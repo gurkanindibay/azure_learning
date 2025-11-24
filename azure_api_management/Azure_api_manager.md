@@ -7,6 +7,7 @@
 4. [Certificates](#certificates)
 5. [Simple Usage Examples](#simple-usage-examples)
 6. [Operational Best Practices](#operational-best-practices)
+7. [Practice Questions](#practice-questions)
 
 ## Purpose
 Azure API Manager (API Management) is the turnkey service on Microsoft Azure that lets teams publish, secure, transform, maintain, and monitor APIs. It is designed to sit between consumers (internal applications, partners, or external developers) and backend services, applying consistent security, routing, and transformation policies without touching the target APIs.
@@ -93,3 +94,29 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 - **Secure secrets**: Store sensitive values in named values and mark them as secrets, then reference them securely inside policies with `{{secret-name}}`.
 - **Design APIs for resiliency**: Use caching policies (`<cache-lookup>`/`<cache-store>`), rate limits, and retries to shield backends from spikes.
 - **Document clearly**: Keep the developer portal updated with descriptions, sample payloads, and contact details to reduce support load.
+- **Pin self-hosted gateway versions**: For production deployments, always use full version tags (e.g., `2.9.0`) following the `{major}.{minor}.{patch}` convention instead of `latest`, `v3`, or preview tags to ensure stable and predictable behavior.
+
+## Practice Questions
+
+### Question 1: Self-Hosted Gateway Container Image Tag
+
+**Scenario**: You plan to use Azure API Management for Hybrid and multicloud API management. You need to create a self-hosted gateway for production.
+
+**Question**: Which container image tag should you use?
+
+**Options**:
+- `2.9.0` ✓
+- `v3`
+- `latest`
+- `V3-preview`
+
+**Answer**: `2.9.0`
+
+**Explanation**: 
+In production, the version must be pinned to ensure stability and predictable behavior. The only way to achieve that is by using a tag that follows the semantic versioning convention `{major}.{minor}.{patch}` (e.g., `2.9.0`).
+
+- The `v3` tag will result in always running the latest major version with every new feature and patch, which can introduce unexpected changes in production.
+- The `latest` tag is used for evaluating the self-hosted gateway and should not be used in production as it continuously updates to the newest version.
+- The `V3-preview` tag should be used only to run the latest preview container image for testing pre-release features, not for production workloads.
+
+**Reference**: [Explore API Management - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/explore-api-management/)
