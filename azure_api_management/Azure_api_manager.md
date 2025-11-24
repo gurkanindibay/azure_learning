@@ -88,6 +88,24 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 </policies>
 ```
 
+### OAuth 2.0 authentication with JWT validation
+```xml
+<policies>
+	<inbound>
+		<validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized">
+			<openid-config url="https://login.microsoftonline.com/{tenant-id}/v2.0/.well-known/openid-configuration" />
+			<audiences>
+				<audience>api://your-api-client-id</audience>
+			</audiences>
+			<issuers>
+				<issuer>https://sts.windows.net/{tenant-id}/</issuer>
+			</issuers>
+		</validate-jwt>
+		<rate-limit-by-key calls="100" renewal-period="60" counter-key="@(context.Request.IpAddress)" />
+	</inbound>
+</policies>
+```
+
 ## Operational Best Practices
 - **Monitor usage**: Configure Application Insights or the built-in analytics to track latency, throttled requests, and subscription failures.
 - **Automate deployment**: Use Azure Resource Manager (ARM) templates or Bicep to publish APIs/policies and manage environments consistently.
@@ -95,6 +113,8 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 - **Design APIs for resiliency**: Use caching policies (`<cache-lookup>`/`<cache-store>`), rate limits, and retries to shield backends from spikes.
 - **Document clearly**: Keep the developer portal updated with descriptions, sample payloads, and contact details to reduce support load.
 - **Pin self-hosted gateway versions**: For production deployments, always use full version tags (e.g., `2.9.0`) following the `{major}.{minor}.{patch}` convention instead of `latest`, `v3`, or preview tags to ensure stable and predictable behavior.
+- **Implement OAuth 2.0 authentication**: Use the `validate-jwt` policy to authenticate incoming requests with OAuth 2.0 tokens, ensuring only authorized users can access your APIs.
+- **Enforce usage quotas**: Apply `rate-limit-by-key` policies to prevent abuse and ensure fair usage among API consumers by limiting the number of calls within specified time periods.
 
 ## Practice Questions
 
@@ -120,3 +140,31 @@ In production, the version must be pinned to ensure stability and predictable be
 - The `V3-preview` tag should be used only to run the latest preview container image for testing pre-release features, not for production workloads.
 
 **Reference**: [Explore API Management - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/explore-api-management/)
+
+### Question 2: OAuth 2.0 Authentication and Usage Quotas
+
+**Scenario**: A company is using Azure API Management to expose their APIs to external partners. The company wants to ensure that the APIs are accessible only to users authenticated with OAuth 2.0, and that usage quotas are enforced to prevent abuse. You need to configure the API Management instance to meet the security and usage requirements.
+
+**Question**: Which two actions should you perform?
+
+**Options**:
+- Configure a `validate-jwt` policy to authenticate incoming requests. ✓
+- Deploy an Azure Application Gateway in front of the API Management instance.
+- Implement IP filtering by defining access restriction policies.
+- Set up a `rate-limit-by-key` policy to enforce call quotas. ✓
+
+**Answer**: 
+1. Configure a `validate-jwt` policy to authenticate incoming requests.
+2. Set up a `rate-limit-by-key` policy to enforce call quotas.
+
+**Explanation**: 
+Configuring a `validate-jwt` policy is necessary to authenticate users with OAuth 2.0. This policy validates the JSON Web Token (JWT) in incoming requests, ensuring that only authenticated users can access the APIs.
+
+Setting up a `rate-limit-by-key` policy helps enforce usage quotas by limiting the number of calls that can be made within a specified time period, preventing abuse and ensuring fair usage among partners.
+
+- IP filtering does not address the OAuth 2.0 authentication requirement and is unrelated to usage quota enforcement.
+- Deploying an Azure Application Gateway is not required for these specific needs; API Management can handle authentication and rate limiting directly through policies.
+
+**Reference**: 
+- [Quickstart: Create a new Azure API Management instance by using the Azure CLI](https://learn.microsoft.com/en-us/azure/api-management/get-started-create-service-instance-cli)
+- [Authentication and authorization to APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/authentication-authorization-overview)
