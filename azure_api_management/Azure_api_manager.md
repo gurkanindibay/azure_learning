@@ -106,15 +106,40 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 </policies>
 ```
 
+### Mock responses for testing
+```xml
+<policies>
+	<inbound>
+		<base />
+		<mock-response status-code="200" content-type="application/json" />
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+		<set-body>@{
+			return new JObject(
+				new JProperty("id", 123),
+				new JProperty("name", "Sample Course"),
+				new JProperty("credits", 3)
+			).ToString();
+		}</set-body>
+	</outbound>
+</policies>
+```
+
 ## Operational Best Practices
 - **Monitor usage**: Configure Application Insights or the built-in analytics to track latency, throttled requests, and subscription failures.
 - **Automate deployment**: Use Azure Resource Manager (ARM) templates or Bicep to publish APIs/policies and manage environments consistently.
 - **Secure secrets**: Store sensitive values in named values and mark them as secrets, then reference them securely inside policies with `{{secret-name}}`.
 - **Design APIs for resiliency**: Use caching policies (`<cache-lookup>`/`<cache-store>`), rate limits, and retries to shield backends from spikes.
-- **Document clearly**: Keep the developer portal updated with descriptions, sample payloads, and contact details to reduce support load.
+- **Document clearly**: Keep the developer portal updated with descriptions, sample payloads, and contact details to reduce support load. Use the portal's built-in documentation features rather than embedding documentation in service code.
 - **Pin self-hosted gateway versions**: For production deployments, always use full version tags (e.g., `2.9.0`) following the `{major}.{minor}.{patch}` convention instead of `latest`, `v3`, or preview tags to ensure stable and predictable behavior.
 - **Implement OAuth 2.0 authentication**: Use the `validate-jwt` policy to authenticate incoming requests with OAuth 2.0 tokens, ensuring only authorized users can access your APIs.
 - **Enforce usage quotas**: Apply `rate-limit-by-key` policies to prevent abuse and ensure fair usage among API consumers by limiting the number of calls within specified time periods.
+- **Manually define API operations**: Create blank APIs and manually define only the necessary operations rather than automatically exposing all backend services. This provides precise control over what is exposed, enhances security by following the principle of least privilege, and enables mock responses for testing without invoking backends.
+- **Import existing APIs efficiently**: When exposing existing services, use the API import functionality to quickly onboard APIs by importing OpenAPI/Swagger definitions or WSDL files, saving time and reducing configuration errors.
 
 ## Practice Questions
 
@@ -168,3 +193,67 @@ Setting up a `rate-limit-by-key` policy helps enforce usage quotas by limiting t
 **Reference**: 
 - [Quickstart: Create a new Azure API Management instance by using the Azure CLI](https://learn.microsoft.com/en-us/azure/api-management/get-started-create-service-instance-cli)
 - [Authentication and authorization to APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/authentication-authorization-overview)
+
+### Question 3: Manual API Configuration with Security Policies
+
+**Scenario**: You are a cloud solutions architect working for a company which has recently adopted Microsoft Azure API Management services to centralize the management of their APIs. The company has multiple backend services that provide information on courses, faculty, and student services. These services are consumed by various front-end applications, including the company's public website, student portal, and mobile apps. You need to ensure that the API Management instance is configured to expose only the necessary operations, maintain security, and provide the ability to mock responses for testing purposes without invoking the backend services.
+
+**Question**: What should you do?
+
+**Options**:
+- Automatically expose all backend operations through the API Management and use Azure Active Directory B2C for authentication.
+- Configure a wildcard operation in the API Management to handle all possible API requests and responses.
+- Create a blank API and manually define the necessary operations, then implement policies to validate JWT tokens and limit call rates. ✓
+- Import all backend services as APIs into the API Management instance and enable CORS to allow requests from the company's domains.
+
+**Answer**: Create a blank API and manually define the necessary operations, then implement policies to validate JWT tokens and limit call rates.
+
+**Explanation**: 
+Creating a blank API and defining necessary operations manually allows for precise control over what is exposed through the API Management gateway. This approach enables you to:
+- Expose only the specific operations required by front-end applications, following the principle of least privilege
+- Implement mock responses for each operation independently, facilitating testing without invoking backend services
+- Apply granular security policies such as JWT validation and rate limiting at the operation level
+
+The other options are incorrect because:
+- **Automatically exposing all backend operations** can lead to security risks by exposing unnecessary endpoints and does not provide the granular control needed for mocking specific responses.
+- **Using a wildcard operation** makes the API vulnerable to security threats as it accepts any request pattern, and it does not provide the ability to define mock responses for specific operations.
+- **Importing all backend services without filtering** exposes unnecessary operations and increases the attack surface. Simply enabling CORS does not address the requirements for selective operation exposure, security policies, or response mocking.
+
+**Reference**: 
+- [Explore Microsoft Graph - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/microsoft-graph/)
+- [Manually add an API - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/explore-api-management/5-create-api-portal)
+
+### Question 4: Exposing Internal Services to Partners
+
+**Scenario**: You are a cloud solutions architect working for a company that is planning to expose their internal data processing service, which is currently hosted on Azure, to their partners via APIs. The service processes large datasets and provides analytics and reporting features. The company wants to ensure that the API is well-documented, access is securely controlled, and usage policies are enforced. You need to create an Azure API Management instance that allows secure and controlled access to the APIs with the ability to enforce usage policies and document the APIs for your partners.
+
+**Question**: What three steps should you perform?
+
+**Options**:
+- Configure access to the APIs by setting up OAuth 2.0 user authorization in the Azure API Management instance. ✓
+- Create an Azure API Management instance and import the existing API using the Azure portal's API import functionality. ✓
+- Define the API manually in the Azure API Management instance and set up a mock API to simulate the backend until it's fully integrated.
+- Document the APIs directly within the code of the data processing service to ensure automatic synchronization with the Azure API Management instance.
+- Implement policies for the APIs in the Azure API Management instance to enforce rate limits and quotas. ✓
+
+**Answer**: 
+1. Create an Azure API Management instance and import the existing API using the Azure portal's API import functionality.
+2. Configure access to the APIs by setting up OAuth 2.0 user authorization in the Azure API Management instance.
+3. Implement policies for the APIs in the Azure API Management instance to enforce rate limits and quotas.
+
+**Explanation**: 
+These three steps provide a complete solution for securely exposing internal services to partners:
+
+**Creating an Azure API Management instance and importing the existing API** is the foundational step. The import functionality allows you to quickly onboard existing APIs by importing OpenAPI/Swagger definitions, WSDL files, or manually configuring endpoints. This provides a direct way to expose the internal service to partners without recreating the API structure from scratch.
+
+**Configuring OAuth 2.0 user authorization** provides secure access control for the APIs. OAuth 2.0 is an industry-standard protocol that allows partners to authenticate and obtain access tokens, ensuring that only authorized users can access the data processing service. This can be implemented using the `validate-jwt` policy in API Management.
+
+**Implementing policies for rate limits and quotas** is essential for controlling API usage and protecting the backend service from being overwhelmed. Policies like `rate-limit` and `quota` ensure fair usage among partners, prevent abuse, and maintain service availability for all consumers.
+
+The other options are incorrect because:
+- **Setting up a mock API** does not address the immediate requirement to expose the actual existing service to partners; it's only useful for testing before the backend is ready.
+- **Documenting APIs within the service code** is not the correct approach. API documentation should be managed through the API Management developer portal, where it can be easily accessed by partners. The developer portal automatically generates interactive documentation from the API definition, and additional descriptions can be added through the portal interface or API definition files.
+
+**Reference**: 
+- [Explore Microsoft Graph - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/microsoft-graph/)
+- [Manually add an API - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/explore-api-management/5-create-api-portal)
