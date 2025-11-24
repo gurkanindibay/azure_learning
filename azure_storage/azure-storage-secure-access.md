@@ -58,7 +58,7 @@ Azure Storage supports three types of Shared Access Signatures, each designed fo
 | **Secured By** | Storage Account Key | Storage Account Key | Microsoft Entra ID |
 | **RBAC Support** | No | No | Yes ✅ |
 | **Scope** | Account-level (multiple services) | Single service only | Single service only |
-| **Services Supported** | Blob, Queue, Table, File | Blob, Queue, Table, File | Blob, File (limited) |
+| **Services Supported** | Blob, Queue, Table, File | Blob, Queue, Table, File | **Blob only** ⚠️ |
 | **Container Access** | Yes | Yes | Yes ✅ |
 | **Most Secure** | No | No | Yes ✅ |
 | **Can Be Revoked** | Only with key rotation | Via stored access policy | Via Entra ID credentials |
@@ -181,6 +181,7 @@ var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
 - Can be revoked by revoking the user delegation key
 - Most secure SAS type
 - Requires Microsoft Entra ID authentication
+- **⚠️ IMPORTANT: Only supported for Blob Storage** (not File, Queue, or Table)
 
 **Why It's Most Secure**:
 1. ✅ **No Storage Keys Exposed**: Doesn't use account keys
@@ -310,9 +311,196 @@ await container.SetAccessPolicyAsync(permissions: Array.Empty<BlobSignedIdentifi
 - ❌ Still uses storage account keys for signing
 - ❌ No Microsoft Entra ID integration
 
+## Service Support for User Delegation SAS
+
+### Critical Limitation: Blob Storage Only
+
+**User Delegation SAS is ONLY supported for Azure Blob Storage.** This is a key limitation to remember for exams and real-world implementations.
+
+| Storage Service | Account SAS | Service SAS | User Delegation SAS |
+|----------------|-------------|-------------|---------------------|
+| **Blob** | ✅ Supported | ✅ Supported | ✅ **Supported** |
+| **File** | ✅ Supported | ✅ Supported | ❌ **Not Supported** |
+| **Queue** | ✅ Supported | ✅ Supported | ❌ **Not Supported** |
+| **Table** | ✅ Supported | ✅ Supported | ❌ **Not Supported** |
+
+### Why Only Blob Storage?
+
+**Technical Reasons:**
+- Blob Storage has the most mature integration with Microsoft Entra ID
+- RBAC roles are well-defined for blob operations
+- User delegation key mechanism was designed specifically for blob access
+- Other services (File, Queue, Table) still rely on shared key authentication for SAS
+
+**Implications:**
+- If you need Entra ID-secured access to File, Queue, or Table → Use Account or Service SAS
+- For maximum security with non-Blob services → Use direct Entra ID authentication (not SAS)
+- Blob Storage is the only service where you can combine SAS with Entra ID credentials
+
+### Exam Question: Identifying Supported Services
+
+**Question**: You plan to use a shared access signature to protect access to services within a general-purpose v2 storage account. You need to identify the type of service that you can protect by using the user delegation shared access signature.
+
+**Options Analysis:**
+
+#### Blob ✅ **CORRECT**
+**Why Correct:**
+- ✅ Only storage service that supports User Delegation SAS
+- ✅ Full integration with Microsoft Entra ID authentication
+- ✅ Supports all RBAC roles for blob operations
+- ✅ Can create user delegation keys for blob access
+
+**Example:**
+```csharp
+// User Delegation SAS works for Blob Storage
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://myaccount.blob.core.windows.net"),
+    credential
+);
+
+var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+    DateTimeOffset.UtcNow,
+    DateTimeOffset.UtcNow.AddHours(1)
+);
+
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    Resource = "c",
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+};
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
+
+var sasToken = sasBuilder.ToSasQueryParameters(
+    userDelegationKey.Value,
+    blobServiceClient.AccountName
+);
+```
+
+#### File ❌ **INCORRECT**
+**Why Wrong:**
+- ❌ Does NOT support User Delegation SAS
+- ✅ Supports Account SAS
+- ✅ Supports Service SAS
+- ⚠️ Only shared key-based SAS available
+
+**Available Options for File:**
+```csharp
+// File service must use Account or Service SAS
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+
+// Service SAS for File Share
+var sasBuilder = new ShareSasBuilder
+{
+    ShareName = "myshare",
+    Resource = "s", // Share
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+};
+sasBuilder.SetPermissions(ShareSasPermissions.Read);
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential);
+// Note: Uses StorageSharedKeyCredential, not Azure AD
+```
+
+**Alternative for File with Entra ID:**
+- Use direct Azure AD authentication (not SAS)
+- Requires SMB protocol with Azure AD Domain Services
+- Not available for REST API access
+
+#### Queue ❌ **INCORRECT**
+**Why Wrong:**
+- ❌ Does NOT support User Delegation SAS
+- ✅ Supports Account SAS
+- ✅ Supports Service SAS
+- ⚠️ Only shared key-based SAS available
+
+**Available Options for Queue:**
+```csharp
+// Queue service must use Account or Service SAS
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+
+// Service SAS for Queue
+var sasBuilder = new QueueSasBuilder
+{
+    QueueName = "myqueue",
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+};
+sasBuilder.SetPermissions(QueueSasPermissions.Read | QueueSasPermissions.Add);
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential);
+// Note: Uses StorageSharedKeyCredential, not Azure AD
+```
+
+**Alternative for Queue with Entra ID:**
+```csharp
+// Use direct Azure AD authentication (not SAS)
+var credential = new DefaultAzureCredential();
+var queueClient = new QueueClient(
+    new Uri("https://myaccount.queue.core.windows.net/myqueue"),
+    credential
+);
+
+// This uses RBAC directly, not SAS
+await queueClient.SendMessageAsync("Hello, World!");
+```
+
+#### Table ❌ **INCORRECT**
+**Why Wrong:**
+- ❌ Does NOT support User Delegation SAS
+- ✅ Supports Account SAS
+- ✅ Supports Service SAS
+- ⚠️ Only shared key-based SAS available
+
+**Available Options for Table:**
+```csharp
+// Table service must use Account or Service SAS
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+
+// Service SAS for Table
+var sasBuilder = new TableSasBuilder(
+    tableName: "mytable",
+    permissions: TableSasPermissions.Read | TableSasPermissions.Add,
+    expiresOn: DateTimeOffset.UtcNow.AddHours(1)
+);
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential);
+// Note: Uses StorageSharedKeyCredential, not Azure AD
+```
+
+**Note:** Azure Table Storage does not currently support direct Azure AD authentication via RBAC for data plane operations.
+
+### Decision Matrix: Choosing SAS Type by Service
+
+```
+Need Entra ID + SAS?
+│
+├─ Blob Storage → User Delegation SAS ✅
+│
+├─ File Storage → Service SAS + Stored Access Policy ⚠️
+│                 (or use SMB with Azure AD Domain Services)
+│
+├─ Queue Storage → Service SAS + Stored Access Policy ⚠️
+│                  (or use direct Azure AD auth without SAS)
+│
+└─ Table Storage → Service SAS + Stored Access Policy ⚠️
+                   (direct Azure AD auth not available)
+```
+
+### Key Takeaway for Exams
+
+**Question Pattern:** "Which service supports User Delegation SAS?"
+**Answer:** **Blob Storage only**
+
+**Remember:**
+- 🎯 User Delegation SAS = Blob Storage ONLY
+- 🔐 Most secure SAS type, but limited to blobs
+- 📊 File, Queue, Table = Account SAS or Service SAS only
+- ✨ For non-blob services needing Entra ID → Use direct authentication (not SAS)
+
 ## Exam Question Analysis
 
-### Question: Container Access with Entra ID and RBAC
+### Question 1: Container Access with Entra ID and RBAC
 
 **Requirements:**
 1. ✅ SAS token secured with Microsoft Entra ID credentials
@@ -712,6 +900,7 @@ public async Task<bool> TestSasTokenAsync(string sasUri)
 ✅ Want to avoid exposing storage keys  
 ✅ Production environments  
 ✅ Compliance requirements  
+⚠️ **Working with Blob Storage ONLY** (not supported for File, Queue, or Table)
 
 ### Use Service SAS When:
 ✅ Single service access is sufficient  
