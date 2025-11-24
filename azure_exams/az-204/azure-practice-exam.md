@@ -1064,3 +1064,30 @@ Summary
 Implement Application Insights
 Use Azure Application Insights
 Monitor Azure resources with Azure Monitor
+
+---
+
+You deploy a web app named App1 by using Azure DevOps. App1 includes releases for a mobile app and a desktop app.
+
+You need to perform a root cause analysis (RCA) to monitor the performance of App1. The solution must meet the following requirements:
+
+Identify related code that causes load.
+Ensure that you can view logs and identify any failures that cause issues with the desktop app.
+Minimize administrative effort.
+What should you use?
+
+Select only one answer.
+
+Application Insights
+
+This answer is correct.
+
+Azure Analytics
+
+
+Azure Monitor
+
+
+Log Analytics
+
+The correct solution is Application Insights, because it is designed to provide deep application performance monitoring, transaction traces, exception logging, and telemetry that links failures directly to code, making it ideal for root cause analysis of both web and desktop components. It integrates easily with DevOps pipelines and requires minimal setup once enabled. Azure Monitor provides high-level observability across Azure resources but lacks the detailed code-level diagnostics needed for RCA. Log Analytics is used to query and analyze log data, often from Application Insights or Azure Monitor, but by itself it does not capture application telemetry. Azure Analytics is not a valid Azure monitoring service. Therefore, Application Insights best satisfies the requirements with the least administrative effort.
