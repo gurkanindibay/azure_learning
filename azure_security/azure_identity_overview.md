@@ -32,6 +32,63 @@ RBAC determines **what** an identity can do, but not **who** the identity is. Th
 [App] --(secret/certificate)--> [Azure AD] --(token)--> [Resource]
 ```
 
+### Types of Service Principals
+
+There are three types of service principals:
+
+#### 2.1 Application Service Principal
+- Created when an application is registered in Microsoft Entra ID
+- Represents the application in each tenant where it's used
+- The **application object** (single instance) lives in the home tenant
+- The **application service principal** (multiple instances) exists in each tenant where the app is used
+- Used to configure permissions for the application (e.g., Microsoft Graph API access)
+- Required for multi-tenant applications to access resources in different tenants
+
+**Use Case:** Multi-tenant App Service web app needing Microsoft Graph API access
+
+```
+[Home Tenant - Application Object]
+         |
+         | Registration
+         v
+[Tenant1 - Application SP] --grants--> [Microsoft Graph API]
+[Tenant2 - Application SP] --grants--> [Microsoft Graph API]
+```
+
+#### 2.2 Managed Identity Service Principal
+- Automatically created and managed by Azure
+- Credentials handled entirely by Azure (no secrets to manage)
+- Two types: System-Assigned (SAMI) and User-Assigned (UAMI)
+- **Cannot** be used for multi-tenant scenarios or Microsoft Graph API delegation
+- Best for Azure resource-to-resource authentication
+
+#### 2.3 Legacy Service Principal
+- Applications created before app registrations were introduced
+- Apps created through legacy experiences
+- Limited functionality compared to modern application service principals
+- Not recommended for new applications
+
+---
+
+## 2.4 When to Use Each Service Principal Type
+
+| Scenario | Use | Don't Use | Reason |
+|----------|-----|-----------|--------|
+| Multi-tenant app accessing Microsoft Graph API | **Application SP** | Managed Identity, Legacy | Application SP is designed for multi-tenant scenarios and can be granted API permissions |
+| App Service accessing Azure Key Vault | SAMI or UAMI | Application SP | No need to manage credentials; Azure handles authentication |
+| Multiple services sharing same identity | UAMI | SAMI, Application SP | UAMI can be assigned to multiple resources |
+| Single VM accessing Storage | SAMI | UAMI, Application SP | Simplest setup for single-resource scenarios |
+| CI/CD pipeline authentication | Application SP | Managed Identity | Pipelines run outside Azure and need explicit credentials |
+| Delegated user permissions | Application SP | Managed Identity | Managed identities only support application permissions, not delegated |
+
+### Key Limitation: Managed Identities and Microsoft Graph
+**Managed Identities (SAMI and UAMI) cannot be used for:**
+- Multi-tenant application scenarios
+- Accessing Microsoft Graph API with delegated permissions
+- Scenarios requiring explicit application registration in Microsoft Entra ID
+
+**Reason:** Managed identities are designed for Azure resource-to-resource authentication within a single tenant. They don't support the application object/service principal separation needed for multi-tenant scenarios.
+
 ---
 
 ## 3. Managed Identities Overview
@@ -176,22 +233,26 @@ You: Restart/redeploy application
 
 ## 8. Summary Table
 
-| Feature | Service Principal | SAMI | UAMI |
-|--------|-------------------|------|------|
-| Identity Type | Application identity | Managed SP | Managed SP |
-| Credential Type | Secret/Cert (manual) | Cert (Azure-managed) | Cert (Azure-managed) |
-| Credential Rotation | Manual | Automatic | Automatic |
-| Resource Lifecycle | Independent | Tied to single service | Independent, reusable |
-| Multi-resource use | Yes | No | Yes |
-| Best For | CI/CD, custom auth | Single-resource workloads | Shared identity scenarios |
+| Feature | Service Principal | Application SP | SAMI | UAMI |
+|--------|-------------------|----------------|------|------|
+| Identity Type | Application identity | Multi-tenant app identity | Managed SP | Managed SP |
+| Credential Type | Secret/Cert (manual) | Secret/Cert (manual) | Cert (Azure-managed) | Cert (Azure-managed) |
+| Credential Rotation | Manual | Manual | Automatic | Automatic |
+| Resource Lifecycle | Independent | Independent | Tied to single service | Independent, reusable |
+| Multi-resource use | Yes | Yes | No | Yes |
+| Multi-tenant support | Yes | Yes | No | No |
+| Microsoft Graph API | Yes | Yes | Limited (app permissions only) | Limited (app permissions only) |
+| Best For | General auth, CI/CD | Multi-tenant apps, Graph API | Single-resource workloads | Shared identity scenarios |
 
 ---
 
 ## 9. Final Notes
 - Service Principal is the **foundation** identity.
+- **Application Service Principal** is specifically for registered applications and multi-tenant scenarios.
 - Managed Identities are **Service Principals with automated credential lifecycle**.
 - UAMI is ideal for multi-service, multi-region, and zero-downtime deployments.
 - Certificate rotation is fully handled by Azure for Managed Identities.
+- **For multi-tenant apps accessing Microsoft Graph API, use Application Service Principal, not Managed Identity.**
 
 ---
 
@@ -253,6 +314,61 @@ This automated system is **exclusive to Managed Identities**. Service Principals
 5. Your code that's running on the virtual machine can request a token from the Azure Instance Metadata Service identity endpoint, accessible only from within the virtual machine: http://169.254.169.254/metadata/identity/oauth2/token
 6. A call is made to Microsoft Entra ID to request an access token (as specified in step 5) by using the client ID and certificate configured in step 3. Microsoft Entra ID returns a JSON Web Token (JWT) access token.
 7. Your code sends the access token on a call to a service that supports Microsoft Entra authentication.
+
+---
+
+## 12. Common Exam Scenario: Multi-Tenant App with Microsoft Graph API
+
+### Scenario
+You have an Azure App Service web app (`app1`) registered as a **multi-tenant application** in Microsoft Entra ID tenant (`tenant1`). You need to grant `app1` permission to access the Microsoft Graph API in `tenant1`.
+
+### Question
+Which service principal should you use?
+
+### Answer: Application Service Principal ✓
+
+### Why Application Service Principal?
+1. **Multi-tenant apps require application objects**: The app is registered in the home tenant (tenant1) with an application object.
+2. **Service principal per tenant**: An application service principal is created in tenant1 (and any other tenant where the app is used).
+3. **Permission configuration**: The application service principal in tenant1 is used to configure API permissions (like Microsoft Graph).
+4. **Microsoft Graph API access**: Application service principals support both application permissions and delegated permissions for Graph API.
+
+### Why NOT Managed Identity?
+- **SAMI (System-Assigned Managed Identity)**: ❌
+  - Designed for Azure resource-to-resource authentication within a single tenant
+  - Cannot represent multi-tenant applications
+  - Limited Microsoft Graph API support (application permissions only, no delegated)
+  
+- **UAMI (User-Assigned Managed Identity)**: ❌
+  - Same limitations as SAMI for multi-tenant scenarios
+  - Not designed for application registration and consent flows
+  - Cannot be used to grant permissions across tenants
+
+### Why NOT Legacy Service Principal?
+- **Legacy SP**: ❌
+  - Created before modern app registrations
+  - Limited functionality
+  - Not designed for Microsoft Graph API scenarios
+
+### Architecture Flow
+```
+[app1 - Multi-tenant App Service]
+         |
+         | Registered in tenant1
+         v
+[Application Object in tenant1]
+         |
+         | Creates
+         v
+[Application Service Principal in tenant1]
+         |
+         | Granted permissions
+         v
+[Microsoft Graph API in tenant1]
+```
+
+### Key Takeaway
+For **multi-tenant applications** requiring **Microsoft Graph API access**, always use **Application Service Principal**. Managed identities are for Azure resource authentication, not for multi-tenant app scenarios.
 
 ---
 
