@@ -1,5 +1,39 @@
 # Secure Access to Azure Storage
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Authentication Methods](#authentication-methods)
+  - [Shared Key (Storage Account Keys)](#1-shared-key-storage-account-keys)
+  - [Shared Access Signature (SAS)](#2-shared-access-signature-sas)
+  - [Microsoft Entra ID (Azure Active Directory)](#3-microsoft-entra-id-azure-active-directory)
+  - [Anonymous Public Read Access](#4-anonymous-public-read-access)
+- [Shared Access Signature (SAS) Types](#shared-access-signature-sas-types)
+  - [Comparison Table](#comparison-table)
+  - [Account SAS](#1-account-sas)
+  - [Service SAS](#2-service-sas)
+  - [User Delegation SAS](#3-user-delegation-sas--most-secure)
+  - [Stored Access Policy](#4-stored-access-policy)
+- [Service Support for User Delegation SAS](#service-support-for-user-delegation-sas)
+  - [Critical Limitation: Blob Storage Only](#critical-limitation-blob-storage-only)
+  - [Why Only Blob Storage?](#why-only-blob-storage)
+  - [Exam Question: Identifying Supported Services](#exam-question-identifying-supported-services)
+  - [Decision Matrix: Choosing SAS Type by Service](#decision-matrix-choosing-sas-type-by-service)
+- [Exam Question Analysis](#exam-question-analysis)
+  - [Question 1: Container Access with Entra ID and RBAC](#question-1-container-access-with-entra-id-and-rbac)
+- [SAS Security Best Practices](#sas-security-best-practices)
+- [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
+  - [Common Built-in Roles](#common-built-in-roles)
+  - [Assigning RBAC Roles](#assigning-rbac-roles)
+  - [Using Managed Identity with User Delegation SAS](#using-managed-identity-with-user-delegation-sas)
+- [Comparison: Authentication Methods](#comparison-authentication-methods)
+- [Additional Security Features](#additional-security-features)
+- [Troubleshooting SAS Issues](#troubleshooting-sas-issues)
+  - [Common Errors and Solutions](#common-errors-and-solutions)
+  - [Testing SAS Tokens](#testing-sas-tokens)
+- [Quick Reference: When to Use Each SAS Type](#quick-reference-when-to-use-each-sas-type)
+- [References](#references)
+
 ## Overview
 
 Azure Storage provides multiple layers of security to protect your data and control access. This document covers authentication methods, authorization mechanisms, and Shared Access Signatures (SAS) - focusing on the different SAS types and when to use each.
