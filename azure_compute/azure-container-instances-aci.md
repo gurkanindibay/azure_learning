@@ -873,6 +873,309 @@ az container restart \
 - Never = never restart automatically
 - Manual restart ≠ restart policy
 
+## Azure Container Instances Pricing
+
+### Pricing Model
+
+Azure Container Instances uses a **pay-per-second** pricing model based on:
+1. **Resource allocation** (vCPU and memory)
+2. **Operating system** (Linux or Windows)
+3. **Duration** (billed per second)
+
+**Key Points:**
+- Billed for resources **allocated**, not used
+- Charged from container start to stop/termination
+- Minimum billing: 1 second
+- Billed per second (no rounding to hours)
+
+### Linux Container Pricing
+
+#### Standard Pricing (Most Regions)
+
+| Resource | Price per Second | Price per Hour | Price per Month (730 hrs) |
+|----------|------------------|----------------|---------------------------|
+| **vCPU** | $0.0000125 | $0.045 | ~$32.85 |
+| **Memory (GB)** | $0.0000014 | $0.005 | ~$3.65 |
+
+#### Resource Allocation Limits
+
+- **Minimum**: 0.5 vCPU, 0.5 GB memory
+- **Maximum (per container)**: 4 vCPU, 16 GB memory
+- **Maximum (per container group)**: 4 vCPU, 16 GB memory
+
+#### Cost Examples (Linux)
+
+**Example 1: Small Task (1 vCPU, 1 GB)**
+```
+Configuration: 1 vCPU, 1 GB memory
+Duration: 1 hour
+
+Cost calculation:
+- vCPU: 1 × $0.045 = $0.045
+- Memory: 1 × $0.005 = $0.005
+Total: $0.05/hour or ~$36.50/month (24/7)
+```
+
+**Example 2: Data Processing (2 vCPU, 4 GB)**
+```
+Configuration: 2 vCPU, 4 GB memory
+Duration: 30 minutes (1,800 seconds)
+
+Cost calculation:
+- vCPU: 2 × $0.0000125 × 1,800 = $0.045
+- Memory: 4 × $0.0000014 × 1,800 = $0.010
+Total: $0.055 per run
+```
+
+**Example 3: Batch Job (4 vCPU, 8 GB)**
+```
+Configuration: 4 vCPU, 8 GB memory
+Duration: 10 runs × 15 minutes each = 2.5 hours/day
+
+Daily cost:
+- vCPU: 4 × $0.045 × 2.5 = $0.45
+- Memory: 8 × $0.005 × 2.5 = $0.10
+Total: $0.55/day or ~$16.50/month
+```
+
+### Windows Container Pricing
+
+#### Standard Pricing (Most Regions)
+
+| Resource | Price per Second | Price per Hour | Price per Month (730 hrs) |
+|----------|------------------|----------------|---------------------------|
+| **vCPU** | $0.0000222 | $0.08 | ~$58.40 |
+| **Memory (GB)** | $0.0000028 | $0.01 | ~$7.30 |
+
+**Note**: Windows containers cost approximately **1.8x more** than Linux containers
+
+#### Cost Examples (Windows)
+
+**Example 1: .NET Framework App (2 vCPU, 4 GB)**
+```
+Configuration: 2 vCPU, 4 GB memory
+Duration: 24/7 (730 hours/month)
+
+Monthly cost:
+- vCPU: 2 × $58.40 = $116.80
+- Memory: 4 × $7.30 = $29.20
+Total: ~$146.00/month
+```
+
+### GPU-Enabled Containers (Preview)
+
+**Availability**: Limited regions (US East, West Europe, etc.)
+
+| GPU SKU | vCPU | Memory | Price per Hour |
+|---------|------|--------|----------------|
+| **K80** | 1 | 1.5 GB | ~$0.70 |
+| **P100** | 1 | 5.5 GB | ~$1.20 |
+| **V100** | 1 | 5.5 GB | ~$3.00 |
+
+**Use Cases**: ML inference, rendering, scientific computing
+
+### Pricing Comparison: ACI vs ACA
+
+| Feature | **ACI** | **ACA** |
+|---------|---------|----------|
+| **Billing model** | Resource allocation | Resource consumption |
+| **Scale to zero** | ❌ No (manual stop required) | ✅ Yes (automatic) |
+| **vCPU pricing** | $0.0000125/sec (Linux) | $0.000024/sec |
+| **Memory pricing** | $0.0000014/GB/sec (Linux) | $0.000003/GB/sec |
+| **Minimum cost (1vCPU, 1GB, 1hr)** | ~$0.05 | ~$0.10 (when active) |
+| **Best for** | Short-lived tasks, batch jobs | Long-running services with variable load |
+| **Free tier** | ❌ No | ✅ Yes (monthly grant) |
+| **Request charges** | ❌ No | ✅ Yes ($0.40/million after 2M) |
+| **Orchestration** | ❌ Limited | ✅ Built-in (Dapr, ingress, etc.) |
+
+### When to Choose ACI vs ACA
+
+#### Choose **ACI** when:
+- ✅ Running short-lived, batch, or scheduled tasks
+- ✅ Need quick, simple container deployment
+- ✅ Fixed resource requirements (no autoscaling needed)
+- ✅ Running Windows containers
+- ✅ Want simpler pricing (no request charges)
+- ✅ Lower cost for continuous small workloads
+
+**Example**: Database migrations, CI/CD build agents, data processing jobs
+
+#### Choose **ACA** when:
+- ✅ Running microservices or web applications
+- ✅ Need automatic scaling (including scale-to-zero)
+- ✅ Variable or unpredictable traffic patterns
+- ✅ Need built-in ingress, load balancing, and service discovery
+- ✅ Want to integrate with Dapr, KEDA, Envoy
+- ✅ Multiple interconnected containers
+
+**Example**: REST APIs, web apps, event-driven applications, microservices
+
+### Cost Optimization Strategies
+
+#### 1. Right-Size Resources
+```bash
+# Start with minimum, monitor, then adjust
+az container create \
+  --resource-group myResourceGroup \
+  --name mycontainer \
+  --image myapp:latest \
+  --cpu 0.5 \
+  --memory 0.5
+```
+
+#### 2. Use Appropriate Restart Policy
+```bash
+# For one-time tasks, use Never to avoid unnecessary charges
+az container create \
+  --resource-group myResourceGroup \
+  --name batch-job \
+  --image myapp:latest \
+  --restart-policy Never
+```
+
+#### 3. Stop Containers When Not Needed
+```bash
+# Stop long-running containers during off-hours
+az container stop --name mycontainer --resource-group myResourceGroup
+
+# Start when needed
+az container start --name mycontainer --resource-group myResourceGroup
+```
+
+#### 4. Use Linux Instead of Windows
+- Linux containers cost ~45% less than Windows
+- Use Linux unless you specifically need Windows features
+
+#### 5. Schedule Batch Jobs Efficiently
+```bash
+# Run during off-peak hours
+# Use Azure Logic Apps or Functions to schedule
+# Example: Run ACI via ARM template deployment
+```
+
+#### 6. Monitor and Delete Unused Containers
+```bash
+# List all container groups
+az container list --output table
+
+# Delete unused containers
+az container delete --name unused --resource-group myResourceGroup --yes
+```
+
+#### 7. Use Container Groups Efficiently
+```yaml
+# Share resources across containers in the same group
+apiVersion: 2021-09-01
+properties:
+  containers:
+  - name: app
+    properties:
+      resources:
+        requests:
+          cpu: 1.5
+          memoryInGb: 2
+  - name: sidecar
+    properties:
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGb: 0.5
+# Total: 2 vCPU, 2.5 GB (instead of separate container groups)
+```
+
+### Real-World Cost Scenarios
+
+#### Scenario 1: Daily Backup Job
+```
+Requirement: Run backup task daily for 30 minutes
+Configuration: 1 vCPU, 2 GB memory, Linux
+
+Daily cost:
+- vCPU: 1 × $0.0000125 × 1,800 seconds = $0.0225
+- Memory: 2 × $0.0000014 × 1,800 seconds = $0.0050
+Total: $0.0275/day or ~$0.83/month
+```
+
+#### Scenario 2: CI/CD Build Agent
+```
+Requirement: 10 builds/day, 10 minutes each
+Configuration: 2 vCPU, 4 GB memory, Linux
+
+Daily cost:
+- Duration: 10 × 600 seconds = 6,000 seconds
+- vCPU: 2 × $0.0000125 × 6,000 = $0.15
+- Memory: 4 × $0.0000014 × 6,000 = $0.034
+Total: $0.184/day or ~$5.52/month
+```
+
+#### Scenario 3: Development Environment
+```
+Requirement: Running 8 hours/day, 5 days/week
+Configuration: 1 vCPU, 2 GB memory, Linux
+
+Monthly cost (160 hours):
+- vCPU: 1 × $0.045 × 160 = $7.20
+- Memory: 2 × $0.005 × 160 = $1.60
+Total: ~$8.80/month
+```
+
+#### Scenario 4: Always-On Monitoring Agent
+```
+Requirement: Running 24/7
+Configuration: 0.5 vCPU, 0.5 GB memory, Linux
+
+Monthly cost (730 hours):
+- vCPU: 0.5 × $32.85 = $16.43
+- Memory: 0.5 × $3.65 = $1.83
+Total: ~$18.26/month
+
+Note: For always-on workloads, consider ACA with scale-to-zero
+or Azure App Service for potentially lower costs
+```
+
+### Additional Costs to Consider
+
+**Not included in ACI pricing:**
+- ❌ **Networking**: Outbound data transfer (first 5 GB/month free, then ~$0.087/GB)
+- ❌ **Virtual Network**: No additional cost for VNet injection
+- ❌ **Storage**: Azure Files volumes (separate storage account costs)
+- ❌ **Container Registry**: Azure Container Registry costs (if using ACR)
+- ❌ **Monitoring**: Azure Monitor / Log Analytics data ingestion (~$2.30/GB)
+- ❌ **Public IP**: Included (no separate charge)
+- ❌ **DNS labels**: Included (no separate charge)
+
+### Pricing Estimation Tool
+
+**Formula for Linux containers:**
+```
+Hourly Cost = (vCPU × $0.045) + (Memory_GB × $0.005)
+Monthly Cost = Hourly Cost × Hours_Running_Per_Month
+```
+
+**Formula for Windows containers:**
+```
+Hourly Cost = (vCPU × $0.08) + (Memory_GB × $0.01)
+Monthly Cost = Hourly Cost × Hours_Running_Per_Month
+```
+
+**Calculator Example:**
+```bash
+# Linux: 2 vCPU, 3 GB, 200 hours/month
+Hourly = (2 × $0.045) + (3 × $0.005) = $0.105
+Monthly = $0.105 × 200 = $21.00
+```
+
+### Key Takeaways
+
+✅ **Pay per second**: Very granular billing  
+✅ **No hidden costs**: Simple pricing model  
+✅ **Linux is cheaper**: ~45% less than Windows  
+✅ **Stop = $0**: No cost when stopped (unlike VMs with storage)  
+✅ **Good for short tasks**: Cost-effective for batch jobs  
+⚠️ **No scale-to-zero**: Must manually stop containers  
+⚠️ **Continuous use**: Consider alternatives (ACA, App Service) for 24/7 workloads  
+⚠️ **Resource allocation**: Billed for allocated resources, not actual usage  
+
 ## References
 
 - [Azure Container Instances documentation](https://learn.microsoft.com/en-us/azure/container-instances/)
@@ -882,3 +1185,4 @@ az container restart \
 - [Mount Azure Files volume](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-volume-azure-files)
 - [Set environment variables](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-environment-variables)
 - [Container Instances pricing](https://azure.microsoft.com/en-us/pricing/details/container-instances/)
+- [Azure Pricing Calculator](https://azure.microsoft.com/en-us/pricing/calculator/)
