@@ -534,7 +534,376 @@ Need Entra ID + SAS?
 
 ## Exam Question Analysis
 
-### Question 1: Container Access with Entra ID and RBAC
+### Question 1: Securing SAS for Supplier Access
+
+**Scenario:**
+You develop an application that will be accessed by a supplier. The supplier requires a shared access signature (SAS) to access Azure services in your company's subscription. You need to secure the SAS.
+
+**Question:**
+Which three actions should you take? Each correct answer presents a complete solution.
+
+**Options:**
+1. Always use HTTPS
+2. Grant permission to multiple resources
+3. Use Azure Monitor and Azure Storage logs to monitor the application
+4. Define a stored access policy for a service SAS
+5. Set a long expiration time
+
+**Correct Answers:**
+1. ✅ **Always use HTTPS**
+2. ✅ **Use Azure Monitor and Azure Storage logs to monitor the application**
+3. ✅ **Define a stored access policy for a service SAS**
+
+**Detailed Analysis:**
+
+#### 1. Always use HTTPS ✅ **CORRECT**
+
+**Why This Is Correct:**
+- SAS tokens contain sensitive authorization information
+- HTTPS encrypts the SAS token in transit, preventing interception
+- Protocol can be enforced when creating the SAS
+
+**Implementation:**
+```csharp
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "supplier-data",
+    Resource = "c",
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(2),
+    Protocol = SasProtocol.Https // ✅ Force HTTPS only
+};
+```
+
+**Security Risk of HTTP:**
+- SAS token visible in network traffic
+- Vulnerable to man-in-the-middle attacks
+- Token can be intercepted and reused
+
+**Best Practice:**
+```csharp
+// ✅ GOOD: Enforce HTTPS
+sasBuilder.Protocol = SasProtocol.Https;
+
+// ❌ BAD: Allow HTTP
+sasBuilder.Protocol = SasProtocol.HttpsAndHttp;
+```
+
+#### 2. Grant permission to multiple resources ❌ **INCORRECT**
+
+**Why This Is Wrong:**
+- Violates the **principle of least privilege**
+- Increases attack surface if SAS is compromised
+- Supplier should only access what they absolutely need
+
+**Security Best Practice:**
+- Grant minimal permissions required for the task
+- Scope SAS to specific resources (not multiple)
+- Limit to single container or blob when possible
+
+**Example of Bad vs. Good Practice:**
+```csharp
+// ❌ BAD: Account SAS with access to all services
+var accountSasBuilder = new AccountSasBuilder
+{
+    Services = AccountSasServices.All, // ❌ Too broad
+    ResourceTypes = AccountSasResourceTypes.All, // ❌ Too broad
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(2)
+};
+
+// ✅ GOOD: Service SAS scoped to specific container
+var serviceSasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "supplier-invoices", // ✅ Specific container
+    Resource = "c",
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(2)
+};
+serviceSasBuilder.SetPermissions(
+    BlobContainerSasPermissions.Read | // ✅ Minimal permissions
+    BlobContainerSasPermissions.List
+);
+```
+
+**Impact of Over-Permissioning:**
+- If SAS leaked, attacker gains access to multiple resources
+- Harder to audit and track access patterns
+- Increases compliance risks
+
+#### 3. Use Azure Monitor and Azure Storage logs to monitor the application ✅ **CORRECT**
+
+**Why This Is Correct:**
+- Detect suspicious access patterns and potential security breaches
+- Monitor for authorization failures (failed SAS attempts)
+- Track SAS usage for compliance and auditing
+- Alert on unusual activity
+
+**Implementation:**
+```csharp
+// Enable Storage Analytics logging
+var blobServiceClient = new BlobServiceClient(connectionString);
+var properties = await blobServiceClient.GetPropertiesAsync();
+
+properties.Value.Logging = new BlobAnalyticsLogging
+{
+    Version = "1.0",
+    Read = true,
+    Write = true,
+    Delete = true,
+    RetentionPolicy = new BlobRetentionPolicy
+    {
+        Enabled = true,
+        Days = 30 // Retain logs for compliance
+    }
+};
+
+await blobServiceClient.SetPropertiesAsync(properties);
+```
+
+**Azure Monitor Integration:**
+```bash
+# Create alert for failed SAS authentications
+az monitor metrics alert create \
+    --name "SAS-Authentication-Failures" \
+    --resource-group myResourceGroup \
+    --scopes /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account} \
+    --condition "count AuthenticationError > 10" \
+    --window-size 5m \
+    --evaluation-frequency 1m
+```
+
+**What to Monitor:**
+- Authorization failures (potential brute force or leaked tokens)
+- Unusual access patterns (time of day, frequency)
+- Access from unexpected IP addresses
+- Operations performed (read, write, delete)
+
+**Log Analysis Example:**
+```kusto
+// Query storage logs for SAS authentication failures
+StorageBlobLogs
+| where AuthenticationType == "SAS"
+| where StatusCode >= 400
+| summarize FailureCount = count() by AccountName, CallerIpAddress, bin(TimeGenerated, 5m)
+| where FailureCount > 10
+| order by TimeGenerated desc
+```
+
+#### 4. Define a stored access policy for a service SAS ✅ **CORRECT**
+
+**Why This Is Correct:**
+- Enables **revocation** without regenerating storage account keys
+- Allows **modification** of permissions after SAS is issued
+- Provides **centralized management** of multiple SAS tokens
+- **Critical for third-party access** where you may need to revoke quickly
+
+**Without Stored Access Policy:**
+- Cannot revoke SAS without regenerating account keys
+- Regenerating keys invalidates ALL SAS tokens (not just supplier's)
+- No way to modify permissions after SAS is issued
+
+**Implementation:**
+```csharp
+// Step 1: Create stored access policy
+var container = new BlobContainerClient(connectionString, "supplier-data");
+
+var policy = new BlobSignedIdentifier
+{
+    Id = "supplier-read-policy",
+    AccessPolicy = new BlobAccessPolicy
+    {
+        PolicyStartsOn = DateTimeOffset.UtcNow,
+        PolicyExpiresOn = DateTimeOffset.UtcNow.AddDays(30),
+        Permissions = "rl" // Read and List
+    }
+};
+
+await container.SetAccessPolicyAsync(permissions: new[] { policy });
+
+// Step 2: Create Service SAS that references the policy
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "supplier-data",
+    Resource = "c",
+    Identifier = "supplier-read-policy" // ✅ References stored policy
+};
+
+var sasToken = sasBuilder.ToSasQueryParameters(
+    new StorageSharedKeyCredential(accountName, accountKey)
+).ToString();
+
+var sasUri = $"https://{accountName}.blob.core.windows.net/supplier-data?{sasToken}";
+// Share this URI with supplier
+```
+
+**Revocation Capability:**
+```csharp
+// If supplier access needs to be revoked immediately
+// Option 1: Remove the policy (revokes ALL SAS tokens using it)
+await container.SetAccessPolicyAsync(
+    permissions: Array.Empty<BlobSignedIdentifier>()
+);
+
+// Option 2: Modify policy permissions
+var updatedPolicy = new BlobSignedIdentifier
+{
+    Id = "supplier-read-policy",
+    AccessPolicy = new BlobAccessPolicy
+    {
+        PolicyStartsOn = DateTimeOffset.UtcNow,
+        PolicyExpiresOn = DateTimeOffset.UtcNow, // ✅ Immediate expiration
+        Permissions = "" // ✅ No permissions
+    }
+};
+await container.SetAccessPolicyAsync(permissions: new[] { updatedPolicy });
+```
+
+**Benefits for Supplier Scenario:**
+- ✅ Revoke supplier access without affecting other systems
+- ✅ Extend or reduce access period as needed
+- ✅ Modify permissions without reissuing SAS token
+- ✅ Easier audit trail (policy name identifies supplier)
+
+#### 5. Set a long expiration time ❌ **INCORRECT**
+
+**Why This Is Wrong:**
+- **Security risk**: If SAS is compromised, attacker has extended access
+- Violates **least privilege principle** for time-based access
+- Harder to track and audit access patterns
+- May not comply with security policies
+
+**Security Best Practice:**
+- Use **short expiration times** (hours, not days/months)
+- Implement **token renewal mechanism** for legitimate ongoing access
+- Balance usability with security
+
+**Example of Bad vs. Good Practice:**
+```csharp
+// ❌ BAD: Long expiration (1 year)
+sasBuilder.ExpiresOn = DateTimeOffset.UtcNow.AddYears(1);
+
+// ✅ GOOD: Short expiration (2 hours) with renewal
+sasBuilder.ExpiresOn = DateTimeOffset.UtcNow.AddHours(2);
+
+// ✅ GOOD: Reasonable expiration with stored access policy (30 days)
+var policy = new BlobAccessPolicy
+{
+    PolicyExpiresOn = DateTimeOffset.UtcNow.AddDays(30),
+    Permissions = "r"
+};
+```
+
+**Recommended Expiration Times:**
+
+| Scenario | Recommended Expiration |
+|----------|----------------------|
+| **Ad-hoc access** | 1-2 hours |
+| **Daily batch job** | 4-8 hours |
+| **Third-party integration** | 1-7 days (with stored policy for revocation) |
+| **Long-term supplier access** | Use stored access policy (up to 30 days) + renewal |
+
+**Implementing Token Renewal:**
+```csharp
+// Supplier application requests new SAS before expiration
+public async Task<string> RenewSupplierSasAsync(string supplierId)
+{
+    // Verify supplier is still authorized
+    if (!await IsSupplierAuthorizedAsync(supplierId))
+    {
+        throw new UnauthorizedAccessException("Supplier access revoked");
+    }
+    
+    // Generate new short-lived SAS
+    var sasBuilder = new BlobSasBuilder
+    {
+        BlobContainerName = $"supplier-{supplierId}",
+        Resource = "c",
+        StartsOn = DateTimeOffset.UtcNow,
+        ExpiresOn = DateTimeOffset.UtcNow.AddHours(4), // ✅ Short expiration
+        Identifier = $"supplier-{supplierId}-policy"
+    };
+    
+    var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+    
+    // Log renewal for audit
+    await LogSasRenewalAsync(supplierId);
+    
+    return sasToken;
+}
+```
+
+**Risk Analysis:**
+
+| Expiration Period | Risk Level | Mitigation |
+|------------------|-----------|------------|
+| **1 hour** | Low | May require frequent renewal |
+| **1 day** | Medium | Use stored access policy for revocation |
+| **1 month** | High | Requires robust monitoring and revocation plan |
+| **1 year** | Very High | ❌ Not recommended - use alternative auth |
+
+### Key Takeaways for Supplier SAS Security
+
+**The Three Pillars:**
+1. 🔒 **Transport Security**: Always use HTTPS
+2. 📊 **Monitoring**: Use Azure Monitor and Storage logs
+3. 🔑 **Revocation Control**: Define stored access policy
+
+**Additional Best Practices:**
+- ✅ Grant minimal permissions (least privilege)
+- ✅ Use short expiration times
+- ✅ Implement IP restrictions when possible
+- ✅ Use User Delegation SAS for blob storage (if supplier supports Entra ID)
+- ✅ Implement token renewal mechanism
+- ✅ Document supplier access in audit logs
+
+**Complete Secure Implementation:**
+```csharp
+public async Task<string> CreateSecureSupplierSasAsync(string supplierId, string containerName)
+{
+    var container = new BlobContainerClient(connectionString, containerName);
+    
+    // 1. Create stored access policy (for revocation)
+    var policy = new BlobSignedIdentifier
+    {
+        Id = $"supplier-{supplierId}-policy",
+        AccessPolicy = new BlobAccessPolicy
+        {
+            PolicyStartsOn = DateTimeOffset.UtcNow,
+            PolicyExpiresOn = DateTimeOffset.UtcNow.AddDays(7), // Weekly renewal
+            Permissions = "rl" // Read and List only (least privilege)
+        }
+    };
+    
+    await container.SetAccessPolicyAsync(permissions: new[] { policy });
+    
+    // 2. Create Service SAS with stored policy
+    var sasBuilder = new BlobSasBuilder
+    {
+        BlobContainerName = containerName,
+        Resource = "c",
+        Identifier = $"supplier-{supplierId}-policy",
+        Protocol = SasProtocol.Https // ✅ HTTPS only
+    };
+    
+    // 3. Optional: IP restriction
+    if (!string.IsNullOrEmpty(supplierIpAddress))
+    {
+        sasBuilder.IPRange = new SasIPRange(IPAddress.Parse(supplierIpAddress));
+    }
+    
+    var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+    var sasUri = $"https://{accountName}.blob.core.windows.net/{containerName}?{sasToken}";
+    
+    // 4. Enable logging and monitoring
+    await EnableStorageLoggingAsync();
+    await CreateMonitoringAlertAsync(supplierId);
+    
+    // 5. Log SAS creation for audit
+    await LogSasCreationAsync(supplierId, containerName, DateTimeOffset.UtcNow.AddDays(7));
+    
+    return sasUri;
+}
+```
+
+### Question 2: Container Access with Entra ID and RBAC
 
 **Requirements:**
 1. ✅ SAS token secured with Microsoft Entra ID credentials
