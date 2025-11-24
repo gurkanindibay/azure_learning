@@ -944,3 +944,123 @@ To avoid affecting existing applications, the time to live of the existing topic
 ------
 
 
+A company plans to use Azure App Configuration for feature flags in an application.
+
+The company has the following encryption requirements:
+
+customer-managed keys
+hardware security module (HSM)-protected keys
+You need to recommend service tiers.
+
+Which two tiers should you recommend? Each correct answer presents part of the solution.
+
+Select all answers that apply.
+
+Azure App Configuration Free tier
+
+
+Azure App Configuration Standard tier
+
+This answer is correct.
+
+Azure Key Vault Standard tier
+
+
+Azure Key Vault Premium tier
+
+This answer is correct.
+This item tests the candidate’s knowledge of the service tiers for Azure App Configuration and Azure Key Vault.
+
+App Configuration Standard tier must be used for customer-managed keys to be used in App Configuration. Key Vault Premium tier is required to support HSM-protected keys. App Configuration Free tier does not allow the use of customer-managed keys. Key Vault Standard tier does not support HSM-protected keys.
+
+Secure app configuration data - Training | Microsoft Learn
+
+
+----
+
+You are tasked with enhancing the security of an existing Azure web application. The application currently stores sensitive configuration data such as connection strings and API keys in its code, which has led to security concerns.
+
+You need to secure the app configuration data to prevent unauthorized access and potential data breaches, while ensuring seamless access for the application itself.
+
+Which two options can achieve this goal? (Choose two.)
+
+Select all answers that apply.
+
+Encrypt the sensitive data and store it within the application code, providing decryption keys to authorized personnel only.
+
+
+Migrate the sensitive configuration data to Azure Key Vault and utilize Managed Identities to securely access the secrets.
+
+This answer is correct.
+
+Move the sensitive configuration data to a private GitHub repository and access it using GitHub credentials stored in the application settings.
+
+
+Store the sensitive configuration data in Azure App Configuration and restrict access using Azure role-based access control (RBAC).
+
+This answer is correct.
+Storing sensitive configuration data in Azure App Configuration and restricting access with Azure RBAC is a secure method to manage app settings while maintaining control over who can access the data. Migrating sensitive data to Azure Key Vault and using Managed Identities allows the application to authenticate to services that support Azure AD authentication without needing credentials in the code, which enhances security. Encrypting the data and storing it within the application code does not follow security best practices as it still resides within the codebase and could be exposed. Storing sensitive data in a private GitHub repository is not secure as it relies on GitHub credentials, which if compromised, could lead to unauthorized access.
+Implement Azure Key Vault - Training | Microsoft Learn
+Implement Azure App Configuration - Training | Microsoft Learn
+
+----
+
+You have an ASP.NET Core app named App1 that you deploy to Azure App Service web app.
+
+You enable and configure Application Insights for App1.
+
+You need to view detailed information from Application Insights about App1 transactions. The solution must minimize administrative effort.
+
+What should you use?
+
+Select only one answer.
+
+Application Insights resource
+
+This answer is correct.
+
+Azure Advisor recommendations
+
+
+live stream metrics
+
+
+performance metrics
+
+The correct solution is to use the Application Insights resource, because it provides access to end-to-end transaction details including request traces, dependencies, exceptions, and telemetry collected from App1. This allows you to drill into detailed transaction diagnostics with minimal configuration once Application Insights is enabled. Azure Advisor recommendations provide optimization guidance but not transaction data. Live stream metrics show real-time telemetry such as request rate and failure rate but not full transaction traces. Performance metrics focus on aggregated system statistics like CPU and memory, not transaction-level diagnostics. Therefore, only the Application Insights resource delivers detailed transaction information with minimal administrative effort.
+
+Implement Application Insights
+Monitor Azure resources with Azure Monitor
+Use Azure Application Insights
+
+---
+
+You have an Azure App Service web app.
+
+You enable Application Insights for the app.
+
+You need to view detailed information about each user who signs in to the app, including what the user does while signed in.
+
+Which type of telemetry data should you filter by using Application Insights?
+
+Select only one answer.
+
+dependencies
+
+This answer is incorrect.
+
+events
+
+This answer is correct.
+
+requests
+
+
+traces
+
+The correct solution is to filter by events, because Application Insights events are custom telemetry designed to track user actions and behaviors inside the app, such as button clicks, page navigation, or other activities performed while signed in. Requests represent incoming HTTP calls to the app and provide details about performance and response codes, but they don’t capture what a user does within the app. Dependencies track calls to external resources like databases or APIs, and traces log diagnostic information from the application. To understand per-user activity inside the application, events are the appropriate telemetry type.
+
+Summary
+Implement Application Insights
+Use Azure Application Insights
+Monitor Azure resources with Azure Monitor
