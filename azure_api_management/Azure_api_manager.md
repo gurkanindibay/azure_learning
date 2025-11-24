@@ -129,6 +129,403 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 </policies>
 ```
 
+## Azure API Management Pricing Tiers
+
+Azure API Management offers multiple pricing tiers to suit different use cases, from development/testing to enterprise production workloads.
+
+### Pricing Tiers Overview
+
+| Tier | Monthly Cost* | SLA | Max Gateway Units | Calls/sec per Unit | Use Case |
+|------|--------------|-----|-------------------|-------------------|----------|
+| **Consumption** | Pay-per-use | None | Auto-scale | Variable | Serverless, event-driven |
+| **Developer** | ~$50 | None | 1 (non-scalable) | 1,000 | Dev/test, non-production |
+| **Basic** | ~$160 | 99.95% | 2 | 1,000 | Small production |
+| **Standard** | ~$660 | 99.95% | 4 | 2,500 | Medium production |
+| **Premium** | ~$2,800 | 99.99% | 12 per region | 4,000 | Enterprise, multi-region |
+| **Isolated** | ~$3,000+ | 99.99% | Dedicated | Custom | Regulatory compliance |
+
+*Prices are approximate and vary by region. Check Azure pricing calculator for accurate costs.
+
+### Tier-by-Tier Breakdown
+
+#### 1. Consumption Tier (Serverless)
+
+**Pricing Model**: Pay-per-execution
+- **Base**: ~$3.50 per million executions
+- **No fixed monthly cost**
+- **First 1 million executions/month**: Free
+- **Billed per execution** (API call)
+
+**Features**:
+- ✅ Auto-scaling (0 to unlimited)
+- ✅ Serverless architecture
+- ✅ Built-in caching (external only)
+- ✅ OAuth 2.0, OpenID Connect
+- ✅ Developer portal
+- ❌ No SLA
+- ❌ No VNet integration
+- ❌ No self-hosted gateway
+- ❌ No multi-region deployment
+- ❌ No custom domains with CA certificates
+
+**Limits**:
+- Max request size: 1 MB
+- Max response size: 1 MB
+- Max timeout: 230 seconds
+- Cached responses: External cache only
+
+**Best For**:
+- Event-driven architectures
+- Unpredictable/variable traffic
+- Development and testing
+- Low-volume APIs
+- Cost-sensitive scenarios
+
+**Example Cost**:
+```
+5 million API calls/month:
+- First 1M: Free
+- Remaining 4M: 4 × $3.50 = $14.00
+Total: ~$14/month
+```
+
+#### 2. Developer Tier
+
+**Pricing**: ~$50/month (flat rate)
+
+**Features**:
+- ✅ All APIs, products, policies
+- ✅ Developer portal
+- ✅ Built-in cache
+- ✅ OAuth 2.0, client certificates
+- ✅ Analytics and monitoring
+- ❌ No SLA (not for production)
+- ❌ No scaling (1 unit only)
+- ❌ No VNet integration
+- ❌ No multi-region
+- ❌ No availability zones
+
+**Limits**:
+- 1 gateway unit (non-scalable)
+- Up to 1,000 calls/sec
+- Max 10 APIs
+
+**Best For**:
+- Development and testing
+- Proof of concepts
+- Learning and training
+- Non-production environments
+
+**NOT Recommended For**: Production workloads (no SLA)
+
+#### 3. Basic Tier
+
+**Pricing**: ~$160/month per unit
+
+**Features**:
+- ✅ 99.95% SLA
+- ✅ Up to 2 gateway units
+- ✅ Custom domains
+- ✅ Built-in cache
+- ✅ Developer portal
+- ✅ OAuth 2.0, JWT validation
+- ❌ No VNet integration
+- ❌ No multi-region
+- ❌ No self-hosted gateway
+
+**Limits**:
+- Max 2 gateway units
+- 1,000 calls/sec per unit
+- Max 5 APIs per service
+
+**Best For**:
+- Small production workloads
+- Single-region deployments
+- Simple API management needs
+- Budget-conscious projects
+
+**Example Cost**:
+```
+1 unit: ~$160/month
+2 units (scaled): ~$320/month
+```
+
+#### 4. Standard Tier
+
+**Pricing**: ~$660/month per unit
+
+**Features**:
+- ✅ 99.95% SLA
+- ✅ Up to 4 gateway units
+- ✅ Custom domains
+- ✅ Built-in cache (better performance)
+- ✅ VNet integration (external mode)
+- ✅ Self-hosted gateway
+- ✅ OAuth 2.0, JWT, client certs
+- ✅ Azure AD integration
+- ❌ No multi-region deployment
+- ❌ No internal VNet mode
+- ❌ No availability zones
+
+**Limits**:
+- Max 4 gateway units
+- 2,500 calls/sec per unit
+- Unlimited APIs
+
+**Best For**:
+- Medium production workloads
+- VNet connectivity required
+- Hybrid cloud scenarios (self-hosted gateway)
+- Growing businesses
+
+**Example Cost**:
+```
+1 unit: ~$660/month
+2 units (scaled): ~$1,320/month
+4 units (max scale): ~$2,640/month
+```
+
+#### 5. Premium Tier
+
+**Pricing**: ~$2,800/month per unit per region
+
+**Features**:
+- ✅ 99.99% SLA (multi-region)
+- ✅ Up to 12 gateway units per region
+- ✅ Multi-region deployment
+- ✅ Availability zones
+- ✅ VNet integration (internal & external)
+- ✅ Self-hosted gateway (unlimited)
+- ✅ Advanced caching
+- ✅ Redis cache integration
+- ✅ Backup and restore
+- ✅ Virtual network injection
+- ✅ Full feature set
+
+**Limits**:
+- Max 12 units per region
+- 4,000 calls/sec per unit
+- Unlimited APIs
+- Unlimited regions (additional cost per region)
+
+**Best For**:
+- Enterprise production workloads
+- Mission-critical APIs
+- Global applications (multi-region)
+- High availability requirements
+- Advanced security needs
+- Regulatory compliance
+
+**Example Cost**:
+```
+Single region, 1 unit: ~$2,800/month
+Single region, 4 units: ~$11,200/month
+Two regions, 2 units each: ~$11,200/month
+```
+
+#### 6. Isolated Tier (Premium v2)
+
+**Pricing**: ~$3,000+/month (custom pricing)
+
+**Features**:
+- ✅ 99.99% SLA
+- ✅ Dedicated compute and network isolation
+- ✅ All Premium features
+- ✅ Compute isolation for regulatory compliance
+- ✅ Network isolation
+- ✅ Dedicated infrastructure
+- ✅ Private Link support
+- ✅ Enhanced security
+
+**Best For**:
+- Highly regulated industries (finance, healthcare)
+- Data sovereignty requirements
+- Enhanced isolation needs
+- Compliance requirements (PCI-DSS, HIPAA)
+
+### Feature Comparison Matrix
+
+| Feature | Consumption | Developer | Basic | Standard | Premium | Isolated |
+|---------|-------------|-----------|-------|----------|---------|----------|
+| **SLA** | ❌ None | ❌ None | ✅ 99.95% | ✅ 99.95% | ✅ 99.99% | ✅ 99.99% |
+| **Custom domains** | ❌ Limited | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **VNet integration** | ❌ No | ❌ No | ❌ No | ✅ External | ✅ Internal/External | ✅ Internal/External |
+| **Multi-region** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| **Self-hosted gateway** | ❌ No | ❌ No | ❌ No | ✅ Yes | ✅ Unlimited | ✅ Unlimited |
+| **Availability zones** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| **Built-in cache** | ❌ External only | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Advanced | ✅ Advanced |
+| **Developer portal** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Max scale units** | Auto | 1 | 2 | 4 | 12/region | Custom |
+| **Calls/sec per unit** | Variable | 1,000 | 1,000 | 2,500 | 4,000 | Custom |
+| **Backup/restore** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| **Compute isolation** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes |
+
+### Scaling and Capacity
+
+#### Calls per Second (Estimated)
+
+| Tier | Per Unit | Max Capacity |
+|------|----------|-------------|
+| Consumption | Variable | Auto-scales |
+| Developer | 1,000 | 1,000 (no scaling) |
+| Basic | 1,000 | 2,000 (2 units max) |
+| Standard | 2,500 | 10,000 (4 units max) |
+| Premium | 4,000 | 48,000 (12 units/region) |
+| Isolated | Custom | Custom |
+
+**Note**: Actual throughput depends on:
+- Request/response size
+- Backend latency
+- Policy complexity
+- Caching configuration
+
+### Multi-Region Deployment (Premium Only)
+
+**Pricing**: Per region, per unit
+
+**Example**: 3 regions with 2 units each
+```
+Cost: 3 regions × 2 units × $2,800 = $16,800/month
+```
+
+**Benefits**:
+- Lower latency (serve from nearest region)
+- Higher availability (failover between regions)
+- Disaster recovery
+- Data residency compliance
+
+### Additional Costs
+
+Beyond the base tier pricing:
+
+| Component | Cost |
+|-----------|------|
+| **Outbound data transfer** | ~$0.087/GB (first 5 GB free) |
+| **Self-hosted gateway** | Included (Standard/Premium), runs on your infrastructure |
+| **Azure Monitor/Application Insights** | Separate (data ingestion ~$2.30/GB) |
+| **Virtual Network** | Included (VNet itself may have costs) |
+| **Custom domains (SSL)** | Certificate costs (free with Let's Encrypt) |
+| **Developer portal hosting** | Included |
+| **Redis cache** | Separate Azure Cache for Redis costs |
+
+### Choosing the Right Tier
+
+#### Choose **Consumption** if:
+- ✅ Traffic is unpredictable or intermittent
+- ✅ Cost is the primary concern
+- ✅ No SLA required
+- ✅ Serverless architecture preferred
+- ✅ Event-driven workloads
+
+#### Choose **Developer** if:
+- ✅ Development and testing only
+- ✅ Learning API Management
+- ✅ POC or demo scenarios
+- ❌ Never for production
+
+#### Choose **Basic** if:
+- ✅ Small production workload
+- ✅ Limited budget
+- ✅ Single region sufficient
+- ✅ No VNet integration needed
+- ✅ Up to 2,000 calls/sec sufficient
+
+#### Choose **Standard** if:
+- ✅ Medium production workload
+- ✅ VNet connectivity required
+- ✅ Self-hosted gateway needed
+- ✅ Up to 10,000 calls/sec sufficient
+- ✅ Single region sufficient
+
+#### Choose **Premium** if:
+- ✅ Enterprise/mission-critical workload
+- ✅ Multi-region deployment required
+- ✅ High availability (99.99% SLA)
+- ✅ Advanced caching needed
+- ✅ Availability zones required
+- ✅ Backup/restore capabilities needed
+- ✅ High throughput (48,000+ calls/sec)
+
+#### Choose **Isolated** if:
+- ✅ Regulatory compliance (PCI-DSS, HIPAA)
+- ✅ Compute isolation required
+- ✅ Data sovereignty requirements
+- ✅ Enhanced security mandates
+
+### Cost Optimization Tips
+
+1. **Start with lower tiers**: Begin with Basic/Standard, upgrade as needed
+2. **Use Consumption for variable traffic**: Pay only for what you use
+3. **Right-size capacity**: Monitor usage, scale units appropriately
+4. **Leverage caching**: Reduce backend calls and costs
+5. **Self-hosted gateway**: Offload traffic to on-premises or edge locations
+6. **Monitor closely**: Use Azure Monitor to track usage and optimize
+7. **Multi-region carefully**: Only deploy to regions where needed
+8. **Developer tier for non-prod**: Use for dev/test, not production
+9. **Policy optimization**: Efficient policies reduce processing time
+10. **Throttling/quotas**: Prevent abuse and unexpected costs
+
+### Migration Between Tiers
+
+**Possible Migrations**:
+- ✅ Developer → Basic/Standard/Premium
+- ✅ Basic → Standard/Premium
+- ✅ Standard → Premium
+- ✅ Consumption → Any dedicated tier
+- ❌ Cannot downgrade from Premium to Standard/Basic
+- ❌ Cannot migrate to Consumption from dedicated tiers
+
+**Note**: Some migrations require creating a new instance and migrating configuration.
+
+### Real-World Cost Examples
+
+#### Example 1: Startup API (Consumption)
+```
+Scenario: 2 million API calls/month
+- First 1M: Free
+- Next 1M: $3.50
+Total: $3.50/month
+```
+
+#### Example 2: SMB Internal APIs (Basic)
+```
+Scenario: 5 APIs, 500 calls/sec average
+- 1 Basic unit: $160/month
+Total: $160/month
+```
+
+#### Example 3: Mid-Size Company (Standard)
+```
+Scenario: 20 APIs, 5,000 calls/sec peak, VNet integration
+- 2 Standard units: 2 × $660 = $1,320/month
+- Outbound transfer (100 GB): $8.70
+Total: ~$1,329/month
+```
+
+#### Example 4: Enterprise Global API (Premium)
+```
+Scenario: Multi-region (3 regions), 4 units per region
+- Region 1: 4 × $2,800 = $11,200
+- Region 2: 4 × $2,800 = $11,200
+- Region 3: 4 × $2,800 = $11,200
+- Outbound transfer (1 TB): $87
+Total: ~$33,687/month
+```
+
+### Key Takeaways
+
+✅ **Consumption**: Best for serverless, variable traffic, cost-sensitive scenarios  
+✅ **Developer**: Only for non-production environments  
+✅ **Basic**: Entry-level production with SLA  
+✅ **Standard**: Mid-tier with VNet and self-hosted gateway  
+✅ **Premium**: Enterprise features, multi-region, high availability  
+✅ **Isolated**: Regulatory compliance and enhanced isolation  
+
+⚠️ **Important**: Always use Azure Pricing Calculator for accurate region-specific pricing  
+⚠️ **SLA**: Only Basic and above have SLAs (99.95%+)  
+⚠️ **Multi-region**: Premium tier only  
+⚠️ **VNet**: Standard tier and above  
+
 ## Operational Best Practices
 - **Monitor usage**: Configure Application Insights or the built-in analytics to track latency, throttled requests, and subscription failures.
 - **Automate deployment**: Use Azure Resource Manager (ARM) templates or Bicep to publish APIs/policies and manage environments consistently.
@@ -140,6 +537,7 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 - **Enforce usage quotas**: Apply `rate-limit-by-key` policies to prevent abuse and ensure fair usage among API consumers by limiting the number of calls within specified time periods.
 - **Manually define API operations**: Create blank APIs and manually define only the necessary operations rather than automatically exposing all backend services. This provides precise control over what is exposed, enhances security by following the principle of least privilege, and enables mock responses for testing without invoking backends.
 - **Import existing APIs efficiently**: When exposing existing services, use the API import functionality to quickly onboard APIs by importing OpenAPI/Swagger definitions or WSDL files, saving time and reducing configuration errors.
+- **Choose appropriate pricing tier**: Select the tier that matches your workload requirements, SLA needs, and budget. Start with lower tiers and scale up as needed.
 
 ## Practice Questions
 

@@ -88,8 +88,384 @@ This document summarizes the Azure services you can use as an API proxy or gatew
 - Application Gateway can live inside a VNet and communicate with back ends over private IPs, which keeps your VMs off the public internet while still providing TLS termination, WAF policies, and TCP/TLS proxying.
 - Both Front Door and Application Gateway offer WAF capabilities, but Front Door delivers global Anycast reach (requiring the `AzureFrontDoor.Backend` service tag) while Application Gateway inspects traffic regionally inside your VNet; choose the one that fits your latency, exposure, and integration needs.
 
+## Pricing Tiers and Cost Comparison
+
+### Azure Front Door Pricing
+
+Azure Front Door offers two tiers with different capabilities and pricing models.
+
+#### Front Door Standard
+
+**Pricing Components**:
+- **Base fee**: ~$35/month per profile
+- **Outbound data transfer**: 
+  - First 10 TB: ~$0.087/GB
+  - 10-50 TB: ~$0.083/GB
+  - 50+ TB: ~$0.070/GB
+- **Requests**: ~$0.0095 per 10,000 requests
+- **Rules engine**: Free (up to 100 rules)
+
+**Features**:
+- ✅ Global load balancing
+- ✅ SSL offload
+- ✅ Custom domains
+- ✅ URL rewrite/redirect
+- ✅ Caching
+- ✅ Health probes
+- ✅ Session affinity
+- ❌ No WAF
+- ❌ No Private Link
+- ❌ No advanced routing
+
+**Best For**: Basic global load balancing and CDN needs without security requirements
+
+#### Front Door Premium
+
+**Pricing Components**:
+- **Base fee**: ~$330/month per profile
+- **Outbound data transfer**: Same as Standard
+- **Requests**: ~$0.0095 per 10,000 requests
+- **WAF policy**: ~$31.50/month per policy
+- **Managed rules**: ~$20/month per rule set
+- **Custom rules**: ~$5/month per rule (first 5 free)
+
+**Features**:
+- ✅ All Standard features
+- ✅ Azure Web Application Firewall (WAF)
+- ✅ Private Link to origin
+- ✅ Bot protection
+- ✅ Advanced routing
+- ✅ Enhanced caching
+- ✅ Microsoft-managed rule sets
+- ✅ Custom WAF rules
+
+**Best For**: Enterprise applications requiring global scale with security (WAF, DDoS protection)
+
+**Cost Example (Premium)**:
+```
+Setup: 1M requests, 100 GB data transfer, 1 WAF policy with 2 managed rule sets
+- Base: $330/month
+- Requests: 100 × $0.0095 = $0.95
+- Data transfer: 100 × $0.087 = $8.70
+- WAF policy: $31.50
+- Managed rules: 2 × $20 = $40
+Total: ~$411/month
+```
+
+---
+
+### Azure Load Balancer Pricing
+
+Azure Load Balancer has two SKUs with different pricing models.
+
+#### Basic Load Balancer
+
+**Pricing**: **FREE**
+
+**Features**:
+- ✅ Public and internal load balancing
+- ✅ TCP/UDP support
+- ✅ Health probes
+- ✅ Port forwarding
+- ✅ Up to 300 instances
+- ❌ No SLA
+- ❌ No availability zones
+- ❌ Limited to single availability set
+- ❌ No outbound rules
+
+**Best For**: Development/testing, non-production workloads
+
+#### Standard Load Balancer
+
+**Pricing Components**:
+- **Rules**: ~$0.025/hour per rule (~$18.25/month)
+- **Data processed**: ~$0.005 per GB
+
+**Features**:
+- ✅ 99.99% SLA
+- ✅ Availability zone redundancy
+- ✅ Up to 1,000 instances
+- ✅ HA ports
+- ✅ Outbound rules
+- ✅ HTTPS health probes
+- ✅ Multiple frontends
+- ✅ Diagnostic logs
+
+**Best For**: Production workloads requiring high availability
+
+**Cost Example**:
+```
+Setup: 5 load balancing rules, 500 GB/month data processed
+- Rules: 5 × $18.25 = $91.25/month
+- Data: 500 × $0.005 = $2.50
+Total: ~$94/month
+```
+
+---
+
+### Azure Application Gateway Pricing
+
+Application Gateway v2 (Standard and WAF) with autoscaling capabilities.
+
+#### Application Gateway v2 Standard
+
+**Pricing Components**:
+- **Fixed cost**: ~$0.246/hour (~$179/month) per gateway
+- **Capacity units**: ~$0.008/hour per capacity unit (~$5.84/month)
+- **Data processed**: ~$0.008 per GB
+
+**Capacity Unit Calculation**:
+- 1 capacity unit = max of:
+  - 2,500 persistent connections
+  - 2.22 Mbps throughput
+  - 1 compute unit
+
+**Features**:
+- ✅ Autoscaling
+- ✅ Zone redundancy
+- ✅ Static VIP
+- ✅ URL-based routing
+- ✅ Multi-site hosting
+- ✅ SSL offload/termination
+- ✅ Session affinity
+- ✅ Connection draining
+- ✅ Custom health probes
+- ❌ No WAF
+
+**Best For**: Regional Layer 7 load balancing without WAF needs
+
+**Cost Example (Standard)**:
+```
+Setup: Average 10 capacity units, 200 GB data processed
+- Fixed: $179/month
+- Capacity units: 10 × $5.84 = $58.40
+- Data: 200 × $0.008 = $1.60
+Total: ~$239/month
+```
+
+#### Application Gateway v2 WAF
+
+**Pricing Components**:
+- **Fixed cost**: ~$0.443/hour (~$323/month) per gateway
+- **Capacity units**: ~$0.0144/hour per capacity unit (~$10.51/month)
+- **Data processed**: ~$0.008 per GB
+
+**Features**:
+- ✅ All Standard v2 features
+- ✅ Web Application Firewall (WAF)
+- ✅ OWASP core rule sets
+- ✅ Bot protection
+- ✅ Custom WAF rules
+- ✅ Geo-filtering
+- ✅ Rate limiting
+- ✅ DDoS protection
+
+**Best For**: Regional applications requiring Layer 7 security and WAF
+
+**Cost Example (WAF)**:
+```
+Setup: Average 10 capacity units, 200 GB data processed
+- Fixed: $323/month
+- Capacity units: 10 × $10.51 = $105.10
+- Data: 200 × $0.008 = $1.60
+Total: ~$430/month
+```
+
+---
+
+### Azure Traffic Manager Pricing
+
+**Pricing Components**:
+- **Health checks**: ~$0.54/month per endpoint
+- **DNS queries**: ~$0.54 per million queries (first million free)
+- **Fast interval health checks**: ~$1.20/month per endpoint (optional)
+
+**Features**:
+- ✅ DNS-based routing
+- ✅ Multiple routing methods
+- ✅ Endpoint monitoring
+- ✅ No data plane (DNS only)
+- ✅ Global availability
+- ❌ No TLS termination
+- ❌ No request proxying
+
+**Cost Example**:
+```
+Setup: 5 endpoints, 2 million DNS queries, standard health checks
+- Health checks: 5 × $0.54 = $2.70/month
+- DNS queries: (2M - 1M free) × $0.54 = $0.54
+Total: ~$3.24/month
+```
+
+**Best For**: Low-cost DNS-based global traffic routing
+
+---
+
+### Pricing Comparison Table
+
+| Service | Tier | Monthly Base Cost | Data Processing | Per Request/Rule | WAF Included | SLA |
+|---------|------|-------------------|-----------------|------------------|--------------|-----|
+| **Front Door** | Standard | ~$35 | ~$0.087/GB | ~$0.95/100K | ❌ No | 99.99% |
+| **Front Door** | Premium | ~$330 | ~$0.087/GB | ~$0.95/100K | ✅ Yes (+$32-92) | 99.99% |
+| **Load Balancer** | Basic | Free | Free | Free | ❌ No | None |
+| **Load Balancer** | Standard | ~$18/rule | ~$0.005/GB | ~$18/rule | ❌ No | 99.99% |
+| **App Gateway** | Standard v2 | ~$179 | ~$0.008/GB | ~$6/CU | ❌ No | 99.95% |
+| **App Gateway** | WAF v2 | ~$323 | ~$0.008/GB | ~$11/CU | ✅ Yes | 99.95% |
+| **Traffic Manager** | N/A | $0 | N/A | ~$0.54/endpoint | ❌ No | 99.99% |
+
+---
+
+### Service Comparison by Cost and Use Case
+
+#### Lowest Cost Options
+
+1. **Traffic Manager** (~$3-10/month)
+   - DNS-based routing only
+   - No data plane costs
+   - Best for simple failover
+
+2. **Load Balancer Basic** (Free)
+   - Development/testing only
+   - No SLA
+   - TCP/UDP only
+
+3. **Load Balancer Standard** (~$20-100/month)
+   - Production TCP/UDP
+   - High throughput, low cost per GB
+
+#### Mid-Range Options
+
+4. **Front Door Standard** (~$50-150/month)
+   - Global HTTP load balancing
+   - No WAF
+   - CDN-like caching
+
+5. **Application Gateway Standard v2** (~$240-400/month)
+   - Regional Layer 7
+   - SSL termination
+   - URL routing
+
+#### Enterprise Options
+
+6. **Application Gateway WAF v2** (~$430-800/month)
+   - Regional WAF
+   - OWASP protection
+   - Layer 7 security
+
+7. **Front Door Premium** (~$400-1500/month)
+   - Global WAF
+   - Bot protection
+   - Private Link support
+
+---
+
+### Cost Optimization Strategies
+
+#### Front Door
+- ✅ Use Standard tier if WAF not required
+- ✅ Enable caching to reduce origin requests
+- ✅ Consolidate multiple profiles where possible
+- ✅ Monitor data transfer and optimize response sizes
+- ⚠️ WAF rules add significant cost ($20-50/month per rule set)
+
+#### Load Balancer
+- ✅ Use Basic for non-production
+- ✅ Minimize number of rules
+- ✅ Standard has low data processing costs
+- ✅ Combine multiple services under one LB when possible
+
+#### Application Gateway
+- ✅ Right-size capacity units (autoscale min/max)
+- ✅ Use Standard v2 if WAF not needed (save ~$144/month)
+- ✅ Monitor capacity unit consumption
+- ✅ Enable connection draining to reduce waste
+- ✅ Use aggressive health probes to scale down faster
+
+#### Traffic Manager
+- ✅ Already very low cost
+- ✅ Avoid fast interval health checks unless needed
+- ✅ Reduce number of endpoints where possible
+
+---
+
+### Decision Guide by Budget and Requirements
+
+| Requirement | Recommended Service | Estimated Monthly Cost |
+|-------------|---------------------|------------------------|
+| **Global routing, no WAF** | Front Door Standard | $50-150 |
+| **Global routing + WAF** | Front Door Premium | $400-1500 |
+| **Regional Layer 7, no WAF** | Application Gateway Standard v2 | $240-400 |
+| **Regional Layer 7 + WAF** | Application Gateway WAF v2 | $430-800 |
+| **Regional Layer 4 production** | Load Balancer Standard | $20-100 |
+| **Regional Layer 4 dev/test** | Load Balancer Basic | Free |
+| **DNS-based failover** | Traffic Manager | $3-10 |
+| **Multi-region with API governance** | Front Door + API Management | $500-3500+ |
+
+---
+
+### Common Architecture Patterns with Costs
+
+#### Pattern 1: Basic Regional Web App
+```
+Internet → Application Gateway Standard v2 → App Service
+Cost: ~$240/month (gateway only)
+```
+
+#### Pattern 2: Secure Regional Web App
+```
+Internet → Application Gateway WAF v2 → App Service
+Cost: ~$430/month (gateway only)
+```
+
+#### Pattern 3: Global Web App with Security
+```
+Internet → Front Door Premium → Regional App Gateways → Backends
+Cost: ~$800/month (Front Door + 2 regional gateways)
+```
+
+#### Pattern 4: Enterprise API Platform
+```
+Internet → Front Door Premium → API Management Premium → Backends
+Cost: ~$3,500/month (minimal scale)
+```
+
+#### Pattern 5: Simple Multi-Region Failover
+```
+Internet → Traffic Manager → Regional endpoints
+Cost: ~$5/month
+```
+
+#### Pattern 6: High-Performance TCP Service
+```
+Internet → Load Balancer Standard → VM Scale Set
+Cost: ~$20-50/month
+```
+
+---
+
+### Key Takeaways
+
+✅ **Traffic Manager**: Cheapest option (~$3/month) but DNS-only, no proxying  
+✅ **Load Balancer Basic**: Free but no SLA, dev/test only  
+✅ **Load Balancer Standard**: Best price/performance for Layer 4 (~$20-100/month)  
+✅ **Front Door Standard**: Global Layer 7 without WAF (~$50-150/month)  
+✅ **Application Gateway Standard v2**: Regional Layer 7 without WAF (~$240/month)  
+✅ **Application Gateway WAF v2**: Regional Layer 7 with WAF (~$430/month)  
+✅ **Front Door Premium**: Global Layer 7 with WAF (~$400-1500/month)  
+
+⚠️ **Important Factors**:
+- WAF adds ~$50-100/month to any service
+- Data transfer costs can exceed base costs at scale
+- Capacity units (App Gateway) scale with traffic
+- Multi-region deployments multiply costs
+- Combining services increases complexity and cost
+
 ## References
 - [Confusion between WAF with Application Gateway and FrontDoor when securing custom Web Apps running on Azure VM published to the internet](https://learn.microsoft.com/en-us/answers/questions/1655290/confusion-between-waf-with-application-gateway-and)
 - [Azure load balancing overview (architecture guide)](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
+- [Azure Front Door pricing](https://azure.microsoft.com/en-us/pricing/details/frontdoor/)
+- [Azure Load Balancer pricing](https://azure.microsoft.com/en-us/pricing/details/load-balancer/)
+- [Azure Application Gateway pricing](https://azure.microsoft.com/en-us/pricing/details/application-gateway/)
+- [Azure Traffic Manager pricing](https://azure.microsoft.com/en-us/pricing/details/traffic-manager/)
 
 
