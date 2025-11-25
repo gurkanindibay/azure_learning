@@ -262,8 +262,8 @@ You can combine `prefixMatch` and `blobIndexMatch` filters:
 ## Blob Types
 
 Lifecycle policies can target:
-- **blockBlob**: Standard block blobs
-- **appendBlob**: Append blobs
+- **blockBlob**: Standard block blobs optimized for general-purpose storage. Composed of blocks that can be managed individually, supporting efficient parallel uploads. Ideal for documents, images, videos, and backups. Support all access tiers (hot, cool, cold, archive). Maximum size: ~190.7 TiB.
+- **appendBlob**: Append blobs optimized for append-only operations like logging. Once written, blocks cannot be updated or deleted, only appended. Ideal for log files, audit trails, and continuous data streams. Do NOT support tiering to cool, cold, or archive tiers (hot tier only). Maximum size: ~195 GiB.
 
 ## Complete Examples
 
