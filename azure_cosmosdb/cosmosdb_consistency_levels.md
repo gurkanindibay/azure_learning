@@ -867,6 +867,282 @@ Strong → ALL regions synchronously (Slowest)
 
 ---
 
+---
+
+## Practice Question: Consistency Level for Batch Transactions
+
+### Scenario
+
+A company implements a multi-region Azure Cosmos DB account.
+
+You need to configure the default consistency level for the account. The consistency level must ensure that update operations made as a batch within a transaction are always visible together.
+
+### Question
+
+Which consistency level should you use?
+
+**Select only one answer:**
+
+**A.** Bounded Staleness
+
+**B.** Session
+
+**C.** Consistent Prefix ✅
+
+**D.** Eventual
+
+---
+
+### Answer: C - Consistent Prefix ✅
+
+**Consistent Prefix** is the correct answer.
+
+---
+
+### Detailed Explanation
+
+#### Why Option C (Consistent Prefix) is Correct
+
+The **Consistent Prefix** consistency level is specifically designed to ensure that updates made as a batch within a transaction are always visible together. This is explicitly stated in the Consistent Prefix documentation:
+
+**Key Guarantee:**
+> "Updates made as a batch within a transaction are returned consistent to the transaction in which they were committed. Write operations within a transaction of multiple documents are always visible together."
+
+**Example:**
+```
+Transaction T1: Write Doc1 v1, Doc2 v1 (committed together)
+Transaction T2: Write Doc1 v2, Doc2 v2 (committed together)
+
+Consistent Prefix Guarantees:
+✓ Clients see: [] or [Doc1 v1, Doc2 v1] or [Doc1 v2, Doc2 v2]
+✗ Never see: [Doc1 v1, Doc2 v2] or [Doc1 v2, Doc2 v1]
+```
+
+**Why This Matters for Batch Operations:**
+- When you commit multiple documents in a single transaction, they form a logical unit
+- Consistent Prefix ensures these documents are always read together in their transactional boundary
+- No partial visibility of the transaction across any replicas
+
+**Real-World Scenario:**
+```csharp
+// Order processing with multiple documents
+var transaction = container.CreateTransactionalBatch(new PartitionKey(orderId))
+    .CreateItem(new Order { Id = orderId, Status = "Confirmed" })
+    .CreateItem(new OrderItem { OrderId = orderId, ProductId = "P1" })
+    .CreateItem(new OrderItem { OrderId = orderId, ProductId = "P2" });
+
+await transaction.ExecuteAsync();
+
+// With Consistent Prefix:
+// - All clients see either no documents OR all three documents together
+// - Never see Order without OrderItems, or vice versa
+```
+
+---
+
+#### Why Option A (Bounded Staleness) is Incorrect
+
+**Bounded Staleness** is designed to manage the **lag of data between regions**, not specifically for ensuring batch transaction visibility.
+
+**What Bounded Staleness Does:**
+- Controls maximum staleness by **K versions** or **T time interval**
+- Ensures replicas don't lag beyond configured bounds
+- Provides predictable consistency with configurable delay
+
+**Why It Doesn't Address the Requirement:**
+- Primary focus: **data lag across regions**
+- Does NOT specifically guarantee batch transaction visibility
+- Overkill for this scenario (provides stronger guarantees than needed)
+
+**Example:**
+```
+Bounded Staleness: Max lag = 10 versions or 5 seconds
+
+Concern: How far behind can Region 2 be from Region 1?
+NOT: Are batch writes visible together?
+```
+
+**When to Use Bounded Staleness:**
+```csharp
+// Use for scenarios where lag tolerance matters
+// Example: Stock price ticker
+var requestOptions = new ItemRequestOptions 
+{ 
+    ConsistencyLevel = ConsistencyLevel.BoundedStaleness 
+};
+
+// Guarantee: Data is never more than 5 seconds or 100 versions old
+// But this is about staleness, not batch visibility
+```
+
+---
+
+#### Why Option B (Session) is Incorrect
+
+**Session** consistency focuses on **single-client session guarantees**, not global batch transaction visibility.
+
+**What Session Does:**
+- Read-your-writes guarantee **within your session**
+- Write-follows-reads guarantee **within your session**
+- Monotonic reads/writes **within your session**
+
+**Why It Doesn't Meet the Requirement:**
+- Session scope: **Individual client session only**
+- Other clients/sessions: **No guarantees about seeing batch together**
+- The requirement is for **all clients** to see batch operations together
+
+**Limitation Example:**
+```
+Your Session:
+Transaction T1: Write Doc1, Doc2 in batch
+You read: ✓ See both Doc1 and Doc2 together (read-your-writes)
+
+Other User's Session:
+They read: ✗ May see Doc1 without Doc2 (no batch guarantee)
+```
+
+**Correct Session Usage:**
+```csharp
+// Session is perfect for user-specific operations
+// Example: Shopping cart
+var cart = await container.CreateItemAsync(
+    new Cart { UserId = userId, Items = [...] }
+);
+
+// YOU always see your cart updates immediately
+// But OTHER users don't need to see your cart at all
+```
+
+**Key Difference:**
+- **Session**: Guarantees within YOUR session (single client)
+- **Consistent Prefix**: Guarantees across ALL clients (global batch visibility)
+
+---
+
+#### Why Option D (Eventual) is Incorrect
+
+**Eventual** consistency provides **no ordering or atomicity guarantees** for batch operations.
+
+**What Eventual Does:**
+- Replicas eventually converge (no time bound)
+- No ordering guarantees
+- Highest performance, weakest consistency
+
+**Why It Fails the Requirement:**
+- **No guarantee** that batch writes are visible together
+- Updates can be seen **in any order**
+- Partial transaction visibility is possible
+
+**Problem Example:**
+```
+Transaction: Write Doc1, Doc2, Doc3 in batch
+
+With Eventual Consistency:
+Reader 1: Sees Doc1, Doc3 (missing Doc2) ✗
+Reader 2: Sees Doc2 only (missing Doc1, Doc3) ✗
+Reader 3: Sees Doc3, Doc1, Doc2 (wrong order) ✗
+
+Eventually all readers see all docs, but no guarantees during convergence
+```
+
+**When Eventual is Appropriate:**
+```csharp
+// Use for non-critical aggregates
+// Example: Like counter
+await container.UpsertItemAsync(
+    new Post { Id = postId, LikeCount = post.LikeCount + 1 }
+);
+
+// Eventual consistency fine - exact count not critical
+// Order doesn't matter for simple counters
+```
+
+---
+
+### Summary: Why Consistent Prefix for Batch Transactions?
+
+| Consistency Level | Guarantees Batch Visibility Together? | Why? |
+|-------------------|--------------------------------------|------|
+| **Consistent Prefix** ✅ | **YES** | Explicitly designed for this - transactions always visible as a unit |
+| **Bounded Staleness** ❌ | **NO** | Focuses on lag bounds, not batch atomicity |
+| **Session** ❌ | **NO** | Only guarantees within single session, not globally |
+| **Eventual** ❌ | **NO** | No ordering or atomicity guarantees at all |
+
+### The Critical Requirement
+
+**"Updates made as a batch within a transaction are always visible together"**
+
+This specifically requires:
+1. ✓ **Atomic visibility**: All documents in transaction visible as a unit
+2. ✓ **Global guarantee**: Applies to all clients, not just one session
+3. ✓ **Order preservation**: Updates appear in committed order
+4. ✓ **No partial reads**: Never see some docs without others from same transaction
+
+**Only Consistent Prefix provides all four guarantees.**
+
+---
+
+### Code Example: Consistent Prefix for Batch Operations
+
+```csharp
+// Configure account with Consistent Prefix
+var clientOptions = new CosmosClientOptions
+{
+    ConsistencyLevel = ConsistencyLevel.ConsistentPrefix
+};
+
+var client = new CosmosClient(endpoint, key, clientOptions);
+var container = client.GetContainer("database", "container");
+
+// Perform batch operation
+var batch = container.CreateTransactionalBatch(new PartitionKey(customerId))
+    .CreateItem(new Customer { Id = customerId, Name = "John" })
+    .CreateItem(new Order { CustomerId = customerId, OrderId = "O1" })
+    .CreateItem(new Order { CustomerId = customerId, OrderId = "O2" });
+
+var response = await batch.ExecuteAsync();
+
+// With Consistent Prefix:
+// - ALL clients globally will either see:
+//   1. None of these documents (transaction not yet visible)
+//   2. ALL three documents together (transaction fully visible)
+// - NEVER partial: Customer without Orders, or Orders without Customer
+
+// Any client reading:
+var query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.CustomerId = @customerId")
+    .WithParameter("@customerId", customerId);
+
+var iterator = container.GetItemQueryIterator<dynamic>(query);
+var results = await iterator.ReadNextAsync();
+
+// Results are guaranteed to show complete transaction or nothing
+// Never partial results from the batch
+```
+
+---
+
+### Key Takeaways
+
+1. **Consistent Prefix for Batch Transactions**
+   - Explicitly guarantees batch write operations are visible together
+   - Preserves global write order across all clients
+   - Perfect for transactional scenarios requiring atomic visibility
+
+2. **Not Bounded Staleness**
+   - Bounded Staleness is about lag management, not batch atomicity
+   - Use when you need predictable staleness bounds
+
+3. **Not Session**
+   - Session is scoped to individual client sessions
+   - Use for user-specific operations (carts, profiles)
+
+4. **Not Eventual**
+   - No guarantees about order or atomicity
+   - Use for non-critical aggregates (likes, views)
+
+---
+
 ### Additional Resources
 
 - [Azure Cosmos DB Consistency Levels](https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels)
