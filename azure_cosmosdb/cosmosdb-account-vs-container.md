@@ -707,6 +707,42 @@ The **Lease Container** (also called Lease Collection) is a critical component f
 
 A lease container is a separate Cosmos DB container that stores checkpoint information for change feed processing. Each lease document represents one logical partition of the monitored container.
 
+**Important: Lease Container is NOT a Queue for Change Data**
+
+A common misconception is that the lease container stores the actual change data. This is incorrect:
+
+- **Lease Container Purpose**: Stores only checkpoint metadata and coordination information
+- **Change Feed Location**: The actual change data remains in the monitored container (Container1)
+- **Analogy**: Think of it like a bookmark in a book:
+  - The **change feed** = The book itself (contains all the content)
+  - The **lease container** = Your bookmark (tracks where you stopped reading)
+
+```
+┌─────────────────────────────────────┐
+│  Container1 (Monitored)             │
+│  ┌──────────────────────────────┐   │
+│  │  Change Feed (Built-in Log)  │   │  ← Actual change data lives here
+│  │  • Doc A inserted             │   │
+│  │  • Doc B updated              │   │
+│  │  • Doc C updated              │   │
+│  └──────────────────────────────┘   │
+└─────────────────────────────────────┘
+                ↓
+         Function reads from
+                ↓
+┌─────────────────────────────────────┐
+│  Lease Container                    │
+│  ┌──────────────────────────────┐   │
+│  │  Checkpoint Info ONLY        │   │  ← Just tracking metadata
+│  │  • Partition 0: position 123 │   │
+│  │  • Partition 1: position 456 │   │
+│  │  • Owner: instance-1         │   │
+│  └──────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+The lease container helps your function remember "I've processed changes up to this point" so it can resume correctly after a restart or failure, but it never stores the actual changed documents.
+
 #### Lease Container Purpose
 
 1. **Checkpoint Management**
