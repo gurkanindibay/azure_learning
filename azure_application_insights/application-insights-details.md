@@ -172,3 +172,108 @@ For **root cause analysis** that requires code-level diagnostics, exception trac
 - Implement Application Insights
 - Monitor Azure resources with Azure Monitor
 - Use Azure Application Insights
+
+---
+
+## Question 3: Multi-Region Monitoring Strategy for Global Expansion
+
+**Scenario:**
+An e-commerce platform is planning to expand its services globally. The platform is hosted on Azure and utilizes various Azure services and third-party integrations.
+
+**Requirement:**
+You need to design and create a robust monitoring solution that can scale with the expansion and provide insights into the performance of the platform across different regions.
+
+**Question:**
+What should you do?
+
+**Options:**
+
+1. **Deploy multiple Application Insights instances for each region and use Azure Monitor to aggregate the data** ✅ *Correct*
+2. **Implement a single Application Insights instance with default settings to monitor the entire platform** ❌ *Incorrect*
+3. **Create web tests and alerts for each region within a single Application Insights instance** ❌ *Incorrect*
+4. **Use manual instrumentation to log user activities and store them in Azure Blob Storage for later analysis** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Deploy multiple Application Insights instances for each region and use Azure Monitor to aggregate the data**
+
+This is the correct solution because it provides:
+- **Regional isolation**: Each region has its own Application Insights instance for localized monitoring
+- **Performance optimization**: Telemetry data stays close to the source, reducing latency
+- **Scalability**: Each instance can scale independently based on regional load
+- **Centralized view**: Azure Monitor aggregates data from all instances for global insights
+- **Regional compliance**: Data can be stored in specific regions to meet regulatory requirements
+- **Resilience**: Regional failures don't affect monitoring in other regions
+
+### Why Other Options Are Incorrect
+
+- **Single Application Insights instance with default settings**: While simpler to set up, this approach:
+  - May not scale effectively for high-volume global traffic
+  - Creates a single point of failure
+  - Doesn't optimize for regional data residency
+  - Can introduce latency for geographically distant regions
+  - May not meet data sovereignty requirements
+
+- **Web tests and alerts for each region within a single instance**: This approach:
+  - Only addresses availability monitoring, not comprehensive application monitoring
+  - Doesn't provide the full suite of telemetry (dependencies, exceptions, custom events)
+  - Is just one component of a robust monitoring solution
+  - Still relies on a single instance with the same scalability limitations
+
+- **Manual instrumentation with Azure Blob Storage**: This approach:
+  - Does not provide real-time monitoring capabilities
+  - Requires significant custom development and maintenance effort
+  - Lacks built-in analytics, alerting, and visualization tools
+  - Doesn't offer automatic anomaly detection
+  - Misses out on Application Insights' powerful features like Application Map, Live Metrics, and Smart Detection
+
+### Multi-Region Monitoring Architecture
+
+```
+Region 1 (East US)          Region 2 (West Europe)       Region 3 (Southeast Asia)
+┌──────────────────┐        ┌──────────────────┐        ┌──────────────────┐
+│ App Service      │        │ App Service      │        │ App Service      │
+│ Application      │        │ Application      │        │ Application      │
+└────────┬─────────┘        └────────┬─────────┘        └────────┬─────────┘
+         │                           │                           │
+         ▼                           ▼                           ▼
+┌──────────────────┐        ┌──────────────────┐        ┌──────────────────┐
+│ App Insights     │        │ App Insights     │        │ App Insights     │
+│ Instance 1       │        │ Instance 2       │        │ Instance 3       │
+└────────┬─────────┘        └────────┬─────────┘        └────────┬─────────┘
+         │                           │                           │
+         └───────────────────────────┼───────────────────────────┘
+                                     ▼
+                          ┌──────────────────────┐
+                          │   Azure Monitor      │
+                          │  (Aggregated View)   │
+                          └──────────────────────┘
+                                     │
+                          ┌──────────┴──────────┐
+                          ▼                     ▼
+                  ┌──────────────┐      ┌──────────────┐
+                  │  Dashboards  │      │   Alerts     │
+                  └──────────────┘      └──────────────┘
+```
+
+### Best Practices for Multi-Region Monitoring
+
+| Practice | Description |
+|----------|-------------|
+| **Regional Instances** | Deploy Application Insights in each region where your application runs |
+| **Consistent Naming** | Use clear naming conventions (e.g., `appinsights-{app}-{region}`) |
+| **Shared Workbooks** | Create Azure Monitor Workbooks that query across all instances |
+| **Cross-Region Alerts** | Configure alerts that evaluate metrics across multiple regions |
+| **Centralized Log Analytics** | Optionally use a shared Log Analytics workspace for centralized querying |
+| **Resource Tagging** | Tag resources with region and environment for easier filtering |
+| **Performance Baselines** | Establish regional performance baselines to detect anomalies |
+
+### Key Takeaway
+
+For **global, scalable monitoring** of applications across multiple regions, deploy **multiple Application Insights instances** (one per region) and use **Azure Monitor** to aggregate and analyze data centrally. This provides regional optimization with global visibility.
+
+### Related Learning Resources
+- Monitor app performance - Training | Microsoft Learn
+- Analyze metrics with Azure Monitor metrics explorer - Training | Microsoft Learn
+- Implement Application Insights
+- Design a distributed monitoring strategy
