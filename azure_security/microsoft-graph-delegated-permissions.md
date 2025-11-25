@@ -2,13 +2,27 @@
 
 ## Overview
 
-When an Azure App Service web app needs to retrieve Microsoft Entra ID signed-in user information using Microsoft Graph, it must use **delegated permissions**. This document explains the mechanism and the differences between various permission types.
+When an Azure App Service web app needs to retrieve Microsoft Entra ID signed-in user information using Microsoft Graph, it must use **delegated permissions**. This document explains the mechanism and the differences between various permission types, as well as the OAuth 2.0 On-Behalf-Of (OBO) flow for delegating user identity through request chains.
 
-## Question Context
+## Question 1: Delegated Permissions
 
 **Scenario**: An Azure App Service web app (app1) registered in Microsoft Entra ID needs to retrieve signed-in user information using Microsoft Graph.
 
 **Solution**: Configure **delegated permissions**
+
+## Question 2: On-Behalf-Of (OBO) Flow
+
+**Scenario**: You manage a Microsoft Entra ID registered application named app1. App1 calls a web API, which then calls Microsoft Graph. You need to ensure the signed-in user identity is delegated through the request chain.
+
+**Question**: Which authentication flow should you use?
+
+**Options**:
+- Authorization code
+- **On-Behalf-Of** ✅ (Correct Answer)
+- Client credentials
+- Implicit
+
+**Solution**: Use the **OAuth 2.0 On-Behalf-Of (OBO) flow**
 
 ## Understanding Delegated Permissions
 
@@ -234,6 +248,153 @@ Some permissions require administrator consent:
 - Protect client secrets and credentials
 - Use managed identities when possible
 
+## OAuth 2.0 On-Behalf-Of (OBO) Flow
+
+### What Is On-Behalf-Of Flow?
+
+The OAuth 2.0 On-Behalf-Of (OBO) flow is used when an application invokes a service or web API, which in turn needs to call another service or web API. The purpose is to **propagate the delegated user identity and permissions through the request chain**.
+
+### When to Use OBO Flow
+
+Use OBO flow when:
+- Your app calls a middle-tier web API
+- That web API needs to call a downstream API (like Microsoft Graph)
+- You need to maintain the signed-in user's identity through the entire chain
+- User permissions should be respected at each level
+
+### How OBO Flow Works
+
+```plaintext
+1. User authenticates with app1
+2. App1 receives an access token for the user
+3. App1 calls middle-tier API with the access token
+4. Middle-tier API uses OBO flow to exchange the token for a new token
+5. New token contains the user's identity and permissions
+6. Middle-tier API calls Microsoft Graph with the new token
+7. Microsoft Graph responds based on user's permissions
+8. Response flows back through the chain to app1
+```
+
+### OBO Flow Diagram
+
+```
+User → App1 (Client) → Middle-tier API → Microsoft Graph
+         ↓                    ↓                 ↓
+    Token (User)      OBO Exchange        User Context
+                      (New Token)         Maintained
+```
+
+### Implementation Example
+
+**Middle-tier API receiving the token:**
+
+```csharp
+using Microsoft.Identity.Client;
+using Microsoft.Graph;
+
+// Received access token from app1
+string userAccessToken = // from Authorization header
+
+// Configure MSAL for OBO
+var app = ConfidentialClientApplicationBuilder
+    .Create(clientId)
+    .WithClientSecret(clientSecret)
+    .WithAuthority(new Uri(authority))
+    .Build();
+
+// User assertion from the incoming token
+var userAssertion = new UserAssertion(userAccessToken);
+
+// Request new token on behalf of user
+var result = await app.AcquireTokenOnBehalfOf(
+    new[] { "https://graph.microsoft.com/User.Read" },
+    userAssertion)
+    .ExecuteAsync();
+
+// Use the new token to call Microsoft Graph
+var graphClient = new GraphServiceClient(
+    new DelegateAuthenticationProvider((requestMessage) =>
+    {
+        requestMessage.Headers.Authorization = 
+            new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        return Task.CompletedTask;
+    }));
+
+var user = await graphClient.Me.GetAsync();
+```
+
+### Why Other Authentication Flows Are Incorrect
+
+#### Authorization Code Flow
+
+**What it is**: OAuth 2.0 authorization code grant used in apps installed on a device to gain access to protected resources.
+
+**Purpose**:
+- Used for initial user authentication
+- Obtains access tokens for the app to call APIs
+- Typically used by web apps, mobile apps, and SPAs
+
+**Why it's not the answer**:
+- Used for the **initial** authentication, not for propagating identity
+- Does not handle the middle-tier scenario
+- Cannot exchange one token for another while maintaining user context
+
+#### Client Credentials Flow
+
+**What it is**: OAuth 2.0 client credentials grant that permits a web service to use its own credentials instead of impersonating a user.
+
+**Purpose**:
+- Service-to-service authentication
+- No user context involved
+- App acts as itself, not on behalf of a user
+
+**Why it's not the answer**:
+- ❌ Does **not** propagate user identity
+- ❌ Does **not** maintain user permissions
+- ❌ Cannot delegate user context through the chain
+- Only suitable for app-only scenarios without users
+
+#### Implicit Flow
+
+**What it is**: A redirection-based flow where the client interacts with the resource owner's user-agent (typically a web browser).
+
+**Purpose**:
+- Legacy flow for single-page applications
+- Tokens returned directly in URL fragment
+- Now superseded by authorization code with PKCE
+
+**Why it's not the answer**:
+- ❌ Cannot delegate user permission and identity through chains
+- ❌ Not designed for service-to-service calls
+- ❌ Deprecated for security reasons
+- Only handles initial user authentication in browsers
+
+### OBO Flow vs Other Flows
+
+| Feature | On-Behalf-Of | Authorization Code | Client Credentials | Implicit |
+|---------|--------------|-------------------|-------------------|----------|
+| User Identity Propagation | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Service Chain Support | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| User Context | ✅ Maintained | Initial only | ❌ None | Initial only |
+| Use Case | Middle-tier APIs | Initial auth | App-only | Legacy SPAs |
+| Delegation Through Chain | ✅ Yes | ❌ No | ❌ No | ❌ No |
+
+### OBO Flow Requirements
+
+1. **Delegated permissions** must be configured on the middle-tier API
+2. **API permissions** must include the downstream API (e.g., Microsoft Graph)
+3. **Consent** must be granted for all required permissions
+4. **Access token** from the client must be valid and contain user information
+5. **Client secret or certificate** for the middle-tier app registration
+
+### OBO Flow Security Considerations
+
+- **Token validation**: Always validate incoming tokens before using OBO
+- **Scope limitation**: Request only necessary scopes for downstream calls
+- **Token caching**: Cache OBO tokens to reduce authentication overhead
+- **Error handling**: Handle consent and permission errors gracefully
+- **Token lifetime**: Be aware of token expiration in the chain
+
 ## Comparison Table
 
 | Feature | Delegated Permissions | Application Permissions |
@@ -273,6 +434,8 @@ Some permissions require administrator consent:
 
 ## Summary
 
+### For Direct Microsoft Graph Access (Question 1)
+
 To enable an Azure App Service web app to retrieve Microsoft Entra ID signed-in user information via Microsoft Graph:
 
 1. ✅ **Use delegated permissions** - This is the correct answer
@@ -281,4 +444,18 @@ To enable an Azure App Service web app to retrieve Microsoft Entra ID signed-in 
 4. Obtain user consent (or admin consent for organization)
 5. Use the access token to call Microsoft Graph APIs on behalf of the signed-in user
 
-This approach ensures the app can access user information while maintaining proper security boundaries and respecting the user's permissions within the organization.
+### For Service Chain with User Identity (Question 2)
+
+To delegate signed-in user identity through a request chain (App → API → Microsoft Graph):
+
+1. ✅ **Use OAuth 2.0 On-Behalf-Of (OBO) flow** - This is the correct answer
+2. Configure delegated permissions on the middle-tier API
+3. Middle-tier API exchanges the incoming token for a new token using OBO
+4. New token maintains user identity and permissions
+5. Middle-tier API calls Microsoft Graph with the OBO token
+
+**Key Distinction**:
+- **Delegated permissions** = What permissions the app needs
+- **OBO flow** = How to maintain user identity through service chains
+
+Both approaches ensure apps can access user information while maintaining proper security boundaries and respecting the user's permissions within the organization.
