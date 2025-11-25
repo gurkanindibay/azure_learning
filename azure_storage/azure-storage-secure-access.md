@@ -534,7 +534,281 @@ Need Entra ID + SAS?
 
 ## Exam Question Analysis
 
-### Question 1: Securing SAS for Supplier Access
+### Question 1: Securing SAS Token Generation with Entra ID
+
+**Scenario:**
+You plan to generate a shared access signature (SAS) token for read access to a blob in a storage account. You need to secure the token from being compromised.
+
+**Question:**
+What should you use?
+
+**Options:**
+1. Primary account key
+2. Secondary account key
+3. Microsoft Entra ID credentials assigned the Contributor role ✅
+4. Microsoft Entra ID credentials assigned the Reader role ❌
+
+**Correct Answer: Microsoft Entra ID credentials assigned the Contributor role**
+
+**Detailed Analysis:**
+
+#### Why Microsoft Entra ID Credentials Assigned the Contributor Role is CORRECT ✅
+
+**Key Points:**
+- ✅ **Most Secure**: Microsoft Entra ID credentials are required to generate a **User Delegation SAS**
+- ✅ **Required Permission**: The account must have the `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey` permission
+- ✅ **Built-in Roles with This Permission**:
+  - **Contributor** ✅
+  - Storage Account Contributor
+  - Storage Blob Data Contributor
+  - Storage Blob Data Owner
+  - Storage Blob Data Reader
+  - Storage Blob Delegator
+
+**Why This Prevents Compromise:**
+- ❌ No storage account keys exposed in the SAS token
+- ✅ Token is signed with a user delegation key from Azure AD
+- ✅ Can be revoked without regenerating storage account keys
+- ✅ Provides audit trail through Azure AD
+- ✅ Integrates with conditional access policies
+- ✅ Supports RBAC permissions
+
+**Implementation Example:**
+```csharp
+// Authenticate with Microsoft Entra ID (Contributor role assigned)
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://mystorageaccount.blob.core.windows.net"),
+    credential
+);
+
+// Get user delegation key (requires generateUserDelegationKey permission)
+var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+    startsOn: DateTimeOffset.UtcNow,
+    expiresOn: DateTimeOffset.UtcNow.AddHours(1)
+);
+
+// Create User Delegation SAS for blob read access
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    BlobName = "myblob.txt",
+    Resource = "b", // Blob
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+};
+
+// Set read permissions
+sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+// Generate the secure SAS token (signed with user delegation key, not account key)
+var sasToken = sasBuilder.ToSasQueryParameters(
+    userDelegationKey.Value,
+    blobServiceClient.AccountName
+).ToString();
+
+var secureSasUri = $"https://mystorageaccount.blob.core.windows.net/mycontainer/myblob.txt?{sasToken}";
+```
+
+**Security Comparison:**
+
+| Method | Signed With | Compromise Risk | Revocation |
+|--------|-------------|-----------------|------------|
+| **User Delegation SAS** (Entra ID) | User delegation key | ✅ Low - No keys exposed | ✅ Easy - Revoke delegation key |
+| **Service/Account SAS** (Account Key) | Storage account key | ❌ High - Key can be extracted | ❌ Hard - Must regenerate keys |
+
+#### Why Primary Account Key is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Less Secure**: Account keys can be more easily compromised
+- ❌ **Full Access**: Provides complete access to the entire storage account
+- ❌ **Difficult Revocation**: Must regenerate keys to revoke access
+- ❌ **Key Exposure**: SAS token generation exposes the account key in your code/configuration
+
+**Security Risks:**
+```csharp
+// ❌ BAD: Using account key to generate SAS
+var accountKey = "abc123..."; // Key exposed in code/config
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    BlobName = "myblob.txt",
+    Resource = "b",
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+};
+
+sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+// SAS is signed with account key - if compromised, full storage access possible
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+```
+
+**Why It's More Easily Compromised:**
+- 🔓 Account key stored in configuration files, code, or environment variables
+- 🔓 Key visible in logs, source control, or deployment pipelines
+- 🔓 If key is leaked, attacker has full storage account access
+- 🔓 Revocation requires regenerating key (affects all applications using it)
+
+#### Why Secondary Account Key is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Same Security Issues**: Secondary key has identical security concerns as primary key
+- ❌ **Purpose**: Designed for key rotation, not improved security
+- ❌ **Still Key-Based**: Does not provide Entra ID security benefits
+
+**Intended Use of Secondary Key:**
+```csharp
+// Secondary key is for rotation, not security
+// Step 1: Applications use primary key
+// Step 2: Generate new secondary key
+// Step 3: Update applications to use secondary key
+// Step 4: Generate new primary key
+// Step 5: Update applications back to primary key
+
+// ❌ This doesn't make SAS more secure from compromise
+```
+
+**Key Rotation Strategy (Still Not as Secure as Entra ID):**
+```bash
+# Regenerate secondary key without disrupting apps using primary
+az storage account keys renew \
+    --account-name mystorageaccount \
+    --resource-group myresourcegroup \
+    --key secondary
+
+# Update apps to use secondary key, then regenerate primary
+az storage account keys renew \
+    --account-name mystorageaccount \
+    --resource-group myresourcegroup \
+    --key primary
+```
+
+#### Why Microsoft Entra ID Credentials Assigned the Reader Role is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Insufficient Permissions**: Reader role does NOT have the `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey` permission
+- ❌ **Cannot Generate User Delegation Key**: Will fail when attempting to create User Delegation SAS
+- ⚠️ Reader role provides read-only access to resource metadata, not data plane operations
+
+**What Reader Role Includes:**
+```json
+// Reader role permissions (limited to control plane)
+{
+  "permissions": [
+    {
+      "actions": [
+        "*/read"  // Can read resource properties, not data
+      ],
+      "notActions": [],
+      "dataActions": [],  // ❌ No data plane permissions
+      "notDataActions": []
+    }
+  ]
+}
+```
+
+**Error When Using Reader Role:**
+```csharp
+// Assuming identity has only Reader role assigned
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://mystorageaccount.blob.core.windows.net"),
+    credential
+);
+
+try
+{
+    // ❌ This will FAIL with authorization error
+    var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+        DateTimeOffset.UtcNow,
+        DateTimeOffset.UtcNow.AddHours(1)
+    );
+}
+catch (Azure.RequestFailedException ex)
+{
+    // Error: AuthorizationPermissionMismatch
+    // The client does not have permission to perform this action
+    Console.WriteLine($"Failed: {ex.Message}");
+}
+```
+
+**Required Roles Comparison:**
+
+| Role | Has generateUserDelegationKey Permission | Can Create User Delegation SAS |
+|------|------------------------------------------|-------------------------------|
+| **Contributor** | ✅ Yes | ✅ Yes |
+| **Storage Account Contributor** | ✅ Yes | ✅ Yes |
+| **Storage Blob Data Contributor** | ✅ Yes | ✅ Yes |
+| **Storage Blob Data Owner** | ✅ Yes | ✅ Yes |
+| **Storage Blob Data Reader** | ✅ Yes | ✅ Yes |
+| **Storage Blob Delegator** | ✅ Yes | ✅ Yes |
+| **Reader** | ❌ No | ❌ No |
+
+### Key Takeaways
+
+**Question Pattern:** "How to secure SAS token from being compromised?"
+
+**Answer:** Use **Microsoft Entra ID credentials with appropriate permissions** (Contributor or Storage-specific roles)
+
+**Why This Matters:**
+1. 🔐 **Security**: User Delegation SAS doesn't expose account keys
+2. 🔑 **Revocation**: Can revoke without affecting other applications
+3. 📊 **Audit**: Azure AD provides complete audit trail
+4. ✅ **Best Practice**: Microsoft-recommended approach for production
+5. 🛡️ **Compliance**: Meets security requirements without key management risks
+
+**Minimum Required Permission:**
+- Control Plane: `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey`
+- Data Plane: Appropriate RBAC role for the operations (e.g., Storage Blob Data Reader for read access)
+
+**Complete Secure Pattern:**
+```csharp
+// ✅ BEST PRACTICE: Secure SAS generation
+public async Task<string> GenerateSecureBlobSasAsync(
+    string storageAccountName,
+    string containerName,
+    string blobName)
+{
+    // 1. Authenticate with Azure AD (Contributor or Storage role required)
+    var credential = new DefaultAzureCredential();
+    var blobServiceClient = new BlobServiceClient(
+        new Uri($"https://{storageAccountName}.blob.core.windows.net"),
+        credential
+    );
+    
+    // 2. Get user delegation key (requires generateUserDelegationKey permission)
+    var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+        startsOn: DateTimeOffset.UtcNow,
+        expiresOn: DateTimeOffset.UtcNow.AddHours(1)
+    );
+    
+    // 3. Create User Delegation SAS
+    var sasBuilder = new BlobSasBuilder
+    {
+        BlobContainerName = containerName,
+        BlobName = blobName,
+        Resource = "b",
+        StartsOn = DateTimeOffset.UtcNow,
+        ExpiresOn = DateTimeOffset.UtcNow.AddHours(1),
+        Protocol = SasProtocol.Https // ✅ HTTPS only
+    };
+    
+    sasBuilder.SetPermissions(BlobSasPermissions.Read);
+    
+    // 4. Generate secure token (no account keys involved)
+    var sasToken = sasBuilder.ToSasQueryParameters(
+        userDelegationKey.Value,
+        storageAccountName
+    ).ToString();
+    
+    // 5. Return secure SAS URI
+    return $"https://{storageAccountName}.blob.core.windows.net/{containerName}/{blobName}?{sasToken}";
+}
+```
+
+### Question 2: Securing SAS for Supplier Access
 
 **Scenario:**
 You develop an application that will be accessed by a supplier. The supplier requires a shared access signature (SAS) to access Azure services in your company's subscription. You need to secure the SAS.
