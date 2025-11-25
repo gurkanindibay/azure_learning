@@ -1,4 +1,4 @@
-# Application Insights - Exam Questions
+# Application Insights 
 
 ## Overview
 
