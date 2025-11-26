@@ -11,6 +11,7 @@
 - [Pricing Tiers](#pricing-tiers)
 - [Creating an App Service Plan](#creating-an-app-service-plan)
 - [Kudu Service](#kudu-service)
+- [App Settings and Environment Configuration](#app-settings-and-environment-configuration)
 - [Exam Tips](#exam-tips)
 - [References](#references)
 
@@ -435,6 +436,96 @@ Kudu provides several useful features for managing your App Service:
 ### Reference
 
 - [Kudu service overview - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/resources-kudu)
+
+## App Settings and Environment Configuration
+
+### ASP.NET Core Environment Variables
+
+Azure App Service allows you to configure application settings that are exposed as environment variables to your application. For ASP.NET Core applications, the `ASPNETCORE_ENVIRONMENT` setting is particularly important for controlling application behavior.
+
+### Environment Modes
+
+| Environment | Description | Use Case |
+|-------------|-------------|----------|
+| **Development** | Enables detailed error pages, debugging features | Local development, troubleshooting |
+| **Staging** | Similar to production but for testing | Pre-production testing |
+| **Production** | Optimized for performance, minimal error details | Live production apps (default) |
+
+### Default Behavior
+
+If the `ASPNETCORE_ENVIRONMENT` variable is **not set**, it defaults to **Production**, which:
+- Disables detailed error pages
+- Disables most debugging features
+- Shows generic error messages to users
+- Optimizes for performance and security
+
+### Enabling Detailed Errors for Debugging
+
+To see detailed error information when your app throws a 500 server error, set:
+
+```
+ASPNETCORE_ENVIRONMENT=Development
+```
+
+**Azure CLI:**
+```bash
+az webapp config appsettings set \
+  --name myWebApp \
+  --resource-group myResourceGroup \
+  --settings ASPNETCORE_ENVIRONMENT=Development
+```
+
+**Azure Portal:**
+1. Navigate to your App Service
+2. Go to **Configuration** > **Application settings**
+3. Add new setting: `ASPNETCORE_ENVIRONMENT` = `Development`
+4. Click **Save**
+
+### ⚠️ Security Warning
+
+> **Never use Development environment in production!** The development environment exposes sensitive information like stack traces, configuration details, and internal paths that could be exploited by attackers.
+
+### Practice Question: Debugging 500 Errors
+
+**Question:**
+
+Your Azure Web App is currently throwing a 500 server error when viewed. You'd like to see more detail on the error. In order to accomplish this, what app setting do you need to set, and to what value?
+
+**Options:**
+
+A) `LOGGING="DEBUG"`
+
+B) `ENVIRONMENT="Development"`
+
+C) `DEBUG="TRUE"`
+
+D) `ASPNETCORE_ENVIRONMENT="Development"` ✅
+
+---
+
+**Correct Answer: D) `ASPNETCORE_ENVIRONMENT="Development"`**
+
+---
+
+**Explanation:**
+
+The `ASPNETCORE_ENVIRONMENT` setting controls the runtime environment for ASP.NET Core applications. Setting it to `Development` enables detailed error pages and debugging features that help diagnose issues.
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) `LOGGING="DEBUG"`** | ❌ Incorrect - This is not a recognized ASP.NET Core environment setting |
+| **B) `ENVIRONMENT="Development"`** | ❌ Incorrect - The correct variable name is `ASPNETCORE_ENVIRONMENT`, not `ENVIRONMENT` |
+| **C) `DEBUG="TRUE"`** | ❌ Incorrect - This is not the correct setting for enabling detailed errors |
+| **D) `ASPNETCORE_ENVIRONMENT="Development"`** | ✅ **Correct** - This enables the development environment which shows detailed error information |
+
+**Key Points:**
+- If the environment isn't set, it defaults to **Production**
+- Production mode disables most debugging features for security
+- Development mode should only be used temporarily for troubleshooting
+
+**Reference:** [Access environment variables - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-windows#access-environment-variables)
+
+---
 
 ## Exam Tips
 
