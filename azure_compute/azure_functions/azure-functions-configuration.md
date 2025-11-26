@@ -181,6 +181,25 @@ Each binding in the `bindings` array must include:
 }
 ```
 
+#### Blob Trigger with Event Grid Source
+
+For processing each blob only once (even if updated multiple times), use Event Grid as the source:
+
+```json
+{
+  "bindings": [
+    {
+      "type": "blobTrigger",
+      "direction": "in",
+      "name": "myBlob",
+      "path": "samples-workitems/{name}",
+      "connection": "AzureWebJobsStorage",
+      "source": "EventGrid"
+    }
+  ]
+}
+```
+
 #### Cosmos DB Trigger
 
 ```json
@@ -450,7 +469,7 @@ The `local.settings.json` file stores **app settings, connection strings, and se
 
 ## Practice Question
 
-### Question: Azure Functions Configuration File
+### Question 1: Azure Functions Configuration File
 
 **Scenario:**
 You are developing an Azure Functions application.
@@ -471,6 +490,142 @@ Azure Functions store their configuration settings in which file?
 
 4. ❌ web.config
    - **Incorrect**: `web.config` is used in traditional ASP.NET applications for IIS configuration. While it may exist in some Azure Functions deployments for specific IIS settings, it is not the primary configuration file for Azure Functions.
+
+---
+
+### Question 2: Blob Trigger - Processing Each Blob Only Once
+
+**Scenario:**
+You are developing an Azure Function that processes data from an Azure Blob Storage container. The function should execute whenever a new blob is added to the container. You want to ensure that the function processes each blob only once, even if the blob is updated multiple times.
+
+**Question:**
+Which of the following configurations should you apply to the Blob Trigger binding?
+
+**Options:**
+
+1. ❌ Set `dataType` to `binary`
+   - **Incorrect**: The `dataType` property specifies the type of data that the function expects to receive from the blob trigger (e.g., `binary`, `string`, `stream`). While this configuration is important for data processing, it does not ensure that the function processes each blob only once, regardless of updates.
+
+2. ❌ Set `blobPath` to the container name
+   - **Incorrect**: The `path` property (not `blobPath`) specifies the path within the Azure Blob Storage where the function should look for new blobs. While this configuration is crucial for defining the scope of the trigger, it does not address the requirement of processing each blob only once, even if updated multiple times.
+
+3. ✅ Set `source` to `EventGrid`
+   - **Correct**: Setting `source` to `EventGrid` configures the Blob Trigger binding to listen for events from Azure Event Grid instead of using the default polling mechanism. By using Event Grid:
+     - The function receives notifications when a new blob is added
+     - Event Grid provides **exactly-once delivery semantics** for blob creation events
+     - The function processes each blob only once, even if the blob is updated multiple times after creation
+     - This is more efficient and reliable than the default storage logs/polling approach
+
+4. ❌ Set `connection` to the storage account connection string
+   - **Incorrect**: The `connection` property specifies the app setting name that contains the storage account connection string. This configuration is essential for the function to access the Azure Blob Storage container but does not guarantee that each blob is processed only once.
+
+---
+
+#### Why Event Grid Source is Important
+
+**Default Blob Trigger Behavior (Polling):**
+- Uses storage logs or container polling to detect new/updated blobs
+- May trigger multiple times for the same blob if it's updated
+- Can have delays in detecting new blobs (especially in large containers)
+- Less efficient for high-volume scenarios
+
+**Event Grid Source Behavior:**
+- Uses Azure Event Grid push-based notifications
+- Triggers only on blob creation events (not updates, unless specifically configured)
+- Near real-time notifications with low latency
+- More reliable and scalable for high-volume scenarios
+- **Exactly-once processing** for blob creation events
+
+---
+
+#### Configuration Example
+
+**Default Blob Trigger (Polling - may process updates):**
+```json
+{
+  "bindings": [
+    {
+      "type": "blobTrigger",
+      "direction": "in",
+      "name": "myBlob",
+      "path": "my-container/{name}",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
+```
+
+**Event Grid Source (Process each blob only once):**
+```json
+{
+  "bindings": [
+    {
+      "type": "blobTrigger",
+      "direction": "in",
+      "name": "myBlob",
+      "path": "my-container/{name}",
+      "connection": "AzureWebJobsStorage",
+      "source": "EventGrid"
+    }
+  ]
+}
+```
+
+**C# Attribute Example:**
+```csharp
+[FunctionName("BlobTriggerEventGrid")]
+public static void Run(
+    [BlobTrigger("my-container/{name}", Source = BlobTriggerSource.EventGrid, 
+                 Connection = "AzureWebJobsStorage")] Stream myBlob,
+    string name,
+    ILogger log)
+{
+    log.LogInformation($"Processing blob: {name}, Size: {myBlob.Length} bytes");
+}
+```
+
+---
+
+#### Key Differences: Default vs Event Grid Source
+
+| Aspect | Default (Polling) | Event Grid Source |
+|--------|-------------------|-------------------|
+| **Detection Method** | Storage logs / polling | Push notifications |
+| **Latency** | Can be delayed (seconds to minutes) | Near real-time |
+| **Trigger on Updates** | Yes (may trigger multiple times) | No (only on creation by default) |
+| **Scalability** | Limited by polling frequency | Highly scalable |
+| **Reliability** | May miss events in high-volume scenarios | Reliable delivery guarantees |
+| **Setup** | Simpler (default) | Requires Event Grid subscription |
+| **Cost** | Storage transaction costs | Event Grid costs |
+
+---
+
+#### Setting Up Event Grid for Blob Trigger
+
+To use Event Grid source, you need to:
+
+1. **Create an Event Grid System Topic** for the storage account
+2. **Create an Event Subscription** that points to your function app
+3. **Configure the Blob Trigger** with `"source": "EventGrid"`
+
+**Azure CLI Example:**
+```bash
+# Create Event Grid system topic for storage account
+az eventgrid system-topic create \
+  --name my-storage-topic \
+  --resource-group MyResourceGroup \
+  --source /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{storage-account} \
+  --topic-type Microsoft.Storage.StorageAccounts
+
+# Create event subscription pointing to the function
+az eventgrid system-topic event-subscription create \
+  --name my-blob-subscription \
+  --system-topic-name my-storage-topic \
+  --resource-group MyResourceGroup \
+  --endpoint-type azurefunction \
+  --endpoint /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Web/sites/{function-app}/functions/{function-name} \
+  --included-event-types Microsoft.Storage.BlobCreated
+```
 
 ## function.json vs Attributes/Decorators
 
