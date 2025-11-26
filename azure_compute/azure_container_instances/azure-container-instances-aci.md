@@ -27,6 +27,7 @@
 - [Container Group Features](#container-group-features)
   - [Multi-Container Groups](#multi-container-groups)
   - [Networking](#networking)
+  - [DNS Name Labels and FQDN](#dns-name-labels-and-fqdn)
   - [Storage Volumes](#storage-volumes)
   - [Environment Variables](#environment-variables)
   - [Secret Volumes](#secret-volumes)
@@ -476,6 +477,102 @@ az container create \
   --vnet myVNet \
   --subnet mySubnet
 ```
+
+### DNS Name Labels and FQDN
+
+Azure Container Instances enables exposing your container groups directly to the internet with an IP address and a **fully qualified domain name (FQDN)**.
+
+#### FQDN Format
+
+When you create a container instance with a custom DNS name label, your application is reachable at:
+
+```
+<dns-name-label>.<azure-region>.azurecontainer.io
+```
+
+**Components:**
+- `<dns-name-label>`: Custom label you specify (must be unique within the Azure region)
+- `<azure-region>`: The Azure region where the container is deployed (e.g., `eastus`, `westeurope`, `southeastasia`)
+- `azurecontainer.io`: Azure Container Instances domain
+
+#### FQDN Examples
+
+| DNS Label | Region | FQDN |
+|-----------|--------|------|
+| `mycontainer` | East US | `mycontainer.eastus.azurecontainer.io` |
+| `mycontainer` | West Europe | `mycontainer.westeurope.azurecontainer.io` |
+| `myapp` | Southeast Asia | `myapp.southeastasia.azurecontainer.io` |
+| `api-prod` | Central US | `api-prod.centralus.azurecontainer.io` |
+
+#### Creating a Container with DNS Label
+
+```bash
+# Create container with DNS name label
+az container create \
+  --resource-group myResourceGroup \
+  --name mycontainer \
+  --image nginx:latest \
+  --dns-name-label mycontainer \
+  --ports 80
+
+# After deployment, access at: mycontainer.<region>.azurecontainer.io
+```
+
+#### Retrieving the FQDN
+
+```bash
+# Get FQDN of a container
+az container show \
+  --resource-group myResourceGroup \
+  --name mycontainer \
+  --query "ipAddress.fqdn" \
+  --output tsv
+
+# Example output: mycontainer.eastus.azurecontainer.io
+```
+
+#### DNS Label Requirements
+
+- **Unique per region**: The DNS name label must be unique within the Azure region
+- **Lowercase alphanumeric**: Must start with a letter, can contain letters, numbers, and hyphens
+- **3-63 characters**: Must be between 3 and 63 characters long
+- **Cannot end with hyphen**: Must end with a letter or number
+
+**Valid examples:**
+- `myapp`
+- `my-web-app`
+- `api-v2`
+- `customer-portal-prod`
+
+**Invalid examples:**
+- `my_app` (underscore not allowed)
+- `My-App` (uppercase not allowed)
+- `-myapp` (cannot start with hyphen)
+- `myapp-` (cannot end with hyphen)
+- `ab` (too short, minimum 3 characters)
+
+#### Common Exam Question Format
+
+**Question:** You have an Azure Container Instance with the DNS label "mycontainer" deployed in East US region. What is the public FQDN?
+
+**Answer:** `mycontainer.eastus.azurecontainer.io`
+
+**Incorrect answers to watch for:**
+- ❌ `mycontainer.azurecontainer.io` (missing region)
+- ❌ `mycontainer.container.azure.com` (wrong domain)
+- ❌ `azurecontainer.io/mycontainer` (wrong format)
+- ❌ `mycontainer.azure.com` (wrong domain)
+
+#### Key Points for Exams
+
+| Aspect | Details |
+|--------|---------|
+| **FQDN Format** | `<dns-label>.<region>.azurecontainer.io` |
+| **Domain** | `azurecontainer.io` (NOT `azure.com` or `container.azure.com`) |
+| **Region Required** | Yes, always included in FQDN |
+| **Protocol** | HTTP/HTTPS based on your container configuration |
+| **IP Address** | Public IP is also assigned (can use IP or FQDN) |
+| **Uniqueness** | DNS label must be unique per region |
 
 ### Storage Volumes
 
