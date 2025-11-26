@@ -4,6 +4,17 @@
 
 Azure Cache for Redis provides an in-memory data store based on Redis software. When your caching needs exceed the memory limits of a single Redis instance, Azure provides clustering capabilities to scale horizontally.
 
+## Table of Contents
+
+- [Memory Limits by Tier](#memory-limits-by-tier)
+- [Redis Cluster Feature](#redis-cluster-feature)
+- [Alternative: Enterprise Tiers](#alternative-enterprise-tiers)
+- [Azure Architecture Patterns for Caching](#azure-architecture-patterns-for-caching)
+- [Best Practices for Large Caches](#best-practices-for-large-caches)
+- [Common Misconceptions](#common-misconceptions)
+- [Exam Tips (AZ-204)](#exam-tips-az-204)
+- [References](#references)
+
 ## Memory Limits by Tier
 
 | Tier | Maximum Memory |
@@ -58,6 +69,131 @@ For even larger memory requirements or advanced features, consider:
 - Cost-effective for large datasets
 - Up to 1.5 TB per node
 - Ideal for datasets with varying access patterns
+
+## Azure Architecture Patterns for Caching
+
+### Cache-Aside Pattern
+
+The **Cache-Aside pattern** is specifically designed to increase application performance using a cache service. It loads data on demand into a cache from a data store.
+
+#### How It Works
+
+```
+┌─────────────────┐      1. Request Data      ┌─────────────────┐
+│                 │ ──────────────────────────▶│                 │
+│   Application   │                            │      Cache      │
+│                 │ ◀──────────────────────────│    (Redis)      │
+│                 │      2. Cache Hit/Miss     │                 │
+└────────┬────────┘                            └─────────────────┘
+         │                                              ▲
+         │ 3. If Cache Miss,                           │
+         │    Query Data Store                          │
+         ▼                                              │
+┌─────────────────┐                                    │
+│                 │      4. Store in Cache             │
+│   Data Store    │ ────────────────────────────────────┘
+│   (Database)    │
+│                 │
+└─────────────────┘
+```
+
+#### Pattern Flow
+
+1. **Check Cache First**: Application checks if the requested data exists in the cache
+2. **Cache Hit**: If data is found, return it directly (fast path)
+3. **Cache Miss**: If data is not found:
+   - Query the underlying data store
+   - Store the retrieved data in the cache
+   - Return the data to the caller
+4. **Data Invalidation**: When data changes, invalidate or update the cached entry
+
+#### Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| **Improved Performance** | Reduces load on the data store by serving repeated requests from cache |
+| **Reduced Latency** | In-memory access is significantly faster than database queries |
+| **Data Consistency** | Helps maintain consistency between cache and data store |
+| **On-Demand Loading** | Only caches data that is actually requested |
+
+#### Code Example (C#)
+
+```csharp
+public async Task<Product> GetProductAsync(string productId)
+{
+    // 1. Try to get from cache
+    var cachedProduct = await _cache.GetStringAsync(productId);
+    
+    if (cachedProduct != null)
+    {
+        // Cache hit - return cached data
+        return JsonSerializer.Deserialize<Product>(cachedProduct);
+    }
+    
+    // 2. Cache miss - get from database
+    var product = await _database.Products.FindAsync(productId);
+    
+    if (product != null)
+    {
+        // 3. Store in cache for future requests
+        await _cache.SetStringAsync(
+            productId,
+            JsonSerializer.Serialize(product),
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            });
+    }
+    
+    return product;
+}
+```
+
+### Other Related Patterns
+
+| Pattern | Purpose | Use Case |
+|---------|---------|----------|
+| **Cache-Aside** | Load data on demand into cache | General caching for read-heavy workloads |
+| **Sharding** | Distribute data across multiple databases | Horizontal scaling of data storage |
+| **Static Content Hosting** | Serve static content from cloud storage | Offload static files from web servers |
+| **Sidecar** | Deploy helper components alongside main app | Logging, monitoring, proxying |
+
+### Practice Question: Azure Architecture Patterns
+
+**Question:**
+
+Which Azure Architecture pattern is specifically designed to increase application performance using a cache service?
+
+**Options:**
+
+A) Sharding pattern
+
+B) Cache-aside pattern ✅
+
+C) Static content hosting pattern
+
+D) Sidecar pattern
+
+---
+
+**Correct Answer: B) Cache-aside pattern**
+
+---
+
+**Explanation:**
+
+The **Cache-Aside pattern** is designed to load data on demand into a cache from a data store. This improves performance by serving repeated requests from the fast in-memory cache and also helps maintain consistency between data held in the cache and data in the underlying data store.
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Sharding pattern** | ❌ Incorrect - Sharding is about distributing data across multiple databases/partitions for horizontal scaling, not specifically for caching |
+| **B) Cache-aside pattern** | ✅ **Correct** - Specifically designed to improve performance by loading data on demand into a cache |
+| **C) Static content hosting pattern** | ❌ Incorrect - This pattern is about deploying static content to cloud storage and serving it directly to clients, not about caching dynamic data |
+| **D) Sidecar pattern** | ❌ Incorrect - Sidecar is about deploying helper components (like logging, monitoring) alongside your main application in a separate process |
+
+**Reference:** [Cache-Aside pattern - Microsoft Docs](https://docs.microsoft.com/en-us/azure/architecture/patterns/cache-aside)
+
+---
 
 ## Best Practices for Large Caches
 
