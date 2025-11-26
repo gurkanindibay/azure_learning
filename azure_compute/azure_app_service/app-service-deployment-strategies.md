@@ -322,6 +322,58 @@ Application logging captures diagnostic information written by your application 
 | **Failed Request Tracing** | Detailed tracing for failed requests | Troubleshoot IIS/application pipeline issues |
 | **Deployment Logs** | Logs from deployment operations | Debug deployment problems |
 
+### App Service Log Categories (Diagnostic Settings)
+
+When configuring diagnostic settings for Azure App Service, logs are organized into specific categories. Understanding these categories is essential for monitoring and troubleshooting.
+
+| Log Category | Description | Contains |
+|--------------|-------------|----------|
+| **AppServiceHTTPLogs** | Web server logs (HTTP logs) | Raw HTTP request data, request/response details, status codes, client IPs |
+| **AppServiceAppLogs** | Application logs | Custom log messages from your application code (ILogger, console.log, etc.) |
+| **AppServiceAuditLogs** | Audit/login activity logs | Login activity via FTP and Kudu, authentication events |
+| **AllMetrics** | Performance metrics | CPU percentage, memory usage, request count, data in/out (not logs, but metrics) |
+
+**Key Points:**
+- **AppServiceHTTPLogs** = Web server logs (IIS/nginx style logs)
+- **AppServiceAppLogs** = Application logs (your code's log output)
+- **AppServiceAuditLogs** = Security/audit logs (FTP/Kudu access)
+- **AllMetrics** = Performance metrics, not logs
+
+---
+
+### Practice Question: App Service Log Types
+
+**Question:**
+
+What type of App Service log files store the web server logs?
+
+**Options:**
+
+A) AppServiceAppLogs
+
+B) AppServiceAuditLogs
+
+C) AllMetrics
+
+D) AppServiceHTTPLogs ✅
+
+---
+
+**Correct Answer: D) AppServiceHTTPLogs**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) AppServiceAppLogs** | ❌ Incorrect - These are application logs containing messages from your application code |
+| **B) AppServiceAuditLogs** | ❌ Incorrect - These contain login activity via FTP and Kudu, not web server logs |
+| **C) AllMetrics** | ❌ Incorrect - These are not logs at all; they are performance metrics (CPU, memory, etc.) |
+| **D) AppServiceHTTPLogs** | ✅ **Correct** - These are the web server logs containing HTTP request/response information |
+
+**Reference:** [Enable diagnostics logging for apps in Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/troubleshoot-diagnostic-logs)
+
 ### Enabling Application Logging
 
 **Azure Portal:**
