@@ -402,6 +402,48 @@ The `host.json` file contains **global configuration options** that affect all f
 }
 ```
 
+**Queue Settings Properties:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `maxPollingInterval` | Maximum interval between queue polls | 00:01:00 |
+| `visibilityTimeout` | Time a message is invisible after being dequeued | 00:00:00 (auto) |
+| `batchSize` | Number of messages to retrieve per poll | 16 |
+| `maxDequeueCount` | Number of times to try processing a message before moving to poison queue | 5 |
+| `newBatchThreshold` | Threshold for fetching a new batch of messages | batchSize/2 |
+
+#### Handling Poison Messages with Storage Queues
+
+**Poison messages** are messages that cannot be processed successfully after multiple attempts. Azure Functions provides built-in support for handling poison messages with Azure Storage Queues.
+
+**How it works:**
+1. When a message is dequeued, the `dequeueCount` property is incremented
+2. If processing fails, the message becomes visible again after `visibilityTimeout`
+3. When `dequeueCount` exceeds `maxDequeueCount`, the message is automatically moved to a poison queue
+4. The poison queue is named `<originalqueuename>-poison`
+
+**Example Configuration:**
+```json
+{
+  "version": "2.0",
+  "extensions": {
+    "queues": {
+      "maxDequeueCount": 5,
+      "visibilityTimeout": "00:00:30"
+    }
+  }
+}
+```
+
+With this configuration:
+- A message will be retried **5 times** before being moved to the poison queue
+- After each failed attempt, the message is invisible for **30 seconds** before retry
+
+**Important Notes:**
+- `maxDequeueCount` must be set to a value greater than 1 for automatic poison queue handling
+- Setting `visibilityTimeout` to a high value only delays message visibility; it does **not** handle poison messages
+- The poison queue must be monitored separately for manual investigation
+
 #### Logging Configuration
 
 ```json
@@ -644,6 +686,76 @@ az eventgrid system-topic event-subscription create \
   --endpoint /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Web/sites/{function-app}/functions/{function-name} \
   --included-event-types Microsoft.Storage.BlobCreated
 ```
+
+---
+
+### Question 3: Handling Poison Messages with Storage Queues
+
+**Scenario:**
+You are developing an Azure Function that processes messages from an Azure Storage Queue. The function needs to handle poison messages (messages that cannot be processed successfully after multiple attempts).
+
+**Question:**
+Which of the following configurations should you implement to ensure poison messages are moved to a separate queue for further investigation?
+
+**Options:**
+
+1. ❌ Set `visibilityTimeout` to a high value in the queue trigger binding
+   - **Incorrect**: Setting `visibilityTimeout` to a high value in the queue trigger binding will only delay the visibility of the message in the queue for processing. It does not handle the scenario of poison messages that cannot be processed successfully after multiple attempts.
+
+2. ✅ Set `maxDequeueCount` to a value greater than 1 in the host.json file
+   - **Correct**: Setting `maxDequeueCount` to a value greater than 1 in the `host.json` file allows you to specify the maximum number of times a message can be dequeued before it is considered a poison message. Once the message reaches this limit, it will be automatically moved to a separate queue named `<queuename>-poison` for further investigation.
+
+3. ❌ Manually move poison messages to a dead-letter queue using custom code
+   - **Incorrect**: Manually moving poison messages to a dead-letter queue using custom code is not an efficient solution as it requires additional development effort and monitoring. It is better to leverage built-in features of Azure Functions and Azure Storage Queues to handle poison messages automatically.
+
+4. ❌ Enable Dead-lettering in the Storage Queue settings
+   - **Incorrect**: Dead-lettering is a feature of **Service Bus Queues**, not Storage Queues, and is not applicable in this scenario. If you were using Service Bus Queues, enabling Dead-lettering would be a good approach as it allows you to automatically move messages that cannot be processed successfully to a separate dead-letter queue. However, for Storage Queues, use `maxDequeueCount` instead.
+
+---
+
+#### Key Differences: Storage Queues vs Service Bus Queues for Poison Messages
+
+| Feature | Storage Queue | Service Bus Queue |
+|---------|---------------|-------------------|
+| **Poison Message Handling** | `maxDequeueCount` in host.json | Dead-letter queue (built-in) |
+| **Poison Queue Name** | `<queuename>-poison` (auto-created) | Dead-letter sub-queue |
+| **Configuration Location** | host.json | Service Bus settings |
+| **Automatic Movement** | Yes (after maxDequeueCount) | Yes (with dead-lettering enabled) |
+
+#### Configuration Example for Storage Queue Poison Messages
+
+**host.json:**
+```json
+{
+  "version": "2.0",
+  "extensions": {
+    "queues": {
+      "maxDequeueCount": 5,
+      "visibilityTimeout": "00:00:30",
+      "batchSize": 16
+    }
+  }
+}
+```
+
+**function.json (Queue Trigger):**
+```json
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "myQueueItem",
+      "queueName": "myqueue",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
+```
+
+With this configuration, if a message from `myqueue` fails processing 5 times, it will automatically be moved to `myqueue-poison`.
+
+**Reference**: [Azure Storage Queue trigger for Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-trigger)
 
 ## function.json vs Attributes/Decorators
 
