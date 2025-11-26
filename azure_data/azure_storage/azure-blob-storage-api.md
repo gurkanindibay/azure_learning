@@ -561,6 +561,191 @@ az storage blob upload \
 
 ## Exam Question Analysis
 
+### Question: Uploading Files to Azure Blob Storage
+
+**Scenario:**
+You are developing an Azure application that needs to interact with Azure Blob Storage to upload files. You want to ensure that you are using the Azure SDK for .NET correctly.
+
+**Question:**
+Which of the following code snippets properly uploads a file to Azure Blob Storage using the Azure.Storage.Blobs library?
+
+---
+
+#### Option A: ❌ INCORRECT
+
+```csharp
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+blobClient.UploadAsync(uploadFileStream, true);
+```
+
+**Why This Is Wrong:**
+- ❌ Calls `UploadAsync` without `await` - the async operation is not awaited
+- ❌ The `uploadFileStream` variable is not defined or opened
+- ❌ Fire-and-forget async call may complete after method returns
+- ❌ No error handling for the async operation
+
+**What Should Be Fixed:**
+```csharp
+using FileStream uploadFileStream = File.OpenRead("path/to/myfile.txt");
+await blobClient.UploadAsync(uploadFileStream, true);  // Add await!
+```
+
+---
+
+#### Option B: ✅ CORRECT (Per Exam)
+
+```csharp
+BlobClient blobClient = new BlobClient(connectionString, "my-container", "myfile.txt");
+using FileStream uploadFileStream = File.OpenRead("path/to/myfile.txt");
+blobClient.Upload(uploadFileStream, overwrite: true);
+```
+
+**Why This Is Marked Correct:**
+- ✅ Correctly creates a `BlobClient` using the constructor with connection string
+- ✅ Opens a `FileStream` to read the local file
+- ✅ Uses `using` statement for proper stream disposal
+- ✅ Specifies `overwrite: true` to handle existing blobs
+- ✅ Uses synchronous `Upload` method (valid, though async preferred)
+
+**Note:** Direct `BlobClient` instantiation is valid for simple scenarios.
+
+---
+
+#### Option C: ⚠️ ALMOST CORRECT (Your Answer)
+
+```csharp
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+using FileStream uploadFileStream = File.OpenRead("path/to/myfile.txt");
+blobClient.Upload(uploadFileStream);
+```
+
+**Why This Is Almost Correct:**
+- ✅ Uses the **hierarchical client pattern** (BlobServiceClient → BlobContainerClient → BlobClient)
+- ✅ This pattern is actually **recommended by Microsoft** for most scenarios
+- ✅ Properly creates and disposes the FileStream
+- ✅ Valid synchronous upload code
+- ⚠️ Missing `overwrite: true` - will throw exception if blob exists
+- ⚠️ Uses synchronous method (async preferred but not required)
+
+**The Hierarchical Pattern Is Actually Preferred Because:**
+- Better for working with multiple containers/blobs
+- Easier to manage shared credentials/options
+- Aligns with SDK design philosophy
+- More testable (can mock at different levels)
+
+---
+
+#### Option D: ❌ INCORRECT (Outdated SDK)
+
+```csharp
+CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
+CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+CloudBlobContainer container = blobClient.GetContainerReference("my-container");
+CloudBlockBlob blockBlob = container.GetBlockBlobReference("myfile.txt");
+using (var fileStream = File.OpenRead("path/to/myfile.txt"))
+{
+    blockBlob.UploadFromStream(fileStream);
+}
+```
+
+**Why This Is Wrong:**
+- ❌ Uses **legacy/deprecated** `Microsoft.Azure.Storage.Blob` library (v11 and earlier)
+- ❌ `CloudStorageAccount`, `CloudBlobClient`, `CloudBlobContainer` are **obsolete classes**
+- ❌ Not part of the modern `Azure.Storage.Blobs` library (v12+)
+- ❌ The question specifically asks about `Azure.Storage.Blobs` library
+
+**Modern Equivalent:**
+```csharp
+// Azure.Storage.Blobs (v12+) - the modern SDK
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+using FileStream fileStream = File.OpenRead("path/to/myfile.txt");
+await blobClient.UploadAsync(fileStream, overwrite: true);
+```
+
+---
+
+### Critical Analysis: Question Quality Issues
+
+This exam question has some inconsistencies:
+
+| Aspect | Option B (Correct) | Option C (Your Answer) |
+|--------|-------------------|------------------------|
+| **Valid Code** | ✓ Yes | ✓ Yes |
+| **Uses Azure.Storage.Blobs** | ✓ Yes | ✓ Yes |
+| **Sync vs Async** | Sync `Upload()` | Sync `Upload()` |
+| **Client Pattern** | Direct instantiation | Hierarchical (preferred) |
+| **Overwrite Parameter** | ✓ Specified | ✗ Missing |
+
+**The Real Difference:** `overwrite: true` parameter
+
+The exam marks Option C as "almost correct" because:
+1. It doesn't specify overwrite behavior (defaults to `false`)
+2. Will throw `RequestFailedException` if blob already exists
+
+**However**, the exam's criticism of "synchronous method" applies equally to BOTH options - they both use `Upload()` not `UploadAsync()`.
+
+---
+
+### Best Practice: The Ideal Upload Code
+
+```csharp
+// ✅ BEST PRACTICE: Hierarchical pattern with async and overwrite
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+
+await using FileStream uploadFileStream = File.OpenRead("path/to/myfile.txt");
+await blobClient.UploadAsync(uploadFileStream, overwrite: true);
+```
+
+**Or with full options:**
+
+```csharp
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+
+await using FileStream uploadFileStream = File.OpenRead("path/to/myfile.txt");
+await blobClient.UploadAsync(uploadFileStream, new BlobUploadOptions
+{
+    HttpHeaders = new BlobHttpHeaders
+    {
+        ContentType = "text/plain"
+    },
+    Metadata = new Dictionary<string, string>
+    {
+        { "UploadedBy", "MyApp" },
+        { "Version", "1.0" }
+    }
+});
+```
+
+---
+
+### Key Takeaways
+
+| Pattern | When to Use |
+|---------|-------------|
+| **Direct BlobClient** | Simple single-blob operations |
+| **Hierarchical Pattern** | Multiple blobs/containers, shared credentials |
+| **Sync Upload** | Console apps, simple scenarios |
+| **Async UploadAsync** | Web apps, APIs, better scalability |
+
+**For the Exam, Remember:**
+- 🎯 Use `Azure.Storage.Blobs` (v12+), NOT `Microsoft.Azure.Storage.Blob`
+- 🎯 `await` async methods properly
+- 🎯 Use `overwrite: true` when re-uploading is expected
+- 🎯 Dispose streams with `using` statement
+- 🎯 Both direct and hierarchical patterns are valid
+
+---
+
 ### Question: Setting Custom Metadata on a Blob
 
 **Scenario:**
