@@ -682,6 +682,87 @@ az functionapp config appsettings set \
 - Check `"version": "2.0"` is specified
 - Restart function app after changes
 
+## Azure Functions Core Tools (Local Development)
+
+### Overview
+
+**Azure Functions Core Tools** is a command-line tool that provides the core runtime and templates for creating Azure Functions, enabling local development and testing before deploying to Azure.
+
+### Key Features
+
+- **Cross-platform**: Works on Windows, macOS, and Linux
+- **Local runtime**: Runs the same Functions runtime that's used in Azure
+- **Function templates**: Provides templates to scaffold new functions
+- **Local debugging**: Full debugging support in VS Code and Visual Studio
+- **Deployment**: Deploy directly to Azure from the command line
+
+### Version Information
+
+| Version | Functions Runtime | Supported OS |
+|---------|------------------|--------------|
+| 4.x | Functions 4.x | Windows, macOS, Linux |
+| 3.x | Functions 3.x | Windows, macOS, Linux |
+| 2.x | Functions 2.x | Windows, macOS, Linux |
+| 1.x | Functions 1.x | Windows only |
+
+### Installation
+
+**npm (all platforms):**
+```bash
+npm install -g azure-functions-core-tools@4 --unsafe-perm true
+```
+
+**Homebrew (macOS):**
+```bash
+brew tap azure/functions
+brew install azure-functions-core-tools@4
+```
+
+**Windows (Chocolatey):**
+```bash
+choco install azure-functions-core-tools
+```
+
+### Common Commands
+
+| Command | Description |
+|---------|-------------|
+| `func init` | Initialize a new Functions project |
+| `func new` | Create a new function from a template |
+| `func start` | Start the local Functions runtime |
+| `func azure functionapp publish <name>` | Deploy to Azure |
+| `func extensions install` | Install binding extensions |
+
+### Local Development Workflow
+
+1. **Initialize project**: `func init MyFunctionApp --worker-runtime dotnet`
+2. **Create function**: `func new --name HttpTrigger --template "HTTP trigger"`
+3. **Configure settings**: Edit `local.settings.json`
+4. **Run locally**: `func start`
+5. **Test**: Send requests to `http://localhost:7071/api/HttpTrigger`
+6. **Deploy**: `func azure functionapp publish MyFunctionApp`
+
+### Practice Question: Local Development Tools
+
+**Question:**
+Which library allows you to develop and test Azure Functions locally before deploying into Azure?
+
+**Options:**
+
+1. ✅ **Core Tools, cross-platform on Windows, macOS and Linux**
+   - **Correct**: Azure Functions Core Tools provides the core runtime and templates for creating functions, which enable local development. Version 2.x and later supports development on Windows, Linux, and macOS. It includes the same runtime used in Azure, allowing you to test functions locally with full fidelity before deploying.
+
+2. ❌ Azure Functions compile natively to an EXE and can be run from the command line
+   - **Incorrect**: Azure Functions do not compile to standalone EXE files that can be run independently. While .NET-based functions compile to DLLs, they require the Functions runtime (provided by Core Tools locally or the Azure Functions host in the cloud) to execute.
+
+3. ❌ Azure SDK library
+   - **Incorrect**: The Azure SDK provides client libraries for interacting with Azure services from your code, but it is not a tool for running or testing Azure Functions locally. The SDK is used within your function code to connect to services like Storage, Cosmos DB, etc.
+
+4. ❌ Azure Functions are cloud only, and cannot be tested locally
+   - **Incorrect**: Azure Functions can absolutely be tested locally using Azure Functions Core Tools. Local development is a core feature of the Azure Functions development experience, and Microsoft strongly encourages testing locally before deploying to Azure.
+
+**Reference**: [Azure Functions Core Tools - Develop Azure Functions locally](https://docs.microsoft.com/en-us/azure/azure-functions/functions-develop-local)
+
 ## Additional Resources
 
 - [Azure Functions triggers and bindings](https://docs.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings)
