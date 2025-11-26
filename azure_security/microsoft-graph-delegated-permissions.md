@@ -4,6 +4,88 @@
 
 When an Azure App Service web app needs to retrieve Microsoft Entra ID signed-in user information using Microsoft Graph, it must use **delegated permissions**. This document explains the mechanism and the differences between various permission types, as well as the OAuth 2.0 On-Behalf-Of (OBO) flow for delegating user identity through request chains.
 
+## What is Microsoft Graph?
+
+Microsoft Graph is often mentioned in security contexts, which can make it seem like it's only for authentication and identity management. However, **Microsoft Graph is much broader** - it's the unified API gateway to access data and intelligence across the entire Microsoft 365 ecosystem.
+
+### Microsoft Graph Scope
+
+Microsoft Graph provides access to:
+
+1. **Microsoft 365 Core Services**:
+   - Bookings, Calendar, Delve
+   - Excel, Word, PowerPoint (document data)
+   - Microsoft 365 compliance eDiscovery
+   - Microsoft Search
+   - OneDrive, OneNote
+   - Outlook/Exchange (email, contacts)
+   - Planner, SharePoint, Teams
+   - To Do, Workplace Analytics
+
+2. **Enterprise Mobility and Security Services**:
+   - Advanced Threat Analytics
+   - Advanced Threat Protection
+   - **Azure Active Directory (Microsoft Entra ID)** - User profiles, authentication
+   - Identity Manager
+   - Intune (device management)
+
+3. **Windows 10 Services**:
+   - Activities, devices, notifications
+   - Universal Print
+
+4. **Dynamics 365 Business Central**
+
+### Why This Document Focuses on Security
+
+This document focuses on **delegated permissions for accessing user identity information** because:
+
+- Authentication and authorization are foundational requirements
+- User profile access is one of the most common Microsoft Graph operations
+- Understanding delegated vs application permissions is critical for security
+- The same permission model applies whether you're accessing user data, emails, or calendars
+
+### Key Insight
+
+**Microsoft Graph is not just for security** - it's the unified API for **all Microsoft 365 data**, including:
+- ✅ Documents (Word, Excel, PowerPoint files in OneDrive/SharePoint)
+- ✅ Email and calendar events (Outlook)
+- ✅ Teams messages and meetings
+- ✅ User profiles and organizational data
+- ✅ SharePoint sites and lists
+- ✅ Planner tasks
+- ❌ NOT Azure resources (use Azure Resource Manager API for that)
+- ❌ NOT columnar/relational database data
+- ❌ NOT raw JSON/XML documents (though API responses use JSON)
+
+### Example Use Cases Beyond Security
+
+```csharp
+// Beyond user profiles, Microsoft Graph can access:
+
+// 1. Read user's emails
+var messages = await graphClient.Me.Messages.GetAsync();
+
+// 2. Access calendar events
+var events = await graphClient.Me.Events.GetAsync();
+
+// 3. Get files from OneDrive
+var files = await graphClient.Me.Drive.Root.Children.GetAsync();
+
+// 4. Send emails as the user
+var message = new Message { /* email content */ };
+await graphClient.Me.SendMail(message).Request().PostAsync();
+
+// 5. Access Teams data
+var teams = await graphClient.Me.JoinedTeams.GetAsync();
+
+// 6. Read SharePoint lists
+var lists = await graphClient.Sites["site-id"].Lists.GetAsync();
+```
+
+### Reference
+
+For complete details on Microsoft Graph capabilities, see: [Microsoft Graph Overview](https://docs.microsoft.com/en-us/graph/overview)
+
 ## Question 1: Delegated Permissions
 
 **Scenario**: An Azure App Service web app (app1) registered in Microsoft Entra ID needs to retrieve signed-in user information using Microsoft Graph.
