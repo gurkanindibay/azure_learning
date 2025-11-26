@@ -251,12 +251,56 @@ Do you want the container to run continuously?
 
 ### Basic Container Creation
 
+The Azure CLI command to create an Azure Container Instance is:
+
+```bash
+az container create
+```
+
+**Command Structure:**
+```bash
+az container create --resource-group <resource-group> --name <container-name> --image <image> [options]
+```
+
+**Key Points:**
+- `container create` - The two-word command structure (noun + verb)
+- `--resource-group` - Specifies the resource group
+- `--name` - Specifies the container instance name
+- `--image` - Specifies the container image to run
+- `--dns-name-label` - Optional: Creates a public FQDN
+- `--ports` - Optional: Exposes specified ports
+
+#### Common Exam Question
+
+**Question:** What is the Azure CLI command to create an Azure Container Instance?
+
+Fill in the blank: `az _______ _______ --resource-group myResourceGroup --name mycontainer --image mcr.microsoft.com/azuredocs/aci-helloworld --dns-name-label aci-demo --ports 80`
+
+**Answer:** `container create`
+
+**Common incorrect answers:**
+- ❌ `aci create` - "aci" is not a valid Azure CLI noun
+- ❌ `create container` - Wrong order (should be noun + verb, not verb + noun)
+- ❌ `container aci` - "aci" is not a valid Azure CLI verb
+
+#### Example Commands
+
 ```bash
 # Simple container with default settings
 az container create \
   --resource-group myResourceGroup \
   --name mycontainer \
   --image nginx:latest
+```
+
+```bash
+# Container with public DNS and port exposure
+az container create \
+  --resource-group myResourceGroup \
+  --name mycontainer \
+  --image mcr.microsoft.com/azuredocs/aci-helloworld \
+  --dns-name-label aci-demo \
+  --ports 80
 ```
 
 ### Container Group Creation
