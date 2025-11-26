@@ -138,7 +138,18 @@ az functionapp create \
 
 ### Scaling
 
-**Scale Up (Vertical):** Change the pricing tier to get more CPU, memory, or features.
+App Service provides two options for scaling: **Scale Up** (vertical) and **Scale Out** (horizontal).
+
+#### Scale Up (Vertical Scaling)
+
+**Scale Up** means changing the pricing tier to get more CPU, memory, disk space, or additional features like deployment slots, custom domains, certificates, etc.
+
+| Aspect | Description |
+|--------|-------------|
+| **What it does** | Moves to the next higher App Service Plan tier |
+| **Example** | Going from S1 Standard plan to S2 Standard plan |
+| **Resources affected** | CPU, memory, disk, features |
+| **Downtime** | Minimal to none (cold start may occur) |
 
 ```bash
 # Scale up from B1 to S1
@@ -148,7 +159,27 @@ az appservice plan update \
   --sku S1
 ```
 
-**Scale Out (Horizontal):** Add more VM instances.
+#### Scale Out (Horizontal Scaling)
+
+**Scale Out** means increasing the number of VM instances that run your app. The number of instances you can scale out to depends on your pricing tier.
+
+| Aspect | Description |
+|--------|-------------|
+| **What it does** | Increases the number of VM instances that run your app |
+| **How it works** | Adds more identical VMs running your app |
+| **Load balancing** | Traffic is automatically distributed across instances |
+| **Limits** | Depends on pricing tier (see table below) |
+
+**Scale Out Limits by Pricing Tier:**
+
+| Pricing Tier | Maximum Instances |
+|--------------|-------------------|
+| Free | 1 (no scale out) |
+| Shared | 1 (no scale out) |
+| Basic | 3 |
+| Standard | 10 |
+| Premium v2/v3 | 30 |
+| Isolated (ASE) | 100 |
 
 ```bash
 # Scale out to 5 instances
@@ -157,6 +188,97 @@ az appservice plan update \
   --resource-group myResourceGroup \
   --number-of-workers 5
 ```
+
+#### Scale Up vs Scale Out Comparison
+
+| Aspect | Scale Up | Scale Out |
+|--------|----------|-----------|
+| **Direction** | Vertical | Horizontal |
+| **What changes** | VM size/tier | Number of VMs |
+| **Resources** | More CPU/RAM per instance | More instances |
+| **Limit** | Tier capacity | 30 instances (100 in Isolated) |
+| **Cost impact** | Higher tier = higher cost | More instances = multiplied cost |
+| **Use case** | Need more power per request | Need to handle more concurrent requests |
+
+#### Autoscale
+
+For Standard tier and above, you can configure **autoscale rules** to automatically scale out based on metrics:
+
+```bash
+# Create autoscale setting
+az monitor autoscale create \
+  --resource-group myResourceGroup \
+  --resource myAppServicePlan \
+  --resource-type Microsoft.Web/serverfarms \
+  --name myAutoscaleSetting \
+  --min-count 2 \
+  --max-count 10 \
+  --count 2
+
+# Add a scale-out rule based on CPU
+az monitor autoscale rule create \
+  --resource-group myResourceGroup \
+  --autoscale-name myAutoscaleSetting \
+  --condition "CpuPercentage > 70 avg 5m" \
+  --scale out 1
+```
+
+---
+
+### Practice Question: Scale Up vs Scale Out
+
+**Question:**
+
+Azure App Service has options to scale up and scale out. What does **scaling out** an app do?
+
+**Options:**
+
+A) Moves to the next higher App Service Plan, such as going from S1 Standard plan to S2 Standard plan.
+
+B) Adds additional running versions of your app to the same instance.
+
+C) Increases the number of VM instances that run your app. ✅
+
+D) Deploys another instance of your app to a different region to ensure better performance for global customers.
+
+---
+
+**Correct Answer: C) Increases the number of VM instances that run your app.**
+
+---
+
+**Explanation:**
+
+**Scale out** increases the number of VM instances that run your app. You can scale out to as many as **30 instances**, depending on your pricing tier. App Service Environments in the **Isolated tier** further increases your scale-out count to **100 instances**.
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Moves to the next higher App Service Plan** | ❌ Incorrect - This describes **Scale Up** (vertical scaling), not Scale Out |
+| **B) Adds additional running versions to the same instance** | ❌ Incorrect - Scale Out adds more instances, not multiple versions on one instance |
+| **C) Increases the number of VM instances** | ✅ **Correct** - Scale Out adds more VM instances to handle load |
+| **D) Deploys to a different region** | ❌ Incorrect - This describes multi-region deployment, not Scale Out |
+
+**Visual Representation:**
+
+```
+Scale Up (Vertical):
+┌─────────────────┐        ┌─────────────────────┐
+│  Instance (S1)  │   →    │   Instance (S2)     │
+│  1 core, 1.75GB │        │   2 cores, 3.5GB    │
+└─────────────────┘        └─────────────────────┘
+     Same number of instances, but bigger
+
+Scale Out (Horizontal):
+┌─────────────────┐        ┌─────────┐ ┌─────────┐ ┌─────────┐
+│  Instance (S1)  │   →    │ Inst 1  │ │ Inst 2  │ │ Inst 3  │
+│  1 core, 1.75GB │        │   S1    │ │   S1    │ │   S1    │
+└─────────────────┘        └─────────┘ └─────────┘ └─────────┘
+     Same size instances, but more of them
+```
+
+**Reference:** [Scale up an app in Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/manage-scale-up)
+
+---
 
 ## Multiple Apps in One Plan
 
