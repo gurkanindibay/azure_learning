@@ -8,16 +8,79 @@ Azure Cosmos DB is a fully managed, globally distributed, multi-model database s
 
 ## Table of Contents
 
-1. [Quick Reference: Which API for Which Data?](#quick-reference-which-api-for-which-data)
-2. [Core (SQL) API](#core-sql-api)
-3. [MongoDB API](#mongodb-api)
-4. [Apache Cassandra API](#apache-cassandra-api)
-5. [Apache Gremlin API](#apache-gremlin-api)
-6. [Table API](#table-api)
-7. [PostgreSQL API](#postgresql-api)
-8. [Data Format Comparison](#data-format-comparison)
-9. [API Selection Decision Guide](#api-selection-decision-guide)
-10. [Exam Scenarios](#exam-scenarios)
+1. [API Determines Account Type](#api-determines-account-type)
+2. [Quick Reference: Which API for Which Data?](#quick-reference-which-api-for-which-data)
+3. [Core (SQL) API](#core-sql-api)
+4. [MongoDB API](#mongodb-api)
+5. [Apache Cassandra API](#apache-cassandra-api)
+6. [Apache Gremlin API](#apache-gremlin-api)
+7. [Table API](#table-api)
+8. [PostgreSQL API](#postgresql-api)
+9. [Data Format Comparison](#data-format-comparison)
+10. [API Selection Decision Guide](#api-selection-decision-guide)
+11. [Exam Scenarios](#exam-scenarios)
+
+---
+
+## API Determines Account Type
+
+### One API Per Account Rule
+
+**Important**: The API you choose determines the type of Cosmos DB account to create. Currently, you **must create a separate account for each API**. You cannot mix different APIs within the same account.
+
+| Scenario | Possible? | Explanation |
+|----------|-----------|-------------|
+| Create SQL API database and Gremlin API database in same account | ❌ No | Each account supports only one API type |
+| Create multiple SQL API databases in same account | ✅ Yes | Multiple databases of the same API type are allowed |
+| Create multiple containers in same database | ✅ Yes | Multiple containers within a database are allowed |
+
+### Practice Question: Multiple APIs in One Account
+
+**Scenario:**
+
+You've created a Cosmos DB account named **Account1**. Inside, you create one database named **Db1**, and one container named **Container1**. The data you are storing is document data using the **Core (SQL) API**. You have a new requirement to add a **graph database using the Gremlin API**.
+
+**Question:**
+
+Can you create another database named Db2 inside Account1 for the graph data?
+
+**Options:**
+
+- A) Yes, each database can use a different API in one account
+- B) No, each account can only contain one type of data ✅
+- C) Yes, you can use any API to call a Cosmos DB database of any type
+
+---
+
+**Correct Answer: B) No, each account can only contain one type of data**
+
+---
+
+**Explanation:**
+
+The API determines the type of account to create. Azure Cosmos DB provides five APIs:
+
+| API | Data Type | Description |
+|-----|-----------|-------------|
+| **Core (SQL)** | Document | Native JSON document storage |
+| **MongoDB** | Document | MongoDB-compatible document storage |
+| **Gremlin** | Graph | Graph data with vertices and edges |
+| **Azure Table** | Key-Value | Simple key-value storage |
+| **Cassandra** | Column-Family | Wide-column storage |
+
+**Key Point:** Currently, you must create a **separate account for each API**. This means:
+
+- **Account1** (Core SQL API) → Can only have SQL databases and containers
+- To use Gremlin API, you must create a **new account** (e.g., Account2) with Gremlin API selected
+
+**Why the other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A) Yes, each database can use a different API** | Incorrect - APIs are set at the account level, not database level |
+| **C) Yes, you can use any API to call any database** | Incorrect - Each API has its own wire protocol and data model; you cannot use SQL queries on a Gremlin database |
+
+**Reference:** [Azure Cosmos DB resource model](https://docs.microsoft.com/en-us/azure/cosmos-db/account-databases-containers-items)
 
 ---
 
