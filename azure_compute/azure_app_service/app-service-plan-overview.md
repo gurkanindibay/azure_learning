@@ -326,6 +326,93 @@ az webapp create --name admin-portal --plan sharedPlan --resource-group myResour
 | Premium | Unlimited |
 | Isolated | Unlimited |
 
+### Deployment Slots and VM Instances
+
+**Key Concept**: When you create an app in App Service, it runs on **all** the VM instances configured in the App Service plan. If multiple apps are in the same App Service plan, they all share the same VM instances. Similarly, if you have **multiple deployment slots** for an app, all deployment slots also run on the **same VM instances**.
+
+This means:
+- The App Service Plan is the **scale unit** of App Service apps
+- If the plan is configured to run 5 VM instances, **all apps** in the plan run on **all 5 instances**
+- If the plan is configured for autoscaling, **all apps** in the plan are scaled out together
+
+### Practice Question: VM Instance Count with Multiple Apps and Slots
+
+**Question:**
+
+You have five applications installed on a single App Service Plan. Each application has two deployment slots - production and staging. You have scaled the plan out to three instances. How many VMs are running to support this?
+
+**Options:**
+
+A) Three ✅
+
+B) One
+
+C) Five
+
+D) Ten
+
+---
+
+**Correct Answer: A) Three**
+
+---
+
+**Explanation:**
+
+| Factor | Count |
+|--------|-------|
+| Applications | 5 |
+| Deployment slots per app | 2 (production + staging) |
+| Total deployment slots | 10 (5 apps × 2 slots) |
+| App Service Plan instances | **3** |
+| **VMs Running** | **3** |
+
+**Why the answer is 3 (not 10, 5, or 1):**
+
+1. **All apps in the same App Service Plan share the same VM instances**
+2. **All deployment slots also run on the same VM instances**
+3. The number of VMs is determined **only** by the App Service Plan's scale-out setting (3 instances)
+4. Adding more apps or slots does NOT increase the number of VMs
+
+**Visual Representation:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    App Service Plan (3 Instances)                   │
+├─────────────────────┬─────────────────────┬─────────────────────────┤
+│     Instance 1      │     Instance 2      │      Instance 3         │
+│                     │                     │                         │
+│  Running on this VM:│  Running on this VM:│   Running on this VM:   │
+│  • App1-Production  │  • App1-Production  │   • App1-Production     │
+│  • App1-Staging     │  • App1-Staging     │   • App1-Staging        │
+│  • App2-Production  │  • App2-Production  │   • App2-Production     │
+│  • App2-Staging     │  • App2-Staging     │   • App2-Staging        │
+│  • App3-Production  │  • App3-Production  │   • App3-Production     │
+│  • App3-Staging     │  • App3-Staging     │   • App3-Staging        │
+│  • App4-Production  │  • App4-Production  │   • App4-Production     │
+│  • App4-Staging     │  • App4-Staging     │   • App4-Staging        │
+│  • App5-Production  │  • App5-Production  │   • App5-Production     │
+│  • App5-Staging     │  • App5-Staging     │   • App5-Staging        │
+└─────────────────────┴─────────────────────┴─────────────────────────┘
+                        All 10 slots run on ALL 3 VMs
+```
+
+**Why Other Answers Are Wrong:**
+
+| Answer | Why Incorrect |
+|--------|---------------|
+| **One** | Would only be true if you didn't scale out at all (single instance) |
+| **Five** | Incorrectly assumes one VM per application |
+| **Ten** | Incorrectly assumes one VM per deployment slot |
+
+**Key Takeaway:**
+
+The **App Service Plan** determines the number of VM instances. Apps and slots are workloads that run **on** these instances - they don't create additional VMs. Scaling out the plan increases VMs; adding apps or slots utilizes existing VMs.
+
+**Reference:** [App Service plan overview - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans)
+
+---
+
 ## Pricing Tiers
 
 App Service Plans come in different pricing tiers:
