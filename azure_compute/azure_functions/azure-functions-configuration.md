@@ -110,6 +110,24 @@ Each binding in the `bindings` array must include:
 | `direction` | Yes | Direction of data flow: `in`, `out`, or `inout` |
 | `name` | Yes | Name used in function code to access the binding data |
 
+#### Direction Property Values
+
+All triggers and bindings have a `direction` property in the `function.json` file. The possible values are:
+
+| Value | Description |
+|-------|-------------|
+| `in` | **Input direction** - Data flows into the function. All triggers use this direction. Input bindings also use this direction to read data from external sources. |
+| `out` | **Output direction** - Data flows out of the function. Output bindings use this direction to write data to external destinations. |
+| `inout` | **Bidirectional** - Special direction that allows both reading and writing. When using `inout`, only the **Advanced editor** is available via the Integrate tab in the Azure portal. |
+
+**Key Points:**
+- For **triggers**, the direction is always `in`
+- **Input bindings** use `in`
+- **Output bindings** use `out`
+- Some bindings support the special `inout` direction for bidirectional data flow
+
+**Reference**: [Azure Functions triggers and bindings](https://docs.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=csharp)
+
 ### Common Trigger Examples
 
 #### HTTP Trigger
