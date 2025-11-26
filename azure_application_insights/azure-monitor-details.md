@@ -475,6 +475,73 @@ For comprehensive monitoring, you'll likely use both:
 
 ---
 
+## Practice Questions
+
+### Question 1: Centralized Log Collection and Analysis
+
+**Question:**
+Which feature within Azure collects all of the logs from various resources into a central dashboard, where you can run queries, view graphs, and create alerts on certain events?
+
+**Options:**
+
+1. ✅ **Azure Monitor**
+   - **Correct**: Azure Monitor is a centralized dashboard that collects all the logs, metrics, and events from your resources. It provides:
+     - **Log Analytics** for running KQL queries on collected logs
+     - **Metrics Explorer** for viewing graphs and analyzing metrics
+     - **Alerts** for creating notifications on certain events
+     - **Dashboards and Workbooks** for visualizing data
+
+2. ❌ **Storage Account or Event Hub**
+   - **Incorrect**: Storage Accounts and Event Hubs are **destinations** where you can export monitoring data, but they are not monitoring solutions themselves. They don't provide query capabilities, built-in graphing, or alerting functionality. You would use these to:
+     - Archive logs for long-term retention (Storage Account)
+     - Stream logs to external systems (Event Hub)
+
+3. ❌ **Azure Portal Dashboard**
+   - **Incorrect**: Azure Portal Dashboard is a **visualization tool** that can display widgets and charts from various Azure services, but it is not the service that actually collects logs or provides query/alerting capabilities. Dashboards consume data from Azure Monitor; they don't collect it.
+
+4. ❌ **Azure Security Center (Microsoft Defender for Cloud)**
+   - **Incorrect**: Azure Security Center (now Microsoft Defender for Cloud) is focused on **security posture management** and **threat protection**. While it does collect security-related data and provides alerts, it is not a general-purpose monitoring solution for all logs, metrics, and events. It's specifically for:
+     - Security recommendations
+     - Vulnerability assessments
+     - Threat detection
+
+---
+
+### Why Azure Monitor is the Answer
+
+| Requirement | Azure Monitor Capability |
+|-------------|-------------------------|
+| **Collect logs from various resources** | ✅ Diagnostic settings, agents, APIs |
+| **Central dashboard** | ✅ Log Analytics, Dashboards, Workbooks |
+| **Run queries** | ✅ Kusto Query Language (KQL) |
+| **View graphs** | ✅ Metrics Explorer, Charts, Workbooks |
+| **Create alerts** | ✅ Metric alerts, Log alerts, Activity log alerts |
+
+### Azure Monitor at a Glance
+
+```
+                    ┌─────────────────────────────────────┐
+                    │          AZURE MONITOR              │
+                    │   (Centralized Monitoring Platform) │
+                    └─────────────────────────────────────┘
+                                    │
+        ┌───────────────────────────┼───────────────────────────┐
+        │                           │                           │
+        ▼                           ▼                           ▼
+┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+│   COLLECT     │         │   ANALYZE     │         │   RESPOND     │
+│               │         │               │         │               │
+│ • Logs        │         │ • KQL Queries │         │ • Alerts      │
+│ • Metrics     │         │ • Graphs      │         │ • Autoscale   │
+│ • Traces      │         │ • Dashboards  │         │ • Automation  │
+│ • Events      │         │ • Workbooks   │         │ • Notifications│
+└───────────────┘         └───────────────┘         └───────────────┘
+```
+
+**Reference:** [Azure Monitor Overview](https://docs.microsoft.com/en-us/azure/azure-monitor/overview)
+
+---
+
 ## Related Learning Resources
 - [Azure Monitor Documentation](https://learn.microsoft.com/azure/azure-monitor/)
 - [Application Insights Overview](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)
