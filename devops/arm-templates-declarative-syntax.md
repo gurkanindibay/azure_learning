@@ -116,6 +116,64 @@ else:
     print("Storage account already exists with correct configuration")
 ```
 
+## Nested and Linked ARM Templates
+
+### Overview
+
+To deploy complex solutions, you can break your ARM template into many related templates, and then deploy them together through a main template. The related templates can be separate files or template syntax that is embedded within the main template.
+
+### Resource Type for Nested Templates
+
+To include another ARM template within your deployment, use the **`Microsoft.Resources/deployments`** resource type.
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "linkedTemplate",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "https://mystorageaccount.blob.core.windows.net/templates/nested-template.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+### Key Properties
+
+| Property | Description |
+|----------|-------------|
+| `templateLink.uri` | URI of the external template to include |
+| `template` | Inline template definition (for embedded templates) |
+| `parameters` | Parameters to pass to the nested template |
+| `mode` | Deployment mode (Incremental or Complete) |
+
+### Common Misconceptions
+
+| Resource Type | Actual Purpose |
+|---------------|----------------|
+| ❌ `Microsoft.Compute/virtualMachines/extensions` | VM extensions, not template linking |
+| ❌ `Microsoft.Resources/deploymentScripts` | Running scripts during deployment |
+| ❌ `"dependsOn": [ ... ]` | Dependency declaration, not a resource type |
+| ✅ `Microsoft.Resources/deployments` | **Correct** - Links/nests ARM templates |
+
+### References
+
+- [Microsoft Docs: Linked and Nested Templates](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates?tabs=azure-powershell)
+
 ## Related Technologies
 
 | Technology | Type | Description |
