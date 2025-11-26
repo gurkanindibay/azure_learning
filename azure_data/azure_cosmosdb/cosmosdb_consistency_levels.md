@@ -1143,6 +1143,175 @@ var results = await iterator.ReadNextAsync();
 
 ---
 
+## Practice Question: Multi-Region High Availability with Low Latency
+
+### Scenario
+
+You are developing an application that uses Azure Cosmos DB as its database. The application requires low-latency reads and writes, and you need to ensure that the data is always available even in the event of a regional outage.
+
+### Question
+
+Which of the following configurations should you implement in Cosmos DB to meet these requirements?
+
+**Select only one answer:**
+
+**A.** Enable Multi-Region Writes and set the Consistency Level to Strong
+
+**B.** Enable Multi-Region Writes and set the Consistency Level to Session ✅
+
+**C.** Enable Single-Region Writes and set the Consistency Level to Bounded Staleness
+
+**D.** Enable Single-Region Writes and set the Consistency Level to Eventual
+
+---
+
+### Answer: B - Enable Multi-Region Writes and set the Consistency Level to Session ✅
+
+---
+
+### Detailed Explanation
+
+#### Requirements Analysis
+
+The question specifies two key requirements:
+1. **Low-latency reads and writes**
+2. **High availability even during regional outages**
+
+---
+
+#### Why Option B (Multi-Region Writes + Session) is Correct
+
+**Multi-Region Writes Benefits:**
+- Enables writing to **any region**, not just a primary region
+- During a regional outage, writes automatically continue in other regions
+- Users write to their **nearest region** for lowest latency
+- Provides true **active-active** configuration
+
+**Session Consistency Benefits:**
+- **Read-your-writes guarantee** within a session
+- **Low latency**: Reads from single replica (100% throughput)
+- **Write latency**: Local region only (fast)
+- Perfect balance between consistency and performance
+
+**Performance Characteristics:**
+```
+Session Consistency:
+├── Read Throughput: 100% (single replica read)
+├── Write Latency: Local region only
+├── Read-Your-Writes: ✓ Guaranteed within session
+└── Ideal for: User-facing applications
+```
+
+---
+
+#### Why Option A (Multi-Region Writes + Strong) is Incorrect
+
+While Multi-Region Writes provides high availability, **Strong consistency contradicts the low-latency requirement**.
+
+**Strong Consistency Problems:**
+- **Writes must synchronously replicate to ALL regions** before returning success
+- This introduces significant latency, especially for geographically distant regions
+- Read throughput is only **50%** (requires quorum from 2 replicas)
+
+**Performance Impact:**
+```
+Strong Consistency:
+├── Read Throughput: 50% (quorum read from 2 replicas)
+├── Write Latency: Synchronous replication to ALL regions (HIGH)
+├── Global Consistency: ✓ Yes, but at significant cost
+└── Problem: Violates low-latency requirement
+```
+
+**Example Latency Comparison:**
+```
+Scenario: Write from East US, regions in East US, West Europe, Southeast Asia
+
+Session Consistency:
+- Write acknowledged after local East US replication (~5-10ms)
+
+Strong Consistency:
+- Write acknowledged after ALL regions confirm (~100-300ms)
+- Must wait for Southeast Asia round-trip!
+```
+
+---
+
+#### Why Option C (Single-Region Writes + Bounded Staleness) is Incorrect
+
+**Single-Region Writes Limitation:**
+- All writes go to **one primary region**
+- During regional outage of the primary region, **writes fail**
+- Does NOT meet the "always available" requirement
+
+**Bounded Staleness:**
+- Good for predictable lag tolerance
+- But doesn't solve the availability problem
+
+**Failure Scenario:**
+```
+Single-Region Write (Primary: East US):
+├── East US outage occurs
+├── Writes: ✗ FAIL (primary region unavailable)
+├── Reads: ✓ Continue from other regions
+└── Result: Does NOT meet high availability for writes
+```
+
+---
+
+#### Why Option D (Single-Region Writes + Eventual) is Incorrect
+
+**Same Single-Region Write Problem:**
+- Primary region outage = write failures
+- Does NOT provide high availability for writes
+
+**Eventual Consistency Additional Issues:**
+- No ordering guarantees
+- Potential for reading stale data
+- May not meet application requirements for data consistency
+
+**Problems:**
+```
+Single-Region Write + Eventual:
+├── Regional Outage: ✗ Writes fail
+├── Consistency: Weakest level
+├── Read-Your-Writes: ✗ Not guaranteed
+└── Result: Fails both requirements
+```
+
+---
+
+### Summary Comparison Table
+
+| Configuration | Low Latency | High Availability | Meets Requirements |
+|---------------|-------------|-------------------|-------------------|
+| **Multi-Region + Session** ✅ | ✓ Yes | ✓ Yes | ✓ **YES** |
+| **Multi-Region + Strong** | ✗ No (sync replication) | ✓ Yes | ✗ No |
+| **Single-Region + Bounded Staleness** | ✓ Yes | ✗ No (write failures) | ✗ No |
+| **Single-Region + Eventual** | ✓ Yes | ✗ No (write failures) | ✗ No |
+
+---
+
+### Key Takeaways
+
+1. **Multi-Region Writes is essential for high availability**
+   - Single-region writes create a single point of failure
+   - Regional outages will cause write failures
+
+2. **Session consistency provides the best balance**
+   - Low latency (local region writes, single replica reads)
+   - Sufficient consistency for most applications
+   - Read-your-writes guarantee within user sessions
+
+3. **Strong consistency sacrifices latency for global consistency**
+   - Only use when absolutely required (financial transactions)
+   - Not suitable when low latency is a requirement
+
+4. **Default recommendation for most applications**
+   - Multi-Region Writes + Session consistency
+   - This is the most common production configuration
+
+---
+
 ### Additional Resources
 
 - [Azure Cosmos DB Consistency Levels](https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels)
