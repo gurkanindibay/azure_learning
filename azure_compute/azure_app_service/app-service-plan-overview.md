@@ -10,6 +10,7 @@
 - [Multiple Apps in One Plan](#multiple-apps-in-one-plan)
 - [Pricing Tiers](#pricing-tiers)
 - [Creating an App Service Plan](#creating-an-app-service-plan)
+- [Kudu Service](#kudu-service)
 - [Exam Tips](#exam-tips)
 - [References](#references)
 
@@ -393,6 +394,47 @@ az appservice plan create \
   }
 }
 ```
+
+## Kudu Service
+
+**Kudu** is the engine behind a number of features in Azure App Service related to **source control based deployment** and other deployment methods like **Dropbox and OneDrive sync**.
+
+### Accessing Kudu
+
+The Kudu console URL varies based on your App Service tier:
+
+| App Service Tier | Kudu URL Format |
+|------------------|-----------------|
+| **Standard Tiers** (Free, Shared, Basic, Standard, Premium) | `https://<app-name>.scm.azurewebsites.net` |
+| **Isolated Tier** (App Service Environment) | `https://<app-name>.scm.<ase-name>.p.azurewebsites.net` |
+
+### Examples
+
+```
+# Standard tier app named "mywebapp"
+https://mywebapp.scm.azurewebsites.net
+
+# Isolated tier app named "mywebapp" in ASE named "myase"
+https://mywebapp.scm.myase.p.azurewebsites.net
+```
+
+### Kudu Features
+
+Kudu provides several useful features for managing your App Service:
+
+| Feature | Description |
+|---------|-------------|
+| **Debug Console** | Access command prompt or PowerShell in the browser |
+| **Process Explorer** | View and manage running processes |
+| **Environment Variables** | View all environment variables |
+| **Log Stream** | Real-time log viewing |
+| **Deployment Triggers** | Webhooks for CI/CD integration |
+| **File Browser** | Browse and edit files in your app |
+| **REST API** | Programmatic access to Kudu functionality |
+
+### Reference
+
+- [Kudu service overview - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/resources-kudu)
 
 ## Exam Tips
 
