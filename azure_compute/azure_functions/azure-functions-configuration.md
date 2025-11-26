@@ -4,6 +4,46 @@
 
 Azure Functions use configuration files to define function behavior, triggers, bindings, and application settings. Understanding these configuration files is essential for developing, deploying, and managing Azure Functions effectively.
 
+## Table of Contents
+
+- [Key Configuration Files](#key-configuration-files)
+- [function.json](#functionjson)
+  - [Overview](#overview-1)
+  - [Structure](#structure)
+  - [Properties](#properties)
+  - [Bindings Array](#bindings-array)
+  - [Common Trigger Examples](#common-trigger-examples)
+  - [Input and Output Bindings](#input-and-output-bindings)
+- [host.json](#hostjson)
+  - [Overview](#overview-2)
+  - [Basic Structure](#basic-structure)
+  - [Common Configuration Sections](#common-configuration-sections)
+- [local.settings.json](#localsettingsjson)
+  - [Overview](#overview-3)
+  - [Structure](#structure-1)
+  - [Properties](#properties-1)
+  - [Required Settings](#required-settings)
+- [Practice Question](#practice-question)
+- [function.json vs Attributes/Decorators](#functionjson-vs-attributesdecorators)
+- [Configuration Hierarchy](#configuration-hierarchy)
+- [Common Configuration Scenarios](#common-configuration-scenarios)
+- [Securing Configuration](#securing-configuration)
+- [Deployment Considerations](#deployment-considerations)
+- [Troubleshooting](#troubleshooting)
+- [Additional Resources](#additional-resources)
+- [Custom Handlers](#custom-handlers)
+  - [Overview](#overview-4)
+  - [Key Concepts](#key-concepts)
+  - [How Custom Handlers Work](#how-custom-handlers-work)
+  - [Configuration](#configuration)
+  - [Custom Handler Requirements](#custom-handler-requirements)
+  - [Example: Go Custom Handler](#example-go-custom-handler)
+  - [Supported Languages via Custom Handlers](#supported-languages-via-custom-handlers)
+  - [Practice Question](#practice-question-1)
+  - [Custom Handlers vs Native Language Support](#custom-handlers-vs-native-language-support)
+  - [Best Practices for Custom Handlers](#best-practices-for-custom-handlers)
+- [Related Topics](#related-topics)
+
 ## Key Configuration Files
 
 | File | Purpose | Scope |
@@ -713,6 +753,108 @@ Custom handlers are configured in the `host.json` file:
 | `workingDirectory` | Working directory for the executable |
 | `arguments` | Command-line arguments to pass to the executable |
 | `enableForwardingHttpRequest` | For HTTP triggers only, forwards the original HTTP request instead of the custom handler payload |
+
+### Custom Handler Requirements
+
+For a custom handler to be deployable and executable inside Azure Functions, it must meet the following requirements:
+
+#### 1. Must be a Standalone Executable or Script
+
+The custom handler must be something that can run on the Azure Functions host environment:
+
+| Platform | Executable Format |
+|----------|-------------------|
+| **Windows** | `.exe`, `.bat`, `.cmd`, or script with interpreter |
+| **Linux** | ELF binary, shell script, or script with interpreter |
+
+#### 2. Must be HTTP-Capable
+
+Your custom handler must:
+- Start an HTTP server
+- Listen on the port specified by `FUNCTIONS_CUSTOMHANDLER_PORT` environment variable
+- Accept HTTP POST requests from the Functions host
+- Return HTTP responses
+
+#### 3. Request/Response Format
+
+The Functions host sends requests and expects responses in a specific JSON format:
+
+**Incoming Request (from Functions host to your handler):**
+```json
+{
+  "Data": {
+    "req": {
+      "Url": "https://myfunc.azurewebsites.net/api/hello",
+      "Method": "GET",
+      "Query": { "name": "World" },
+      "Headers": { "Content-Type": ["application/json"] },
+      "Body": ""
+    }
+  },
+  "Metadata": {
+    "sys": {
+      "MethodName": "HttpTrigger",
+      "UtcNow": "2025-11-26T12:00:00Z"
+    }
+  }
+}
+```
+
+**Expected Response (from your handler back to Functions host):**
+```json
+{
+  "Outputs": {
+    "res": {
+      "statusCode": 200,
+      "body": "Hello, World!",
+      "headers": { "Content-Type": "application/json" }
+    }
+  },
+  "Logs": ["Function executed successfully"],
+  "ReturnValue": null
+}
+```
+
+#### 4. Deployment Requirements
+
+Your executable must be included in the deployment package:
+
+```
+MyFunctionApp/
+├── host.json                 # Points to your executable
+├── local.settings.json
+├── handler.exe               # Your custom handler (Windows)
+├── handler                   # Your custom handler (Linux)
+└── HttpTrigger/
+    └── function.json         # Function bindings
+```
+
+#### 5. Platform Considerations
+
+| Consideration | Requirement |
+|---------------|-------------|
+| **Architecture** | Must match the Azure Functions host (typically x64) |
+| **Dependencies** | All dependencies must be bundled or available on the host |
+| **Startup time** | Should start quickly to avoid cold start delays |
+| **Port binding** | Must read `FUNCTIONS_CUSTOMHANDLER_PORT` and bind to it |
+
+#### 6. Simplified Mode for HTTP-Only Functions
+
+If you only use HTTP triggers, you can enable `enableForwardingHttpRequest: true` to receive the raw HTTP request instead of the wrapper format:
+
+```json
+{
+  "version": "2.0",
+  "customHandler": {
+    "description": {
+      "defaultExecutablePath": "handler"
+    },
+    "enableForwardingHttpRequest": true
+  }
+}
+```
+
+This forwards the original HTTP request directly, making it easier to build standard web servers without needing to parse the custom handler payload format.
 
 ### Example: Go Custom Handler
 
