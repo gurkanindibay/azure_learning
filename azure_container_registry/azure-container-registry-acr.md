@@ -11,6 +11,13 @@
   - [Manifest](#manifest)
   - [Artifact](#artifact)
 - [ACR Service Tiers](#acr-service-tiers)
+- [ACR Tasks](#acr-tasks)
+  - [az acr build Command](#az-acr-build-command)
+  - [Key Parameters](#key-parameters)
+  - [ACR Build Examples](#acr-build-examples)
+  - [ACR Tasks vs Local Docker Build](#acr-tasks-vs-local-docker-build)
+  - [Benefits of ACR Tasks](#benefits-of-acr-tasks)
+  - [Common ACR Task Types](#common-acr-task-types)
 - [Authentication Methods](#authentication-methods)
 - [Managing Images and Repositories](#managing-images-and-repositories)
   - [Deleting Images vs Manifests vs Repositories](#deleting-images-vs-manifests-vs-repositories)
@@ -111,6 +118,146 @@ An **artifact** is a generic term for any content stored in ACR, including:
 | **Basic** | Cost-optimized for learning and development | 10 GB | Low | No |
 | **Standard** | Production workloads | 100 GB | Medium | No |
 | **Premium** | High-volume, geo-replicated, content trust | 500 GB | High | Yes |
+
+## ACR Tasks
+
+ACR Tasks is a suite of features within Azure Container Registry that provides streamlined and efficient Docker container image builds in Azure. It allows you to build, test, and push container images without needing a local Docker installation.
+
+### az acr build Command
+
+The `az acr build` command queues a quick build, providing streaming logs for an Azure Container Registry. **It performs a docker build in Azure and immediately pushes the result image into the ACR.**
+
+**Syntax:**
+```bash
+az acr build --registry $ACR_NAME --image <image-name>:<tag> <source-location>
+```
+
+**Example:**
+```bash
+az acr build --registry myregistry --image helloacrtasks:v1 .
+```
+
+**What this command does:**
+1. ✅ Uploads the source code (Dockerfile and context) to Azure
+2. ✅ Builds the container image in Azure (not on your local machine)
+3. ✅ Immediately pushes the built image to the specified ACR
+4. ✅ Streams build logs back to your terminal
+
+**What this command does NOT do:**
+- ❌ Does NOT create a new ACR resource (registry must exist)
+- ❌ Does NOT keep the image on your local machine
+- ❌ Does NOT delete images from existing resources
+
+### Key Parameters
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `--registry` | Name of the container registry | `myregistry` |
+| `--image` | Image name and tag | `helloacrtasks:v1` |
+| `<source>` | Source location (. for current directory, URL, or tar archive) | `.` |
+| `--file` | Dockerfile path (default: Dockerfile) | `--file ./docker/Dockerfile` |
+| `--platform` | Target platform | `--platform linux/amd64` |
+| `--no-push` | Build only, don't push to registry | `--no-push` |
+
+### ACR Build Examples
+
+#### Build from Current Directory
+```bash
+# Build and push using Dockerfile in current directory
+az acr build --registry myregistry --image myapp:v1 .
+```
+
+#### Build from Git Repository
+```bash
+# Build directly from a GitHub repository
+az acr build --registry myregistry \
+  --image myapp:v1 \
+  https://github.com/Azure-Samples/acr-build-helloworld-node.git
+```
+
+#### Build with Custom Dockerfile
+```bash
+# Specify a different Dockerfile
+az acr build --registry myregistry \
+  --image myapp:v1 \
+  --file ./docker/Dockerfile.prod \
+  .
+```
+
+#### Build without Pushing
+```bash
+# Build only (for testing), don't push to registry
+az acr build --registry myregistry \
+  --image myapp:test \
+  --no-push \
+  .
+```
+
+#### Multi-platform Build
+```bash
+# Build for multiple platforms
+az acr build --registry myregistry \
+  --image myapp:v1 \
+  --platform linux/amd64,linux/arm64 \
+  .
+```
+
+### ACR Tasks vs Local Docker Build
+
+| Aspect | `az acr build` | Local `docker build` + `docker push` |
+|--------|----------------|-------------------------------------|
+| **Build Location** | Azure cloud | Local machine |
+| **Docker Required** | No | Yes |
+| **Push to Registry** | Automatic | Separate step |
+| **Network Bandwidth** | Only source code uploaded | Full image uploaded |
+| **Build Resources** | Azure compute | Local compute |
+| **Build Logs** | Streamed from Azure | Local output |
+
+### Benefits of ACR Tasks
+
+1. **No Docker Installation Required**: Build images without Docker on your local machine
+2. **Faster Builds**: Leverage Azure compute resources
+3. **Reduced Network Usage**: Only source code is uploaded (not built image layers)
+4. **Consistent Environment**: Builds run in a consistent Azure environment
+5. **Integration**: Works seamlessly with Azure DevOps, GitHub Actions, and other CI/CD tools
+6. **Security**: Source code and build happen within Azure, no need to expose local environment
+
+### Common ACR Task Types
+
+| Task Type | Command | Use Case |
+|-----------|---------|----------|
+| **Quick Task** | `az acr build` | On-demand builds, testing |
+| **Automatically Triggered** | `az acr task create` | CI/CD, source code changes |
+| **Multi-step Task** | YAML task definition | Complex build pipelines |
+| **Base Image Update** | Triggered task | Rebuild when base images update |
+
+### Example: Complete Build Workflow
+
+```bash
+# Set variables
+ACR_NAME=myregistry
+IMAGE_NAME=helloacrtasks
+TAG=v1
+
+# Build and push the image
+az acr build \
+  --registry $ACR_NAME \
+  --image $IMAGE_NAME:$TAG \
+  .
+
+# Verify the image was pushed
+az acr repository show-tags \
+  --name $ACR_NAME \
+  --repository $IMAGE_NAME \
+  --output table
+
+# Run the image (e.g., in Azure Container Instances)
+az container create \
+  --resource-group myResourceGroup \
+  --name mycontainer \
+  --image $ACR_NAME.azurecr.io/$IMAGE_NAME:$TAG \
+  --registry-login-server $ACR_NAME.azurecr.io
+```
 
 ## Authentication Methods
 
@@ -544,6 +691,7 @@ az acr manifest delete --registry devregistry --suffix dev/nginx:latest --image 
 ## References
 
 - [Azure Container Registry documentation](https://learn.microsoft.com/en-us/azure/container-registry/)
+- [ACR Tasks - Quick task tutorial](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-tutorial-quick-task)
 - [Push and pull container images](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli)
 - [Delete container images in Azure Container Registry](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-delete)
 - [ACR CLI reference](https://learn.microsoft.com/en-us/cli/azure/acr)
