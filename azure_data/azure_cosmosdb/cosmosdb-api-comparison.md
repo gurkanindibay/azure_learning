@@ -478,7 +478,7 @@ Text-based format:                     Binary-encoded format:
 
 ## Exam Scenarios
 
-### Scenario 1: JSON Document Data (Featured Question)
+### Scenario 1: JSON Document Data
 
 **Question:** Which CosmosDB API format works best with document (JSON) data?
 
@@ -507,7 +507,73 @@ The question specifically asks about **JSON** data, making **Core (SQL) API** th
 
 ---
 
-### Scenario 2: MongoDB Migration
+### Scenario 2: Graph Data
+
+**Question:** Which CosmosDB API format works best with graph data?
+
+**Options:**
+- A) Table API
+- B) Cassandra API
+- C) Gremlin API ✅
+- D) Core (SQL) API
+
+**Correct Answer: C) Gremlin API**
+
+**Explanation:**
+
+| API | Data Format | Why Correct/Incorrect |
+|-----|-------------|----------------------|
+| **Gremlin API** ✅ | Vertices & Edges | Allows users to make **graph queries** and store data as **edges and vertices** - perfect for graph data |
+| **Table API** ❌ | Key/Value | Stores data in **key/value format**, not suited for graph relationships |
+| **Cassandra API** ❌ | Column-oriented | Stores data in a **column-oriented schema**, optimized for wide-column workloads |
+| **Core (SQL) API** ❌ | Document (JSON) | Stores data in **document format**, not optimized for graph traversals |
+
+**Why Gremlin API is the best for Graph Data:**
+
+1. **Native Graph Model**: Data is stored as vertices (nodes) and edges (relationships)
+2. **Graph Traversal Queries**: Gremlin query language is specifically designed for traversing relationships
+3. **Relationship-First Design**: Optimized for queries like "find friends of friends" or "shortest path between nodes"
+4. **Property Graph Model**: Both vertices and edges can have properties
+
+**Graph Data Example:**
+```
+    ┌─────────┐         ┌─────────┐
+    │ Person  │─KNOWS──▶│ Person  │
+    │ "John"  │         │ "Jane"  │
+    └─────────┘         └─────────┘
+         │
+         │ BOUGHT
+         ▼
+    ┌─────────┐
+    │ Product │
+    │ "Laptop"│
+    └─────────┘
+```
+
+**Gremlin Query Examples:**
+```groovy
+// Find all people John knows
+g.V().has('name', 'John').out('knows').values('name')
+
+// Find products bought by John's friends
+g.V().has('name', 'John').out('knows').out('bought').values('name')
+
+// Find the shortest path between two people
+g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
+```
+
+**Use Cases for Gremlin API:**
+- Social networks (friend connections)
+- Recommendation engines (product relationships)
+- Fraud detection (transaction patterns)
+- Knowledge graphs (entity relationships)
+- Network topology (IT infrastructure)
+
+**Reference:** [Introduction to Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/introduction)
+
+---
+
+### Scenario 3: MongoDB Migration
 
 **Question:** Your company has an existing MongoDB application that needs to be migrated to Azure Cosmos DB with minimal code changes. Which API should you use?
 
@@ -520,7 +586,7 @@ The question specifically asks about **JSON** data, making **Core (SQL) API** th
 
 ---
 
-### Scenario 3: Social Network Application
+### Scenario 4: Social Network Application
 
 **Question:** You're building a social network application that needs to efficiently query friend relationships and friend-of-friend connections. Which API should you use?
 
@@ -533,7 +599,7 @@ The question specifically asks about **JSON** data, making **Core (SQL) API** th
 
 ---
 
-### Scenario 4: IoT Time-Series Data
+### Scenario 5: IoT Time-Series Data
 
 **Question:** You're collecting high-volume sensor data from IoT devices that needs to be written quickly and queried by time ranges. Which API should you use?
 
@@ -546,7 +612,7 @@ The question specifically asks about **JSON** data, making **Core (SQL) API** th
 
 ---
 
-### Scenario 5: Flexible JSON Documents
+### Scenario 6: Flexible JSON Documents
 
 **Question:** You're building a new e-commerce application that needs to store product catalogs with varying attributes depending on product category. You want SQL-like query capabilities. Which API should you use?
 
