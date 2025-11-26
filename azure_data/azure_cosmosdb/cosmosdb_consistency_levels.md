@@ -1312,9 +1312,210 @@ Single-Region Write + Eventual:
 
 ---
 
+## Practice Question: Overriding Consistency Level at Request Level
+
+### Scenario
+
+When creating a Cosmos DB account, you indicate which consistency level you would like to follow: Strong, Bounded Staleness, Session, Consistent Prefix and Eventual.
+
+### Question
+
+How can a developer force Strong consistency on a query when the database itself is configured with Eventual consistency?
+
+**Select only one answer:**
+
+**A.** Set the MaxConcurrency property of QueryRequestOptions when making the query.
+
+**B.** Set the ConsistencyLevel property of QueryRequestOptions when making the query. ✅
+
+**C.** By specifying the exact partition key and row key in the query.
+
+**D.** Modify the Consistency level of the database using settings before making the query.
+
+---
+
+### Answer: B - Set the ConsistencyLevel property of QueryRequestOptions when making the query ✅
+
+---
+
+### Detailed Explanation
+
+#### Why Option B is Correct
+
+The **QueryRequestOptions.ConsistencyLevel** property allows developers to override the default consistency level on a **per-request basis**. This is a powerful feature that enables:
+
+- **Request-level control**: Different queries can use different consistency levels
+- **No database modification required**: The account's default consistency remains unchanged
+- **Flexibility**: Critical operations can use Strong consistency while others use Eventual
+
+**Key Point from Microsoft Documentation:**
+> "QueryRequestOptions.ConsistencyLevel Property gets or sets the consistency level required for the request in the Azure Cosmos DB service. This is a request level property, and doesn't affect the database settings."
+
+**Code Example:**
+```csharp
+// Database is configured with Eventual consistency, but we need Strong for this query
+var queryOptions = new QueryRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong
+};
+
+var query = new QueryDefinition("SELECT * FROM c WHERE c.accountId = @accountId")
+    .WithParameter("@accountId", accountId);
+
+var iterator = container.GetItemQueryIterator<Account>(query, requestOptions: queryOptions);
+var results = await iterator.ReadNextAsync();
+
+// This specific query uses Strong consistency
+// Other queries without this option still use Eventual (account default)
+```
+
+**Important Constraint:**
+You can only request a consistency level that is **equal to or weaker** than the account's default, **OR** you can request a **stronger** consistency level. However, requesting weaker consistency than the account default is the common use case.
+
+**Wait - Clarification on Strengthening Consistency:**
+Actually, you **CAN** strengthen consistency at the request level. The rule is:
+- You can always request **stronger** consistency than the account default
+- You **cannot** request **weaker** consistency than the account default
+
+So for an account configured with Eventual (weakest), you can request any stronger level (Consistent Prefix, Session, Bounded Staleness, Strong).
+
+---
+
+#### Why Option A is Incorrect
+
+**MaxConcurrency** property controls the **degree of parallelism** for query execution, not consistency.
+
+**What MaxConcurrency Does:**
+- Controls how many partitions are queried in parallel
+- Affects query performance and resource consumption
+- Has **nothing to do with consistency**
+
+```csharp
+var queryOptions = new QueryRequestOptions
+{
+    MaxConcurrency = 10  // Query up to 10 partitions in parallel
+};
+
+// This is about parallelism, not consistency!
+```
+
+---
+
+#### Why Option C is Incorrect
+
+**Specifying partition key and row key** affects query efficiency and scope, not consistency level.
+
+**What Partition Key Does:**
+- Routes the query to a specific logical partition
+- Improves query performance (single partition query vs. cross-partition)
+- **Does NOT change consistency level**
+
+```csharp
+// This is efficient (single partition) but doesn't affect consistency
+var item = await container.ReadItemAsync<Account>(
+    accountId,
+    new PartitionKey(partitionKeyValue)
+);
+
+// Still uses account's default consistency (Eventual in this scenario)
+```
+
+---
+
+#### Why Option D is Incorrect
+
+**Modifying the database consistency level** is:
+1. **Not necessary** - request-level override is available
+2. **Affects all operations** - not just the specific query
+3. **Requires administrative access** - may not be available to developers
+4. **Overkill** - changes the entire account's behavior
+
+```csharp
+// This would change the account's DEFAULT consistency
+// Affects ALL queries and operations from ALL clients
+// NOT what you want for a single query override
+
+// Instead, use per-request override:
+var queryOptions = new QueryRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong  // Only this query
+};
+```
+
+---
+
+### Summary Table
+
+| Option | What It Does | Affects Consistency? |
+|--------|-------------|---------------------|
+| **ConsistencyLevel property** ✅ | Sets consistency per request | ✓ Yes - request level |
+| **MaxConcurrency property** | Controls query parallelism | ✗ No |
+| **Partition key / row key** | Routes query to partition | ✗ No |
+| **Modify database settings** | Changes account default | ✓ Yes - but too broad |
+
+---
+
+### Code Example: Request-Level Consistency Override
+
+```csharp
+public class CosmosDbService
+{
+    private readonly Container _container;
+
+    // Critical financial query - use Strong consistency
+    public async Task<Account> GetAccountBalanceStrong(string accountId)
+    {
+        var queryOptions = new QueryRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Strong,
+            PartitionKey = new PartitionKey(accountId)
+        };
+
+        var response = await _container.ReadItemAsync<Account>(
+            accountId,
+            new PartitionKey(accountId),
+            new ItemRequestOptions { ConsistencyLevel = ConsistencyLevel.Strong }
+        );
+
+        return response.Resource;
+    }
+
+    // Non-critical read - use account default (Eventual)
+    public async Task<IEnumerable<Product>> GetProductCatalog()
+    {
+        var query = new QueryDefinition("SELECT * FROM c WHERE c.type = 'product'");
+        
+        // No consistency override - uses account default (Eventual)
+        var iterator = _container.GetItemQueryIterator<Product>(query);
+        var results = new List<Product>();
+        
+        while (iterator.HasMoreResults)
+        {
+            var response = await iterator.ReadNextAsync();
+            results.AddRange(response);
+        }
+        
+        return results;
+    }
+}
+```
+
+---
+
+### Key Takeaways
+
+1. **Use QueryRequestOptions.ConsistencyLevel** for per-request consistency control
+2. **Request-level property** - doesn't affect database settings
+3. **Can strengthen consistency** from account default
+4. **Ideal for mixed workloads** - critical operations get Strong, others use Eventual
+5. **No administrative changes required** - developers can control at code level
+
+---
+
 ### Additional Resources
 
 - [Azure Cosmos DB Consistency Levels](https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels)
+- [QueryRequestOptions.ConsistencyLevel Property](https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.cosmos.queryrequestoptions.consistencylevel)
 - [SQL Server Transaction Isolation Levels](https://learn.microsoft.com/en-us/sql/t-sql/statements/set-transaction-isolation-level-transact-sql)
 - [Understanding Isolation Levels](https://learn.microsoft.com/en-us/sql/connect/jdbc/understanding-isolation-levels)
 - [Snapshot Isolation in SQL Server](https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/snapshot-isolation-sql-server)
