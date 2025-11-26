@@ -261,26 +261,129 @@ az container create \
 
 ## Authentication Methods
 
-### 1. Azure AD Authentication
+### 1. Azure AD Authentication (Azure CLI)
 ```bash
 az acr login --name devregistry
 ```
 
-### 2. Service Principal
+### 2. Docker Login (Direct Authentication)
+```bash
+docker login <your-acr-name>.azurecr.io
+```
+
+### 3. Service Principal
 ```bash
 docker login devregistry.azurecr.io \
   --username <service-principal-id> \
   --password <service-principal-password>
 ```
 
-### 3. Admin User (not recommended for production)
+### 4. Admin User (not recommended for production)
 ```bash
 az acr update --name devregistry --admin-enabled true
 az acr credential show --name devregistry
 ```
 
-### 4. Managed Identity
+### 5. Managed Identity
 Used by Azure services like AKS, Container Instances, etc.
+
+---
+
+### Practice Question: Logging into Azure Container Registry
+
+**Scenario:**
+You are preparing to publish a Docker image to Azure Container Registry (ACR). You need to authenticate your local development environment before pushing the image.
+
+**Question:**
+Which of the following commands is used to log in to your Azure Container Registry from your local development environment before you push the image?
+
+**Options:**
+
+1. ❌ `docker push <your-acr-name>.azurecr.io/<your-image-name>:<tag>`
+   - **Incorrect**: This command is used to **push** a Docker image to the registry, not to log in. You must authenticate first before you can push images. The push command will fail with an authentication error if you haven't logged in.
+
+2. ✅ `docker login <your-acr-name>.azurecr.io`
+   - **Correct**: This is the standard Docker command to authenticate your Docker client to a container registry. When you run this command:
+     - Docker prompts for username and password
+     - For ACR, you can use service principal credentials or admin user credentials
+     - After successful login, credentials are stored in Docker's credential store
+     - Subsequent push/pull commands will use these credentials
+
+3. ❌ `az acr push <your-acr-name>`
+   - **Incorrect**: This command does not exist in the Azure CLI. There is no `az acr push` command. To push images to ACR, you use either:
+     - `docker push` (after authentication)
+     - `az acr build` (builds and pushes in one step, no local Docker required)
+
+4. ⚠️ `az acr login --name <your-acr-name>`
+   - **Note**: The exam marks this as incorrect, but **this command IS actually valid and commonly used**. It authenticates using your Azure AD credentials via the Azure CLI. However, the exam considers `docker login` as the "correct" answer for logging in from a local development environment.
+
+---
+
+### Important: Both Login Methods Are Valid!
+
+| Method | Command | How It Works |
+|--------|---------|--------------|
+| **Docker Login** | `docker login <acr-name>.azurecr.io` | Direct Docker authentication, prompts for credentials |
+| **Azure CLI Login** | `az acr login --name <acr-name>` | Uses Azure AD authentication, no manual credentials |
+
+**`az acr login` is actually the recommended approach because:**
+- ✅ Uses Azure AD authentication (more secure)
+- ✅ No need to manage service principal credentials manually
+- ✅ Token-based authentication (temporary credentials)
+- ✅ Integrates with Azure RBAC
+- ✅ No credentials stored in plain text
+
+**`docker login` is useful when:**
+- Using service principal credentials in CI/CD pipelines
+- Environments without Azure CLI installed
+- Programmatic authentication with stored credentials
+
+---
+
+### Complete Docker Image Push Workflow
+
+```bash
+# Step 1: Login to ACR (choose one method)
+
+# Option A: Using Azure CLI (recommended)
+az acr login --name myregistry
+
+# Option B: Using Docker login with service principal
+docker login myregistry.azurecr.io \
+  --username <service-principal-id> \
+  --password <service-principal-password>
+
+# Option C: Using Docker login with admin credentials
+docker login myregistry.azurecr.io \
+  --username myregistry \
+  --password <admin-password>
+
+# Step 2: Tag your local image
+docker tag myapp:latest myregistry.azurecr.io/myapp:v1.0
+
+# Step 3: Push the image to ACR
+docker push myregistry.azurecr.io/myapp:v1.0
+```
+
+---
+
+### Authentication Methods Comparison
+
+| Method | Security | Use Case | Requires Azure CLI |
+|--------|----------|----------|-------------------|
+| `az acr login` | ✅ High (Azure AD) | Development, interactive | Yes |
+| `docker login` (Service Principal) | ✅ High | CI/CD pipelines, automation | No |
+| `docker login` (Admin User) | ⚠️ Low | Quick testing only | No |
+| Managed Identity | ✅ High | Azure services (AKS, ACI) | N/A |
+
+---
+
+### Key Takeaways
+
+1. **For exam purposes**: `docker login <acr-name>.azurecr.io` is considered the correct answer for logging in from local development
+2. **In practice**: `az acr login --name <acr-name>` is often preferred for its Azure AD integration
+3. **Push command**: `docker push` is used AFTER authentication, not for logging in
+4. **No `az acr push`**: This command doesn't exist; use `docker push` or `az acr build`
 
 ## Managing Images and Repositories
 
