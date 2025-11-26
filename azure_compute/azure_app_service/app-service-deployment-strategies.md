@@ -14,6 +14,7 @@
   - [Question 3: Configuring CORS for External Requests](#question-3-configuring-cors-for-external-requests)
   - [Question 4: Session Affinity in Multi-Instance Deployments](#question-4-session-affinity-in-multi-instance-deployments)
   - [Question 5: Enabling Application Logging](#question-5-enabling-application-logging)
+  - [Question 6: Docker Container Automatic Updates](#question-6-docker-container-automatic-updates)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -204,6 +205,106 @@ Which two actions should you perform? (Choose two)
 
 4. ❌ Enable Always On in the General Settings
    - **Incorrect**: Always On keeps the web app loaded and prevents it from being unloaded after idle periods. While useful for ensuring your app remains responsive, it has no relationship to enabling or capturing application logs. Logging works regardless of whether Always On is enabled.
+
+### Question 6: Docker Container Automatic Updates
+
+**Scenario:**
+You are deploying a Docker container to Azure App Service. You need to ensure that your app automatically updates when you push changes to your Docker image in a container registry.
+
+**Question:**
+Which of the following deployment methods would allow you to automatically update your app when you push changes to your Docker image in a container registry?
+
+**Options:**
+
+1. ❌ Deployment using a ZIP file from local storage
+   - **Incorrect**: ZIP file deployment involves manually uploading a ZIP file containing the updated app files to the Azure App Service. This method:
+     - Requires manual intervention for each update
+     - Does not interact with container registries
+     - Is designed for code-based deployments, not Docker containers
+     - Has no mechanism to detect changes in Docker images
+
+2. ❌ Manual deployment via Azure CLI
+   - **Incorrect**: Manual deployment via Azure CLI requires explicit commands to update the app. While you can use CLI commands to deploy Docker containers, this approach:
+     - Requires manual execution of commands for each update
+     - Does not provide automatic detection of image changes
+     - Is not a "push-based" deployment model
+     - Suitable for scripted deployments but not automatic updates
+
+3. ✅ Continuous deployment using Azure DevOps
+   - **Correct**: Continuous deployment using Azure DevOps enables automatic updates when changes are pushed to the Docker image in a container registry. This works because:
+     - **Pipeline triggers**: Azure DevOps can trigger pipelines when a new image is pushed to Azure Container Registry (ACR) or other registries
+     - **Webhooks**: Container registries can send webhooks to trigger deployments
+     - **Seamless integration**: Azure DevOps integrates with Azure App Service for automated deployments
+     - **CI/CD workflow**: Build → Push Image → Trigger Deployment → Update App Service
+
+   **Alternative Automatic Deployment Options:**
+   - **Azure Container Registry webhooks**: Configure webhooks in ACR to trigger App Service updates directly
+   - **GitHub Actions**: Similar CI/CD capabilities with automatic deployments
+   - **App Service Continuous Deployment**: Enable "Continuous Deployment" in Deployment Center for supported registries
+
+4. ❌ Deployment using Azure Resource Manager (ARM) templates
+   - **Incorrect**: ARM templates are Infrastructure as Code (IaC) for deploying Azure resources. While useful, they:
+     - Define the desired state of resources declaratively
+     - Do not monitor container registries for image changes
+     - Require manual execution or pipeline triggers to apply changes
+     - Are better suited for provisioning infrastructure, not continuous app updates
+
+---
+
+**Additional Context: Docker Container Deployment Options in App Service**
+
+| Method | Automatic Updates | Use Case |
+|--------|-------------------|----------|
+| **Continuous Deployment (Azure DevOps/GitHub Actions)** | ✅ Yes | Production CI/CD pipelines |
+| **ACR Webhooks + App Service** | ✅ Yes | Simple automatic updates from ACR |
+| **App Service Continuous Deployment** | ✅ Yes | Built-in option in Deployment Center |
+| **Azure CLI** | ❌ No (Manual) | Scripted/automated deployments |
+| **ARM/Bicep Templates** | ❌ No (Manual) | Infrastructure provisioning |
+| **ZIP Deployment** | ❌ No (Manual) | Code-based apps, not containers |
+
+**Enabling Continuous Deployment for Docker in App Service:**
+
+```bash
+# Enable continuous deployment webhook for a container-based web app
+az webapp deployment container config \
+  --name MyWebApp \
+  --resource-group MyResourceGroup \
+  --enable-cd true
+
+# Get the webhook URL to configure in your container registry
+az webapp deployment container show-cd-url \
+  --name MyWebApp \
+  --resource-group MyResourceGroup
+```
+
+**Azure DevOps Pipeline Example:**
+
+```yaml
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Docker@2
+    displayName: 'Build and push image'
+    inputs:
+      containerRegistry: 'myACRConnection'
+      repository: 'myapp'
+      command: 'buildAndPush'
+      Dockerfile: '**/Dockerfile'
+      tags: |
+        $(Build.BuildId)
+        latest
+
+  - task: AzureWebAppContainer@1
+    displayName: 'Deploy to App Service'
+    inputs:
+      azureSubscription: 'myAzureSubscription'
+      appName: 'MyWebApp'
+      containers: 'myacr.azurecr.io/myapp:$(Build.BuildId)'
+```
 
 ## Application Logging in Azure App Service
 
