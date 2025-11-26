@@ -167,6 +167,92 @@ All triggers and bindings have a `direction` property in the `function.json` fil
 }
 ```
 
+##### Timer Trigger - TimerInfo Object
+
+When using a Timer Trigger, the function receives a `TimerInfo` object that provides information about the timer invocation. This object includes useful properties for handling late executions.
+
+**TimerInfo Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Schedule` | TimerSchedule | The timer schedule |
+| `ScheduleStatus` | ScheduleStatus | Status information including last/next scheduled times |
+| `IsPastDue` | bool | `true` if the function invocation is later than scheduled |
+
+**C# Example - Checking for Late Execution:**
+```csharp
+[FunctionName("TimerTriggerCSharp")]
+public static void Run(
+    [TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, 
+    ILogger log)
+{
+    if (myTimer.IsPastDue)
+    {
+        log.LogInformation("Timer is running late!");
+    }
+    
+    log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+}
+```
+
+**When is a Timer Past Due?**
+- The function host was stopped or restarted during a scheduled execution
+- The function was delayed due to resource constraints
+- The app was scaled down and missed a scheduled trigger
+- The function app was in a cold start state
+
+---
+
+##### Practice Question: Timer Trigger - IsPastDue
+
+**Question:**
+
+Your function uses the following code. You want to add a message to the log when the function starts late. What code belongs in the missing line?
+
+```csharp
+[FunctionName("TimerTriggerCSharp")]
+public static void Run(
+    [TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, 
+    ILogger log)
+{
+    // >>>>> LINE MISSING HERE <<<<<
+    {
+        log.LogInformation("Timer is running late!");
+    }
+    
+    log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+}
+```
+
+**Options:**
+
+A) `if (TimerTrigger.IsLate)`
+
+B) `if (myTimer.IsPastDue)` ✅
+
+C) `if (myTimer.TriggerTime < DateTime.Now)`
+
+D) `if (myTimer.IsLate)`
+
+---
+
+**Correct Answer: B) `if (myTimer.IsPastDue)`**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) `if (TimerTrigger.IsLate)`** | ❌ Incorrect - `TimerTrigger` is the attribute class, not an instance with properties. You cannot access instance properties from the attribute type itself. |
+| **B) `if (myTimer.IsPastDue)`** | ✅ **Correct** - The `TimerInfo` object (named `myTimer` in this function) has an `IsPastDue` property that returns `true` if the function execution is later than scheduled. |
+| **C) `if (myTimer.TriggerTime < DateTime.Now)`** | ❌ Incorrect - There is no `TriggerTime` property on `TimerInfo`. While the logic seems reasonable, this property does not exist. |
+| **D) `if (myTimer.IsLate)`** | ❌ Incorrect - There is no `IsLate` property on `TimerInfo`. The correct property name is `IsPastDue`. |
+
+**Reference:** [Azure Functions Timer Trigger](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer?tabs=csharp#ncrontab-expressions)
+
+---
+
 #### Queue Trigger
 
 ```json
