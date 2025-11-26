@@ -345,6 +345,64 @@ await container.SetAccessPolicyAsync(permissions: Array.Empty<BlobSignedIdentifi
 - ❌ Still uses storage account keys for signing
 - ❌ No Microsoft Entra ID integration
 
+### Modifying SAS Expiry Date After Creation
+
+**Key Concept**: You cannot directly modify the expiry date of a shared access signature after it has been created. However, if you create the SAS using a **stored access policy**, you can modify the constraints (including expiry time) by updating the policy.
+
+**Question**: How can you modify the expiry date and time of a shared access signature after it's already been created?
+
+**Answer**: Create the shared access signature using a stored access policy. When you associate a Service SAS with a stored access policy, the SAS inherits the constraints—the start time, expiry time, and permissions—defined for the stored access policy. You can modify the stored access policy at any time after the SAS has been created.
+
+**What Does NOT Work**:
+- ❌ You cannot edit a SAS directly in the Azure Portal SAS blade after creation
+- ❌ You cannot modify the expiry date of an ad-hoc SAS (one without a stored access policy)
+- ❌ The only way to change an ad-hoc SAS is to recreate it entirely
+
+**Why Stored Access Policy Works**:
+- The SAS token references the policy by identifier (not the actual constraints)
+- When the SAS is validated, Azure reads the current constraints from the policy
+- Updating the policy immediately affects all SAS tokens that reference it
+
+**Example - Extending SAS Expiry via Stored Access Policy**:
+```csharp
+// Original policy with 7-day expiry
+var policy = new BlobSignedIdentifier
+{
+    Id = "my-policy",
+    AccessPolicy = new BlobAccessPolicy
+    {
+        PolicyStartsOn = DateTimeOffset.UtcNow,
+        PolicyExpiresOn = DateTimeOffset.UtcNow.AddDays(7),
+        Permissions = "rl"
+    }
+};
+await container.SetAccessPolicyAsync(permissions: new[] { policy });
+
+// ... time passes, need to extend expiry ...
+
+// Update the policy to extend expiry (affects all SAS tokens using this policy)
+var updatedPolicy = new BlobSignedIdentifier
+{
+    Id = "my-policy", // Same identifier
+    AccessPolicy = new BlobAccessPolicy
+    {
+        PolicyStartsOn = DateTimeOffset.UtcNow,
+        PolicyExpiresOn = DateTimeOffset.UtcNow.AddDays(30), // Extended to 30 days
+        Permissions = "rl"
+    }
+};
+await container.SetAccessPolicyAsync(permissions: new[] { updatedPolicy });
+
+// All existing SAS tokens referencing "my-policy" now have the new expiry date
+```
+
+**Best Practice for Flexible SAS Management**:
+- Always use stored access policies when you anticipate needing to modify SAS constraints
+- Use stored access policies for third-party or partner access where revocation may be needed
+- Ad-hoc SAS is suitable only for one-time, short-lived access where modification won't be needed
+
+**Reference**: [Microsoft Doc: Storage SAS Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
+
 ## Service Support for User Delegation SAS
 
 ### Critical Limitation: Blob Storage Only
