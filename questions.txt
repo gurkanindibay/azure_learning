@@ -1,0 +1,11 @@
+Which CosmosDB API format works best with document (JSON) data?
+Correct answer
+Core SQL
+Cassandra API
+Graph API
+Your answer is incorrect
+MongoDB API
+Overall explanation
+Core (SQL) API stores data in JSON document format. Cassandra API stores data in column-oriented schema. Gremlin API allows users to make graph queries and stores data as edges and vertices. MongoDB API also uses documents but is BSON format, which is a binary format and not text-based. Refer to Microsoft Doc: https://docs.microsoft.com/en-us/azure/cosmos-db/introduction
+Domain
+Non-relational DB
