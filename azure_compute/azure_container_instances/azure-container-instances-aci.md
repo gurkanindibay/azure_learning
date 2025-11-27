@@ -3,6 +3,14 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [ACI as Serverless Compute](#aci-as-serverless-compute)
+  - [What Type of Compute is ACI?](#what-type-of-compute-is-aci)
+  - [Two Definitions of "Serverless"](#two-definitions-of-serverless)
+  - [ACI vs Other Compute Types](#aci-vs-other-compute-types)
+  - [Common Exam Question](#common-exam-question)
+  - [Why ACI is Serverless (Not IaaS)](#why-aci-is-serverless-not-iaas)
+  - [Scaling Limitations](#scaling-limitations)
+  - [Key Takeaway for Exams](#key-takeaway-for-exams)
 - [Key Concepts](#key-concepts)
   - [Container Groups](#container-groups)
   - [Container Instances](#container-instances)
@@ -58,6 +66,81 @@ Azure Container Instances (ACI) is a service that enables you to run containers 
 - Event-driven applications
 - Development and testing
 - CI/CD build agents
+
+## ACI as Serverless Compute
+
+### What Type of Compute is ACI?
+
+**Azure Container Instances is considered serverless compute.**
+
+This is an important distinction for Azure certifications. While "serverless" often brings to mind auto-scaling and scale-to-zero capabilities (like Azure Functions or Azure Container Apps), Microsoft classifies ACI as serverless because:
+
+1. **No VM management** - You don't provision or manage virtual machines
+2. **On-demand containers** - Containers run in a managed, serverless Azure environment
+3. **Per-second billing** - You pay only for the resources allocated while the container runs
+4. **No infrastructure overhead** - No cluster management or orchestration required
+
+### Two Definitions of "Serverless"
+
+| Aspect | Serverless Infrastructure (ACI) | Serverless Architecture (Functions, ACA) |
+|--------|--------------------------------|------------------------------------------|
+| **Definition** | No server/VM management | Event-driven, auto-scaling, pay-per-execution |
+| **VM Management** | ✅ None | ✅ None |
+| **Auto Scale-Out** | ❌ No | ✅ Yes |
+| **Scale to Zero** | ❌ No | ✅ Yes |
+| **Pay Model** | Per-second (while allocated) | Per-execution/request |
+| **Orchestration** | ❌ None | ✅ Built-in |
+
+### ACI vs Other Compute Types
+
+| Compute Type | Example Services | Infrastructure Management |
+|--------------|------------------|--------------------------|
+| **IaaS** | Azure VMs, VM Scale Sets | You manage VMs, OS, patching |
+| **PaaS** | App Service, Azure SQL | Platform managed, you manage app |
+| **Serverless** | **ACI**, Functions, ACA, Logic Apps | Fully managed, no infrastructure |
+| **Containers (Orchestrated)** | AKS | You manage cluster configuration |
+
+### Common Exam Question
+
+**Question:** What type of compute is Azure Container Instances considered to be?
+
+| Option | Correct? |
+|--------|----------|
+| Infrastructure as a Service | ❌ No |
+| Virtual Machine Scale Set | ❌ No |
+| Hybrid Compute | ❌ No |
+| **Serverless** | ✅ **Yes** |
+
+**Explanation:** Azure Container Instances are on-demand containers in a managed, serverless Azure environment. ACI is a solution for any scenario that can operate in isolated containers, without orchestration. Run event-driven applications, quickly deploy from your container development pipelines, and run data processing and build jobs.
+
+### Why ACI is Serverless (Not IaaS)
+
+| Feature | IaaS (VMs) | ACI (Serverless) |
+|---------|------------|------------------|
+| Provision VMs | ✅ Required | ❌ Not needed |
+| Manage OS | ✅ Required | ❌ Not needed |
+| Install container runtime | ✅ Required | ❌ Pre-configured |
+| Patch and update | ✅ Your responsibility | ❌ Azure managed |
+| Network configuration | ✅ Complex setup | ✅ Simplified |
+| Billing | Per VM (hourly minimum) | Per second |
+
+### Scaling Limitations
+
+While ACI is serverless, it does **NOT** provide:
+- ❌ Automatic horizontal scaling (scale-out)
+- ❌ Scale to zero
+- ❌ Built-in load balancing across instances
+- ❌ Orchestration between container groups
+
+**For auto-scaling serverless containers, use Azure Container Apps (ACA).**
+
+### Key Takeaway for Exams
+
+> **Azure Container Instances = Serverless Compute**
+> 
+> ACI is serverless because you don't manage any VMs or infrastructure. However, it lacks the auto-scaling capabilities typically associated with "serverless architecture" patterns. For full serverless container orchestration with auto-scaling, use Azure Container Apps instead.
+
+**Reference:** [Microsoft Docs - Azure Container Instances Overview](https://docs.microsoft.com/en-us/azure/container-instances/)
 
 ## Key Concepts
 
