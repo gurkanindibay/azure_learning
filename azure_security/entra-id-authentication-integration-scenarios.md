@@ -9,13 +9,14 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 ## Table of Contents
 
 1. [Authentication Methods Overview](#authentication-methods-overview)
-2. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
-3. [Microsoft Entra External ID (formerly Azure AD B2C)](#microsoft-entra-external-id-formerly-azure-ad-b2c)
-4. [Microsoft Graph API Integration](#microsoft-graph-api-integration)
-5. [Self-Hosted Identity Providers](#self-hosted-identity-providers)
-6. [Comparison of Authentication Approaches](#comparison-of-authentication-approaches)
-7. [Implementation Scenarios](#implementation-scenarios)
-8. [Best Practices and Recommendations](#best-practices-and-recommendations)
+2. [Azure App Service Authentication (Easy Auth)](#azure-app-service-authentication-easy-auth)
+3. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
+4. [Microsoft Entra External ID (formerly Azure AD B2C)](#microsoft-entra-external-id-formerly-azure-ad-b2c)
+5. [Microsoft Graph API Integration](#microsoft-graph-api-integration)
+6. [Self-Hosted Identity Providers](#self-hosted-identity-providers)
+7. [Comparison of Authentication Approaches](#comparison-of-authentication-approaches)
+8. [Implementation Scenarios](#implementation-scenarios)
+9. [Best Practices and Recommendations](#best-practices-and-recommendations)
 
 ---
 
@@ -42,6 +43,267 @@ Microsoft Entra ID supports industry-standard authentication protocols:
 | **OpenID Connect** | Authentication layer on OAuth 2.0 | User authentication and SSO |
 | **SAML 2.0** | XML-based authentication | Enterprise SSO, legacy apps |
 | **WS-Federation** | Legacy Microsoft protocol | Older .NET applications |
+
+---
+
+## Azure App Service Authentication (Easy Auth)
+
+### Overview
+
+**Azure App Service Authentication**, commonly known as **Easy Auth**, is a built-in authentication and authorization feature of Azure App Service that allows you to sign in users and access data without writing any authentication code in your application.
+
+### ✅ Recommended for Azure App Service Applications
+
+Easy Auth is the **correct and recommended way** to configure authentication in Azure App Service applications using Microsoft Entra ID when you want a quick, secure, and code-free authentication solution.
+
+### Why Easy Auth Is the Best Choice for App Service
+
+1. **Zero Code Required**: Authentication is handled at the platform level
+2. **Secure by Default**: Microsoft manages security best practices
+3. **Quick Setup**: Configure in minutes through Azure Portal
+4. **Multiple Providers**: Supports Entra ID, Facebook, Google, Twitter, and more
+5. **Token Management**: Automatic token refresh and session management
+6. **Built-in Authorization**: Works with App Service authorization policies
+
+### How Easy Auth Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Azure App Service                         │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Authentication Module (Easy Auth)            │   │
+│  │                                                           │   │
+│  │    1. Intercepts all requests                            │   │
+│  │    2. Validates authentication tokens                    │   │
+│  │    3. Manages sessions automatically                     │   │
+│  │    4. Handles token refresh                              │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Your Application Code                        │   │
+│  │                                                           │   │
+│  │    ✅ No authentication code needed                      │   │
+│  │    ✅ User info available in request headers             │   │
+│  │    ✅ Focus on business logic                            │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Authentication flow
+                              ▼
+              ┌────────────────────────────────┐
+              │      Microsoft Entra ID        │
+              │   (Identity Provider)          │
+              └────────────────────────────────┘
+```
+
+### Authentication Flow with Easy Auth
+
+```
+┌──────────┐                                          ┌────────────────┐
+│  User    │  1. Request protected resource           │  App Service   │
+│  Browser ├─────────────────────────────────────────►│  (Easy Auth)   │
+└──────────┘                                          └───────┬────────┘
+                                                              │
+     2. Redirect to Entra ID login                           │
+     ◄────────────────────────────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────┐
+│      Microsoft Entra ID        │
+│  - User enters credentials     │
+│  - MFA challenge (if enabled)  │
+│  - Consent screen (if needed)  │
+└───────────────┬────────────────┘
+                │
+     3. Return with authorization code
+     │
+     ▼
+┌────────────────────────────────┐
+│     App Service (Easy Auth)    │
+│  - Exchanges code for tokens   │
+│  - Validates tokens            │
+│  - Creates session cookie      │
+│  - Stores tokens in token store│
+└───────────────┬────────────────┘
+                │
+     4. Redirect to original resource with session
+     │
+     ▼
+┌────────────────────────────────┐
+│     Your Application           │
+│  - User is authenticated       │
+│  - User info in headers        │
+│  - Access tokens available     │
+└────────────────────────────────┘
+```
+
+### Setting Up Easy Auth in Azure Portal
+
+**Step 1: Navigate to Authentication Settings**
+```plaintext
+Azure Portal → App Service → Authentication
+```
+
+**Step 2: Add Identity Provider**
+```plaintext
+1. Click "Add identity provider"
+2. Select "Microsoft" (for Entra ID)
+3. Choose configuration options:
+   - App registration type: Create new or use existing
+   - Supported account types: Single tenant, multi-tenant, or any
+4. Click "Add"
+```
+
+**Step 3: Configure Authentication Behavior**
+```plaintext
+Settings → Authentication:
+- Restrict access: Require authentication
+- Unauthenticated requests: Redirect to identity provider
+- Token store: Enabled (recommended)
+```
+
+### Setting Up Easy Auth via Azure CLI
+
+```bash
+# Enable Easy Auth with Microsoft Entra ID
+az webapp auth microsoft update \
+    --name <your-app-name> \
+    --resource-group <your-resource-group> \
+    --client-id <your-app-registration-client-id> \
+    --client-secret <your-client-secret> \
+    --issuer https://login.microsoftonline.com/<tenant-id>/v2.0
+
+# Configure authentication behavior
+az webapp auth update \
+    --name <your-app-name> \
+    --resource-group <your-resource-group> \
+    --enabled true \
+    --action RedirectToLoginPage \
+    --token-store true
+```
+
+### Accessing User Information in Your Application
+
+Easy Auth automatically injects user information into request headers:
+
+**HTTP Headers Available:**
+| Header | Description |
+|--------|-------------|
+| `X-MS-CLIENT-PRINCIPAL-NAME` | Username/email |
+| `X-MS-CLIENT-PRINCIPAL-ID` | User's object ID |
+| `X-MS-CLIENT-PRINCIPAL-IDP` | Identity provider name |
+| `X-MS-CLIENT-PRINCIPAL` | Base64-encoded JWT claims |
+| `X-MS-TOKEN-AAD-ACCESS-TOKEN` | Access token (if token store enabled) |
+| `X-MS-TOKEN-AAD-ID-TOKEN` | ID token |
+
+**Example: Reading User Info in ASP.NET Core**
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class UserController : ControllerBase
+{
+    [HttpGet("profile")]
+    public IActionResult GetProfile()
+    {
+        // No authentication code needed - Easy Auth handles it!
+        var userName = Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
+        var userId = Request.Headers["X-MS-CLIENT-PRINCIPAL-ID"].FirstOrDefault();
+        
+        return Ok(new { 
+            Name = userName, 
+            Id = userId,
+            Message = "Authenticated via Easy Auth!"
+        });
+    }
+}
+```
+
+**Example: Reading User Info in Node.js/Express**
+```javascript
+app.get('/api/profile', (req, res) => {
+    // No authentication middleware needed!
+    const userName = req.headers['x-ms-client-principal-name'];
+    const userId = req.headers['x-ms-client-principal-id'];
+    
+    res.json({
+        name: userName,
+        id: userId,
+        message: 'Authenticated via Easy Auth!'
+    });
+});
+```
+
+### When to Use Easy Auth
+
+✅ **Use Easy Auth when:**
+- Hosting on Azure App Service, Azure Functions, or Azure Container Apps
+- Want quick authentication setup without code changes
+- Need authentication for an existing application
+- Building prototypes or MVPs
+- Want platform-managed security
+- Need multiple identity provider support
+
+⚠️ **Consider other approaches when:**
+- Need fine-grained control over authentication flow
+- Require custom token validation logic
+- Building for platforms other than Azure App Service
+- Need offline authentication support
+
+### Easy Auth vs Custom Authentication Code
+
+| Aspect | Easy Auth | Custom Code (MSAL/OIDC) |
+|--------|-----------|-------------------------|
+| **Setup Time** | Minutes | Hours to days |
+| **Code Changes** | None | Significant |
+| **Maintenance** | Microsoft managed | Developer managed |
+| **Flexibility** | Limited | Full control |
+| **Security Updates** | Automatic | Manual |
+| **Multiple Providers** | Built-in | Custom implementation |
+| **Token Management** | Automatic | Manual |
+| **Best For** | App Service apps | Any platform |
+
+### ⚠️ Why Other Approaches Are NOT Recommended for This Scenario
+
+#### ❌ Custom User Database with Manual Token Management
+
+**Why this is WRONG:**
+```plaintext
+❌ Security vulnerabilities - easy to make mistakes
+❌ Increased complexity - reinventing the wheel
+❌ No SSO support - users must re-authenticate
+❌ Missing enterprise features (MFA, Conditional Access)
+❌ Maintenance burden - security updates on you
+❌ Not scalable - hard to manage at enterprise level
+```
+
+#### ❌ Microsoft Entra External ID for Enterprise Apps
+
+**Why this is NOT the best choice for this scenario:**
+```plaintext
+⚠️ External ID is designed for consumer-facing applications
+⚠️ Requires additional configuration for enterprise scenarios
+⚠️ More complex than needed for internal employee authentication
+⚠️ Different pricing model (pay-per-authentication)
+```
+
+**When External ID IS appropriate:**
+- Consumer/customer sign-up and sign-in
+- Social identity provider integration (Facebook, Google)
+- Custom branding requirements
+- Self-service password reset for external users
+
+#### ❌ Custom OAuth 2.0 with Self-Hosted Token Service
+
+**Why this is NOT recommended:**
+```plaintext
+❌ Unnecessary complexity - Entra ID already provides OAuth 2.0
+❌ Security responsibility shifts to you
+❌ Loses Entra ID features (MFA, Conditional Access)
+❌ No Microsoft ecosystem integration
+❌ Higher operational overhead
+❌ More attack surface to manage
+```
 
 ---
 
@@ -967,6 +1229,7 @@ public class Config
 
 | Scenario | Recommended Approach | Reason |
 |----------|---------------------|--------|
+| **Azure App Service web app needing quick auth setup** | ✅ Easy Auth (App Service Authentication) | Zero code, secure, quick setup |
 | **Enterprise web app with employee authentication** | ✅ OpenID Connect / OAuth 2.0 with Entra ID | Standard, secure, simple |
 | **Consumer-facing app with social logins** | ✅ External ID (B2C) | Designed for consumer scenarios |
 | **Multi-tenant SaaS application** | ✅ OpenID Connect / OAuth 2.0 (multi-tenant) | Native multi-tenant support |
@@ -976,8 +1239,34 @@ public class Config
 | **Access Microsoft Graph API** | ✅ OAuth 2.0 + delegated permissions | Standard API access pattern |
 | **Legacy .NET Framework app** | ✅ WS-Federation or SAML | Backward compatibility |
 | **On-premises app with AD** | ✅ ADFS + OpenID Connect | Bridge on-prem to cloud |
+| **Custom auth with own user database** | ❌ NOT Recommended | Security risks, complexity |
+| **Custom OAuth 2.0 token service** | ❌ NOT Recommended | Unnecessary when Entra ID available |
 
 ### Detailed Comparison
+
+#### 0. Azure App Service Authentication (Easy Auth) ✅
+
+**Pros:**
+- ✅ Zero authentication code required
+- ✅ Quick setup through Azure Portal or CLI
+- ✅ Platform-managed security
+- ✅ Automatic token management and refresh
+- ✅ Supports multiple identity providers
+- ✅ Built-in session management
+- ✅ Secure by default
+
+**Cons:**
+- ❌ Only available for Azure App Service, Functions, Container Apps
+- ❌ Limited customization of authentication flow
+- ❌ Less control compared to custom implementation
+
+**Best For:**
+- Azure App Service hosted applications
+- Quick authentication setup
+- Existing applications needing auth without code changes
+- Prototypes and MVPs
+
+---
 
 #### 1. OpenID Connect / OAuth 2.0 (Recommended) ✅
 
@@ -1609,7 +1898,7 @@ npm update @azure/msal-browser @azure/msal-react
 
 ## Exam Scenario Analysis
 
-### Original Question
+### Exam Question 1: Authentication with OpenID Connect
 
 **Scenario:** You are developing an Azure web application that requires user authentication. You decide to use Microsoft Entra ID for authentication purposes.
 
@@ -1688,12 +1977,85 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
 
 ---
 
+### Exam Question 2: App Service Authentication (Easy Auth)
+
+**Scenario:** You are developing a web application that requires user authentication. You want to implement Microsoft Entra ID for user sign-in and management. 
+
+**Question:** Which of the following options is the correct way to configure authentication in your application using Entra ID?
+
+### Answer Options Analysis
+
+#### ❌ Option 1: Implement a custom user database and manage authentication tokens manually
+
+**Why this is WRONG:**
+- Implementing a custom user database and managing authentication tokens manually within your application is NOT the ideal approach when utilizing Microsoft Entra ID
+- This method introduces security vulnerabilities
+- Increases the complexity of managing user authentication
+- Loses benefits of Entra ID features (MFA, SSO, Conditional Access)
+- Places security responsibility on you instead of Microsoft
+
+---
+
+#### ❌ Option 2: Use Microsoft Entra External ID with MSAL for JavaScript
+
+**Why this is NOT the best choice:**
+- Microsoft Entra External ID is designed for **consumer-facing applications**
+- May require additional configuration for enterprise scenarios
+- More complex than needed for standard enterprise user authentication
+- Better suited for apps needing social logins or custom branding
+- Different pricing model (pay-per-authentication)
+
+**When External ID IS appropriate:**
+- Customer/consumer sign-up and sign-in
+- Social identity provider integration (Facebook, Google)
+- Self-service user management for external users
+
+---
+
+#### ✅ Option 3: Utilize Azure App Service Authentication (Easy Auth) - CORRECT ANSWER
+
+**Why this is CORRECT:**
+1. **Zero Code Required**: Automatically handles user sign-in and authorization without writing any authentication code
+2. **Secure by Default**: Microsoft manages security best practices
+3. **Convenient**: Simplifies the authentication process significantly
+4. **Built-in Features**: 
+   - Automatic token management
+   - Session handling
+   - Token refresh
+5. **Multiple Provider Support**: Can use Entra ID, Facebook, Google, Twitter, and more
+6. **Platform Managed**: Security updates handled automatically
+
+**Implementation:**
+```plaintext
+Azure Portal → App Service → Authentication → Add identity provider → Microsoft
+```
+
+**No code changes required!** User information is available in request headers:
+- `X-MS-CLIENT-PRINCIPAL-NAME`: Username
+- `X-MS-CLIENT-PRINCIPAL-ID`: User ID
+- `X-MS-TOKEN-AAD-ACCESS-TOKEN`: Access token
+
+---
+
+#### ❌ Option 4: Configure OAuth 2.0 with a custom token service hosted on Azure
+
+**Why this is NOT recommended:**
+- Entra ID already has its own OAuth 2.0 authentication mechanisms
+- Building a custom token service is unnecessary
+- Introduces additional complexity and security risk
+- Loses integration with Microsoft ecosystem
+- Requires maintaining custom security infrastructure
+- Not aligned with Microsoft's recommended practices
+
+---
+
 ## Summary and Key Takeaways
 
 ### Choose the Right Method
 
 | Scenario | Use This | Don't Use This |
 |----------|---------|----------------|
+| **Azure App Service app needing quick auth** | ✅ Easy Auth | ❌ Custom implementation |
 | **Standard Azure web app** | ✅ OpenID Connect / OAuth 2.0 | ❌ External ID, Graph API, Self-hosted |
 | **Consumer app** | ✅ External ID (B2C) | ❌ Standard Entra ID for internal use |
 | **Access Microsoft 365 data** | ✅ OAuth 2.0 + Microsoft Graph | ❌ Graph API for authentication |
@@ -1705,6 +2067,12 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
 
 ```
 Need user authentication?
+    │
+    ├─ Hosting on Azure App Service?
+    │   ├─ Want zero-code solution?
+    │   │   └─ ✅ Use: Easy Auth (App Service Authentication)
+    │   └─ Need custom control?
+    │       └─ ✅ Use: OpenID Connect / OAuth 2.0 with MSAL
     │
     ├─ Internal employees/partners?
     │   └─ ✅ Use: OpenID Connect / OAuth 2.0 with Entra ID
@@ -1738,6 +2106,7 @@ Need user authentication?
 
 | Need | Solution |
 |------|----------|
+| Zero-code auth for App Service | Easy Auth (App Service Authentication) |
 | Authenticate employees | OpenID Connect with Entra ID |
 | Authenticate consumers | External ID (B2C) with user flows |
 | Access user's Microsoft 365 data | OAuth 2.0 + Microsoft Graph API |
@@ -1752,6 +2121,7 @@ Need user authentication?
 ### Official Documentation
 
 - [Microsoft identity platform documentation](https://learn.microsoft.com/en-us/entra/identity-platform/)
+- [Azure App Service Authentication](https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization)
 - [OpenID Connect on Microsoft identity platform](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)
 - [OAuth 2.0 authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)
 - [Microsoft Entra External ID documentation](https://learn.microsoft.com/en-us/entra/external-id/)
