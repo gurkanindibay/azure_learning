@@ -1,4 +1,4 @@
-```markdown
+
 # Azure Blob Storage API
 
 ## Table of Contents
@@ -25,6 +25,8 @@
   - [Python Examples](#python-examples)
   - [Azure CLI Examples](#azure-cli-examples)
 - [Exam Question Analysis](#exam-question-analysis)
+  - [Question: Uploading Files to Azure Blob Storage](#question-uploading-files-to-azure-blob-storage)
+  - [Question: Uploading a File to Azure Blob Storage (SDK Methods)](#question-uploading-a-file-to-azure-blob-storage-sdk-methods)
   - [Question: Setting Custom Metadata on a Blob](#question-setting-custom-metadata-on-a-blob)
 - [Best Practices](#best-practices)
 - [References](#references)
@@ -746,6 +748,117 @@ await blobClient.UploadAsync(uploadFileStream, new BlobUploadOptions
 
 ---
 
+### Question: Uploading a File to Azure Blob Storage (SDK Methods)
+
+**Scenario:**
+You are developing an application that requires the ability to store and retrieve large amounts of unstructured data in Azure Blob Storage. You need to implement a solution that allows users to upload files to a specific container in Blob Storage.
+
+**Question:**
+Which of the following Azure SDK methods should you use to upload a file to a blob?
+
+---
+
+#### Option A: ❌ INCORRECT - `PutBlockBlobAsync()`
+
+**Why This Is Wrong:**
+- ❌ `PutBlockBlobAsync()` is **NOT** the correct method for uploading a file to a blob
+- ❌ This method is used for uploading a **block blob**, which is different from uploading a file directly
+- ❌ Block blob operations involve staging individual blocks and then committing a block list
+- ⚠️ For direct file uploads, you should use higher-level methods that abstract this complexity
+
+**When Block Blob Methods Are Used:**
+```csharp
+// Block blob operations are for large file uploads with chunking
+BlockBlobClient blockBlobClient = containerClient.GetBlockBlobClient("largefile.zip");
+
+// Stage individual blocks
+await blockBlobClient.StageBlockAsync(blockId, blockStream);
+
+// Commit the block list
+await blockBlobClient.CommitBlockListAsync(blockIds);
+```
+
+---
+
+#### Option B: ❌ INCORRECT - `CreateBlobAsync()`
+
+**Why This Is Wrong:**
+- ❌ `CreateBlobAsync()` is **NOT** the correct method for uploading a file
+- ❌ This method is used for **creating** a new blob in Azure Blob Storage
+- ❌ It does **NOT** handle the actual file upload process
+- ⚠️ Creating a blob and uploading content are separate operations
+
+**What CreateBlobAsync Does:**
+- Creates an empty blob or blob placeholder
+- Does not transfer file content from local system
+
+---
+
+#### Option C: ✅ CORRECT - `UploadFromFileAsync()`
+
+**Why This Is Correct:**
+- ✅ `UploadFromFileAsync()` is the **correct method** for uploading a file to a blob
+- ✅ Allows users to upload a file from the **local file system** directly to a blob
+- ✅ Handles the file reading and upload process automatically
+- ✅ Simplifies the upload workflow by accepting a file path
+
+**Example Usage:**
+```csharp
+// Using BlobClient
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+
+// Upload directly from a file path
+await blobClient.UploadAsync("path/to/local/myfile.txt", overwrite: true);
+
+// Or using the explicit file upload method
+await blobClient.UploadAsync(
+    path: "path/to/local/myfile.txt",
+    options: new BlobUploadOptions
+    {
+        HttpHeaders = new BlobHttpHeaders { ContentType = "text/plain" }
+    }
+);
+```
+
+**Note:** In the modern Azure.Storage.Blobs SDK (v12+), `UploadAsync()` has overloads that accept a file path directly, which is functionally equivalent to `UploadFromFileAsync()`.
+
+---
+
+#### Option D: ❌ INCORRECT - `UploadBlobAsync()`
+
+**Why This Is Wrong:**
+- ❌ `UploadBlobAsync()` does **NOT exist** in the Azure SDK for Blob Storage
+- ❌ This is not a valid method for uploading files to Azure Blob Storage
+- ⚠️ The correct methods are `UploadAsync()` on `BlobClient` or `UploadBlobAsync()` on `BlobContainerClient`
+
+**Valid Upload Methods in Azure.Storage.Blobs:**
+
+| Method | Class | Description |
+|--------|-------|-------------|
+| `UploadAsync(Stream)` | `BlobClient` | Upload from a stream |
+| `UploadAsync(string path)` | `BlobClient` | Upload from a file path |
+| `UploadAsync(BinaryData)` | `BlobClient` | Upload from binary data |
+| `UploadBlobAsync(string, Stream)` | `BlobContainerClient` | Create and upload in one call |
+
+---
+
+### Key Takeaways for File Upload Methods
+
+| Method | Valid? | Purpose |
+|--------|--------|---------|
+| `UploadFromFileAsync()` / `UploadAsync(path)` | ✅ | Upload file from local path |
+| `UploadAsync(Stream)` | ✅ | Upload from a stream |
+| `PutBlockBlobAsync()` | ❌ | For block blob staging operations |
+| `CreateBlobAsync()` | ❌ | Creates blob, doesn't upload content |
+| `UploadBlobAsync()` | ❌ | Does not exist on BlobClient |
+
+**For the Exam, Remember:**
+- 🎯 Use `UploadAsync()` or `UploadFromFileAsync()` for direct file uploads
+- 🎯 Block blob methods are for advanced chunked upload scenarios
+- 🎯 Know the difference between creating a blob and uploading content
+
+---
+
 ### Question: Setting Custom Metadata on a Blob
 
 **Scenario:**
@@ -962,4 +1075,4 @@ await blobClient.UploadAsync(fileStream, new BlobUploadOptions
 - [Azure.Storage.Blobs - .NET SDK](https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs)
 - [Manage blob properties and metadata with .NET](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata)
 - [azure-storage-blob - Python SDK](https://learn.microsoft.com/en-us/python/api/azure-storage-blob/)
-```
+
