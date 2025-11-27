@@ -110,6 +110,94 @@ Each binding in the `bindings` array must include:
 | `direction` | Yes | Direction of data flow: `in`, `out`, or `inout` |
 | `name` | Yes | Name used in function code to access the binding data |
 
+### Trigger Limit: Exactly One Per Function
+
+**Key Concept**: A function must have **exactly one trigger**. Triggers are what cause a function to run - they define how a function is invoked. Triggers have associated data, which is often provided as the payload of the function.
+
+**Important Rules:**
+- A function **cannot** have zero triggers
+- A function **cannot** have multiple triggers
+- Each function has **exactly one** trigger
+
+This is a fundamental design principle of Azure Functions that ensures clear, predictable function invocation.
+
+### Practice Question: Number of Triggers Per Function
+
+**Question:**
+
+How many triggers can an Azure Function have?
+
+**Options:**
+
+A) Any number
+
+B) 0 or 1
+
+C) 32 maximum
+
+D) Exactly one ✅
+
+---
+
+**Correct Answer: D) Exactly one**
+
+---
+
+**Explanation:**
+
+Triggers are what cause a function to run. A trigger defines how a function is invoked and **a function must have exactly one trigger**. Triggers have associated data, which is often provided as the payload of the function.
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Any number** | ❌ Incorrect - Functions are limited to exactly one trigger |
+| **B) 0 or 1** | ❌ Incorrect - A function cannot have zero triggers; it must have exactly one |
+| **C) 32 maximum** | ❌ Incorrect - There is no such limit; the rule is exactly one trigger |
+| **D) Exactly one** | ✅ **Correct** - Every function must have exactly one trigger that defines how it's invoked |
+
+**Visual Example:**
+
+```
+✅ Valid Function Configuration:
+┌─────────────────────────────────────┐
+│ Function: ProcessOrder              │
+├─────────────────────────────────────┤
+│ Trigger: Queue Trigger (1)          │  ← Exactly one trigger
+│ Input Binding: Cosmos DB            │  ← Multiple bindings OK
+│ Output Binding: Blob Storage        │
+│ Output Binding: SendGrid Email      │
+└─────────────────────────────────────┘
+
+❌ Invalid - No Trigger:
+┌─────────────────────────────────────┐
+│ Function: ProcessOrder              │
+├─────────────────────────────────────┤
+│ Input Binding: Cosmos DB            │  ← No trigger = Invalid!
+│ Output Binding: Blob Storage        │
+└─────────────────────────────────────┘
+
+❌ Invalid - Multiple Triggers:
+┌─────────────────────────────────────┐
+│ Function: ProcessOrder              │
+├─────────────────────────────────────┤
+│ Trigger: HTTP Trigger               │  ← Two triggers = Invalid!
+│ Trigger: Queue Trigger              │
+│ Output Binding: Blob Storage        │
+└─────────────────────────────────────┘
+```
+
+**Triggers vs Bindings:**
+
+| Aspect | Trigger | Bindings |
+|--------|---------|----------|
+| **Purpose** | Causes function to run | Provides input/output data |
+| **Count per function** | **Exactly 1** | 0 to many |
+| **Direction** | Always `in` | `in`, `out`, or `inout` |
+| **Examples** | HTTP, Queue, Timer, Blob, Cosmos DB | Blob, Cosmos DB, Table, SendGrid |
+
+**Reference:** [Azure Functions triggers and bindings](https://docs.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=csharp)
+
+---
+
 #### Direction Property Values
 
 All triggers and bindings have a `direction` property in the `function.json` file. The possible values are:
