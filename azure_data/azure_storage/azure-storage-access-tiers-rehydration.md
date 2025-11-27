@@ -31,6 +31,8 @@
   - [Storage Costs](#storage-costs)
   - [Rehydration Costs](#rehydration-costs)
   - [Early Deletion Fees](#early-deletion-fees)
+- [Choosing the Right Tier - Practical Scenarios](#choosing-the-right-tier---practical-scenarios)
+  - [Scenario: 100 GB/day with 30-day retention and rare access](#scenario-100-gbday-with-30-day-retention-and-rare-access)
 - [Best Practices](#best-practices)
 - [Complete Rehydration Workflow Example](#complete-rehydration-workflow-example)
   - [Scenario: Rehydrate archived log files for analysis](#scenario-rehydrate-archived-log-files-for-analysis)
@@ -418,6 +420,36 @@ Deleting or moving blobs before the minimum storage duration results in a prorat
 - Cool: 30 days minimum
 - Cold: 90 days minimum
 - Archive: 180 days minimum
+
+## Choosing the Right Tier - Practical Scenarios
+
+### Scenario: 100 GB/day with 30-day retention and rare access
+
+**Question**: Your application generates 100 GB of data per day, and you need to keep that data for 30 days before deleting it. You may need to access the data occasionally. You will use a lifecycle rule to automatically delete the data after 30 days, and you won't likely need to read that data. Which is the most cost-effective storage option?
+
+**Answer**: **Azure Blob Storage - Cool Tier** ✅
+
+**Why Cool Tier is correct:**
+- Lower storage costs compared to Hot Tier
+- Data is infrequently accessed (matches Cool Tier use case)
+- 30-day retention aligns with Cool Tier's minimum storage duration
+- Still provides immediate access when occasional reads are needed
+- Lifecycle rules can automatically delete data after 30 days
+
+**Why other options are not optimal:**
+
+| Option | Why Not Suitable |
+|--------|------------------|
+| **Hot Tier** ❌ | Designed for frequently accessed data with low latency. Higher storage costs are unnecessary when data won't be read often. |
+| **Premium Tier** ❌ | Designed for high-performance scenarios requiring low-latency access. Overkill for data that's rarely accessed and will be deleted after 30 days. |
+| **Azure Files** ❌ | File share service suited for shared file storage scenarios, not optimized for large-scale data retention and automatic deletion workflows. |
+| **Archive Tier** ❌ | While cheapest for storage, the 180-day minimum retention requirement doesn't match the 30-day deletion need, and rehydration costs/delays make occasional access impractical. |
+
+**Key Decision Factors:**
+- **Access frequency**: Rare → Cool or Cold (not Hot)
+- **Retention period**: 30 days → Cool Tier (matches minimum duration)
+- **Need for immediate access**: Yes (occasionally) → Cool (not Archive)
+- **Lifecycle automation**: Cool Tier supports lifecycle policies for automatic deletion
 
 ## Best Practices
 
