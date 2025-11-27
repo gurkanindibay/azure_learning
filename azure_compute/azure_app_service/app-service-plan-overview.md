@@ -12,6 +12,7 @@
 - [Creating an App Service Plan](#creating-an-app-service-plan)
 - [Kudu Service](#kudu-service)
 - [App Settings and Environment Configuration](#app-settings-and-environment-configuration)
+- [Moving Web Apps Between Regions](#moving-web-apps-between-regions)
 - [Exam Tips](#exam-tips)
 - [References](#references)
 
@@ -611,6 +612,90 @@ The `ASPNETCORE_ENVIRONMENT` setting controls the runtime environment for ASP.NE
 - Development mode should only be used temporarily for troubleshooting
 
 **Reference:** [Access environment variables - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore?pivots=platform-windows#access-environment-variables)
+
+---
+
+## Moving Web Apps Between Regions
+
+### Regional Constraints
+
+**Important:** You **cannot change an App Service Plan's region** after it has been created. The region in which your app runs is the region of the App Service Plan it's in.
+
+### Moving Apps Between Plans
+
+You can move an app to another App Service Plan, but with limitations:
+
+| Requirement | Description |
+|-------------|-------------|
+| **Same Resource Group** | Source and target plans must be in the same resource group |
+| **Same Region** | Source and target plans must be in the same geographical region |
+
+### Options for Running an App in a Different Region
+
+If you want to run your app in a different region, you have these alternatives:
+
+| Option | Description | Use Case |
+|--------|-------------|----------|
+| **App Cloning** | Clone your app to a new or existing App Service Plan in any region | Best for quick migration with existing configuration |
+| **Redeploy from Scratch** | Create a new app in the target region and deploy your code | Best when you want a fresh start or don't need to preserve settings |
+
+### App Cloning
+
+Cloning copies your app to a new or existing App Service Plan in any region. The clone includes:
+- App settings
+- Connection strings
+- Deployment slots (optional)
+- Custom domains (optional)
+
+```bash
+# Clone an app to a new region
+az webapp create \
+  --name myapp-eastus \
+  --resource-group myResourceGroup-EastUS \
+  --plan myAppServicePlan-EastUS \
+  --source-web-app /subscriptions/{sub-id}/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myapp
+```
+
+### Practice Question: Moving a Web App to a New Region
+
+**Question:**
+
+You have created a web app called TestWebApp in the West US region. After creating it, you decide you'd rather this web app run in the East US region. How do you move a Web App to a new region?
+
+**Options:**
+
+A) It can only be done in PowerShell or CLI
+
+B) In the Azure Portal, open the Web App, and choose the Move menu at the top of the Overview screen
+
+C) You cannot. If you want to move an app between regions, you must clone the app, or redeploy the app from scratch. ✅
+
+D) You can't move the web app, but you can move the App Service Plan it runs in which has the same effect.
+
+---
+
+**Correct Answer: C) You cannot. If you want to move an app between regions, you must clone the app, or redeploy the app from scratch.**
+
+---
+
+**Explanation:**
+
+You can move an app to another App Service plan, but **only** if the source plan and the target plan are in the **same resource group and geographical region**. The region in which your app runs is the region of the App Service plan it's in. However, **you cannot change an App Service plan's region**.
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) It can only be done in PowerShell or CLI** | ❌ Incorrect - Moving between regions is not possible regardless of the tool used |
+| **B) Use the Move menu in Azure Portal** | ❌ Incorrect - The Move option is for moving between resource groups/subscriptions, not regions |
+| **C) Clone or redeploy** | ✅ **Correct** - These are the only two options for running an app in a different region |
+| **D) Move the App Service Plan** | ❌ Incorrect - You cannot change an App Service Plan's region either |
+
+**Key Takeaway:**
+
+The App Service Plan's region is immutable. If you need your app in a different region, you must either:
+1. **Clone** the app to a new App Service Plan in the target region
+2. **Redeploy** the app from scratch in the target region
+
+**Reference:** [Manage an App Service plan - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/app-service-plan-manage)
 
 ---
 
