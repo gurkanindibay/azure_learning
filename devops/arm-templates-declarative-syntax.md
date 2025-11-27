@@ -21,6 +21,13 @@
   - [Key Properties](#key-properties)
   - [Common Misconceptions](#common-misconceptions)
   - [References](#references)
+- [ARM Template Features for Resource Dependencies](#arm-template-features-for-resource-dependencies)
+  - [dependsOn](#dependson)
+  - [reference()](#reference)
+  - [conditions](#conditions)
+  - [copy](#copy)
+  - [Feature Comparison](#feature-comparison)
+  - [Best Practice](#best-practice)
 - [Related Technologies](#related-technologies)
 - [References](#references)
 
@@ -197,6 +204,128 @@ To include another ARM template within your deployment, use the **`Microsoft.Res
 ### References
 
 - [Microsoft Docs: Linked and Nested Templates](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates?tabs=azure-powershell)
+
+## ARM Template Features for Resource Dependencies
+
+When deploying resources that depend on each other (e.g., subnets that require a VNet to exist first), ARM templates provide several features. Understanding when to use each is critical.
+
+### dependsOn
+
+**Purpose:** Explicitly specify dependencies between resources to control deployment order.
+
+The `dependsOn` property ensures that a resource is created only after its dependencies are successfully deployed.
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2021-02-01",
+      "name": "myVNet",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": ["10.0.0.0/16"]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2021-02-01",
+      "name": "myVNet/mySubnet",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'myVNet')]"
+      ],
+      "properties": {
+        "addressPrefix": "10.0.1.0/24"
+      }
+    }
+  ]
+}
+```
+
+**Use Case:** Ensuring subnets are created only after the VNet is successfully deployed.
+
+### reference()
+
+**Purpose:** Retrieve runtime properties of another resource in the template.
+
+The `reference()` function gets information about an existing or deployed resource, such as its properties or outputs. However, it **does not enforce deployment order**.
+
+```json
+{
+  "outputs": {
+    "vnetAddressSpace": {
+      "type": "array",
+      "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', 'myVNet')).addressSpace.addressPrefixes]"
+    }
+  }
+}
+```
+
+**Note:** While `reference()` can access properties of resources, it is not designed to specify dependencies between resources.
+
+### conditions
+
+**Purpose:** Conditionally deploy resources based on parameter values or expressions.
+
+The `condition` property determines whether a resource should be deployed at all, based on a boolean expression.
+
+```json
+{
+  "type": "Microsoft.Storage/storageAccounts",
+  "apiVersion": "2021-02-01",
+  "name": "mystorageaccount",
+  "condition": "[equals(parameters('deployStorage'), 'yes')]",
+  "location": "[resourceGroup().location]",
+  "sku": {
+    "name": "Standard_LRS"
+  },
+  "kind": "StorageV2"
+}
+```
+
+**Note:** Conditions control *whether* a resource is deployed, not *when* it is deployed relative to other resources.
+
+### copy
+
+**Purpose:** Create multiple instances of a resource using iteration.
+
+The `copy` element allows you to deploy multiple copies of a resource with different property values.
+
+```json
+{
+  "type": "Microsoft.Storage/storageAccounts",
+  "apiVersion": "2021-02-01",
+  "name": "[concat('storage', copyIndex())]",
+  "location": "[resourceGroup().location]",
+  "copy": {
+    "name": "storageCopy",
+    "count": 3
+  },
+  "sku": {
+    "name": "Standard_LRS"
+  },
+  "kind": "StorageV2"
+}
+```
+
+**Note:** The `copy` feature is for creating multiple resource instances, not for specifying dependencies.
+
+### Feature Comparison
+
+| Feature | Purpose | Controls Deployment Order? |
+|---------|---------|---------------------------|
+| **dependsOn** | Specify resource dependencies | ✅ Yes |
+| **reference()** | Retrieve properties of another resource | ❌ No |
+| **condition** | Conditionally deploy resources | ❌ No |
+| **copy** | Create multiple resource instances | ❌ No |
+
+### Best Practice
+
+When you need to ensure that one resource is created only after another resource is successfully deployed (e.g., subnets after VNet), use **`dependsOn`**. This is the correct and explicit way to define resource deployment order in ARM templates.
 
 ## Related Technologies
 
