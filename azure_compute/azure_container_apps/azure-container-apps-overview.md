@@ -155,6 +155,25 @@ az containerapp create \
 
 Azure Container Apps uses **KEDA (Kubernetes Event-Driven Autoscaling)** for sophisticated scaling:
 
+**What is KEDA?**
+
+KEDA is an open-source Kubernetes-based event-driven autoscaler that extends the standard Kubernetes Horizontal Pod Autoscaler (HPA) capabilities. In Azure Container Apps, KEDA enables scaling based on external metrics, such as messages in a queue or events in a stream, providing a more dynamic and responsive scaling mechanism.
+
+**Key Points About KEDA in Azure Container Apps:**
+
+| Statement | Correct? | Explanation |
+|-----------|----------|-------------|
+| KEDA allows scaling based on external metrics (queue messages, stream events) | ✅ Yes | This is KEDA's primary purpose - enabling event-driven autoscaling based on external metrics |
+| KEDA is exclusive to Azure Kubernetes Service (AKS) | ❌ No | While commonly used with AKS, KEDA can also be utilized in Azure Container Apps for event-driven autoscaling |
+| KEDA scales only based on CPU usage | ❌ No | KEDA provides flexible scaling based on external metrics, not solely CPU usage |
+| KEDA manages the lifecycle of underlying VMs | ❌ No | KEDA's focus is on enabling event-driven autoscaling for applications, not managing VM lifecycles |
+
+**KEDA's Role:**
+- **Event-Driven Scaling**: Scales containers based on external events and metrics
+- **External Metrics Integration**: Connects to various event sources (queues, streams, databases)
+- **Scale to Zero**: Supports scaling replicas to zero when no events are pending
+- **Kubernetes Native**: Works seamlessly within Kubernetes environments including Azure Container Apps
+
 **Supported Scalers:**
 - HTTP requests
 - Azure Service Bus queues/topics
