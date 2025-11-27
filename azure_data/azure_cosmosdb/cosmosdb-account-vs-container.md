@@ -21,7 +21,8 @@
     - [What is Change Feed?](#what-is-change-feed)
     - [Azure Functions Cosmos DB Trigger](#azure-functions-cosmos-db-trigger)
     - [Lease Collection Concept](#lease-collection-concept)
-11. [Practice Question](#practice-question)
+11. [Single Partition Queries vs Cross-Partition Queries](#single-partition-queries-vs-cross-partition-queries)
+12. [Practice Questions](#practice-questions)
 
 ---
 
@@ -852,9 +853,9 @@ public static void Run(
 
 ---
 
-## Practice Question
+## Practice Questions
 
-### Azure Cosmos DB Change Feed Processing with Azure Functions
+### Question 1: Azure Cosmos DB Change Feed Processing with Azure Functions
 
 **Scenario:**
 
@@ -1082,6 +1083,176 @@ public static void Run(
 - [Azure Functions Cosmos DB Trigger Documentation](https://learn.microsoft.com/azure/azure-functions/functions-bindings-cosmosdb-v2-trigger)
 - [Change Feed in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/change-feed)
 - [Change Feed Processor](https://learn.microsoft.com/azure/cosmos-db/change-feed-processor)
+
+---
+
+## Single Partition Queries vs Cross-Partition Queries
+
+Understanding the difference between single partition queries and cross-partition queries is crucial for optimizing performance and cost in Azure Cosmos DB.
+
+### What is a Single Partition Query?
+
+A **single partition query** is a query that targets data within a single logical partition. This is achieved by including the partition key in the query's WHERE clause or by specifying it in the request options.
+
+```csharp
+// Single partition query - partition key specified
+QueryDefinition query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.categoryId = @categoryId AND c.price < @maxPrice")
+    .WithParameter("@categoryId", "electronics")
+    .WithParameter("@maxPrice", 500);
+
+FeedIterator<Product> iterator = container.GetItemQueryIterator<Product>(
+    query,
+    requestOptions: new QueryRequestOptions
+    {
+        PartitionKey = new PartitionKey("electronics")  // Targets single partition
+    });
+```
+
+### What is a Cross-Partition Query?
+
+A **cross-partition query** (also called a fan-out query) is a query that must search across multiple or all partitions because the partition key is not specified or not used in the filter.
+
+```csharp
+// Cross-partition query - no partition key specified
+QueryDefinition query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.price < @maxPrice")
+    .WithParameter("@maxPrice", 500);
+
+FeedIterator<Product> iterator = container.GetItemQueryIterator<Product>(
+    query,
+    requestOptions: new QueryRequestOptions
+    {
+        MaxConcurrency = -1  // Allow parallel execution across partitions
+    });
+```
+
+### Benefits of Single Partition Queries
+
+| Benefit | Explanation |
+|---------|-------------|
+| **Lower Cost (Fewer RUs)** | Single partition queries consume significantly less Request Units (RUs) because they only need to access one partition instead of fanning out to multiple partitions |
+| **Faster Execution** | By targeting a single partition, the system can retrieve and process data without coordinating across multiple partitions, resulting in faster execution times |
+| **Better Scalability** | Focusing queries on single partitions distributes workload more effectively, reducing overall resource consumption and improving efficiency |
+| **Predictable Performance** | Single partition queries offer more consistent and predictable latency since they avoid the overhead of cross-partition coordination |
+| **Lower Network Overhead** | Reduced data transfer requirements as only one partition is accessed, leading to quicker response times |
+| **Simpler Query Execution** | The system avoids the complexities of coordinating data retrieval across multiple partitions, resulting in a more streamlined operation |
+
+### Comparison Table
+
+| Aspect | Single Partition Query | Cross-Partition Query |
+|--------|----------------------|----------------------|
+| **RU Consumption** | Lower | Higher (proportional to partitions scanned) |
+| **Latency** | Lower, predictable | Higher, variable |
+| **Scalability** | Better | Can become a bottleneck |
+| **Network Overhead** | Minimal | Higher (fan-out to multiple partitions) |
+| **Execution Complexity** | Simple, direct | Complex, requires coordination |
+| **Best For** | Point lookups, filtered queries | Aggregations, full scans |
+
+### When Cross-Partition Queries Are Necessary
+
+While single partition queries are preferred, cross-partition queries are sometimes unavoidable:
+
+1. **Aggregations Across All Data**
+   - COUNT, SUM, AVG across the entire container
+   - Reporting and analytics queries
+
+2. **Searches Without Partition Key**
+   - Full-text search across all documents
+   - Queries on non-partition key fields
+
+3. **TOP N Queries Globally**
+   - Finding top items across all partitions
+
+### Best Practices
+
+1. **Always Include Partition Key When Possible**
+   ```csharp
+   // Preferred: Include partition key in query
+   var query = new QueryDefinition(
+       "SELECT * FROM c WHERE c.userId = @userId AND c.status = @status")
+       .WithParameter("@userId", "user123")  // Partition key
+       .WithParameter("@status", "active");
+   ```
+
+2. **Design Partition Keys for Common Query Patterns**
+   - Choose partition keys that align with your most frequent queries
+   - Ensure queries naturally filter by partition key
+
+3. **Monitor Query Metrics**
+   ```csharp
+   // Check if query crossed partitions
+   FeedResponse<Product> response = await iterator.ReadNextAsync();
+   Console.WriteLine($"Request Charge: {response.RequestCharge} RU");
+   // Higher RU often indicates cross-partition query
+   ```
+
+4. **Use Composite Indexes for Complex Queries**
+   - Optimize cross-partition queries that cannot be avoided
+   - Reduce RU consumption with proper indexing
+
+### Question 2: Single Partition vs Cross-Partition Query Benefits
+
+**Question:** What is the benefit of using a query that only requires a single partition to execute versus a cross-partition query in Azure Cosmos DB?
+
+**A.** Single partition queries do not require indexing, while cross-partition queries do.
+
+**B.** Single partition queries incur lower costs because they consume less Request Units (RUs) than cross-partition queries. ✅
+
+**C.** Single partition queries perform at the same speed as cross-partition queries, so there is no real advantage.
+
+**D.** Single partition queries can return results that are eventually consistent, while cross-partition queries can only return strong consistency.
+
+---
+
+### Answer: B ✅
+
+**Single partition queries incur lower costs because they consume less Request Units (RUs) than cross-partition queries.**
+
+---
+
+### Detailed Explanation
+
+#### Why Option B is Correct
+
+Single partition queries in Azure Cosmos DB provide several key advantages:
+
+1. **Lower RU Consumption**
+   - Queries target only one partition, avoiding the overhead of fanning out to multiple partitions
+   - Each partition accessed adds to the total RU cost
+   - Cross-partition queries multiply the base cost by the number of partitions scanned
+
+2. **Better Scalability and Performance**
+   - By focusing on a single partition, the system distributes workload more effectively
+   - Reduces overall resource consumption
+   - Improves efficiency of query execution
+
+3. **Predictable Performance**
+   - Single partition queries offer consistent latency
+   - No coordination overhead across partitions
+   - Faster data retrieval and processing
+
+4. **Reduced Network Overhead**
+   - Less data transfer required
+   - Quicker response times
+   - Lower latency for end users
+
+#### Why Other Options Are Incorrect
+
+**Option A - "Single partition queries do not require indexing"**
+- **Incorrect**: Both single and cross-partition queries use indexes
+- Indexing is independent of partition targeting
+- Proper indexing improves performance for all query types
+
+**Option C - "Same speed, no real advantage"**
+- **Incorrect**: Single partition queries are significantly faster
+- Cross-partition queries have coordination overhead
+- The difference in performance can be substantial
+
+**Option D - "Different consistency levels"**
+- **Incorrect**: Consistency levels are independent of query partition scope
+- Both query types respect the configured consistency level
+- Consistency is set at account level or per-request, not per-query type
 
 ---
 
