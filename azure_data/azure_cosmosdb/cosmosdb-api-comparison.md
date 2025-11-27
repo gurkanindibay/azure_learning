@@ -636,7 +636,57 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 3: MongoDB Migration
+### Scenario 3: Key-Value Data
+
+**Question:** Which CosmosDB API format works best with key-value data?
+
+**Options:**
+- A) Table API ✅
+- B) MongoDB API
+- C) Gremlin API
+- D) Cassandra API
+
+**Correct Answer: A) Table API**
+
+**Explanation:**
+
+| API | Data Format | Why Correct/Incorrect |
+|-----|-------------|----------------------|
+| **Table API** ✅ | Key/Value | Stores data in **key/value format** - specifically designed for simple key-value storage patterns |
+| **MongoDB API** ❌ | BSON (Binary JSON) | Stores data in a **document structure via BSON format**, not key-value |
+| **Gremlin API** ❌ | Vertices & Edges | Allows users to make **graph queries** and stores data as **edges and vertices**, not key-value |
+| **Cassandra API** ❌ | Column-oriented | Stores data in a **column-oriented schema**, optimized for wide-column workloads |
+
+**Why Table API is the best for Key-Value Data:**
+
+1. **Native Key-Value Model**: Data is stored with PartitionKey and RowKey as the primary identifiers
+2. **Simple Access Pattern**: Optimized for point reads and writes using keys
+3. **Azure Table Storage Compatible**: Provides an upgrade path from Azure Table Storage with global distribution
+4. **Efficient Lookups**: Fast retrieval by key without complex query requirements
+
+**Key-Value Data Example:**
+```
+┌────────────────┬───────────────┬──────────────┬──────────────┐
+│ PartitionKey   │ RowKey        │ Value1       │ Value2       │
+├────────────────┼───────────────┼──────────────┼──────────────┤
+│ "config"       │ "timeout"     │ "30"         │ "seconds"    │
+│ "config"       │ "retries"     │ "3"          │ null         │
+│ "session"      │ "user123"     │ "{...}"      │ "active"     │
+└────────────────┴───────────────┴──────────────┴──────────────┘
+```
+
+**Use Cases for Table API:**
+- Configuration storage (key-value settings)
+- Session management
+- User preference storage
+- Simple caching scenarios
+- Migration from Azure Table Storage
+
+**Reference:** [Introduction to Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/introduction)
+
+---
+
+### Scenario 4: MongoDB Migration
 
 **Question:** Your company has an existing MongoDB application that needs to be migrated to Azure Cosmos DB with minimal code changes. Which API should you use?
 
@@ -649,7 +699,7 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 4: Social Network Application
+### Scenario 5: Social Network Application
 
 **Question:** You're building a social network application that needs to efficiently query friend relationships and friend-of-friend connections. Which API should you use?
 
@@ -662,7 +712,7 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 5: IoT Time-Series Data
+### Scenario 6: IoT Time-Series Data
 
 **Question:** You're collecting high-volume sensor data from IoT devices that needs to be written quickly and queried by time ranges. Which API should you use?
 
@@ -675,7 +725,7 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 6: Flexible JSON Documents
+### Scenario 7: Flexible JSON Documents
 
 **Question:** You're building a new e-commerce application that needs to store product catalogs with varying attributes depending on product category. You want SQL-like query capabilities. Which API should you use?
 
