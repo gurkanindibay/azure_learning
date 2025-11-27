@@ -369,6 +369,92 @@ public static async Task<IActionResult> Run(
 }
 ```
 
+##### CRON Expression Format
+
+Azure Functions Timer Triggers use **NCRONTAB expressions** (6-field format) to define schedules. The format is:
+
+```
+{second} {minute} {hour} {day} {month} {day-of-week}
+```
+
+| Field | Allowed Values | Special Characters |
+|-------|----------------|-------------------|
+| Second | 0-59 | , - * / |
+| Minute | 0-59 | , - * / |
+| Hour | 0-23 | , - * / |
+| Day | 1-31 | , - * / |
+| Month | 1-12 | , - * / |
+| Day of Week | 0-6 (0 = Sunday) | , - * / |
+
+**Common CRON Expression Examples:**
+
+| Expression | Description |
+|------------|-------------|
+| `0 */5 * * * *` | Every 5 minutes |
+| `0 0 * * * *` | Every hour (at minute 0) |
+| `0 5 * * * *` | At 5 minutes past every hour |
+| `0 0 0 * * *` | Every day at midnight |
+| `0 0 9 * * 1-5` | Every weekday at 9:00 AM |
+| `0 30 9 * * *` | Every day at 9:30 AM |
+
+---
+
+##### Practice Question: Timer Trigger CRON Expression
+
+**Question:**
+
+You need to configure an Azure Function to run on a schedule using a CRON expression. Your requirement is to have the function execute at 5 minutes past every hour, every day of the week. Which of the following CRON expressions should you use?
+
+**Options:**
+
+A) `0 5 * * *`
+
+B) `0/5 * * * *`
+
+C) `5 * * * *` ✅
+
+D) `5 * * * 1-5`
+
+---
+
+**Correct Answer: C) `5 * * * *`**
+
+---
+
+**Explanation:**
+
+| Option | Expression | Why Correct/Incorrect |
+|--------|------------|----------------------|
+| **A) `0 5 * * *`** | 5-field format | ❌ Incorrect - This is a standard 5-field CRON expression (not Azure's 6-field NCRONTAB format). In 5-field format, this specifies execution at 5:00 AM (5 hours past midnight) every day, not 5 minutes past every hour. |
+| **B) `0/5 * * * *`** | Every 5 minutes | ❌ Incorrect - The `0/5` in the first field means "starting at 0, every 5 units." This specifies the function should run every 5 minutes (at 0, 5, 10, 15, etc. minutes past each hour), not just at 5 minutes past each hour. |
+| **C) `5 * * * *`** | 5 minutes past every hour | ✅ **Correct** - In Azure Functions' NCRONTAB format, the first field is seconds and the second is minutes. However, when only 5 fields are provided, Azure interprets this as `0 5 * * * *` (at second 0, minute 5, every hour, every day, every month, every day of week). The `*` wildcards in the subsequent fields ensure the function runs every hour, every day of the week. |
+| **D) `5 * * * 1-5`** | 5 minutes past every hour, weekdays only | ❌ Incorrect - The `1-5` in the day-of-week field restricts execution to Monday through Friday only. This does not meet the requirement of running every day of the week (including weekends). |
+
+**Visual Schedule Comparison:**
+
+```
+Expression A: 0 5 * * * (5-field CRON)
+├── Runs at: 5:00 AM daily
+└── ❌ Does not run hourly
+
+Expression B: 0/5 * * * * (Azure 6-field)
+├── Runs at: :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
+└── ❌ Runs every 5 minutes, not just at :05
+
+Expression C: 5 * * * * (Correct)
+├── Runs at: 00:05, 01:05, 02:05, ..., 23:05
+└── ✅ Runs at 5 minutes past every hour, every day
+
+Expression D: 5 * * * 1-5
+├── Runs at: 00:05, 01:05, 02:05, ..., 23:05
+├── But only Monday through Friday
+└── ❌ Does not run on weekends
+```
+
+**Reference:** [Timer trigger for Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer?tabs=csharp#ncrontab-expressions)
+
+---
+
 ##### Timer Trigger - TimerInfo Object
 
 When using a Timer Trigger, the function receives a `TimerInfo` object that provides information about the timer invocation. This object includes useful properties for handling late executions.
