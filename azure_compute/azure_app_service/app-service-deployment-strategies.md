@@ -53,6 +53,11 @@
   - [Identity and Routing Commands](#identity-and-routing-commands)
   - [Parameters for `az webapp deploy`](#parameters-for-az-webapp-deploy)
 - [Example Deployment Workflow](#example-deployment-workflow)
+- [Kudu REST API](#kudu-rest-api)
+  - [What is Kudu?](#what-is-kudu)
+  - [Common Kudu REST API Endpoints](#common-kudu-rest-api-endpoints)
+  - [ZIP API for Deployments](#zip-api-for-deployments)
+  - [Practice Question: Kudu ZIP API](#practice-question-kudu-zip-api)
 - [Additional Resources](#additional-resources)
 - [Related Topics](#related-topics)
 
@@ -864,11 +869,79 @@ az webapp deploy \
   --type zip
 ```
 
+## Kudu REST API
+
+### What is Kudu?
+
+Kudu is the engine behind Git deployments in Azure App Service. It provides a set of REST APIs for managing your App Service, including file operations, diagnostics, and deployments. The Kudu SCM (Source Control Management) endpoint is accessible at `https://<app-name>.scm.azurewebsites.net`.
+
+### Common Kudu REST API Endpoints
+
+| API Endpoint | Method | Description |
+|--------------|--------|-------------|
+| `/api/zip/{path}/` | **PUT** | Upload and expand a ZIP file to a folder |
+| `/api/zip/{path}/` | **GET** | Download a folder as a ZIP file |
+| `/api/vfs/{path}` | GET/PUT/DELETE | Virtual File System operations |
+| `/api/deployments/{id}` | GET/PUT | Get or update deployment information |
+| `/api/scm/info` | GET | Get SCM information |
+| `/api/settings` | GET/POST | Get or update Kudu settings |
+| `/api/diagnostics/runtime` | GET | Get runtime versions |
+| `/api/processes` | GET | List running processes |
+
+### ZIP API for Deployments
+
+The Zip API (`/api/zip/{path}/`) is specifically designed for:
+- **Uploading**: Expanding ZIP files into folders on the server
+- **Downloading**: Downloading folders as ZIP files from the server
+
+**Upload a ZIP file:**
+```bash
+# Upload and expand a ZIP file to wwwroot
+curl -X PUT \
+  -u "<deployment-user>:<password>" \
+  --data-binary @myapp.zip \
+  "https://<app-name>.scm.azurewebsites.net/api/zip/site/wwwroot/"
+```
+
+**Download a folder as ZIP:**
+```bash
+# Download the wwwroot folder as a ZIP file
+curl -X GET \
+  -u "<deployment-user>:<password>" \
+  -o wwwroot.zip \
+  "https://<app-name>.scm.azurewebsites.net/api/zip/site/wwwroot/"
+```
+
+### Practice Question: Kudu ZIP API
+
+**Question:**
+
+What is the REST API command for uploading a ZIP file into an Azure App Service using the Kudu SCM endpoint?
+
+**Options:**
+
+1. ❌ `POST /deploy`
+   - **Incorrect**: There is no `/deploy` endpoint in the Kudu REST API for ZIP file uploads. The POST method is not used for ZIP deployments.
+
+2. ❌ `POST /api/scm/{path}/`
+   - **Incorrect**: The `/api/scm/` endpoint is used for SCM-related operations (like getting SCM info), not for uploading ZIP files.
+
+3. ❌ `PUT /api/deployments/{id}`
+   - **Incorrect**: The `/api/deployments/{id}` endpoint is used to get or update deployment metadata and status, not to upload ZIP files.
+
+4. ✅ `PUT /api/zip/{path}/`
+   - **Correct**: The Zip API uses `PUT /api/zip/{path}/` to upload and expand ZIP files into the specified folder. For example, `PUT /api/zip/site/wwwroot/` uploads and extracts a ZIP file to the wwwroot folder.
+
+**Reference:** [Kudu REST API - GitHub](https://github.com/projectkudu/kudu/wiki/REST-API)
+
+---
+
 ## Additional Resources
 
 - [Deploy to App Service - Microsoft Learn](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip)
 - [Set up staging environments in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots)
 - [Azure CLI: az webapp deploy](https://learn.microsoft.com/en-us/cli/azure/webapp)
+- [Kudu REST API Documentation](https://github.com/projectkudu/kudu/wiki/REST-API)
 
 ## Related Topics
 
