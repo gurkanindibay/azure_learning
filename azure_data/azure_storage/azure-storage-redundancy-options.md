@@ -56,6 +56,35 @@ az storage account create \
   --sku Standard_LRS
 ```
 
+---
+
+#### Practice Question: LRS Data Copies
+
+**Question:**
+When deploying an Azure Storage account, and you choose Locally Redundant Storage (LRS), how many copies of your data does Azure keep?
+
+**Options:**
+1. ✅ **3**
+2. ❌ 1 copy in each Availability Zone
+3. ❌ 1
+4. ❌ 6
+
+**Answer: 3**
+
+**Explanation:**
+Azure Storage always stores multiple copies of your data so that it is protected from planned and unplanned events, including transient hardware failures, network or power outages, and massive natural disasters. Redundancy ensures that your storage account meets its availability and durability targets even in the face of failures.
+
+**Locally redundant storage (LRS) copies your data synchronously three times within a single physical location in the primary region.** LRS is the least expensive replication option, but is not recommended for applications requiring high availability or durability.
+
+**Why other options are incorrect:**
+- ❌ **1 copy in each Availability Zone**: This describes ZRS, not LRS. LRS uses a single data center, not availability zones.
+- ❌ **1**: Azure Storage always maintains multiple copies for redundancy. A single copy would provide no protection.
+- ❌ **6**: This is the number of copies for GRS/GZRS (3 in primary + 3 in secondary region).
+
+**Reference:** [Azure Storage redundancy](https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy)
+
+---
+
 ### Zone-Redundant Storage (ZRS)
 
 **How it works:**
