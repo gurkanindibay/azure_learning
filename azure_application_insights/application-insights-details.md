@@ -27,6 +27,12 @@
   - [Best Practices for Multi-Region Monitoring](#best-practices-for-multi-region-monitoring)
   - [Key Takeaway](#key-takeaway-2)
   - [Related Learning Resources](#related-learning-resources-2)
+- [Question 4: Identifying Slow Requests and Dependencies](#question-4-identifying-slow-requests-and-dependencies)
+  - [Explanation](#explanation-3)
+  - [Why Other Options Are Less Effective](#why-other-options-are-less-effective)
+  - [Application Insights Features Comparison for Performance Troubleshooting](#application-insights-features-comparison-for-performance-troubleshooting)
+  - [Key Takeaway](#key-takeaway-3)
+  - [Related Learning Resources](#related-learning-resources-3)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -303,3 +309,72 @@ For **global, scalable monitoring** of applications across multiple regions, dep
 - Analyze metrics with Azure Monitor metrics explorer - Training | Microsoft Learn
 - Implement Application Insights
 - Design a distributed monitoring strategy
+
+---
+
+## Question 4: Identifying Slow Requests and Dependencies
+
+**Scenario:**
+You are developing an Azure application that uses Azure Application Insights to monitor performance and usage. You want to ensure that you can effectively troubleshoot issues related to the application's performance.
+
+**Question:**
+Which of the following features of Azure Application Insights can you use to identify slow requests and dependencies in your application?
+
+**Options:**
+
+1. **Live Metrics Stream** ✅ *Correct*
+2. **Application Map** ❌ *Less Effective*
+3. **Performance Counters** ❌ *Less Effective*
+4. **Analytics Query** ❌ *Less Effective*
+
+### Explanation
+
+**Correct Answer: Live Metrics Stream**
+
+The **Live Metrics Stream** feature in Azure Application Insights allows you to monitor real-time performance data, including slow requests and dependencies. It provides:
+
+- **Live view of key metrics** with sub-second latency
+- **Real-time request and dependency tracking** as they happen
+- **Instant visibility** into slow requests and failed dependencies
+- **Quick identification and troubleshooting** of performance issues as they occur
+- **No sampling** - see all requests in real-time
+- **Minimal overhead** - designed for production use
+
+**Key Live Metrics Stream Capabilities:**
+
+| Capability | Description |
+|------------|-------------|
+| **Incoming Requests** | Real-time view of request rate, duration, and failures |
+| **Outgoing Dependencies** | Live monitoring of dependency calls and response times |
+| **Exceptions** | Immediate visibility into exceptions as they occur |
+| **Performance Counters** | CPU, memory, and other system metrics in real-time |
+| **Custom Metrics** | Stream custom telemetry data live |
+| **Server Selection** | Filter by specific server instances |
+
+### Why Other Options Are Less Effective
+
+- **Application Map**: Provides a visual representation of the components and dependencies of your application. While it can help you understand the overall architecture and identify which components have issues, it may not be the most effective tool for identifying **specific slow requests and dependencies in real-time**. It's better for architectural overview and dependency health at a glance.
+
+- **Performance Counters**: Allow you to track and monitor system-level performance metrics (CPU, memory, I/O, etc.). While they can provide valuable insights into overall system performance, they may not be as effective as other features for identifying **specific slow requests and dependencies** within your application. They're more about infrastructure health than application-level request tracking.
+
+- **Analytics Query**: Allows you to run custom queries on your application's telemetry data using Kusto Query Language (KQL). While it can help you analyze and visualize performance data in great detail, it may not be the most efficient tool for **quickly identifying and troubleshooting slow requests and dependencies in real-time**. It's better for historical analysis and complex investigations.
+
+### Application Insights Features Comparison for Performance Troubleshooting
+
+| Feature | Best For | Real-Time | Granularity | Use Case |
+|---------|----------|-----------|-------------|----------|
+| **Live Metrics Stream** | Real-time monitoring | ✅ Yes (sub-second) | Request/dependency level | Quick identification of current issues |
+| **Application Map** | Architecture overview | ❌ Near real-time | Component level | Understanding dependencies and bottlenecks |
+| **Performance Counters** | System health | ✅ Yes | System level | Infrastructure monitoring |
+| **Analytics Query** | Historical analysis | ❌ No (query-based) | Any level | Deep investigation and trend analysis |
+| **Transaction Search** | Finding specific requests | ❌ No | Individual request | Debugging specific failures |
+| **Profiler** | Code-level diagnostics | ❌ Sampled | Method level | Identifying slow code paths |
+
+### Key Takeaway
+
+For **real-time identification of slow requests and dependencies**, **Live Metrics Stream** is the most effective tool because it provides immediate visibility into performance issues as they occur, allowing for quick troubleshooting without delay.
+
+### Related Learning Resources
+- Live Metrics: Monitor and diagnose with 1-second latency
+- Application Insights overview
+- Monitor Azure resources with Azure Monitor
