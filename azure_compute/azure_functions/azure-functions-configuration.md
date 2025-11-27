@@ -592,6 +592,102 @@ For processing each blob only once (even if updated multiple times), use Event G
 }
 ```
 
+#### Practice Question: Blob Deletion Trigger
+
+**Question:**
+
+Is it possible to create a function in Azure that triggers only when a blob is deleted from a storage container?
+
+**Options:**
+
+A) Yes, using Azure Functions with Blob Storage trigger and setting it to listen for deletion events.
+
+B) Yes, using Azure Event Grid to subscribe to blob deletion events and route them to an Azure Function. ✅
+
+C) No, Azure Functions do not support triggers for blob deletion events.
+
+D) Yes, but only if the blob is deleted via an HTTP request to an Azure Function.
+
+---
+
+**Correct Answer: B) Yes, using Azure Event Grid to subscribe to blob deletion events and route them to an Azure Function.**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Blob Storage trigger for deletion events** | ❌ Incorrect - Blob Storage triggers only fire once for a **new or updated blob**. They cannot be configured to specifically fire when a blob is deleted, or more than once. The Blob Trigger monitors for blob additions and updates, not deletions. |
+| **B) Azure Event Grid for blob deletion events** | ✅ **Correct** - Azure Event Grid can be used to subscribe to blob deletion events (`Microsoft.Storage.BlobDeleted`) in a storage account and route these events to an Azure Function for processing. This allows for the creation of a function that triggers only when a blob is deleted, making it a valid and recommended approach for handling such scenarios. |
+| **C) Azure Functions do not support blob deletion triggers** | ❌ Incorrect - Azure Functions do support triggers for blob deletion events, but not through the Blob Storage trigger binding directly. Instead, you use Azure Event Grid subscriptions to capture blob deletion events and route them to an Azure Function. |
+| **D) Only via HTTP request** | ❌ Incorrect - While it is possible to trigger a function in Azure when a blob is deleted via an HTTP request (by having your application call an HTTP-triggered function when it deletes a blob), this method is not the most efficient or direct way to achieve this functionality. Using Azure Event Grid to subscribe to blob deletion events and route them to an Azure Function is a more suitable and recommended approach for handling blob deletion triggers. |
+
+---
+
+**Key Difference: Blob Trigger vs Event Grid for Blob Events**
+
+| Aspect | Blob Storage Trigger | Event Grid Integration |
+|--------|---------------------|----------------------|
+| **New Blob Created** | ✅ Supported | ✅ Supported |
+| **Blob Updated** | ✅ Supported (may trigger multiple times) | ✅ Supported |
+| **Blob Deleted** | ❌ **Not Supported** | ✅ **Supported** |
+| **Event Types** | Limited to create/update | Full control over event types |
+| **Delivery** | Polling-based or Event Grid source | Push-based notifications |
+
+---
+
+**Implementation: Triggering on Blob Deletion with Event Grid**
+
+To create a function that triggers when a blob is deleted:
+
+1. **Create an Event Grid System Topic** for your storage account
+2. **Create an Event Subscription** filtering for `Microsoft.Storage.BlobDeleted` events
+3. **Point the subscription** to an Event Grid-triggered Azure Function
+
+**Example Event Grid Trigger Function (C#):**
+```csharp
+[FunctionName("BlobDeletedHandler")]
+public static void Run(
+    [EventGridTrigger] EventGridEvent eventGridEvent,
+    ILogger log)
+{
+    log.LogInformation($"Blob deleted event received");
+    log.LogInformation($"Event Type: {eventGridEvent.EventType}");
+    log.LogInformation($"Subject: {eventGridEvent.Subject}");
+    log.LogInformation($"Data: {eventGridEvent.Data}");
+    
+    // Process the blob deletion event
+}
+```
+
+**function.json for Event Grid Trigger:**
+```json
+{
+  "bindings": [
+    {
+      "type": "eventGridTrigger",
+      "direction": "in",
+      "name": "eventGridEvent"
+    }
+  ]
+}
+```
+
+**Azure CLI - Create Event Subscription for Blob Deleted Events:**
+```bash
+az eventgrid event-subscription create \
+  --name blob-deleted-subscription \
+  --source-resource-id /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{storage-account} \
+  --endpoint-type azurefunction \
+  --endpoint /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Web/sites/{function-app}/functions/BlobDeletedHandler \
+  --included-event-types Microsoft.Storage.BlobDeleted
+```
+
+**Reference:** [Reacting to Blob storage events](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-event-overview)
+
+---
+
 #### Cosmos DB Trigger
 
 ```json
