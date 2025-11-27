@@ -32,6 +32,7 @@
 - [Permission Models](#permission-models)
   - [Registry-Level Access](#registry-level-access)
   - [Repository-Level Access](#repository-level-access)
+- [Retention Policy for Untagged Manifests](#retention-policy-for-untagged-manifests)
 - [Best Practices](#best-practices)
 - [Common Scenarios](#common-scenarios)
 - [Key Takeaways](#key-takeaways)
@@ -644,6 +645,127 @@ az acr repository delete \
 ```
 
 **Note:** Most scenarios use `--name` parameter with registry-level access.
+
+## Retention Policy for Untagged Manifests
+
+Azure Container Registry allows you to set a **retention policy** for stored image manifests that don't have any associated tags (untagged manifests). When a retention policy is enabled, untagged manifests in the registry are automatically deleted after the number of days you set.
+
+### Why Use Retention Policy?
+
+- **Prevent registry bloat**: Registries can fill up with untagged manifests over time
+- **Save on storage costs**: Automatically remove artifacts that aren't needed
+- **Reduce manual cleanup**: No need to manually identify and delete old untagged images
+- **Maintain registry hygiene**: Keep only relevant tagged images
+
+### Configuring Retention Policy
+
+Use the `az acr config retention` command to manage retention policies:
+
+```bash
+# Enable retention policy for untagged manifests
+az acr config retention update \
+  --registry myregistry \
+  --status enabled \
+  --days 30 \
+  --type UntaggedManifests
+```
+
+**Parameters:**
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `--registry` | Name of the container registry | Yes |
+| `--status` | Enable or disable the policy (`enabled` / `disabled`) | Yes |
+| `--days` | Number of days to retain untagged manifests (0-365) | Yes |
+| `--type` | Type of manifests to apply policy to (`UntaggedManifests`) | Yes |
+
+### Common Retention Policy Commands
+
+```bash
+# Enable retention policy - delete untagged images after 30 days
+az acr config retention update \
+  --registry myregistry \
+  --status enabled \
+  --days 30 \
+  --type UntaggedManifests
+
+# Check current retention policy settings
+az acr config retention show \
+  --registry myregistry
+
+# Disable retention policy
+az acr config retention update \
+  --registry myregistry \
+  --status disabled
+```
+
+### How Retention Policy Works
+
+1. When you push a new image with the same tag, the old manifest becomes untagged
+2. The retention policy tracks the age of untagged manifests
+3. After the specified number of days, untagged manifests are automatically deleted
+4. Tagged images are NOT affected by the retention policy
+
+**Example workflow:**
+```
+Day 1: Push myapp:v1.0 (creates manifest A with tag v1.0)
+Day 5: Push new myapp:v1.0 (creates manifest B with tag v1.0, manifest A becomes untagged)
+Day 35: Manifest A is automatically deleted (30 days after becoming untagged)
+```
+
+### Important Notes
+
+- **Premium tier recommended**: While retention policies work on all tiers, Premium tier offers more storage and features
+- **Dry run not available**: Changes take effect immediately
+- **Irreversible deletion**: Once manifests are deleted, they cannot be recovered (unless soft delete is enabled)
+- **Policy applies to entire registry**: Cannot set different policies for different repositories
+
+---
+
+### Practice Question: ACR Retention Policy
+
+**Scenario:**
+Your Azure Container Registry is getting quite big. You have to find a way to reduce the size of it by removing unused images. You decided to delete any untagged images after 30 days.
+
+**Question:**
+Which Azure CLI command is used to automatically remove untagged images? Fill in the blank.
+
+```bash
+az acr config ________ update --registry myregistry --status enabled --days 30 --type UntaggedManifests
+```
+
+**Options:**
+1. ❌ `timeout`
+2. ❌ `untagged`
+3. ✅ `retention`
+4. ❌ `delete`
+
+**Answer: `retention`**
+
+**Explanation:**
+The `retention` keyword is used to set the retention policy. The complete command is:
+
+```bash
+az acr config retention update \
+  --registry myregistry \
+  --status enabled \
+  --days 30 \
+  --type UntaggedManifests
+```
+
+This command:
+- Enables the retention policy on the registry
+- Sets automatic deletion of untagged manifests after 30 days
+- Only affects manifests without tags (`UntaggedManifests`)
+
+**Why other options are incorrect:**
+- `timeout`: Not a valid `az acr config` subcommand
+- `untagged`: Not a valid `az acr config` subcommand
+- `delete`: While related to deletion, it's not the correct subcommand for configuring automatic cleanup policies
+
+**Reference:** [Set a retention policy for untagged manifests](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy)
+
+---
 
 ## Best Practices
 
