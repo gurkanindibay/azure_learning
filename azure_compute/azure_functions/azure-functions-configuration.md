@@ -240,6 +240,120 @@ All triggers and bindings have a `direction` property in the `function.json` fil
 }
 ```
 
+##### HTTP Trigger - Response Types in C#
+
+When developing HTTP-triggered Azure Functions in C#, you have several options for returning responses. Understanding the appropriate response type is important for building correct and idiomatic functions.
+
+**Common Response Types:**
+
+| Response Type | Status Code | Use Case |
+|---------------|-------------|----------|
+| `OkObjectResult` | 200 | Successful request with JSON response body |
+| `OkResult` | 200 | Successful request without response body |
+| `BadRequestObjectResult` | 400 | Client error with error message |
+| `NotFoundObjectResult` | 404 | Resource not found |
+| `JsonResult` | Configurable | JSON response with custom status code |
+| `ContentResult` | Configurable | Raw content with custom content type |
+
+**Recommended Approach:**
+
+For returning a JSON response with a 200 status code, use `OkObjectResult`:
+
+```csharp
+public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
+{
+    return new OkObjectResult(new { message = "Success" });
+}
+```
+
+The `OkObjectResult` automatically:
+- Sets the status code to 200
+- Serializes the object to JSON
+- Sets the appropriate `Content-Type` header
+
+---
+
+##### Practice Question: HTTP Trigger JSON Response
+
+**Question:**
+
+You are developing an Azure Function that is triggered by an HTTP request. The function should return a JSON response with a status code of 200 when the request is successfully processed. Which of the following code snippets correctly implements this functionality in C#?
+
+**Options:**
+
+A) 
+```csharp
+public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
+{
+    return new JsonResult(new { message = "Success" }) { StatusCode = 200 };
+}
+```
+
+B) 
+```csharp
+public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
+{
+    return new BadRequestObjectResult("An error occurred");
+}
+```
+
+C) 
+```csharp
+public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
+{
+    return new ContentResult { Content = "{\"message\":\"Success\"}", ContentType = "application/json" };
+}
+```
+
+D) ✅
+```csharp
+public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
+{
+    return new OkObjectResult(new { message = "Success" });
+}
+```
+
+---
+
+**Correct Answer: D) OkObjectResult**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) JsonResult** | ❌ Incorrect - While `JsonResult` returns a JSON response and can set the status code to 200, it may not be the most appropriate choice for returning a simple JSON response in this scenario. `OkObjectResult` is more idiomatic for Azure Functions HTTP triggers. |
+| **B) BadRequestObjectResult** | ❌ Incorrect - `BadRequestObjectResult` returns a 400 status code, indicating a client error. This is not the correct response for successful request processing. It should return a 200 status code with a success message instead. |
+| **C) ContentResult** | ❌ Incorrect - `ContentResult` can return a JSON response with the correct content type, but it lacks the explicit setting of the status code to 200. Without setting `StatusCode = 200`, the response may not correctly indicate successful processing. Additionally, manually constructing the JSON string is error-prone and less maintainable. |
+| **D) OkObjectResult** | ✅ **Correct** - `OkObjectResult` is the recommended way to return a 200 response with a JSON body. It automatically sets the status code to 200, serializes the object to JSON, and sets the appropriate content type header. |
+
+**Why OkObjectResult is Preferred:**
+
+1. **Automatic Status Code**: Sets HTTP 200 OK automatically
+2. **Content Negotiation**: Handles JSON serialization transparently
+3. **Type Safety**: Works with strongly-typed objects
+4. **Idiomatic**: Follows ASP.NET Core conventions used in Azure Functions
+5. **Clean Code**: Requires minimal boilerplate
+
+**Complete Example:**
+```csharp
+[FunctionName("HttpTriggerFunction")]
+public static async Task<IActionResult> Run(
+    [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req,
+    ILogger log)
+{
+    log.LogInformation("C# HTTP trigger function processed a request.");
+    
+    // Successfully processed - return 200 with JSON
+    return new OkObjectResult(new { message = "Success", timestamp = DateTime.UtcNow });
+}
+```
+
+**Reference:** [Azure Functions HTTP trigger](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger)
+
+---
+
 #### Timer Trigger
 
 ```json
