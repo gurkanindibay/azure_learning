@@ -1,6 +1,7 @@
 # Azure Container Instances (ACI) vs Azure Container Apps (ACA)
 ## Table of Contents
 
+- [Advantages of Containerized Applications](#advantages-of-containerized-applications)
 - [TL;DR](#tldr)
 - [Quick summary table](#quick-summary-table)
 - [Detailed comparison](#detailed-comparison)
@@ -24,6 +25,50 @@
 - [Pros & Cons (short)](#pros-cons-short)
 - [Frequently asked questions (short)](#frequently-asked-questions-short)
 - [References](#references)
+
+---
+
+## Advantages of Containerized Applications
+
+Before diving into Azure container services, it's important to understand the benefits of containerized applications compared to non-containerized (traditional) applications.
+
+### Key Advantages of Containers
+
+| Advantage | Description | Containerized Benefit |
+|-----------|-------------|----------------------|
+| **Consistent Runtime Environment** ✅ | Containers package the application with its dependencies, ensuring the same behavior across development, testing, and production | Reduces "works on my machine" issues and environment-related bugs |
+| **Efficient Resource Utilization** ✅ | Containers are lightweight and share the host OS kernel | Lower overhead compared to virtual machines, more applications per server |
+| **Portability Across Environments** ✅ | Container images can run on any container runtime (Docker, containerd, etc.) | Deploy the same container on-premises, in any cloud, or on developer machines |
+
+### What is NOT an Advantage of Containers?
+
+| Common Misconception | Reality |
+|---------------------|---------|
+| **Reduced Complexity in Application Architecture** ❌ | While containers provide isolation and scalability benefits, they can actually **introduce additional complexity** in managing container orchestration, networking, storage, and service discovery. Organizations need to learn new tools (Docker, Kubernetes, orchestrators) and adopt new practices for container management. |
+
+### Summary Table
+
+| Aspect | Is it an Advantage of Containers? | Explanation |
+|--------|-----------------------------------|-------------|
+| Consistent runtime environment | ✅ **Yes** | Containers ensure the application behaves the same way in different environments, reducing runtime errors caused by environment variations |
+| Efficient resource utilization | ✅ **Yes** | Containers are lightweight and share the host OS kernel, leading to optimized resource consumption compared to traditional virtual machines |
+| Portability across environments | ✅ **Yes** | Containers package the application and its dependencies, allowing it to run consistently across various environments without compatibility issues |
+| Reduced complexity in architecture | ❌ **No** | Containers can introduce **additional complexity** in managing orchestration, networking, and storage - not reduce it |
+
+### Key Takeaway for Exams
+
+> **Question:** Which of the following is NOT an advantage of using containerized applications over non-containerized applications?
+> 
+> **Answer:** **Reduced complexity in application architecture**
+> 
+> **Explanation:** While containers offer many benefits like isolation, portability, and scalability, they can introduce additional complexity in:
+> - Container orchestration (Kubernetes, Docker Swarm)
+> - Networking between containers
+> - Storage management and data persistence
+> - Monitoring and logging across distributed containers
+> - Security considerations (image scanning, runtime security)
+
+---
 
 
 ## TL;DR
