@@ -258,6 +258,55 @@ while (resultSet.HasMoreResults)
 - Results are paginated via `FeedIterator`
 - Specifying partition key improves performance
 
+### Query Items with LINQ
+
+You can also use LINQ to query items, which provides compile-time type checking and IntelliSense support.
+
+```csharp
+// Using LINQ with ToFeedIterator
+var query = container.GetItemLinqQueryable<Product>()
+                     .Where(item => item.categoryId == "electronics");
+var resultSet = query.ToFeedIterator();
+
+// Iterate through results
+while (resultSet.HasMoreResults)
+{
+    FeedResponse<Product> response = await resultSet.ReadNextAsync();
+    foreach (Product product in response)
+    {
+        Console.WriteLine($"Found: {product.name}");
+    }
+}
+```
+
+**Important:** When querying with a filter condition, use the correct comparison operator:
+
+| Approach | Correct Syntax | Notes |
+|----------|---------------|-------|
+| SQL Query | `SELECT * FROM c WHERE c.type = 'car'` | Use single `=` for equality |
+| LINQ | `.Where(item => item.type == "car")` | Use `==` for equality |
+
+**Common Mistake:** Using `==` in SQL queries (e.g., `c.type == 'car'`) is incorrect SQL syntax. Similarly, using `.Equals()` method in LINQ queries may not translate properly to Cosmos DB queries.
+
+```csharp
+// ✅ Correct: SQL query with single equals
+var query = new QueryDefinition("SELECT * FROM c WHERE c.type = 'car'");
+var resultSet = container.GetItemQueryIterator<Item>(query);
+
+// ✅ Correct: LINQ with == operator
+var query = container.GetItemLinqQueryable<Item>()
+                     .Where(item => item.type == "car");
+var resultSet = query.ToFeedIterator();
+
+// ❌ Incorrect: SQL query with double equals (invalid SQL)
+var resultSet = container.GetItemQueryIterator<Item>("SELECT * FROM c WHERE c.type == 'car'");
+
+// ❌ Incorrect: LINQ with .Equals() method (may not translate properly)
+var query = container.GetItemLinqQueryable<Item>()
+                     .Where(item => item.type.Equals("car"));
+var resultSet = query.ToFeedIterator();
+```
+
 ### Update an Item
 
 Modify an existing item.
