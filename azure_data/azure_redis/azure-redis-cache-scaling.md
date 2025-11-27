@@ -7,6 +7,7 @@ Azure Cache for Redis provides an in-memory data store based on Redis software. 
 ## Table of Contents
 
 - [Memory Limits by Tier](#memory-limits-by-tier)
+- [Pricing Factors](#pricing-factors)
 - [Redis Cluster Feature](#redis-cluster-feature)
 - [Alternative: Enterprise Tiers](#alternative-enterprise-tiers)
 - [Azure Architecture Patterns for Caching](#azure-architecture-patterns-for-caching)
@@ -25,6 +26,30 @@ Azure Cache for Redis provides an in-memory data store based on Redis software. 
 | Premium with Clustering | Up to 1.2 TB (10 shards × 120 GB) |
 | Enterprise | Up to 100 GB per node |
 | Enterprise Flash | Up to 1.5 TB per node |
+
+## Pricing Factors
+
+Azure Cache for Redis pricing is based on three key factors:
+
+| Factor | Description |
+|--------|-------------|
+| **Region** | Pricing varies by Azure region |
+| **Pricing Tier** | Basic, Standard, Premium, Enterprise, or Enterprise Flash |
+| **Hours** | Charged by the hour of usage |
+
+### What Does NOT Affect Pricing
+
+| Factor | Affects Cost? |
+|--------|--------------|
+| Consumed storage | ❌ No |
+| Per transaction | ❌ No |
+| Number of connections | ❌ No |
+
+### Key Point
+
+Redis Cache is charged **by the hour**, varies **by region**, and depends on the **tier** you choose. Unlike some other Azure services, you are not charged based on storage consumption or transaction counts.
+
+**Reference:** [Azure Cache for Redis Pricing](https://azure.microsoft.com/en-us/pricing/details/cache/)
 
 ## Redis Cluster Feature
 
