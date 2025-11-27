@@ -1,4 +1,30 @@
 # Azure Container Instances (ACI) vs Azure Container Apps (ACA)
+## Table of Contents
+
+- [TL;DR](#tldr)
+- [Quick summary table](#quick-summary-table)
+- [Detailed comparison](#detailed-comparison)
+  - [1) Overview](#1-overview)
+  - [2) Compute model & architecture](#2-compute-model-architecture)
+  - [3) Orchestration & Features](#3-orchestration-features)
+  - [4) Scaling](#4-scaling)
+  - [5) Networking & Ingress](#5-networking-ingress)
+  - [6) Storage & Volumes](#6-storage-volumes)
+  - [7) Security & Isolation](#7-security-isolation)
+  - [8) Observability & Developer Experience](#8-observability-developer-experience)
+  - [9) Pricing](#9-pricing)
+  - [10) Integrations & Extensibility](#10-integrations-extensibility)
+  - [11) Use Cases (when to use which)](#11-use-cases-when-to-use-which)
+  - [12) Limitations & Notes](#12-limitations-notes)
+- [Examples: Quick CLI snippets](#examples-quick-cli-snippets)
+  - [Azure Container Instances (ACI) — Quick create](#azure-container-instances-aci-quick-create)
+  - [Azure Container Apps (ACA) — Quick create (az containerapp up)](#azure-container-apps-aca-quick-create-az-containerapp-up)
+- [Decision checklist — when to choose which](#decision-checklist-when-to-choose-which)
+- [Migration/Hybrid patterns](#migrationhybrid-patterns)
+- [Pros & Cons (short)](#pros-cons-short)
+- [Frequently asked questions (short)](#frequently-asked-questions-short)
+- [References](#references)
+
 
 ## TL;DR
 - **Azure Container Instances (ACI)**: A single-container (or container group) serverless compute for running containers on demand with hypervisor isolation and per-second billing. Great for simple, stateless workloads, burst compute and jobs, and fast ephemeral containers.

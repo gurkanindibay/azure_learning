@@ -1,5 +1,47 @@
 # Azure Monitor
 
+## Table of Contents
+
+- [Overview](#overview)
+  - [What is Azure Monitor?](#what-is-azure-monitor)
+  - [Key Capabilities](#key-capabilities)
+- [Architecture Components](#architecture-components)
+  - [Data Sources](#data-sources)
+  - [Data Platform](#data-platform)
+- [Log Analytics Workspace](#log-analytics-workspace)
+  - [What is a Log Analytics Workspace?](#what-is-a-log-analytics-workspace)
+  - [Key Characteristics](#key-characteristics)
+  - [Why Log Analytics Workspace?](#why-log-analytics-workspace)
+  - [Common Misconceptions](#common-misconceptions)
+  - [Workspace Architecture](#workspace-architecture)
+  - [Managing Access to Log Analytics Workspace](#managing-access-to-log-analytics-workspace)
+  - [Data Collection Methods](#data-collection-methods)
+- [Consumption Tools](#consumption-tools)
+  - [Analysis Tools](#analysis-tools)
+  - [Visualization Tools](#visualization-tools)
+  - [Response Mechanisms](#response-mechanisms)
+  - [Insights (Pre-built Monitoring Solutions)](#insights-pre-built-monitoring-solutions)
+- [Integration Capabilities](#integration-capabilities)
+  - [Native Azure Integrations](#native-azure-integrations)
+  - [Third-Party Integrations](#third-party-integrations)
+  - [APIs](#apis)
+- [Pricing Model](#pricing-model)
+- [Use Cases](#use-cases)
+- [Best Practices](#best-practices)
+- [Comparison: Azure Monitor vs Application Insights](#comparison-azure-monitor-vs-application-insights)
+  - [Relationship Overview](#relationship-overview)
+  - [When to Use Azure Monitor (Broader Context)](#when-to-use-azure-monitor-broader-context)
+  - [When to Use Application Insights (Application Focus)](#when-to-use-application-insights-application-focus)
+  - [Complementary Usage](#complementary-usage)
+  - [Key Differences in Capabilities](#key-differences-in-capabilities)
+  - [Data Storage Location](#data-storage-location)
+  - [Migration and Evolution](#migration-and-evolution)
+  - [Choosing the Right Tool](#choosing-the-right-tool)
+  - [Summary](#summary)
+- [Practice Questions](#practice-questions)
+  - [Question 1: Centralized Log Collection and Analysis](#question-1-centralized-log-collection-and-analysis)
+- [Related Learning Resources](#related-learning-resources)
+
 ## Overview
 
 **Azure Monitor** is a comprehensive monitoring solution for collecting, analyzing, and responding to monitoring data from cloud and on-premises environments. It provides full-stack observability across applications, infrastructure, and networks.

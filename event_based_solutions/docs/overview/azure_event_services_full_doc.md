@@ -1,4 +1,40 @@
 # Azure Event Services Reference Guide
+## Table of Contents
+
+- [1. Overview of Event Services](#1-overview-of-event-services)
+  - [Event Grid](#event-grid)
+  - [Event Hubs](#event-hubs)
+  - [Service Bus](#service-bus)
+- [2. Architecture Diagrams](#2-architecture-diagrams)
+  - [2.1 Combined Architecture](#21-combined-architecture)
+  - [2.2 Event Grid](#22-event-grid)
+  - [2.3 Event Hubs](#23-event-hubs)
+  - [2.4 Service Bus](#24-service-bus)
+- [3. Decision Tree / Heuristics](#3-decision-tree-heuristics)
+- [4. Real-World Patterns & Examples](#4-real-world-patterns-examples)
+  - [4.1 Telemetry & Analytics (Event Hubs)](#41-telemetry-analytics-event-hubs)
+  - [4.2 Reactive Automation (Event Grid)](#42-reactive-automation-event-grid)
+  - [4.3 Enterprise Messaging (Service Bus)](#43-enterprise-messaging-service-bus)
+  - [4.4 Combined Scenario](#44-combined-scenario)
+- [5. Best Practices](#5-best-practices)
+  - [Security](#security)
+  - [Scaling](#scaling)
+  - [Reliability](#reliability)
+- [6. Architecture Template](#6-architecture-template)
+- [7. Summary Comparison Table](#7-summary-comparison-table)
+- [8. Data Integration Models Comparison](#8-data-integration-models-comparison)
+  - [Push-Push (Event Grid)](#push-push-event-grid)
+  - [Push-Pull (Event Hubs)](#push-pull-event-hubs)
+  - [Push-Pull Hybrid (Service Bus)](#push-pull-hybrid-service-bus)
+- [9. Event Grid Advanced Features](#9-event-grid-advanced-features)
+  - [Message Schemas](#message-schemas)
+  - [Retry & Retry Policies](#retry-retry-policies)
+  - [Dead Letter Events](#dead-letter-events)
+  - [Access Control & Permissions](#access-control-permissions)
+  - [Certificates & TLS](#certificates-tls)
+  - [Endpoint Validation](#endpoint-validation)
+  - [Delivery Response Handling](#delivery-response-handling)
+
 
 This document consolidates the full conversation and provides a structured reference for Azure Event Grid, Event Hubs, and Service Bus, including comparisons, architecture diagrams, decision guides, and real-world examples.
 

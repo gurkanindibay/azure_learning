@@ -2,6 +2,50 @@
 
 This document summarizes the Azure services you can use as an API proxy or gateway layer. Each service can front-end your APIs, control traffic flows, and enforce policies, but they operate at different layers of the network stack and provide distinct capabilities.
 
+## Table of Contents
+
+- [Azure Front Door](#azure-front-door)
+- [Azure API Management (APIM)](#azure-api-management-apim)
+- [Azure Load Balancer](#azure-load-balancer)
+- [Azure Application Gateway](#azure-application-gateway)
+- [Decision Flow Diagram](#decision-flow-diagram)
+- [Azure Traffic Manager](#azure-traffic-manager)
+- [Comparison Table](#comparison-table)
+- [Deployment Patterns](#deployment-patterns)
+- [Additional Notes](#additional-notes)
+- [Guidance from Microsoft Docs](#guidance-from-microsoft-docs)
+- [Pricing Tiers and Cost Comparison](#pricing-tiers-and-cost-comparison)
+  - [Azure Front Door Pricing](#azure-front-door-pricing)
+    - [Front Door Standard](#front-door-standard)
+    - [Front Door Premium](#front-door-premium)
+  - [Azure Load Balancer Pricing](#azure-load-balancer-pricing)
+    - [Basic Load Balancer](#basic-load-balancer)
+    - [Standard Load Balancer](#standard-load-balancer)
+  - [Azure Application Gateway Pricing](#azure-application-gateway-pricing)
+    - [Application Gateway v2 Standard](#application-gateway-v2-standard)
+    - [Application Gateway v2 WAF](#application-gateway-v2-waf)
+  - [Azure Traffic Manager Pricing](#azure-traffic-manager-pricing)
+  - [Pricing Comparison Table](#pricing-comparison-table)
+  - [Service Comparison by Cost and Use Case](#service-comparison-by-cost-and-use-case)
+    - [Lowest Cost Options](#lowest-cost-options)
+    - [Mid-Range Options](#mid-range-options)
+    - [Enterprise Options](#enterprise-options)
+    - [Cost Optimization Strategies](#cost-optimization-strategies)
+      - [Front Door](#front-door)
+      - [Load Balancer](#load-balancer)
+      - [Application Gateway](#application-gateway)
+      - [Traffic Manager](#traffic-manager)
+    - [Decision Guide by Budget and Requirements](#decision-guide-by-budget-and-requirements)
+  - [Common Architecture Patterns with Costs](#common-architecture-patterns-with-costs)
+    - [Pattern 1: Basic Regional Web App](#pattern-1-basic-regional-web-app)
+    - [Pattern 2: Secure Regional Web App](#pattern-2-secure-regional-web-app)
+    - [Pattern 3: Global Web App with Security](#pattern-3-global-web-app-with-security)
+    - [Pattern 4: Enterprise API Platform](#pattern-4-enterprise-api-platform)
+    - [Pattern 5: Simple Multi-Region Failover](#pattern-5-simple-multi-region-failover)
+    - [Pattern 6: High-Performance TCP Service](#pattern-6-high-performance-tcp-service)
+  - [Key Takeaways](#key-takeaways)
+- [References](#references)
+
 ## Azure Front Door
 - **Layer/scope:** Global Layer 7 (HTTP/HTTPS) load balancer with CDN-like caching and Web Application Firewall (WAF) options.
 - **Purpose:** Provides a global entry point for HTTP APIs with fast failover, SSL offloading, URL-based routing, caching, and DDoS resiliency. Useful when your consumers span multiple regions.

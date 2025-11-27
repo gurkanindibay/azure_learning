@@ -1,4 +1,39 @@
 # Azure Service Bus vs Apache Kafka — Focused Comparison
+## Table of Contents
+
+- [1. High-level differences (one-liner)](#1-high-level-differences-one-liner)
+- [2. Core Concepts](#2-core-concepts)
+  - [2.1 Queue (Service Bus) vs Topic (Kafka & Service Bus)](#21-queue-service-bus-vs-topic-kafka-service-bus)
+  - [2.2 Partition semantics & ordering](#22-partition-semantics-ordering)
+- [3. Push vs Pull models (how consumers receive messages)](#3-push-vs-pull-models-how-consumers-receive-messages)
+  - [Apache Kafka — Pull Model (Default)](#apache-kafka-pull-model-default)
+  - [Azure Service Bus — Push and Pull (Broker-dispatch & explicit Receive)](#azure-service-bus-push-and-pull-broker-dispatch-explicit-receive)
+- [4. Delivery, semantics, and guarantees](#4-delivery-semantics-and-guarantees)
+- [5. Subscription / Consumer Group comparison](#5-subscription-consumer-group-comparison)
+- [6. When to use which? (Scenarios)](#6-when-to-use-which-scenarios)
+- [7. Practical notes & gotchas](#7-practical-notes-gotchas)
+- [8. Examples (simple flows)](#8-examples-simple-flows)
+  - [8.1 Service Bus Queue (point-to-point)](#81-service-bus-queue-point-to-point)
+  - [8.2 Service Bus Topic + Subscriptions (pub/sub)](#82-service-bus-topic-subscriptions-pubsub)
+  - [8.3 Kafka Topic+Partition](#83-kafka-topicpartition)
+- [9. Quick comparison table](#9-quick-comparison-table)
+  - [Diagram: Consumer group -> Partition mapping (queue-like behavior)](#diagram-consumer-group-partition-mapping-queue-like-behavior)
+- [10. Summary](#10-summary)
+- [11. Scenario mapping: Best-fit examples](#11-scenario-mapping-best-fit-examples)
+  - [11.1 Best for Azure Service Bus](#111-best-for-azure-service-bus)
+  - [11.2 Best for Apache Kafka](#112-best-for-apache-kafka)
+  - [11.3 Good for Both (choose based on non-functional needs)](#113-good-for-both-choose-based-on-non-functional-needs)
+- [12. Short decision checklist](#12-short-decision-checklist)
+- [13. Does Kafka have a Queue model like Service Bus?](#13-does-kafka-have-a-queue-model-like-service-bus)
+  - [Key points](#key-points)
+  - [Practical guidance: making Kafka act like a queue](#practical-guidance-making-kafka-act-like-a-queue)
+  - [Quick comparison table: Service Bus Queue vs Kafka (queue-like behavior)](#quick-comparison-table-service-bus-queue-vs-kafka-queue-like-behavior)
+- [Appendix — Short code snippets](#appendix-short-code-snippets)
+  - [Service Bus: Example push-style (C# `ServiceBusProcessor`)](#service-bus-example-push-style-c-servicebusprocessor)
+  - [Service Bus: Example pull-style (C# `Receiver`)](#service-bus-example-pull-style-c-receiver)
+  - [Kafka: Consumer example (Node.js using kafkajs — consumer is "pull" under the hood)](#kafka-consumer-example-nodejs-using-kafkajs-consumer-is-pull-under-the-hood)
+- [Key Takeaways](#key-takeaways)
+
 
 This document compares **Azure Service Bus** and **Apache Kafka**, with a focus on: Queues, Topics, Partitions, and Push vs Pull models. This is intended to clarify how each system treats fundamental messaging concepts and the implications for ordering, scaling, delivery semantics, and architecture.
 

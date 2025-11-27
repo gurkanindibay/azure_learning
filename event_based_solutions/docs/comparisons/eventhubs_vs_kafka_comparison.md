@@ -1,4 +1,16 @@
 # Azure Event Hubs vs Apache Kafka — Comparison Guide
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Similarities](#2-similarities)
+- [3. Key Differences](#3-key-differences)
+- [4. Use Case Recommendations](#4-use-case-recommendations)
+  - [✅ Event Hubs](#event-hubs)
+  - [✅ Apache Kafka](#apache-kafka)
+- [5. Example Comparison Scenarios](#5-example-comparison-scenarios)
+- [6. ASCII Architecture Diagram](#6-ascii-architecture-diagram)
+- [7. Summary](#7-summary)
+
 
 This document provides a structured comparison between **Azure Event Hubs** and **Apache Kafka**, including architecture, use cases, differences, and best practices.
 

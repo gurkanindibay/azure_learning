@@ -1,4 +1,31 @@
 # Azure Event Hubs Detailed Reference
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Core Concepts](#2-core-concepts)
+  - [Namespace](#namespace)
+  - [Partitions](#partitions)
+  - [Consumer Groups](#consumer-groups)
+  - [Throughput Units (TUs) / Processing Units (PUs)](#throughput-units-tus-processing-units-pus)
+- [3. Key Features](#3-key-features)
+  - [Event Capture](#event-capture)
+  - [Apache Kafka Compatibility](#apache-kafka-compatibility)
+  - [Schema Registry Considerations](#schema-registry-considerations)
+  - [Checkpointing](#checkpointing)
+- [4. Data Integration Model: Push-Pull](#4-data-integration-model-push-pull)
+  - [Publisher Side (Push)](#publisher-side-push)
+  - [Consumer Side (Pull)](#consumer-side-pull)
+  - [Benefits](#benefits)
+  - [Considerations](#considerations)
+- [5. Architecture & Flow](#5-architecture-flow)
+- [6. Access Control (Security)](#6-access-control-security)
+  - [Authentication](#authentication)
+  - [Application Identity Strategy](#application-identity-strategy)
+  - [Authorization](#authorization)
+    - [Azure RBAC (Role-Based Access Control)](#azure-rbac-role-based-access-control)
+    - [SAS Policies](#sas-policies)
+- [7. Best Practices](#7-best-practices)
+
 
 ## 1. Overview
 Azure Event Hubs is a big data streaming platform and event ingestion service. It can receive and process millions of events per second. Data sent to an event hub can be transformed and stored using any real-time analytics provider or batching/storage adapters.

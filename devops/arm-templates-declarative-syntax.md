@@ -1,5 +1,29 @@
 # ARM Templates: Declarative Syntax
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Why Declarative Syntax is Better Than Programmatic Approach](#why-declarative-syntax-is-better-than-programmatic-approach)
+  - [1. Idempotent Deployments - No Need to Check Resource Existence](#1-idempotent-deployments-no-need-to-check-resource-existence)
+  - [2. Consistent and Repeatable Deployments](#2-consistent-and-repeatable-deployments)
+  - [3. Full Infrastructure as Code (IaC)](#3-full-infrastructure-as-code-iac)
+  - [4. Built-in Dependency Management](#4-built-in-dependency-management)
+- [Common Misconceptions](#common-misconceptions)
+  - [❌ Incorrect: "Declarative syntax only requires minor changes before each deployment"](#incorrect-declarative-syntax-only-requires-minor-changes-before-each-deployment)
+  - [❌ Incorrect: "Declarative syntax compiles into binary form"](#incorrect-declarative-syntax-compiles-into-binary-form)
+  - [✅ Note: Both approaches support advanced features](#note-both-approaches-support-advanced-features)
+- [Example: Declarative vs Programmatic](#example-declarative-vs-programmatic)
+  - [Declarative (ARM Template)](#declarative-arm-template)
+  - [Programmatic (Pseudo-code)](#programmatic-pseudo-code)
+- [Nested and Linked ARM Templates](#nested-and-linked-arm-templates)
+  - [Overview](#overview)
+  - [Resource Type for Nested Templates](#resource-type-for-nested-templates)
+  - [Key Properties](#key-properties)
+  - [Common Misconceptions](#common-misconceptions)
+  - [References](#references)
+- [Related Technologies](#related-technologies)
+- [References](#references)
+
 ## Overview
 
 ARM (Azure Resource Manager) templates use a **declarative syntax** to define and deploy Azure infrastructure. This approach allows you to describe *what* you want to deploy rather than *how* to deploy it.

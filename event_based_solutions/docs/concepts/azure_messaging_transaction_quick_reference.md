@@ -1,4 +1,43 @@
 # Azure Messaging Services: Transaction Quick Reference
+## Table of Contents
+
+- [⚡ Quick Decision Guide](#quick-decision-guide)
+- [📊 Transaction Support at a Glance](#transaction-support-at-a-glance)
+- [🔑 Key Transaction Patterns](#key-transaction-patterns)
+  - [Service Bus: Full Transactions](#service-bus-full-transactions)
+  - [Event Hubs: Manual Idempotency](#event-hubs-manual-idempotency)
+  - [Event Grid: HTTP-Based Acknowledgment](#event-grid-http-based-acknowledgment)
+- [🎯 When to Use Each Service](#when-to-use-each-service)
+  - [🏆 Service Bus: Transactional Workflows](#service-bus-transactional-workflows)
+  - [📈 Event Hubs: High-Volume Streaming](#event-hubs-high-volume-streaming)
+  - [⚡ Event Grid: Event Distribution](#event-grid-event-distribution)
+- [⚠️ Common Pitfalls](#common-pitfalls)
+  - [Service Bus](#service-bus)
+  - [Event Hubs](#event-hubs)
+  - [Event Grid](#event-grid)
+- [🔒 Reliability Patterns](#reliability-patterns)
+  - [Pattern 1: Idempotency (All Services)](#pattern-1-idempotency-all-services)
+  - [Pattern 2: Store-Then-Process (Event Grid/Hubs)](#pattern-2-store-then-process-event-gridhubs)
+  - [Pattern 3: Transaction Scope (Service Bus Only)](#pattern-3-transaction-scope-service-bus-only)
+- [📝 Delivery Guarantees Comparison](#delivery-guarantees-comparison)
+  - [Service Bus](#service-bus-2)
+  - [Event Hubs](#event-hubs-2)
+  - [Event Grid](#event-grid-2)
+- [🔧 Error Handling Strategies](#error-handling-strategies)
+  - [Service Bus: Abandon or Dead-Letter](#service-bus-abandon-or-dead-letter)
+  - [Event Hubs: Manual Retry or Dead-Letter](#event-hubs-manual-retry-or-dead-letter)
+  - [Event Grid: HTTP Status Code](#event-grid-http-status-code)
+- [💡 Best Practices Summary](#best-practices-summary)
+  - [Service Bus](#service-bus-3)
+  - [Event Hubs](#event-hubs-3)
+  - [Event Grid](#event-grid-3)
+- [🎓 Decision Flowchart](#decision-flowchart)
+- [📚 Additional Resources](#additional-resources)
+- [🎯 Quick Commands Reference](#quick-commands-reference)
+  - [Service Bus](#service-bus-4)
+  - [Event Hubs](#event-hubs-4)
+  - [Event Grid](#event-grid-4)
+
 
 ## ⚡ Quick Decision Guide
 

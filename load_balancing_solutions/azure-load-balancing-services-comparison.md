@@ -2,6 +2,26 @@
 
 This document provides a comprehensive feature-based comparison of Azure's load balancing and traffic management services to help you choose the right service for your needs.
 
+## Table of Contents
+
+- [Services Overview](#services-overview)
+- [Feature Comparison Table](#feature-comparison-table)
+- [Common Features Across Services](#common-features-across-services)
+  - [Shared by All Services](#shared-by-all-services)
+  - [Shared by Layer 7 Services (App Gateway, API Management, Front Door)](#shared-by-layer-7-services-app-gateway-api-management-front-door)
+  - [Shared by Global Services (API Management, Traffic Manager, Front Door)](#shared-by-global-services-api-management-traffic-manager-front-door)
+- [Unique Features](#unique-features)
+  - [Azure Load Balancer (Unique)](#azure-load-balancer-unique)
+  - [Application Gateway (Unique)](#application-gateway-unique)
+  - [API Management (Unique)](#api-management-unique)
+  - [Traffic Manager (Unique)](#traffic-manager-unique)
+  - [Front Door (Unique)](#front-door-unique)
+- [Use Case Recommendations](#use-case-recommendations)
+- [Combining Services](#combining-services)
+- [Decision Flowchart](#decision-flowchart)
+- [Pricing Considerations](#pricing-considerations)
+- [Conclusion](#conclusion)
+
 ## Services Overview
 
 - **Azure Load Balancer**: Layer 4 (TCP/UDP) load balancer for distributing network traffic

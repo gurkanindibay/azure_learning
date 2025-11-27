@@ -1,4 +1,29 @@
 # Azure Container Apps - Deployment from Source Code
+## Table of Contents
+
+- [Overview](#overview)
+- [Deployment Methods](#deployment-methods)
+  - [Using `az containerapp up` with Source Code](#using-az-containerapp-up-with-source-code)
+  - [Other Container App Commands](#other-container-app-commands)
+- [Practice Question](#practice-question)
+- [Key Takeaways](#key-takeaways)
+- [Azure Container Apps Pricing](#azure-container-apps-pricing)
+  - [Consumption Plan (Pay-as-you-go)](#consumption-plan-pay-as-you-go)
+    - [1. Resource Consumption](#1-resource-consumption)
+    - [2. Request Charges](#2-request-charges)
+  - [Free Grant](#free-grant)
+  - [Pricing Tiers Comparison](#pricing-tiers-comparison)
+  - [Cost Optimization Tips](#cost-optimization-tips)
+  - [Scaling Configuration](#scaling-configuration)
+  - [Use Case Cost Examples](#use-case-cost-examples)
+    - [Example 1: Small API (Dev/Test)](#example-1-small-api-devtest)
+    - [Example 2: Production Web App](#example-2-production-web-app)
+    - [Example 3: Event-Driven Processing](#example-3-event-driven-processing)
+  - [Additional Costs](#additional-costs)
+  - [Key Benefits](#key-benefits)
+- [Additional Resources](#additional-resources)
+- [Related Topics](#related-topics)
+
 
 ## Overview
 

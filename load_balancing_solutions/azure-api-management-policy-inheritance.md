@@ -1,5 +1,17 @@
 # Azure API Management — Policy Inheritance and `<base />` Element
 
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Default Policy Execution Order](#2-default-policy-execution-order)
+- [3. Purpose of the `<base />` Element](#3-purpose-of-the-base--element)
+  - [Definition](#definition)
+- [4. Example of Inherited Policies](#4-example-of-inherited-policies)
+- [5. Operation-Level Policy Using `<base />`](#5-operation-level-policy-using-base-)
+- [6. Final Execution Order](#6-final-execution-order)
+- [7. Visual Representation](#7-visual-representation)
+- [8. Key Takeaways](#8-key-takeaways)
+
 ## 1. Overview
 
 Azure API Management (APIM) allows policies to be defined at multiple scopes:

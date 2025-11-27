@@ -1,4 +1,17 @@
 # Message Queues vs Pub-Sub
+## Table of Contents
+
+- [Data Structures](#data-structures)
+  - [🔶 The Queue](#the-queue)
+  - [🔶 The Log](#the-log)
+- [🛑 Message Queues](#message-queues)
+  - [Reliability](#reliability)
+- [🛑 Pub-Sub](#pub-sub)
+  - [Features Unlocked by Logs](#features-unlocked-by-logs)
+  - [Fanout and Consumer Groups](#fanout-and-consumer-groups)
+  - [Trade-offs](#trade-offs)
+- [🛑 Summary](#summary)
+
 
 Most people don’t understand the difference between **Message Queues** and **Pub-Sub**.
 

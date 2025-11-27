@@ -1,4 +1,18 @@
 # RabbitMQ vs Azure Service Bus vs Kafka
+## Table of Contents
+
+- [Understanding Where RabbitMQ Fits](#understanding-where-rabbitmq-fits)
+- [1. The Short Answer](#1-the-short-answer)
+- [2. RabbitMQ vs. Azure Service Bus (The Real Comparison)](#2-rabbitmq-vs-azure-service-bus-the-real-comparison)
+  - [2.1 Architecture](#21-architecture)
+  - [2.2 Hosting & Operations](#22-hosting-operations)
+  - [2.3 Protocols](#23-protocols)
+- [3. RabbitMQ vs. Kafka (The Architectural Clash)](#3-rabbitmq-vs-kafka-the-architectural-clash)
+  - [3.1 The "Smart Broker" vs "Smart Consumer"](#31-the-smart-broker-vs-smart-consumer)
+  - [3.2 Message Lifecycle](#32-message-lifecycle)
+- [4. Decision Matrix: When to use RabbitMQ?](#4-decision-matrix-when-to-use-rabbitmq)
+- [5. Summary Diagram](#5-summary-diagram)
+
 ## Understanding Where RabbitMQ Fits
 
 ---

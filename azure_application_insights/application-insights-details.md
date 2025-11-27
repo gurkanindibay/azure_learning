@@ -1,8 +1,34 @@
-# Application Insights 
+# Application Insights
 
-## Overview
+## Table of Contents
 
-**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
+- [Overview](#overview)
+  - [What is Application Insights?](#what-is-application-insights)
+  - [Key Capabilities](#key-capabilities)
+  - [Telemetry Types](#telemetry-types)
+  - [How It Works](#how-it-works)
+  - [Integration Points](#integration-points)
+  - [Pricing Considerations](#pricing-considerations)
+- [Question 1: Telemetry Data Types for User Activity Tracking](#question-1-telemetry-data-types-for-user-activity-tracking)
+  - [Explanation](#explanation)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect)
+  - [Key Takeaway](#key-takeaway)
+  - [Related Learning Resources](#related-learning-resources)
+- [Question 2: Root Cause Analysis (RCA) for Application Performance](#question-2-root-cause-analysis-rca-for-application-performance)
+  - [Explanation](#explanation-1)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-1)
+  - [Key Takeaway](#key-takeaway-1)
+  - [Application Insights Capabilities for RCA](#application-insights-capabilities-for-rca)
+  - [Related Learning Resources](#related-learning-resources-1)
+- [Question 3: Multi-Region Monitoring Strategy for Global Expansion](#question-3-multi-region-monitoring-strategy-for-global-expansion)
+  - [Explanation](#explanation-2)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-2)
+  - [Multi-Region Monitoring Architecture](#multi-region-monitoring-architecture)
+  - [Best Practices for Multi-Region Monitoring](#best-practices-for-multi-region-monitoring)
+  - [Key Takeaway](#key-takeaway-2)
+  - [Related Learning Resources](#related-learning-resources-2)
+
+## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
 ### What is Application Insights?
 

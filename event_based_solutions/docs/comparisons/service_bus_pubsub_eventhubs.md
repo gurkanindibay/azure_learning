@@ -1,4 +1,32 @@
 # Azure Service Bus Pub/Sub vs Event Hubs  
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Purpose / Ideal Use Cases](#2-purpose-ideal-use-cases)
+  - [2.1 Service Bus (Topics & Subscriptions)](#21-service-bus-topics-subscriptions)
+  - [2.2 Event Hubs](#22-event-hubs)
+- [3. Message Delivery Model Comparison](#3-message-delivery-model-comparison)
+  - [3.1 Inner Architecture & Mechanism](#31-inner-architecture-mechanism)
+- [4. Throughput & Scale](#4-throughput-scale)
+- [5. Features Comparison](#5-features-comparison)
+  - [5.1 Enterprise Messaging](#51-enterprise-messaging)
+  - [5.2 Streaming & Analytics](#52-streaming-analytics)
+- [6. Protocols & Behaviors](#6-protocols-behaviors)
+- [7. Scenarios & Use Cases](#7-scenarios-use-cases)
+  - [7.1 Distinct Scenarios (Clear Winners)](#71-distinct-scenarios-clear-winners)
+  - [7.2 Common / Overlapping Scenarios](#72-common-overlapping-scenarios)
+    - [**Scenario: Microservices Integration**](#scenario-microservices-integration)
+    - [**Scenario: Data Ingestion for Database**](#scenario-data-ingestion-for-database)
+- [8. Mental Model](#8-mental-model)
+  - [7.1 Service Bus](#71-service-bus)
+  - [7.2 Event Hubs](#72-event-hubs)
+- [8. When to Choose What](#8-when-to-choose-what)
+  - [Choose **Service Bus Topics** when you need:](#choose-service-bus-topics-when-you-need)
+  - [Choose **Event Hubs** when you need:](#choose-event-hubs-when-you-need)
+  - [8.1 The "Value of a Message" Heuristic](#81-the-value-of-a-message-heuristic)
+- [9. One-Sentence Summary](#9-one-sentence-summary)
+- [10. Diagram](#10-diagram)
+
 A Structured Technical Comparison Document
 
 ---

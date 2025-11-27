@@ -1,4 +1,31 @@
 # Azure Event Grid Detailed Reference
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Core Concepts](#2-core-concepts)
+  - [Events](#events)
+  - [Event Sources (Publishers)](#event-sources-publishers)
+  - [Topics](#topics)
+  - [Event Subscriptions](#event-subscriptions)
+  - [Event Handlers](#event-handlers)
+- [3. Filtering](#3-filtering)
+- [4. Data Integration Model: Push-Push](#4-data-integration-model-push-push)
+  - [Publisher Side (Push)](#publisher-side-push)
+  - [Subscriber Side (Push)](#subscriber-side-push)
+  - [Benefits](#benefits)
+  - [Considerations](#considerations)
+- [5. Architecture Patterns](#5-architecture-patterns)
+  - [Reactive Automation](#reactive-automation)
+- [6. Best Practices](#6-best-practices)
+- [6. Advanced Features](#6-advanced-features)
+  - [Message Schemas](#message-schemas)
+  - [Retry & Retry Policies](#retry-retry-policies)
+  - [Dead Letter Events](#dead-letter-events)
+  - [Access Control & Permissions](#access-control-permissions)
+  - [Certificates & TLS](#certificates-tls)
+  - [Endpoint Validation](#endpoint-validation)
+  - [Delivery Response Handling](#delivery-response-handling)
+
 
 ## 1. Overview
 Azure Event Grid is a highly scalable, serverless event broker that lets you integrate applications using events. It simplifies building event-driven architectures.

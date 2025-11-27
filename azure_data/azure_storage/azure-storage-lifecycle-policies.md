@@ -1,4 +1,29 @@
 # Azure Storage Lifecycle Policies
+## Table of Contents
+
+- [Overview](#overview)
+- [Policy Structure](#policy-structure)
+  - [Basic Policy Schema](#basic-policy-schema)
+- [Filters](#filters)
+  - [prefixMatch Filter](#prefixmatch-filter)
+    - [Syntax](#syntax)
+    - [Examples](#examples)
+  - [blobIndexMatch Filter](#blobindexmatch-filter)
+  - [Combining Filters](#combining-filters)
+- [Actions](#actions)
+  - [Tier Actions](#tier-actions)
+  - [Delete Actions](#delete-actions)
+  - [Action Conditions](#action-conditions)
+- [Blob Types](#blob-types)
+- [Complete Examples](#complete-examples)
+  - [Example 1: Comprehensive Tiering Strategy](#example-1-comprehensive-tiering-strategy)
+  - [Example 2: Access-Based Lifecycle](#example-2-access-based-lifecycle)
+  - [Example 3: Multi-Container Policy](#example-3-multi-container-policy)
+- [Best Practices](#best-practices)
+- [Common Mistakes to Avoid](#common-mistakes-to-avoid)
+- [Key Takeaway: prefixMatch Structure](#key-takeaway-prefixmatch-structure)
+- [References](#references)
+
 
 ## Overview
 
