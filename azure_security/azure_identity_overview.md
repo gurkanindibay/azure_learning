@@ -46,6 +46,14 @@
   - [Why NOT Legacy Service Principal?](#why-not-legacy-service-principal)
   - [Architecture Flow](#architecture-flow)
   - [Key Takeaway](#key-takeaway)
+- [13. Accessing Azure Key Vault Secrets with Azure SDK for .NET](#13-accessing-azure-key-vault-secrets-with-azure-sdk-for-net)
+  - [Scenario](#scenario-1)
+  - [Question](#question-1)
+  - [Answer Options Analysis](#answer-options-analysis)
+  - [Summary: Key Vault Access Best Practices](#summary-key-vault-access-best-practices)
+  - [DefaultAzureCredential Authentication Order](#defaultazurecredential-authentication-order)
+  - [Complete Example: Accessing Key Vault Secret in ASP.NET Core](#complete-example-accessing-key-vault-secret-in-aspnet-core)
+  - [Key Takeaway](#key-takeaway-1)
 
 
 ## 1. Introduction
@@ -417,6 +425,199 @@ Which service principal should you use?
 
 ### Key Takeaway
 For **multi-tenant applications** requiring **Microsoft Graph API access**, always use **Application Service Principal**. Managed identities are for Azure resource authentication, not for multi-tenant app scenarios.
+
+---
+
+## 13. Accessing Azure Key Vault Secrets with Azure SDK for .NET
+
+### Scenario
+You are developing an application that needs to securely access a database connection string stored in Azure Key Vault. You need to retrieve the secret from the Key Vault using the Azure SDK for .NET.
+
+### Question
+Which of the following steps is necessary to retrieve the secret from the Key Vault using the Azure SDK for .NET?
+
+### Answer Options Analysis
+
+#### ✅ Correct Answer: Use `Azure.Identity.DefaultAzureCredential` with `SecretClient`
+
+**Use the `Azure.Identity.DefaultAzureCredential` class to authenticate and then use the `SecretClient` class to access the secret.**
+
+**Why this is correct:**
+- `DefaultAzureCredential` is the **recommended way** to authenticate applications with Azure services, including Key Vault
+- It automatically tries multiple authentication methods in order (Managed Identity, Visual Studio, Azure CLI, etc.)
+- Once authenticated, the `SecretClient` class provides secure access to Key Vault secrets
+- This approach follows Azure security best practices
+
+**Implementation Example:**
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
+// Create a SecretClient using DefaultAzureCredential
+var client = new SecretClient(
+    new Uri("https://your-keyvault.vault.azure.net/"),
+    new DefaultAzureCredential());
+
+// Retrieve the secret
+KeyVaultSecret secret = await client.GetSecretAsync("DatabaseConnectionString");
+string connectionString = secret.Value;
+```
+
+**Required NuGet Packages:**
+```bash
+dotnet add package Azure.Identity
+dotnet add package Azure.Security.KeyVault.Secrets
+```
+
+---
+
+#### ❌ Incorrect: Use `SecretClient` with `TokenCredential` without authentication
+
+**Use the `Azure.Security.KeyVault.Secrets.SecretClient` class with `TokenCredential` for accessing the secret, but do not need to authenticate the application.**
+
+**Why this is WRONG:**
+- While `SecretClient` with `TokenCredential` is a valid approach, **authentication is always required**
+- Azure Key Vault requires authentication to ensure secure access to secrets
+- Without proper authentication, unauthorized access would be possible
+- `TokenCredential` is an abstract class that requires a concrete implementation (like `DefaultAzureCredential`)
+
+**Key Point:** Authentication is **essential** to prevent unauthorized access to secrets stored in Azure Key Vault.
+
+---
+
+#### ❌ Incorrect: Use `Microsoft.Extensions.Configuration.AzureKeyVault` package
+
+**Use the `Microsoft.Extensions.Configuration.AzureKeyVault` package to retrieve the secret automatically when the application starts.**
+
+**Why this is NOT the best choice:**
+- The `Microsoft.Extensions.Configuration.AzureKeyVault` package is designed for **configuration providers**, not direct secret access
+- It's used to load configuration settings from Key Vault into `IConfiguration` at application startup
+- For directly accessing secrets programmatically, `SecretClient` is the appropriate choice
+- Different use case: configuration loading vs. direct secret retrieval
+
+**When to use `Microsoft.Extensions.Configuration.AzureKeyVault`:**
+```csharp
+// Used for loading Key Vault secrets as configuration
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://your-keyvault.vault.azure.net/"),
+    new DefaultAzureCredential());
+
+// Access as configuration
+var connectionString = configuration["DatabaseConnectionString"];
+```
+
+**When to use `SecretClient`:**
+```csharp
+// Used for direct, programmatic secret access
+var client = new SecretClient(vaultUri, new DefaultAzureCredential());
+var secret = await client.GetSecretAsync("DatabaseConnectionString");
+```
+
+---
+
+#### ❌ Incorrect: Use `KeyVaultClient` without authentication
+
+**Use the `KeyVaultClient` class to access the secret directly without any authentication.**
+
+**Why this is WRONG:**
+- `KeyVaultClient` is from the older `Microsoft.Azure.KeyVault` package (now deprecated)
+- **Authentication is always required** for Key Vault access - this is a fundamental security requirement
+- Accessing secrets without authentication would be a severe security vulnerability
+- Azure Key Vault enforces authentication through Microsoft Entra ID
+
+**Security Principle:** Never attempt to access Key Vault without proper authentication. Azure Key Vault is designed to protect sensitive information and requires verified identity before granting access.
+
+---
+
+### Summary: Key Vault Access Best Practices
+
+| Approach | Recommended | Use Case |
+|----------|-------------|----------|
+| `DefaultAzureCredential` + `SecretClient` | ✅ Yes | Direct programmatic secret access |
+| `SecretClient` without authentication | ❌ No | Authentication is always required |
+| `Microsoft.Extensions.Configuration.AzureKeyVault` | ⚠️ Specific use | Loading secrets as app configuration |
+| `KeyVaultClient` (deprecated) | ❌ No | Use modern `SecretClient` instead |
+
+### DefaultAzureCredential Authentication Order
+
+`DefaultAzureCredential` attempts authentication in this order:
+
+1. **Environment Variables** - Uses `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`
+2. **Workload Identity** - For Kubernetes workloads
+3. **Managed Identity** - System-assigned or User-assigned MI
+4. **Visual Studio** - Uses VS credentials for local development
+5. **Azure CLI** - Uses `az login` credentials
+6. **Azure PowerShell** - Uses `Connect-AzAccount` credentials
+7. **Interactive Browser** - Opens browser for interactive login
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           DefaultAzureCredential Flow                   │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1. Environment Variables ──► if found, use it         │
+│           │                                             │
+│           ▼ (not found)                                 │
+│  2. Workload Identity ──────► if available, use it     │
+│           │                                             │
+│           ▼ (not available)                             │
+│  3. Managed Identity ───────► if available, use it     │
+│           │                                             │
+│           ▼ (not available)                             │
+│  4. Visual Studio ──────────► if signed in, use it     │
+│           │                                             │
+│           ▼ (not available)                             │
+│  5. Azure CLI ──────────────► if logged in, use it     │
+│           │                                             │
+│           ▼ (not available)                             │
+│  6. Azure PowerShell ───────► if connected, use it     │
+│           │                                             │
+│           ▼ (not available)                             │
+│  7. Interactive Browser ────► prompt user login        │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Complete Example: Accessing Key Vault Secret in ASP.NET Core
+
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Option 1: Direct SecretClient usage (recommended for specific secret access)
+builder.Services.AddSingleton(sp =>
+{
+    var keyVaultUrl = builder.Configuration["KeyVault:Url"];
+    return new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+});
+
+// Option 2: Configuration provider (for loading multiple secrets as configuration)
+builder.Configuration.AddAzureKeyVault(
+    new Uri(builder.Configuration["KeyVault:Url"]),
+    new DefaultAzureCredential());
+
+var app = builder.Build();
+
+// Using SecretClient in a controller
+app.MapGet("/api/data", async (SecretClient secretClient) =>
+{
+    var secret = await secretClient.GetSecretAsync("DatabaseConnectionString");
+    // Use the secret value
+    return Results.Ok("Secret retrieved successfully");
+});
+
+app.Run();
+```
+
+### Key Takeaway
+
+**Always use `DefaultAzureCredential` with `SecretClient`** for accessing Azure Key Vault secrets in .NET applications. This approach:
+- Provides seamless authentication across development and production environments
+- Automatically uses the most appropriate credential based on the environment
+- Follows Azure security best practices
+- Supports Managed Identity in production (no secrets to manage)
 
 ---
 
