@@ -303,6 +303,28 @@ await blobServiceClient.RevokeUserDelegationKeysAsync();
 - Provides centralized management of SAS permissions
 - Maximum 5 policies per container/queue/table/share
 
+#### Stored Access Policy Level for Blob Storage
+
+**Exam Question**: At which level should you associate the stored access policy for blob storage?
+
+**Answer**: **Container level**
+
+**Why Container Level?**
+- ✅ **Stored access policies for blobs must be associated at the container level**
+- ✅ The policy applies to all blobs within that container when generating shared access signatures
+- ✅ Enables centralized management of SAS permissions for all blobs in the container
+
+**Why NOT Other Levels?**
+
+| Level | Supports Stored Access Policy? | Notes |
+|-------|-------------------------------|-------|
+| **Container** | ✅ **Yes** | Required level for blob stored access policies |
+| **Individual Blob** | ❌ **No** | Individual blobs can be associated with SAS keys but do not support stored access policies |
+| **Blob Service** | ❌ **No** | Can be associated with SAS keys but does not support stored access policies |
+| **Storage Account** | ❌ **No** | Can be associated with SAS keys but does not support stored access policies |
+
+**Key Takeaway**: When implementing stored access policies for shared access signatures on blob storage, always associate them at the **container level**.
+
 **Benefits**:
 - Change permissions without regenerating SAS tokens
 - Revoke access by deleting the policy
