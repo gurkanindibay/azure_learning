@@ -33,6 +33,12 @@
   - [Application Insights Features Comparison for Performance Troubleshooting](#application-insights-features-comparison-for-performance-troubleshooting)
   - [Key Takeaway](#key-takeaway-3)
   - [Related Learning Resources](#related-learning-resources-3)
+- [Question 5: Custom Telemetry Correlation Pattern](#question-5-custom-telemetry-correlation-pattern)
+  - [Explanation](#explanation-4)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-3)
+  - [Operation Correlation Patterns Comparison](#operation-correlation-patterns-comparison)
+  - [Key Takeaway](#key-takeaway-4)
+  - [Related Learning Resources](#related-learning-resources-4)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -378,3 +384,101 @@ For **real-time identification of slow requests and dependencies**, **Live Metri
 - Live Metrics: Monitor and diagnose with 1-second latency
 - Application Insights overview
 - Monitor Azure resources with Azure Monitor
+
+---
+
+## Question 5: Custom Telemetry Correlation Pattern
+
+**Scenario:**
+You are implementing custom telemetry in an Application Insights-enabled application. You need to ensure that all telemetry items generated within a specific operation are correlated together.
+
+**Question:**
+Which pattern should you use?
+
+**Options:**
+
+1. **`var telemetry = new EventTelemetry("customEvent"); telemetry.Context.Operation.ParentId = HttpContext.TraceIdentifier; telemetryClient.Track(telemetry);`** ❌ *Incorrect*
+
+2. **`using (var operation = telemetryClient.StartOperation<RequestTelemetry>("operationName")) { /* telemetry code */ }`** ✅ *Correct*
+
+3. **`telemetryClient.Context.Operation.Id = Guid.NewGuid().ToString(); telemetryClient.TrackEvent("customEvent");`** ❌ *Incorrect*
+
+4. **`telemetryClient.TrackRequest("requestName", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "200", true);`** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Using StartOperation Pattern**
+
+```csharp
+using (var operation = telemetryClient.StartOperation<RequestTelemetry>("operationName"))
+{
+    // All telemetry sent within this block will be automatically correlated
+    telemetryClient.TrackEvent("customEvent");
+    telemetryClient.TrackTrace("Some trace message");
+    // ...
+}
+```
+
+The **StartOperation** pattern is the correct solution because it:
+
+- **Creates an operation context** that automatically correlates all telemetry items sent within the `using` block
+- **Ensures all telemetry shares the same operation ID** for proper correlation
+- **Properly handles the lifecycle** of the operation (start and end times)
+- **Automatically manages parent-child relationships** between telemetry items
+- **Follows the recommended pattern** for distributed tracing in Application Insights
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Setting ParentId manually** | Setting `ParentId` manually on individual telemetry items is **error-prone** and doesn't properly establish operation context for automatic correlation of all telemetry within an operation. Each telemetry item would need to be manually configured. |
+| **Setting Operation.Id manually** | Manually setting the `Operation.Id` doesn't establish **proper operation context** and doesn't handle the lifecycle of the operation, potentially causing correlation issues. It also doesn't set up the proper parent-child hierarchy. |
+| **TrackRequest alone** | `TrackRequest` alone sends request telemetry but **doesn't establish an operation context** for correlating subsequent telemetry items within the same operation. It's just a single telemetry item, not a correlation mechanism. |
+
+### Operation Correlation Patterns Comparison
+
+| Pattern | Automatic Correlation | Lifecycle Management | Error Handling | Recommended |
+|---------|----------------------|---------------------|----------------|-------------|
+| **StartOperation** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Manual ParentId** | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Manual Operation.Id** | ❌ Partial | ❌ No | ❌ No | ❌ No |
+| **TrackRequest only** | ❌ No | ❌ No | ❌ No | ❌ No |
+
+### StartOperation Best Practices
+
+```csharp
+// Example: Properly correlated custom operation
+using (var operation = telemetryClient.StartOperation<RequestTelemetry>("ProcessOrder"))
+{
+    try
+    {
+        // All telemetry within this scope is automatically correlated
+        telemetryClient.TrackEvent("OrderReceived", new Dictionary<string, string>
+        {
+            { "OrderId", orderId }
+        });
+
+        // Call to external service - dependency is correlated
+        await ProcessPaymentAsync(order);
+
+        telemetryClient.TrackEvent("OrderProcessed");
+        
+        operation.Telemetry.Success = true;
+    }
+    catch (Exception ex)
+    {
+        telemetryClient.TrackException(ex);
+        operation.Telemetry.Success = false;
+        throw;
+    }
+}
+```
+
+### Key Takeaway
+
+For **correlating all telemetry items within a specific operation**, always use the **`StartOperation<T>`** pattern. It provides automatic correlation, proper lifecycle management, and ensures all telemetry items within the scope share the same operation ID for end-to-end tracing.
+
+### Related Learning Resources
+- Telemetry correlation in Application Insights
+- Custom operations tracking with Application Insights .NET SDK
+- Distributed tracing in Application Insights
