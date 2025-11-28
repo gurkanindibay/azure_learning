@@ -39,6 +39,12 @@
   - [Operation Correlation Patterns Comparison](#operation-correlation-patterns-comparison)
   - [Key Takeaway](#key-takeaway-4)
   - [Related Learning Resources](#related-learning-resources-4)
+- [Question 6: Adaptive Sampling for Telemetry Volume Control](#question-6-adaptive-sampling-for-telemetry-volume-control)
+  - [Explanation](#explanation-5)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-4)
+  - [Sampling Methods Comparison](#sampling-methods-comparison)
+  - [Key Takeaway](#key-takeaway-5)
+  - [Related Learning Resources](#related-learning-resources-5)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -482,3 +488,94 @@ For **correlating all telemetry items within a specific operation**, always use 
 - Telemetry correlation in Application Insights
 - Custom operations tracking with Application Insights .NET SDK
 - Distributed tracing in Application Insights
+
+---
+
+## Question 6: Adaptive Sampling for Telemetry Volume Control
+
+**Scenario:**
+You are developing an ASP.NET Core web application that uses Application Insights for monitoring. You need to implement adaptive sampling to control telemetry volume while maintaining statistical accuracy. The sampling should automatically adjust based on the current telemetry rate.
+
+**Question:**
+Which code segment should you use?
+
+**Options:**
+
+1. **`services.ConfigureTelemetryModule<AdaptiveSamplingTelemetryProcessor>((module, o) => { module.MaxTelemetryItemsPerSecond = 5; });`** ✅ *Correct*
+
+2. **`services.AddApplicationInsightsTelemetryProcessor<SamplingTelemetryProcessor>(); services.Configure<SamplingTelemetryProcessor>((processor) => { processor.SamplingPercentage = 10; });`** ❌ *Incorrect*
+
+3. **`services.AddSingleton<ITelemetryProcessor, AdaptiveSamplingTelemetryProcessor>(); services.Configure<ApplicationInsightsServiceOptions>((options) => { options.EnableAdaptiveSampling = true; });`** ❌ *Incorrect*
+
+4. **`services.Configure<TelemetryConfiguration>((config) => { config.DefaultTelemetrySink.TelemetryProcessorChainBuilder.UseSampling(10); });`** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: ConfigureTelemetryModule with AdaptiveSamplingTelemetryProcessor**
+
+```csharp
+services.ConfigureTelemetryModule<AdaptiveSamplingTelemetryProcessor>((module, o) => 
+{ 
+    module.MaxTelemetryItemsPerSecond = 5; 
+});
+```
+
+Configuring the **AdaptiveSamplingTelemetryProcessor** module with the `MaxTelemetryItemsPerSecond` property enables adaptive sampling that:
+
+- **Automatically adjusts the sampling rate** based on the current volume of telemetry
+- **Maintains the specified target telemetry volume** (in this case, 5 items per second)
+- **Preserves statistical accuracy** by dynamically adapting to traffic patterns
+- **Reduces costs** by limiting telemetry volume during high-traffic periods
+- **Increases sampling** during low-traffic periods to maintain visibility
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **SamplingTelemetryProcessor with SamplingPercentage** | The `SamplingTelemetryProcessor` implements **fixed-rate sampling** with a static percentage (10% in this case), not adaptive sampling that automatically adjusts based on telemetry volume. |
+| **AddSingleton with EnableAdaptiveSampling** | While this attempts to enable adaptive sampling, it **doesn't configure the `MaxTelemetryItemsPerSecond` parameter** required to control the target telemetry volume for adaptive sampling. The configuration is incomplete. |
+| **UseSampling(10) on TelemetryProcessorChainBuilder** | The `UseSampling` method configures **fixed-rate sampling** with a static percentage (10%), not adaptive sampling that automatically adjusts the sampling rate based on telemetry volume. |
+
+### Sampling Methods Comparison
+
+| Sampling Method | Type | Adjustment | Configuration | Best For |
+|-----------------|------|------------|---------------|----------|
+| **Adaptive Sampling** | Dynamic | Automatic based on volume | `MaxTelemetryItemsPerSecond` | Variable traffic patterns |
+| **Fixed-Rate Sampling** | Static | Manual percentage | `SamplingPercentage` | Consistent traffic patterns |
+| **Ingestion Sampling** | Server-side | Azure Portal | Percentage in portal | Post-collection filtering |
+
+### Adaptive Sampling Configuration Best Practices
+
+```csharp
+// Recommended configuration for adaptive sampling
+services.ConfigureTelemetryModule<AdaptiveSamplingTelemetryProcessor>((module, o) => 
+{ 
+    // Target telemetry items per second
+    module.MaxTelemetryItemsPerSecond = 5;
+    
+    // Optional: Exclude certain telemetry types from sampling
+    module.ExcludedTypes = "Event;Exception";
+    
+    // Optional: Include only specific telemetry types for sampling
+    // module.IncludedTypes = "Request;Dependency";
+});
+```
+
+**Key Configuration Options:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `MaxTelemetryItemsPerSecond` | Target rate for adaptive sampling algorithm | 5 |
+| `ExcludedTypes` | Telemetry types to exclude from sampling | None |
+| `IncludedTypes` | Telemetry types to include in sampling | All |
+| `MinSamplingPercentage` | Minimum sampling percentage floor | 0.1% |
+| `MaxSamplingPercentage` | Maximum sampling percentage ceiling | 100% |
+
+### Key Takeaway
+
+For **adaptive sampling** that automatically adjusts based on telemetry volume while maintaining statistical accuracy, use **`ConfigureTelemetryModule<AdaptiveSamplingTelemetryProcessor>`** with the `MaxTelemetryItemsPerSecond` property. This is the proper way to implement dynamic sampling in ASP.NET Core applications with Application Insights.
+
+### Related Learning Resources
+- Sampling in Application Insights
+- Configure adaptive sampling for ASP.NET Core applications
+- Application Insights for ASP.NET Core applications
