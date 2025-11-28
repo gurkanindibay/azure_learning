@@ -11,6 +11,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 1. [Authentication Methods Overview](#authentication-methods-overview)
 2. [Azure App Service Authentication (Easy Auth)](#azure-app-service-authentication-easy-auth)
 3. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
+   - [MSAL Client Application Types](#msal-client-application-types)
 4. [Microsoft Entra External ID (formerly Azure AD B2C)](#microsoft-entra-external-id-formerly-azure-ad-b2c)
 5. [Microsoft Graph API Integration](#microsoft-graph-api-integration)
 6. [Self-Hosted Identity Providers](#self-hosted-identity-providers)
@@ -825,6 +826,92 @@ Tokens returned directly in URL fragment (less secure)
 No refresh tokens
 Susceptible to token leakage
 ```
+
+### MSAL Client Application Types
+
+When implementing authentication using the Microsoft Authentication Library (MSAL), it's important to understand the distinction between different types of client applications based on their ability to securely store credentials.
+
+#### Confidential Client Application ✅
+
+**Can securely authenticate with the authorization server using stored credentials**
+
+Confidential client applications run on servers where they can securely store authentication credentials. They can prove their identity to the authorization server using:
+
+- **Managed Identities**: Azure-managed credentials with automatic rotation
+- **Client ID and Secret pairs**: Application credentials stored securely
+- **Certificates**: X.509 certificates for authentication
+
+**Characteristics:**
+- Run on secure servers (web apps, APIs, background services)
+- Can safely store application secrets
+- Have a dedicated backend component
+- Use server-to-server authentication
+
+**Examples:**
+- ASP.NET Core Web Applications
+- Node.js Express servers
+- Azure Functions
+- Background daemon services
+- Web APIs
+
+**Code Example:**
+```csharp
+var app = ConfidentialClientApplicationBuilder
+    .Create("your-client-id")
+    .WithClientSecret("your-client-secret")
+    .WithAuthority(new Uri("https://login.microsoftonline.com/your-tenant-id"))
+    .Build();
+```
+
+#### Public Client Application ❌
+
+**Cannot securely store credentials**
+
+Public client applications run on devices and can't be trusted to safely keep application secrets. They can only access web APIs on behalf of the user using interactive authentication flows.
+
+**Characteristics:**
+- Run on user devices or in browsers
+- Cannot safely store application secrets
+- Rely on user authentication
+- Use PKCE for enhanced security
+
+**Types of Public Clients:**
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Browser-based applications** | Run entirely in the browser using JavaScript | React SPA, Angular app |
+| **Native client applications** | Installed on user devices | iOS app, Android app, Desktop app |
+| **Mobile applications** | Run on mobile devices | Xamarin, React Native |
+
+**Code Example (SPA):**
+```javascript
+const msalInstance = new PublicClientApplication({
+    auth: {
+        clientId: 'your-client-id',
+        authority: 'https://login.microsoftonline.com/your-tenant-id',
+        redirectUri: window.location.origin
+    }
+});
+```
+
+#### Comparison Table
+
+| Feature | Confidential Client | Public Client |
+|---------|---------------------|---------------|
+| **Can store secrets** | ✅ Yes | ❌ No |
+| **Runs on** | Servers | User devices/browsers |
+| **Authentication methods** | Managed identity, client secret, certificate | User credentials only |
+| **Example** | Web API, daemon service | Mobile app, SPA |
+| **Recommended flow** | Authorization Code, Client Credentials | Authorization Code with PKCE |
+
+#### Exam Question
+
+**Question**: Which type of client application can securely authenticate with the authorization server using stored credentials?
+
+- ❌ **Browser-based client application** - Public clients running entirely in the browser cannot securely store credentials or secrets
+- ❌ **Public client application** - Run on devices and can't be trusted to safely keep application secrets; they can only access web APIs on behalf of the user
+- ✅ **Confidential client application** - Can prove their identity using managed identities, client ID and secret pairs, or certificates; they run on servers and can securely store authentication credentials
+- ❌ **Native client application** - A subset of public client applications that run on devices and cannot securely store credentials
 
 ---
 
