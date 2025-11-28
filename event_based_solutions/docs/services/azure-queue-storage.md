@@ -27,6 +27,7 @@
   - [Service Bus (Azure.Messaging.ServiceBus)](#service-bus-azuremessagingservicebus)
   - [Critical Distinction: Peek vs Receive](#critical-distinction-peek-vs-receive)
 - [Exam Question Analysis](#exam-question-analysis)
+  - [Question: Queue-Based Load Leveling with Visibility Timeout](#question-queue-based-load-leveling-with-visibility-timeout)
   - [Question: Verify Message Presence Without Removal](#question-verify-message-presence-without-removal)
   - [Exam Answer Issues](#exam-answer-issues)
   - [Correct Technical Facts](#correct-technical-facts)
@@ -375,6 +376,62 @@ while (true)
 - Both services distinguish between "peek" (view only) and "receive" (retrieve with lock/invisibility)
 
 ## Exam Question Analysis
+
+### Question: Queue-Based Load Leveling with Visibility Timeout
+
+**Scenario**: You are implementing a queue-based load leveling pattern using Azure Queue Storage. Messages must be invisible for 5 minutes after being retrieved to allow for processing time. If processing fails, messages should reappear for retry. Which parameter should you configure?
+
+**Options:**
+
+1. **Set `defaultMessageTimeToLive` to 300 seconds when creating the queue** ❌
+   - **Wrong**: The `defaultMessageTimeToLive` property sets the default expiration time for messages in the queue, not the visibility timeout during processing.
+
+2. **Set `messageTimeToLive` to 300 seconds in the queue service properties** ❌
+   - **Wrong**: Queue service properties don't include a `messageTimeToLive` setting, and this would affect message expiration rather than visibility during processing.
+
+3. **Set `visibilityTimeout` to 300 seconds when calling `GetMessage`** ✅
+   - **Correct**: The `visibilityTimeout` parameter in `GetMessage` (or `ReceiveMessageAsync` in .NET SDK) specifies how long a message remains invisible after being retrieved. Setting it to 300 seconds (5 minutes) provides the required processing window before the message reappears if not deleted.
+
+4. **Set `messageTTL` to 300 seconds when calling `PutMessage`** ❌
+   - **Wrong**: The `messageTTL` (time-to-live) parameter determines when a message expires and is permanently deleted from the queue, not how long it remains invisible during processing.
+
+**Key Concepts:**
+
+| Parameter | Purpose | When Used |
+|-----------|---------|-----------|
+| `visibilityTimeout` | How long message is invisible after retrieval | `ReceiveMessageAsync()` / `GetMessage` |
+| `timeToLive` / `messageTTL` | When message expires and is deleted | `SendMessageAsync()` / `PutMessage` |
+| `defaultMessageTimeToLive` | Default TTL for all messages in queue | Queue creation |
+
+**Code Example:**
+
+```csharp
+// Set visibility timeout to 5 minutes (300 seconds) when receiving
+QueueMessage message = await queueClient.ReceiveMessageAsync(
+    visibilityTimeout: TimeSpan.FromSeconds(300) // 5 minutes
+);
+
+if (message != null)
+{
+    try
+    {
+        // Process the message within 5 minutes
+        await ProcessMessageAsync(message);
+        
+        // Delete after successful processing
+        await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt);
+    }
+    catch (Exception ex)
+    {
+        // If processing fails, message will automatically reappear after 5 minutes
+        Console.WriteLine($"Processing failed: {ex.Message}");
+    }
+}
+```
+
+**Domain**: Connect to and consume Azure services and third-party services
+
+---
 
 ### Question: Verify Message Presence Without Removal
 
