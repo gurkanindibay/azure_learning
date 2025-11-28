@@ -4,6 +4,10 @@
 
 - [Overview](#overview)
 - [Capacity Modes Comparison](#capacity-modes-comparison)
+- [Request Unit (RU) Consumption](#request-unit-ru-consumption)
+  - [Understanding RU Costs by Operation Type](#understanding-ru-costs-by-operation-type)
+  - [Read vs Write RU Consumption](#read-vs-write-ru-consumption)
+  - [Factors Affecting RU Consumption](#factors-affecting-ru-consumption)
 - [Provisioned Throughput](#provisioned-throughput)
   - [Characteristics](#characteristics)
   - [When to Use](#when-to-use)
@@ -44,6 +48,50 @@ Azure Cosmos DB offers different capacity modes that determine how you're charge
 | **Analytical Store** | ✅ Supported | ❌ Not supported |
 | **Backup** | Continuous and periodic | Periodic only |
 | **Cost When Idle** | Pay for provisioned capacity | No charge |
+
+## Request Unit (RU) Consumption
+
+### Understanding RU Costs by Operation Type
+
+Azure Cosmos DB charges different amounts of Request Units (RU) based on the operation type. Understanding these costs is essential for capacity planning.
+
+| Operation Type | Minimum RU Cost (1 KB Document) | Description |
+|----------------|--------------------------------|-------------|
+| **Point Read** | 1 RU | Reading a single document by ID and partition key |
+| **Write (Insert/Replace/Upsert/Delete)** | 5 RU | Any write operation on a document |
+| **Query** | Varies | Depends on query complexity, data scanned, and results returned |
+
+### Read vs Write RU Consumption
+
+**Point Read Operations:**
+- A point read for a 1 KB document consumes **1 RU**
+- Point reads are the most efficient operations in Cosmos DB
+- Requires both document ID and partition key
+
+**Write Operations:**
+- Azure Cosmos DB charges a **minimum of 5 RUs** for any write operation (insert, replace, upsert, delete) on a 1 KB document
+- This is **5x the cost of a point read** for the same document size
+- The higher cost accounts for:
+  - Replication overhead across replicas
+  - Index updates and maintenance
+  - Transaction logging
+  - Consistency guarantees
+
+**Key Formula:**
+```
+Write RU Cost ≈ 5 × Point Read RU Cost (for same document size)
+```
+
+**Example:**
+- Point read of 1 KB document: **1 RU**
+- Write (insert/replace/upsert/delete) of 1 KB document: **5 RU** (minimum)
+
+### Factors Affecting RU Consumption
+
+1. **Document Size**: Larger documents consume more RUs
+2. **Indexing Policy**: More indexes increase write RU consumption
+3. **Consistency Level**: Stronger consistency may increase RU costs
+4. **Query Complexity**: Complex queries with filters, aggregations consume more RUs
 
 ## Provisioned Throughput
 
@@ -701,7 +749,31 @@ public async Task MigrateDataAsync(
 
 ## Exam Questions and Scenarios
 
-### Question 1: Choosing Capacity Mode
+### Question 1: RU Consumption for Write Operations
+
+**Scenario**: You are developing an Azure Cosmos DB solution that requires a point read operation for a 1 KB document. The operation consistently consumes 1 RU. You need to estimate the RU consumption for writing the same document.
+
+**Question**: What is the minimum RU consumption for writing the 1 KB document?
+
+**Options**:
+- A) 1 RU
+- B) 3 RUs
+- C) 5 RUs ✅
+- D) 10 RUs
+
+**Answer**: **C) 5 RUs**
+
+**Reasoning**:
+- ❌ **1 RU**: Write operations always cost more than point reads due to additional overhead for replication and indexing, so 1 RU is insufficient.
+- ❌ **3 RUs**: The minimum write cost is 5 RUs for a 1 KB document, making 3 RUs insufficient for any write operation.
+- ✅ **5 RUs**: Azure Cosmos DB charges a minimum of 5 RUs for any write operation (insert, replace, upsert, delete) on a 1 KB document, regardless of indexing settings.
+- ❌ **10 RUs**: While write operations cost more than reads, 10 RUs is higher than the actual minimum of 5 RUs for a 1 KB document write.
+
+**Key Takeaway**: Write operations consume approximately 5x the RUs of a point read for the same document size.
+
+---
+
+### Question 2: Choosing Capacity Mode
 
 **Scenario**: You're developing a mobile application that will have unpredictable usage patterns. The app is in early stages with less than 100 active users. You expect data storage to remain under 20 GB for the foreseeable future.
 
@@ -715,7 +787,7 @@ public async Task MigrateDataAsync(
 - ✅ Early stage app → Serverless reduces initial costs
 - ✅ Pay only when used → No waste during idle periods
 
-### Question 2: Multi-Region Requirement
+### Question 3: Multi-Region Requirement
 
 **Scenario**: You need to deploy a globally distributed application with multi-region writes for low-latency access worldwide.
 
@@ -728,7 +800,7 @@ public async Task MigrateDataAsync(
 - ✅ Provisioned supports multi-region writes
 - Must use provisioned (manual or autoscale)
 
-### Question 3: Cost Optimization
+### Question 4: Cost Optimization
 
 **Scenario**: Your application runs batch jobs that process data for 2 hours every night. During the day, there's minimal activity. Storage requirements are 30 GB.
 
@@ -742,7 +814,7 @@ public async Task MigrateDataAsync(
 - ✅ Storage under 50 GB → Within limits
 - Provisioned would charge for full 24 hours
 
-### Question 4: High-Throughput Application
+### Question 5: High-Throughput Application
 
 **Scenario**: Your IoT application needs to consistently process 10,000 RU/s throughout the day with occasional spikes to 15,000 RU/s.
 
