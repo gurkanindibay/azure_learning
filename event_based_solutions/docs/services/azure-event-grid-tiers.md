@@ -5,7 +5,7 @@
 - [Overview](#overview)
 - [Resource Types and Pricing Models](#resource-types-and-pricing-models)
 - [Event Grid Basic (Topics)](#event-grid-basic-topics)
-- [Event Grid Namespaces (Standard/Premium)](#event-grid-namespaces-standardpremium)
+- [Event Grid Namespaces (Standard Tier)](#event-grid-namespaces-standard-tier)
 - [Domains Pricing](#domains-pricing)
 - [System Topics](#system-topics)
 - [Partner Topics](#partner-topics)
@@ -22,9 +22,9 @@
 
 Azure Event Grid pricing is based on the **resource type** you use rather than traditional service tiers. The main options are:
 
-1. **Event Grid Basic (Topics)** - Pay-per-operation model
-2. **Event Grid Namespaces** - MQTT + HTTP with quota-based model (Standard/Premium)
-3. **Domains** - Multi-tenant topics
+1. **Event Grid Basic Tier** - Pay-per-operation model (Topics, Domains, System Topics, Partner Topics)
+2. **Event Grid Standard Tier (Namespaces)** - Throughput unit-based pricing with MQTT + HTTP
+3. **Domains** - Multi-tenant topics (part of Basic tier)
 4. **System Topics** - Azure resource events
 5. **Partner Topics** - SaaS partner integrations
 
@@ -32,14 +32,13 @@ Each option has different capabilities, pricing models, and use cases.
 
 ## Resource Types and Pricing Models
 
-| Resource Type | Pricing Model | Protocol | Best For |
-|--------------|---------------|----------|----------|
-| **Basic (Topics)** | Per operation | HTTP | Simple event routing |
-| **Namespaces (Standard)** | Quota-based | MQTT + HTTP | IoT, pub-sub |
-| **Namespaces (Premium)** | Quota-based | MQTT + HTTP | Enterprise IoT |
-| **Domains** | Per operation | HTTP | Multi-tenant |
-| **System Topics** | Free | HTTP | Azure events |
-| **Partner Topics** | Free | HTTP | SaaS integrations |
+| Resource Type | Tier | Pricing Model | Protocol | Best For |
+|--------------|------|---------------|----------|----------|
+| **Custom Topics** | Basic | Per operation ($0.60/million) | HTTP | Simple event routing |
+| **Namespaces** | Standard | Per throughput unit + operations | MQTT + HTTP | IoT, pub-sub, pull delivery |
+| **Domains** | Basic | Per operation | HTTP | Multi-tenant |
+| **System Topics** | Basic | Per operation | HTTP | Azure events |
+| **Partner Topics** | Basic | Per operation | HTTP | SaaS integrations |
 
 ## Event Grid Basic (Topics)
 
@@ -50,7 +49,7 @@ Each option has different capabilities, pricing models, and use cases.
 - **CloudEvents and Event Grid schemas**
 - **No upfront costs**
 - **Serverless** - scales automatically
-- **99.99% SLA** for Premium endpoints
+- **99.99% SLA** with availability zones
 - **Push-based** delivery model
 - **At-least-once** delivery guarantee
 
@@ -60,8 +59,7 @@ Each option has different capabilities, pricing models, and use cases.
 |-----------|------|
 | **First 100,000 operations/month** | Free |
 | **Beyond 100,000 operations** | $0.60 per million operations |
-| **Advanced filtering** | $0.50 per million operations (additional) |
-| **Premium endpoints (private links)** | $0.025 per hour per endpoint |
+| **Advanced filtering** | Included in operation pricing |
 
 **What counts as an operation:**
 - ✅ Publishing an event to a topic
@@ -217,62 +215,51 @@ Event Grid Basic supports multiple endpoint types:
   - Advanced filtering: 250M × $0.50/1M = ~$125
   - **Total**: ~$275/month
 
-## Event Grid Namespaces (Standard/Premium)
+## Event Grid Namespaces (Standard Tier)
 
 ### Overview
 
-**Event Grid Namespaces** introduce a new resource model with:
+**Event Grid Namespaces** (Standard tier) introduce a new resource model with:
 - **MQTT v3.1.1 and v5** protocol support
 - **HTTP push and pull** delivery
-- **Quota-based** pricing (not per-operation)
+- **Throughput unit-based** pricing
 - **IoT-optimized** capabilities
 - **Client authentication** with certificates
 - **Namespace isolation**
 
-### Standard vs Premium Namespaces
+### Standard Tier Pricing (Namespaces)
 
-| Feature | Standard | Premium |
-|---------|----------|---------|
-| **Monthly Base Cost** | Included in quota | Included in quota |
-| **Client Connections (MQTT)** | 1,000 per namespace | 10,000 per namespace |
-| **Throughput** | 1 MB/s | 10 MB/s |
-| **Storage** | 1 GB | 10 GB |
-| **Requests/month** | 1 million | 10 million |
-| **Availability Zones** | ❌ | ✅ |
-| **Private Endpoints** | ❌ | ✅ |
-| **Geo-DR** | ❌ | ✅ |
-| **SLA** | 99.9% | 99.99% |
-| **Use Case** | Development, Small IoT | Production, Large IoT |
+Pricing is based on **throughput units** and **operations**:
 
-### Standard Namespace Pricing
+| Component | Cost |
+| **Throughput Unit (per hour, per unit)** | $0.04 |
+| **MQTT Operations (per million)** | $1.00 |
+| **Free MQTT Operations (per month)** | 1,000,000 |
+| **Event Operations (per million)** | $0.60 |
+| **Free Event Operations (per month)** | 1,000,000 |
 
-**Base Quota (included):**
-- **$100/month** includes:
-  - 1,000 MQTT client connections
-  - 1 MB/s throughput
-  - 1 GB storage
-  - 1 million requests/month
+### Understanding Throughput Units
 
-**Overage Charges:**
-- **Client connections**: $0.10 per connection/month (beyond 1,000)
-- **Throughput**: $50 per MB/s/month (beyond 1 MB/s)
-- **Storage**: $0.10 per GB/month (beyond 1 GB)
-- **Requests**: $0.60 per million (beyond 1 million)
+**Throughput Units (TUs)** are pre-purchased capacity units:
+- Each TU provides a certain level of throughput capacity
+- TUs are billed hourly at **$0.04 per unit per hour**
+- Scale up/down based on your needs
 
-### Premium Namespace Pricing
+**Cost Example (1 TU, 30 days):**
+- TU cost: 1 × $0.04 × 24 × 30 = **$28.80/month**
+- Plus operations beyond free tier
 
-**Base Quota (included):**
-- **$1,000/month** includes:
-  - 10,000 MQTT client connections
-  - 10 MB/s throughput
-  - 10 GB storage
-  - 10 million requests/month
+### Features Included in Standard Tier
 
-**Overage Charges:**
-- **Client connections**: $0.08 per connection/month (beyond 10,000)
-- **Throughput**: $40 per MB/s/month (beyond 10 MB/s)
-- **Storage**: $0.08 per GB/month (beyond 10 GB)
-- **Requests**: $0.48 per million (beyond 10 million)
+| Feature | Standard Tier |
+|---------|---------------|
+| **MQTT v3.1.1 and v5** | ✅ |
+| **HTTP Pull Delivery** | ✅ |
+| **HTTP Push Delivery** | ✅ (to Event Hubs, Webhooks) |
+| **Maximum Message Retention** | 7 days |
+| **CloudEvents Schema** | ✅ |
+| **Ingress Rate** | Up to 40 MB/s |
+| **Egress Rate** | Up to 80 MB/s |
 
 ### Namespace Features
 
@@ -353,10 +340,10 @@ foreach (var evt in events.Value)
 }
 ```
 
-#### 4. Private Endpoints (Premium Only)
+#### 4. Private Endpoints (Namespaces)
 
 ```bash
-# Create private endpoint for Premium namespace
+# Create private endpoint for namespace
 az network private-endpoint create \
   --name eventgrid-pe \
   --resource-group myResourceGroup \
@@ -382,8 +369,7 @@ az eventgrid namespace update \
 - Need **namespace-level isolation**
 - High connection count (many concurrent clients)
 - Bidirectional communication required
-- Predictable monthly costs preferred
-- Premium: Enterprise IoT with private networks
+- Enterprise IoT scenarios
 
 ❌ **Don't use Namespaces when:**
 - Simple HTTP push scenarios (use Basic topics)
@@ -393,33 +379,25 @@ az eventgrid namespace update \
 
 ### Cost Examples for Namespaces
 
-**Standard Namespace Example:**
-- 500 MQTT devices connected
-- 0.5 MB/s average throughput
-- 500 MB storage used
-- 500,000 requests/month
-- **Cost**: $100/month (all within base quota)
-
-**Standard with Overage:**
-- 2,000 MQTT devices
-- 1.5 MB/s throughput
-- 2 GB storage
-- 2 million requests
+**Namespace Example 1: Low Volume IoT**
+- 1 throughput unit
+- 500,000 MQTT operations/month
+- 500,000 event operations/month
 - **Cost**: 
-  - Base: $100
-  - Connections: 1,000 × $0.10 = $100
-  - Throughput: 0.5 MB/s × $50 = $25
-  - Storage: 1 GB × $0.10 = $0.10
-  - Requests: 1M × $0.60 = $0.60
-  - **Total**: ~$226/month
+  - TU: 1 × $0.04 × 24 × 30 = $28.80
+  - MQTT: Free (within 1M free tier)
+  - Events: Free (within 1M free tier)
+  - **Total**: ~$29/month
 
-**Premium Namespace Example:**
-- 5,000 MQTT devices
-- 5 MB/s throughput
-- 5 GB storage
-- 5 million requests
-- Private endpoints
-- **Cost**: $1,000/month (all within base quota)
+**Namespace Example 2: Medium Volume IoT**
+- 2 throughput units
+- 3,000,000 MQTT operations/month
+- 2,000,000 event operations/month
+- **Cost**: 
+  - TU: 2 × $0.04 × 24 × 30 = $57.60
+  - MQTT: (3M - 1M) × $1/M = $2
+  - Events: (2M - 1M) × $0.60/M = $0.60
+  - **Total**: ~$60/month
 
 ## Domains Pricing
 
@@ -567,18 +545,14 @@ az eventgrid system-topic event-subscription create \
 - **Throughput**: 5,000+ events/sec per topic
 - **Concurrent subscribers**: 500 per topic
 
-### Event Grid Namespaces
+### Event Grid Namespaces (Standard Tier)
 
-**Standard:**
-- **MQTT Connections**: 1,000 (base quota)
-- **Throughput**: 1 MB/s (base quota)
+- **Ingress Rate**: Up to 40 MB/s
+- **Egress Rate**: Up to 80 MB/s
+- **MQTT Throughput**: Up to 40 MB/s
+- **Message Retention**: Up to 7 days
 - **Latency**: <100ms (MQTT publish)
-
-**Premium:**
-- **MQTT Connections**: 10,000 (base quota)
-- **Throughput**: 10 MB/s (base quota)
-- **Latency**: <50ms (MQTT publish)
-- **Availability Zones**: 99.99% SLA
+- **Availability Zones**: Supported (99.99% SLA)
 
 ## Choosing the Right Option
 
@@ -588,7 +562,7 @@ az eventgrid system-topic event-subscription create \
 Start
 │
 ├─ Need MQTT protocol?
-│  └─ YES → Event Grid Namespace (Standard or Premium)
+│  └─ YES → Event Grid Namespace (Standard Tier)
 │  └─ NO → Continue
 │
 ├─ Need pull-based delivery?
@@ -596,7 +570,7 @@ Start
 │  └─ NO → Continue
 │
 ├─ IoT scenario with many devices?
-│  └─ YES → Event Grid Namespace Premium
+│  └─ YES → Event Grid Namespace (Standard Tier)
 │  └─ NO → Continue
 │
 ├─ Multi-tenant SaaS?
@@ -617,11 +591,11 @@ Start
 |----------|-------------------|-----------|
 | **Azure Resource Events** | System Topics | Free, automatic |
 | **Simple Event Routing** | Basic Topics | Pay-per-use, simple |
-| **IoT Telemetry** | Namespace (Standard/Premium) | MQTT support |
+| **IoT Telemetry** | Namespace (Standard) | MQTT support |
 | **Multi-tenant SaaS** | Domains | Tenant isolation |
 | **High-volume Push** | Basic Topics | Auto-scales, cost-effective |
 | **Pull-based Consumption** | Namespaces | HTTP pull delivery |
-| **Enterprise IoT** | Namespace Premium | Private endpoints, SLA |
+| **Enterprise IoT** | Namespace (Standard) | Private endpoints, high throughput |
 | **Serverless Apps** | Basic Topics | Integrates with Functions |
 
 ## Pricing Considerations
@@ -632,9 +606,8 @@ Start
 
 | Option | Monthly Cost |
 |--------|-------------|
-| Basic Topics | $0.54 |
-| Standard Namespace | $100 |
-| Premium Namespace | $1,000 |
+| Basic Topics | ~$0.54 |
+| Standard Namespace | ~$29+ (1 TU + ops) |
 
 **Winner**: Basic Topics
 
@@ -642,20 +615,18 @@ Start
 
 | Option | Monthly Cost |
 |--------|-------------|
-| Basic Topics (HTTP only) | Not applicable |
-| Standard Namespace | ~$500 |
-| Premium Namespace | $1,000 |
+| Basic Topics (HTTP only) | Not applicable (no MQTT) |
+| Standard Namespace | ~$60-90 (depending on TUs) |
 
-**Winner**: Standard Namespace (if <10K devices)
+**Winner**: Standard Namespace (only option for MQTT)
 
-**Scenario 3: Enterprise IoT (20K devices, private network)**
+**Scenario 3: Enterprise IoT (20K devices, high throughput)**
 
 | Option | Monthly Cost |
 |--------|-------------|
-| Standard Namespace | $1,100+ (no private endpoints) |
-| Premium Namespace | $1,800 |
+| Standard Namespace (multiple TUs) | ~$150-300/month |
 
-**Winner**: Premium Namespace (private endpoints included)
+**Winner**: Standard Namespace (scale with throughput units)
 
 ### Cost Optimization Strategies
 
@@ -671,10 +642,10 @@ Start
    await client.SendEventsAsync(batchOf100Events);
    ```
 
-3. **Right-size Namespace Tier**
+3. **Right-size Throughput Units**
    ```bash
-   # Don't over-provision
-   # Use Standard if <10K devices
+   # Scale based on actual needs
+   # Start small and scale up as needed
    az eventgrid namespace create --sku standard
    ```
 
@@ -704,16 +675,14 @@ az eventgrid namespace create --name myns --sku standard
 - Connection strings change
 - Protocol changes (HTTP → MQTT if needed)
 
-### Standard → Premium Namespace
+### Scaling Namespaces
 
 ```bash
-# Requires recreation
-# 1. Create Premium namespace
-az eventgrid namespace create --name mynewns --sku premium
-
-# 2. Reconfigure clients
-# 3. Cutover
-# 4. Delete Standard namespace
+# Scale up throughput units as needed
+az eventgrid namespace update \
+  --name myns \
+  --resource-group myResourceGroup \
+  --throughput-units 5
 ```
 
 ## Exam Questions and Scenarios
@@ -724,13 +693,13 @@ az eventgrid namespace create --name mynewns --sku premium
 
 **Question:** Which Event Grid option should you use?
 
-**Answer:** **Event Grid Namespace (Premium)**
+**Answer:** **Event Grid Namespace (Standard Tier)**
 
 **Reasoning:**
-- ✅ Namespace supports MQTT
-- ✅ Premium supports 10,000+ connections
-- ❌ Basic Topics don't support MQTT
-- ❌ Standard Namespace base quota only 1,000 connections
+- ✅ Namespace supports MQTT v3.1.1 and v5
+- ✅ Standard tier with adequate throughput units supports high connection counts
+- ❌ Basic tier (Topics) doesn't support MQTT
+- Scale throughput units based on your needs
 
 ### Question 2: Cost Optimization
 
@@ -822,7 +791,7 @@ az eventgrid namespace create --name mynewns --sku premium
      --topic-templates "factory/+/sensors/+"
    ```
 
-3. **Enable Private Endpoints (Premium)**
+3. **Enable Private Endpoints (Namespaces)**
    ```bash
    # Secure IoT communications
    az network private-endpoint create --group-id namespace
