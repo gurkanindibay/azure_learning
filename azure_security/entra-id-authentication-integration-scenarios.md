@@ -1742,6 +1742,24 @@ var users = await graphClient.Users.GetAsync();
 - Requires admin consent
 - No user context - service acts as itself
 
+#### Exam Question: Authentication Flow for Daemon Apps
+
+**Question**: Your application needs to acquire tokens on behalf of itself without user interaction to access Microsoft Graph API. The application is registered in Microsoft Entra ID. Which authentication flow should you implement?
+
+- ❌ **Integrated Windows Authentication (IWA) flow** - IWA is for desktop and mobile applications that run on domain-joined or Microsoft Entra joined Windows computers, not for service-to-service authentication scenarios.
+
+- ❌ **Authorization code flow** - The authorization code flow requires user interaction to obtain an authorization code, making it unsuitable for applications that need to authenticate without user interaction.
+
+- ✅ **Client credentials flow** - Daemon apps acquire a token for the calling app by using the client credential acquisition methods in MSAL, which require a client secret or certificate that you add to the app registration. This flow is designed for applications authenticating as themselves without user context.
+
+- ❌ **Device code flow** - The device code flow is designed for devices with limited input capabilities and still requires user interaction to complete authentication on another device.
+
+**Key Points:**
+- **Client credentials flow** is the only flow that allows an application to authenticate as itself without any user interaction
+- Requires application permissions (not delegated permissions) configured in the app registration
+- Uses either a client secret or certificate to prove the application's identity
+- Common use cases: background services, daemons, scheduled tasks, microservices
+
 ---
 
 ## Best Practices and Recommendations
