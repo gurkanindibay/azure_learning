@@ -9,6 +9,7 @@
   - [Throughput Units (TUs) / Processing Units (PUs)](#throughput-units-tus-processing-units-pus)
 - [3. Key Features](#3-key-features)
   - [Event Capture](#event-capture)
+    - [Cross-Subscription Capture with Managed Identity](#cross-subscription-capture-with-managed-identity)
   - [Apache Kafka Compatibility](#apache-kafka-compatibility)
   - [Schema Registry Considerations](#schema-registry-considerations)
   - [Checkpointing](#checkpointing)
@@ -69,6 +70,26 @@ Automatically capture the streaming data in Azure Blob Storage or Azure Data Lak
 | **Parquet** | ⚠️ Indirect Only | Only supported through Azure Stream Analytics integration using the no-code editor, not through direct Event Hubs Capture configuration in the portal. |
 
 > **Exam Tip:** When configuring Event Hubs Capture through the Azure portal, **Apache Avro** is the only supported file format. It provides a compact binary format with an inline schema, making it efficient for streaming data capture. If you need Parquet format, you must use Azure Stream Analytics with the no-code editor instead of direct Event Hubs Capture.
+
+#### Cross-Subscription Capture with Managed Identity
+
+When configuring Event Hubs Capture to store data in a storage account that resides in a **different subscription** than the Event Hubs namespace, there are specific requirements to consider:
+
+| Scenario | Requirement |
+|----------|-------------|
+| **Event Hubs in Subscription A, Storage in Subscription B** | Register the **Microsoft.EventHub Resource Provider** in Subscription B |
+
+**Key Points:**
+
+- **Resource Provider Registration (Required):** When capturing to a storage account in a different subscription, the `Microsoft.EventHub` Resource Provider must be registered in the subscription containing the storage account. This enables cross-subscription capture functionality.
+
+- **Managed Identity Location:** The managed identity (user-assigned or system-assigned) can be created in **either subscription** and assigned appropriate permissions. It does **not** need to be in the same subscription as the storage account.
+
+- **Zone Redundancy:** Not required for cross-subscription capture with managed identity. Zone redundancy is a high-availability feature within a region and is unrelated to cross-subscription scenarios.
+
+- **Private Endpoints:** Not required for managed identity authentication in cross-subscription scenarios. Private endpoints are for network isolation, not authentication.
+
+> **Exam Tip:** When Event Hubs Capture uses managed identity to write to a storage account in a different subscription, ensure the `Microsoft.EventHub` Resource Provider is registered in the target subscription (the one containing the storage account). This is the key requirement for cross-subscription capture to work.
 
 ### Apache Kafka Compatibility
 Event Hubs provides an endpoint compatible with Kafka producer and consumer APIs. You can use existing Kafka applications without running your own Kafka cluster.
