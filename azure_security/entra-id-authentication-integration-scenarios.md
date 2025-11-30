@@ -817,6 +817,12 @@ Enhanced security for public clients:
 9. Entra ID → App: Tokens (no refresh token by default)
 ```
 
+**Why PKCE is Required for SPAs:**
+- **Public clients cannot store secrets**: SPAs run entirely in the browser where code is visible and cannot securely store client secrets
+- **PKCE provides protection**: The code_verifier/code_challenge mechanism ensures that even if the authorization code is intercepted, it cannot be exchanged for tokens without the original code_verifier
+- **MSAL.js supports PKCE**: The Microsoft Authentication Library for JavaScript automatically implements PKCE
+- **Modern security standard**: PKCE is now the recommended approach for all public clients (SPAs, mobile apps, desktop apps)
+
 #### Implicit Flow (Legacy - Not Recommended)
 
 ⚠️ **Deprecated**: Use Authorization Code Flow with PKCE instead
@@ -826,6 +832,54 @@ Tokens returned directly in URL fragment (less secure)
 No refresh tokens
 Susceptible to token leakage
 ```
+
+**Why Implicit Flow is Deprecated for SPAs:**
+- **Token exposure in URL**: Access tokens are returned in the URL fragment, making them visible in browser history and potentially logged by servers
+- **No refresh tokens**: Users must re-authenticate when tokens expire
+- **Security vulnerabilities**: Susceptible to token leakage and replay attacks
+- **Modern SPAs should use PKCE**: Authorization code flow with PKCE provides equivalent functionality with better security
+
+#### Client Credentials Flow
+
+Used for server-to-server authentication without user involvement:
+
+```
+1. App → Entra ID: Request token with client credentials
+2. Entra ID → App: Access token
+```
+
+**⚠️ Not Suitable for SPAs:**
+- Requires a client secret that must be stored securely
+- SPAs cannot safely store client secrets as they run entirely in the browser
+- Designed for confidential clients (backend services, daemons) only
+
+#### Resource Owner Password Credentials (ROPC) Flow
+
+⚠️ **Not Recommended**: Application directly handles user credentials
+
+**Why ROPC Should Be Avoided:**
+- Application asks users for their password directly, which is a security anti-pattern
+- Bypasses modern authentication features like MFA and Conditional Access
+- Users cannot use passwordless authentication methods
+- Only use as a last resort for legacy application migration
+
+#### OAuth 2.0 Flow Selection Guide for SPAs
+
+| Flow | Recommended for SPAs? | Reason |
+|------|----------------------|--------|
+| **Authorization Code with PKCE** | ✅ Yes | Provides security for public clients that cannot store secrets |
+| **Implicit Grant** | ❌ No (Deprecated) | Tokens exposed in URL, security vulnerabilities |
+| **Client Credentials** | ❌ No | Requires client secret that SPAs cannot securely store |
+| **Resource Owner Password** | ❌ No | Not secure, bypasses MFA and modern auth features |
+
+#### Exam Question: SPA Authentication Flow
+
+**Question**: You are developing a single-page application (SPA) that needs to authenticate users and call a protected web API. The application uses the Microsoft Authentication Library (MSAL) for JavaScript. Which OAuth 2.0 flow should you use?
+
+- ✅ **Authorization code flow with PKCE** - Single-page applications require Proof Key for Code Exchange (PKCE) when using the authorization code grant flow, and PKCE is supported by MSAL. This flow provides the security needed for public clients that cannot securely store client secrets.
+- ❌ **Resource owner password credentials flow** - This flow is not recommended because your application asking a user for their password is not secure, and it bypasses modern authentication features like MFA.
+- ❌ **Implicit grant flow** - The implicit grant flow is deprecated for SPAs due to security concerns with tokens being exposed in the URL. Modern SPAs should use the authorization code flow with PKCE instead.
+- ❌ **Client credentials flow** - The client credentials flow requires a client secret that you add to the app registration, which SPAs cannot securely store as they run entirely in the browser.
 
 ### MSAL Client Application Types
 
