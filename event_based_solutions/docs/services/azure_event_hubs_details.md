@@ -55,8 +55,20 @@ A management container for Event Hubs. It provides a unique FQDN and serves as a
 
 ### Event Capture
 Automatically capture the streaming data in Azure Blob Storage or Azure Data Lake Storage Gen 2.
-- **Format:** Avro.
+- **Format:** Apache Avro (default and only format supported through Azure portal configuration).
 - **Trigger:** Time-based (e.g., every 5 mins) or Size-based (e.g., every 100 MB).
+- **Tier Availability:** Standard, Premium, and Dedicated tiers (not available in Basic tier).
+
+#### Supported File Formats for Event Hubs Capture
+
+| Format | Portal Configuration | Notes |
+|--------|---------------------|-------|
+| **Apache Avro** | ✅ Supported | Default and standard format. Provides a compact binary format with inline schema. |
+| **JSON** | ❌ Not Supported | Not available for Event Hubs Capture configuration. |
+| **CSV** | ❌ Not Supported | Not available for Event Hubs Capture configuration. |
+| **Parquet** | ⚠️ Indirect Only | Only supported through Azure Stream Analytics integration using the no-code editor, not through direct Event Hubs Capture configuration in the portal. |
+
+> **Exam Tip:** When configuring Event Hubs Capture through the Azure portal, **Apache Avro** is the only supported file format. It provides a compact binary format with an inline schema, making it efficient for streaming data capture. If you need Parquet format, you must use Azure Stream Analytics with the no-code editor instead of direct Event Hubs Capture.
 
 ### Apache Kafka Compatibility
 Event Hubs provides an endpoint compatible with Kafka producer and consumer APIs. You can use existing Kafka applications without running your own Kafka cluster.
