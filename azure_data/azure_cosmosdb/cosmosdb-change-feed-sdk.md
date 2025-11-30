@@ -14,6 +14,11 @@
   - [Start Position Options](#start-position-options)
   - [Performance Tuning](#performance-tuning)
 - [Component Interaction Flow](#component-interaction-flow)
+- [Azure Functions with Cosmos DB Trigger](#azure-functions-with-cosmos-db-trigger)
+  - [When to Use Azure Functions for Change Feed Processing](#when-to-use-azure-functions-for-change-feed-processing)
+  - [How Azure Functions Cosmos DB Trigger Works](#how-azure-functions-cosmos-db-trigger-works)
+  - [Key Benefits of Azure Functions Approach](#key-benefits-of-azure-functions-approach)
+  - [When to Use SDK vs Azure Functions](#when-to-use-sdk-vs-azure-functions)
 - [Advanced Scenarios](#advanced-scenarios)
   - [Multiple Change Feed Processors](#multiple-change-feed-processors)
   - [Monitoring and Observability](#monitoring-and-observability)
@@ -534,6 +539,144 @@ If host fails:
 - Another host acquires the lease
 - Processing resumes from last checkpoint
 ```
+
+## Azure Functions with Cosmos DB Trigger
+
+### When to Use Azure Functions for Change Feed Processing
+
+For scenarios requiring **real-time analytics dashboards** or applications that need to process changes from Azure Cosmos DB with **automatic checkpointing** and **scaling across multiple consumers**, Azure Functions with Cosmos DB trigger is the recommended approach.
+
+#### AZ-204 Exam Scenario
+
+**Question:** You need to implement a real-time analytics dashboard that processes changes from an Azure Cosmos DB container. The solution must automatically handle checkpointing and scale across multiple consumers. Which approach should you use?
+
+**Options and Analysis:**
+
+| Approach | Recommended | Reason |
+|----------|-------------|--------|
+| **Azure Functions with Cosmos DB trigger** | ✅ **Correct** | Uses the change feed processor behind the scenes, providing automatic checkpointing and scaling across multiple instances without manual implementation |
+| Direct change feed API with custom state management | ❌ | Requires implementing custom checkpointing and consumer coordination logic, which is more complex than necessary |
+| Change feed pull model with manual checkpointing | ❌ | Requires manual implementation of checkpointing logic and load balancing across consumers, adding unnecessary complexity |
+| Polling the container with a timer trigger | ❌ | Inefficient and doesn't provide real-time processing; requires manual change tracking implementation |
+
+### How Azure Functions Cosmos DB Trigger Works
+
+Azure Functions with Cosmos DB trigger uses the **change feed processor library internally**, providing all the benefits without the complexity of manual setup:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│               Azure Functions Runtime                            │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           Cosmos DB Trigger (Built-in)                    │  │
+│  │                                                           │  │
+│  │  • Automatic lease management                            │  │
+│  │  • Automatic checkpointing                               │  │
+│  │  • Automatic scaling (multiple instances)                │  │
+│  │  • Built-in retry logic                                  │  │
+│  │                                                           │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                           │                                      │
+│                           ▼                                      │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Your Function Code                           │  │
+│  │         (Business Logic Only - No Boilerplate)           │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Azure Functions Example
+
+```csharp
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+
+public class CosmosDbChangeFeedFunction
+{
+    private readonly ILogger _logger;
+
+    public CosmosDbChangeFeedFunction(ILoggerFactory loggerFactory)
+    {
+        _logger = loggerFactory.CreateLogger<CosmosDbChangeFeedFunction>();
+    }
+
+    [Function("ProcessCosmosDBChanges")]
+    public void Run(
+        [CosmosDBTrigger(
+            databaseName: "OrdersDB",
+            containerName: "Orders",
+            Connection = "CosmosDBConnection",
+            LeaseContainerName = "leases",
+            CreateLeaseContainerIfNotExists = true)] IReadOnlyList<Order> changes)
+    {
+        if (changes != null && changes.Count > 0)
+        {
+            _logger.LogInformation("Processing {Count} changes", changes.Count);
+            
+            foreach (var order in changes)
+            {
+                // Process each change - business logic only
+                _logger.LogInformation("Order {Id} status: {Status}", 
+                    order.Id, order.Status);
+                
+                // Send to analytics dashboard, update aggregates, etc.
+            }
+        }
+    }
+}
+
+public class Order
+{
+    public string Id { get; set; }
+    public string Status { get; set; }
+    public decimal Amount { get; set; }
+}
+```
+
+### Key Benefits of Azure Functions Approach
+
+| Feature | Azure Functions Trigger | Manual SDK Implementation |
+|---------|------------------------|---------------------------|
+| **Checkpointing** | Automatic | Manual implementation required |
+| **Scaling** | Automatic (KEDA-based or consumption plan) | Manual host coordination |
+| **Lease Management** | Automatic | Manual lease container setup |
+| **Infrastructure** | Serverless (no servers to manage) | Requires hosting infrastructure |
+| **Cost Model** | Pay per execution | Pay for always-on infrastructure |
+| **Setup Complexity** | Low (configuration-based) | High (code-based) |
+| **Error Handling** | Built-in retry policies | Manual implementation |
+
+### Configuration Options
+
+```json
+{
+  "bindings": [
+    {
+      "type": "cosmosDBTrigger",
+      "name": "changes",
+      "direction": "in",
+      "databaseName": "OrdersDB",
+      "containerName": "Orders",
+      "connection": "CosmosDBConnection",
+      "leaseContainerName": "leases",
+      "createLeaseContainerIfNotExists": true,
+      "startFromBeginning": false,
+      "maxItemsPerInvocation": 100,
+      "preferredLocations": "West US 2"
+    }
+  ]
+}
+```
+
+### When to Use SDK vs Azure Functions
+
+| Use Case | Recommendation |
+|----------|----------------|
+| Real-time analytics dashboard | **Azure Functions** |
+| Simple event processing with auto-scaling | **Azure Functions** |
+| Complex processing with custom scaling logic | SDK with Change Feed Processor |
+| Integration with existing .NET applications | SDK with Change Feed Processor |
+| Containerized microservices architecture | SDK with Change Feed Processor |
+| Need full control over checkpoint management | SDK with Change Feed Processor |
 
 ## Advanced Scenarios
 
