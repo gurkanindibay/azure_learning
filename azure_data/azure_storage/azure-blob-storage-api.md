@@ -28,6 +28,7 @@
   - [Question: Uploading Files to Azure Blob Storage](#question-uploading-files-to-azure-blob-storage)
   - [Question: Uploading a File to Azure Blob Storage (SDK Methods)](#question-uploading-a-file-to-azure-blob-storage-sdk-methods)
   - [Question: Setting Custom Metadata on a Blob](#question-setting-custom-metadata-on-a-blob)
+  - [Question: Implementing Retry Logic for Large File Uploads](#question-implementing-retry-logic-for-large-file-uploads)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -974,6 +975,160 @@ await blobClient.UploadAsync(fileStream, new BlobUploadOptions
     }
 });
 ```
+
+---
+
+### Question: Implementing Retry Logic for Large File Uploads
+
+**Scenario:**
+You are developing a .NET application that uploads large files to Azure Blob Storage. You need to implement retry logic to handle transient failures during upload operations.
+
+**Question:**
+Which approach should you use?
+
+**Options:**
+
+1. Configure retry policy in the BlobServiceClient after creating the BlobClient.
+2. Use BlobRequestOptions parameter in the upload method call.
+3. Implement manual retry logic using try-catch blocks around each upload operation.
+4. Configure BlobClientOptions with retry properties and pass it to the BlobClient constructor.
+
+**Answer:** Option 4 - Configure BlobClientOptions with retry properties and pass it to the BlobClient constructor.
+
+---
+
+#### Option 1: ❌ INCORRECT
+
+**Configure retry policy in the BlobServiceClient after creating the BlobClient.**
+
+**Why This Is Wrong:**
+- ❌ Retry policies must be configured when creating the client through `BlobClientOptions`
+- ❌ Cannot be modified after the client is instantiated
+- ❌ The SDK doesn't support runtime modification of retry settings
+
+---
+
+#### Option 2: ❌ INCORRECT
+
+**Use BlobRequestOptions parameter in the upload method call.**
+
+**Why This Is Wrong:**
+- ❌ `BlobRequestOptions` is from older SDK versions (Microsoft.WindowsAzure.Storage)
+- ❌ Doesn't exist in the current Azure.Storage.Blobs SDK
+- ❌ The modern SDK uses `BlobClientOptions` for configuring retry behavior
+
+---
+
+#### Option 3: ❌ INCORRECT
+
+**Implement manual retry logic using try-catch blocks around each upload operation.**
+
+**Why This Is Wrong:**
+- ❌ Adds unnecessary complexity to your code
+- ❌ The SDK provides built-in retry mechanisms through `BlobClientOptions`
+- ❌ Manual implementation is error-prone and harder to maintain
+- ❌ Built-in retry handles transient failures more efficiently and consistently
+
+---
+
+#### Option 4: ✅ CORRECT
+
+**Configure BlobClientOptions with retry properties and pass it to the BlobClient constructor.**
+
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Core;
+
+// Configure retry options
+var options = new BlobClientOptions
+{
+    Retry =
+    {
+        MaxRetries = 5,
+        Delay = TimeSpan.FromSeconds(2),
+        MaxDelay = TimeSpan.FromSeconds(30),
+        Mode = RetryMode.Exponential,
+        NetworkTimeout = TimeSpan.FromMinutes(5)
+    }
+};
+
+// Pass options to the client constructor
+var blobServiceClient = new BlobServiceClient(connectionString, options);
+var containerClient = blobServiceClient.GetBlobContainerClient("my-container");
+var blobClient = containerClient.GetBlobClient("large-file.zip");
+
+// Upload will automatically use configured retry policy
+await blobClient.UploadAsync(fileStream, overwrite: true);
+```
+
+**Why This Is Correct:**
+- ✅ `BlobClientOptions` with retry properties (MaxRetries and Delay) enables automatic retry handling
+- ✅ Configures retry behavior at the client level
+- ✅ This is the recommended approach for implementing retry logic in the Azure.Storage.Blobs SDK
+- ✅ Handles transient failures automatically without additional code
+- ✅ Supports exponential backoff for better handling of transient issues
+
+**Key Retry Configuration Properties:**
+
+| Property | Description | Default |
+|----------|-------------|--------|
+| `MaxRetries` | Maximum number of retry attempts | 3 |
+| `Delay` | Initial delay between retries | 0.8 seconds |
+| `MaxDelay` | Maximum delay between retries | 1 minute |
+| `Mode` | Retry strategy (Fixed or Exponential) | Exponential |
+| `NetworkTimeout` | Timeout for network operations | 100 seconds |
+
+**Best Practice Example with Full Configuration:**
+
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Core;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+
+public class BlobUploadService
+{
+    private readonly BlobServiceClient _blobServiceClient;
+
+    public BlobUploadService(string connectionString)
+    {
+        var options = new BlobClientOptions
+        {
+            Retry =
+            {
+                MaxRetries = 5,
+                Delay = TimeSpan.FromSeconds(2),
+                MaxDelay = TimeSpan.FromSeconds(30),
+                Mode = RetryMode.Exponential,
+                NetworkTimeout = TimeSpan.FromMinutes(10) // Longer timeout for large files
+            }
+        };
+
+        _blobServiceClient = new BlobServiceClient(connectionString, options);
+    }
+
+    public async Task UploadLargeFileAsync(
+        string containerName, 
+        string blobName, 
+        string filePath)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        await containerClient.CreateIfNotExistsAsync();
+
+        var blobClient = containerClient.GetBlobClient(blobName);
+
+        await using var fileStream = File.OpenRead(filePath);
+        
+        // Retry logic is automatically applied based on BlobClientOptions
+        await blobClient.UploadAsync(fileStream, overwrite: true);
+    }
+}
+```
+
+**Reference:**
+- [Configure retry options for Azure Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-retry-policy-dotnet)
+- [Azure.Core RetryOptions](https://learn.microsoft.com/en-us/dotnet/api/azure.core.retryoptions)
 
 ---
 
