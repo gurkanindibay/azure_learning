@@ -817,6 +817,94 @@ Enhanced security for public clients:
 9. Entra ID → App: Tokens (no refresh token by default)
 ```
 
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    Authorization Code Flow with PKCE                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐                                              ┌─────────────────┐
+│   SPA /     │  1. Generate PKCE parameters                 │   Microsoft     │
+│   Mobile    │     code_verifier = random(43-128 chars)     │   Entra ID      │
+│   App       │     code_challenge = BASE64URL(SHA256(       │                 │
+│             │                      code_verifier))         │                 │
+└──────┬──────┘                                              └────────┬────────┘
+       │                                                              │
+       │  2. Authorization Request                                    │
+       │  GET /authorize?                                             │
+       │    response_type=code                                        │
+       │    &client_id={client_id}                                    │
+       │    &redirect_uri={redirect_uri}                              │
+       │    &scope=openid profile                                     │
+       │    &code_challenge={code_challenge}                          │
+       │    &code_challenge_method=S256                               │
+       │    &state={state}                                            │
+       ├─────────────────────────────────────────────────────────────►│
+       │                                                              │
+       │                                                              │
+       │  3. User authenticates (credentials + MFA if enabled)        │
+       │                                                              │
+       │                    ┌────────────────────────┐                │
+       │                    │  Entra ID Login Page   │                │
+       │                    │  - Enter credentials   │                │
+       │                    │  - Complete MFA        │                │
+       │                    │  - Consent (if needed) │                │
+       │                    └────────────────────────┘                │
+       │                                                              │
+       │  4. Authorization Code returned via redirect                 │
+       │  GET {redirect_uri}?code={authorization_code}&state={state}  │
+       │◄─────────────────────────────────────────────────────────────┤
+       │                                                              │
+       │  5. Exchange code for tokens                                 │
+       │  POST /token                                                 │
+       │    grant_type=authorization_code                             │
+       │    &code={authorization_code}                                │
+       │    &redirect_uri={redirect_uri}                              │
+       │    &client_id={client_id}                                    │
+       │    &code_verifier={code_verifier}  ◄── PKCE verification    │
+       ├─────────────────────────────────────────────────────────────►│
+       │                                                              │
+       │                         ┌─────────────────────────────────┐  │
+       │                         │  Entra ID verifies:             │  │
+       │                         │  SHA256(code_verifier) ==       │  │
+       │                         │  code_challenge                 │  │
+       │                         │                                 │  │
+       │                         │  ✅ Match: Issue tokens         │  │
+       │                         │  ❌ No match: Reject request    │  │
+       │                         └─────────────────────────────────┘  │
+       │                                                              │
+       │  6. Tokens returned                                          │
+       │  {                                                           │
+       │    "access_token": "eyJ...",                                 │
+       │    "id_token": "eyJ...",                                     │
+       │    "token_type": "Bearer",                                   │
+       │    "expires_in": 3600                                        │
+       │  }                                                           │
+       │◄─────────────────────────────────────────────────────────────┤
+       │                                                              │
+┌──────┴──────┐                                              ┌────────┴────────┐
+│   App       │  7. Use access token to call APIs            │   Protected     │
+│   (Tokens   │     Authorization: Bearer {access_token}     │   API           │
+│   stored)   ├─────────────────────────────────────────────►│                 │
+└─────────────┘                                              └─────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  PKCE Security Benefit:                                                       │
+│                                                                               │
+│  Even if an attacker intercepts the authorization code in step 4,            │
+│  they CANNOT exchange it for tokens because they don't have the              │
+│  original code_verifier that was generated in step 1 and kept secret         │
+│  in the client application's memory.                                          │
+│                                                                               │
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐         │
+│  │  code_verifier  │────►│  SHA256 hash    │────►│ code_challenge  │         │
+│  │  (secret)       │     │                 │     │ (sent to server)│         │
+│  └─────────────────┘     └─────────────────┘     └─────────────────┘         │
+│                                                                               │
+│  The hash is one-way: you cannot derive code_verifier from code_challenge    │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
 **Why PKCE is Required for SPAs:**
 - **Public clients cannot store secrets**: SPAs run entirely in the browser where code is visible and cannot securely store client secrets
 - **PKCE provides protection**: The code_verifier/code_challenge mechanism ensures that even if the authorization code is intercepted, it cannot be exchanged for tokens without the original code_verifier
