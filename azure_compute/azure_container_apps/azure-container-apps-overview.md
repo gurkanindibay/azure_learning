@@ -24,6 +24,7 @@
   - [Traffic Splitting](#traffic-splitting)
 - [Comparison with Other Services](#comparison-with-other-services)
 - [Dynamic Sessions](#dynamic-sessions)
+- [GPU Workload Profiles](#gpu-workload-profiles)
 - [Common Use Cases](#common-use-cases)
 - [Limitations and Constraints](#limitations-and-constraints)
 - [Best Practices](#best-practices)
@@ -561,6 +562,80 @@ Azure Container Apps **dynamic sessions** provide instant access to secure, sand
 
 3. **vs. Azure Container Instances**: ACI provides Hyper-V isolation at the pod level but lacks the specialized sandboxing features and session management capabilities required for running untrusted code at scale.
 
+## GPU Workload Profiles
+
+Azure Container Apps supports **serverless GPU workload profiles** that provide access to GPU resources for machine learning and AI workloads without managing infrastructure.
+
+### Key Features
+
+- **NVIDIA GPUs**: Access to NVIDIA A100 and T4 GPUs in a serverless environment
+- **Scale-to-Zero**: Automatic scaling down to zero replicas when not in use, reducing costs
+- **Built-in Data Governance**: Compliance and data governance features built into the platform
+- **No Infrastructure Management**: Fully managed GPU resources without cluster administration
+
+### GPU Types Available
+
+| GPU Type | Best For | Key Characteristics |
+|----------|----------|--------------------|
+| **NVIDIA A100** | Large-scale ML training, high-performance inference | Highest performance, large memory |
+| **NVIDIA T4** | Inference workloads, moderate training | Cost-effective, good balance of performance |
+
+### When to Use GPU Workload Profiles
+
+✅ **Use Container Apps Serverless GPUs When:**
+- Running machine learning inference at scale
+- Training ML models with variable demand
+- Processing GPU-accelerated workloads intermittently
+- Need scale-to-zero to minimize costs during idle periods
+- Require data governance and compliance features
+- Want to avoid managing GPU infrastructure
+
+❌ **Consider Alternatives When:**
+- Need persistent GPU allocation 24/7
+- Require specialized Kubernetes configurations (use AKS with GPU nodes)
+- Need GPU types not available in Container Apps
+
+### Comparison: GPU Options for Containerized ML Workloads
+
+| Solution | Scale-to-Zero | Data Governance | Infrastructure Management | Best For |
+|----------|---------------|-----------------|---------------------------|----------|
+| **Azure Container Apps (Serverless GPU)** | ✅ Yes | ✅ Built-in | ✅ Fully Managed | Dynamic ML workloads with variable demand |
+| **Azure Kubernetes Service (GPU Node Pools)** | ❌ No | ⚠️ Manual setup | ❌ Self-managed | Full control, complex orchestration |
+| **Azure Container Instances (GPU Preview)** | ❌ No | ⚠️ Limited | ✅ Managed | Simple, short-running GPU tasks |
+| **Azure App Service** | N/A | N/A | N/A | ❌ No GPU support |
+
+> **Exam Tip**: When a question asks about deploying containerized applications that require **GPU resources for machine learning workloads** with **scale-to-zero capabilities** and **data governance**, the correct answer is **Azure Container Apps with serverless GPU workload profiles**. AKS with GPU-enabled node pools requires infrastructure management and doesn't support scale-to-zero. Azure App Service doesn't support GPU compute. Azure Container Instances GPU support (preview) lacks serverless scale-to-zero capabilities.
+
+### Example Configuration
+
+```bash
+# Create a Container Apps environment with GPU workload profile
+az containerapp env create \
+  --name myGpuEnv \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --enable-workload-profiles
+
+# Add a GPU workload profile
+az containerapp env workload-profile add \
+  --name myGpuEnv \
+  --resource-group myResourceGroup \
+  --workload-profile-name gpu-profile \
+  --workload-profile-type NC24-A100 \
+  --min-nodes 0 \
+  --max-nodes 5
+
+# Deploy an app using the GPU profile
+az containerapp create \
+  --name myMlApp \
+  --resource-group myResourceGroup \
+  --environment myGpuEnv \
+  --workload-profile-name gpu-profile \
+  --image myregistry.azurecr.io/ml-inference:v1 \
+  --min-replicas 0 \
+  --max-replicas 10
+```
+
 ## Common Use Cases
 
 ### 1. Microservices Architecture
@@ -609,7 +684,7 @@ Azure Container Apps **dynamic sessions** provide instant access to secure, sand
 1. **Session Affinity**: Not supported (design for stateless apps)
 2. **Privileged Containers**: Not allowed (no root access)
 3. **Host Networking**: Not available (isolated networking)
-4. **GPU Support**: Not currently available
+4. **GPU Support**: Available via serverless GPU workload profiles (NVIDIA A100 and T4)
 5. **Windows Containers**: Linux containers only
 6. **Storage**: No persistent storage (use Azure Files or volumes)
 
