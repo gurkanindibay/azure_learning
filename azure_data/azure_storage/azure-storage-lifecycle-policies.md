@@ -21,6 +21,10 @@
   - [Example 3: Multi-Container Policy](#example-3-multi-container-policy)
 - [Best Practices](#best-practices)
 - [Common Mistakes to Avoid](#common-mistakes-to-avoid)
+- [Bulk Tier Transitions Within Same Storage Account](#bulk-tier-transitions-within-same-storage-account)
+  - [✅ Correct Approach: Lifecycle Management Policy](#-correct-approach-lifecycle-management-policy)
+  - [❌ Incorrect Approaches for Bulk Tier Transitions](#-incorrect-approaches-for-bulk-tier-transitions)
+  - [Key Insight: Tiers vs Containers](#key-insight-tiers-vs-containers)
 - [Key Takeaway: prefixMatch Structure](#key-takeaway-prefixmatch-structure)
 - [References](#references)
 
@@ -441,6 +445,62 @@ Lifecycle policies can target:
 4. ❌ Forgetting to enable access time tracking when using access-based conditions
 5. ❌ Overlapping rules that conflict with each other
 6. ❌ Not testing policies in a non-production environment first
+
+## Bulk Tier Transitions Within Same Storage Account
+
+When you need to transition blobs between access tiers (e.g., from hot to cool) within the same storage account, lifecycle management policies are the most efficient approach.
+
+### ✅ Correct Approach: Lifecycle Management Policy
+
+Lifecycle management policies can automatically transition blobs between tiers within the same account based on specified conditions. The tier change operation occurs **server-side without requiring data transfer**, making it the most efficient approach for bulk tier changes.
+
+**Example: Immediate tier transition using `daysAfterModificationGreaterThan: 0`**
+```json
+{
+  "rules": [
+    {
+      "enabled": true,
+      "name": "transitionHotToCool",
+      "type": "Lifecycle",
+      "definition": {
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 0
+            }
+          }
+        },
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["mycontainer/"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Key Benefits:**
+- Server-side operation - no data transfer required
+- Changes the tier of existing blobs in place
+- Cost-efficient for bulk operations
+- No data duplication
+
+### ❌ Incorrect Approaches for Bulk Tier Transitions
+
+| Approach | Why It's Wrong |
+|----------|----------------|
+| **Copy Blob API with x-ms-access-tier header** | Creates a **new blob copy** rather than changing the tier of the existing blob. Results in duplicate blobs and unnecessary storage costs. |
+| **AzCopy with --block-blob-tier parameter** | Creates **new copies** of the blobs rather than changing the tier of existing blobs in place. Results in data duplication and increased costs. |
+| **Azure Data Factory to move blobs** | Incorrectly assumes tiers are separate containers. Access tiers are **properties of blobs**, not separate containers. Involves unnecessary data movement. |
+
+### Key Insight: Tiers vs Containers
+
+Access tiers (hot, cool, cold, archive) are **blob-level properties**, not separate storage locations or containers. When you change a blob's tier:
+- The blob stays in the same container
+- Only the tier metadata property changes
+- No physical data movement occurs (except for archive rehydration)
+- The blob URL remains the same
 
 ## Key Takeaway: prefixMatch Structure
 
