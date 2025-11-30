@@ -112,6 +112,30 @@ When Event Grid fails to deliver an event to an endpoint, it retries based on a 
     - **Max Delivery Attempts:** Configurable between 1 and 30.
     - **Event Time-to-Live (TTL):** Configurable duration (e.g., 1 minute to 1440 minutes) after which the event is dropped if not delivered.
 
+#### Practice Question: Configuring Retry Policy with Dead-Lettering
+
+**Question:** A company uses Azure Event Grid to handle events from blob storage. The solution must retry failed event deliveries with exponential backoff for up to 24 hours before moving events to a dead-letter location. Which configuration should you implement?
+
+| Option | Description |
+|--------|-------------|
+| A | Set maxDeliveryAttempts to 30 and eventTimeToLiveInMinutes to 1440 with dead-lettering enabled |
+| B | Set maxRetryAttempts to 24 and retryInterval to 1 hour with dead-lettering enabled |
+| C | Set retryPolicy to exponential and deliveryTimeout to 24 hours with dead-lettering enabled |
+| D | Set automaticRetry to true and retryDuration to 24 hours with dead-lettering enabled |
+
+<details>
+<summary>Answer</summary>
+
+**Correct Answer: A**
+
+**Explanation:**
+- **Option A (Correct):** Event Grid uses exponential backoff by default, and setting `maxDeliveryAttempts` to 30 with `eventTimeToLiveInMinutes` to 1440 (24 hours = 1440 minutes) ensures retries continue for 24 hours before dead-lettering occurs.
+- **Option B (Incorrect):** Event Grid doesn't support fixed retry intervals as it uses exponential backoff, and `maxRetryAttempts` and `retryInterval` aren't valid configuration properties for Event Grid event subscriptions.
+- **Option C (Incorrect):** Event Grid doesn't have a `retryPolicy` setting as exponential backoff is the default behavior, and `deliveryTimeout` isn't a valid configuration option.
+- **Option D (Incorrect):** `automaticRetry` and `retryDuration` aren't valid Event Grid configuration properties. Event Grid automatically retries with exponential backoff, and the retry behavior is controlled by `maxDeliveryAttempts` and `eventTimeToLiveInMinutes`.
+
+</details>
+
 ### Dead Letter Events
 If an event cannot be delivered after all retry attempts or the TTL expires:
 - **Dead Lettering:** You can configure a storage account (blob container) to store these undelivered events.
