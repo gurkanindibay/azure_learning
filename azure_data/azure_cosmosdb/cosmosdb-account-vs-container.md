@@ -17,12 +17,17 @@
 7. [Practical Examples](#practical-examples)
 8. [When to Use Multiple Accounts vs Multiple Containers](#when-to-use-multiple-accounts-vs-multiple-containers)
 9. [Best Practices](#best-practices)
-10. [Change Feed](#change-feed)
+10. [Hierarchical Partition Keys](#hierarchical-partition-keys)
+    - [Understanding the 20 GB Logical Partition Limit](#understanding-the-20-gb-logical-partition-limit)
+    - [What are Hierarchical Partition Keys?](#what-are-hierarchical-partition-keys)
+    - [How Hierarchical Partition Keys Solve the 20 GB Problem](#how-hierarchical-partition-keys-solve-the-20-gb-problem)
+    - [Multi-Tenant SaaS Best Practices with Hierarchical Partition Keys](#multi-tenant-saas-best-practices-with-hierarchical-partition-keys)
+11. [Change Feed](#change-feed)
     - [What is Change Feed?](#what-is-change-feed)
     - [Azure Functions Cosmos DB Trigger](#azure-functions-cosmos-db-trigger)
     - [Lease Collection Concept](#lease-collection-concept)
-11. [Single Partition Queries vs Cross-Partition Queries](#single-partition-queries-vs-cross-partition-queries)
-12. [Practice Questions](#practice-questions)
+12. [Single Partition Queries vs Cross-Partition Queries](#single-partition-queries-vs-cross-partition-queries)
+13. [Practice Questions](#practice-questions)
 
 ---
 
@@ -499,6 +504,174 @@ az cosmosdb sql container create \
    - Use clear, descriptive names
    - Follow naming conventions: `users`, `orders`, `products`
    - Avoid special characters
+
+---
+
+## Hierarchical Partition Keys
+
+### Understanding the 20 GB Logical Partition Limit
+
+In Azure Cosmos DB, each **logical partition** has a maximum size limit of **20 GB**. A logical partition is defined by the partition key value - all items with the same partition key value belong to the same logical partition.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Physical Partition                        │
+│  ┌─────────────────┐  ┌─────────────────┐                   │
+│  │ Logical Part A  │  │ Logical Part B  │                   │
+│  │ (TenantId=T1)   │  │ (TenantId=T2)   │                   │
+│  │ Max: 20 GB      │  │ Max: 20 GB      │                   │
+│  └─────────────────┘  └─────────────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Problem with Standard Partition Keys for Large Tenants:**
+- Using `TenantId` as a standard partition key limits each tenant to 20 GB
+- Large tenants in multi-tenant SaaS applications can easily exceed this limit
+- This creates a ceiling that prevents growth for large customers
+
+### What are Hierarchical Partition Keys?
+
+**Hierarchical partition keys** (also known as subpartitioning) allow you to define a partition key with up to **3 levels of hierarchy**. This feature enables a single logical partition key value (like TenantId) to exceed the 20 GB limit while maintaining efficient query routing.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│           Hierarchical Partition Key Structure               │
+│                                                              │
+│  Level 1: TenantId                                           │
+│     ├── Level 2: Year                                        │
+│     │      ├── Level 3: Month                                │
+│     │      │      └── Items (documents)                      │
+│     │      └── ...                                           │
+│     └── ...                                                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Example Configuration:**
+```csharp
+// Define hierarchical partition key with multiple levels
+ContainerProperties containerProperties = new ContainerProperties
+{
+    Id = "orders",
+    PartitionKeyPaths = new List<string> 
+    { 
+        "/tenantId",    // Level 1: Tenant
+        "/year",        // Level 2: Year
+        "/month"        // Level 3: Month
+    }
+};
+
+Container container = await database.CreateContainerIfNotExistsAsync(
+    containerProperties,
+    throughput: 400
+);
+```
+
+### How Hierarchical Partition Keys Solve the 20 GB Problem
+
+| Scenario | Standard Partition Key | Hierarchical Partition Key |
+|----------|----------------------|---------------------------|
+| **Partition Key** | `/tenantId` | `/tenantId`, `/year`, `/month` |
+| **Logical Partition Limit** | 20 GB per TenantId | 20 GB per TenantId+Year+Month combination |
+| **Large Tenant (100 GB)** | ❌ Exceeds limit | ✅ Distributed across multiple logical partitions |
+| **Query by TenantId** | Single partition query | Still efficient - routes to relevant physical partitions |
+
+**With hierarchical partition keys:**
+- Data for TenantId="Contoso" is distributed across multiple logical partitions
+- Each combination (Contoso, 2025, January), (Contoso, 2025, February), etc. has its own 20 GB limit
+- Queries filtering by TenantId still route efficiently to the relevant physical partitions
+- No cross-partition query penalty for tenant-specific queries
+
+### Multi-Tenant SaaS Best Practices with Hierarchical Partition Keys
+
+1. **Use TenantId as the First Level**
+   - Ensures all tenant data is logically grouped
+   - Enables efficient tenant-specific queries
+   - Provides data isolation at query level
+
+2. **Choose Second/Third Levels Based on Data Growth Pattern**
+   - Time-based: `/year`, `/month` for time-series data
+   - Category-based: `/region`, `/productCategory` for e-commerce
+   - Entity-based: `/customerId`, `/orderId` for transactional data
+
+3. **Consider Query Patterns**
+   - Queries should include partition key levels from left to right
+   - `WHERE tenantId = 'X' AND year = '2025'` is efficient
+   - `WHERE year = '2025'` without tenantId becomes cross-partition
+
+### Incorrect Approaches for Large Tenant Data
+
+| Approach | Why It's Wrong |
+|----------|----------------|
+| **Random suffix appended to TenantId** | Scatters tenant data across partitions, making all tenant queries cross-partition operations (inefficient) |
+| **Synthetic key combining TenantId and timestamp** | Distributes tenant data across multiple logical partitions but makes tenant-specific queries cross-partition and inefficient |
+| **TenantId as standard partition key with increased throughput** | More throughput doesn't change the 20 GB logical partition limit - the data ceiling remains |
+
+### Creating a Container with Hierarchical Partition Keys
+
+**Using Azure CLI:**
+```bash
+az cosmosdb sql container create \
+  --account-name mycosmosaccount \
+  --resource-group myResourceGroup \
+  --database-name saas-db \
+  --name orders \
+  --partition-key-path "/tenantId" "/year" "/month"
+```
+
+**Using .NET SDK:**
+```csharp
+using Microsoft.Azure.Cosmos;
+
+// Create container with hierarchical partition key
+ContainerProperties properties = new ContainerProperties
+{
+    Id = "multi-tenant-orders",
+    PartitionKeyPaths = new List<string> 
+    { 
+        "/tenantId", 
+        "/year", 
+        "/month" 
+    }
+};
+
+Container container = await database.CreateContainerIfNotExistsAsync(
+    properties,
+    throughput: 400
+);
+
+// Insert item with hierarchical partition key
+var order = new
+{
+    id = "order-001",
+    tenantId = "contoso",
+    year = "2025",
+    month = "11",
+    orderId = "ORD-12345",
+    amount = 999.99
+};
+
+// Specify all levels of the partition key
+await container.CreateItemAsync(
+    order,
+    new PartitionKeyBuilder()
+        .Add("contoso")
+        .Add("2025")
+        .Add("11")
+        .Build()
+);
+```
+
+**Querying with Hierarchical Partition Keys:**
+```csharp
+// Efficient query - includes first level of partition key
+QueryDefinition query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.tenantId = @tenantId AND c.year = @year")
+    .WithParameter("@tenantId", "contoso")
+    .WithParameter("@year", "2025");
+
+// The query routes to relevant physical partitions for this tenant
+FeedIterator<Order> iterator = container.GetItemQueryIterator<Order>(query);
+```
 
 ---
 
@@ -1253,6 +1426,109 @@ Single partition queries in Azure Cosmos DB provide several key advantages:
 - **Incorrect**: Consistency levels are independent of query partition scope
 - Both query types respect the configured consistency level
 - Consistency is set at account level or per-request, not per-query type
+
+### Question 3: Multi-Tenant SaaS Application with Large Tenants
+
+**Scenario:**
+
+You are developing a multi-tenant SaaS application using Azure Cosmos DB. You need to ensure that data for large tenants can exceed 20 GB while maintaining efficient query performance within each tenant.
+
+**Question:**
+
+What should you configure?
+
+**Select only one answer:**
+
+**A.** A random suffix appended to TenantId as the partition key
+
+**B.** Hierarchical partition keys with TenantId as the first level ✅
+
+**C.** A synthetic partition key combining TenantId and timestamp
+
+**D.** TenantId as a standard partition key with increased throughput
+
+---
+
+### Answer: B ✅
+
+**Hierarchical partition keys with TenantId as the first level.**
+
+---
+
+### Detailed Explanation
+
+#### Why Option B is Correct
+
+**Hierarchical partition keys** allow a single TenantId to exceed the 20 GB logical partition limit while maintaining efficient query routing to relevant physical partitions.
+
+1. **Overcomes the 20 GB Limit**
+   - With hierarchical partition keys, data is distributed across multiple logical partitions
+   - Each combination (TenantId + Level2 + Level3) has its own 20 GB limit
+   - Large tenants can store hundreds of GB without hitting the ceiling
+
+2. **Maintains Query Efficiency**
+   - Queries that include TenantId are routed to the relevant physical partitions
+   - No cross-partition query penalty for tenant-specific queries
+   - The Cosmos DB engine understands the hierarchy and optimizes routing
+
+3. **Example Configuration**
+   ```csharp
+   PartitionKeyPaths = new List<string> 
+   { 
+       "/tenantId",    // Level 1
+       "/year",        // Level 2
+       "/month"        // Level 3
+   }
+   ```
+
+#### Why Other Options Are Incorrect
+
+**Option A - Random suffix appended to TenantId**
+- **Incorrect**: Random suffixes would scatter tenant data across partitions
+- All tenant queries become cross-partition operations
+- Severely impacts query performance and increases RU consumption
+- Example: `TenantId-abc123`, `TenantId-xyz789` creates different partitions
+
+**Option C - Synthetic partition key combining TenantId and timestamp**
+- **Incorrect**: A synthetic key with timestamp would distribute tenant data across multiple logical partitions
+- However, tenant-specific queries become cross-partition and inefficient
+- The timestamp component doesn't provide hierarchical routing benefits
+- Example: `TenantId_2025-11-30T10:30:00` creates a unique partition for each timestamp
+
+**Option D - TenantId as standard partition key with increased throughput**
+- **Incorrect**: Using TenantId as a standard partition key still limits each tenant to 20 GB per logical partition
+- Increased throughput (RU/s) does NOT change the storage limit
+- This doesn't solve the large tenant requirement at all
+- More throughput = more operations per second, NOT more storage per partition
+
+---
+
+### Key Takeaways
+
+1. **20 GB Limit is Per Logical Partition**
+   - Each unique partition key value has a 20 GB ceiling
+   - This is a fundamental Cosmos DB constraint
+
+2. **Hierarchical Partition Keys Extend the Limit**
+   - Distribute data across multiple logical partitions
+   - Maintain query efficiency with intelligent routing
+   - Support up to 3 levels of hierarchy
+
+3. **Random/Synthetic Keys Break Query Efficiency**
+   - Spreading data randomly makes targeted queries impossible
+   - All tenant queries become expensive fan-out operations
+
+4. **Throughput ≠ Storage Limit**
+   - RU/s controls operations per second
+   - Does not affect the 20 GB logical partition limit
+
+---
+
+### References
+
+- [Hierarchical Partition Keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/hierarchical-partition-keys)
+- [Partitioning and Horizontal Scaling](https://learn.microsoft.com/azure/cosmos-db/partitioning-overview)
+- [Multi-tenant SaaS Patterns](https://learn.microsoft.com/azure/cosmos-db/nosql/multi-tenant)
 
 ---
 
