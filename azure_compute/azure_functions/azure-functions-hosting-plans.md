@@ -33,6 +33,8 @@
   - [General Recommendations](#general-recommendations)
   - [Security Considerations](#security-considerations)
   - [Performance Optimization](#performance-optimization)
+  - [ReadyToRun Compilation for .NET Isolated Worker Model](#readytorun-compilation-for-net-isolated-worker-model)
+  - [Practice Question: Improving Cold Start Performance](#practice-question-improving-cold-start-performance)
   - [Scaling Configuration](#scaling-configuration)
 - [Migration Between Plans](#migration-between-plans)
   - [Consumption → Premium](#consumption-premium)
@@ -460,6 +462,115 @@ az functionapp create \
 3. **Use async patterns**: Leverage asynchronous programming
 4. **Implement retry logic**: Handle transient failures gracefully
 5. **Monitor with Application Insights**: Track performance metrics and errors
+6. **Enable ReadyToRun compilation**: For .NET isolated worker model apps, use ahead-of-time compilation to improve startup performance
+
+### ReadyToRun Compilation for .NET Isolated Worker Model
+
+**Overview:**
+ReadyToRun (R2R) is a form of ahead-of-time (AOT) compilation that can significantly improve startup performance for .NET applications. This is especially valuable for Azure Functions running in a Consumption plan where cold starts are a concern.
+
+**Key Points:**
+- Available for .NET isolated worker model functions (not in-process model)
+- Requires `FUNCTIONS_WORKER_RUNTIME` to be set to `dotnet-isolated` (not `dotnet`)
+- The runtime architecture must match the hosting environment (e.g., `win-x64`, `linux-x64`)
+- Reduces JIT (Just-In-Time) compilation overhead during startup
+
+**Configuration:**
+
+To enable ReadyToRun compilation, add the following to your `.csproj` file:
+
+```xml
+<PropertyGroup>
+  <PublishReadyToRun>true</PublishReadyToRun>
+  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+</PropertyGroup>
+```
+
+Or for Linux:
+```xml
+<PropertyGroup>
+  <PublishReadyToRun>true</PublishReadyToRun>
+  <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+</PropertyGroup>
+```
+
+**Important Considerations:**
+
+| Aspect | Description |
+|--------|-------------|
+| **Worker Runtime** | Must use `dotnet-isolated` for isolated worker model, not `dotnet` |
+| **Architecture Match** | Runtime architecture must match hosting environment |
+| **Build Size** | ReadyToRun binaries are larger than standard binaries |
+| **Cold Start Improvement** | Reduces cold start latency by pre-compiling native code |
+
+**FUNCTIONS_WORKER_RUNTIME Settings:**
+
+| Value | Model | .NET Support |
+|-------|-------|--------------|
+| `dotnet` | In-process model | .NET 6 (deprecated, ending support Nov 10, 2026) |
+| `dotnet-isolated` | Isolated worker model | .NET 6, .NET 7, .NET 8+ |
+
+**Note:** The in-process model (`dotnet`) does not support .NET 8. If you're using .NET 8, you must use the isolated worker model with `FUNCTIONS_WORKER_RUNTIME` set to `dotnet-isolated`.
+
+---
+
+### Practice Question: Improving Cold Start Performance
+
+**Question:**
+
+You have an Azure Functions app that uses the isolated worker model with .NET 8. You need to ensure the app benefits from improved startup performance when running in a Consumption plan. What should you configure?
+
+**Options:**
+
+A) Set FUNCTIONS_WORKER_RUNTIME to dotnet and configure netFrameworkVersion to 8.0
+
+B) Enable ReadyToRun compilation in the project file and ensure the runtime architecture matches the hosting environment ✅
+
+C) Migrate the app from the isolated worker model to the in-process model
+
+D) Configure always-on setting in the App Service plan and scale out to multiple instances
+
+---
+
+**Correct Answer: B) Enable ReadyToRun compilation in the project file and ensure the runtime architecture matches the hosting environment**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Set FUNCTIONS_WORKER_RUNTIME to dotnet** | ❌ Incorrect - `FUNCTIONS_WORKER_RUNTIME` must be set to `dotnet-isolated` for the isolated worker model, not `dotnet`. Setting it to `dotnet` would attempt to use the in-process model which doesn't support .NET 8. |
+| **B) Enable ReadyToRun compilation** | ✅ **Correct** - You can compile your function app as ReadyToRun binaries. ReadyToRun is a form of ahead-of-time compilation that can improve startup performance to help reduce the effect of cold starts when running in a Consumption plan. This requires matching the runtime architecture to the hosting environment. |
+| **C) Migrate to the in-process model** | ❌ Incorrect - Support will end for the in-process model on November 10, 2026. We highly recommend that you migrate your apps to the isolated worker model for full support. This would be moving backwards and doesn't address the performance requirement. Additionally, the in-process model doesn't support .NET 8. |
+| **D) Configure always-on setting** | ❌ Incorrect - The always-on setting is not available in Consumption plans and is only applicable to Premium and Dedicated plans. Scaling out doesn't address cold start performance for individual instances. |
+
+**Visual Comparison:**
+
+```
+✅ Correct Configuration for .NET 8 Isolated Worker:
+┌─────────────────────────────────────┐
+│ .csproj                             │
+├─────────────────────────────────────┤
+│ <PublishReadyToRun>true</...>       │
+│ <RuntimeIdentifier>win-x64</...>    │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│ Application Settings                │
+├─────────────────────────────────────┤
+│ FUNCTIONS_WORKER_RUNTIME=dotnet-isolated │
+└─────────────────────────────────────┘
+
+❌ Invalid Configuration:
+┌─────────────────────────────────────┐
+│ Application Settings                │
+├─────────────────────────────────────┤
+│ FUNCTIONS_WORKER_RUNTIME=dotnet     │  ← Wrong! .NET 8 requires isolated model
+└─────────────────────────────────────┘
+```
+
+**Reference:** [Azure Functions .NET isolated worker process](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide)
 
 ### Scaling Configuration
 
