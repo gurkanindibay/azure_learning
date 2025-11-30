@@ -824,3 +824,63 @@ The other options are incorrect because:
 **Reference**: 
 - [Azure API Management pricing](https://azure.microsoft.com/en-us/pricing/details/api-management/)
 - [Azure API Management tiers](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
+
+### Question 8: OAuth 2.0 JWT Validation for Microsoft Entra ID
+
+**Scenario**: You are configuring OAuth 2.0 authorization for APIs in Azure API Management. You need to validate JWT tokens from Microsoft Entra ID with minimal configuration while ensuring only tokens with specific audience claims are accepted.
+
+**Question**: Which policy should you use?
+
+**Options**:
+- `authentication-certificate`
+- `validate-jwt`
+- `check-header`
+- `validate-azure-ad-token` ✓
+
+**Answer**: `validate-azure-ad-token`
+
+**Explanation**: 
+The `validate-azure-ad-token` policy is specifically designed for Microsoft Entra ID tokens, providing simplified configuration with built-in support for Microsoft Entra ID endpoints and token validation. This policy:
+- Automatically discovers and uses Microsoft Entra ID's OpenID Connect configuration
+- Requires minimal setup compared to the generic `validate-jwt` policy
+- Provides built-in support for validating audience claims
+- Handles Microsoft Entra ID-specific token formats and validation requirements
+
+The other options are incorrect because:
+- **`authentication-certificate`**: This policy is used for certificate-based authentication with backend services, not for validating OAuth 2.0 JWT tokens from identity providers. It's designed for mutual TLS scenarios where the API Management needs to present a client certificate to backend services.
+- **`validate-jwt`**: While the `validate-jwt` policy can validate tokens from Microsoft Entra ID, it requires more manual configuration including explicitly specifying the OpenID configuration endpoint, issuers, and other settings. The `validate-azure-ad-token` policy provides the same functionality with less configuration overhead for Microsoft Entra ID specifically.
+- **`check-header`**: This policy only verifies the presence and value of HTTP headers but cannot validate JWT token signatures, claims, or expiration times. It's a simple header check that doesn't provide any cryptographic validation of tokens.
+
+**Example - validate-azure-ad-token policy**:
+```xml
+<policies>
+    <inbound>
+        <validate-azure-ad-token tenant-id="your-tenant-id">
+            <audiences>
+                <audience>api://your-api-client-id</audience>
+            </audiences>
+        </validate-azure-ad-token>
+    </inbound>
+</policies>
+```
+
+**Example - validate-jwt policy (more verbose)**:
+```xml
+<policies>
+    <inbound>
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+            <openid-config url="https://login.microsoftonline.com/{tenant-id}/v2.0/.well-known/openid-configuration" />
+            <audiences>
+                <audience>api://your-api-client-id</audience>
+            </audiences>
+            <issuers>
+                <issuer>https://sts.windows.net/{tenant-id}/</issuer>
+            </issuers>
+        </validate-jwt>
+    </inbound>
+</policies>
+```
+
+**Reference**: 
+- [Validate Microsoft Entra token policy](https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-policy)
+- [Authentication and authorization to APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/authentication-authorization-overview)
