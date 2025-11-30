@@ -357,6 +357,67 @@ Supports atomic operations. You can send a message, delete a message, and update
 ### Duplicate Detection
 Service Bus can automatically remove duplicate messages sent within a specific time window based on `MessageId`.
 
+#### How It Works
+- **MessageId Property:** When duplicate detection is enabled, Service Bus tracks the `MessageId` of all messages within a configurable time window (up to 7 days, default 10 minutes).
+- **Automatic Deduplication:** If a message with the same `MessageId` is sent within the detection window, the duplicate is silently discarded.
+- **Tier Requirement:** Available in Standard and Premium tiers only (not Basic).
+
+#### Configuration
+
+```bash
+# Enable duplicate detection at queue creation
+az servicebus queue create \
+  --namespace-name mynamespace \
+  --resource-group myResourceGroup \
+  --name myqueue \
+  --enable-duplicate-detection true \
+  --duplicate-detection-history-time-window P1D  # 24 hours (ISO 8601 duration)
+```
+
+```csharp
+// Send messages with duplicate detection
+var sender = client.CreateSender("financial-transactions-queue");
+
+// First message
+var message1 = new ServiceBusMessage("Transaction data")
+{
+    MessageId = "txn-12345"  // TransactionId as MessageId
+};
+await sender.SendMessageAsync(message1);
+
+// Duplicate message (same MessageId within detection window)
+var message2 = new ServiceBusMessage("Transaction data")
+{
+    MessageId = "txn-12345"  // Same MessageId - will be silently dropped
+};
+await sender.SendMessageAsync(message2);  // No error, but message is discarded
+```
+
+#### Exam Scenario: Financial Transaction Duplicate Detection
+
+**Scenario:** You are developing a solution that processes financial transactions using Azure Service Bus. The solution must ensure that duplicate transactions are automatically detected within a 24-hour window. Transaction messages contain a `TransactionId` property that uniquely identifies each transaction.
+
+**Correct Answer:** Enable duplicate detection on the queue and set `MessageId` to the `TransactionId` value when sending messages.
+
+**Why This Works:**
+- Duplicate detection uses the `MessageId` property to identify duplicates
+- Configure detection window to 24 hours (`P1D` in ISO 8601 format)
+- Duplicates are automatically discarded without any additional application logic
+
+#### Common Misconceptions
+
+| Approach | Why It's Wrong |
+|----------|----------------|
+| **Enable sessions and set SessionId to TransactionId** | Sessions are for message ordering and stateful processing, not duplicate detection. Setting SessionId creates separate sessions per transaction instead of detecting duplicates. |
+| **Enable dead-lettering and check for duplicates** | Dead-lettering handles failed messages, not duplicates. Messages go to DLQ after processing failures, not when duplicates are detected. |
+| **Enable autoforwarding for duplicate checking** | Autoforwarding chains queues/subscriptions for routing, not deduplication. Would require custom logic rather than built-in detection. |
+
+#### Best Practices
+- Always set a meaningful `MessageId` based on your business identifier (e.g., TransactionId, OrderId)
+- Configure appropriate detection window based on your retry/failure scenarios
+- Remember that duplicate detection must be enabled at queue/topic creation time
+- Use idempotent message processing as a complementary strategy
+
 ### Scheduled Delivery
 Messages can be sent to a queue/topic but remain invisible to consumers until a specific scheduled time.
 
