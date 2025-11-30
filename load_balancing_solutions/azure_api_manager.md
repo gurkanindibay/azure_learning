@@ -764,3 +764,33 @@ The other options are incorrect because:
 **Reference**: 
 - [Use a virtual network with Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/virtual-network-concepts)
 - [Connect privately to API Management using a private endpoint](https://learn.microsoft.com/en-us/azure/api-management/private-endpoint)
+
+### Question 6: Multi-Tenant Rate Limiting and Quotas
+
+**Scenario**: You are implementing a multi-tenant API solution in Azure API Management. Each tenant must have different rate limits and quotas. You want to minimize management overhead while ensuring proper isolation.
+
+**Question**: What should you implement?
+
+**Options**:
+- Use a single product with conditional expressions in quota-by-key policy
+- Implement rate limiting at the backend service level only
+- Create separate products with different quota policies and assign subscriptions per tenant ✓
+- Create separate API Management instances for each tenant
+
+**Answer**: Create separate products with different quota policies and assign subscriptions per tenant
+
+**Explanation**: 
+Products with quota policies provide a manageable way to implement different limits per tenant through subscriptions, minimizing overhead while maintaining proper isolation. This approach allows you to:
+- Define different rate limits and quotas at the product level
+- Assign each tenant a subscription to the appropriate product
+- Manage tenant-specific limits without complex policy logic
+- Leverage built-in subscription management for tenant isolation
+
+The other options are incorrect because:
+- **Single product with conditional expressions**: While technically possible, using complex conditional expressions in a single policy increases complexity and maintenance overhead compared to separate products. As the number of tenants grows, the policy becomes increasingly difficult to manage and debug.
+- **Backend-level rate limiting**: Backend-level rate limiting doesn't leverage API Management's built-in capabilities and increases complexity in backend services rather than centralizing in API Management. This approach also defeats the purpose of having an API gateway handle cross-cutting concerns like rate limiting.
+- **Separate API Management instances**: Creating separate instances provides isolation but significantly increases management overhead and costs, violating the requirement to minimize management overhead. Each instance requires separate configuration, monitoring, and maintenance.
+
+**Reference**: 
+- [Products in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-add-products)
+- [Advanced request throttling with Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-sample-flexible-throttling)
