@@ -13,6 +13,7 @@
   - [Apache Kafka Compatibility](#apache-kafka-compatibility)
   - [Schema Registry Considerations](#schema-registry-considerations)
   - [Checkpointing](#checkpointing)
+  - [Processing Events with Multiple Instances (Partition Distribution)](#processing-events-with-multiple-instances-partition-distribution)
 - [4. Data Integration Model: Push-Pull](#4-data-integration-model-push-pull)
   - [Publisher Side (Push)](#publisher-side-push)
   - [Consumer Side (Pull)](#consumer-side-pull)
@@ -101,6 +102,59 @@ Event Hubs provides an endpoint compatible with Kafka producer and consumer APIs
 
 ### Checkpointing
 Consumers store their position in the partition stream. If a worker fails, a new one picks up from the last checkpoint.
+
+### Processing Events with Multiple Instances (Partition Distribution)
+
+When processing events from an Event Hub with multiple partitions using Azure Functions or other consumers, you need to ensure proper partition distribution and single-instance processing per partition.
+
+#### EventProcessorClient (Recommended Approach)
+
+**EventProcessorClient** is the recommended way to process events from Event Hubs when you need:
+- Automatic partition distribution among multiple instances
+- Single-instance processing per partition guarantee
+- Reliable checkpointing for progress tracking and failure handling
+
+| Component | Purpose |
+|-----------|---------|
+| **EventProcessorClient** | Automatically distributes partitions among multiple consumer instances |
+| **Consumer Group** | Provides isolated view of the event stream for a set of consumers |
+| **Blob Storage Checkpoint Store** | Persists checkpoint data to track processing progress |
+
+**How It Works:**
+1. Multiple instances of your application use the same consumer group
+2. EventProcessorClient automatically coordinates which instance processes which partition
+3. Each partition is processed by **only one instance at a time**
+4. Progress is checkpointed to blob storage, enabling recovery after failures
+5. When instances are added or removed, partitions are automatically rebalanced
+
+**Example Configuration (Azure Functions):**
+```csharp
+// Azure Functions automatically uses EventProcessorClient under the hood
+// when using EventHubTrigger with proper configuration
+[FunctionName("ProcessTelemetry")]
+public async Task Run(
+    [EventHubTrigger("telemetry-hub", 
+     Connection = "EventHubConnection",
+     ConsumerGroup = "telemetry-processors")] EventData[] events,
+    ILogger log)
+{
+    foreach (var eventData in events)
+    {
+        // Process event
+    }
+    // Checkpointing is handled automatically
+}
+```
+
+#### Alternative Approaches (Not Recommended for This Scenario)
+
+| Approach | Why It's Not Ideal |
+|----------|-------------------|
+| **Multiple Consumer Groups (one function per group)** | Allows independent consumption of the same events but doesn't provide automatic partition distribution or ensure single-instance processing per partition |
+| **Direct Receivers with Manual Partition Assignment** | Requires manual partition assignment and doesn't automatically handle instance failures or rebalancing when instances are added/removed |
+| **EventHubTrigger with maxBatchSize=1** | Controls batch size for processing, not partition distribution; doesn't ensure partitions are distributed among multiple instances |
+
+> **Exam Tip:** When you need to process Event Hub events using multiple Azure Functions instances while ensuring each partition is processed by only one instance at a time, use **EventProcessorClient with a consumer group and blob storage for checkpointing**. This combination provides automatic partition distribution, single-instance-per-partition guarantee, and reliable checkpoint-based recovery.
 
 ## 4. Data Integration Model: Push-Pull
 
