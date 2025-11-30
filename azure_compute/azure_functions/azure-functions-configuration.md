@@ -354,6 +354,170 @@ public static async Task<IActionResult> Run(
 
 ---
 
+##### HTTP Trigger Authorization Levels
+
+Azure Functions HTTP triggers support different authorization levels to control access to the function. The `authLevel` property in `function.json` (or the `AuthorizationLevel` enum in C# attributes) determines what keys, if any, are required to invoke the function.
+
+**Authorization Levels:**
+
+| Level | Description | Key Required |
+|-------|-------------|--------------|
+| `anonymous` | No authentication required. Any request can trigger the function. | None |
+| `function` | A function-specific API key is required. Each function has its own unique key. | Function key |
+| `admin` | The master key (host key) is required. Provides access to all functions in the app. | Master/Host key |
+
+**Key Characteristics:**
+
+| Level | Security | Use Case |
+|-------|----------|----------|
+| **anonymous** | ❌ No protection | Public APIs, webhooks from external services, testing |
+| **function** | ✅ Function-level protection | Most production HTTP endpoints, per-function access control |
+| **admin** | ✅✅ App-level protection | Administrative endpoints, operations affecting the entire app |
+
+**Configuration Examples:**
+
+```json
+// function.json - Anonymous access (no key required)
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "authLevel": "anonymous",
+      "methods": ["get"]
+    }
+  ]
+}
+
+// function.json - Function key required
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "authLevel": "function",
+      "methods": ["get", "post"]
+    }
+  ]
+}
+
+// function.json - Admin/Master key required
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "authLevel": "admin",
+      "methods": ["post"]
+    }
+  ]
+}
+```
+
+**C# Attribute Examples:**
+
+```csharp
+// Anonymous access
+[HttpTrigger(AuthorizationLevel.Anonymous, "get")]
+
+// Function key required
+[HttpTrigger(AuthorizationLevel.Function, "get", "post")]
+
+// Admin key required
+[HttpTrigger(AuthorizationLevel.Admin, "post")]
+```
+
+**How to Pass Keys:**
+
+Keys can be passed to the function in two ways:
+1. **Query string parameter**: `?code=<API_KEY>`
+2. **HTTP header**: `x-functions-key: <API_KEY>`
+
+**Example Requests:**
+
+```bash
+# Anonymous - no key needed
+curl https://myapp.azurewebsites.net/api/publicfunction
+
+# Function level - with function key
+curl "https://myapp.azurewebsites.net/api/myfunction?code=<FUNCTION_KEY>"
+
+# Or using header
+curl -H "x-functions-key: <FUNCTION_KEY>" https://myapp.azurewebsites.net/api/myfunction
+
+# Admin level - with master key
+curl -H "x-functions-key: <MASTER_KEY>" https://myapp.azurewebsites.net/api/adminfunction
+```
+
+**Best Practices:**
+- Use `function` level for most production HTTP endpoints
+- Use `anonymous` only when the endpoint needs to be publicly accessible or when using alternative authentication (e.g., Azure AD, API Management)
+- Reserve `admin` level for administrative or management operations only
+- Consider using Azure API Management or Azure AD for more robust authentication scenarios
+
+---
+
+##### Practice Question: HTTP Trigger Authorization Level
+
+**Question:**
+
+You need to create an Azure Functions HTTP trigger that requires authentication. The function should only accept requests with a valid function key. Which authorization level should you configure?
+
+**Options:**
+
+A) user
+
+B) admin
+
+C) function ✅
+
+D) anonymous
+
+---
+
+**Correct Answer: C) function**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) user** | ❌ Incorrect - The `user` authorization level is not a valid option for HTTP trigger authorization in Azure Functions. The valid levels are `anonymous`, `function`, and `admin` for controlling access to HTTP-triggered functions. |
+| **B) admin** | ❌ Incorrect - The `admin` authorization level requires the master key (host key) which provides access to all functions in the app. This is more permissive than needed and should be reserved for administrative operations only. It doesn't provide function-specific authentication. |
+| **C) function** | ✅ **Correct** - The `function` authorization level requires a function-specific API key to be provided in the request. This provides authentication at the function level, allowing different keys for different functions while maintaining security. |
+| **D) anonymous** | ❌ Incorrect - The `anonymous` authorization level allows any request to trigger the function without requiring any authentication or API keys, which does not meet the requirement for authentication with a valid function key. |
+
+**Visual Comparison:**
+
+```
+Authorization Level: anonymous
+├── Key Required: None
+├── Security: ❌ No protection
+└── Use Case: Public endpoints
+
+Authorization Level: function ✅
+├── Key Required: Function-specific key
+├── Security: ✅ Function-level protection
+└── Use Case: Most production HTTP endpoints
+
+Authorization Level: admin
+├── Key Required: Master/Host key
+├── Security: ✅✅ App-level protection
+└── Use Case: Administrative operations only
+
+Authorization Level: user
+├── ❌ NOT A VALID OPTION
+└── Does not exist in Azure Functions
+```
+
+**Reference:** [Azure Functions HTTP trigger - Authorization keys](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger#authorization-keys)
+
+---
+
 #### Timer Trigger
 
 ```json
