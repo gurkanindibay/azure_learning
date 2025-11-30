@@ -23,6 +23,7 @@
   - [Blue-Green Deployments](#blue-green-deployments)
   - [Traffic Splitting](#traffic-splitting)
 - [Comparison with Other Services](#comparison-with-other-services)
+- [Dynamic Sessions](#dynamic-sessions)
 - [Common Use Cases](#common-use-cases)
 - [Limitations and Constraints](#limitations-and-constraints)
 - [Best Practices](#best-practices)
@@ -508,6 +509,57 @@ az containerapp revision deactivate --revision myapp--v1
 | **Microservices** | Excellent | Not designed for it |
 | **Triggers** | HTTP, KEDA | 70+ built-in triggers |
 | **Best For** | Long-running services | Event-driven functions |
+
+## Dynamic Sessions
+
+Azure Container Apps **dynamic sessions** provide instant access to secure, sandboxed environments designed specifically for running untrusted code at scale.
+
+### Key Characteristics
+
+- **Hyper-V Isolation**: Industry-standard Hyper-V isolation provides strong security boundaries between sessions
+- **Sandboxed Environments**: Each session runs in a completely isolated environment
+- **Scale Support**: Designed to handle running untrusted code at scale
+- **Session Types**: Supports both Python code interpreter sessions and custom container sessions
+
+### Session Types
+
+| Session Type | Description | Use Case |
+|--------------|-------------|----------|
+| **Python Code Interpreter** | Pre-configured Python environment | Data analysis, ML inference, code execution |
+| **Custom Container** | Bring your own container image | Custom runtimes, specialized tools |
+
+### When to Use Dynamic Sessions
+
+✅ **Use Dynamic Sessions When:**
+- Running untrusted code from users
+- Executing code that needs strong isolation
+- Building multi-tenant code execution platforms
+- Creating interactive coding environments (notebooks, REPLs)
+- Running AI-generated code safely
+
+❌ **Not Suitable For:**
+- Long-running services (use regular Container Apps)
+- Trusted application code
+- Standard microservices workloads
+
+### Comparison: Running Untrusted Code at Scale
+
+| Solution | Hyper-V Isolation | Sandboxing | Session Management | Untrusted Code Support |
+|----------|-------------------|------------|-------------------|------------------------|
+| **Azure Container Apps Dynamic Sessions** | ✅ Yes | ✅ Strong | ✅ Built-in | ✅ Designed for it |
+| **Azure Kubernetes Service (Pod Security Policies)** | ❌ No | ⚠️ Kubernetes-level only | ❌ Manual | ⚠️ Limited |
+| **Azure App Service (Isolated Plan)** | ❌ No | ⚠️ Network isolation only | ❌ Not applicable | ❌ Not designed for it |
+| **Azure Container Instances** | ✅ Yes (pod level) | ⚠️ Basic | ❌ Limited | ⚠️ Lacks specialized features |
+
+> **Exam Tip**: When a question asks about running containers with strong isolation for executing untrusted code at scale with Hyper-V isolation and support for custom containers, **Azure Container Apps dynamic sessions** is the correct answer. Other options like AKS pod security policies, App Service isolated plans, or ACI container groups do not provide the same level of sandboxing and session management capabilities.
+
+### Benefits Over Alternatives
+
+1. **vs. AKS with Pod Security Policies**: Pod security policies in AKS provide security constraints at the Kubernetes level but do not offer Hyper-V isolation or the specialized sandboxing required for untrusted code execution.
+
+2. **vs. App Service with Isolated Plan**: The isolated service plan provides network isolation for App Service but does not offer Hyper-V isolation or support for running untrusted code in sandboxed container environments.
+
+3. **vs. Azure Container Instances**: ACI provides Hyper-V isolation at the pod level but lacks the specialized sandboxing features and session management capabilities required for running untrusted code at scale.
 
 ## Common Use Cases
 
