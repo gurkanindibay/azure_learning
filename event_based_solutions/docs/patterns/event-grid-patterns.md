@@ -422,6 +422,81 @@ Region 1 (Primary):                    Region 2 (Secondary):
 └─────────┘ └─────────┘ └─────────┘
 ```
 
+### Exam Scenario: Routing Events by Multiple Criteria
+
+**Scenario**: A company needs to route events from multiple Azure services to different processing endpoints based on event type and resource location. Events from resources in the West US region should be processed by a specific Azure Function.
+
+**Question**: Which Event Grid feature should you use?
+
+**Answer**: **Configure advanced filtering with multiple filter conditions using AND operation** ✓
+
+**Why Advanced Filtering with AND Operations?**
+
+Advanced filtering allows combining multiple conditions with AND operations, enabling filtering by both event type and resource properties like location, meeting the requirement for routing based on multiple criteria.
+
+**Implementation Example**:
+```json
+{
+    "filter": {
+        "includedEventTypes": ["Microsoft.Storage.BlobCreated", "Microsoft.Storage.BlobDeleted"],
+        "advancedFilters": [
+            {
+                "operatorType": "StringContains",
+                "key": "subject",
+                "values": ["westus"]
+            },
+            {
+                "operatorType": "StringIn",
+                "key": "data.location",
+                "values": ["westus", "West US"]
+            }
+        ]
+    }
+}
+```
+
+**Why NOT Other Options?**
+
+| Option | Why It Doesn't Work |
+|--------|---------------------|
+| **CloudEvents schema with extension attributes** | Extension attributes are for adding custom data to events, not for filtering. The filtering mechanism remains the same regardless of schema choice. |
+| **Subject filtering with `Subject begins with /westus/`** | Subject filtering alone cannot filter by event type, and the subject format depends on the event source. This approach doesn't provide the flexibility needed for filtering by multiple criteria. |
+| **Event type filtering with separate subscriptions per region** | Event type filtering alone cannot filter by resource location, and creating separate subscriptions for each region would require the event source to publish to multiple topics, which isn't scalable. |
+
+### Event Grid Filtering Types Summary
+
+| Filter Type | Description | Use Case |
+|-------------|-------------|----------|
+| **Event Type** | Filter based on the type of event | When you only need specific event types |
+| **Subject** | Filter using prefix/suffix matching on subject | When routing based on resource path structure |
+| **Advanced Filters** | Complex filtering with multiple operators | When combining multiple criteria (AND operations) |
+
+### Advanced Filter Operators
+
+```
+┌────────────────────────────────────────────────────────────┐
+│ Advanced Filter Operators:                                 │
+│                                                            │
+│ String Operators:                                          │
+│ • StringIn / StringNotIn                                   │
+│ • StringBeginsWith / StringEndsWith                        │
+│ • StringContains / StringNotContains                       │
+│                                                            │
+│ Number Operators:                                          │
+│ • NumberGreaterThan / NumberGreaterThanOrEquals            │
+│ • NumberLessThan / NumberLessThanOrEquals                  │
+│ • NumberIn / NumberNotIn / NumberInRange                   │
+│                                                            │
+│ Boolean Operators:                                         │
+│ • BoolEquals                                               │
+│                                                            │
+│ Null Check:                                                │
+│ • IsNullOrUndefined / IsNotNull                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Key Takeaway**: When you need to filter events by multiple criteria (such as event type AND location), use **advanced filtering** with AND operations. This provides the flexibility to combine multiple conditions without requiring changes to the event source or creating multiple topics/subscriptions.
+
 ---
 
 ## 9. Domain Events Pattern
