@@ -794,3 +794,33 @@ The other options are incorrect because:
 **Reference**: 
 - [Products in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-add-products)
 - [Advanced request throttling with Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-sample-flexible-throttling)
+
+### Question 7: High-Volume IoT Telemetry with Auto-Scaling
+
+**Scenario**: You are developing an API solution using Azure API Management. The solution must support high-volume IoT telemetry data ingestion with automatic scaling based on traffic, while minimizing costs.
+
+**Question**: Which tier should you choose?
+
+**Options**:
+- Developer
+- Consumption ✓
+- Premium
+- Basic v2
+
+**Answer**: Consumption
+
+**Explanation**: 
+The **Consumption tier** is the correct choice because it automatically scales based on traffic and bills per execution, making it ideal for variable traffic patterns like IoT telemetry data while minimizing costs. Key benefits for this scenario:
+- **Auto-scaling**: Scales from 0 to handle any volume of traffic automatically
+- **Pay-per-use pricing**: Only pay for actual API calls (~$3.50 per million executions)
+- **No fixed monthly cost**: Perfect for variable/unpredictable traffic patterns
+- **Serverless architecture**: No infrastructure management required
+
+The other options are incorrect because:
+- **Developer tier**: The Developer tier is for non-production use cases and evaluations only. It doesn't offer an SLA, cannot scale automatically based on traffic (limited to 1 non-scalable unit), and is not suitable for production workloads.
+- **Premium tier**: The Premium tier supports high-volume workloads but requires manual scaling configuration and has significantly higher fixed costs (~$2,800/month per unit), which doesn't meet the requirement to minimize costs.
+- **Basic v2 tier**: The Basic v2 tier is designed for development and testing scenarios. While it has an SLA, it doesn't automatically scale based on traffic like the Consumption tier does.
+
+**Reference**: 
+- [Azure API Management pricing](https://azure.microsoft.com/en-us/pricing/details/api-management/)
+- [Azure API Management tiers](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
