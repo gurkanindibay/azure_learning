@@ -6,8 +6,9 @@
 3. [Subscription Keys](#subscription-keys)
 4. [Certificates](#certificates)
 5. [Simple Usage Examples](#simple-usage-examples)
-6. [Operational Best Practices](#operational-best-practices)
-7. [Practice Questions](#practice-questions)
+6. [Networking Configurations](#networking-configurations)
+7. [Operational Best Practices](#operational-best-practices)
+8. [Practice Questions](#practice-questions)
 
 ## Purpose
 Azure API Manager (API Management) is the turnkey service on Microsoft Azure that lets teams publish, secure, transform, maintain, and monitor APIs. It is designed to sit between consumers (internal applications, partners, or external developers) and backend services, applying consistent security, routing, and transformation policies without touching the target APIs.
@@ -526,6 +527,85 @@ Total: ~$33,687/month
 ⚠️ **Multi-region**: Premium tier only  
 ⚠️ **VNet**: Standard tier and above  
 
+## Networking Configurations
+
+Azure API Management offers multiple networking options to control how clients connect to your API gateway and how the gateway connects to backend services.
+
+### Networking Options Overview
+
+| Configuration | Inbound Access | Outbound Access | Tier Requirements | Use Case |
+|--------------|----------------|-----------------|-------------------|----------|
+| **No VNet (Default)** | Public | Public | All tiers | Simple public APIs |
+| **Private Endpoint** | Private (via PE) | Public | Developer, Basic, Standard, Premium | Private client access with public backends |
+| **External VNet Mode** | Public | VNet-routed | Standard, Premium | Public APIs with private backends |
+| **Internal VNet Mode** | VNet only | VNet only | Premium | Fully private API infrastructure |
+
+### Private Endpoints
+
+Private Endpoints provide a secure, private network path for inbound client connections to API Management.
+
+**Key Characteristics**:
+- Creates a private IP address within your VNet for API Management
+- Clients connect via the private IP instead of the public endpoint
+- **Inbound traffic**: Flows through the Private Endpoint (private network)
+- **Outbound traffic**: API Management can still reach public backend APIs over the internet
+- Supported in Developer, Basic, Standard, and Premium tiers
+- ❌ **Not supported** in Consumption tier
+
+**When to Use**:
+- Client applications must access API Management through private network only
+- Backend APIs remain publicly accessible
+- Need to restrict inbound access while maintaining outbound connectivity
+
+### External Virtual Network Mode
+
+External VNet mode deploys API Management into a VNet subnet while keeping the gateway endpoint publicly accessible.
+
+**Key Characteristics**:
+- API Management gateway remains publicly accessible from the internet
+- Outbound connections can reach resources within the VNet and peered networks
+- Requires Standard or Premium tier
+- Gateway, developer portal, and management endpoint are public
+
+**When to Use**:
+- Need to access private backend services within a VNet
+- Public API access is acceptable or required
+- Hybrid scenarios with both public and private backends
+
+### Internal Virtual Network Mode
+
+Internal VNet mode makes API Management accessible only from within the virtual network.
+
+**Key Characteristics**:
+- **Both inbound and outbound** traffic is restricted to the VNet
+- Gateway endpoint is only accessible from within the VNet or connected networks
+- Requires Premium tier
+- All components (gateway, developer portal, management) are private
+- ❌ **Cannot** access public backend APIs without additional configuration (e.g., NAT gateway, firewall)
+
+**When to Use**:
+- Fully private API infrastructure requirements
+- All backends are within the same VNet or connected networks
+- Strict network isolation requirements
+
+### Consumption Tier Limitations
+
+The Consumption tier has significant networking limitations:
+- ❌ No Private Endpoint support
+- ❌ No virtual network integration
+- ❌ No IP restrictions beyond built-in policies
+- Only suitable for publicly accessible, serverless API scenarios
+
+### Choosing the Right Configuration
+
+```
+Do clients need private-only access?
+├── No → Use default (no VNet) or External VNet mode
+└── Yes → Do backends need to be public?
+    ├── Yes → Use Private Endpoint
+    └── No → Use Internal VNet mode (Premium tier required)
+```
+
 ## Operational Best Practices
 - **Monitor usage**: Configure Application Insights or the built-in analytics to track latency, throttled requests, and subscription failures.
 - **Automate deployment**: Use Azure Resource Manager (ARM) templates or Bicep to publish APIs/policies and manage environments consistently.
@@ -655,3 +735,32 @@ The other options are incorrect because:
 **Reference**: 
 - [Explore Microsoft Graph - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/microsoft-graph/)
 - [Manually add an API - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/explore-api-management/5-create-api-portal)
+
+### Question 5: Private Network Access with Public Backends
+
+**Scenario**: A company needs to ensure their Azure API Management instance can only be accessed through a private network connection from client applications, while backend APIs remain publicly accessible.
+
+**Question**: Which networking configuration should you implement?
+
+**Options**:
+- Deploy API Management to the Consumption tier with IP restrictions
+- Configure API Management with external virtual network mode
+- Deploy a Private Endpoint for inbound connectivity to API Management ✓
+- Configure API Management with internal virtual network mode
+
+**Answer**: Deploy a Private Endpoint for inbound connectivity to API Management
+
+**Explanation**: 
+A Private Endpoint creates an alternative network path for inbound client connections to API Management while allowing the instance to make outbound connections to public backend APIs. This is the ideal solution when:
+- Clients must connect through a private network
+- Backend APIs need to remain publicly accessible
+- You need to separate inbound and outbound network requirements
+
+The other options are incorrect because:
+- **Consumption tier with IP restrictions**: The Consumption tier doesn't support Private Endpoints or virtual network integration, so it cannot provide private network connectivity as required.
+- **External virtual network mode**: External VNet mode keeps the API Management endpoint publicly accessible, which doesn't meet the requirement for private network access only. It's designed for scenarios where you need to reach private backends while keeping the gateway public.
+- **Internal virtual network mode**: Internal VNet mode would make API Management only accessible from within the virtual network for both inbound and outbound traffic, preventing access to public backend APIs without additional configuration (like NAT gateway or firewall).
+
+**Reference**: 
+- [Use a virtual network with Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/virtual-network-concepts)
+- [Connect privately to API Management using a private endpoint](https://learn.microsoft.com/en-us/azure/api-management/private-endpoint)
