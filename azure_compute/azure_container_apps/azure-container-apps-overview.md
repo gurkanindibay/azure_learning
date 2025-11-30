@@ -16,6 +16,7 @@
   - [Ingress Configuration](#ingress-configuration)
   - [Internal vs External Ingress](#internal-vs-external-ingress)
   - [Custom Domains and Certificates](#custom-domains-and-certificates)
+  - [Private Endpoints and Private Link](#private-endpoints-and-private-link)
 - [Dapr Integration](#dapr-integration)
 - [Secrets Management](#secrets-management)
 - [Observability](#observability)
@@ -289,6 +290,31 @@ az containerapp hostname bind \
 - Managed certificates (free, auto-renewed)
 - Custom certificates from Key Vault
 - Upload your own certificates
+
+### Private Endpoints and Private Link
+
+**Private endpoints** provide secure, private connectivity to Azure Container Apps in workload profile environments from services like Azure Front Door.
+
+**Key Points:**
+- Private endpoints are generally available for **workload profile environments** in Azure Container Apps
+- Enable direct connection from Azure Front Door over a **private link** instead of the public internet
+- Ensure secure private connectivity without exposing traffic to the public internet
+
+**When to Use Private Endpoints:**
+- Connecting Azure Front Door to Container Apps with private connectivity
+- Securing backend container apps that should not be publicly accessible
+- Meeting compliance requirements for private network traffic
+
+**Private Connectivity Options Comparison:**
+
+| Solution | Private Connectivity | Use Case |
+|----------|---------------------|----------|
+| **Private Endpoints with Private Link** | ✅ Yes - Direct private connection | Azure Front Door to Container Apps private connectivity |
+| **Network Security Groups (NSGs)** | ❌ No - Only filters traffic | Controls traffic flow, but cannot establish private connectivity |
+| **Azure Firewall** | ❌ No - Network security only | Provides security but doesn't create private connectivity channels |
+| **Service Endpoints** | ❌ No - Not supported for this scenario | Provides access to Azure services over backbone, but not for Front Door to Container Apps |
+
+> **Exam Tip**: When a question asks about ensuring **private connectivity from Azure Front Door to Azure Container Apps** in a workload profile environment, the correct answer is **Private endpoints with private link connection**. Network security groups only filter existing traffic. Azure Firewall provides network security but doesn't create private connectivity. Service endpoints don't support this specific scenario between Azure Front Door and Container Apps.
 
 ## Dapr Integration
 
