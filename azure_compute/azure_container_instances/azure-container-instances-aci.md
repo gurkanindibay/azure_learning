@@ -37,6 +37,9 @@
   - [Networking](#networking)
   - [DNS Name Labels and FQDN](#dns-name-labels-and-fqdn)
   - [Storage Volumes](#storage-volumes)
+    - [Azure Files Volume Mount Parameters](#azure-files-volume-mount-parameters)
+    - [Common Exam Question: Azure Files Volume Mount](#common-exam-question-azure-files-volume-mount)
+    - [Volume Types Comparison](#volume-types-comparison)
   - [Environment Variables](#environment-variables)
   - [Secret Volumes](#secret-volumes)
 - [Deployment Methods](#deployment-methods)
@@ -703,8 +706,41 @@ az container show \
 
 ### Storage Volumes
 
+Azure Container Instances supports mounting volumes to containers for persistent storage. The most common volume type is **Azure Files**, which provides fully managed file shares accessible via the SMB protocol.
+
+#### Azure Files Volume Mount Parameters
+
+To mount an Azure Files share to containers in a container group with read-write permissions, you must configure **all four** required parameters:
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `--azure-file-volume-share-name` | Name of the Azure Files share | ✅ Yes |
+| `--azure-file-volume-account-name` | Storage account name | ✅ Yes |
+| `--azure-file-volume-account-key` | Storage account key for authentication | ✅ Yes |
+| `--azure-file-volume-mount-path` | Path where the share is mounted in containers | ✅ Yes |
+
+#### Common Exam Question: Azure Files Volume Mount
+
+**Question:** You need to mount an Azure Files share to multiple containers in an Azure Container Instances container group. The containers must access the share with read-write permissions. What should you configure?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| Create the container group with `--azure-file-volume-share-name` and `--azure-file-volume-mount-path` parameters only | ❌ No | Missing the storage account name and account key parameters prevents authentication to the Azure Files share, causing the volume mount to fail during container deployment. |
+| **Create the container group with `--azure-file-volume-share-name`, `--azure-file-volume-account-name`, `--azure-file-volume-account-key`, and `--azure-file-volume-mount-path` parameters** | ✅ **Yes** | These parameters correctly configure an Azure Files volume mount in a container group, providing the share name, storage account credentials, and mount path required for containers to access the file share with appropriate permissions. |
+| Create the container group with `--secrets-mount-path` and `--azure-file-volume-account-name` parameters only | ❌ No | The `--secrets-mount-path` parameter is for mounting secrets as volumes, not file shares, and missing the share name and account key prevents proper Azure Files configuration. |
+| Create the container group with `--gitrepo-url`, `--gitrepo-mount-path`, and `--azure-file-volume-account-key` parameters | ❌ No | The gitrepo parameters are for mounting Git repositories as volumes, not Azure Files shares, and mixing these parameters creates an invalid configuration for file share access. |
+
+#### Volume Types Comparison
+
+| Volume Type | Purpose | Parameters |
+|-------------|---------|------------|
+| **Azure Files** | Persistent file share storage | `--azure-file-volume-*` |
+| **Secret** | Mount secrets as files | `--secrets-mount-path` |
+| **Git Repo** | Clone Git repository as volume | `--gitrepo-url`, `--gitrepo-mount-path` |
+| **Empty Directory** | Ephemeral shared storage between containers | Defined in YAML |
+
 ```bash
-# Mount Azure Files share
+# Mount Azure Files share (all required parameters)
 az container create \
   --resource-group myResourceGroup \
   --name mycontainer \
