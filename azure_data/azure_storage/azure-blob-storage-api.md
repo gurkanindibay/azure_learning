@@ -24,11 +24,17 @@
   - [C# Examples](#c-examples)
   - [Python Examples](#python-examples)
   - [Azure CLI Examples](#azure-cli-examples)
+- [Working with Blob Leases](#working-with-blob-leases)
+  - [What is a Blob Lease?](#what-is-a-blob-lease)
+  - [Lease Duration Rules](#lease-duration-rules)
+  - [Acquiring a Blob Lease](#acquiring-a-blob-lease)
+  - [Lease Operations](#lease-operations)
 - [Exam Question Analysis](#exam-question-analysis)
   - [Question: Uploading Files to Azure Blob Storage](#question-uploading-files-to-azure-blob-storage)
   - [Question: Uploading a File to Azure Blob Storage (SDK Methods)](#question-uploading-a-file-to-azure-blob-storage-sdk-methods)
   - [Question: Setting Custom Metadata on a Blob](#question-setting-custom-metadata-on-a-blob)
   - [Question: Implementing Retry Logic for Large File Uploads](#question-implementing-retry-logic-for-large-file-uploads)
+  - [Question: Implementing Blob Lease for Exclusive Write Access](#question-implementing-blob-lease-for-exclusive-write-access)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -560,6 +566,187 @@ az storage blob upload \
     --content-type "image/jpeg" \
     --metadata Resolution=1920x1080 ColorProfile=sRGB \
     --account-name mystorageaccount
+```
+
+## Working with Blob Leases
+
+### What is a Blob Lease?
+
+A **blob lease** establishes a lock on a blob for exclusive write and delete access. Leases are useful in distributed applications where multiple processes might try to modify the same blob simultaneously.
+
+**Key Characteristics:**
+- Provides exclusive write/delete access to a blob
+- Can be acquired, renewed, released, or broken
+- Prevents other clients from modifying or deleting the blob while leased
+- Essential for implementing pessimistic concurrency control
+
+**Use Cases:**
+- Distributed file processing where only one process should write at a time
+- Preventing race conditions in multi-instance applications
+- Implementing distributed locks across Azure services
+- Coordinating access in leader election scenarios
+
+### Lease Duration Rules
+
+| Duration Type | Range | Behavior |
+|---------------|-------|----------|
+| **Finite Lease** | 15-60 seconds | Automatically expires after the specified duration |
+| **Infinite Lease** | -1 (TimeSpan value) | Never expires, must be explicitly released or broken |
+
+**Important:**
+- Finite leases must be between **15 and 60 seconds**
+- Values outside this range will throw an exception
+- Infinite leases require explicit `ReleaseAsync()` or `BreakAsync()` to release
+
+### Acquiring a Blob Lease
+
+To acquire a lease on a blob, you must:
+1. Create a `BlobLeaseClient` from the `BlobClient` using `GetBlobLeaseClient()`
+2. Call `AcquireAsync()` on the lease client with the desired duration
+
+**✅ Correct Way to Acquire a Lease:**
+
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs.Models;
+
+// Get the blob client
+BlobClient blobClient = new BlobClient(connectionString, "my-container", "myfile.txt");
+
+// Create a lease client from the blob client
+BlobLeaseClient leaseClient = blobClient.GetBlobLeaseClient();
+
+// Acquire a 45-second lease (valid range: 15-60 seconds for finite leases)
+Response<BlobLease> lease = await leaseClient.AcquireAsync(TimeSpan.FromSeconds(45));
+
+Console.WriteLine($"Lease ID: {lease.Value.LeaseId}");
+Console.WriteLine($"Lease Time: {lease.Value.LeaseTime}");
+```
+
+**❌ Common Mistakes:**
+
+```csharp
+// ❌ WRONG: BlobClient doesn't have AcquireLeaseAsync method
+Response<BlobLease> lease = await blobClient.AcquireLeaseAsync(TimeSpan.FromSeconds(45));
+
+// ❌ WRONG: BlobLeaseClient constructor doesn't accept TimeSpan
+BlobLeaseClient leaseClient = new BlobLeaseClient(blobClient, TimeSpan.FromSeconds(45));
+Response<BlobLease> lease = await leaseClient.AcquireAsync();
+
+// ❌ WRONG: Unnecessary conditions on lease acquisition
+BlobLeaseClient leaseClient = blobClient.GetBlobLeaseClient();
+Response<BlobLease> lease = await leaseClient.AcquireAsync(
+    TimeSpan.FromSeconds(45), 
+    conditions: new BlobLeaseRequestConditions { IfMatch = new ETag("*") }
+);
+```
+
+### Lease Operations
+
+| Operation | Method | Description |
+|-----------|--------|-------------|
+| **Acquire** | `AcquireAsync(TimeSpan)` | Obtain a new lease on the blob |
+| **Renew** | `RenewAsync()` | Extend the lease before it expires |
+| **Change** | `ChangeAsync(proposedId)` | Change the lease ID |
+| **Release** | `ReleaseAsync()` | Explicitly release the lease |
+| **Break** | `BreakAsync()` | Break a lease, allowing others to acquire |
+
+**Complete Example with All Operations:**
+
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs.Models;
+
+public class BlobLeaseManager
+{
+    private readonly BlobClient _blobClient;
+    private BlobLeaseClient _leaseClient;
+    private string _leaseId;
+
+    public BlobLeaseManager(string connectionString, string containerName, string blobName)
+    {
+        _blobClient = new BlobClient(connectionString, containerName, blobName);
+        _leaseClient = _blobClient.GetBlobLeaseClient();
+    }
+
+    // Acquire a finite lease (15-60 seconds)
+    public async Task<string> AcquireLeaseAsync(int durationSeconds = 30)
+    {
+        var lease = await _leaseClient.AcquireAsync(TimeSpan.FromSeconds(durationSeconds));
+        _leaseId = lease.Value.LeaseId;
+        return _leaseId;
+    }
+
+    // Acquire an infinite lease (never expires)
+    public async Task<string> AcquireInfiniteLeaseAsync()
+    {
+        var lease = await _leaseClient.AcquireAsync(TimeSpan.FromSeconds(-1));
+        _leaseId = lease.Value.LeaseId;
+        return _leaseId;
+    }
+
+    // Renew the lease before it expires
+    public async Task RenewLeaseAsync()
+    {
+        await _leaseClient.RenewAsync();
+    }
+
+    // Release the lease when done
+    public async Task ReleaseLeaseAsync()
+    {
+        await _leaseClient.ReleaseAsync();
+        _leaseId = null;
+    }
+
+    // Break the lease (allows others to acquire immediately or after break period)
+    public async Task BreakLeaseAsync(int breakPeriodSeconds = 0)
+    {
+        await _leaseClient.BreakAsync(TimeSpan.FromSeconds(breakPeriodSeconds));
+        _leaseId = null;
+    }
+
+    // Modify blob with lease
+    public async Task UpdateBlobWithLeaseAsync(Stream content)
+    {
+        if (string.IsNullOrEmpty(_leaseId))
+            throw new InvalidOperationException("Must acquire lease first");
+
+        // Use the lease ID in conditions for write operations
+        await _blobClient.UploadAsync(content, new BlobUploadOptions
+        {
+            Conditions = new BlobRequestConditions { LeaseId = _leaseId }
+        });
+    }
+}
+```
+
+**Using the Lease Manager:**
+
+```csharp
+var leaseManager = new BlobLeaseManager(connectionString, "documents", "report.pdf");
+
+try
+{
+    // Acquire a 45-second lease
+    string leaseId = await leaseManager.AcquireLeaseAsync(45);
+    Console.WriteLine($"Acquired lease: {leaseId}");
+
+    // Perform exclusive operations
+    await using var content = new MemoryStream(Encoding.UTF8.GetBytes("Updated content"));
+    await leaseManager.UpdateBlobWithLeaseAsync(content);
+
+    // Renew if operation takes longer than expected
+    await leaseManager.RenewLeaseAsync();
+
+    // Release when done
+    await leaseManager.ReleaseLeaseAsync();
+}
+catch (RequestFailedException ex) when (ex.ErrorCode == "LeaseAlreadyPresent")
+{
+    Console.WriteLine("Blob is already leased by another client");
+}
 ```
 
 ## Exam Question Analysis
@@ -1132,6 +1319,121 @@ public class BlobUploadService
 
 ---
 
+### Question: Implementing Blob Lease for Exclusive Write Access
+
+**Scenario:**
+You are implementing blob lease functionality in a distributed application to ensure exclusive write access. You need to acquire a lease that automatically expires after 45 seconds if not renewed.
+
+**Question:**
+Which code should you use to acquire a blob lease?
+
+---
+
+#### Option A: ❌ INCORRECT
+
+```csharp
+Response<BlobLease> lease = await blobClient.AcquireLeaseAsync(TimeSpan.FromSeconds(45));
+```
+
+**Why This Is Wrong:**
+- ❌ The `BlobClient` class does **NOT** have an `AcquireLeaseAsync` method
+- ❌ Lease operations require creating a `BlobLeaseClient` first
+- ❌ Must use `GetBlobLeaseClient()` to get the lease client before acquiring a lease
+
+**The Correct Pattern:**
+```csharp
+// First get a BlobLeaseClient, then acquire the lease
+BlobLeaseClient leaseClient = blobClient.GetBlobLeaseClient();
+Response<BlobLease> lease = await leaseClient.AcquireAsync(TimeSpan.FromSeconds(45));
+```
+
+---
+
+#### Option B: ❌ INCORRECT
+
+```csharp
+BlobLeaseClient leaseClient = blobClient.GetBlobLeaseClient();
+Response<BlobLease> lease = await leaseClient.AcquireAsync(
+    TimeSpan.FromSeconds(45), 
+    conditions: new BlobLeaseRequestConditions { IfMatch = new ETag("*") }
+);
+```
+
+**Why This Is Wrong:**
+- ⚠️ Adding `IfMatch` condition with wildcard ETag (`*`) to a lease acquisition is **unnecessary**
+- ❌ Lease acquisition does **NOT** require ETag matching conditions
+- ❌ May cause issues or unexpected behavior since lease operations don't use ETag matching
+- ⚠️ This adds complexity without benefit
+
+**When to Use Conditions:**
+- Conditions like `IfMatch` are used for **blob operations** (upload, delete), not for lease acquisition
+- Lease acquisition doesn't need to verify blob content hasn't changed
+
+---
+
+#### Option C: ❌ INCORRECT
+
+```csharp
+BlobLeaseClient leaseClient = new BlobLeaseClient(blobClient, TimeSpan.FromSeconds(45));
+Response<BlobLease> lease = await leaseClient.AcquireAsync();
+```
+
+**Why This Is Wrong:**
+- ❌ The `BlobLeaseClient` constructor does **NOT** accept a `TimeSpan` parameter for lease duration
+- ❌ The constructor signature is `BlobLeaseClient(BlobClient client, string leaseId = null)`
+- ❌ The lease duration must be specified in the `AcquireAsync()` method, not in the constructor
+- ⚠️ This code would result in a compile-time error
+
+**Correct Constructor Usage:**
+```csharp
+// Constructor only accepts BlobClient and optional lease ID
+BlobLeaseClient leaseClient = new BlobLeaseClient(blobClient); // No TimeSpan!
+// or
+BlobLeaseClient leaseClient = new BlobLeaseClient(blobClient, existingLeaseId);
+```
+
+---
+
+#### Option D: ✅ CORRECT
+
+```csharp
+BlobLeaseClient leaseClient = blobClient.GetBlobLeaseClient();
+Response<BlobLease> lease = await leaseClient.AcquireAsync(TimeSpan.FromSeconds(45));
+```
+
+**Why This Is Correct:**
+- ✅ Correctly creates a `BlobLeaseClient` using `GetBlobLeaseClient()` method
+- ✅ Acquires a lease with a 45-second duration using `AcquireAsync()`
+- ✅ 45 seconds falls within the valid range of **15-60 seconds** for finite leases
+- ✅ Uses the proper two-step process: get lease client → acquire lease
+
+**Key Points:**
+- `GetBlobLeaseClient()` creates a lease client bound to the blob
+- `AcquireAsync(TimeSpan)` acquires the lease with specified duration
+- Valid finite lease durations: 15-60 seconds
+- Use `-1` (TimeSpan.FromSeconds(-1)) for infinite leases
+
+---
+
+### Key Takeaways for Blob Leases
+
+| Aspect | Details |
+|--------|---------|
+| **Create Lease Client** | Use `blobClient.GetBlobLeaseClient()` |
+| **Acquire Lease** | Use `leaseClient.AcquireAsync(TimeSpan duration)` |
+| **Finite Lease Duration** | 15-60 seconds |
+| **Infinite Lease** | `TimeSpan.FromSeconds(-1)` |
+| **Release Lease** | `leaseClient.ReleaseAsync()` |
+
+**For the Exam, Remember:**
+- 🎯 `BlobClient` does NOT have lease methods - must use `BlobLeaseClient`
+- 🎯 Use `GetBlobLeaseClient()` to create the lease client
+- 🎯 Lease duration goes in `AcquireAsync()`, NOT in the constructor
+- 🎯 Valid finite lease: 15-60 seconds
+- 🎯 Don't add unnecessary conditions to lease acquisition
+
+---
+
 ### Key Takeaways
 
 | Method | Purpose | Use For |
@@ -1222,6 +1524,37 @@ public class BlobUploadService
    ContentDisposition = "inline; filename=\"report.pdf\""
    ```
 
+### Blob Lease Best Practices
+
+1. **Use Finite Leases for Auto-Expiration**: Set lease duration between 15-60 seconds for auto-expiration
+   ```csharp
+   // ✅ Good - auto-expires if process crashes
+   await leaseClient.AcquireAsync(TimeSpan.FromSeconds(30));
+   ```
+
+2. **Renew Leases Before Expiration**: Keep the lease active during long operations
+   ```csharp
+   // Renew before the 45-second lease expires
+   await leaseClient.RenewAsync();
+   ```
+
+3. **Release Leases When Done**: Free up resources for other clients
+   ```csharp
+   await leaseClient.ReleaseAsync();
+   ```
+
+4. **Handle Lease Conflicts Gracefully**: Catch exceptions when lease is held by others
+   ```csharp
+   try
+   {
+       await leaseClient.AcquireAsync(TimeSpan.FromSeconds(30));
+   }
+   catch (RequestFailedException ex) when (ex.ErrorCode == "LeaseAlreadyPresent")
+   {
+       // Handle conflict - blob is leased by another client
+   }
+   ```
+
 ## References
 
 - [Set Blob Metadata - REST API](https://learn.microsoft.com/en-us/rest/api/storageservices/set-blob-metadata)
@@ -1230,4 +1563,6 @@ public class BlobUploadService
 - [Azure.Storage.Blobs - .NET SDK](https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs)
 - [Manage blob properties and metadata with .NET](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata)
 - [azure-storage-blob - Python SDK](https://learn.microsoft.com/en-us/python/api/azure-storage-blob/)
+- [Lease Blob - REST API](https://learn.microsoft.com/en-us/rest/api/storageservices/lease-blob)
+- [BlobLeaseClient Class - .NET SDK](https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs.specialized.blobleaseclient)
 
