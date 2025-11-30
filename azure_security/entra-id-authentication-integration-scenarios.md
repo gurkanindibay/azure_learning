@@ -801,7 +801,7 @@ Most secure flow for server-side web applications:
 8. App: Validate tokens and create session
 ```
 
-#### Authorization Code Flow with PKCE (for SPAs and Mobile Apps)
+#### Authorization Code Flow with PKCE (Proof Key for Code Exchange (pronounced "pixy"))(for SPAs and Mobile Apps)
 
 Enhanced security for public clients:
 
