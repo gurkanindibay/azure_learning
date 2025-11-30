@@ -54,6 +54,13 @@
   - [DefaultAzureCredential Authentication Order](#defaultazurecredential-authentication-order)
   - [Complete Example: Accessing Key Vault Secret in ASP.NET Core](#complete-example-accessing-key-vault-secret-in-aspnet-core)
   - [Key Takeaway](#key-takeaway-1)
+- [14. Implementing Key Rotation in Azure Key Vault](#14-implementing-key-rotation-in-azure-key-vault)
+  - [Scenario](#scenario-2)
+  - [Question](#question-2)
+  - [Answer Options Analysis](#answer-options-analysis-1)
+  - [Summary: Key Vault Key Management Commands](#summary-key-vault-key-management-commands)
+  - [Key Rotation Best Practices](#key-rotation-best-practices)
+  - [Key Takeaway](#key-takeaway-2)
 
 
 ## 1. Introduction
@@ -618,6 +625,92 @@ app.Run();
 - Automatically uses the most appropriate credential based on the environment
 - Follows Azure security best practices
 - Supports Managed Identity in production (no secrets to manage)
+
+---
+
+## 14. Implementing Key Rotation in Azure Key Vault
+
+### Scenario
+You need to implement key rotation for an RSA key stored in Azure Key Vault. The new key version should be generated based on the key's rotation policy.
+
+### Question
+Which Azure CLI command should you use?
+
+### Answer Options Analysis
+
+#### ✅ Correct Answer: `az keyvault key rotate`
+
+```bash
+az keyvault key rotate --vault-name myvault --name mykey
+```
+
+**Why this is correct:**
+- The `rotate` command specifically generates a new version of an existing key based on the key's rotation policy
+- This is exactly what's required for implementing key rotation
+- Azure Key Vault maintains all previous versions, allowing for seamless transition
+- The rotation policy defines the key type, size, and other attributes for the new version
+
+---
+
+#### ❌ Incorrect: `az keyvault key create`
+
+```bash
+az keyvault key create --vault-name myvault --name mykey --kty RSA
+```
+
+**Why this is WRONG:**
+- The `create` command would attempt to create a new key with the same name
+- This would fail because the key already exists
+- It doesn't generate a new version of an existing key
+- Use `create` only for creating new keys, not for rotating existing ones
+
+---
+
+#### ❌ Incorrect: `az keyvault key import`
+
+```bash
+az keyvault key import --vault-name myvault --name mykey --pem-file newkey.pem
+```
+
+**Why this is WRONG:**
+- The `import` command is used to import an externally generated key into Key Vault
+- It doesn't generate a new version based on the rotation policy
+- Use this when you have a key generated outside of Azure that you want to store in Key Vault
+
+---
+
+#### ❌ Incorrect: `az keyvault key backup`
+
+```bash
+az keyvault key backup --vault-name myvault --name mykey --file backup.key
+```
+
+**Why this is WRONG:**
+- The `backup` command creates a backup file of the key for disaster recovery purposes
+- It doesn't generate a new version or implement rotation
+- Use this for creating backups that can be restored to another Key Vault in the same Azure geography
+
+---
+
+### Summary: Key Vault Key Management Commands
+
+| Command | Purpose | Use Case |
+|---------|---------|----------|
+| `az keyvault key rotate` | Generate new key version | ✅ Key rotation based on rotation policy |
+| `az keyvault key create` | Create a new key | Initial key creation |
+| `az keyvault key import` | Import external key | Bringing externally generated keys into Key Vault |
+| `az keyvault key backup` | Create backup file | Disaster recovery preparation |
+
+### Key Rotation Best Practices
+
+1. **Set up rotation policy** - Define automatic rotation schedule using `az keyvault key rotation-policy update`
+2. **Use versioning** - Azure Key Vault maintains all key versions, enabling gradual migration
+3. **Monitor rotation** - Set up alerts for rotation events using Azure Monitor
+4. **Test rotation** - Validate that applications can handle key version changes gracefully
+
+### Key Takeaway
+
+**Use `az keyvault key rotate`** to generate a new version of an existing key based on its rotation policy. This command is specifically designed for key rotation scenarios and ensures compliance with security best practices for cryptographic key management.
 
 ---
 
