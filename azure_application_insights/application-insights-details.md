@@ -51,6 +51,12 @@
   - [Telemetry Pipeline Order](#telemetry-pipeline-order)
   - [Key Takeaway](#key-takeaway-6)
   - [Related Learning Resources](#related-learning-resources-6)
+- [Question 8: Identifying Service Source of Telemetry Using cloudRole](#question-8-identifying-service-source-of-telemetry-using-cloudrole)
+  - [Explanation](#explanation-7)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-6)
+  - [Cloud Role Configuration Examples](#cloud-role-configuration-examples)
+  - [Key Takeaway](#key-takeaway-7)
+  - [Related Learning Resources](#related-learning-resources-7)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -722,3 +728,122 @@ To ensure a custom telemetry processor runs **after adaptive sampling**, registe
 - Filtering and preprocessing telemetry in Application Insights SDK
 - Telemetry processors in Application Insights
 - Application Insights for ASP.NET Core applications
+
+---
+
+## Question 8: Identifying Service Source of Telemetry Using cloudRole
+
+**Scenario:**
+You have an Application Insights resource receiving telemetry from multiple services.
+
+**Requirement:**
+You need to identify which service generated specific telemetry items in the Azure portal.
+
+**Question:**
+Which property should you configure?
+
+**Options:**
+
+1. **Set `appInsights.defaultClient.config.instrumentationKey` to a unique value per service** ❌ *Incorrect*
+2. **Set `appInsights.defaultClient.context.device.id` to a unique service identifier** ❌ *Incorrect*
+3. **Set `appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole]` to a unique service name** ✅ *Correct*
+4. **Set `appInsights.defaultClient.context.user.accountId` to the service name** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Set cloudRole tag to a unique service name**
+
+The **cloudRole** tag properly identifies the source of telemetry in Application Insights, allowing you to distinguish between different services in:
+- **Application Map**: Visual representation shows each service as a separate node
+- **Telemetry filtering**: Filter telemetry by service in the Azure portal
+- **Performance analysis**: Analyze metrics per service
+- **Distributed tracing**: Track requests across multiple services
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Different Instrumentation Keys** | While using different instrumentation keys would separate telemetry, it would require multiple Application Insights resources, increasing costs and complexity compared to using cloudRole tags. |
+| **device.id** | The `device.id` property is intended for identifying specific device instances, not services or applications. It's not the appropriate property for distinguishing between different services. |
+| **user.accountId** | The `user.accountId` property is meant for identifying user accounts, not services. Using it for service identification would interfere with actual user tracking and analytics. |
+
+### Cloud Role Configuration Examples
+
+**Node.js Example:**
+```javascript
+const appInsights = require('applicationinsights');
+appInsights.setup('<your-instrumentation-key>').start();
+
+// Set the cloud role name
+appInsights.defaultClient.context.tags[
+  appInsights.defaultClient.context.keys.cloudRole
+] = 'OrderService';
+```
+
+**C# / .NET Example:**
+```csharp
+using Microsoft.ApplicationInsights.Extensibility;
+
+public class CloudRoleNameInitializer : ITelemetryInitializer
+{
+    public void Initialize(ITelemetry telemetry)
+    {
+        telemetry.Context.Cloud.RoleName = "OrderService";
+        telemetry.Context.Cloud.RoleInstance = Environment.MachineName;
+    }
+}
+
+// Register in Startup.cs or Program.cs
+services.AddSingleton<ITelemetryInitializer, CloudRoleNameInitializer>();
+```
+
+**Java Example:**
+```java
+import com.microsoft.applicationinsights.TelemetryClient;
+import com.microsoft.applicationinsights.telemetry.TelemetryContext;
+
+TelemetryClient telemetryClient = new TelemetryClient();
+TelemetryContext context = telemetryClient.getContext();
+context.getCloud().setRole("OrderService");
+```
+
+### Cloud Role Properties Comparison
+
+| Property | Purpose | Use Case |
+|----------|---------|----------|
+| **Cloud.RoleName** | Identifies the service/component | Distinguishing microservices in Application Map |
+| **Cloud.RoleInstance** | Identifies specific instance | Distinguishing between scaled instances of same service |
+| **InstrumentationKey** | Routes telemetry to AI resource | Separate resources for different environments |
+| **device.id** | Identifies device | Client-side telemetry from browsers/mobile apps |
+| **user.accountId** | Identifies user account | User analytics and tracking |
+
+### Application Map Visualization
+
+With properly configured cloudRole tags, the Application Map displays:
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Web Frontend  │────▶│  Order Service  │────▶│ Payment Service │
+│  (cloudRole)    │     │  (cloudRole)    │     │  (cloudRole)    │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │    Database     │
+                        │  (dependency)   │
+                        └─────────────────┘
+```
+
+### Key Takeaway
+
+When multiple services send telemetry to a single Application Insights resource, use the **cloudRole** tag to identify each service. This approach:
+- Maintains a **single Application Insights resource** (cost-effective)
+- Enables **service-level filtering** in the portal
+- Provides **visual separation** in Application Map
+- Supports **distributed tracing** across services
+
+### Related Learning Resources
+- Application Map in Application Insights
+- Set cloud role name in Application Insights
+- Telemetry context in Application Insights
+- Distributed tracing and correlation
