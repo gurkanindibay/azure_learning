@@ -17,6 +17,7 @@
   - [Internal vs External Ingress](#internal-vs-external-ingress)
   - [Custom Domains and Certificates](#custom-domains-and-certificates)
   - [Private Endpoints and Private Link](#private-endpoints-and-private-link)
+  - [Custom VNet Integration](#custom-vnet-integration)
 - [Dapr Integration](#dapr-integration)
 - [Secrets Management](#secrets-management)
 - [Observability](#observability)
@@ -316,6 +317,35 @@ az containerapp hostname bind \
 | **Service Endpoints** | ❌ No - Not supported for this scenario | Provides access to Azure services over backbone, but not for Front Door to Container Apps |
 
 > **Exam Tip**: When a question asks about ensuring **private connectivity from Azure Front Door to Azure Container Apps** in a workload profile environment, the correct answer is **Private endpoints with private link connection**. Network security groups only filter existing traffic. Azure Firewall provides network security but doesn't create private connectivity. Service endpoints don't support this specific scenario between Azure Front Door and Container Apps.
+
+### Custom VNet Integration
+
+When deploying Azure Container Apps into a custom virtual network (VNet), you must ensure the subnet has sufficient IP addresses to support the infrastructure and scaling requirements.
+
+**Minimum Subnet Size Requirements:**
+
+| Environment Type | Minimum Subnet Size | Explanation |
+|-----------------|---------------------|-------------|
+| **Consumption Plan** | **/23** | Provides sufficient IP addresses for Container Apps infrastructure and scaling needs |
+| **Workload Profiles** | **/27** | Smaller subnet sufficient for workload profile environments |
+
+**Key Points:**
+- The **consumption plan** requires a **/23 subnet minimum** when integrating with a custom VNet
+- The **/23** subnet provides approximately 512 IP addresses, necessary for infrastructure components and container scaling
+- **Workload profiles environments** have a smaller requirement of **/27** minimum
+- Larger subnets (like /21) will work but are not the minimum required
+- Smaller subnets (like /24 or /27) are **insufficient** for consumption plan environments
+
+**Subnet Size Comparison for Consumption Plan:**
+
+| Subnet Size | IP Addresses | Sufficient for Consumption Plan? | Explanation |
+|-------------|--------------|----------------------------------|-------------|
+| **/21** | ~2,048 | ✅ Yes (larger than required) | Works but exceeds minimum requirement |
+| **/23** | ~512 | ✅ Yes (minimum required) | **Correct minimum** for consumption plan environments |
+| **/24** | ~256 | ❌ No | Too small - insufficient IP addresses for Container Apps infrastructure |
+| **/27** | ~32 | ❌ No | Minimum for workload profiles only, not consumption plan |
+
+> **Exam Tip**: When asked about the **minimum subnet size for Azure Container Apps with custom VNet integration using the consumption plan**, the answer is **/23**. Don't confuse this with **/27**, which is the minimum for workload profiles environments. The consumption plan requires more IP addresses to support its infrastructure and scaling capabilities.
 
 ## Dapr Integration
 
