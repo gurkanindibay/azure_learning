@@ -136,6 +136,36 @@ Blob soft delete protects individual blobs by retaining deleted blobs for a spec
 - Deleted blobs can be restored within retention period
 - Works with all blob types (block, append, page)
 
+**Restoring Soft-Deleted Blobs:**
+
+To restore a soft-deleted blob within the retention period, use the **Undelete Blob** operation:
+
+```bash
+# Azure CLI - List soft-deleted blobs
+az storage blob list \
+    --account-name <storage-account-name> \
+    --container-name <container-name> \
+    --include d
+
+# Azure CLI - Undelete a blob
+az storage blob undelete \
+    --account-name <storage-account-name> \
+    --container-name <container-name> \
+    --name <blob-name>
+```
+
+```csharp
+// .NET SDK - Undelete a blob
+BlobClient blobClient = containerClient.GetBlobClient("myblob.txt");
+await blobClient.UndeleteAsync();
+```
+
+> ⚠️ **Important Restrictions on Soft-Deleted Blobs:**
+> - Soft-deleted blobs **cannot be used as a source** for copy operations
+> - They must be **explicitly undeleted** before they can be copied or accessed
+> - Creating a new blob with the same name does **not** restore the soft-deleted version
+> - Lifecycle management policies **cannot** restore soft-deleted blobs
+
 **Enable via Azure CLI:**
 ```bash
 az storage account blob-service-properties update \
@@ -237,6 +267,38 @@ Point-in-time restore protects against accidental deletion or corruption by enab
 **Key Distinction:**
 - **Point-in-time restore**: Restores data **to a previous state** (time-based restoration)
 - **Soft delete**: Recovers **deleted items** (deletion recovery)
+
+---
+
+### Question: Restoring a Soft-Deleted Blob
+
+**Question:**
+You have a blob container with soft delete enabled for a 30-day retention period. A blob was deleted 20 days ago and you need to restore it. Which method should you use?
+
+**Options:**
+- A) Call the Undelete Blob operation on the soft-deleted blob using its name ✅
+- B) Copy the soft-deleted blob to a new blob using the Copy Blob operation
+- C) Use lifecycle management policy to automatically restore soft-deleted blobs
+- D) Create a new blob with the same name to automatically restore the soft-deleted version
+
+**Correct Answer: A) Call the Undelete Blob operation on the soft-deleted blob using its name**
+
+**Explanation:**
+The **Undelete Blob** operation is specifically designed to restore soft-deleted blobs within the retention period. Since the blob was deleted 20 days ago and the retention is 30 days, it can be successfully restored using this operation.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Copy Blob operation** | Soft-deleted blobs **cannot be used as a source** for copy operations. They must first be undeleted before they can be copied |
+| **Lifecycle management policy** | Lifecycle management policies **cannot restore** soft-deleted blobs. They can only transition, delete, or manage blobs based on conditions, not perform restore operations |
+| **Create new blob with same name** | Creating a new blob with the same name **doesn't restore** the soft-deleted blob; it creates an entirely new blob. The soft-deleted version remains separate and must be explicitly undeleted |
+
+**Key Takeaway:**
+Soft-deleted blobs exist in a special state where they:
+- Can be listed (with include deleted flag)
+- Can be undeleted using the Undelete Blob operation
+- **Cannot** be read, copied, or used until explicitly undeleted
 
 ## Best Practices
 
