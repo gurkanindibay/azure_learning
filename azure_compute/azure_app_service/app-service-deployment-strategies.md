@@ -60,6 +60,14 @@
   - [Common Kudu REST API Endpoints](#common-kudu-rest-api-endpoints)
   - [ZIP API for Deployments](#zip-api-for-deployments)
   - [Practice Question: Kudu ZIP API](#practice-question-kudu-zip-api)
+- [WebJobs for Background Processing](#webjobs-for-background-processing)
+  - [What are WebJobs?](#what-are-webjobs)
+  - [Types of WebJobs](#types-of-webjobs)
+  - [WebJobs vs Other Background Processing Options](#webjobs-vs-other-background-processing-options)
+  - [Key Requirements for Continuous WebJobs](#key-requirements-for-continuous-webjobs)
+  - [WebJobs Features](#webjobs-features)
+  - [Creating a Continuous WebJob](#creating-a-continuous-webjob)
+  - [Practice Question: Background Processing for App Service](#practice-question-background-processing-for-app-service)
 - [Additional Resources](#additional-resources)
 - [Related Topics](#related-topics)
 
@@ -1043,6 +1051,140 @@ What is the REST API command for uploading a ZIP file into an Azure App Service 
    - **Correct**: The Zip API uses `PUT /api/zip/{path}/` to upload and expand ZIP files into the specified folder. For example, `PUT /api/zip/site/wwwroot/` uploads and extracts a ZIP file to the wwwroot folder.
 
 **Reference:** [Kudu REST API - GitHub](https://github.com/projectkudu/kudu/wiki/REST-API)
+
+---
+
+## WebJobs for Background Processing
+
+### What are WebJobs?
+
+WebJobs is a feature of Azure App Service that enables you to run programs or scripts in the same instance as a web app, API app, or mobile app. WebJobs can run alongside your main application without requiring additional Azure resources.
+
+### Types of WebJobs
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **Continuous** | Runs continuously in an endless loop. Automatically restarts if stopped. | Background processing, queue monitoring, real-time data processing |
+| **Triggered** | Runs on a schedule (CRON) or on-demand | Scheduled tasks, batch processing, periodic cleanup jobs |
+
+### WebJobs vs Other Background Processing Options
+
+| Feature | WebJobs with AlwaysOn | IHostedService | Azure Functions (Timer) | Logic Apps |
+|---------|----------------------|----------------|------------------------|------------|
+| **Runs Within App Service** | ✅ Yes | ✅ Yes | ❌ Separate resource | ❌ Separate service |
+| **Continuous Execution** | ✅ Yes | ✅ Yes | ❌ Schedule-based | ❌ Trigger-based |
+| **Auto-Restart on Crash** | ✅ Yes | ❌ No guarantee | N/A | N/A |
+| **Remote Debugging** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No |
+| **Idle Timeout Prevention** | ✅ With AlwaysOn | ❌ Requires AlwaysOn | N/A | N/A |
+| **Additional Cost** | ❌ No extra cost | ❌ No extra cost | ✅ Separate billing | ✅ Separate billing |
+
+### Key Requirements for Continuous WebJobs
+
+1. **AlwaysOn Setting**: Must be enabled to prevent the app from being unloaded after 20 minutes of inactivity
+2. **Basic Tier or Higher**: AlwaysOn is only available in Basic, Standard, Premium, and Isolated tiers
+3. **Proper Configuration**: WebJob must be configured as "Continuous" type
+
+### WebJobs Features
+
+- **Automatic Restart**: Continuous WebJobs automatically restart if they stop or crash
+- **Remote Debugging**: Attach Visual Studio debugger to running WebJobs
+- **Logging**: Built-in logging through Kudu dashboard
+- **SDK Support**: WebJobs SDK provides triggers and bindings similar to Azure Functions
+- **File Watching**: Can monitor files and directories for changes
+
+### Creating a Continuous WebJob
+
+```bash
+# Deploy a WebJob using Azure CLI
+az webapp webjob continuous create \
+  --resource-group <group-name> \
+  --name <app-name> \
+  --webjob-name <webjob-name> \
+  --webjob-type continuous \
+  --file-path <path-to-zip>
+```
+
+### Practice Question: Background Processing for App Service
+
+**Question:**
+
+You need to implement background processing for an Azure App Service web app. The background tasks should run continuously, restart automatically if they stop, and support remote debugging. Which feature should you use?
+
+**Options:**
+- A) Background tasks using IHostedService
+- B) Azure Functions with Timer trigger
+- C) Azure Logic Apps with recurrence trigger
+- D) WebJobs with AlwaysOn enabled
+
+---
+
+### Answer: D ✅
+
+**Correct Answer: D) WebJobs with AlwaysOn enabled**
+
+---
+
+### Detailed Explanation
+
+**Option A - Background tasks using IHostedService**
+- **Incorrect**: IHostedService provides background task capabilities within ASP.NET Core applications
+- However, it doesn't guarantee automatic restart after crashes
+- Requires AlwaysOn to prevent idle timeout, otherwise the app (including hosted services) unloads after 20 minutes
+- If the hosted service crashes, the application might need to be restarted manually
+- WebJobs provides a more robust solution for continuous background processing
+
+**Option B - Azure Functions with Timer trigger**
+- **Incorrect**: Azure Functions with Timer triggers run on schedules (CRON expressions) rather than continuously
+- Timer-triggered functions execute at specific intervals, not in an endless loop
+- Would require a separate Azure resource (Function App) rather than running within the App Service web app
+- Not suitable for continuous background processing requirements
+
+**Option C - Azure Logic Apps with recurrence trigger**
+- **Incorrect**: Logic Apps are designed for workflow orchestration, not continuous background processing
+- Run as a completely separate Azure service
+- Recurrence trigger runs workflows on a schedule, not continuously
+- Not suitable for continuous background processing within an App Service web app
+- Better suited for integrating multiple services and systems
+
+**Option D - WebJobs with AlwaysOn enabled** ✅
+- **Correct**: WebJobs with AlwaysOn enabled provide the complete solution:
+  - **Continuous background processing**: Runs in an endless loop
+  - **Automatic restart**: Automatically restarts if the WebJob stops or crashes
+  - **Remote debugging**: Full support for attaching debuggers from Visual Studio
+  - **Integrated with App Service**: Runs in the same instance, no additional Azure resources needed
+  - **AlwaysOn**: Prevents the app from being unloaded due to inactivity
+
+---
+
+### Key Takeaways
+
+1. **WebJobs are Ideal for App Service Background Processing**
+   - Run in the same instance as your web app
+   - No additional Azure resources or costs
+   - Full integration with App Service features
+
+2. **AlwaysOn is Critical for Continuous WebJobs**
+   - Without AlwaysOn, the app unloads after 20 minutes of inactivity
+   - AlwaysOn requires Basic tier or higher
+   - Ensures continuous WebJobs never stop due to idle timeout
+
+3. **IHostedService Limitations**
+   - Part of the main application process
+   - No built-in automatic restart on crash
+   - Still requires AlwaysOn for idle timeout prevention
+
+4. **Azure Functions and Logic Apps are Separate Services**
+   - Require additional Azure resources
+   - Not suitable for "within App Service" requirements
+   - Timer triggers are schedule-based, not continuous
+
+---
+
+### References
+
+- [Run background tasks with WebJobs in Azure App Service](https://learn.microsoft.com/azure/app-service/webjobs-create)
+- [WebJobs SDK](https://learn.microsoft.com/azure/app-service/webjobs-sdk-how-to)
+- [Configure App Service apps](https://learn.microsoft.com/azure/app-service/configure-common)
 
 ---
 
