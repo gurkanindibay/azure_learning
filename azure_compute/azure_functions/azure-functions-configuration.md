@@ -29,6 +29,7 @@ Azure Functions use configuration files to define function behavior, triggers, b
 - [Common Configuration Scenarios](#common-configuration-scenarios)
 - [Securing Configuration](#securing-configuration)
 - [Deployment Considerations](#deployment-considerations)
+  - [Practice Question: Deploying Functions with Custom Dependencies](#practice-question-deploying-functions-with-custom-dependencies)
 - [Troubleshooting](#troubleshooting)
 - [Additional Resources](#additional-resources)
 - [Custom Handlers](#custom-handlers)
@@ -1578,6 +1579,65 @@ az functionapp config appsettings set \
 1. Navigate to Function App
 2. Go to Configuration > Application settings
 3. Add/edit settings
+
+### Practice Question: Deploying Functions with Custom Dependencies
+
+**Scenario:**
+You need to deploy an Azure Functions app with custom dependencies that are not available in the default runtime environment. The app requires a specific version of a system library.
+
+**Question:**
+Which deployment method should you use?
+
+**Options:**
+
+1. ❌ Deploy using Azure DevOps with the dependencies specified in the YAML pipeline configuration
+   - **Incorrect**: Azure DevOps pipelines can automate deployment but cannot install system libraries into the Functions runtime environment. The pipeline runs in a separate build agent, not the target environment.
+
+2. ❌ Use remote build with additional build steps specified in a custom deployment script
+   - **Incorrect**: Remote build can handle application dependencies but cannot install system libraries or modify the underlying OS image. It's limited to what can be done within the build container's permissions.
+
+3. ✅ Deploy the function app using a custom container image that includes all required dependencies
+   - **Correct**: Using a custom container allows you to include any system libraries, dependencies, and specific versions required by your function app, providing full control over the runtime environment.
+
+4. ❌ Deploy using ZIP deployment with the dependencies included in the package.json or requirements.txt file
+   - **Incorrect**: ZIP deployment with package files only handles application-level dependencies that can be installed via package managers, not system libraries or specific versions of system components that need OS-level installation.
+
+---
+
+**Additional Context: Azure Functions Deployment Methods for Custom Dependencies**
+
+| Deployment Method | Application Dependencies | System Libraries | Full Runtime Control |
+|-------------------|--------------------------|------------------|----------------------|
+| **Custom Container** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **ZIP Deployment** | ✅ Yes (via package managers) | ❌ No | ❌ No |
+| **Remote Build** | ✅ Yes (via package managers) | ❌ No | ❌ No |
+| **Azure DevOps** | ✅ Yes (via package managers) | ❌ No | ❌ No |
+
+**When to Use Custom Containers:**
+- You need specific versions of system libraries (e.g., libgdiplus, OpenCV)
+- Your function requires native dependencies not available in the default runtime
+- You need full control over the OS environment
+- You want to ensure consistency between development and production environments
+- You need to install tools or runtimes not supported by default
+
+**Azure CLI Example - Deploy Function App with Custom Container:**
+```bash
+# Create a function app with a custom container
+az functionapp create \
+  --name MyFunctionApp \
+  --resource-group MyResourceGroup \
+  --storage-account mystorageaccount \
+  --plan MyPremiumPlan \
+  --deployment-container-image-name myacr.azurecr.io/myfunctionimage:v1
+
+# Update the container image
+az functionapp config container set \
+  --name MyFunctionApp \
+  --resource-group MyResourceGroup \
+  --image myacr.azurecr.io/myfunctionimage:v2
+```
+
+**Note**: Custom container deployment requires a **Premium plan** or **Dedicated (App Service) plan**. The Consumption plan does not support custom containers.
 
 ## Troubleshooting
 
