@@ -18,6 +18,7 @@ Azure Functions use configuration files to define function behavior, triggers, b
   - [Overview](#overview-2)
   - [Basic Structure](#basic-structure)
   - [Common Configuration Sections](#common-configuration-sections)
+  - [Practice Question: Reducing Telemetry Volume from Host.Aggregator](#practice-question-reducing-telemetry-volume-from-hostaggregator)
 - [local.settings.json](#localsettingsjson)
   - [Overview](#overview-3)
   - [Structure](#structure-1)
@@ -1102,6 +1103,68 @@ With this configuration:
   }
 }
 ```
+
+##### Practice Question: Reducing Telemetry Volume from Host.Aggregator
+
+**Scenario:**
+You are developing an Azure Functions app with Application Insights integration. Under load, you notice excessive telemetry volume from the Host.Aggregator category. You need to reduce this telemetry while maintaining function execution monitoring.
+
+**Question:**
+What should you configure in host.json?
+
+**Options:**
+
+1. ✅ Set the log level for Host.Aggregator to Warning and keep Host.Results at Information
+   - **Correct**: This configuration reduces telemetry from Host.Aggregator by only logging warnings and errors, while Host.Results continues to provide detailed execution information for monitoring, effectively balancing volume and visibility.
+
+2. ❌ Disable Host.Aggregator completely and rely only on Host.Results
+   - **Incorrect**: Completely disabling a telemetry category might cause loss of important diagnostic information. It's better to adjust log levels than to disable categories entirely.
+
+3. ❌ Set excludedTypes to ['Request'] in the sampling configuration
+   - **Incorrect**: Excluding Request types from sampling would affect all request telemetry, not just Host.Aggregator, and could impact the ability to monitor function executions properly.
+
+4. ❌ Configure maxTelemetryItemsPerSecond to 1 for all categories
+   - **Incorrect**: This applies a global limit that affects all telemetry types equally and doesn't specifically address the Host.Aggregator volume issue. It may also be too restrictive for proper monitoring.
+
+---
+
+**Correct Configuration Example:**
+```json
+{
+  "version": "2.0",
+  "logging": {
+    "logLevel": {
+      "default": "Information",
+      "Host.Aggregator": "Warning",
+      "Host.Results": "Information"
+    },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 20
+      }
+    }
+  }
+}
+```
+
+**Key Telemetry Categories in Azure Functions:**
+
+| Category | Description | Recommended Level |
+|----------|-------------|-------------------|
+| **Host.Results** | Function execution results (success/failure, duration) | Information |
+| **Host.Aggregator** | Aggregated metrics and statistics | Warning (to reduce volume) |
+| **Function** | Function-specific logs | Information or Warning |
+| **Host** | General host-level logs | Error or Warning |
+
+**Best Practices for Managing Telemetry Volume:**
+- Use category-specific log levels instead of global limits
+- Keep `Host.Results` at Information level for execution monitoring
+- Reduce `Host.Aggregator` to Warning when volume is excessive
+- Use sampling settings to control overall telemetry rate
+- Avoid completely disabling categories—adjust levels instead
+
+---
 
 ## local.settings.json
 
