@@ -45,6 +45,12 @@
   - [Sampling Methods Comparison](#sampling-methods-comparison)
   - [Key Takeaway](#key-takeaway-5)
   - [Related Learning Resources](#related-learning-resources-5)
+- [Question 7: Telemetry Processor Registration After Adaptive Sampling](#question-7-telemetry-processor-registration-after-adaptive-sampling)
+  - [Explanation](#explanation-6)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-5)
+  - [Telemetry Pipeline Order](#telemetry-pipeline-order)
+  - [Key Takeaway](#key-takeaway-6)
+  - [Related Learning Resources](#related-learning-resources-6)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -578,4 +584,141 @@ For **adaptive sampling** that automatically adjusts based on telemetry volume w
 ### Related Learning Resources
 - Sampling in Application Insights
 - Configure adaptive sampling for ASP.NET Core applications
+- Application Insights for ASP.NET Core applications
+
+---
+
+## Question 7: Telemetry Processor Registration After Adaptive Sampling
+
+**Scenario:**
+You are implementing a telemetry processor for Application Insights in a .NET application. The processor must run after adaptive sampling to enrich telemetry with custom properties.
+
+**Question:**
+Where should you register your custom processor?
+
+**Options:**
+
+1. **Register the processor in ApplicationInsights.config before the AdaptiveSamplingTelemetryProcessor element** ❌ *Incorrect*
+
+2. **Add the processor directly to TelemetryConfiguration.Active.TelemetryProcessors collection** ❌ *Incorrect*
+
+3. **Configure the processor as a telemetry initializer using `services.AddSingleton<ITelemetryInitializer, CustomProcessor>()`** ❌ *Incorrect*
+
+4. **Call `services.AddApplicationInsightsTelemetryProcessor<CustomProcessor>()` after configuring adaptive sampling in the service configuration** ✅ *Correct*
+
+### Explanation
+
+**Correct Answer: Call services.AddApplicationInsightsTelemetryProcessor<CustomProcessor>() after configuring adaptive sampling**
+
+```csharp
+// In Startup.cs or Program.cs
+services.AddApplicationInsightsTelemetry();
+
+// Configure adaptive sampling first
+services.ConfigureTelemetryModule<AdaptiveSamplingTelemetryProcessor>((module, o) => 
+{ 
+    module.MaxTelemetryItemsPerSecond = 5; 
+});
+
+// Add custom processor AFTER adaptive sampling configuration
+services.AddApplicationInsightsTelemetryProcessor<CustomProcessor>();
+```
+
+Adding the telemetry processor **after adaptive sampling configuration** ensures it runs in the correct order in the processor chain, allowing it to enrich telemetry that has already been sampled. This is the proper registration mechanism that:
+
+- **Guarantees correct execution order** in the telemetry pipeline
+- **Only processes telemetry that survives sampling** (efficient)
+- **Uses the recommended ASP.NET Core dependency injection pattern**
+- **Maintains proper lifecycle management** of the processor
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Register in ApplicationInsights.config before AdaptiveSamplingTelemetryProcessor** | Placing the processor **before** adaptive sampling would cause it to process **all telemetry before sampling occurs**, potentially adding properties to telemetry that gets dropped. This is inefficient and defeats the purpose of running after sampling. |
+| **Add directly to TelemetryConfiguration.Active.TelemetryProcessors** | Directly modifying the `TelemetryProcessors` collection **bypasses the proper registration mechanism** and doesn't guarantee the correct order relative to sampling processors. It also doesn't integrate well with dependency injection. |
+| **Configure as ITelemetryInitializer** | Telemetry initializers and processors serve **different purposes**. Initializers enrich telemetry **early in the pipeline** before any processing, while processors can filter and modify telemetry **later in the pipeline**. Only processors can run after sampling. |
+
+### Telemetry Pipeline Order
+
+Understanding the telemetry pipeline order is crucial for proper processor placement:
+
+```
+Telemetry Created
+       │
+       ▼
+┌─────────────────────────┐
+│  Telemetry Initializers │  ← Enrich ALL telemetry early
+│  (ITelemetryInitializer)│
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│  Telemetry Processors   │  ← Process in registration order
+│  (Chain)                │
+│  ┌───────────────────┐  │
+│  │ Processor 1       │  │  ← Runs first
+│  └─────────┬─────────┘  │
+│            ▼            │
+│  ┌───────────────────┐  │
+│  │ Adaptive Sampling │  │  ← Drops telemetry based on rate
+│  └─────────┬─────────┘  │
+│            ▼            │
+│  ┌───────────────────┐  │
+│  │ Custom Processor  │  │  ← Runs AFTER sampling (correct)
+│  └─────────┬─────────┘  │
+└────────────┼────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  Telemetry Channel      │  ← Sends to Application Insights
+└─────────────────────────┘
+```
+
+### Telemetry Initializers vs Telemetry Processors
+
+| Aspect | Telemetry Initializers | Telemetry Processors |
+|--------|----------------------|---------------------|
+| **Purpose** | Enrich telemetry with properties | Filter, modify, or drop telemetry |
+| **Execution Order** | Runs early, before processors | Runs later, in chain order |
+| **Can Filter/Drop** | ❌ No | ✅ Yes |
+| **Runs After Sampling** | ❌ No | ✅ Yes (if registered after) |
+| **Interface** | `ITelemetryInitializer` | `ITelemetryProcessor` |
+| **Use Case** | Add common properties to all telemetry | Conditional enrichment, filtering |
+
+### Custom Processor Example
+
+```csharp
+public class CustomProcessor : ITelemetryProcessor
+{
+    private readonly ITelemetryProcessor _next;
+
+    public CustomProcessor(ITelemetryProcessor next)
+    {
+        _next = next;
+    }
+
+    public void Process(ITelemetry item)
+    {
+        // This only processes telemetry that survived sampling
+        // Add custom properties to enrich the telemetry
+        if (item is ISupportProperties telemetryWithProperties)
+        {
+            telemetryWithProperties.Properties["CustomProperty"] = "CustomValue";
+            telemetryWithProperties.Properties["ProcessedAt"] = DateTime.UtcNow.ToString("o");
+        }
+
+        // Pass to the next processor in the chain
+        _next.Process(item);
+    }
+}
+```
+
+### Key Takeaway
+
+To ensure a custom telemetry processor runs **after adaptive sampling**, register it using **`services.AddApplicationInsightsTelemetryProcessor<CustomProcessor>()`** after the adaptive sampling configuration. This guarantees the processor only enriches telemetry that has already been sampled, improving efficiency and ensuring proper pipeline order.
+
+### Related Learning Resources
+- Filtering and preprocessing telemetry in Application Insights SDK
+- Telemetry processors in Application Insights
 - Application Insights for ASP.NET Core applications
