@@ -25,6 +25,7 @@
   - [Traffic Splitting](#traffic-splitting)
 - [Comparison with Other Services](#comparison-with-other-services)
 - [Dynamic Sessions](#dynamic-sessions)
+- [Workload Profiles (Consumption vs Dedicated)](#workload-profiles-consumption-vs-dedicated)
 - [GPU Workload Profiles](#gpu-workload-profiles)
 - [Common Use Cases](#common-use-cases)
 - [Limitations and Constraints](#limitations-and-constraints)
@@ -588,6 +589,93 @@ Azure Container Apps **dynamic sessions** provide instant access to secure, sand
 
 3. **vs. Azure Container Instances**: ACI provides Hyper-V isolation at the pod level but lacks the specialized sandboxing features and session management capabilities required for running untrusted code at scale.
 
+## Workload Profiles (Consumption vs Dedicated)
+
+Azure Container Apps offers two types of environment plans that determine resource allocation, pricing, and capabilities:
+
+### Consumption Plan
+
+The **Consumption plan** is the default serverless option with automatic scaling:
+
+- **Container Image Size Limit**: **8 GB maximum**
+- **Pay-per-use billing**: Only charged for active resource consumption
+- **Scale-to-zero**: Automatically scales down to zero replicas
+- **Shared infrastructure**: Resources are shared with other customers
+- **Best for**: Development, testing, and lightweight production workloads
+
+### Dedicated Workload Profiles
+
+**Dedicated workload profiles** provide reserved compute resources with enhanced capabilities:
+
+- **Container Image Size Limit**: **Up to available disk space** (supports images larger than 8 GB)
+- **Dedicated compute**: Reserved resources not shared with other customers
+- **Customizable profiles**: Choose from various CPU/memory combinations
+- **Enhanced performance**: Predictable performance without noisy neighbor effects
+- **Private endpoints support**: Available only in workload profile environments
+- **Best for**: Production workloads requiring larger images, consistent performance, or compliance requirements
+
+### Comparison: Consumption vs Dedicated Workload Profiles
+
+| Feature | Consumption Plan | Dedicated Workload Profiles |
+|---------|------------------|----------------------------|
+| **Container Image Size** | Max 8 GB | Up to available disk space |
+| **Billing Model** | Pay-per-second consumption | Reserved capacity + consumption |
+| **Scale-to-Zero** | ✅ Supported | ✅ Supported |
+| **Private Endpoints** | ❌ Not available | ✅ Available |
+| **Resource Isolation** | Shared infrastructure | Dedicated resources |
+| **Performance** | Variable (shared) | Predictable (dedicated) |
+| **KEDA Scaling** | ✅ Supported | ✅ Supported |
+
+### Choosing Between Plans
+
+**Use Consumption Plan When:**
+- Container images are under 8 GB
+- Cost optimization is a priority
+- Workload can tolerate variable performance
+- Development and testing scenarios
+
+**Use Dedicated Workload Profiles When:**
+- Container images exceed 8 GB (e.g., ML models, large applications)
+- Consistent performance is required
+- Private endpoint connectivity is needed
+- Compliance requires resource isolation
+
+> **Exam Tip**: When a question asks about limiting Azure Container Apps resource consumption with requirements for **container images larger than 8 GB** (e.g., 15 GB) AND **automatic scaling based on queue messages**, the correct answer is **Dedicated workload profiles with KEDA scale rules**. The consumption plan limits container images to 8 GB maximum. KEDA (Kubernetes Event-Driven Autoscaling) enables event-driven scaling based on queue messages, Service Bus, Event Hubs, and other external metrics. Other options like spot containers don't inherently support larger images or queue-based scaling, confidential containers focus on security rather than scaling, and Azure Functions integration with consumption plan still has the 8 GB image limit.
+
+### Example: Creating a Dedicated Workload Profile Environment
+
+```bash
+# Create environment with workload profiles enabled
+az containerapp env create \
+  --name myenv \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --enable-workload-profiles
+
+# Add a dedicated workload profile
+az containerapp env workload-profile add \
+  --name myenv \
+  --resource-group myResourceGroup \
+  --workload-profile-name dedicated-d4 \
+  --workload-profile-type D4 \
+  --min-nodes 1 \
+  --max-nodes 10
+
+# Deploy app with large image using dedicated profile and KEDA queue scaling
+az containerapp create \
+  --name myapp \
+  --resource-group myResourceGroup \
+  --environment myenv \
+  --workload-profile-name dedicated-d4 \
+  --image myregistry.azurecr.io/large-app:v1 \
+  --min-replicas 0 \
+  --max-replicas 20 \
+  --scale-rule-name queue-scaling \
+  --scale-rule-type azure-queue \
+  --scale-rule-metadata "queueName=myqueue" "queueLength=5" \
+  --scale-rule-auth "connection=queue-connection-secret"
+```
+
 ## GPU Workload Profiles
 
 Azure Container Apps supports **serverless GPU workload profiles** that provide access to GPU resources for machine learning and AI workloads without managing infrastructure.
@@ -698,12 +786,14 @@ az containerapp create \
 
 ### Resource Limits (Per Container)
 
-| Resource | Minimum | Maximum |
-|----------|---------|---------|
-| **CPU** | 0.25 vCPU | 4 vCPU |
-| **Memory** | 0.5 GiB | 8 GiB |
-| **Replicas** | 0 | 300 |
-| **Container Size** | N/A | 4 GB compressed |
+| Resource | Minimum | Maximum (Consumption) | Maximum (Dedicated) |
+|----------|---------|----------------------|---------------------|
+| **CPU** | 0.25 vCPU | 4 vCPU | Varies by profile |
+| **Memory** | 0.5 GiB | 8 GiB | Varies by profile |
+| **Replicas** | 0 | 300 | 300 |
+| **Container Image Size** | N/A | 8 GB | Up to available disk space |
+
+> **Note**: The container image size limit of 8 GB applies only to the Consumption plan. Dedicated workload profiles support larger container images, making them suitable for ML models, large applications, or scenarios requiring images exceeding 8 GB.
 
 ### Other Limitations
 
