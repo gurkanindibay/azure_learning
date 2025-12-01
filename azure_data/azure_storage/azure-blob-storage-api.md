@@ -35,6 +35,7 @@
   - [Question: Setting Custom Metadata on a Blob](#question-setting-custom-metadata-on-a-blob)
   - [Question: Implementing Retry Logic for Large File Uploads](#question-implementing-retry-logic-for-large-file-uploads)
   - [Question: Implementing Blob Lease for Exclusive Write Access](#question-implementing-blob-lease-for-exclusive-write-access)
+  - [Question: Storing Custom Application-Specific Data with Blobs](#question-storing-custom-application-specific-data-with-blobs)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -1431,6 +1432,164 @@ Response<BlobLease> lease = await leaseClient.AcquireAsync(TimeSpan.FromSeconds(
 - 🎯 Lease duration goes in `AcquireAsync()`, NOT in the constructor
 - 🎯 Valid finite lease: 15-60 seconds
 - 🎯 Don't add unnecessary conditions to lease acquisition
+
+---
+
+### Question: Storing Custom Application-Specific Data with Blobs
+
+**Scenario:**
+You need to store custom application-specific data with each blob in Azure Storage. The data should be retrievable without downloading the blob content.
+
+**Question:**
+What should you use?
+
+**Domain:** Develop for Azure storage
+
+---
+
+#### Option A: ❌ INCORRECT - Blob Snapshots
+
+**Why This Is Wrong:**
+- ❌ Blob snapshots create **read-only copies** of blobs at specific points in time
+- ❌ Snapshots are designed for **backup and versioning**, not for storing custom metadata
+- ❌ Each snapshot is a complete copy of the blob at that moment
+- ❌ Not designed for storing custom metadata with blobs
+
+**What Blob Snapshots Are For:**
+```csharp
+// Create a snapshot - creates a read-only copy of the blob
+BlobClient blobClient = containerClient.GetBlobClient("myfile.txt");
+Response<BlobSnapshotInfo> snapshot = await blobClient.CreateSnapshotAsync();
+
+// Access the snapshot
+string snapshotUri = $"{blobClient.Uri}?snapshot={snapshot.Value.Snapshot}";
+```
+
+**Use Cases for Snapshots:**
+- Creating point-in-time backups
+- Recovering from accidental overwrites or deletions
+- Maintaining historical versions of blobs
+
+---
+
+#### Option B: ✅ CORRECT - Blob Metadata
+
+**Why This Is Correct:**
+- ✅ Blob metadata consists of **name-value pairs** that can be stored with a blob
+- ✅ Metadata can be **retrieved without downloading** the blob content
+- ✅ Ideal for storing **custom application-specific data**
+- ✅ Supports up to 8 KB of metadata per blob
+
+**Example Usage:**
+```csharp
+// Set custom metadata
+await blobClient.SetMetadataAsync(new Dictionary<string, string>
+{
+    { "ApplicationId", "MyApp-12345" },
+    { "ProcessedBy", "ServiceA" },
+    { "Category", "Reports" },
+    { "CustomData", "any-application-specific-value" }
+});
+
+// Retrieve metadata WITHOUT downloading blob content
+BlobProperties properties = await blobClient.GetPropertiesAsync();
+foreach (var metadata in properties.Metadata)
+{
+    Console.WriteLine($"{metadata.Key}: {metadata.Value}");
+}
+```
+
+**Key Benefits:**
+- Stored directly with the blob
+- Retrieved via `GetPropertiesAsync()` - no content download needed
+- Supports any custom key-value data your application needs
+- Can be set during upload or anytime after
+
+---
+
+#### Option C: ❌ INCORRECT - Blob Properties
+
+**Why This Is Wrong:**
+- ❌ Blob properties are **system-defined attributes**
+- ❌ Properties include `ContentType`, `ContentLength`, `LastModified`, `ETag`, etc.
+- ❌ **Cannot** be used to store custom application-specific data
+- ❌ Only predefined system properties can be set
+
+**System Properties Examples:**
+```csharp
+// These are system properties - NOT for custom data
+BlobHttpHeaders headers = new BlobHttpHeaders
+{
+    ContentType = "application/pdf",        // System property
+    CacheControl = "max-age=3600",          // System property
+    ContentDisposition = "attachment"        // System property
+};
+await blobClient.SetHttpHeadersAsync(headers);
+```
+
+**Blob Properties Are Fixed:**
+| Property | Description | Custom? |
+|----------|-------------|---------|
+| `ContentType` | MIME type | ❌ System-defined |
+| `ContentLength` | Size in bytes | ❌ Read-only |
+| `LastModified` | Last modification time | ❌ Read-only |
+| `ETag` | Version identifier | ❌ Read-only |
+| `ContentEncoding` | Encoding type | ❌ System-defined |
+
+---
+
+#### Option D: ❌ INCORRECT - Blob Index Tags
+
+**Why This Is Wrong:**
+- ⚠️ Blob index tags **can** store key-value pairs, BUT...
+- ❌ They are designed for **searching and filtering** blobs across the storage account
+- ❌ Not intended for storing arbitrary application data
+- ❌ Limited to 10 tags per blob (vs 8 KB for metadata)
+- ❌ Tags are indexed for query operations, not for general data storage
+
+**What Blob Index Tags Are For:**
+```csharp
+// Set index tags - designed for SEARCHING
+await blobClient.SetTagsAsync(new Dictionary<string, string>
+{
+    { "Status", "Processed" },
+    { "Department", "Finance" }
+});
+
+// Query blobs by tags across the entire storage account
+string query = "@container = 'mycontainer' AND Status = 'Processed'";
+await foreach (TaggedBlobItem item in blobServiceClient.FindBlobsByTagsAsync(query))
+{
+    Console.WriteLine($"Found: {item.BlobName}");
+}
+```
+
+**Comparison: Metadata vs Index Tags:**
+
+| Feature | Blob Metadata | Blob Index Tags |
+|---------|--------------|-----------------|
+| **Purpose** | Store custom data | Search and filter blobs |
+| **Max Size** | 8 KB total | 10 tags, limited size |
+| **Queryable** | No | Yes, across account |
+| **Use Case** | App-specific data | Blob organization/discovery |
+| **Retrieve Without Content** | ✅ Yes | ✅ Yes |
+
+---
+
+### Key Takeaways for Storing Custom Data
+
+| Option | Purpose | For Custom App Data? |
+|--------|---------|---------------------|
+| **Blob Metadata** | Store name-value pairs with blob | ✅ Yes - Ideal choice |
+| **Blob Properties** | System-defined attributes | ❌ No - System only |
+| **Blob Snapshots** | Point-in-time copies | ❌ No - For versioning |
+| **Blob Index Tags** | Search/filter blobs | ⚠️ Possible but not intended |
+
+**For the Exam, Remember:**
+- 🎯 **Blob Metadata** = Custom application-specific data (retrievable without download)
+- 🎯 **Blob Properties** = System-defined attributes only
+- 🎯 **Blob Snapshots** = Read-only copies for backup/versioning
+- 🎯 **Blob Index Tags** = Search and filter across storage account
 
 ---
 
