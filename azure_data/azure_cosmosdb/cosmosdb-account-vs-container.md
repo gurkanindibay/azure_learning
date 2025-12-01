@@ -143,6 +143,11 @@ Items (Documents)
    - Defines which properties are indexed and how
    - Can be customized per container
    - Default: automatic indexing of all properties
+   - **Indexing Modes**:
+     - **Consistent**: Updates the index synchronously as items are created, updated, or deleted. Adds overhead to write operations but ensures queries always return up-to-date results.
+     - **None**: Disables indexing on the container entirely. Improves bulk write performance significantly. Ideal for bulk import scenarios - after bulk operations complete, you can change the indexing mode back to Consistent.
+     - **Lazy** (Deprecated): Previously allowed asynchronous index updates. Not supported for new containers and requires special exemption which is rarely granted.
+   - Note: "Automatic" is NOT an indexing mode - it's a separate property (`automatic: true/false`) that controls whether indexing happens automatically.
 
 5. **Unique Keys**
    - Containers can enforce uniqueness constraints
@@ -1529,6 +1534,85 @@ What should you configure?
 - [Hierarchical Partition Keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/hierarchical-partition-keys)
 - [Partitioning and Horizontal Scaling](https://learn.microsoft.com/azure/cosmos-db/partitioning-overview)
 - [Multi-tenant SaaS Patterns](https://learn.microsoft.com/azure/cosmos-db/nosql/multi-tenant)
+
+---
+
+### Question 4: Cosmos DB Indexing Mode for Bulk Write Performance
+
+**Question:**
+You have an Azure Cosmos DB container that stores IoT sensor data. You need to configure the indexing policy to improve bulk write performance while accepting eventual consistency for queries. Which indexing mode should you use?
+
+**Options:**
+- A) Automatic
+- B) Consistent
+- C) None
+- D) Lazy
+
+---
+
+### Answer: C ✅
+
+**Correct Answer: C) None**
+
+---
+
+### Detailed Explanation
+
+**Option A - Automatic**
+- **Incorrect**: "Automatic" is not a valid indexing mode
+- The indexing policy has an `automatic` property that can be set to `true` or `false`
+- The actual indexing modes are: Consistent, None, or the deprecated Lazy mode
+- Don't confuse the `automatic` property with indexing modes
+
+**Option B - Consistent**
+- **Incorrect**: Consistent indexing mode updates the index synchronously as items are created, updated, or deleted
+- This adds overhead to every write operation
+- Reduces bulk write performance because each write must wait for the index to be updated
+- Best for scenarios where query consistency is critical
+
+**Option C - None** ✅
+- **Correct**: Setting the indexing mode to None disables indexing on the container entirely
+- This improves bulk write performance significantly because no indexing overhead is incurred
+- After bulk operations complete, you can change the indexing mode back to Consistent
+- Ideal for bulk import scenarios where you want to load data quickly
+- Queries will still work but will perform full scans (which is acceptable during bulk import)
+
+**Option D - Lazy**
+- **Incorrect**: Lazy indexing mode is deprecated and not supported for new containers
+- New containers cannot select lazy indexing
+- Requesting lazy indexing requires a special exemption which is rarely granted
+- Previously, it allowed asynchronous index updates but this is no longer available
+
+---
+
+### Key Takeaways
+
+1. **Indexing Modes in Cosmos DB**
+   - **Consistent**: Synchronous index updates, always up-to-date queries
+   - **None**: No indexing, best for bulk write performance
+   - **Lazy**: Deprecated, not available for new containers
+
+2. **"Automatic" is NOT an Indexing Mode**
+   - It's a separate boolean property in the indexing policy
+   - Controls whether properties are automatically indexed
+   - Don't confuse `automatic: true/false` with indexing modes
+
+3. **Bulk Import Strategy**
+   - Set indexing mode to `None` before bulk import
+   - Perform bulk write operations
+   - Change indexing mode back to `Consistent` after import completes
+   - This approach significantly reduces RU consumption during import
+
+4. **Trade-offs**
+   - `None` mode: Fast writes, but queries perform full scans
+   - `Consistent` mode: Slower writes, but efficient queries
+
+---
+
+### References
+
+- [Indexing policies in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/index-policy)
+- [Indexing modes in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/index-overview)
 
 ---
 
