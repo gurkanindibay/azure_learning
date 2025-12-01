@@ -717,6 +717,43 @@ Container container = await database.CreateContainerIfNotExistsAsync(containerPr
 
 ---
 
+### Question 6: Strong Consistency with Multi-Region Writes
+
+**Scenario:** You have an Azure Cosmos DB account configured with strong consistency and multi-region writes. When you try to enable multi-region writes, the operation fails.
+
+**Question:** What is the cause of this failure?
+
+**Options:**
+- A. Strong consistency is not supported with multi-region writes
+- B. Missing required Azure permissions for the account
+- C. Account tier doesn't support multi-region writes
+- D. Insufficient throughput provisioned for multi-region configuration
+
+**Answer:** A ✅
+
+**Explanation:**
+
+**Why A is Correct:**
+- Azure Cosmos DB **doesn't support strong consistency with multi-region writes**
+- This is because it's impossible to maintain linearizability guarantees across multiple write regions
+- Strong consistency requires that reads always return the most recent committed version, which cannot be guaranteed when writes occur in multiple distributed regions simultaneously
+
+**Why B is Incorrect:**
+- If permissions were the issue, you wouldn't be able to access the account settings at all, not just multi-region configuration
+- Permission issues manifest as access denied errors, not configuration failures
+
+**Why C is Incorrect:**
+- Multi-region writes are supported across **all Azure Cosmos DB account tiers**
+- The limitation is with the consistency level, not the account tier
+
+**Why D is Incorrect:**
+- Throughput requirements don't prevent enabling multi-region writes
+- The issue is the incompatible consistency level, not provisioned capacity
+
+**Key Takeaway:** When designing multi-region write configurations, you must use Session, Consistent Prefix, or Eventual consistency levels. If strong consistency is required, use a single write region with read replicas instead.
+
+---
+
 ## Summary
 
 | Scenario | Recommended Configuration |
