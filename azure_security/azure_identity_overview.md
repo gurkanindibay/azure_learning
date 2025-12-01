@@ -176,8 +176,23 @@ Unlike user identities (humans), workload identities represent non-human entitie
 - **Location-based controls**: Enforce location restrictions on automated workloads and applications
 
 ### Requirements
-- **Workload Identities Premium licenses** are required to use Conditional Access for workload identities
+- **Microsoft Entra Workload ID Premium** licenses are required to use Conditional Access for workload identities
 - Service principals must be registered in your tenant
+
+### Microsoft Entra Workload ID Premium Licensing
+
+**Microsoft Entra Workload ID Premium** (previously Azure AD Workload Identities Premium) is a separate, paid add-on license for workload identities.
+
+| Feature | Requires Workload ID Premium |
+|---------|------------------------------|
+| Conditional Access for workload identities | ✅ Yes |
+| Identity Protection for workload identities (risk detection) | ✅ Yes |
+| Access reviews for service principals | ✅ Yes |
+| Basic service principal / managed identity creation | ❌ No (included in free tier) |
+
+**Pricing**: Charged per workload identity per month
+
+**Note**: Basic workload identity features (creating service principals, managed identities, app registrations) are included in free Microsoft Entra ID.
 
 ### Important Distinctions
 
