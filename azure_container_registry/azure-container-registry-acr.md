@@ -9,6 +9,7 @@
   - [Image](#image)
   - [Tag](#tag)
   - [Manifest](#manifest)
+  - [Multi-Architecture Images (Manifest Lists)](#multi-architecture-images-manifest-lists)
   - [Artifact](#artifact)
 - [ACR Service Tiers](#acr-service-tiers)
 - [ACR Tasks](#acr-tasks)
@@ -103,6 +104,51 @@ A **manifest** is a JSON document that describes an image's layers, configuratio
 - Deleting a manifest removes the image
 - Multiple tags can reference the same manifest
 - Format: `sha256:<hash>`
+
+### Multi-Architecture Images (Manifest Lists)
+
+**Multi-architecture images** use **manifest lists** (also known as **OCI image index**) to enable automatic platform selection based on the requesting client's architecture.
+
+**How it works:**
+- A manifest list is a higher-level manifest that references multiple platform-specific image manifests
+- When a client pulls an image, ACR automatically serves the appropriate image variant based on the client's platform (e.g., linux/amd64, linux/arm64, windows/amd64)
+- This enables seamless deployment across different architectures without modifying image references
+
+**Key benefits:**
+- **Automatic platform selection**: Clients automatically receive the correct image for their architecture
+- **Single image reference**: Use one tag (e.g., `myapp:v1.0`) across all platforms
+- **Simplified CI/CD**: Build once for multiple architectures, push to single repository
+
+**Example manifest list structure:**
+```json
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+  "manifests": [
+    {
+      "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+      "digest": "sha256:abc123...",
+      "platform": { "architecture": "amd64", "os": "linux" }
+    },
+    {
+      "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+      "digest": "sha256:def456...",
+      "platform": { "architecture": "arm64", "os": "linux" }
+    }
+  ]
+}
+```
+
+**Creating multi-architecture images:**
+```bash
+# Build and push images for multiple architectures using docker buildx
+docker buildx build --platform linux/amd64,linux/arm64 -t myregistry.azurecr.io/myapp:v1.0 --push .
+```
+
+> **Note:** Multi-architecture images with manifest lists should not be confused with:
+> - **Content trust (Docker Notary)**: Provides image signing and verification for security purposes
+> - **Zone redundancy**: Provides high availability within a region
+> - **Geo-replication**: Creates registry replicas in different regions for performance and availability
 
 ### Artifact
 
