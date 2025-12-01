@@ -15,6 +15,10 @@
   - [Soft Delete for Containers](#soft-delete-for-containers)
 - [Blob Versioning](#blob-versioning)
 - [Azure Backup for Blobs](#azure-backup-for-blobs)
+- [Immutable Storage for Blob Data](#immutable-storage-for-blob-data)
+  - [Time-Based Retention Policy](#time-based-retention-policy)
+  - [Legal Hold](#legal-hold)
+  - [Immutability Policy Comparison](#immutability-policy-comparison)
 - [Feature Comparison](#feature-comparison)
 - [Exam Question Analysis](#exam-question-analysis)
 - [Best Practices](#best-practices)
@@ -225,6 +229,53 @@ Azure Backup provides operational backup for blob data, offering a more comprehe
 - Supports cross-region restore (with GRS accounts)
 - Different from storage account's built-in features
 
+## Immutable Storage for Blob Data
+
+Immutable storage enables you to store business-critical data in a WORM (Write Once, Read Many) state. When configured, data cannot be modified or deleted for a specified interval. Azure Blob Storage supports two types of immutability policies:
+
+### Time-Based Retention Policy
+
+A time-based retention policy stores blob data in a WORM state for a **specified interval**. When set, objects can be created and read, but not modified or deleted until the retention period expires.
+
+**Key Characteristics:**
+- Requires specifying a **retention duration upfront**
+- Can be **locked** or **unlocked**
+- **Unlocked policy**: Can be removed or modified, but still requires specifying a retention duration
+- **Locked policy**: Cannot be removed; retention period can only be extended, never shortened
+- After retention expires, objects can be deleted but not overwritten
+
+**Types:**
+
+| Policy State | Can Modify Retention? | Can Delete Policy? | Use Case |
+|--------------|----------------------|-------------------|----------|
+| **Unlocked** | Yes | Yes | Testing, adjusting retention before committing |
+| **Locked** | Extend only | No | Compliance requirements with known duration |
+
+### Legal Hold
+
+A **legal hold** stores immutable data **until the legal hold is explicitly cleared**. Unlike time-based retention policies, legal holds do not require specifying a retention duration.
+
+**Key Characteristics:**
+- **No retention duration required** - ideal when duration is unknown
+- Objects can be created and read, but not modified or deleted
+- Must be **explicitly cleared** to allow modifications/deletions
+- Multiple legal holds can be applied with different tags
+- Perfect for legal proceedings where retention duration is uncertain
+
+**When to Use Legal Hold:**
+- Legal proceedings with unknown duration
+- Regulatory investigations
+- Any scenario where data must be preserved indefinitely until an external event concludes
+
+### Immutability Policy Comparison
+
+| Feature | Time-Based Retention (Unlocked) | Time-Based Retention (Locked) | Legal Hold |
+|---------|--------------------------------|------------------------------|------------|
+| **Duration Required** | Yes | Yes | No |
+| **Can Remove Policy** | Yes | No | Yes (by clearing hold) |
+| **Can Modify Duration** | Yes | Extend only | N/A |
+| **Best For** | Testing, adjustable compliance | Strict compliance with known duration | Unknown duration, legal proceedings |
+
 ## Feature Comparison
 
 | Feature | Restores What? | Scope | Requires Other Features |
@@ -299,6 +350,38 @@ Soft-deleted blobs exist in a special state where they:
 - Can be listed (with include deleted flag)
 - Can be undeleted using the Undelete Blob operation
 - **Cannot** be read, copied, or used until explicitly undeleted
+
+---
+
+### Question: Immutability Policy for Unknown Retention Duration
+
+**Question:**
+A company is implementing Azure Storage immutability for compliance requirements. They need a solution where data retention duration is unknown and can be removed when legal proceedings conclude. Which immutability policy type should they use?
+
+**Options:**
+- A) Unlocked time-based retention policy
+- B) Legal hold ✅
+- C) Time-based retention policy with automatic extension
+- D) Time-based retention policy with 1 year duration
+
+**Correct Answer: B) Legal hold**
+
+**Explanation:**
+A **legal hold** stores immutable data until the legal hold is explicitly cleared. When a legal hold is set, objects can be created and read, but not modified or deleted. This is ideal when retention duration is unknown, such as during legal proceedings that may conclude at an unpredictable time.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Unlocked time-based retention policy** | While unlocked policies can be removed, they still require specifying a retention duration upfront, which doesn't meet the requirement of unknown duration |
+| **Time-based retention policy with automatic extension** | Time-based retention policies require a specified duration and don't support indefinite retention based on external events like legal proceedings |
+| **Time-based retention policy with 1 year duration** | After the retention period has expired, objects can be deleted but not overwritten. A fixed duration doesn't suit scenarios where the retention period is unknown |
+
+**Key Distinction:**
+- **Time-based retention**: Requires a **known duration** specified upfront
+- **Legal hold**: **No duration required** - retention continues until explicitly cleared
+
+**Domain:** Implement Azure security
 
 ## Best Practices
 
