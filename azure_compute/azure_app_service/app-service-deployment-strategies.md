@@ -15,6 +15,7 @@
   - [Question 4: Session Affinity in Multi-Instance Deployments](#question-4-session-affinity-in-multi-instance-deployments)
   - [Question 5: Enabling Application Logging](#question-5-enabling-application-logging)
   - [Question 6: Docker Container Automatic Updates](#question-6-docker-container-automatic-updates)
+  - [Question 7: Eliminating File Lock Conflicts](#question-7-eliminating-file-lock-conflicts)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -310,6 +311,75 @@ steps:
       appName: 'MyWebApp'
       containers: 'myacr.azurecr.io/myapp:$(Build.BuildId)'
 ```
+
+### Question 7: Eliminating File Lock Conflicts
+
+**Scenario:**
+You are deploying a web application to Azure App Service. You need to deploy using a method that eliminates file lock conflicts between deployment and runtime.
+
+**Question:**
+Which deployment approach should you use?
+
+**Options:**
+
+1. ❌ Deploy using local Git push
+   - **Incorrect**: Local Git deployment extracts files to the wwwroot directory where file lock conflicts can occur between deployment and runtime operations. When files are extracted, they can conflict with files currently being used by the running application.
+
+2. ✅ Deploy using WEBSITE_RUN_FROM_PACKAGE=1 with ZIP deployment
+   - **Correct**: When you run directly from a ZIP package, the files in the package are not copied to the wwwroot directory. Instead, the ZIP package itself gets mounted directly as the read-only wwwroot directory. This eliminates file lock conflicts as files are served from a read-only mounted package.
+   
+   **How Run From Package Works:**
+   - The ZIP file is stored in Azure Blob Storage or locally
+   - The package is mounted as a read-only file system at `D:\home\site\wwwroot`
+   - No file extraction occurs, so no file locks are needed
+   - Faster deployment since files aren't copied
+   - Atomic deployment - the app sees the new version instantly
+
+   **Configuration:**
+   ```bash
+   # Set the app setting to enable run from package
+   az webapp config appsettings set --resource-group <group-name> \
+     --name <app-name> \
+     --settings WEBSITE_RUN_FROM_PACKAGE=1
+   
+   # Deploy the ZIP package
+   az webapp deploy --resource-group <group-name> \
+     --name <app-name> \
+     --src-path <path-to-zip> \
+     --type zip
+   ```
+
+3. ❌ Deploy using Web Deploy with delete existing files option
+   - **Incorrect**: Web Deploy still copies files to the wwwroot directory during deployment, which can cause file lock conflicts even when deleting existing files first. The delete operation itself can encounter locks on files being used by the running application.
+
+4. ❌ Deploy using FTP to wwwroot directory
+   - **Incorrect**: FTP deployment copies files directly to the wwwroot directory where they can experience file lock conflicts between the deployment process and the running application. Files being served to users may be locked when you try to overwrite them.
+
+---
+
+**Additional Context: Deployment Methods and File Lock Behavior**
+
+| Deployment Method | File Lock Risk | How Files Are Deployed |
+|-------------------|----------------|------------------------|
+| **Run From Package** | ✅ None | ZIP mounted as read-only wwwroot |
+| **Deployment Slots** | ✅ None (in production) | Files deployed to separate slot |
+| **Local Git** | ❌ High | Files extracted to wwwroot |
+| **FTP** | ❌ High | Files copied directly to wwwroot |
+| **Web Deploy** | ❌ Medium-High | Files copied to wwwroot |
+| **ZIP Deploy (without Run From Package)** | ❌ Medium | Files extracted to wwwroot |
+
+**When to Use Run From Package:**
+- When you want to eliminate file lock conflicts completely
+- When you need atomic deployments (instant switch to new version)
+- When you want faster deployment times (no file extraction)
+- When your app doesn't need to write to the wwwroot directory
+
+**Limitations of Run From Package:**
+- The wwwroot directory is read-only (cannot write files there at runtime)
+- Not suitable for apps that need to modify their own files
+- App must store user uploads and generated files elsewhere (Azure Storage, etc.)
+
+---
 
 ## Application Logging in Azure App Service
 
@@ -764,6 +834,12 @@ File locking occurs when:
 - The application is running and has files open
 - Files are being written while trying to overwrite them
 - Multiple processes are accessing the same files
+
+**Solutions to Eliminate File Lock Conflicts:**
+
+1. **Run From Package (WEBSITE_RUN_FROM_PACKAGE=1)**: The ZIP package is mounted as a read-only wwwroot directory, completely eliminating file lock conflicts since no files are extracted or copied.
+
+2. **Deployment Slots**: Deploy to a staging slot first, then swap to production. Files in production remain untouched during deployment.
 
 ### Why Staging Slots Solve File Locking
 
