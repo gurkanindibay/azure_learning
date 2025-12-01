@@ -16,6 +16,7 @@
   - [Question 5: Enabling Application Logging](#question-5-enabling-application-logging)
   - [Question 6: Docker Container Automatic Updates](#question-6-docker-container-automatic-updates)
   - [Question 7: Eliminating File Lock Conflicts](#question-7-eliminating-file-lock-conflicts)
+  - [Question 8: Temporary Diagnostic Logging Configuration](#question-8-temporary-diagnostic-logging-configuration)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -378,6 +379,39 @@ Which deployment approach should you use?
 - The wwwroot directory is read-only (cannot write files there at runtime)
 - Not suitable for apps that need to modify their own files
 - App must store user uploads and generated files elsewhere (Azure Storage, etc.)
+
+### Question 8: Temporary Diagnostic Logging Configuration
+
+**Scenario:**
+You need to enable diagnostic logging for a Windows App Service web app. The logs should be stored temporarily for debugging purposes and automatically turn off after a period.
+
+**Question:**
+Which logging configuration should you use?
+
+**Options:**
+
+1. ✅ Application Logging (Filesystem)
+   - **Correct**: The Filesystem option is designed for temporary debugging purposes and automatically turns itself off after 12 hours. This option stores logs in the App Service file system and automatically disables after 12 hours, making it ideal for temporary debugging scenarios where you need quick access to application logs without manual cleanup.
+
+2. ❌ Application Logging (Blob)
+   - **Incorrect**: The Blob option persists logs permanently in Azure Blob Storage and does not automatically turn off. It requires manual intervention to disable, which doesn't meet the requirement for temporary debugging. Use this option when you need long-term log retention for compliance or audit purposes.
+
+3. ❌ Detailed Error Messages
+   - **Incorrect**: Detailed Error Messages only captures error pages for HTTP 400-599 status codes. It doesn't provide comprehensive application debugging logs, nor does it automatically turn off after a period. This feature saves copies of .htm error pages that would have been sent to the client browser.
+
+4. ❌ Web Server Logging (Storage)
+   - **Incorrect**: Web Server Logging captures HTTP request information (IIS logs), not application-specific debugging data. When configured with Storage, it persists logs permanently without automatic disable functionality. This is useful for analyzing HTTP traffic patterns but not for application-level debugging.
+
+---
+
+**Key Takeaway:**
+
+| Logging Option | Auto-Disable | Storage Location | Use Case |
+|----------------|--------------|------------------|----------|
+| **Application Logging (Filesystem)** | ✅ Yes (12 hours) | App Service file system | Temporary debugging |
+| **Application Logging (Blob)** | ❌ No | Azure Blob Storage | Long-term retention |
+| **Detailed Error Messages** | ❌ No | App Service file system | HTTP error diagnostics |
+| **Web Server Logging** | ❌ No | File system or Storage | HTTP traffic analysis |
 
 ---
 
