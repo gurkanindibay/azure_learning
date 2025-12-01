@@ -955,6 +955,38 @@ az eventhubs namespace create \
 
 > **Exam Tip:** When you need automatic throughput scaling in Azure Event Hubs Standard tier, always use **Auto-inflate**. It's the built-in feature specifically designed for this purpose and doesn't require custom code or Azure Monitor integration.
 
+### Question 6: Standard Tier Throughput Units Scaling Beyond 20 TUs
+
+**Scenario:** You are developing a solution that uses Azure Event Hubs with the Standard tier. The namespace currently has 20 throughput units and needs to scale to 30 throughput units.
+
+**Question:** What should you do?
+
+**Answer:** **File a support ticket to request the increase**
+
+**Reasoning:**
+- ✅ **Standard-tier namespaces can have up to 20 throughput units through self-serve**, but require filing a support ticket to increase beyond 20 TUs up to the **maximum of 40 TUs**
+- Self-serve experience (Azure portal, CLI, PowerShell) only allows up to 20 TUs for Standard tier
+- Microsoft must manually approve and enable the increased limit
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| Enable Auto-inflate to scale automatically | Auto-inflate can automatically scale throughput units but is still limited to the **20 TU self-serve maximum** without a support ticket. It cannot exceed the account's configured limit. |
+| Use the portal to increase to 30 TUs directly | The self-serve experience (portal, CLI, PowerShell) only allows up to **20 TUs** for Standard tier; increasing beyond this requires a support ticket. |
+| Upgrade to the Dedicated tier | While Dedicated tier supports more capacity, filing a support ticket is the **appropriate and cost-effective solution** for Standard tier scaling beyond 20 TUs. Upgrading to Dedicated is unnecessary and significantly more expensive. |
+
+**Key Limits Summary:**
+
+| Tier | Self-Serve TU Limit | Maximum TU Limit (with Support) |
+|------|--------------------|---------------------------------|
+| Basic | 20 TUs | 20 TUs |
+| Standard | 20 TUs | 40 TUs |
+
+> **Exam Tip:** Remember the **20 TU self-serve limit** for Standard tier. If you need more than 20 TUs (up to 40), you must **file a support ticket**. Auto-inflate helps with automatic scaling but doesn't bypass this limit.
+
+> **Important:** Auto-inflate's maximum throughput units setting is also limited to your account's throughput unit limit. If your account limit is 20 TUs, auto-inflate can only scale up to 20 TUs.
+
 ## Best Practices
 
 ### General Best Practices
