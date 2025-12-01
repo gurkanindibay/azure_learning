@@ -15,6 +15,10 @@
   - [Redirect to Custom Page](#redirect-to-custom-page)
 - [Practice Questions](#practice-questions)
   - [Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID](#question-1-blocking-unauthenticated-requests-with-microsoft-entra-id)
+  - [Question 2: Token Validation in ASP.NET Core Web APIs](#question-2-token-validation-in-aspnet-core-web-apis)
+- [Token Validation for Web APIs](#token-validation-for-web-apis)
+  - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
+  - [Implementing JWT Validation](#implementing-jwt-validation)
 - [Configuring Easy Auth with Azure CLI](#configuring-easy-auth-with-azure-cli)
 - [Best Practices](#best-practices)
 - [References](#references)
@@ -165,6 +169,139 @@ When configured:
 | **D) Return HTTP 401 Unauthorized** ❌ | Returning HTTP 401 without redirecting to authentication would block access but wouldn't provide users a way to authenticate, creating a poor user experience. |
 
 **Key Takeaway:** When you need to block unauthenticated access AND provide a seamless authentication experience, always choose **"Require authentication"**. This option both enforces security and handles the redirect to the identity provider automatically.
+
+---
+
+### Question 2: Token Validation in ASP.NET Core Web APIs
+
+**Question:** You are developing a web API using ASP.NET Core that will be deployed to Azure App Service. The API must validate access tokens from client applications. You need to choose the appropriate method to validate the tokens. Which approach should you use?
+
+**Options:**
+- A) Use ASP.NET JWT middleware with IdentityModel extensions for .NET
+- B) Use MSAL.NET to validate the tokens directly
+- C) Use Azure App Service authentication module only
+- D) Use Microsoft Graph SDK for token validation
+
+**Correct Answer: A) Use ASP.NET JWT middleware with IdentityModel extensions for .NET**
+
+**Explanation:**
+ASP.NET Core web APIs should use the **ASP.NET JWT middleware** for token validation. The validation is done by the **IdentityModel extensions for .NET** library, not by MSAL.NET. This is the standard approach for validating access tokens in protected web APIs.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **MSAL.NET** | MSAL.NET is designed for **acquiring tokens**, not for validating them. Token validation in web APIs should be handled by middleware that can properly verify the token's signature, issuer, audience, and expiration. |
+| **App Service authentication module only** | While App Service authentication (Easy Auth) can handle authentication, web APIs still need to implement **proper token validation in code** to verify the token's claims and ensure it's valid for the specific API. |
+| **Microsoft Graph SDK** | Microsoft Graph SDK is for **calling Microsoft Graph API**, not for validating tokens. It doesn't provide token validation functionality needed for protecting your own web API. |
+
+**Key Takeaway:** 
+- **MSAL.NET** = Token **acquisition** (client-side)
+- **IdentityModel extensions for .NET** = Token **validation** (server-side/API)
+- **Microsoft Graph SDK** = Calling Graph API
+- **Easy Auth** = Platform-level authentication, but doesn't replace code-level token validation in APIs
+
+## Token Validation for Web APIs
+
+### Understanding Token Validation Libraries
+
+When building protected web APIs, it's crucial to understand the purpose of different authentication libraries:
+
+| Library | Purpose | Use Case |
+|---------|---------|----------|
+| **MSAL.NET** | Acquire tokens | Client applications that need to get tokens |
+| **IdentityModel extensions for .NET** | Validate tokens | Web APIs that need to verify incoming tokens |
+| **Microsoft.AspNetCore.Authentication.JwtBearer** | JWT middleware | ASP.NET Core apps that need to authenticate requests |
+| **Microsoft Graph SDK** | Call Graph API | Applications that need to access Microsoft Graph |
+
+### Implementing JWT Validation
+
+**ASP.NET Core - Program.cs:**
+
+```csharp
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add JWT Bearer authentication using Microsoft Identity Platform
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+```
+
+**appsettings.json:**
+
+```json
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "<your-tenant-id>",
+    "ClientId": "<your-api-client-id>",
+    "Audience": "api://<your-api-client-id>"
+  }
+}
+```
+
+**Protected Controller:**
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]  // Requires valid JWT token
+public class WeatherController : ControllerBase
+{
+    [HttpGet]
+    public IActionResult Get()
+    {
+        // Access claims from the validated token
+        var userId = User.FindFirst("oid")?.Value;
+        var scope = User.FindFirst("scp")?.Value;
+        
+        return Ok(new { Message = "Protected data", UserId = userId });
+    }
+}
+```
+
+### Token Validation Process
+
+The JWT middleware performs the following validations:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    JWT Token Validation                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. ✅ Signature Validation                                  │
+│     └── Verify token signed by trusted issuer               │
+│                                                              │
+│  2. ✅ Issuer Validation                                     │
+│     └── Check 'iss' claim matches expected issuer           │
+│                                                              │
+│  3. ✅ Audience Validation                                   │
+│     └── Check 'aud' claim matches your API's client ID      │
+│                                                              │
+│  4. ✅ Expiration Validation                                 │
+│     └── Check 'exp' claim to ensure token not expired       │
+│                                                              │
+│  5. ✅ Not Before Validation                                 │
+│     └── Check 'nbf' claim to ensure token is active         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+> ⚠️ **Important**: Even when using Easy Auth at the platform level, your API code should still validate tokens to ensure proper claim verification and to avoid relying solely on infrastructure-level security.
 
 ## Configuring Easy Auth with Azure CLI
 
