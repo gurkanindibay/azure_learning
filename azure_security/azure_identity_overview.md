@@ -12,6 +12,10 @@
     - [2.3 Legacy Service Principal](#23-legacy-service-principal)
 - [2.4 When to Use Each Service Principal Type](#24-when-to-use-each-service-principal-type)
   - [Key Limitation: Managed Identities and Microsoft Graph](#key-limitation-managed-identities-and-microsoft-graph)
+- [2.5 Conditional Access for Workload Identities](#25-conditional-access-for-workload-identities)
+  - [Key Features](#key-features)
+  - [Requirements](#requirements)
+  - [Important Distinctions](#important-distinctions)
 - [3. Managed Identities Overview](#3-managed-identities-overview)
 - [4. System-Assigned Managed Identity (SAMI)](#4-system-assigned-managed-identity-sami)
   - [Characteristics](#characteristics)
@@ -151,6 +155,55 @@ There are three types of service principals:
 - Scenarios requiring explicit application registration in Microsoft Entra ID
 
 **Reason:** Managed identities are designed for Azure resource-to-resource authentication within a single tenant. They don't support the application object/service principal separation needed for multi-tenant scenarios.
+
+---
+
+## 2.5 Conditional Access for Workload Identities
+
+### What are Workload Identities?
+**Workload identities** are identities used by software workloads (applications, services, scripts, containers) to authenticate and access other services and resources. In Microsoft Entra ID, workload identities include:
+- **Application registrations and service principals**
+- **Managed identities**
+
+Unlike user identities (humans), workload identities represent non-human entities that need to authenticate programmatically.
+
+### Conditional Access for Workload Identities
+**Conditional Access for workload identities** is a feature that enables organizations to apply access policies to service principals, allowing security controls similar to those used for user identities.
+
+### Key Features
+- **IP-based blocking**: Block service principals from accessing resources when connecting from outside known public IP ranges
+- **Single-tenant support**: Can be applied to single-tenant service principals registered in your tenant
+- **Location-based controls**: Enforce location restrictions on automated workloads and applications
+
+### Requirements
+- **Workload Identities Premium licenses** are required to use Conditional Access for workload identities
+- Service principals must be registered in your tenant
+
+### Important Distinctions
+
+| Feature | Applies To | Use Case |
+|---------|------------|----------|
+| **Conditional Access for workload identities** | Service Principals | ✅ Block service principals based on IP ranges, location controls for automated workloads |
+| **Conditional Access for users** | User identities | ❌ Does NOT affect service principal authentication; user-scoped policies don't apply to service principals |
+| **Azure AD Identity Protection** | Risk detection | ❌ Can detect risks but NOT designed for IP-based blocking of service principals |
+| **Azure AD Privileged Identity Management (PIM)** | Privileged role management | ❌ Used for just-in-time access and role assignments, NOT location-based access controls |
+
+### Exam Scenario
+
+**Question:** A company needs to block service principals from accessing resources when connecting from outside known IP ranges. The company has Workload Identities Premium licenses. Which Conditional Access feature should they use?
+
+**Answer:** ✅ **Conditional Access for workload identities**
+
+**Why this is correct:**
+- Specifically designed for service principal access control
+- Enables blocking service principals from outside known public IP ranges
+- Requires Workload Identities Premium licenses (which the company has)
+- Applies to single-tenant service principals registered in your tenant
+
+**Why other options are incorrect:**
+- **Conditional Access for users**: User-scoped policies don't affect service principal authentication
+- **Azure AD Identity Protection**: Detects risks but doesn't provide IP-based blocking for service principals
+- **Azure AD PIM**: Manages privileged role assignments and just-in-time access, not location-based controls
 
 ---
 
