@@ -915,6 +915,94 @@ az acr import \
   --registry /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.ContainerRegistry/registries/devregistry
 ```
 
+### Scenario 7: Multi-Tenant SaaS Application with Tenant Isolation
+
+When managing a multi-tenant SaaS application using Azure Container Registry, you need to ensure each tenant's images are isolated while using a single registry. The recommended approach is to use **repository namespaces with scope maps and tokens**.
+
+#### Why Repository Namespaces with Scope Maps?
+
+| Approach | Pros | Cons | Verdict |
+|----------|------|------|---------|
+| **Repository namespaces with scope maps and tokens** | Logical isolation, granular access control, cost-effective, single registry to manage | Requires Premium tier for tokens | ✅ **Recommended** |
+| **Separate registries per tenant** | Complete isolation | High management overhead, increased costs, harder to maintain | ❌ Not recommended |
+| **Geo-replication with regional isolation** | Good for multi-region performance | Doesn't provide tenant isolation (all replicas contain same images) | ❌ Wrong use case |
+| **Registry webhooks with custom authentication** | Event notifications | Doesn't provide isolation or access control | ❌ Wrong use case |
+
+#### Implementation
+
+**1. Create repository namespace structure for each tenant:**
+```
+tenant1/webapp
+tenant1/api
+tenant1/worker
+tenant2/webapp
+tenant2/api
+tenant2/worker
+```
+
+**2. Create a scope map for each tenant:**
+```bash
+# Create scope map for tenant1 with specific repository permissions
+az acr scope-map create \
+  --name tenant1-scope-map \
+  --registry myregistry \
+  --repository tenant1/webapp content/read content/write metadata/read \
+  --repository tenant1/api content/read content/write metadata/read \
+  --repository tenant1/worker content/read content/write metadata/read \
+  --description "Scope map for tenant1 repositories"
+
+# Create scope map for tenant2
+az acr scope-map create \
+  --name tenant2-scope-map \
+  --registry myregistry \
+  --repository tenant2/webapp content/read content/write metadata/read \
+  --repository tenant2/api content/read content/write metadata/read \
+  --repository tenant2/worker content/read content/write metadata/read \
+  --description "Scope map for tenant2 repositories"
+```
+
+**3. Create tokens linked to scope maps:**
+```bash
+# Create token for tenant1
+az acr token create \
+  --name tenant1-token \
+  --registry myregistry \
+  --scope-map tenant1-scope-map
+
+# Generate credentials for the token
+az acr token credential generate \
+  --name tenant1-token \
+  --registry myregistry \
+  --password1
+
+# Create token for tenant2
+az acr token create \
+  --name tenant2-token \
+  --registry myregistry \
+  --scope-map tenant2-scope-map
+```
+
+**4. Use tenant-specific tokens for authentication:**
+```bash
+# Tenant1 authenticates with their token
+docker login myregistry.azurecr.io \
+  --username tenant1-token \
+  --password <generated-password>
+
+# Tenant1 can only push/pull to their namespaced repositories
+docker push myregistry.azurecr.io/tenant1/webapp:v1.0
+```
+
+#### Key Benefits
+
+- **Logical Isolation**: Each tenant's images are in separate namespace prefixes
+- **Granular Access Control**: Scope maps define exactly which repositories each token can access
+- **Cost-Effective**: Single Premium registry vs. multiple registries
+- **Centralized Management**: One registry to manage, monitor, and secure
+- **Scalable**: Easy to add new tenants by creating new scope maps and tokens
+
+> **Note:** Repository-scoped tokens require **Premium tier** Azure Container Registry.
+
 ## Key Takeaways
 
 ### ✅ Correct Command to Delete Image:
