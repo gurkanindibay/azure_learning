@@ -11,6 +11,7 @@
 - [Premium Tier (P1v2, P2v2, P3v2, P1v3, P2v3, P3v3)](#premium-tier-p1v2-p2v2-p3v2-p1v3-p2v3-p3v3)
 - [Isolated Tier (I1v2, I2v2, I3v2)](#isolated-tier-i1v2-i2v2-i3v2)
 - [Detailed Feature Comparison](#detailed-feature-comparison)
+  - [Networking Features Deep Dive](#networking-features-deep-dive)
 - [Compute Resources by Tier](#compute-resources-by-tier)
 - [Choosing the Right Tier](#choosing-the-right-tier)
 - [Scaling Options](#scaling-options)
@@ -634,6 +635,42 @@ az webapp create \
 | Service Endpoints | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | Internal Load Balancer | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
+#### Networking Features Deep Dive
+
+Understanding the differences between App Service networking options is critical for choosing the right solution:
+
+| Feature | Direction | Purpose | On-Premises Connectivity | Requirements |
+|---------|-----------|---------|--------------------------|--------------|
+| **Hybrid Connections** | Outbound | Connect App Service to on-premises/external resources | ✅ Direct (via Service Bus Relay) | Hybrid Connection Manager on-premises |
+| **VNet Integration** | Outbound | Connect App Service to Azure VNet resources | ⚠️ Requires VPN/ExpressRoute | VNet in same region |
+| **Private Endpoints** | Inbound | Allow VNet resources to access App Service privately | ❌ Not for outbound | Premium tier or higher |
+| **App Service Environment** | Both | Complete network isolation in your VNet | ⚠️ Requires VPN/ExpressRoute | Isolated tier, dedicated infrastructure |
+
+**Hybrid Connections:**
+- Uses Azure Service Bus Relay for secure outbound connections
+- Connects over port 443 (HTTPS) - no firewall changes needed
+- Ideal for connecting to on-premises databases, APIs, or services
+- Requires Hybrid Connection Manager installed on an on-premises Windows server
+- No VPN or ExpressRoute required
+
+**VNet Integration:**
+- Enables outbound connectivity from App Service to resources in an Azure VNet
+- Does NOT provide direct on-premises connectivity (requires VPN Gateway or ExpressRoute)
+- Does NOT allow inbound connections from VNet to App Service
+- Available in Standard tier and above
+
+**Private Endpoints:**
+- Provides a private IP address for your App Service within a VNet
+- Used for **inbound** connections - allows resources in VNet to reach App Service
+- Does NOT enable App Service to connect outbound to on-premises resources
+- Available in Premium tier and above
+
+**App Service Environment (ASE):**
+- Fully isolated, dedicated environment running in your VNet
+- Supports Internal Load Balancer for complete private access
+- Complex to set up and significantly more expensive
+- Best for high-security or compliance requirements
+
 ### Deployment Features
 
 | Feature | Free | Shared | Basic | Standard | Premium | Isolated |
@@ -926,7 +963,33 @@ az appservice plan update --name myPlan --resource-group myRG --sku B1
 - ✅ Complete network isolation
 - ⚠️ Premium with private endpoints provides partial isolation but not complete
 
-### Question 4: Cost Optimization
+### Question 4: On-Premises Database Connectivity
+
+**Scenario:** You are deploying a web application to Azure App Service that needs to connect to an on-premises SQL Server database through a secure connection. The on-premises network cannot be exposed to the internet.
+
+**Question:** Which networking feature should you use?
+
+**Options:**
+
+1. ❌ **App Service Environment**
+   - **Incorrect**: App Service Environment provides network isolation but requires significant infrastructure changes and VPN/ExpressRoute setup for on-premises connectivity, making it overly complex for this scenario.
+
+2. ✅ **Hybrid Connections (Correct Answer)**
+   - **Correct**: Hybrid Connections provide secure connectivity to on-premises resources without requiring VPN or exposing the on-premises network to the internet, using an outbound connection over port 443 through Service Bus Relay.
+
+3. ❌ **Private Endpoints**
+   - **Incorrect**: Private Endpoints are used for inbound connections to App Service from a VNet, not for App Service to connect outbound to on-premises resources.
+
+4. ❌ **Virtual Network Integration**
+   - **Incorrect**: Virtual Network Integration enables outbound connections from App Service to Azure VNet resources but doesn't directly provide connectivity to on-premises resources without additional VPN setup.
+
+**Key Points:**
+- Hybrid Connections use an outbound HTTPS connection (port 443) via Azure Service Bus Relay
+- No firewall changes needed on the on-premises network
+- Requires installing Hybrid Connection Manager on an on-premises server
+- Works with Standard, Premium, and Isolated tiers
+
+### Question 5: Cost Optimization
 
 **Scenario:** You have 10 small web applications that together use less than 4 GB of memory and 2 CPU cores. They all have similar traffic patterns.
 
