@@ -918,6 +918,43 @@ az eventhubs namespace create \
 - ✅ Premium: Private endpoints supported
 - ✅ Dedicated: Private endpoints supported
 
+### Question 5: Automatic Throughput Scaling
+
+**Scenario:** A company processes streaming data using Azure Event Hubs. During peak hours, incoming data rate exceeds the allocated throughput units, causing throttling. The solution must automatically scale throughput units based on demand between 2 and 20 units.
+
+**Question:** What should you configure?
+
+**Answer:** **Enable Auto-inflate with maximum throughput units set to 20**
+
+**Reasoning:**
+- ✅ **Auto-inflate** automatically increases throughput units when the ingress or egress limits are exceeded
+- ✅ Setting the maximum to 20 ensures scaling stays within the required range
+- ✅ The minimum of 2 is maintained by initial configuration (capacity setting)
+- ✅ Auto-inflate is a built-in feature for Standard tier that provides immediate, automatic scaling
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| Implement event-driven scaling using Azure Functions | Requires custom implementation and introduces latency in scaling decisions. Auto-inflate provides immediate, automatic scaling without custom code. |
+| Configure Azure Event Hubs Premium with processing units auto-scaling | Premium tier uses processing units (PUs), not throughput units. The requirement specifically mentions throughput units, indicating Standard tier with Auto-inflate. |
+| Configure autoscale rules in Azure Monitor with throughput unit metrics | Event Hubs doesn't support autoscale rules for throughput units through Azure Monitor. Auto-inflate is the built-in scaling feature for throughput units. |
+
+**Configuration Example:**
+```bash
+# Create namespace with initial 2 TUs and auto-inflate up to 20 TUs
+az eventhubs namespace create \
+  --name mystreamingnamespace \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --sku Standard \
+  --capacity 2 \
+  --enable-auto-inflate true \
+  --maximum-throughput-units 20
+```
+
+> **Exam Tip:** When you need automatic throughput scaling in Azure Event Hubs Standard tier, always use **Auto-inflate**. It's the built-in feature specifically designed for this purpose and doesn't require custom code or Azure Monitor integration.
+
 ## Best Practices
 
 ### General Best Practices
