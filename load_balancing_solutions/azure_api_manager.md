@@ -884,3 +884,33 @@ The other options are incorrect because:
 **Reference**: 
 - [Validate Microsoft Entra token policy](https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-policy)
 - [Authentication and authorization to APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/authentication-authorization-overview)
+
+### Question 9: WebSocket API with JWT Validation
+
+**Scenario**: You need to add a WebSocket API to Azure API Management for real-time stock trading updates. The API must support bidirectional communication and apply JWT validation to the initial handshake.
+
+**Question**: Which tier and configuration should you use?
+
+**Options**:
+- Consumption tier with WebSocket passthrough enabled in gateway settings
+- Any tier except Consumption with JWT validation policy applied to the onHandshake operation ✓
+- Premium tier only with custom WebSocket handler policy in the backend section
+- Standard tier with WebSocket protocol converter policy in the inbound section
+
+**Answer**: Any tier except Consumption with JWT validation policy applied to the onHandshake operation
+
+**Explanation**: 
+WebSocket APIs are supported in all API Management tiers except Consumption, and security policies like JWT validation can be applied specifically to the `onHandshake` operation for authentication. This approach:
+- Enables bidirectional communication for real-time scenarios like stock trading updates
+- Applies security validation at the initial connection handshake
+- Maintains the WebSocket connection after successful authentication
+- Works with Developer, Basic, Standard, Premium, and Isolated tiers
+
+The other options are incorrect because:
+- **Consumption tier with WebSocket passthrough**: The Consumption tier does not support WebSocket APIs regardless of gateway settings configuration. WebSocket support requires a dedicated tier.
+- **Premium tier only with custom WebSocket handler policy**: WebSocket support is available in all tiers except Consumption, not limited to Premium. It doesn't require custom handler policies in the backend section as WebSocket support is native to API Management.
+- **Standard tier with WebSocket protocol converter policy**: WebSocket support is native in API Management and doesn't require protocol converter policies. While Standard tier does support WebSocket APIs, no additional protocol conversion configuration is needed.
+
+**Reference**: 
+- [WebSocket APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/websocket-api)
+- [API Management features and tier comparison](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
