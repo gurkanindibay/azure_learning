@@ -28,6 +28,13 @@ Because Azure Cosmos DB supports multiple API models, version 3 of the .NET SDK 
    - [Query Items](#query-items)
    - [Update an Item](#update-an-item)
    - [Delete an Item](#delete-an-item)
+6. [Server-Side Programming](#server-side-programming)
+   - [Overview](#server-side-programming-overview)
+   - [Stored Procedures](#stored-procedures)
+   - [Triggers](#triggers)
+   - [User-Defined Functions (UDFs)](#user-defined-functions-udfs)
+   - [Comparison Table](#server-side-programming-comparison)
+   - [Practice Questions](#server-side-programming-practice-questions)
 
 ---
 
@@ -407,6 +414,153 @@ FeedIterator<Product> results = container.GetItemQueryIterator<Product>(query);
 // Step 8: Delete the Item
 await container.DeleteItemAsync<Product>("product-1", new PartitionKey("electronics"));
 ```
+
+---
+
+## Server-Side Programming
+
+### Server-Side Programming Overview
+
+Azure Cosmos DB supports server-side programming through three constructs: **Stored Procedures**, **Triggers**, and **User-Defined Functions (UDFs)**. These are written in JavaScript and execute directly on the database engine.
+
+| Construct | Purpose | Context Object Access | Can Access Container | Execution Scope |
+|-----------|---------|----------------------|---------------------|----------------|
+| **Stored Procedures** | Business logic, batch operations | ✅ Yes | ✅ Yes | Single partition |
+| **Triggers** | Pre/Post operation hooks | ✅ Yes | ✅ Yes | Single partition |
+| **User-Defined Functions (UDFs)** | Custom calculations in queries | ❌ No | ❌ No | Query parameters only |
+
+### Stored Procedures
+
+Stored procedures are JavaScript functions that execute within the database engine. They have access to the **context object** which allows them to read and write data within the container.
+
+```javascript
+// Example: Stored procedure with context object access
+function createDocument(docToCreate) {
+    var context = getContext();
+    var container = context.getCollection();
+    var response = context.getResponse();
+
+    // Can read/write to the container
+    var accepted = container.createDocument(
+        container.getSelfLink(),
+        docToCreate,
+        function(err, docCreated) {
+            if (err) throw new Error('Error creating document: ' + err.message);
+            response.setBody(docCreated);
+        }
+    );
+
+    if (!accepted) throw new Error('Document creation not accepted');
+}
+```
+
+**Key Characteristics:**
+- ✅ Access to `getContext()` for container operations
+- ✅ Can perform CRUD operations within a single partition
+- ✅ ACID transactions within partition scope
+- ✅ Can execute complex business logic
+- ⚠️ Bounded execution time (limited to 5 seconds)
+
+### Triggers
+
+Triggers are JavaScript functions that execute before (pre-trigger) or after (post-trigger) a database operation. Like stored procedures, triggers have access to the **context object**.
+
+```javascript
+// Example: Pre-trigger to validate data
+function validateDocument() {
+    var context = getContext();
+    var request = context.getRequest();
+    var document = request.getBody();
+
+    // Validate document before creation
+    if (!document.timestamp) {
+        document.timestamp = new Date().toISOString();
+    }
+
+    // Can access container through context
+    request.setBody(document);
+}
+```
+
+**Key Characteristics:**
+- ✅ Access to `getContext()` for container operations
+- ✅ Pre-triggers run before the operation
+- ✅ Post-triggers run after the operation
+- ✅ Can modify the document being processed
+- ⚠️ Must be explicitly specified in the request
+
+### User-Defined Functions (UDFs)
+
+UDFs are **compute-only** JavaScript functions that can be used within queries to perform custom calculations. They are fundamentally different from stored procedures and triggers.
+
+```javascript
+// Example: UDF for custom calculation
+function calculateTax(price) {
+    // Can ONLY process the parameter passed to it
+    // NO access to context object
+    // NO access to container data
+    // NO network calls allowed
+    return price * 0.08;
+}
+```
+
+**Using UDF in a Query:**
+```sql
+SELECT 
+    c.name, 
+    c.price, 
+    udf.calculateTax(c.price) AS tax,
+    c.price + udf.calculateTax(c.price) AS totalPrice
+FROM c
+WHERE c.category = 'electronics'
+```
+
+**Key Characteristics:**
+- ❌ **NO access to context object** (`getContext()` not available)
+- ❌ **Cannot access container data** directly
+- ❌ **Cannot make external HTTP calls** (sandboxed environment)
+- ❌ **Cannot import external modules**
+- ✅ Can only process data passed as parameters
+- ✅ Pure computational functions
+- ✅ Used within SQL queries for custom logic
+
+### Server-Side Programming Comparison
+
+| Feature | Stored Procedures | Triggers | UDFs |
+|---------|------------------|----------|------|
+| **Language** | JavaScript | JavaScript | JavaScript |
+| **Context Object** | ✅ Yes | ✅ Yes | ❌ No |
+| **Container Access** | ✅ Yes | ✅ Yes | ❌ No |
+| **Network Access** | ❌ No | ❌ No | ❌ No |
+| **External Modules** | ❌ No | ❌ No | ❌ No |
+| **ACID Transactions** | ✅ Yes | ✅ Yes | N/A |
+| **Use Case** | Batch operations, business logic | Data validation, auditing | Custom query calculations |
+| **Invocation** | Explicit call | Specified in request | Within SQL queries |
+| **Partition Scope** | Single partition | Single partition | Query scope |
+
+### Server-Side Programming Practice Questions
+
+#### Question 1: UDF Data Access
+
+**Scenario:** You are implementing a user-defined function (UDF) in Azure Cosmos DB to calculate custom business metrics within queries.
+
+**Question:** Where can the UDF access data from?
+
+**Options:**
+
+1. ✅ **Only from query results passed as parameters**
+   - **Correct**: UDFs in Azure Cosmos DB are compute-only JavaScript functions that can only process data passed to them as parameters within queries, with no context object access.
+
+2. ❌ From external REST APIs using HTTP calls
+   - **Incorrect**: UDFs run in a sandboxed environment without network access and cannot make external HTTP calls or import modules.
+
+3. ❌ From the current container using the context object
+   - **Incorrect**: UDFs don't have access to the context object; only stored procedures and triggers can use context to access containers.
+
+4. ❌ From any container in the same database
+   - **Incorrect**: UDFs cannot access containers directly; they only process parameters passed to them during query execution.
+
+**Key Takeaway:** UDFs are pure computational functions - they transform input parameters into output values without any side effects or data access.
 
 ---
 
