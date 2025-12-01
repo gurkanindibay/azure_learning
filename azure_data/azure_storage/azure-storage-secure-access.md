@@ -21,6 +21,7 @@
   - [Decision Matrix: Choosing SAS Type by Service](#decision-matrix-choosing-sas-type-by-service)
 - [Exam Question Analysis](#exam-question-analysis)
   - [Question 1: Container Access with Entra ID and RBAC](#question-1-container-access-with-entra-id-and-rbac)
+  - [Question 3: SAS with Microsoft Entra ID Credentials for Enhanced Security](#question-3-sas-with-microsoft-entra-id-credentials-for-enhanced-security)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -1353,11 +1354,111 @@ var containerSasUri = new BlobContainerClient(
 
 **Use Case**: Managing multiple Service SAS tokens with centralized control
 
+### Question 3: SAS with Microsoft Entra ID Credentials for Enhanced Security
+
+**Scenario:**
+You need to create a SAS token for blob storage that uses Microsoft Entra credentials for enhanced security. The SAS must be valid for 5 days.
+
+**Question:**
+Which type of SAS should you create?
+
+**Options:**
+1. Stored access policy SAS
+2. Account SAS
+3. Service SAS
+4. User delegation SAS ✅
+
+**Correct Answer: User delegation SAS**
+
+**Detailed Analysis:**
+
+#### Why User Delegation SAS is CORRECT ✅
+
+**Key Points:**
+- ✅ **Microsoft Entra ID Security**: User delegation SAS is secured with Microsoft Entra ID credentials instead of the account key
+- ✅ **Superior Security**: Provides enhanced security as it doesn't expose storage account keys
+- ✅ **7-Day Maximum Validity**: The maximum interval over which the user delegation key is valid is **7 days** from the start date
+- ✅ **5-Day Period Supported**: Since 5 days is less than the 7-day maximum, this requirement can be fulfilled
+
+**Important Limitation:**
+```
+User Delegation Key Maximum Validity: 7 days
+Requested Validity Period: 5 days ✅ (within limit)
+```
+
+**Implementation Example:**
+```csharp
+// Authenticate with Microsoft Entra ID
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://mystorageaccount.blob.core.windows.net"),
+    credential
+);
+
+// Get user delegation key (maximum 7 days)
+var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+    startsOn: DateTimeOffset.UtcNow,
+    expiresOn: DateTimeOffset.UtcNow.AddDays(5) // ✅ 5 days is within 7-day limit
+);
+
+// Create User Delegation SAS
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    BlobName = "myblob.txt",
+    Resource = "b",
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddDays(5) // ✅ 5-day validity
+};
+
+sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+var sasToken = sasBuilder.ToSasQueryParameters(
+    userDelegationKey.Value,
+    blobServiceClient.AccountName
+).ToString();
+```
+
+#### Why Stored Access Policy SAS is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Not a Distinct SAS Type**: Stored access policies are a feature that can be associated with Service SAS, not a separate SAS type
+- ❌ **Not Supported for User Delegation SAS**: Stored access policies cannot be used with user delegation SAS
+- ❌ **Uses Storage Account Key**: Still requires storage account key for signing, not Microsoft Entra credentials
+
+#### Why Account SAS is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Secured with Storage Account Key**: Account SAS is signed using the storage account key, NOT Microsoft Entra credentials
+- ❌ **Fails Enhanced Security Requirement**: Does not meet the requirement for Microsoft Entra-based authentication
+- ❌ **No RBAC Support**: Cannot leverage Azure AD role-based access control
+
+#### Why Service SAS is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Secured with Storage Account Key**: Service SAS is signed using the storage account key, NOT Microsoft Entra credentials
+- ❌ **Fails Enhanced Security Requirement**: Does not meet the requirement for Microsoft Entra-based authentication
+- ❌ **No RBAC Support**: Cannot leverage Azure AD role-based access control
+
+**Comparison Table:**
+
+| SAS Type | Secured By | Entra ID Support | Max Validity for Delegation Key |
+|----------|------------|------------------|--------------------------------|
+| **User Delegation SAS** | Microsoft Entra ID ✅ | Yes ✅ | 7 days |
+| **Account SAS** | Storage Account Key ❌ | No ❌ | N/A |
+| **Service SAS** | Storage Account Key ❌ | No ❌ | N/A |
+| **Stored Access Policy** | Not a SAS type ❌ | No ❌ | N/A |
+
 ### Key Takeaway
 
 When the question asks for:
 - **Microsoft Entra ID credentials** + **RBAC** + **Container access**
 - **Answer**: User Delegation SAS (only option that supports Entra ID and RBAC)
+
+**User Delegation Key Validity Rule:**
+- Maximum validity period: **7 days**
+- Any SAS requirement ≤ 7 days can use User Delegation SAS
+- For longer periods, consider implementing SAS renewal mechanisms
 
 ## SAS Security Best Practices
 
