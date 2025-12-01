@@ -7,8 +7,9 @@
 4. [Certificates](#certificates)
 5. [Simple Usage Examples](#simple-usage-examples)
 6. [Networking Configurations](#networking-configurations)
-7. [Operational Best Practices](#operational-best-practices)
-8. [Practice Questions](#practice-questions)
+7. [API Versioning](#api-versioning)
+8. [Operational Best Practices](#operational-best-practices)
+9. [Practice Questions](#practice-questions)
 
 ## Purpose
 Azure API Manager (API Management) is the turnkey service on Microsoft Azure that lets teams publish, secure, transform, maintain, and monitor APIs. It is designed to sit between consumers (internal applications, partners, or external developers) and backend services, applying consistent security, routing, and transformation policies without touching the target APIs.
@@ -606,6 +607,68 @@ Do clients need private-only access?
     └── No → Use Internal VNet mode (Premium tier required)
 ```
 
+## API Versioning
+
+API versioning in Azure API Management allows you to manage multiple versions of an API that can coexist simultaneously, enabling clients to choose which version they want to use.
+
+### Version Sets
+
+A **version set** is a logical grouping of related API versions. It provides a unified way to manage multiple versions of an API while maintaining a consistent identity. Version sets allow you to:
+- Group related API versions together under a single logical API
+- Define how clients specify which version they want to use
+- Maintain different versions simultaneously for backward compatibility
+- Gradually migrate clients from older to newer versions
+
+### Versioning Schemes
+
+API Management supports three versioning schemes:
+
+| Scheme | Description | Example |
+|--------|-------------|----------|
+| **Path** | Version is specified in the URL path | `/api/v1/orders` or `/api/v2/orders` |
+| **Header** | Version is specified using a custom HTTP header | `api-version: v1` |
+| **Query** | Version is specified as a query string parameter | `/api/orders?api-version=v1` |
+
+### Header-Based Versioning
+
+Header-based versioning is ideal when you want to:
+- Keep URLs clean and consistent across versions
+- Allow clients to specify versions without changing the request path
+- Implement versioning in a way that doesn't affect URL routing or caching based on path
+
+**Configuration steps for header-based versioning**:
+1. Create a version set with the **Header** versioning scheme
+2. Specify the header name (e.g., `api-version`)
+3. Add API versions to the version set
+4. Clients include the header in requests to specify the desired version
+
+**Example request with header-based versioning**:
+```bash
+curl -X GET \
+    "https://contoso.azure-api.net/orders" \
+    -H "Ocp-Apim-Subscription-Key: YOUR_KEY" \
+    -H "api-version: v2"
+```
+
+### Versioning vs. Revisions
+
+It's important to understand the difference between versions and revisions:
+
+| Aspect | Versions | Revisions |
+|--------|----------|----------|
+| **Purpose** | Breaking changes, major updates | Non-breaking changes, testing |
+| **Client visibility** | Clients choose which version to use | Current revision is active; others are for testing |
+| **Coexistence** | Multiple versions can be active simultaneously | Only one revision is current at a time |
+| **Use case** | v1 and v2 APIs with different contracts | Testing changes before making them live |
+
+### Best Practices for API Versioning
+
+- **Use version sets for breaking changes**: When introducing changes that would break existing clients, create a new version within a version set rather than modifying the existing API.
+- **Choose the appropriate versioning scheme**: Select header, path, or query versioning based on your client requirements and API design standards.
+- **Document version differences**: Clearly communicate what changes exist between versions in your developer portal.
+- **Maintain backward compatibility**: Support older versions for a reasonable deprecation period to give clients time to migrate.
+- **Avoid using revisions for coexisting versions**: Revisions are designed for non-breaking changes and testing, not for maintaining multiple client-selectable versions.
+
 ## Operational Best Practices
 - **Monitor usage**: Configure Application Insights or the built-in analytics to track latency, throttled requests, and subscription failures.
 - **Automate deployment**: Use Azure Resource Manager (ARM) templates or Bicep to publish APIs/policies and manage environments consistently.
@@ -914,3 +977,33 @@ The other options are incorrect because:
 **Reference**: 
 - [WebSocket APIs in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/websocket-api)
 - [API Management features and tier comparison](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
+
+### Question 10: API Versioning with Custom Header
+
+**Scenario**: You need to implement API versioning in Azure API Management where different versions of an API can coexist. Clients should specify the version using a custom header `api-version`.
+
+**Question**: Which configuration should you implement?
+
+**Options**:
+- Create separate APIs with suffix naming like `apiv1` and `apiv2`
+- Implement `choose` policy to route based on `api-version` header
+- Configure revision management with header-based routing
+- Configure version set with Header versioning scheme and header name `api-version` ✓
+
+**Answer**: Configure version set with Header versioning scheme and header name `api-version`
+
+**Explanation**: 
+Version sets with Header versioning scheme allow clients to specify versions using custom headers, perfectly matching the requirement for `api-version` header-based versioning. This approach:
+- Provides built-in versioning functionality specifically designed for managing multiple coexisting API versions
+- Allows clients to specify the desired version via the `api-version` header
+- Maintains unified management of all versions under a single logical API
+- Requires minimal configuration compared to custom policy-based solutions
+
+The other options are incorrect because:
+- **Creating separate APIs with suffix naming**: Creating completely separate APIs (like `apiv1` and `apiv2`) lacks the unified management benefits of version sets and requires more manual configuration and maintenance. Each API would need to be managed independently without the relationship that version sets provide.
+- **Implementing `choose` policy to route based on header**: While a `choose` policy could technically route requests based on the `api-version` header, version sets provide built-in versioning functionality specifically designed for this scenario with less complexity. Using policies for this purpose adds unnecessary complexity and doesn't leverage API Management's native versioning capabilities.
+- **Configuring revision management with header-based routing**: Revisions are designed for non-breaking changes and testing purposes, not for maintaining multiple coexisting versions that clients can choose between. Revisions allow you to make changes safely and test them before making them live, but only one revision is "current" at any time.
+
+**Reference**: 
+- [Versions in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-versions)
+- [Add multiple versions of your API](https://learn.microsoft.com/en-us/azure/api-management/api-management-get-started-publish-versions)
