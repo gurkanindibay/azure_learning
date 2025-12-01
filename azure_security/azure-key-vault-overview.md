@@ -15,6 +15,10 @@
   - [Key Vault Deployment Properties Comparison](#key-vault-deployment-properties-comparison)
   - [Key Takeaway](#key-takeaway)
   - [Related Learning Resources](#related-learning-resources)
+- [Question 2: Secure Storage of Connection Strings with Automatic Rotation](#question-2-secure-storage-of-connection-strings-with-automatic-rotation)
+  - [Explanation](#explanation-1)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-1)
+  - [Key Takeaway](#key-takeaway-1)
 
 ## Overview
 
@@ -211,3 +215,101 @@ When you need Azure VMs to retrieve **certificates** from Key Vault during deplo
 - About Azure Key Vault
 - Use Azure Key Vault with a virtual machine
 - Key Vault deployment properties
+
+---
+
+## Question 2: Secure Storage of Connection Strings with Automatic Rotation
+
+**Scenario:**
+A web application needs to store database connection strings securely. The connection strings must be automatically rotated without application changes, and access must be auditable.
+
+**Question:**
+What is the most appropriate solution?
+
+**Options:**
+
+1. **Store connection strings in Azure App Configuration with encryption enabled** ❌ *Incorrect*
+
+2. **Store connection strings as secrets in Azure Key Vault with rotation policies configured** ✅ *Correct*
+
+3. **Store connection strings in a storage account with immutability policies enabled** ❌ *Incorrect*
+
+4. **Store connection strings as environment variables in the web application settings** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Store connection strings as secrets in Azure Key Vault with rotation policies configured**
+
+Azure Key Vault is designed to securely store and tightly control access to tokens, passwords, certificates, API keys, and other secrets like connection strings. Key Vault provides:
+
+- **Secure Storage**: Hardware-backed encryption for sensitive data
+- **Automatic Rotation**: Rotation policies can be configured to automatically rotate secrets
+- **Full Audit Capabilities**: All access to secrets is logged and auditable
+- **No Application Changes**: Applications can reference Key Vault secrets, and rotation happens transparently
+
+```bicep
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+    enableSoftDelete: true
+    enablePurgeProtection: true
+    accessPolicies: []
+  }
+}
+
+// Store connection string as a secret
+resource dbConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'DatabaseConnectionString'
+  properties: {
+    value: 'Server=myserver.database.windows.net;Database=mydb;...'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+```
+
+**Azure CLI Example - Setting up rotation policy:**
+
+```bash
+# Create a secret with rotation policy
+az keyvault secret set \
+  --vault-name myKeyVault \
+  --name DatabaseConnectionString \
+  --value "Server=myserver.database.windows.net;..."
+
+# Configure rotation policy (for supported secret types)
+az keyvault secret rotation-policy update \
+  --vault-name myKeyVault \
+  --name DatabaseConnectionString \
+  --auto-rotate-interval 90d
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Azure App Configuration with encryption enabled** | While Azure App Configuration can store configuration data securely, it doesn't provide built-in automatic rotation capabilities for secrets like connection strings. It's designed for application configuration management, not secret lifecycle management. |
+| **Storage account with immutability policies** | Storage accounts with immutability policies prevent modification of data, which would actually **prevent rotation**. This solution lacks the secret management features needed for connection strings and is designed for compliance scenarios requiring data immutability. |
+| **Environment variables in web application settings** | Environment variables in application settings don't provide automatic rotation capabilities and have limited audit functionality compared to purpose-built secret management solutions. Rotating secrets would require application redeployment or restart. |
+
+### Comparison of Secret Storage Options
+
+| Feature | Key Vault | App Configuration | Storage Account | Environment Variables |
+|---------|-----------|-------------------|-----------------|----------------------|
+| **Secure Storage** | ✅ HSM-backed | ✅ Encrypted | ✅ Encrypted | ⚠️ Limited |
+| **Automatic Rotation** | ✅ Built-in policies | ❌ Not supported | ❌ Not applicable | ❌ Not supported |
+| **Audit Logging** | ✅ Full audit trail | ⚠️ Limited | ⚠️ Limited | ❌ No audit |
+| **No App Changes for Rotation** | ✅ Transparent | ❌ Requires update | ❌ Not applicable | ❌ Requires restart |
+| **Secret Management** | ✅ Purpose-built | ❌ Config-focused | ❌ Not designed for | ❌ Basic |
+
+### Key Takeaway
+
+When you need to store secrets (like connection strings) with requirements for **automatic rotation**, **security**, and **auditability**, **Azure Key Vault** is the purpose-built solution. It provides rotation policies to automatically rotate secrets, comprehensive audit logging, and allows applications to retrieve the latest secret version without code changes.
