@@ -17,6 +17,7 @@
 - [Cost Considerations](#cost-considerations)
 - [Changing Between Tiers](#changing-between-tiers)
 - [Exam Questions and Scenarios](#exam-questions-and-scenarios)
+- [Custom Domains and TLS/SSL Certificates](#custom-domains-and-tlsssl-certificates)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -938,6 +939,105 @@ az appservice plan update --name myPlan --resource-group myRG --sku B1
 - ✅ One S2 or P1v3 plan cheaper than 10 separate B1 plans
 - ✅ Combined resources sufficient for all apps
 - 💰 Significant cost savings
+
+### Question 5: Securing Custom Domain with HTTPS
+
+**Scenario:** You have an Azure App Service web app that requires a custom domain name. You have already verified domain ownership and created a CNAME record pointing to the web app.
+
+**Question:** What should you do next to secure the custom domain with HTTPS?
+
+**Options:**
+
+1. ❌ Configure the web app to use HTTPS only in the TLS/SSL settings
+   - **Incorrect**: The 'HTTPS Only' setting forces HTTPS but requires a certificate to be already bound to the custom domain, so this cannot be the immediate next step.
+
+2. ✅ Add a TLS/SSL binding using either an App Service certificate or an uploaded certificate
+   - **Correct**: After configuring the custom domain, you must create a TLS/SSL binding by either purchasing an App Service certificate, uploading your own certificate, or using a free App Service managed certificate to enable HTTPS.
+
+3. ❌ Create an Azure Key Vault to store the SSL certificate
+   - **Incorrect**: While Key Vault can store certificates, the immediate next step is to bind a certificate to the custom domain, whether it's stored in Key Vault or uploaded directly.
+
+4. ❌ Enable HTTPS redirect in the custom domain settings
+   - **Incorrect**: HTTPS redirect can only be enabled after a TLS/SSL certificate is bound to the custom domain; it's not the next step but rather a subsequent configuration.
+
+## Custom Domains and TLS/SSL Certificates
+
+### Overview
+
+Securing your Azure App Service web app with HTTPS requires proper configuration of custom domains and TLS/SSL certificates. The process involves several steps that must be completed in the correct order.
+
+### Steps to Secure a Custom Domain with HTTPS
+
+1. **Verify Domain Ownership** - Prove you own the domain
+2. **Create DNS Records** - Add CNAME or A record pointing to your web app
+3. **Add Custom Domain** - Configure the custom domain in App Service
+4. **Add TLS/SSL Binding** - Bind a certificate to enable HTTPS
+5. **Enable HTTPS Only** - Force all traffic to use HTTPS (optional)
+
+### Certificate Options
+
+| Certificate Type | Description | Cost | Management |
+|-----------------|-------------|------|------------|
+| **Free App Service Managed Certificate** | Auto-provisioned by Azure | Free | Fully managed |
+| **App Service Certificate** | Purchased through Azure | Paid | Managed renewal |
+| **Uploaded Certificate** | Your own certificate (e.g., from CA) | Varies | Manual renewal |
+| **Key Vault Certificate** | Certificate stored in Azure Key Vault | Varies | Centralized management |
+
+### Adding a TLS/SSL Binding
+
+```bash
+# Step 1: Add custom domain (after DNS verification)
+az webapp config hostname add \
+  --webapp-name myWebApp \
+  --resource-group myResourceGroup \
+  --hostname www.mydomain.com
+
+# Step 2: Create a free managed certificate
+az webapp config ssl create \
+  --name myWebApp \
+  --resource-group myResourceGroup \
+  --hostname www.mydomain.com
+
+# Step 3: Bind the certificate to the custom domain
+az webapp config ssl bind \
+  --name myWebApp \
+  --resource-group myResourceGroup \
+  --certificate-thumbprint <thumbprint> \
+  --ssl-type SNI
+
+# Step 4: (Optional) Enable HTTPS only
+az webapp update \
+  --name myWebApp \
+  --resource-group myResourceGroup \
+  --https-only true
+```
+
+### SSL/TLS Binding Types
+
+| Binding Type | Description | Use Case |
+|--------------|-------------|----------|
+| **SNI SSL** | Server Name Indication - modern standard | Most applications |
+| **IP SSL** | Dedicated IP address for SSL | Legacy clients that don't support SNI |
+
+### Tier Requirements for Custom Domains and SSL
+
+| Feature | Free | Shared | Basic | Standard+ |
+|---------|------|--------|-------|----------|
+| Custom Domain | ❌ | ✅ | ✅ | ✅ |
+| SSL/TLS Certificate | ❌ | ❌ | ✅ | ✅ |
+| Free Managed Certificate | ❌ | ❌ | ✅ | ✅ |
+
+### Common Mistakes
+
+⚠️ **Wrong Order of Operations:**
+- Cannot enable "HTTPS Only" before binding a certificate
+- Cannot bind a certificate before adding the custom domain
+- DNS records must be configured before domain verification
+
+⚠️ **Tier Limitations:**
+- Free tier does not support custom domains
+- Shared tier supports custom domains but NOT SSL/TLS
+- Basic tier and above support both custom domains and SSL/TLS
 
 ## Best Practices
 
