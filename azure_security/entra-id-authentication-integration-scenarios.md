@@ -9,6 +9,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 ## Table of Contents
 
 1. [Authentication Methods Overview](#authentication-methods-overview)
+   - [Certificate-Based Authentication (CBA)](#certificate-based-authentication-cba)
 2. [Azure App Service Authentication (Easy Auth)](#azure-app-service-authentication-easy-auth)
 3. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
    - [MSAL Client Application Types](#msal-client-application-types)
@@ -44,6 +45,57 @@ Microsoft Entra ID supports industry-standard authentication protocols:
 | **OpenID Connect** | Authentication layer on OAuth 2.0 | User authentication and SSO |
 | **SAML 2.0** | XML-based authentication | Enterprise SSO, legacy apps |
 | **WS-Federation** | Legacy Microsoft protocol | Older .NET applications |
+
+### Certificate-Based Authentication (CBA)
+
+**Certificate-Based Authentication (CBA)** allows users to authenticate to Microsoft Entra ID using X.509 certificates on their devices (such as smart cards or hardware tokens) instead of entering a username and password.
+
+#### CBA Authentication Strength Configuration
+
+A key configuration decision for CBA is whether to configure it as **single-factor** or **multifactor** authentication:
+
+| Configuration | Description | MFA Behavior |
+|---------------|-------------|--------------|
+| **Single-factor** | Certificate provides one factor of authentication | Users must complete additional MFA step |
+| **Multifactor** | Certificate satisfies MFA requirements on its own | No additional authentication required |
+
+#### Configuring CBA as Multifactor Authentication
+
+When you need to satisfy MFA requirements **without requiring users to provide additional authentication methods**, you must configure CBA as **multifactor authentication**.
+
+**How it works:**
+- The certificate alone counts as both "something you have" (the certificate/device) and "something you know" (the PIN to unlock the certificate)
+- Users can complete MFA with their CBA authentication method
+- No additional authentication factor is required
+
+**Configuration in Microsoft Entra ID:**
+1. Navigate to **Microsoft Entra admin center** → **Protection** → **Authentication methods**
+2. Select **Certificate-based authentication**
+3. Under **Authentication binding policy**, configure the authentication strength:
+   - Set **Protection level** to **Multi-factor authentication**
+
+#### Why Other CBA Configurations Are Incorrect
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Configure CBA as single-factor authentication** | If CBA is configured as single-factor, users must use a second authentication method to satisfy MFA, which doesn't meet the requirement of satisfying MFA without additional methods. |
+| **Configure CBA with conditional access exclusion** | Excluding CBA from conditional access would bypass security requirements rather than satisfying MFA requirements appropriately. This is a security anti-pattern. |
+| **Configure CBA with password authentication** | Adding password authentication would require users to provide additional authentication beyond the certificate, which contradicts the requirement of not requiring additional methods. |
+
+#### CBA Use Cases
+
+✅ **Use CBA as multifactor when:**
+- Users have smart cards or hardware tokens
+- Need to satisfy MFA requirements with certificate alone
+- Implementing phishing-resistant authentication
+- Compliance requires hardware-based authentication
+
+✅ **Use CBA as single-factor when:**
+- Certificate is just one part of a broader MFA strategy
+- Additional verification factors are required by policy
+- Implementing defense-in-depth security model
+
+> **Exam Tip:** When asked about configuring CBA to satisfy MFA requirements without requiring additional authentication methods, the answer is always to configure CBA as **multifactor authentication**. This allows the certificate alone to satisfy MFA requirements.
 
 ---
 
