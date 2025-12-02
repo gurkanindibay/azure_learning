@@ -12,6 +12,9 @@
     - [Message Lock Behavior:](#message-lock-behavior)
     - [Transaction Capabilities:](#transaction-capabilities-2)
     - [Guarantees:](#guarantees-2)
+    - [Transaction Scope Limitations:](#transaction-scope-limitations)
+    - [Exam Scenario: Transactional Message Processing Operations](#exam-scenario-transactional-message-processing-operations)
+    - [Best Practices for Transactions:](#best-practices-for-transactions)
   - [1.3 Receive-and-Delete Mode](#13-receive-and-delete-mode)
     - [⚠️ Non-Transactional Alternative](#non-transactional-alternative)
     - [Characteristics:](#characteristics)
@@ -186,6 +189,37 @@ using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled)
 - ✅ **Lock Renewal:** Extend lock duration for long-running operations
 - ✅ **Automatic Retry:** Message returns to queue if abandoned or lock expires
 - ✅ **Dead-Letter Queue:** Failed messages automatically moved after max delivery count
+
+#### Transaction Scope Limitations:
+- ❌ **No Cross-Namespace Transactions:** Transactions must be within a single namespace
+- ❌ **No Mixed Management/Messaging Operations:** Cannot combine entity creation/modification with messaging operations
+- ✅ **Single Messaging Entity Scope:** Transactions are scoped to operations against a single messaging entity
+- ✅ **Supported Operations in Transaction:** Send, Complete, Abandon, Dead-letter, and Defer
+
+#### Exam Scenario: Transactional Message Processing Operations
+
+**Scenario:** You need to implement transactional message processing in Azure Service Bus where multiple operations must succeed or fail together. Which combination of operations can be included in a single transaction?
+
+**Correct Answer:** Send to queue A, receive from queue B, and complete messages from queue B.
+
+**Why This Works:**
+- Service Bus supports transfers for transactional handover from a queue to a processor, and then to another queue
+- Operations that can be performed within a transaction scope include: send, complete, abandon, dead-letter, and defer
+- These are all messaging operations within the same namespace
+
+**Why Other Options Fail:**
+
+| Approach | Why It's Wrong |
+|----------|----------------|
+| **Send messages to queues in different namespaces** | Cross-namespace transactions are not supported. Service Bus supports grouping operations against a single messaging entity within the scope of a transaction. |
+| **Receive messages from a topic subscription and create a new subscription** | Mixing management and messaging operations in a transaction isn't supported. Creating subscriptions is a management operation. |
+| **Create a new queue and send messages to it** | Mixing management and messaging operations in a transaction isn't supported. Creating entities is a management operation that cannot be combined with messaging operations. |
+
+#### Best Practices for Transactions:
+- Keep transactions scoped to operations within the same namespace
+- Use messaging operations only (send, complete, abandon, dead-letter, defer) in transactions
+- Perform management operations (create queues, topics, subscriptions) separately from messaging operations
+- Consider the Saga pattern for complex cross-namespace workflows that require compensation logic
 
 ### 1.3 Receive-and-Delete Mode
 
