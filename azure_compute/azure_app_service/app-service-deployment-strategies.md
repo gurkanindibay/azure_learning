@@ -18,6 +18,7 @@
   - [Question 7: Docker Container Automatic Updates](#question-7-docker-container-automatic-updates)
   - [Question 8: Eliminating File Lock Conflicts](#question-8-eliminating-file-lock-conflicts)
   - [Question 9: Temporary Diagnostic Logging Configuration](#question-9-temporary-diagnostic-logging-configuration)
+  - [Question 10: Deployment Package Size Limits on Consumption Plan](#question-10-deployment-package-size-limits-on-consumption-plan)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -461,6 +462,52 @@ Which logging configuration should you use?
 | **Application Logging (Blob)** | ❌ No | Azure Blob Storage | Long-term retention |
 | **Detailed Error Messages** | ❌ No | App Service file system | HTTP error diagnostics |
 | **Web Server Logging** | ❌ No | File system or Storage | HTTP traffic analysis |
+
+---
+
+### Question 10: Deployment Package Size Limits on Consumption Plan
+
+**Scenario:**
+You are configuring deployment for an Azure App Service web app. The deployment package is 1.5 GB in size.
+
+**Question:**
+Which deployment method should you avoid when using a Consumption plan?
+
+**Options:**
+
+1. ❌ Container-based deployment
+   - **Incorrect**: Container-based deployment uses a different deployment mechanism that doesn't rely on the same temporary storage constraints as package deployment. Containers are pulled from a registry and run directly, bypassing the temporary storage limitations.
+
+2. ✅ Run from package deployment
+   - **Correct**: The maximum size for a deployment package file is **1 GB**. Additionally, the temporary storage limit for a Consumption plan is **500 MB per plan**. With a 1.5 GB package exceeding both limits, run from package deployment would fail on the Consumption plan. This method requires the package to be stored and mounted, which is constrained by these storage limitations.
+
+3. ❌ External URL deployment with streaming
+   - **Incorrect**: External URL deployment with streaming doesn't require the full package to be stored in temporary storage, avoiding the size limitations of Consumption plan. The application streams content directly from the external URL.
+
+4. ❌ Incremental deployment with differential updates
+   - **Incorrect**: Incremental deployment only transfers changed files, significantly reducing the deployment size and staying within Consumption plan limits. This approach is efficient for large applications as it only updates modified components.
+
+---
+
+**Key Concepts:**
+
+| Deployment Method | Package Size Limit | Consumption Plan Compatible | Notes |
+|-------------------|-------------------|----------------------------|-------|
+| **Run from package** | 1 GB | ❌ Limited by temp storage (500 MB) | Package must fit in temporary storage |
+| **Container-based** | Image size varies | ✅ Yes | Uses container registry, not temp storage |
+| **External URL streaming** | No practical limit | ✅ Yes | Streams directly, no temp storage |
+| **Incremental deployment** | Depends on changes | ✅ Yes | Only transfers changed files |
+
+**Consumption Plan Storage Limitations:**
+- **Temporary storage**: 500 MB per Consumption plan
+- **Package deployment limit**: 1 GB maximum package size
+- These limits make run from package unsuitable for large applications on Consumption plans
+
+**Alternative Solutions for Large Deployments:**
+- Use Premium or Dedicated (App Service) plans with higher storage limits
+- Use container-based deployment for applications exceeding package size limits
+- Implement incremental deployment strategies to reduce transfer sizes
+- Consider external URL deployment for large static assets
 
 ---
 
