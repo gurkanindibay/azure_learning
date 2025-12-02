@@ -19,6 +19,8 @@
   - [Time-Based Retention Policy](#time-based-retention-policy)
   - [Legal Hold](#legal-hold)
   - [Immutability Policy Comparison](#immutability-policy-comparison)
+- [Blob Index Tags](#blob-index-tags)
+  - [Blob Index Tags vs Other Blob Attributes](#blob-index-tags-vs-other-blob-attributes)
 - [Feature Comparison](#feature-comparison)
 - [Exam Question Analysis](#exam-question-analysis)
 - [Best Practices](#best-practices)
@@ -287,6 +289,67 @@ A **legal hold** stores immutable data **until the legal hold is explicitly clea
 | **Can Modify Duration** | Yes | Extend only | N/A |
 | **Best For** | Testing, adjustable compliance | Strict compliance with known duration | Unknown duration, legal proceedings |
 
+## Blob Index Tags
+
+Blob index tags provide a way to categorize and search for blobs using custom key-value pairs. Unlike other blob attributes, index tags are **automatically indexed** by Azure Storage and are **queryable across the entire storage account**.
+
+**Key Characteristics:**
+- Support up to 10 key-value tag pairs per blob
+- Keys can be 1-128 characters; values can be 0-256 characters
+- Tags are **automatically indexed** for efficient searching
+- Support **account-wide queries** using the Find Blobs by Tags operation
+- Can be set during blob upload or added/modified later
+- Available for block blobs, append blobs, and page blobs
+
+**Setting Blob Index Tags:**
+
+```bash
+# Azure CLI - Set tags during upload
+az storage blob upload \
+    --account-name <storage-account-name> \
+    --container-name <container-name> \
+    --name <blob-name> \
+    --file <local-file> \
+    --tags "project=marketing" "status=active" "year=2025"
+
+# Azure CLI - Set tags on existing blob
+az storage blob tag set \
+    --account-name <storage-account-name> \
+    --container-name <container-name> \
+    --name <blob-name> \
+    --tags "project=marketing" "status=complete"
+```
+
+**Querying Blobs by Tags:**
+
+```bash
+# Azure CLI - Find blobs across entire storage account
+az storage blob filter \
+    --account-name <storage-account-name> \
+    --tag-filter "project = 'marketing' AND status = 'active'"
+```
+
+```csharp
+// .NET SDK - Find blobs by tags
+BlobServiceClient serviceClient = new BlobServiceClient(connectionString);
+string query = "@container = 'mycontainer' AND status = 'active'";
+await foreach (TaggedBlobItem blobItem in serviceClient.FindBlobsByTagsAsync(query))
+{
+    Console.WriteLine($"Blob: {blobItem.BlobName}");
+}
+```
+
+### Blob Index Tags vs Other Blob Attributes
+
+| Attribute | Automatically Indexed | Queryable Across Account | Custom Key-Value Pairs | Use Case |
+|-----------|----------------------|-------------------------|----------------------|----------|
+| **Blob Index Tags** | ✅ Yes | ✅ Yes | ✅ Yes | Searchable custom metadata, data categorization |
+| **Blob Metadata** | ❌ No | ❌ No | ✅ Yes | Custom data stored with blob (requires listing/downloading to access) |
+| **Blob Properties** | ❌ No | ❌ No | ❌ No (system-defined) | System attributes like Content-Type, Last-Modified |
+| **Container Metadata** | ❌ No | ❌ No | ✅ Yes | Container-level custom data (not blob-level) |
+
+> 💡 **Exam Tip**: When you need to implement **searchable custom key-value pairs across a storage account**, use **Blob Index Tags**. They are the only attribute type that is automatically indexed and supports account-wide queries.
+
 ## Feature Comparison
 
 | Feature | Restores What? | Scope | Requires Other Features |
@@ -436,6 +499,40 @@ The question asks what operations are allowed - and the key insight is that **cr
 > ⚠️ **Exam Tip**: The question asks what is "allowed" after 100 days. While create, read, AND delete are all allowed after expiry, the answer is "delete only" because that's the **only operation that wasn't previously allowed** and becomes available after the retention period expires.
 
 **Domain:** Implement Azure security
+
+---
+
+### Question: Implementing Searchable Custom Key-Value Pairs for Blobs
+
+**Question:**
+You need to implement a solution that automatically indexes blob data for searching based on custom key-value pairs. The solution must support queries across the entire storage account. What should you configure?
+
+**Options:**
+- A) Blob properties
+- B) Blob metadata
+- C) Container metadata
+- D) Blob index tags ✅
+
+**Correct Answer: D) Blob index tags**
+
+**Explanation:**
+Blob index tags are automatically indexed and support querying across the entire storage account using key-value pairs, making them ideal for implementing searchable custom metadata.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Blob properties** | Blob properties contain system-defined attributes that are not customizable and cannot be used for custom key-value indexing |
+| **Blob metadata** | Blob metadata is not automatically indexed and cannot be queried directly; it requires downloading or listing blobs to access the metadata values |
+| **Container metadata** | Container metadata is stored at the container level and is not automatically indexed or searchable across the storage account |
+
+**Key Distinction:**
+- **Blob Index Tags**: Automatically indexed, queryable across account, custom key-value pairs ✅
+- **Blob Metadata**: Custom key-value pairs but NOT indexed or directly queryable
+- **Blob Properties**: System-defined only, not customizable
+- **Container Metadata**: Container-level only, not indexed
+
+**Domain:** Develop for Azure storage
 
 ## Best Practices
 
