@@ -3,6 +3,15 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Understanding Azure RBAC Actions](#understanding-azure-rbac-actions)
+  - [What Are RBAC Actions?](#what-are-rbac-actions)
+  - [Action Format and Structure](#action-format-and-structure)
+  - [Actions vs DataActions](#actions-vs-dataactions)
+  - [How Authorization Works](#how-authorization-works)
+  - [Wildcards and NotActions](#wildcards-and-notactions)
+  - [Built-in Roles = Predefined Action Bundles](#built-in-roles--predefined-action-bundles)
+  - [Custom Roles](#custom-roles)
+  - [Key Exam Tip: Action vs Role](#key-exam-tip-action-vs-role)
 - [Management Plane vs Data Plane](#management-plane-vs-data-plane)
 - [Permission Models Comparison](#permission-models-comparison)
   - [Service-Specific Access Policies](#service-specific-access-policies)
@@ -22,6 +31,220 @@ Azure provides two primary approaches for controlling access to resources:
 2. **Azure RBAC (Role-Based Access Control)** - Unified model using Azure's identity and access management
 
 Understanding when to use each model is critical for implementing proper security separation, especially preventing privilege escalation scenarios.
+
+## Understanding Azure RBAC Actions
+
+### What Are RBAC Actions?
+
+In Azure RBAC, **Actions** are the equivalent of **permissions** in traditional RBAC systems. They are the specific operations that Azure allows or denies on resources.
+
+**Standard RBAC vs Azure RBAC Terminology:**
+
+| Traditional RBAC | Azure RBAC |
+|------------------|------------|
+| Permission | Action |
+| Role | Role (built-in or custom) |
+| User/Group | Security Principal (user, group, service principal, managed identity) |
+| Resource | Scope (subscription, resource group, resource) |
+
+### Action Format and Structure
+
+Azure RBAC actions follow a specific naming convention:
+
+```
+{Company}.{ProviderName}/{resourceType}/{action}
+```
+
+**Example Breakdown:**
+```
+Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action
+│          │              │                    │
+│          │              │                    └── Operation type
+│          │              └── Resource path
+│          └── Resource provider
+└── Company (always Microsoft for Azure)
+```
+
+**Common Action Suffixes:**
+
+| Suffix | Meaning | Example |
+|--------|---------|--------|
+| `/read` | Read/Get operations | `containers/read` |
+| `/write` | Create/Update operations | `containers/write` |
+| `/delete` | Delete operations | `containers/delete` |
+| `/action` | Special operations | `generateUserDelegationKey/action` |
+| `/*` | All operations on resource | `storageAccounts/*` |
+
+### Actions vs DataActions
+
+Azure separates permissions into two categories:
+
+| Type | Scope | Description | Example |
+|------|-------|-------------|--------|
+| **Actions** | Control plane (management) | Managing Azure resources | `listkeys/action`, `generateUserDelegationKey/action` |
+| **DataActions** | Data plane (data access) | Accessing data within resources | `blobs/read`, `blobs/write` |
+
+**Why the Separation?**
+- Allows granting management permissions without data access
+- Example: `Contributor` role can manage storage accounts but cannot read blob data
+- Enhances security through principle of least privilege
+
+**Role Definition Example:**
+```json
+{
+  "Name": "Storage Blob Data Reader",
+  "Actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+    "Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action"
+  ],
+  "DataActions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"
+  ]
+}
+```
+
+### How Authorization Works
+
+When a user or service calls an Azure API, the authorization flow is:
+
+```
+User/Service calls API
+        │
+        ▼
+┌───────────────────────────────────────┐
+│ Azure Authorization Check:            │
+│                                       │
+│ 1. Does caller have role assignment   │
+│    at this scope?                     │
+│                                       │
+│ 2. Does that role include the         │
+│    required action?                   │
+│                                       │
+│ 3. If YES → Allow (200 OK)            │
+│    If NO  → Deny (403 Forbidden)      │
+└───────────────────────────────────────┘
+```
+
+**Example Authorization Flow:**
+```csharp
+// This API call requires:
+// Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action
+var key = await blobServiceClient.GetUserDelegationKeyAsync(...);
+
+// Azure checks: Does the caller's assigned role include this action?
+// - Storage Blob Data Reader → ✅ Includes action → Allowed
+// - Reader                   → ❌ Missing action → 403 Forbidden
+```
+
+### Wildcards and NotActions
+
+**Wildcards (`*`):**
+
+Roles can use wildcards for broader permissions:
+
+```
+Microsoft.Storage/storageAccounts/*        // All actions on storage accounts
+Microsoft.Storage/*/read                   // All read actions in Storage provider
+*                                          // All actions (Owner role)
+```
+
+**NotActions (Exclusions):**
+
+Roles can exclude specific actions:
+
+```json
+{
+  "Actions": [
+    "Microsoft.Storage/*"
+  ],
+  "NotActions": [
+    "Microsoft.Storage/storageAccounts/delete"
+  ]
+}
+```
+
+This grants all Storage actions **except** delete.
+
+**NotDataActions:**
+
+Similarly, data actions can be excluded:
+
+```json
+{
+  "DataActions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/*"
+  ],
+  "NotDataActions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete"
+  ]
+}
+```
+
+### Built-in Roles = Predefined Action Bundles
+
+Built-in roles are collections of predefined actions that Microsoft has bundled for common use cases:
+
+```
+┌─────────────────────────────────────┐
+│   Storage Blob Data Contributor     │  ← Built-in Role
+├─────────────────────────────────────┤
+│ Actions:                            │
+│  • generateUserDelegationKey/action │
+│                                     │
+│ DataActions:                        │
+│  • containers/blobs/read            │  ← Predefined Actions
+│  • containers/blobs/write           │     (Permissions)
+│  • containers/blobs/delete          │
+│  • containers/blobs/move/action     │
+│  • containers/blobs/add/action      │
+└─────────────────────────────────────┘
+```
+
+**Role Assignment Formula:**
+
+```
+Role Assignment = Security Principal + Role Definition + Scope
+                         │                   │            │
+                      (WHO)              (WHAT)       (WHERE)
+                                           │
+                                    Collection of
+                                      Actions
+                                   (Permissions)
+```
+
+### Custom Roles
+
+If built-in roles don't fit your needs, you can create custom roles with specific actions:
+
+```json
+{
+  "Name": "Custom Blob Reader with Delegation",
+  "Description": "Can read blobs and generate user delegation keys",
+  "Actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action"
+  ],
+  "NotActions": [],
+  "DataActions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"
+  ],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/{subscription-id}"
+  ]
+}
+```
+
+**Azure CLI to Create Custom Role:**
+```bash
+az role definition create --role-definition custom-role.json
+```
+
+### Key Exam Tip: Action vs Role
+
+When exam questions ask **"which RBAC action is required?"**, they want the specific permission string:
+
+- ✅ **Correct**: `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action`
+- ❌ **Wrong**: "Storage Blob Data Reader" (this is a role name, not an action)
 
 ## Management Plane vs Data Plane
 
