@@ -242,7 +242,18 @@ A time-based retention policy stores blob data in a WORM state for a **specified
 - Can be **locked** or **unlocked**
 - **Unlocked policy**: Can be removed or modified, but still requires specifying a retention duration
 - **Locked policy**: Cannot be removed; retention period can only be extended, never shortened
-- After retention expires, objects can be deleted but not overwritten
+- After retention expires, objects can be deleted but **not overwritten (modified)**
+
+**Operations Allowed Based on Retention Status:**
+
+| Operation | During Retention Period | After Retention Expires |
+|-----------|------------------------|------------------------|
+| **Create** | ✅ Allowed | ✅ Allowed |
+| **Read** | ✅ Allowed | ✅ Allowed |
+| **Modify (Overwrite)** | ❌ Not Allowed | ❌ Not Allowed |
+| **Delete** | ❌ Not Allowed | ✅ Allowed |
+
+> ⚠️ **Important**: Even after the retention period expires, blobs **cannot be overwritten or modified**. Only deletion becomes allowed. This is a key exam concept!
 
 **Types:**
 
@@ -380,6 +391,49 @@ A **legal hold** stores immutable data until the legal hold is explicitly cleare
 **Key Distinction:**
 - **Time-based retention**: Requires a **known duration** specified upfront
 - **Legal hold**: **No duration required** - retention continues until explicitly cleared
+
+**Domain:** Implement Azure security
+
+---
+
+### Question: Operations Allowed After Time-Based Retention Expires
+
+**Question:**
+A storage account has a container with a locked time-based retention policy set for 90 days. After 100 days, what operations are allowed on the blobs in this container?
+
+**Options:**
+- A) Read and modify only
+- B) Read only
+- C) Create, read, modify, and delete
+- D) Delete only ✅
+
+**Correct Answer: D) Delete only**
+
+**Explanation:**
+When a time-based retention policy is set, objects can be created and read, but not modified or deleted during the retention period. After the retention period has expired (100 days > 90 days), objects can be **deleted but not overwritten**. 
+
+The question asks what operations are allowed - and the key insight is that **create and read were always allowed** (both during and after retention). The only operation that **changes** after the retention period expires is **delete** - it becomes allowed. Modify/overwrite is **never** allowed, even after retention expires.
+
+> 💡 **Key Concept**: Time-based retention policies enforce WORM (Write Once, Read Many) semantics. The "Write Once" restriction (no modifications/overwrites) is **permanent** and never lifted, even after retention expires. Only the deletion restriction is lifted after the retention period.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Read and modify only** | Modification (overwriting) is **never allowed** even after the retention period expires. The WORM policy permanently prevents overwrites |
+| **Read only** | After the retention period expires, both read and **delete** operations are allowed, not just read operations. Also, create is always allowed |
+| **Create, read, modify, and delete** | Modify operations are **never allowed** on existing blobs under time-based retention, even after retention expires |
+
+**Complete Operations Summary:**
+
+| Operation | During Retention Period | After Retention Expires | Notes |
+|-----------|------------------------|------------------------|-------|
+| **Create new blobs** | ✅ Allowed | ✅ Allowed | Always allowed - new blobs can be added anytime |
+| **Read existing blobs** | ✅ Allowed | ✅ Allowed | Always allowed - this is the "Read Many" in WORM |
+| **Modify/Overwrite existing blobs** | ❌ Not Allowed | ❌ Not Allowed | **Never allowed** - this is the "Write Once" in WORM |
+| **Delete existing blobs** | ❌ Not Allowed | ✅ Allowed | Only operation that changes after expiry |
+
+> ⚠️ **Exam Tip**: The question asks what is "allowed" after 100 days. While create, read, AND delete are all allowed after expiry, the answer is "delete only" because that's the **only operation that wasn't previously allowed** and becomes available after the retention period expires.
 
 **Domain:** Implement Azure security
 
