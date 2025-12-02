@@ -11,12 +11,13 @@
 - [Practice Questions](#practice-questions)
   - [Question 1: Deploying with Reduced File Locking](#question-1-deploying-with-reduced-file-locking)
   - [Question 2: Slot-Specific Settings (Sticky Settings)](#question-2-slot-specific-settings-sticky-settings)
-  - [Question 3: Configuring CORS for External Requests](#question-3-configuring-cors-for-external-requests)
-  - [Question 4: Session Affinity in Multi-Instance Deployments](#question-4-session-affinity-in-multi-instance-deployments)
-  - [Question 5: Enabling Application Logging](#question-5-enabling-application-logging)
-  - [Question 6: Docker Container Automatic Updates](#question-6-docker-container-automatic-updates)
-  - [Question 7: Eliminating File Lock Conflicts](#question-7-eliminating-file-lock-conflicts)
-  - [Question 8: Temporary Diagnostic Logging Configuration](#question-8-temporary-diagnostic-logging-configuration)
+  - [Question 3: Azure Functions Blue-Green Deployment with Sticky Settings](#question-3-azure-functions-blue-green-deployment-with-sticky-settings)
+  - [Question 4: Configuring CORS for External Requests](#question-4-configuring-cors-for-external-requests)
+  - [Question 5: Session Affinity in Multi-Instance Deployments](#question-5-session-affinity-in-multi-instance-deployments)
+  - [Question 6: Enabling Application Logging](#question-6-enabling-application-logging)
+  - [Question 7: Docker Container Automatic Updates](#question-7-docker-container-automatic-updates)
+  - [Question 8: Eliminating File Lock Conflicts](#question-8-eliminating-file-lock-conflicts)
+  - [Question 9: Temporary Diagnostic Logging Configuration](#question-9-temporary-diagnostic-logging-configuration)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -155,7 +156,46 @@ Which configuration should you use?
 4. ❌ Scale up
    - **Incorrect**: Scale up controls the web app's service plan tier, providing more CPU, memory, disk space, and features such as dedicated virtual machines, custom domains and certificates, staging slots, and autoscaling. It has no relation to swap behavior or connection string management.
 
-### Question 3: Configuring CORS for External Requests
+### Question 3: Azure Functions Blue-Green Deployment with Sticky Settings
+
+**Scenario:**
+You need to implement a blue-green deployment strategy for an Azure Functions app. The function app uses sticky app settings for environment-specific configurations. Which command should you use to swap the staging slot with production while preserving sticky settings?
+
+**Question:**
+Which command should you use?
+
+**Options:**
+
+1. ❌ `az functionapp deployment slot swap --name MyFunctionApp --resource-group MyRG --slot staging --action preview`
+   - **Incorrect**: The `--action preview` option applies the target slot's settings to the source slot for testing purposes but **doesn't complete the swap**. This is used for swap validation (also known as "swap with preview"), allowing you to test how the app behaves with production settings before finalizing the swap. It's not used for the actual deployment swap with sticky settings.
+
+2. ✅ `az functionapp deployment slot swap --name MyFunctionApp --resource-group MyRG --slot staging --target-slot production`
+   - **Correct**: This command performs a standard slot swap which correctly handles sticky settings by keeping them in their respective slots. **Sticky settings (deployment slot settings) remain with the slot and are not swapped**, which is the default and desired behavior. The staging slot's app code and non-sticky settings move to production, while each slot retains its own sticky settings.
+
+3. ❌ `az functionapp deployment slot swap --name MyFunctionApp --resource-group MyRG --slot staging --preserve-vnet false`
+   - **Incorrect**: The `--preserve-vnet` parameter affects **virtual network configuration preservation** during swap but has no relation to sticky app settings. Sticky settings are handled automatically during a standard swap operation regardless of VNet settings.
+
+4. ❌ `az functionapp deployment slot auto-swap --slot staging --auto-swap-slot production`
+   - **Incorrect**: The `auto-swap` command **configures automatic swapping** after deployment completion, not for performing an immediate swap. Auto-swap is used for CI/CD scenarios where you want the swap to happen automatically after a successful deployment to the staging slot, not for manual blue-green deployments.
+
+---
+
+**Key Concepts:**
+
+| Swap Type | Command | Use Case |
+|-----------|---------|----------|
+| **Standard Swap** | `az functionapp deployment slot swap --slot staging --target-slot production` | Manual blue-green deployment |
+| **Swap with Preview** | `az functionapp deployment slot swap --slot staging --action preview` | Test with production settings before swap |
+| **Auto-Swap** | `az functionapp deployment slot auto-swap --slot staging --auto-swap-slot production` | CI/CD automatic promotion |
+
+**Sticky Settings Behavior During Swap:**
+- Settings marked as **deployment slot settings** (sticky) remain with their slot
+- Non-sticky settings move with the application code
+- Connection strings and app settings can be individually configured as sticky
+
+---
+
+### Question 4: Configuring CORS for External Requests
 
 **Scenario:**
 You need to configure a web app to allow external requests from https://myapps.com.
@@ -177,7 +217,7 @@ Which Azure CLI command should you use?
 4. ❌ `az webapp config access-restriction add -g MyResourceGroup -n MyWebApp --rule-name external --action Allow --ids myapps --priority 200`
    - **Incorrect**: The `az webapp config access-restriction add` command is used to add IP-based or subnet-based access restrictions to control which sources can access the web app at the network level. It does not configure CORS, which is an application-level security mechanism for cross-origin HTTP requests.
 
-### Question 4: Session Affinity in Multi-Instance Deployments
+### Question 5: Session Affinity in Multi-Instance Deployments
 
 **Scenario:**
 You manage a multi-instance deployment of an Azure App Service web app named app1. You need to ensure a client application is routed to the same instance for the life of the session.
@@ -199,7 +239,7 @@ Which platform setting should you use?
 4. ✅ ARR Affinity
    - **Correct**: ARR (Application Request Routing) Affinity ensures that a client application is routed to the same instance for the life of the session in a multi-instance deployment. When enabled, Azure uses a cookie (ARRAffinity) to track which instance served the initial request and routes subsequent requests from the same client to that instance. This is essential for stateful applications that store session data in local memory.
 
-### Question 5: Enabling Application Logging
+### Question 6: Enabling Application Logging
 
 **Scenario:**
 You manage an Azure App Service web app named app1. You need to enable application logging to diagnose issues and monitor application behavior.
@@ -221,7 +261,7 @@ Which two actions should you perform? (Choose two)
 4. ❌ Enable Always On in the General Settings
    - **Incorrect**: Always On keeps the web app loaded and prevents it from being unloaded after idle periods. While useful for ensuring your app remains responsive, it has no relationship to enabling or capturing application logs. Logging works regardless of whether Always On is enabled.
 
-### Question 6: Docker Container Automatic Updates
+### Question 7: Docker Container Automatic Updates
 
 **Scenario:**
 You are deploying a Docker container to Azure App Service. You need to ensure that your app automatically updates when you push changes to your Docker image in a container registry.
@@ -321,7 +361,7 @@ steps:
       containers: 'myacr.azurecr.io/myapp:$(Build.BuildId)'
 ```
 
-### Question 7: Eliminating File Lock Conflicts
+### Question 8: Eliminating File Lock Conflicts
 
 **Scenario:**
 You are deploying a web application to Azure App Service. You need to deploy using a method that eliminates file lock conflicts between deployment and runtime.
@@ -388,7 +428,7 @@ Which deployment approach should you use?
 - Not suitable for apps that need to modify their own files
 - App must store user uploads and generated files elsewhere (Azure Storage, etc.)
 
-### Question 8: Temporary Diagnostic Logging Configuration
+### Question 9: Temporary Diagnostic Logging Configuration
 
 **Scenario:**
 You need to enable diagnostic logging for a Windows App Service web app. The logs should be stored temporarily for debugging purposes and automatically turn off after a period.
