@@ -43,6 +43,53 @@ Azure Service Bus is a fully managed enterprise message broker with message queu
 
 ## 2. Core Concepts
 
+### Namespace
+A **namespace** is the Service Bus instance itself — it is the top-level resource that you create in Azure. When you "create a Service Bus," you are creating a namespace.
+
+- **Service Bus Instance:** The namespace represents the deployed Service Bus resource. There is no separate "Service Bus" resource; the namespace is the service.
+- **Unique FQDN:** Each namespace provides a unique fully qualified domain name (e.g., `mynamespace.servicebus.windows.net`).
+- **Container for Entities:** Holds all messaging entities including queues, topics, and subscriptions.
+- **Management Boundary:** Serves as an administrative boundary for:
+  - Access control (Shared Access Signatures, Azure AD/Entra ID)
+  - Network isolation (Private endpoints, VNET integration in Premium)
+  - Billing and resource allocation
+  - Tier selection (Basic, Standard, Premium)
+- **Connection Scope:** All client connections are established at the namespace level.
+- **Transaction Boundary:** Transactions are scoped to a single namespace. You can perform atomic operations across multiple queues/topics within the same namespace, but **cross-namespace transactions are not supported**.
+
+```csharp
+// Transaction example - all operations within same namespace
+await using var client = new ServiceBusClient(connectionString);
+
+using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+{
+    // Send to queue1 in namespace
+    var sender1 = client.CreateSender("queue1");
+    await sender1.SendMessageAsync(new ServiceBusMessage("Message 1"));
+    
+    // Send to queue2 in same namespace - included in transaction
+    var sender2 = client.CreateSender("queue2");
+    await sender2.SendMessageAsync(new ServiceBusMessage("Message 2"));
+    
+    scope.Complete(); // Both messages committed atomically
+}
+```
+
+```bash
+# Create a Service Bus namespace
+az servicebus namespace create \
+  --name mynamespace \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --sku Standard
+```
+
+**Key Points:**
+- Namespace name must be globally unique across Azure
+- Tier (SKU) is set at namespace level and applies to all entities within
+- Premium tier provides dedicated resources (Messaging Units) per namespace
+- Each namespace is isolated from others, providing security and resource boundaries
+
 ### Queues
 - **Model:** Point-to-point communication.
 - **Behavior:** Sender sends a message; Receiver pulls it. Once processed, the message is removed.
