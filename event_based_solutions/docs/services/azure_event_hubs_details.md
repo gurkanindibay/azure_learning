@@ -60,6 +60,21 @@ Automatically capture the streaming data in Azure Blob Storage or Azure Data Lak
 - **Format:** Apache Avro (default and only format supported through Azure portal configuration).
 - **Trigger:** Time-based (e.g., every 5 mins) or Size-based (e.g., every 100 MB).
 - **Tier Availability:** Standard, Premium, and Dedicated tiers (not available in Basic tier).
+- **Cost:** No additional administrative costs to run; scales automatically with your throughput.
+
+#### Why Event Hubs Capture vs. Alternatives
+
+| Option | Purpose | Best For |
+|--------|---------|----------|
+| **Event Hubs Capture** ✅ | Automatically stores streaming data in Blob Storage/ADLS in Avro format | Long-term analysis, no additional cost, automatic scaling |
+| **Checkpoint Store with Blob Storage** ❌ | Tracks consumer progress (offsets) | Consumer state management, NOT for storing event data |
+| **Stream Analytics with Blob Output** ❌ | Separate service for stream processing with storage output | Complex transformations, but requires additional configuration and cost |
+| **Event Hubs Archive** ❌ | Does not exist | N/A - This feature doesn't exist in Event Hubs |
+
+> **Exam Tip:** When asked about automatically storing streaming data for long-term analysis in Azure Blob Storage with Apache Avro format, the answer is **Event Hubs Capture**. Don't confuse it with:
+> - **Checkpoint stores** - These track consumer position/offsets, not actual event data
+> - **Stream Analytics** - A separate paid service requiring additional setup
+> - **Event Hubs Archive** - This feature does not exist; "Capture" is the correct term
 
 #### Supported File Formats for Event Hubs Capture
 
