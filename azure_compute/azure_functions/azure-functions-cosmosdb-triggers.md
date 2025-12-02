@@ -14,8 +14,10 @@
     - [startFromBeginning](#startfrombeginning)
     - [leaseCollectionName](#leasecollectionname)
     - [createLeaseCollectionIfNotExists](#createleasecollectionifnotexists)
-- [Practice Question](#practice-question)
+    - [leaseCollectionPrefix](#leasecollectionprefix)
+- [Practice Questions](#practice-questions)
   - [Question: Processing Cosmos DB Changes with Minimal Latency](#question-processing-cosmos-db-changes-with-minimal-latency)
+  - [Question: Multiple Function Apps Monitoring the Same Container](#question-multiple-function-apps-monitoring-the-same-container)
 - [Cosmos DB Input Binding](#cosmos-db-input-binding)
   - [Purpose](#purpose)
   - [Configuration](#configuration)
@@ -194,7 +196,52 @@ Whether to automatically create the leases container.
 - **Default**: false
 - **Recommendation**: true for development, false for production
 
-## Practice Question
+#### leaseCollectionPrefix
+
+A prefix applied to lease documents within the lease container, enabling multiple function apps to share the same lease container while tracking progress independently.
+
+- **Default**: Empty string (no prefix)
+- **Purpose**: Isolates lease documents for different function apps monitoring the same container
+- **Use Case**: When multiple Azure Functions apps need to process changes from the same Cosmos DB container independently
+- **Best Practice**: Set a unique prefix for each function app that monitors the same container
+
+**Why It Matters:**
+When multiple functions monitor the same Cosmos DB container, they can conflict over lease ownership if they share lease documents. By setting a unique `LeaseCollectionPrefix` for each function app (or using a dedicated lease container), each function maintains its own checkpoint state, preventing conflicts and ensuring independent progress tracking.
+
+**Example:**
+```csharp
+// Function App 1
+[CosmosDBTrigger(
+    databaseName: "MyDatabase",
+    collectionName: "Orders",
+    ConnectionStringSetting = "CosmosDBConnection",
+    LeaseCollectionName = "leases",
+    LeaseCollectionPrefix = "FunctionApp1_")]
+
+// Function App 2
+[CosmosDBTrigger(
+    databaseName: "MyDatabase",
+    collectionName: "Orders",
+    ConnectionStringSetting = "CosmosDBConnection",
+    LeaseCollectionName = "leases",
+    LeaseCollectionPrefix = "FunctionApp2_")]
+```
+
+**Function.json Example:**
+```json
+{
+  "type": "cosmosDBTrigger",
+  "name": "documents",
+  "direction": "in",
+  "connectionStringSetting": "CosmosDBConnection",
+  "databaseName": "MyDatabase",
+  "collectionName": "Orders",
+  "leaseCollectionName": "leases",
+  "leaseCollectionPrefix": "FunctionApp1_"
+}
+```
+
+## Practice Questions
 
 ### Question: Processing Cosmos DB Changes with Minimal Latency
 
@@ -223,6 +270,28 @@ What should you do?
 
 4. ❌ Set the feedPollDelay parameter of the function to -1
    - **Incorrect**: Setting `feedPollDelay` to -1 is invalid and would likely result in an error or default to a standard value. The `feedPollDelay` parameter expects a non-negative integer value in milliseconds. Negative values are not supported in the Cosmos DB trigger configuration. The correct value to minimize delay is 0, not -1.
+
+### Question: Multiple Function Apps Monitoring the Same Container
+
+**Scenario:**
+You have multiple Azure Functions apps using Cosmos DB triggers to process changes from the same container. Each function app needs to track its processing progress independently.
+
+**Question:**
+What should you configure to ensure proper operation?
+
+**Options:**
+
+1. ❌ Set different MaxItemsPerInvocation values for each function
+   - **Incorrect**: `MaxItemsPerInvocation` controls the batch size for processing changes and is used for performance tuning. Different values across functions don't provide the required separation for independent progress tracking. All functions would still compete for the same lease documents.
+
+2. ❌ Configure different PartitionKey values for each function
+   - **Incorrect**: The `PartitionKey` configuration in the trigger binding refers to the monitored container's partition key, not for separating function instances. All functions monitoring the same container must use the same partition key configuration that matches the container's partition key.
+
+3. ✅ Set a unique LeaseCollectionPrefix for each function app
+   - **Correct**: When multiple functions monitor the same Cosmos DB container, each must use a unique `LeaseCollectionPrefix` or a dedicated lease container. The prefix creates separate lease documents for each function, allowing independent progress tracking and preventing conflicts between functions. For example, setting `LeaseCollectionPrefix = "FunctionApp1_"` for one function and `LeaseCollectionPrefix = "FunctionApp2_"` for another ensures each function maintains its own checkpoint state.
+
+4. ❌ Use different ConnectionStringSetting names for each function
+   - **Incorrect**: Using different connection string setting names doesn't provide separation when monitoring the same container. The connection string setting name is just a reference to an app setting that contains the actual connection string. If both point to the same Cosmos DB account and container, the functions would still conflict over lease ownership without unique lease configurations.
 
 ## Cosmos DB Input Binding
 
