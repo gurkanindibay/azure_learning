@@ -585,6 +585,76 @@ public class DomainEventPublisher
 - Use event sourcing when appropriate
 - Maintain bounded context boundaries
 
+### Exam Scenario: Multi-Tenant SaaS Application with Event Grid Domain
+
+**Scenario**: You are implementing an Azure Event Grid domain for a multi-tenant SaaS application. Each tenant needs isolated event subscriptions. You need to ensure that tenant A cannot subscribe to events from tenant B.
+
+**Question**: Which approach should you use?
+
+**Answer**: **Create separate topics within the domain for each tenant and use Azure RBAC to control access** ✓
+
+**Why Separate Topics with Azure RBAC?**
+
+Event Grid domains support fine-grain authorization control over each topic through Azure RBAC. You can assign the `EventGrid EventSubscription Contributor` role scoped to specific domain topics, ensuring tenants can only subscribe to their assigned topics while preventing cross-tenant access.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Event Grid Domain                             │
+│                    (Multi-Tenant SaaS)                           │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │  Topic: TenantA │  │  Topic: TenantB │  │  Topic: TenantC │  │
+│  │                 │  │                 │  │                 │  │
+│  │  RBAC: TenantA  │  │  RBAC: TenantB  │  │  RBAC: TenantC  │  │
+│  │  Contributors   │  │  Contributors   │  │  Contributors   │  │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  │
+│           │                    │                    │           │
+└───────────┼────────────────────┼────────────────────┼───────────┘
+            │                    │                    │
+            ▼                    ▼                    ▼
+     ┌────────────┐       ┌────────────┐       ┌────────────┐
+     │  TenantA   │       │  TenantB   │       │  TenantC   │
+     │ Subscribers│       │ Subscribers│       │ Subscribers│
+     └────────────┘       └────────────┘       └────────────┘
+```
+
+**RBAC Configuration Example**:
+```bash
+# Assign EventGrid EventSubscription Contributor role to TenantA for their specific topic
+az role assignment create \
+    --role "EventGrid EventSubscription Contributor" \
+    --assignee <tenant-a-principal-id> \
+    --scope "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.EventGrid/domains/<domain>/topics/tenant-a"
+```
+
+**Why NOT Other Options?**
+
+| Option | Why It Doesn't Work |
+|--------|---------------------|
+| **Create a separate Event Grid domain for each tenant** | This is unnecessarily complex and defeats the purpose of using Event Grid domains, which are designed specifically for multi-tenant scenarios with topic-level isolation. Managing hundreds or thousands of domains for tenants creates operational overhead. |
+| **Implement custom authentication at the event handler level** | Custom authentication at the event handler level occurs after Event Grid has already delivered the events. This means cross-tenant events would still be routed and consume resources before being rejected at the handler. It doesn't prevent subscription-level access. |
+| **Use a single topic with tag-based filtering for each tenant** | A single topic with tag-based filtering does not provide the security isolation required. Any subscriber with access to the topic could potentially filter for and receive events from other tenants. Filtering is for routing, not security. |
+
+### Event Grid Domain Benefits for Multi-Tenancy
+
+| Feature | Benefit |
+|---------|---------|
+| **Topic-level RBAC** | Fine-grained access control per tenant |
+| **Single endpoint** | Simplified publisher configuration |
+| **Scalability** | Support for thousands of topics within one domain |
+| **Cost efficiency** | Shared infrastructure with logical isolation |
+| **Management simplicity** | Single domain to manage vs. many separate topics |
+
+### Key RBAC Roles for Event Grid
+
+| Role | Description |
+|------|-------------|
+| **EventGrid EventSubscription Contributor** | Can manage event subscriptions (create, update, delete) |
+| **EventGrid EventSubscription Reader** | Can read event subscriptions |
+| **EventGrid Contributor** | Full access to Event Grid resources |
+| **EventGrid Data Sender** | Can send events to Event Grid topics |
+
+**Key Takeaway**: For multi-tenant SaaS applications using Event Grid, use **Event Grid domains with separate topics per tenant** and **Azure RBAC scoped to specific domain topics**. This provides true security isolation at the subscription level, not just filtering-based separation.
+
 ---
 
 ## Summary
