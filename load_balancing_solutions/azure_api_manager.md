@@ -3,13 +3,14 @@
 ## Table of Contents
 1. [Purpose](#purpose)
 2. [Platform Overview](#platform-overview)
-3. [Subscription Keys](#subscription-keys)
-4. [Certificates](#certificates)
-5. [Simple Usage Examples](#simple-usage-examples)
-6. [Networking Configurations](#networking-configurations)
-7. [API Versioning](#api-versioning)
-8. [Operational Best Practices](#operational-best-practices)
-9. [Practice Questions](#practice-questions)
+3. [Developer Portal Customization](#developer-portal-customization)
+4. [Subscription Keys](#subscription-keys)
+5. [Certificates](#certificates)
+6. [Simple Usage Examples](#simple-usage-examples)
+7. [Networking Configurations](#networking-configurations)
+8. [API Versioning](#api-versioning)
+9. [Operational Best Practices](#operational-best-practices)
+10. [Practice Questions](#practice-questions)
 
 ## Purpose
 Azure API Manager (API Management) is the turnkey service on Microsoft Azure that lets teams publish, secure, transform, maintain, and monitor APIs. It is designed to sit between consumers (internal applications, partners, or external developers) and backend services, applying consistent security, routing, and transformation policies without touching the target APIs.
@@ -19,6 +20,56 @@ Azure API Manager (API Management) is the turnkey service on Microsoft Azure tha
 - **Publisher portal**: Used by platform owners to configure APIs, products, policies, and developer onboarding.
 - **Developer portal**: Self-service interface where consumers discover APIs, read documentation, and obtain credentials.
 - **Products**: Group APIs into packages with quotas, rate limits, and visibility rules. Consumers subscribe to products to receive a subscription key.
+
+## Developer Portal Customization
+
+The developer portal in Azure API Management is a fully customizable website where API consumers can discover APIs, read documentation, test APIs interactively, and obtain credentials. When organizations need to customize the portal beyond basic styling, they have several options with varying levels of flexibility.
+
+### Customization Approaches
+
+| Approach | Customization Level | Use Case |
+|----------|-------------------|----------|
+| **Built-in widgets** | Limited | Basic branding changes, simple modifications |
+| **Custom CSS** | Moderate | Styling changes without structural modifications |
+| **Self-hosted portal** | Full | Complete customization including custom functionality |
+
+### Built-in Portal Customization
+
+The Azure portal provides built-in customization widgets that allow basic branding changes:
+- Logo and favicon customization
+- Color scheme modifications
+- Basic layout adjustments
+- Content editing through the visual editor
+
+**Limitations**: Built-in widgets provide limited options and don't allow adding custom functionality or extensive modifications.
+
+### Self-Hosted Developer Portal
+
+For organizations requiring extensive customization, **self-hosting the developer portal** is the recommended approach. This involves:
+
+1. **Downloading the source code**: The developer portal is open-source and available on GitHub
+2. **Modifying the source code directly**: Full access to React-based components, styles, and functionality
+3. **Adding custom functionality**: Integrate custom widgets, authentication flows, or business logic
+4. **Complete branding control**: Modify every aspect of the portal's appearance and behavior
+5. **Hosting on your infrastructure**: Deploy to Azure Static Web Apps, Azure App Service, or any web hosting platform
+
+**Benefits of Self-Hosting**:
+- ✅ Full customization capabilities
+- ✅ Custom functionality and widgets
+- ✅ Complete control over branding and features
+- ✅ Integration with existing authentication systems
+- ✅ Custom domain and hosting options
+
+**Considerations**:
+- Requires development expertise
+- Responsible for updates and maintenance
+- Need to manage hosting infrastructure
+
+### What Doesn't Work for Full Customization
+
+- **ARM templates**: Azure Resource Manager templates are for infrastructure deployment, not for applying custom CSS or portal customization
+- **REST API theme configuration**: The API Management REST API doesn't provide theme configuration endpoints for developer portal customization
+- **Built-in widgets alone**: Limited to basic branding and cannot add custom functionality
 
 ## Subscription Keys
 
@@ -1007,3 +1058,29 @@ The other options are incorrect because:
 **Reference**: 
 - [Versions in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-versions)
 - [Add multiple versions of your API](https://learn.microsoft.com/en-us/azure/api-management/api-management-get-started-publish-versions)
+
+### Question 11: Developer Portal Customization
+
+**Scenario**: A company wants to customize the developer portal in Azure API Management to match their corporate branding and add custom functionality.
+
+**Question**: What approach should you recommend?
+
+**Options**:
+- Use the built-in portal customization widgets in the Azure portal only
+- Apply custom CSS through Azure Resource Manager templates during deployment
+- Configure custom themes through API Management REST API endpoints
+- Self-host the developer portal and modify the source code directly ✓
+
+**Answer**: Self-host the developer portal and modify the source code directly
+
+**Explanation**: 
+Self-hosting the developer portal allows full customization including modifying source code, adding custom functionality, and complete control over branding and features. The developer portal source code is available on GitHub and can be downloaded, modified, and hosted on your own infrastructure.
+
+The other options are incorrect because:
+- **Built-in customization widgets**: Built-in widgets provide limited options and don't allow adding custom functionality or extensive modifications. They are suitable only for basic branding changes like logos and color schemes.
+- **ARM templates for custom CSS**: ARM templates are for infrastructure deployment, not for applying custom CSS or portal customization. They define Azure resources, not application styling.
+- **REST API theme configuration**: The API Management REST API doesn't provide theme configuration endpoints for developer portal customization. The REST API is used for managing APIs, products, subscriptions, and other API Management resources.
+
+**Reference**: 
+- [Azure API Management developer portal overview](https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-developer-portal)
+- [Self-host the developer portal](https://learn.microsoft.com/en-us/azure/api-management/developer-portal-self-host)
