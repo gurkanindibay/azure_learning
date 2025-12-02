@@ -16,6 +16,7 @@
 - [Practice Questions](#practice-questions)
   - [Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID](#question-1-blocking-unauthenticated-requests-with-microsoft-entra-id)
   - [Question 2: Token Validation in ASP.NET Core Web APIs](#question-2-token-validation-in-aspnet-core-web-apis)
+  - [Question 3: Extending Session Expiration for App Service Authentication](#question-3-extending-session-expiration-for-app-service-authentication)
 - [Token Validation for Web APIs](#token-validation-for-web-apis)
   - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
   - [Implementing JWT Validation](#implementing-jwt-validation)
@@ -200,6 +201,41 @@ ASP.NET Core web APIs should use the **ASP.NET JWT middleware** for token valida
 - **IdentityModel extensions for .NET** = Token **validation** (server-side/API)
 - **Microsoft Graph SDK** = Calling Graph API
 - **Easy Auth** = Platform-level authentication, but doesn't replace code-level token validation in APIs
+
+---
+
+### Question 3: Extending Session Expiration for App Service Authentication
+
+**Question:** You need to extend the session expiration for App Service authentication to allow users to remain authenticated for longer periods. What should you configure?
+
+**Options:**
+- A) Modify the access token lifetime in Azure AD
+- B) Enable token auto-renewal in MSAL configuration
+- C) Configure token lifetime policy in the application code
+- D) Set token-refresh-extension-hours using Azure CLI
+
+**Correct Answer: D) Set token-refresh-extension-hours using Azure CLI**
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Modify the access token lifetime in Azure AD** ❌ | The grace period applies only to the App Service authenticated session, not to the access tokens from the identity providers. No grace period exists for expired provider tokens. Modifying AD token lifetime won't affect App Service session. |
+| **B) Enable token auto-renewal in MSAL configuration** ❌ | MSAL handles token renewal for acquired tokens but doesn't control App Service authentication session lifetime, which is managed separately by the App Service platform. |
+| **C) Configure token lifetime policy in the application code** ❌ | Token lifetime for App Service authentication is managed at the platform level, not in application code. The session extension must be configured through App Service settings. |
+| **D) Set token-refresh-extension-hours using Azure CLI** ✅ | To extend the default expiration window, run the following Azure CLI command in Azure Cloud Shell: `az webapp auth update --resource-group <group_name> --name <app_name> --token-refresh-extension-hours <hours>`, which extends the App Service authenticated session grace period. |
+
+**Azure CLI Command:**
+
+```bash
+# Extend the token refresh extension hours
+az webapp auth update \
+  --resource-group <group_name> \
+  --name <app_name> \
+  --token-refresh-extension-hours <hours>
+```
+
+**Key Takeaway:** App Service authentication session lifetime is managed at the **platform level** using Azure CLI or Azure Portal settings, not through identity provider configurations (Azure AD), client libraries (MSAL), or application code. The `token-refresh-extension-hours` parameter specifically controls how long the App Service authenticated session remains valid.
 
 ## Token Validation for Web APIs
 
