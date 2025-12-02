@@ -19,6 +19,11 @@
   - [Explanation](#explanation-1)
   - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-1)
   - [Key Takeaway](#key-takeaway-1)
+- [Question 3: Preventing Contributor Role Data Plane Access](#question-3-preventing-contributor-role-data-plane-access)
+  - [Explanation](#explanation-2)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-2)
+  - [Permission Model Comparison](#permission-model-comparison)
+  - [Key Takeaway](#key-takeaway-2)
 
 ## Overview
 
@@ -313,3 +318,131 @@ az keyvault secret rotation-policy update \
 ### Key Takeaway
 
 When you need to store secrets (like connection strings) with requirements for **automatic rotation**, **security**, and **auditability**, **Azure Key Vault** is the purpose-built solution. It provides rotation policies to automatically rotate secrets, comprehensive audit logging, and allows applications to retrieve the latest secret version without code changes.
+
+---
+
+## Question 3: Preventing Contributor Role Data Plane Access
+
+**Scenario:**
+You are configuring Azure Key Vault to prevent unauthorized users with Contributor role from granting themselves data plane access.
+
+**Question:**
+Which permission model should you implement?
+
+**Options:**
+
+1. **Vault access policy with deny assignments** ❌ *Incorrect*
+
+2. **Access Policies with restricted permissions** ❌ *Incorrect*
+
+3. **Access Policies with Azure AD authentication** ❌ *Incorrect*
+
+4. **Azure RBAC** ✅ *Correct*
+
+### Explanation
+
+**Correct Answer: Azure RBAC**
+
+To mitigate the risk of users with Contributor role granting themselves data plane access, you should implement the **Role-Based Access Control (RBAC) permission model**. Azure RBAC restricts permission management to the **'Owner'** and **'User Access Administrator'** roles, allowing a clear separation between security operations and administrative duties.
+
+With Azure RBAC:
+- **Contributor role** users **cannot** grant themselves or others access to Key Vault data plane
+- Only users with **Owner** or **User Access Administrator** roles can assign Key Vault data plane roles
+- Provides clear separation of duties between infrastructure management and security administration
+
+```bash
+# Enable Azure RBAC permission model on Key Vault
+az keyvault update \
+  --name myKeyVault \
+  --resource-group myResourceGroup \
+  --enable-rbac-authorization true
+```
+
+```bicep
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+    // Enable Azure RBAC permission model
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    enablePurgeProtection: true
+  }
+}
+```
+
+**Assigning Key Vault Data Plane Roles:**
+
+```bash
+# Assign Key Vault Secrets User role (read secrets only)
+az role assignment create \
+  --role "Key Vault Secrets User" \
+  --assignee user@contoso.com \
+  --scope /subscriptions/{subscription-id}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vault-name}
+
+# Assign Key Vault Administrator role (full data plane access)
+az role assignment create \
+  --role "Key Vault Administrator" \
+  --assignee admin@contoso.com \
+  --scope /subscriptions/{subscription-id}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vault-name}
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Vault access policy with deny assignments** | When using the Access Policy permission model, a user with the Contributor role can still grant themselves access. Deny assignments don't override this fundamental limitation of the access policy model. The access policy model inherently allows users with `Microsoft.KeyVault/vaults/write` permission to modify policies. |
+| **Access Policies with restricted permissions** | When using the Access Policy permission model, a user with **Contributor**, **Key Vault Contributor**, or any other role that includes `Microsoft.KeyVault/vaults/write` permissions for the key vault management plane can grant themselves data plane access by setting a Key Vault access policy. This is a fundamental design limitation of access policies. |
+| **Access Policies with Azure AD authentication** | Access Policies **always** allow users with Contributor role to modify them regardless of authentication method, as this is a limitation of the access policy model itself. Azure AD authentication doesn't change the permission model's behavior. |
+
+### Permission Model Comparison
+
+| Feature | Access Policy Model | Azure RBAC Model |
+|---------|--------------------|-----------------|
+| **Contributor can grant self access** | ✅ Yes (Security Risk) | ❌ No (Prevented) |
+| **Who can manage data plane access** | Users with `Microsoft.KeyVault/vaults/write` | Owner, User Access Administrator |
+| **Separation of duties** | ❌ Limited | ✅ Clear separation |
+| **Granular permissions** | ⚠️ Limited (per identity) | ✅ Fine-grained (built-in roles) |
+| **Scope flexibility** | Vault level only | Subscription, RG, Vault, or individual object |
+| **Recommended for new deployments** | ❌ No | ✅ Yes |
+
+### Key Vault RBAC Built-in Roles
+
+| Role | Description | Scope |
+|------|-------------|-------|
+| **Key Vault Administrator** | Full access to all data plane operations | Data plane |
+| **Key Vault Secrets Officer** | Manage secrets (read, write, delete) | Secrets |
+| **Key Vault Secrets User** | Read secret contents | Secrets |
+| **Key Vault Certificates Officer** | Manage certificates | Certificates |
+| **Key Vault Crypto Officer** | Manage keys | Keys |
+| **Key Vault Crypto User** | Perform cryptographic operations | Keys |
+| **Key Vault Reader** | Read vault metadata (no secrets) | Metadata |
+
+### The Security Problem with Access Policies
+
+```
+Access Policy Model (Security Risk):
+┌──────────────────────────────────────────────────────────┐
+│  User with Contributor Role                              │
+│  ├── Has Microsoft.KeyVault/vaults/write permission      │
+│  └── Can modify vault properties including...            │
+│       └── Access Policies ──► Grants self data access!   │
+└──────────────────────────────────────────────────────────┘
+
+Azure RBAC Model (Secure):
+┌──────────────────────────────────────────────────────────┐
+│  User with Contributor Role                              │
+│  ├── Has Microsoft.KeyVault/vaults/write permission      │
+│  └── Can modify vault properties BUT...                  │
+│       └── Cannot assign RBAC roles (requires Owner/UAA)  │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Takeaway
+
+When you need to prevent users with **Contributor** role from granting themselves data plane access to Key Vault, implement the **Azure RBAC permission model**. This model restricts permission management to **Owner** and **User Access Administrator** roles only, providing clear separation between security operations and administrative duties. The Access Policy model has a fundamental security limitation where anyone with `Microsoft.KeyVault/vaults/write` permission can grant themselves data plane access.
