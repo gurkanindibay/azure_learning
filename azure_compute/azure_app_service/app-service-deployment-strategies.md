@@ -21,6 +21,7 @@
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
+  - [Windows vs Linux Logging Availability](#windows-vs-linux-logging-availability)
   - [Enabling Application Logging](#enabling-application-logging)
   - [Logging in Application Code](#logging-in-application-code)
   - [Viewing Application Logs](#viewing-application-logs)
@@ -478,6 +479,67 @@ Application logging captures diagnostic information written by your application 
 | **Detailed Error Messages** | Detailed .htm error pages | Diagnose HTTP errors (400, 500, etc.) |
 | **Failed Request Tracing** | Detailed tracing for failed requests | Troubleshoot IIS/application pipeline issues |
 | **Deployment Logs** | Logs from deployment operations | Debug deployment problems |
+
+### Windows vs Linux Logging Availability
+
+Not all logging types are available on both Windows and Linux App Service plans. Understanding these differences is crucial when implementing diagnostic logging for your web apps.
+
+| Log Type | Windows | Linux | Notes |
+|----------|---------|-------|-------|
+| **Application Logging (Filesystem)** | ✅ Available | ✅ Available | Both platforms support application logs to filesystem |
+| **Application Logging (Blob)** | ✅ Available | ✅ Available | Both platforms support application logs to blob storage |
+| **Web Server Logging** | ✅ Available | ✅ Available | IIS logs on Windows, nginx logs on Linux |
+| **Detailed Error Messages** | ✅ Available | ❌ **Not Available** | Windows only - saves detailed .htm error pages |
+| **Failed Request Tracing** | ✅ Available | ❌ **Not Available** | Windows only - detailed IIS request tracing |
+| **Deployment Logging** | ✅ Available | ✅ Available | Both platforms track deployment activities |
+| **Docker Container Logs** | N/A | ✅ Available | Linux only - for custom container apps |
+
+**Key Differences:**
+
+1. **Detailed Error Messages**: Only available for Windows apps. To enable in Azure Portal: Go to your app > **Monitoring** > **App Service logs** > Turn on **Detailed error messages**
+
+2. **Failed Request Tracing**: Only available for Windows apps. Provides detailed tracing information for failed HTTP requests through the IIS pipeline.
+
+3. **Docker Container Logs**: Specifically available for Linux apps running custom containers, providing runtime container information.
+
+**Important:** When implementing diagnostic logging for Linux App Service, remember that you cannot enable detailed error messages or failed request tracing - these options are only shown for Windows apps in the Azure Portal.
+
+---
+
+### Practice Question: Linux App Service Logging Availability
+
+**Question:**
+
+You need to implement diagnostic logging for a Linux App Service web app. Which logging type is **NOT** available for Linux web apps?
+
+**Options:**
+
+A) Docker container logs
+
+B) Application logging to filesystem
+
+C) Detailed error messages
+
+D) Deployment logging
+
+---
+
+**Correct Answer: C) Detailed error messages**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Docker container logs** | ❌ Incorrect - Docker container logs are specifically available for Linux apps running custom containers and provide runtime container information |
+| **B) Application logging to filesystem** | ❌ Incorrect - Application logging to filesystem is available for Linux apps and can be configured through the Azure portal under App Service logs |
+| **C) Detailed error messages** | ✅ **Correct** - Detailed error messages are only available for Windows apps. In the Azure Portal, you can enable this by going to your app > **Monitoring** > **App Service logs** and turning on "Detailed error messages" - but this option only appears for Windows apps |
+| **D) Deployment logging** | ❌ Incorrect - Deployment logging tracks deployment activities and is available for both Windows and Linux App Service apps |
+
+**Reference:** [Enable diagnostics logging for apps in Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/troubleshoot-diagnostic-logs)
+
+---
 
 ### App Service Log Categories (Diagnostic Settings)
 
