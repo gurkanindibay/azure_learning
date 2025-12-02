@@ -151,8 +151,11 @@ Items (Documents)
 
 5. **Unique Keys**
    - Containers can enforce uniqueness constraints
-   - Defined at container creation time
-   - Ensures specific properties have unique values within a partition
+   - Defined at container creation time (cannot be modified after)
+   - Ensures specific properties have unique values **within a logical partition**
+   - The partition key is implicitly part of the uniqueness scope
+   - Use unique key policies (not indexing) to enforce uniqueness
+   - Example: Unique key `/emailAddress` with partition key `/companyId` ensures emails are unique per company
 
 6. **Time to Live (TTL)**
    - TTL can be configured per container
@@ -1613,6 +1616,103 @@ You have an Azure Cosmos DB container that stores IoT sensor data. You need to c
 
 - [Indexing policies in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/index-policy)
 - [Indexing modes in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/index-overview)
+
+---
+
+### Question 5: Unique Key Policy for Email Uniqueness Within Companies
+
+**Question:**
+You need to ensure that email addresses are unique within each company in an Azure Cosmos DB container. The partition key is `/companyId`. What should you configure?
+
+**Options:**
+- A) Create a unique key policy with path `/emailAddress`
+- B) Set `/emailAddress` as the partition key
+- C) Create a unique key policy with paths `/companyId` and `/emailAddress`
+- D) Create a unique index on `/emailAddress` in the indexing policy
+
+---
+
+### Answer: A ✅
+
+**Correct Answer: A) Create a unique key policy with path `/emailAddress`**
+
+---
+
+### Detailed Explanation
+
+**Option A - Create a unique key policy with path `/emailAddress`** ✅
+- **Correct**: A unique key with path `/emailAddress` combined with the partition key `/companyId` ensures email uniqueness within each company (logical partition)
+- Unique keys in Cosmos DB are scoped to the logical partition (partition key value)
+- This means the same email can exist in different companies, but not within the same company
+- This is the correct way to enforce uniqueness constraints per partition
+
+**Option B - Set `/emailAddress` as the partition key**
+- **Incorrect**: Changing the partition key to `/emailAddress` would affect data distribution and query patterns
+- Partition keys should be chosen based on:
+  - Access patterns (how you query the data)
+  - Data distribution (avoiding hot partitions)
+  - Scalability requirements
+- Partition keys are NOT designed for enforcing uniqueness requirements
+- This would also break the company-based data organization
+
+**Option C - Create a unique key policy with paths `/companyId` and `/emailAddress`**
+- **Incorrect**: Including the partition key `/companyId` in the unique key paths is **redundant**
+- The partition key is **implicitly part of the uniqueness constraint scope**
+- Unique keys are already scoped to the partition key by design
+- Adding `/companyId` to the unique key paths would create an incorrect and unnecessary constraint
+
+**Option D - Create a unique index on `/emailAddress` in the indexing policy**
+- **Incorrect**: **Indexing policies do not enforce uniqueness constraints**
+- Indexes are for query performance optimization, not data integrity
+- Unique keys must be defined in the **unique key policy** at container creation time
+- You cannot enforce uniqueness through indexing configuration
+
+---
+
+### Key Concepts: Unique Keys in Cosmos DB
+
+1. **Scope of Unique Keys**
+   - Unique keys are scoped to the **logical partition** (partition key value)
+   - Uniqueness is enforced **within** each partition, not across the entire container
+   - Example: With partition key `/companyId`, unique key `/emailAddress` means:
+     - `company1` + `user@example.com` ✅ Allowed
+     - `company2` + `user@example.com` ✅ Allowed (different partition)
+     - `company1` + `user@example.com` ❌ Rejected (duplicate in same partition)
+
+2. **Unique Key Policy Definition**
+   ```json
+   {
+     "uniqueKeyPolicy": {
+       "uniqueKeys": [
+         {
+           "paths": ["/emailAddress"]
+         }
+       ]
+     }
+   }
+   ```
+
+3. **Important Constraints**
+   - Unique keys must be defined at **container creation time**
+   - Cannot be added or modified after the container is created
+   - Maximum of 16 paths per unique key
+   - Maximum of 10 unique key constraints per container
+   - Unique key paths cannot exceed 100 characters
+
+4. **Unique Keys vs Indexing vs Partition Keys**
+
+   | Feature | Purpose | Enforces Uniqueness |
+   |---------|---------|---------------------|
+   | **Partition Key** | Data distribution & scalability | ❌ No |
+   | **Indexing Policy** | Query performance optimization | ❌ No |
+   | **Unique Key Policy** | Data integrity constraints | ✅ Yes (within partition) |
+
+---
+
+### References
+
+- [Unique keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/unique-keys)
+- [Define unique keys for Azure Cosmos DB containers](https://learn.microsoft.com/azure/cosmos-db/how-to-define-unique-keys)
 
 ---
 
