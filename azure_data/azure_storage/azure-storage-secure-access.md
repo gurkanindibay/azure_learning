@@ -22,9 +22,11 @@
 - [Exam Question Analysis](#exam-question-analysis)
   - [Question 1: Container Access with Entra ID and RBAC](#question-1-container-access-with-entra-id-and-rbac)
   - [Question 3: SAS with Microsoft Entra ID Credentials for Enhanced Security](#question-3-sas-with-microsoft-entra-id-credentials-for-enhanced-security)
+  - [Question 4: RBAC Action Required for User Delegation Key](#question-4-rbac-action-required-for-user-delegation-key)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
+  - [Common Azure Storage RBAC Actions Reference](#common-azure-storage-rbac-actions-reference)
   - [Assigning RBAC Roles](#assigning-rbac-roles)
   - [Using Managed Identity with User Delegation SAS](#using-managed-identity-with-user-delegation-sas)
 - [Comparison: Authentication Methods](#comparison-authentication-methods)
@@ -1460,6 +1462,83 @@ When the question asks for:
 - Any SAS requirement ≤ 7 days can use User Delegation SAS
 - For longer periods, consider implementing SAS renewal mechanisms
 
+### Question 4: RBAC Action Required for User Delegation Key
+
+**Scenario:**
+You need to request a user delegation key for creating a user delegation SAS.
+
+**Question:**
+Which Azure RBAC action must be assigned to the security principal?
+
+**Options:**
+1. `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action` ✅
+2. `Microsoft.Storage/storageAccounts/listkeys/action`
+3. `Microsoft.Storage/storageAccounts/blobServices/write`
+4. `Microsoft.Authorization/roleAssignments/write`
+
+**Correct Answer: `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action`**
+
+**Detailed Analysis:**
+
+#### Why `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action` is CORRECT ✅
+
+**Key Points:**
+- ✅ **Specific Permission**: This action specifically allows requesting user delegation keys
+- ✅ **Required for User Delegation SAS**: A client that creates a user delegation SAS must be assigned an Azure RBAC role that includes this action
+- ✅ **Built-in Roles with This Permission**:
+  - Storage Blob Data Contributor
+  - Storage Blob Data Owner
+  - Storage Blob Data Reader
+  - Storage Blob Delegator
+  - Contributor
+
+**Implementation Example:**
+```csharp
+// The security principal calling this method must have
+// Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action
+var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+    startsOn: DateTimeOffset.UtcNow,
+    expiresOn: DateTimeOffset.UtcNow.AddHours(1)
+);
+```
+
+#### Why `Microsoft.Storage/storageAccounts/listkeys/action` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Wrong Purpose**: The `listkeys` action provides access to storage account keys, NOT user delegation keys
+- ❌ **Security Concern**: User delegation SAS specifically avoids using account keys for security
+- ❌ **Different Mechanism**: Account keys and user delegation keys are fundamentally different authentication mechanisms
+
+#### Why `Microsoft.Storage/storageAccounts/blobServices/write` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Wrong Scope**: The `write` action allows modifying blob service properties
+- ❌ **Doesn't Grant Key Generation**: This permission doesn't include the ability to generate user delegation keys
+- ❌ **Different Operation**: Writing to blob services is a data plane operation, while generating delegation keys is a control plane operation
+
+#### Why `Microsoft.Authorization/roleAssignments/write` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Different Service**: This action allows creating role assignments in Azure RBAC
+- ❌ **Not Storage Related**: It's an authorization management permission, not a storage permission
+- ❌ **Wrong Context**: This doesn't provide any permission to generate user delegation keys for blob storage
+
+**Comparison Table:**
+
+| RBAC Action | Purpose | User Delegation Key? |
+|-------------|---------|----------------------|
+| `generateUserDelegationKey/action` | Request user delegation keys | ✅ Yes |
+| `listkeys/action` | Access storage account keys | ❌ No |
+| `blobServices/write` | Modify blob service properties | ❌ No |
+| `roleAssignments/write` | Create role assignments | ❌ No |
+
+### Key Takeaway
+
+When implementing user delegation SAS, ensure the security principal has the `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action` permission. This is typically included in:
+- **Storage Blob Delegator** - Minimal role specifically for delegation key generation
+- **Storage Blob Data Contributor/Owner/Reader** - Data access roles that also include delegation
+- **Contributor** - Broader role that includes this permission
+
 ## SAS Security Best Practices
 
 ### 1. Choose the Right SAS Type
@@ -1575,6 +1654,8 @@ var secret = await client.GetSecretAsync("storage-sas-token");
 
 ## RBAC Roles for Storage Access
 
+> **Note:** For a comprehensive guide on Azure RBAC Actions fundamentals (action format, Actions vs DataActions, wildcards, custom roles, etc.), see [Azure RBAC Permission Models](../../azure_security/azure-rbac-permission-models.md#understanding-azure-rbac-actions).
+
 ### Common Built-in Roles
 
 | Role | Permissions | Use Case |
@@ -1586,6 +1667,51 @@ var secret = await client.GetSecretAsync("storage-sas-token");
 | **Storage Queue Data Reader** | Read queue messages | Queue monitoring |
 | **Storage Queue Data Message Processor** | Peek, receive, delete messages | Queue consumer |
 | **Storage Queue Data Message Sender** | Send queue messages | Queue producer |
+
+### Common Azure Storage RBAC Actions Reference
+
+This table lists frequently tested RBAC actions for Azure Storage operations:
+
+| RBAC Action | Description | Use Case |
+|-------------|-------------|----------|
+| `Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action` | Request user delegation keys for creating User Delegation SAS | Creating secure SAS tokens with Entra ID |
+| `Microsoft.Storage/storageAccounts/listkeys/action` | List storage account access keys | Legacy applications, account key access |
+| `Microsoft.Storage/storageAccounts/regeneratekey/action` | Regenerate storage account keys | Key rotation |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/read` | Read container properties and metadata | Listing containers, getting container info |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/write` | Create or modify containers | Container management |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/delete` | Delete containers | Container cleanup |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read` | Read blob data | Reading blob content |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write` | Write blob data | Uploading/modifying blobs |
+| `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete` | Delete blobs | Removing blobs |
+| `Microsoft.Storage/storageAccounts/fileServices/fileshares/read` | Read file share properties | File share access |
+| `Microsoft.Storage/storageAccounts/fileServices/fileshares/write` | Create or modify file shares | File share management |
+| `Microsoft.Storage/storageAccounts/queueServices/queues/read` | Read queue properties | Queue monitoring |
+| `Microsoft.Storage/storageAccounts/queueServices/queues/write` | Create or modify queues | Queue management |
+| `Microsoft.Storage/storageAccounts/tableServices/tables/read` | Read table properties | Table access |
+| `Microsoft.Storage/storageAccounts/tableServices/tables/write` | Create or modify tables | Table management |
+
+**Key Action Categories:**
+
+| Category | Action Pattern | Example |
+|----------|---------------|---------|
+| **Key Management** | `listkeys`, `regeneratekey` | Account key operations |
+| **Delegation** | `generateUserDelegationKey` | User Delegation SAS |
+| **Data Plane - Read** | `*/read` | Reading data/properties |
+| **Data Plane - Write** | `*/write` | Creating/modifying resources |
+| **Data Plane - Delete** | `*/delete` | Removing resources |
+
+**Which Built-in Roles Include Which Actions:**
+
+| Role | generateUserDelegationKey | listkeys | Data Plane Operations |
+|------|---------------------------|----------|----------------------|
+| **Owner** | ✅ | ✅ | ✅ (via other roles) |
+| **Contributor** | ✅ | ✅ | ❌ (control plane only) |
+| **Storage Account Contributor** | ✅ | ✅ | ❌ (control plane only) |
+| **Storage Blob Data Owner** | ✅ | ❌ | ✅ Full |
+| **Storage Blob Data Contributor** | ✅ | ❌ | ✅ Read/Write/Delete |
+| **Storage Blob Data Reader** | ✅ | ❌ | ✅ Read only |
+| **Storage Blob Delegator** | ✅ | ❌ | ❌ (delegation only) |
+| **Reader** | ❌ | ❌ | ❌ |
 
 ### Assigning RBAC Roles
 
