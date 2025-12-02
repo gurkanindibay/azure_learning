@@ -57,6 +57,12 @@
   - [Cloud Role Configuration Examples](#cloud-role-configuration-examples)
   - [Key Takeaway](#key-takeaway-7)
   - [Related Learning Resources](#related-learning-resources-7)
+- [Question 9: Enabling Application Insights Profiler for Azure Functions](#question-9-enabling-application-insights-profiler-for-azure-functions)
+  - [Explanation](#explanation-8)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-7)
+  - [Profiler Configuration Requirements](#profiler-configuration-requirements)
+  - [Key Takeaway](#key-takeaway-8)
+  - [Related Learning Resources](#related-learning-resources-8)
 
 ## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
@@ -847,3 +853,79 @@ When multiple services send telemetry to a single Application Insights resource,
 - Set cloud role name in Application Insights
 - Telemetry context in Application Insights
 - Distributed tracing and correlation
+
+---
+
+## Question 9: Enabling Application Insights Profiler for Azure Functions
+
+**Scenario:**
+You have an Azure Functions app running on Windows using the App Service plan. You want to enable Application Insights Profiler for better performance monitoring.
+
+**Requirement:**
+You need to enable Application Insights Profiler for the Azure Functions app.
+
+**Question:**
+Which configuration is required?
+
+**Options:**
+
+1. **Enable Profiler using the Consumption plan for better performance monitoring** ❌ *Incorrect*
+2. **Configure Profiler through the host.json file in the Functions app** ❌ *Incorrect*
+3. **Add environment variables APPINSIGHTS_PROFILER_FEATURE_VERSION='1.0.0' and DiagnosticServices_EXTENSION_VERSION='~3' to the Functions app settings** ✅ *Correct*
+4. **Install the Microsoft.ApplicationInsights.Profiler NuGet package in the Functions project** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Add environment variables APPINSIGHTS_PROFILER_FEATURE_VERSION='1.0.0' and DiagnosticServices_EXTENSION_VERSION='~3' to the Functions app settings**
+
+You can enable the Application Insights Profiler for .NET for Azure Functions apps on the App Service plan by configuring the required environment variables for profiler feature version and diagnostic services extension.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Enable Profiler using the Consumption plan** | The Consumption tier isn't currently available for Snapshot Debugger and similar limitations apply to Profiler, requiring at least Basic service tier. Profiler and Snapshot Debugger are not supported on the Consumption plan. |
+| **Configure Profiler through host.json** | Profiler configuration for Functions apps on App Service plan is done through application settings/environment variables, not through host.json. The host.json file is used for other Functions runtime configurations but not for Profiler enablement. |
+| **Install Microsoft.ApplicationInsights.Profiler NuGet package** | Application Insights Profiler for .NET is preinstalled as part of the Azure App Service runtime, so manual package installation is not required for Functions on App Service plan. |
+
+### Profiler Configuration Requirements
+
+| Requirement | Details |
+|-------------|--------|
+| **Hosting Plan** | App Service plan (Basic tier or higher) - not Consumption plan |
+| **Platform** | Windows (Linux has different configuration requirements) |
+| **Environment Variables** | `APPINSIGHTS_PROFILER_FEATURE_VERSION` = `1.0.0` |
+|                          | `DiagnosticServices_EXTENSION_VERSION` = `~3` |
+| **Application Insights** | Must be connected to the Functions app |
+
+### Configuration Steps
+
+1. **Navigate to your Function App** in the Azure portal
+2. Go to **Configuration** > **Application settings**
+3. Add the following application settings:
+   - Name: `APPINSIGHTS_PROFILER_FEATURE_VERSION`, Value: `1.0.0`
+   - Name: `DiagnosticServices_EXTENSION_VERSION`, Value: `~3`
+4. **Save** the configuration and restart the app
+
+### Profiler Hosting Plan Compatibility
+
+| Hosting Plan | Profiler Support | Notes |
+|-------------|------------------|-------|
+| **Consumption** | ❌ Not supported | Use App Service or Premium plan |
+| **Premium** | ✅ Supported | Recommended for production workloads |
+| **App Service (Basic+)** | ✅ Supported | Requires at least Basic tier |
+| **App Service (Free/Shared)** | ❌ Not supported | Upgrade to Basic or higher |
+
+### Key Takeaway
+
+To enable Application Insights Profiler for Azure Functions on the App Service plan:
+- Use **environment variables** (`APPINSIGHTS_PROFILER_FEATURE_VERSION` and `DiagnosticServices_EXTENSION_VERSION`) in application settings
+- Ensure you're using at least the **Basic service tier** (not Consumption plan)
+- The Profiler is **preinstalled** in the App Service runtime, so no NuGet package installation is needed
+- Configuration is done through **application settings**, not host.json
+
+### Related Learning Resources
+- Enable Profiler for Azure Functions
+- Application Insights Profiler for .NET
+- Azure Functions hosting options
+- Troubleshoot Profiler issues
