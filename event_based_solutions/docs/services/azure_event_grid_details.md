@@ -162,6 +162,53 @@ When an event subscription targets a webhook or HTTP endpoint, Event Grid perfor
 - **Failed validation:** If the endpoint never acknowledges the validation event or responds with an error, the subscription stays in a `PendingValidation` state and delivery never starts; retry attempts are made but eventually the subscription is disabled.
 - **Automation tip:** Functions/Logic Apps listening for Event Grid events should explicitly handle the validation event (check `eventType` and return the code) before processing normal events.
 
+#### Webhook Validation Mechanisms
+
+Event Grid supports two validation mechanisms for webhook endpoints:
+
+| Mechanism | Type | Description | Best For |
+|-----------|------|-------------|----------|
+| **Synchronous Handshake** | Primary | Webhook echoes the `validationCode` back in the HTTP response body | Most webhook scenarios, simple implementation |
+| **Asynchronous Validation** | Alternative | Webhook calls the `validationUrl` to confirm ownership | Scenarios where immediate response isn't possible |
+
+**Synchronous Handshake (Primary Method):**
+1. Event Grid sends a `SubscriptionValidationEvent` with a `validationCode`
+2. Webhook must respond within 30 seconds with HTTP 200
+3. Response body must include: `{ "validationResponse": "<validationCode>" }`
+4. Subscription is activated upon successful validation
+
+**Asynchronous Validation (Alternative Method):**
+1. Event Grid sends a `SubscriptionValidationEvent` with both `validationCode` and `validationUrl`
+2. Webhook can later perform a GET request to the `validationUrl`
+3. The `validationUrl` is valid for 5 minutes
+4. Useful when webhook cannot respond synchronously
+
+> **Important:** The synchronous handshake is the primary and most commonly used validation mechanism. Bearer token authentication and Mutual TLS are used for securing webhook calls after subscription creation, not for the initial endpoint validation process.
+
+#### Practice Question: Webhook Endpoint Validation
+
+**Question:** You are implementing an Event Grid solution that must validate webhook endpoints. The webhook must prove it can receive events before the subscription is created. Which validation mechanism should you implement?
+
+| Option | Description |
+|--------|-------------|
+| A | Mutual TLS certificate validation |
+| B | Asynchronous validation using a callback URL |
+| C | Bearer token authentication in the Authorization header |
+| D | Synchronous handshake validation by echoing the validation code |
+
+<details>
+<summary>Answer</summary>
+
+**Correct Answer: D**
+
+**Explanation:**
+- **Option A (Incorrect):** Mutual TLS provides transport-level security but is not the mechanism used by Event Grid for validating that a webhook endpoint can receive events during subscription creation.
+- **Option B (Incorrect):** While Event Grid supports asynchronous validation via `validationUrl` callback, the synchronous handshake is the primary and most commonly used validation mechanism for webhooks.
+- **Option C (Incorrect):** Bearer token authentication is used for securing webhook calls after subscription creation, not for the initial endpoint validation process required during subscription setup.
+- **Option D (Correct):** Event Grid sends a validation event with a `validationCode` that the webhook must echo back synchronously in the response, proving it can receive and process Event Grid events before the subscription is activated.
+
+</details>
+
 ### Delivery Response Handling
 When Event Grid receives a `400 (Bad Request)` or `413 (Request Entity Too Large)` during delivery:
 - **No retries:** These status codes are treated as permanent failures. Event Grid still makes that single delivery attempt, records the failure, and will not retry that event again even though the subscription stays active.
