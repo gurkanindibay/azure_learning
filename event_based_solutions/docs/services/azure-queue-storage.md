@@ -31,6 +31,7 @@
   - [Question: Verify Message Presence Without Removal](#question-verify-message-presence-without-removal)
   - [Exam Answer Issues](#exam-answer-issues)
   - [Correct Technical Facts](#correct-technical-facts)
+  - [Question: Configuring Retry Attempts for Failed Queue Messages](#question-configuring-retry-attempts-for-failed-queue-messages)
 - [Best Practices](#best-practices)
   - [1. Message Processing](#1-message-processing)
   - [2. Performance](#2-performance)
@@ -486,6 +487,95 @@ The provided exam explanation contains inaccuracies:
 - ✅ `ReceiveMessagesAsync(maxMessages)` - receives multiple messages
 
 **Key Difference**: The question context and correct answer should specify `PeekMessagesAsync` to be completely accurate for Queue Storage.
+
+---
+
+### Question: Configuring Retry Attempts for Failed Queue Messages
+
+**Scenario**: You have an Azure Storage Queue that processes messages in batches. When retrieving messages, you need to ensure failed messages are retried up to 5 times before being removed. What should you configure?
+
+**Options:**
+
+1. **Set the message time-to-live to 5 times the processing duration** ❌
+   - **Wrong**: Time-to-live controls message expiration, not retry count. Messages expire based on time, not the number of processing attempts.
+
+2. **Enable automatic retry with exponential backoff for 5 attempts** ❌
+   - **Wrong**: Queue Storage doesn't have built-in automatic retry with exponential backoff. To handle poison messages, you must manually check the `dequeueCount` of the queue message.
+
+3. **Set `maxDequeueCount` to 5 and implement a poison queue handler** ✅
+   - **Correct**: Azure Functions retries the function up to five times for a given queue message, including the first try. If all five attempts fail, the functions runtime adds a message to a poison queue named `<originalqueuename>-poison`.
+
+4. **Configure `visibilityTimeout` to allow 5 retry intervals** ❌
+   - **Wrong**: Visibility timeout controls how long a message is hidden after retrieval, not the number of retry attempts. It doesn't automatically track or limit dequeue attempts.
+
+**Key Concepts:**
+
+| Parameter | Purpose | Controls Retries? |
+|-----------|---------|-------------------|
+| `maxDequeueCount` | Maximum number of times a message can be dequeued before moving to poison queue | ✅ Yes |
+| `dequeueCount` | Current number of times the message has been retrieved | Read-only counter |
+| `visibilityTimeout` | How long message is invisible after retrieval | ❌ No (timing only) |
+| `timeToLive` | When message expires and is permanently deleted | ❌ No (expiration only) |
+
+**Azure Functions Configuration (host.json):**
+
+```json
+{
+  "version": "2.0",
+  "extensions": {
+    "queues": {
+      "maxDequeueCount": 5,
+      "visibilityTimeout": "00:00:30",
+      "batchSize": 16,
+      "maxPollingInterval": "00:01:00",
+      "newBatchThreshold": 8
+    }
+  }
+}
+```
+
+**Manual Implementation (SDK Approach):**
+
+```csharp
+public async Task ProcessMessagesWithRetryAsync(QueueClient queueClient, QueueClient poisonQueueClient)
+{
+    const int maxDequeueCount = 5;
+    
+    QueueMessage message = await queueClient.ReceiveMessageAsync();
+    
+    if (message != null)
+    {
+        // Check if message has exceeded retry limit
+        if (message.DequeueCount > maxDequeueCount)
+        {
+            // Move to poison queue
+            await poisonQueueClient.SendMessageAsync(message.MessageText);
+            await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt);
+            Console.WriteLine($"Message moved to poison queue after {message.DequeueCount} attempts");
+        }
+        else
+        {
+            try
+            {
+                await ProcessMessageAsync(message);
+                await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt);
+            }
+            catch (Exception ex)
+            {
+                // Log error - message will reappear after visibility timeout for retry
+                Console.WriteLine($"Processing failed (attempt {message.DequeueCount}): {ex.Message}");
+            }
+        }
+    }
+}
+```
+
+**Important Notes:**
+- **Azure Functions Automatic Handling**: When using Azure Functions with Queue triggers, set `maxDequeueCount` in `host.json`. The runtime automatically manages retries and moves failed messages to `<queuename>-poison`.
+- **SDK Manual Handling**: When using the SDK directly, you must manually check `DequeueCount` and implement poison queue logic.
+- **Poison Queue Naming**: Azure Functions creates poison queues with the naming convention `<originalqueuename>-poison`.
+
+**Domain**: Connect to and consume Azure services and third-party services
 
 ## Best Practices
 
