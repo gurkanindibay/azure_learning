@@ -421,6 +421,56 @@ await sender.SendMessageAsync(message2);  // No error, but message is discarded
 ### Scheduled Delivery
 Messages can be sent to a queue/topic but remain invisible to consumers until a specific scheduled time.
 
+#### Methods for Scheduling Messages
+
+There are two primary approaches to schedule messages in Azure Service Bus:
+
+**1. ScheduleMessageAsync (Recommended for Cancellable Scheduling)**
+```csharp
+var sender = client.CreateSender("myqueue");
+var message = new ServiceBusMessage("Process this in 2 hours");
+
+// Schedule message to appear 2 hours from now
+DateTimeOffset scheduledTime = DateTimeOffset.Now.AddHours(2);
+long sequenceNumber = await sender.ScheduleMessageAsync(message, scheduledTime);
+
+// Cancel the scheduled message if needed using the sequence number
+await sender.CancelScheduledMessageAsync(sequenceNumber);
+```
+
+**2. ScheduledEnqueueTime Property with SendMessageAsync**
+```csharp
+var sender = client.CreateSender("myqueue");
+var message = new ServiceBusMessage("Process this in 2 hours")
+{
+    ScheduledEnqueueTime = DateTimeOffset.Now.AddHours(2)
+};
+
+await sender.SendMessageAsync(message);
+// Note: This does NOT return a sequence number for cancellation
+```
+
+#### Key Differences
+
+| Method | Returns Sequence Number | Cancellation | Use Case |
+|--------|------------------------|--------------|----------|
+| `ScheduleMessageAsync` | ✅ Yes | Easy - use `CancelScheduledMessageAsync(sequenceNumber)` | When cancellation may be needed |
+| `SendMessageAsync` with `ScheduledEnqueueTime` | ❌ No | Complex - must peek message to get sequence number | Fire-and-forget scheduling |
+
+#### Common Misconceptions
+
+| Approach | Why It's Wrong |
+|----------|----------------|
+| **SendMessageAsync with visibility timeout** | Service Bus doesn't support visibility timeout on send operations. This is an Azure Queue Storage concept, not applicable to Service Bus message scheduling. |
+| **ServiceBusProcessor with delay configuration** | ServiceBusProcessor is for **receiving** messages, not for scheduling future message delivery. It cannot schedule messages to appear at a specific future time. |
+| **ScheduledEnqueueTime for cancellable messages** | While this works for scheduling, you won't get back the sequence number, making cancellation more complex as you would need to peek the message to get the sequence number first. |
+
+#### Best Practices
+- Use `ScheduleMessageAsync` when you need the ability to cancel scheduled messages
+- The returned sequence number should be stored if cancellation might be required
+- Use `ScheduledEnqueueTime` property for simple fire-and-forget scheduled messages
+- Both methods support scheduling messages to queues and topics
+
 ## 4. Data Integration Model: Push-Pull (Hybrid)
 
 Service Bus follows a **hybrid push-pull** delivery model:
