@@ -828,6 +828,35 @@ public async Task MigrateDataAsync(
 - ✅ Autoscale handles spikes automatically → Prevents throttling
 - ✅ Cost-effective for variable high-throughput scenarios
 
+---
+
+### Question 6: Unpredictable Traffic with Low Average Usage
+
+**Scenario**: You have an Azure Cosmos DB account with unpredictable traffic patterns that range from 0 to 500 RU/s. Usage is typically below 100 RU/s for 90% of the time.
+
+**Question**: Which capacity mode should you choose?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| Provisioned throughput with manual scaling at 100 RU/s | ❌ | Manual scaling at 100 RU/s would cause throttling during the 500 RU/s peaks and still charge for 100 RU/s continuously, making it both inadequate for peaks and expensive for idle periods. |
+| Provisioned throughput with manual scaling at 500 RU/s | ❌ | Provisioning 500 RU/s continuously would result in paying for unused capacity 90% of the time, making it significantly more expensive than serverless for this usage pattern. |
+| **Serverless** | ✅ | Serverless mode is ideal for workloads with bursty, intermittent traffic and low average-to-peak ratios. With usage below 100 RU/s for 90% of the time and peaks of 500 RU/s, serverless provides cost-effective pay-per-use pricing. |
+| Provisioned throughput with autoscale max 500 RU/s | ❌ | Autoscale with 500 RU/s maximum would scale down to 50 RU/s minimum (10% of max), but you'd still pay for at least 50 RU/s continuously even when there's no traffic, making it less cost-effective than serverless. |
+
+**Key Takeaway**: Serverless is ideal when:
+- Traffic is unpredictable and bursty
+- Average usage is significantly lower than peak usage
+- There are periods of zero or near-zero traffic
+- Peak throughput is within 5,000 RU/s limit
+
+**Cost Analysis**:
+| Mode | Cost Pattern |
+|------|--------------|
+| Manual 100 RU/s | Pay for 100 RU/s 24/7 + throttling during peaks |
+| Manual 500 RU/s | Pay for 500 RU/s 24/7 (90% unused) |
+| Autoscale max 500 RU/s | Pay for minimum 50 RU/s 24/7 even at zero usage |
+| Serverless | Pay only for actual consumption (0 cost at 0 usage) |
+
 ## References
 
 - [Choose between provisioned throughput and serverless](https://learn.microsoft.com/en-us/azure/cosmos-db/throughput-serverless)
