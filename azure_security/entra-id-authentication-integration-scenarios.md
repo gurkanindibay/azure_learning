@@ -2037,6 +2037,36 @@ public async Task<string> GetAccessTokenAsync()
 }
 ```
 
+#### MSAL.NET Silent Token Acquisition Best Practices
+
+When working with MSAL.NET, it's crucial to understand when to fall back to interactive authentication. The recommended pattern is:
+
+1. **Always try `AcquireTokenSilent` first** - This attempts to get a token from the cache without user interaction
+2. **Fall back to interactive authentication only when `MsalUiRequiredException` is thrown** - This specific exception indicates that user interaction is required
+
+**Why this pattern?**
+
+| Approach | Recommendation | Reason |
+|----------|----------------|--------|
+| Call `AcquireTokenSilent` first | ✅ **Recommended** | Provides best user experience by avoiding unnecessary login prompts |
+| Fall back on `MsalUiRequiredException` | ✅ **Correct** | This exception specifically indicates user interaction is needed |
+| Fall back on any exception | ❌ **Incorrect** | Not all exceptions require interactive authentication; only `MsalUiRequiredException` indicates user interaction is needed |
+| Fall back after fixed timeout | ❌ **Incorrect** | Ignores actual error conditions; should respond to specific exceptions |
+| Use interactive auth as primary | ❌ **Incorrect** | Creates poor user experience with unnecessary login prompts |
+
+#### Exam Question
+
+**Question**: Your application needs to handle scenarios where MSAL.NET cannot acquire tokens silently. According to best practices, when should your application fall back to interactive authentication?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| When any exception occurs during token acquisition | ❌ | Not all exceptions require interactive authentication. Only `MsalUiRequiredException` specifically indicates that user interaction is needed to acquire a token. |
+| **When `AcquireTokenSilent` throws `MsalUiRequiredException`** | ✅ | The recommended pattern is to call the `AcquireTokenSilent` method first. If `AcquireTokenSilent` fails, then acquire a token using other methods. If a `MsalUiRequiredException` exception is thrown, the application acquires a token interactively. |
+| After a fixed timeout period regardless of the error | ❌ | Falling back based on a timeout ignores the actual error condition. The application should respond to specific exceptions that indicate user interaction is required. |
+| Always use interactive authentication as the primary method | ❌ | Your application code should first try to get a token silently from the cache before attempting to acquire a token by other means. Interactive authentication should be a fallback, not the primary method. |
+
+> **Key Takeaway:** Always call `AcquireTokenSilent` first, and only fall back to interactive authentication when `MsalUiRequiredException` is thrown. This provides the best user experience while correctly handling scenarios where user interaction is required.
+
 ---
 
 ### 5. Use Managed Identities When Possible
