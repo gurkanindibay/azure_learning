@@ -270,6 +270,38 @@ az containerapp create \
 | **Security** | Exposed to internet | Protected by VNET |
 | **Custom Domain** | Supported | Supported |
 
+### Restricting Traffic to VNet-Only Access
+
+When you need to accept traffic **only from your Azure virtual network**, the correct approach is to deploy the Container Apps environment as **internal** with VNet integration.
+
+**Key Points:**
+- An **internal** Container Apps environment ensures that ingress is only accessible from within the VNet
+- External environments, even with IP restrictions, remain publicly accessible
+- Network security groups (NSGs) alone cannot change an external environment to accept VNet-only traffic
+- Private endpoints are used for **outbound** connections from Container Apps, not for restricting **inbound** traffic
+
+**Common Misconceptions:**
+
+| Approach | Works for VNet-Only Inbound Traffic? | Explanation |
+|----------|--------------------------------------|-------------|
+| **Deploy as internal environment with VNet integration** | ✅ Yes | Internal Container Apps environment ensures ingress is only accessible from within the VNet |
+| Network security groups on subnet | ❌ No | NSGs filter traffic but cannot change an external environment to accept only VNet traffic; the environment type must be internal |
+| IP restrictions on external environment | ❌ No | IP restrictions can limit access, but the app remains publicly accessible, not fully VNet-only |
+| Private endpoints on external environment | ❌ No | Private endpoints are for outbound connections from Container Apps, not for restricting inbound traffic to VNet-only access |
+
+**Creating an Internal Environment:**
+```bash
+# Create internal Container Apps environment with VNet integration
+az containerapp env create \
+  --name myenv \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --infrastructure-subnet-resource-id "/subscriptions/{subscription-id}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}" \
+  --internal-only true
+```
+
+> **Exam Tip**: When a question asks about accepting traffic **only from an Azure virtual network** for Container Apps with external ingress, the correct answer is to **deploy the Container Apps environment as internal and use VNet integration**. Network security groups, IP restrictions, and private endpoints do not fully meet the requirement for VNet-only inbound traffic access.
+
 ### Custom Domains and Certificates
 
 **Adding a Custom Domain:**
