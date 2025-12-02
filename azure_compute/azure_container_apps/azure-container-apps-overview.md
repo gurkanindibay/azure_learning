@@ -31,6 +31,7 @@
 - [Common Use Cases](#common-use-cases)
 - [Limitations and Constraints](#limitations-and-constraints)
 - [Best Practices](#best-practices)
+- [Exam Questions and Scenarios](#exam-questions-and-scenarios)
 
 ## Overview
 
@@ -468,23 +469,50 @@ az containerapp create \
 
 ### Blue-Green Deployments
 
+Blue-green deployments in Azure Container Apps leverage **revisions** and **traffic splitting** to test new versions before full rollout. This approach allows you to deploy a new version (green) alongside the current stable version (blue) without affecting users.
+
+**Key Concept**: Container Apps uses **traffic splitting rules between revisions** to implement blue-green deployments. This is different from Azure App Service, which uses deployment slots.
+
+**Why Traffic Splitting Between Revisions?**
+- Container Apps automatically creates a new immutable **revision** for each deployment
+- Multiple revisions can be active simultaneously
+- You can route a percentage of traffic to each revision
+- No need for external load balancers or multiple environments
+
 Deploy a new version without affecting the current version:
 
 ```bash
+# Ensure revision mode is set to multiple
+az containerapp revision set-mode \
+  --name myapp \
+  --resource-group myResourceGroup \
+  --mode multiple
+
 # Deploy new revision (green)
 az containerapp update \
   --name myapp \
   --image myimage:v2 \
   --revision-suffix green
 
-# Test the green revision
-# (it gets 0% traffic by default in multiple revision mode)
-
-# Switch traffic to green
+# Test the green revision with 20% traffic
 az containerapp ingress traffic set \
   --name myapp \
-  --revision-weight latest=100
+  --revision-weight myapp--blue=80 myapp--green=20
+
+# After validation, switch all traffic to green
+az containerapp ingress traffic set \
+  --name myapp \
+  --revision-weight myapp--green=100
 ```
+
+**Blue-Green Deployment Approaches Comparison:**
+
+| Approach | Works for Container Apps? | Explanation |
+|----------|--------------------------|-------------|
+| **Traffic splitting rules between revisions** | ✅ Yes | Container Apps supports traffic splitting between active revisions, allowing you to route a percentage of traffic to a new revision for testing |
+| **Multiple Container Apps environments** | ❌ Not recommended | Creating multiple environments is unnecessary overhead; Container Apps supports traffic splitting within a single app across different revisions |
+| **Load balancer with weighted routing** | ❌ Not needed | Container Apps handles traffic routing internally through revision management; external load balancers are not required for traffic splitting |
+| **Deployment slots** | ❌ Not available | Deployment slots are a feature of Azure App Service, not Container Apps. Container Apps uses revisions and traffic splitting for similar functionality |
 
 ### Traffic Splitting
 
@@ -927,6 +955,44 @@ az containerapp create \
     - Consolidate workloads to maximize free tier usage
     - Use for dev/test environments
     - Monitor consumption in Azure Cost Management
+
+## Exam Questions and Scenarios
+
+### Question 1: Blue-Green Deployments with Traffic Splitting
+
+**Scenario**: A company needs to implement blue-green deployments in Azure Container Apps. They want to test new versions with 20% of traffic before full rollout.
+
+**Question**: What should they configure?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| **Traffic splitting rules between revisions** | ✅ Yes | Container Apps supports traffic splitting between active revisions, allowing you to route a percentage of traffic (like 20%) to a new revision for testing while keeping 80% on the stable revision. |
+| Multiple Container Apps environments | ❌ No | Creating multiple environments is unnecessary for blue-green deployments as Container Apps supports traffic splitting within a single app across different revisions. |
+| Load balancer with weighted routing | ❌ No | Container Apps handles traffic routing internally through revision management; you don't need to configure an external load balancer for traffic splitting. |
+| Deployment slots | ❌ No | Deployment slots are a feature of Azure App Service, not Container Apps. Container Apps uses revisions and traffic splitting for similar functionality. |
+
+**Key Takeaway**: Azure Container Apps uses **revisions** and **traffic splitting** to implement blue-green deployments. Each deployment creates a new revision, and you can split traffic between revisions using percentage-based rules. This is fundamentally different from Azure App Service's deployment slots approach.
+
+**Implementation Example:**
+```bash
+# Set revision mode to multiple to keep old revision active
+az containerapp revision set-mode --name myapp --mode multiple
+
+# Deploy new version (creates new revision)
+az containerapp update --name myapp --image myimage:v2
+
+# Split traffic: 80% to stable, 20% to new version
+az containerapp ingress traffic set \
+  --name myapp \
+  --revision-weight myapp--stable=80 myapp--new=20
+
+# After testing, route 100% to new version
+az containerapp ingress traffic set \
+  --name myapp \
+  --revision-weight myapp--new=100
+```
+
+---
 
 ## Additional Resources
 
