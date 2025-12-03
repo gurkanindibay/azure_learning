@@ -64,7 +64,9 @@
   - [Key Takeaway](#key-takeaway-8)
   - [Related Learning Resources](#related-learning-resources-8)
 
-## Overview**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
+## Overview
+
+**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically detect performance anomalies.
 
 ### What is Application Insights?
 
