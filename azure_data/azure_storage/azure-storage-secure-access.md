@@ -31,6 +31,8 @@
   - [Using Managed Identity with User Delegation SAS](#using-managed-identity-with-user-delegation-sas)
 - [Comparison: Authentication Methods](#comparison-authentication-methods)
 - [Additional Security Features](#additional-security-features)
+  - [Azure Storage Encryption Options](#6-azure-storage-encryption-options)
+  - [Exam Question: Multi-Tenant Encryption](#exam-question-multi-tenant-encryption)
 - [Troubleshooting SAS Issues](#troubleshooting-sas-issues)
   - [Common Errors and Solutions](#common-errors-and-solutions)
   - [Testing SAS Tokens](#testing-sas-tokens)
@@ -1817,6 +1819,101 @@ az storage account network-rule add \
 - Recover accidentally deleted blobs and containers
 - Retention period configurable (1-365 days)
 - Protection against accidental data loss
+
+### 6. Azure Storage Encryption Options
+
+Azure Storage automatically encrypts all data at rest using 256-bit AES encryption. However, different encryption options provide varying levels of control and isolation.
+
+#### Encryption Options Comparison
+
+| Encryption Option | Scope | Key Management | Use Case |
+|-------------------|-------|----------------|----------|
+| **Storage Account Encryption Key** | Entire storage account | Microsoft-managed or customer-managed | Default encryption for all data |
+| **Infrastructure Encryption** | Storage account (double encryption) | Microsoft-managed | Compliance requiring double encryption |
+| **Encryption Scopes** | Container or blob level | Microsoft-managed or customer-managed per scope | **Multi-tenant data isolation** ✅ |
+| **Customer-Provided Keys** | Per-request (Blob only) | Customer provides key with each request | Temporary operations |
+
+#### Storage Account Encryption Key
+
+- **Description**: Default encryption applied to the entire storage account
+- **Characteristics**:
+  - Single key scope for all data in the account
+  - Can use Microsoft-managed keys or customer-managed keys (CMK)
+  - Cannot provide different encryption keys for different customers' data
+- **Limitation**: ❌ Not suitable when different customers need different encryption keys within the same account
+
+#### Infrastructure Encryption
+
+- **Description**: Provides double encryption at both the service and infrastructure levels
+- **Characteristics**:
+  - Two layers of encryption with two different encryption algorithms
+  - Provides defense against compromise of one encryption algorithm
+  - Uses the same key scope as the storage account
+- **Limitation**: ❌ Does not allow different keys per customer - same key scope as storage account
+
+#### Encryption Scopes ✅ (Best for Multi-Tenant Isolation)
+
+- **Description**: Enable encryption with a key scoped to a container or an individual blob
+- **Characteristics**:
+  - Create secure boundaries between data in the same storage account
+  - Each scope can use a different encryption key
+  - Perfect for multi-tenant scenarios where different customers need different keys
+  - Can be Microsoft-managed or customer-managed (Azure Key Vault)
+- **Use Case**: **When you need different encryption keys for different customers' data within the same storage account**
+
+**Example - Creating an Encryption Scope:**
+```bash
+# Create encryption scope with Microsoft-managed key
+az storage account encryption-scope create \
+    --account-name mystorageaccount \
+    --resource-group myresourcegroup \
+    --name customerAscope
+
+# Create encryption scope with customer-managed key from Key Vault
+az storage account encryption-scope create \
+    --account-name mystorageaccount \
+    --resource-group myresourcegroup \
+    --name customerBscope \
+    --key-source Microsoft.KeyVault \
+    --key-uri "https://myvault.vault.azure.net/keys/mykey/version"
+```
+
+**Example - Creating a Container with Encryption Scope:**
+```bash
+# Create container with default encryption scope
+az storage container create \
+    --account-name mystorageaccount \
+    --name customer-a-container \
+    --default-encryption-scope customerAscope \
+    --prevent-encryption-scope-override true
+```
+
+#### Customer-Provided Keys
+
+- **Description**: Provide encryption key on each Blob Storage request
+- **Characteristics**:
+  - Key provided per-request in the request header
+  - Only works with Blob Storage operations
+  - Key not stored in Azure - must be provided with every request
+- **Limitation**: ❌ Doesn't provide persistent encryption boundaries between different customers' data
+
+### Exam Question: Multi-Tenant Encryption
+
+**Question**: You have an Azure Storage account that contains sensitive data from multiple customers. You need to implement encryption with different keys for each customer's data within the same storage account. What should you use?
+
+**Options:**
+- A. Infrastructure encryption
+- B. Storage account encryption key
+- C. Customer-provided keys
+- D. Encryption scopes
+
+**Correct Answer: D. Encryption scopes**
+
+**Explanation:**
+- **Encryption scopes** enable you to manage encryption with a key that is scoped to a container or an individual blob, allowing you to create secure boundaries between data that resides in the same storage account but belongs to different customers.
+- **Infrastructure encryption** provides double encryption at the service and infrastructure levels but uses the same key scope as the storage account, not allowing different keys per customer.
+- **Storage account encryption key** applies to the entire storage account and cannot provide different encryption keys for different customers' data within the same account.
+- **Customer-provided keys** are provided per-request for Blob Storage operations but don't provide persistent encryption boundaries between different customers' data in the storage account.
 
 ## Troubleshooting SAS Issues
 
