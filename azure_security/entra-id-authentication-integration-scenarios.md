@@ -10,6 +10,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 
 1. [Authentication Methods Overview](#authentication-methods-overview)
    - [Certificate-Based Authentication (CBA)](#certificate-based-authentication-cba)
+   - [FIDO2 Passwordless Authentication](#fido2-passwordless-authentication)
 2. [Azure App Service Authentication (Easy Auth)](#azure-app-service-authentication-easy-auth)
 3. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
    - [MSAL Client Application Types](#msal-client-application-types)
@@ -96,6 +97,87 @@ When you need to satisfy MFA requirements **without requiring users to provide a
 - Implementing defense-in-depth security model
 
 > **Exam Tip:** When asked about configuring CBA to satisfy MFA requirements without requiring additional authentication methods, the answer is always to configure CBA as **multifactor authentication**. This allows the certificate alone to satisfy MFA requirements.
+
+### FIDO2 Passwordless Authentication
+
+**FIDO2 (Fast Identity Online 2)** is a passwordless authentication standard that allows users to sign in to Microsoft Entra ID using security keys or platform authenticators (like Windows Hello) instead of passwords.
+
+#### FIDO2 Overview
+
+FIDO2 security keys provide:
+- **Phishing-resistant authentication**: Cryptographic proof tied to the specific website
+- **Passwordless experience**: No passwords to remember or type
+- **Hardware-based security**: Private keys stored securely on the device
+- **Cross-platform support**: Works across different browsers and operating systems
+
+#### FIDO2 Licensing Requirements
+
+| Feature | License Required |
+|---------|------------------|
+| **FIDO2 registration and sign-in** | No license required (Free) |
+| **Conditional Access enforcement** | Microsoft Entra ID Premium P1 or P2 |
+| **Advanced reporting and monitoring** | Microsoft Entra ID Premium P2 |
+
+> **Important:** Registration and passwordless sign-in with Microsoft Entra ID doesn't require a license, though Premium licenses enable additional features like enforcement through Conditional Access.
+
+#### FIDO2 Security Key Registration Requirements
+
+Before users can register a FIDO2 security key, certain prerequisites must be met:
+
+| Requirement | Description |
+|-------------|-------------|
+| **FIDO2 enabled in authentication methods policy** | The FIDO2 authentication method must be enabled for users |
+| **Recent MFA completion** | Users must complete MFA within the **past 5 minutes** before registering |
+| **Supported browser** | Modern browsers (Edge, Chrome, Firefox, Safari) support FIDO2 |
+| **Security key compatibility** | The security key must be FIDO2 certified |
+
+#### Common FIDO2 Registration Issues
+
+| Issue | Symptom | Root Cause |
+|-------|---------|------------|
+| **MFA not completed recently** | Registration fails | Users must complete MFA within 5 minutes before registration |
+| **FIDO2 disabled in policy** | Registration option doesn't appear | FIDO2 must be enabled in authentication methods policy |
+| **Unsupported browser** | Registration option may not appear | Use a modern browser that supports WebAuthn |
+| **Missing license** | N/A | No license required for basic FIDO2 functionality |
+
+#### Why MFA Must Be Completed Within 5 Minutes
+
+Users must complete multifactor authentication (MFA) within the past five minutes before they can register a passkey (FIDO2). This is a **security requirement** to ensure:
+- Proper user verification before allowing passwordless credential registration
+- The person registering the security key is the legitimate account owner
+- Protection against unauthorized credential registration
+
+#### Why Other Registration Issues Are Less Likely
+
+| Potential Cause | Why It's Less Likely |
+|-----------------|---------------------|
+| **Unsupported browser** | Most modern browsers support FIDO2 registration. This would typically result in the option not appearing rather than a registration failure. |
+| **FIDO2 disabled in policy** | If FIDO2 were disabled in the authentication methods policy, the option to register FIDO2 security keys would not appear at all, rather than failing during the registration process. |
+| **Missing Premium license** | Registration and passwordless sign-in don't require a license. Premium licenses only enable additional features like Conditional Access enforcement. |
+
+#### Configuring FIDO2 in Microsoft Entra ID
+
+**Enable FIDO2 Authentication Method:**
+1. Navigate to **Microsoft Entra admin center** → **Protection** → **Authentication methods**
+2. Select **FIDO2 security key**
+3. Enable the method and configure target users/groups
+4. Configure any key restrictions (optional)
+
+#### FIDO2 Use Cases
+
+✅ **Use FIDO2 when:**
+- Implementing phishing-resistant authentication
+- Users need passwordless sign-in experience
+- High-security environments requiring hardware-based authentication
+- Compliance requires strong authentication methods
+- Reducing password-related helpdesk calls
+
+⚠️ **Consider alternatives when:**
+- Users don't have access to compatible security keys
+- Budget constraints prevent security key distribution
+- Legacy systems don't support WebAuthn
+
+> **Exam Tip:** When users report they cannot register their FIDO2 security keys (registration fails), the most likely cause is that they have not completed multifactor authentication within the past five minutes. This MFA requirement ensures proper user verification before allowing passwordless credential registration.
 
 ---
 
