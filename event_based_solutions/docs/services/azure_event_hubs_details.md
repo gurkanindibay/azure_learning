@@ -37,8 +37,42 @@ Azure Event Hubs is a big data streaming platform and event ingestion service. I
 
 ## 2. Core Concepts
 
+### Event Hubs Hierarchy
+
+```
+Namespace (Container)
+    └── Event Hub Instance (Entity)
+            ├── Partitions
+            └── Consumer Groups
+```
+
+| Term | What It Is | Example |
+|------|-----------|---------|
+| **Namespace** | A management container that holds one or more Event Hubs. Provides a unique FQDN. | `mycompany-eventhubs` → `mycompany.servicebus.windows.net` |
+| **Event Hub Instance** | An individual event stream/channel within a namespace. This is the actual entity where events are sent/received. | `telemetry-hub`, `orders-hub`, `logs-hub` |
+| **Partition** | Ordered sequences of events within an Event Hub for parallelism. | Partition 0, Partition 1, etc. |
+| **Consumer Group** | A view (state, position, offset) of an Event Hub for independent consumption. | `$Default`, `analytics-group` |
+
+> **Database Analogy:** Think of it like a database system:
+> - **Namespace** = Database Server
+> - **Event Hub Instance** = Individual Database/Table
+> - **Partition** = Table partitions/shards
+
+> **Kafka Analogy:** If you're coming from Apache Kafka:
+> - **Namespace** = Kafka Cluster
+> - **Event Hub Instance** = Kafka Topic
+> - **Partition** = Kafka Partition
+> - **Consumer Group** = Kafka Consumer Group
+
 ### Namespace
 A management container for Event Hubs. It provides a unique FQDN and serves as a container for multiple Event Hub instances.
+
+### Event Hub Instance
+An individual event stream within a namespace. This is the entity where producers send events and consumers read from. Each Event Hub instance can have multiple partitions and consumer groups.
+
+- **Naming:** Must be unique within a namespace.
+- **Kafka Equivalent:** Analogous to a Kafka topic.
+- **Authorization:** Can be secured independently from other Event Hubs in the same namespace.
 
 ### Partitions
 - **Definition:** Ordered sequences of events that are held in an Event Hub.
@@ -242,6 +276,24 @@ Applications connecting to Event Hubs need an identity to be authenticated and a
 
 ### Authorization
 Authorization determines what an authenticated principal can do.
+
+#### Authorization Levels
+
+Authorization in Event Hubs can be applied at multiple levels, with the **Event Hub (entity) level** being the most granular:
+
+| Level | RBAC Support | SAS Policy Support | Description |
+|-------|--------------|-------------------|-------------|
+| **Resource Group** | ✅ Yes | ❌ No | Applies to all namespaces in the group |
+| **Namespace** | ✅ Yes | ✅ Yes | Applies to all Event Hubs in the namespace |
+| **Event Hub** | ✅ Yes | ✅ Yes | Applies to a specific Event Hub only |
+| **Partition** | ❌ No | ❌ No | Authorization cannot be applied at partition level |
+
+**Key Points:**
+- **Namespace Level:** Grants access to all Event Hubs within that namespace. Useful for administrative scenarios.
+- **Event Hub (Entity) Level:** Most common and recommended for production. Provides security isolation between different Event Hubs.
+- **Partition Level:** Not supported. Once you have access to an Event Hub, you have access to all its partitions.
+
+> **Note:** There is no "Topic" concept in Event Hubs (that's a Service Bus term). The equivalent is the **Event Hub entity** itself. If coming from Kafka, think of an Event Hub as analogous to a Kafka topic.
 
 #### Azure RBAC (Role-Based Access Control)
 When using Entra ID, assign built-in roles to scopes (Resource Group, Namespace, or Event Hub):
