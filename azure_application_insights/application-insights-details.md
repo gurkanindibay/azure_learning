@@ -63,6 +63,12 @@
   - [Profiler Configuration Requirements](#profiler-configuration-requirements)
   - [Key Takeaway](#key-takeaway-8)
   - [Related Learning Resources](#related-learning-resources-8)
+- [Question 10: Configuring Application Insights Profiler for Azure Virtual Machine](#question-10-configuring-application-insights-profiler-for-azure-virtual-machine)
+  - [Explanation](#explanation-9)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-8)
+  - [WadCfg Configuration for Profiler](#wadcfg-configuration-for-profiler)
+  - [Key Takeaway](#key-takeaway-9)
+  - [Related Learning Resources](#related-learning-resources-9)
 
 ## Overview
 
@@ -931,3 +937,94 @@ To enable Application Insights Profiler for Azure Functions on the App Service p
 - Application Insights Profiler for .NET
 - Azure Functions hosting options
 - Troubleshoot Profiler issues
+
+---
+
+## Question 10: Configuring Application Insights Profiler for Azure Virtual Machine
+
+**Scenario:**
+You need to configure Application Insights Profiler for a .NET application running on an Azure Virtual Machine. The VM already has the Azure Diagnostics extension installed.
+
+**Requirement:**
+You need to enable Application Insights Profiler for the .NET application on the VM.
+
+**Question:**
+What additional configuration is required?
+
+**Options:**
+
+1. **Install the Application Insights SDK in the VM using a site extension** ❌ *Incorrect*
+2. **Add the ApplicationInsightsProfiler sink to the WadCfg configuration with your Application Insights connection string** ✅ *Correct*
+3. **Enable Profiler through the VM's Application Insights blade in Azure portal** ❌ *Incorrect*
+4. **Configure Profiler settings in the appsettings.json file of the application** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Add the ApplicationInsightsProfiler sink to the WadCfg configuration with your Application Insights connection string**
+
+Since the Azure Diagnostics extension is already installed on the VM, you need to add the Application Insights Profiler for .NET sink to the **SinksConfig** node under **WadCfg** to enable Profiler. This is done by configuring the diagnostics configuration to send profiling data to Application Insights.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Install the Application Insights SDK using a site extension** | The Microsoft Azure Diagnostics extension is already installed, and Profiler configuration requires adding a sink to the diagnostics configuration, not installing additional extensions. Site extensions are also specific to App Service, not VMs. |
+| **Enable Profiler through the VM's Application Insights blade in Azure portal** | The Azure portal doesn't provide a way to set the Application Insights Profiler for .NET sink directly. This requires manual configuration through Azure Resource Explorer or ARM templates. |
+| **Configure Profiler settings in appsettings.json** | For VMs with Azure Diagnostics, Profiler configuration is done through the WadCfg section of the diagnostics configuration, not through application configuration files like appsettings.json. |
+
+### WadCfg Configuration for Profiler
+
+To enable Application Insights Profiler on a VM with Azure Diagnostics extension, you need to modify the diagnostics configuration:
+
+```json
+{
+  "WadCfg": {
+    "SinksConfig": {
+      "Sink": [
+        {
+          "name": "ApplicationInsightsProfiler",
+          "ApplicationInsightsProfiler": {
+            "connectionString": "InstrumentationKey=<your-instrumentation-key>;IngestionEndpoint=https://<region>.in.applicationinsights.azure.com/"
+          }
+        }
+      ]
+    },
+    "DiagnosticMonitorConfiguration": {
+      // ... other diagnostic configuration
+    }
+  }
+}
+```
+
+### Configuration Methods Comparison
+
+| Configuration Method | Use Case | Applicable To |
+|---------------------|----------|---------------|
+| **WadCfg Sink Configuration** | VMs with Azure Diagnostics extension | Azure VMs, Cloud Services |
+| **App Settings/Environment Variables** | Functions on App Service plan | Azure Functions |
+| **Application Insights Agent** | VMs without Azure Diagnostics | Azure VMs, on-premises servers |
+| **NuGet Package + Code** | Custom applications | Web apps, console apps |
+
+### Profiler Configuration for Different Azure Services
+
+| Azure Service | Profiler Configuration Method |
+|---------------|------------------------------|
+| **Azure VM (with Azure Diagnostics)** | Add ApplicationInsightsProfiler sink to WadCfg |
+| **Azure VM (without Azure Diagnostics)** | Install Application Insights Agent |
+| **Azure App Service** | Enable via Azure portal or app settings |
+| **Azure Functions (App Service plan)** | Environment variables (APPINSIGHTS_PROFILER_FEATURE_VERSION) |
+| **Azure Cloud Services** | Add sink to diagnostics.wadcfgx |
+
+### Key Takeaway
+
+When configuring Application Insights Profiler for a .NET application on an Azure VM that **already has the Azure Diagnostics extension installed**:
+- Add the **ApplicationInsightsProfiler sink** to the **SinksConfig** node under **WadCfg**
+- Include your **Application Insights connection string** in the sink configuration
+- Use **Azure Resource Explorer** or **ARM templates** to modify the diagnostics configuration
+- The Azure portal does **not** provide a direct UI for this configuration
+
+### Related Learning Resources
+- Application Insights Profiler for .NET
+- Azure Diagnostics extension overview
+- Configure Azure Diagnostics extension for Virtual Machines
+- Profiler for Cloud Services and Virtual Machines
