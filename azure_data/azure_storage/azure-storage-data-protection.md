@@ -534,6 +534,66 @@ Blob index tags are automatically indexed and support querying across the entire
 
 **Domain:** Develop for Azure storage
 
+---
+
+### Question: Deleting Previous Versions of a Versioned Blob
+
+**Question:**
+You have a storage account with blob versioning enabled. You need to permanently delete all versions of a blob except the current version. What is the most efficient approach?
+
+**Options:**
+- A) Disable versioning and re-enable it
+- B) Use lifecycle management policy with delete action on previous versions ✅
+- C) Manually delete each version using the version ID
+- D) Delete the blob and recreate it
+
+**Correct Answer: B) Use lifecycle management policy with delete action on previous versions**
+
+**Explanation:**
+A lifecycle management policy can automatically delete previous versions based on age criteria, providing an efficient and automated way to manage version cleanup. This is the most scalable and maintainable approach for managing blob versions across a storage account.
+
+**Example Lifecycle Policy for Deleting Previous Versions:**
+```json
+{
+  "rules": [
+    {
+      "enabled": true,
+      "name": "deletePreviousVersions",
+      "type": "Lifecycle",
+      "definition": {
+        "actions": {
+          "version": {
+            "delete": {
+              "daysAfterCreationGreaterThan": 0
+            }
+          }
+        },
+        "filters": {
+          "blobTypes": ["blockBlob"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Disable versioning and re-enable it** | Disabling and re-enabling versioning does **not** delete existing versions; they remain accessible with their version IDs. This only affects whether new versions are created going forward |
+| **Manually delete each version using the version ID** | Manually deleting each version requires individual API calls for each version, which is inefficient for large numbers of versions and doesn't scale well |
+| **Delete the blob and recreate it** | Deleting a versioned blob creates a **new previous version** rather than removing existing versions, and doesn't achieve the goal of keeping only the current version |
+
+**Key Concepts:**
+- Lifecycle management policies support actions on `version` objects (previous versions) separately from `baseBlob` (current version)
+- The `daysAfterCreationGreaterThan` condition allows targeting versions based on age
+- Setting `daysAfterCreationGreaterThan: 0` will delete all previous versions that are at least 0 days old (effectively all previous versions)
+
+> 💡 **Exam Tip**: When dealing with bulk operations on blob versions, always consider lifecycle management policies first. They provide automated, efficient, and scalable management of versions without requiring manual intervention or custom code.
+
+**Domain:** Develop for Azure storage
+
 ## Best Practices
 
 1. **Enable All Protection Features**: For maximum protection, enable versioning, soft delete, and point-in-time restore together
