@@ -594,6 +594,48 @@ A lifecycle management policy can automatically delete previous versions based o
 
 **Domain:** Develop for Azure storage
 
+---
+
+### Question: Storage Account Types Supporting Change Feed
+
+**Question:**
+You need to enable change feed for a storage account to track blob modifications. Which storage account types support the change feed feature?
+
+**Options:**
+- A) All storage account types including Data Lake Storage Gen2
+- B) Premium file share and premium page blob accounts only
+- C) General-purpose v1 and general-purpose v2 accounts only
+- D) General-purpose v2 and premium block blob accounts only ✅
+
+**Correct Answer: D) General-purpose v2 and premium block blob accounts only**
+
+**Explanation:**
+Change feed is supported on **standard general-purpose v2**, **premium block blob**, and **standard Blob storage** accounts. These account types provide the necessary infrastructure for change feed functionality. Accounts with hierarchical namespace enabled (Data Lake Storage Gen2) are **not currently supported**.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **All storage account types including Data Lake Storage Gen2** | Storage accounts with hierarchical namespace enabled (Data Lake Storage Gen2) do not currently support change feed, limiting the feature to specific account types without this capability enabled |
+| **Premium file share and premium page blob accounts only** | Premium file share and premium page blob accounts do not support change feed. The feature is specifically available for general-purpose v2, premium block blob, and standard Blob storage accounts |
+| **General-purpose v1 and general-purpose v2 accounts only** | General-purpose v1 accounts do not support change feed. While they can be upgraded to general-purpose v2 accounts which do support it, v1 accounts themselves cannot enable this feature |
+
+**Storage Account Types and Change Feed Support:**
+
+| Storage Account Type | Change Feed Support |
+|---------------------|---------------------|
+| **Standard general-purpose v2** | ✅ Supported |
+| **Premium block blob** | ✅ Supported |
+| **Standard Blob storage** | ✅ Supported |
+| **General-purpose v1** | ❌ Not Supported (upgrade to v2) |
+| **Premium page blob** | ❌ Not Supported |
+| **Premium file share** | ❌ Not Supported |
+| **Data Lake Storage Gen2 (HNS enabled)** | ❌ Not Supported |
+
+> 💡 **Exam Tip**: Change feed requires specific storage account types. Remember that hierarchical namespace (HNS) accounts and general-purpose v1 accounts do NOT support change feed. This is also important for point-in-time restore since it requires change feed to be enabled.
+
+**Domain:** Develop for Azure storage
+
 ## Best Practices
 
 1. **Enable All Protection Features**: For maximum protection, enable versioning, soft delete, and point-in-time restore together
