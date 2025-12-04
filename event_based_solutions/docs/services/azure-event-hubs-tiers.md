@@ -207,6 +207,29 @@ producer.produce('myeventhub', value='Hello from Kafka')
 producer.flush()
 ```
 
+> **Important: Kafka Compression Support**
+>
+> While Standard tier supports the Kafka protocol, **Kafka compression is NOT supported in Standard tier**. If your Kafka producers use compression to optimize bandwidth, you must use **Premium or Dedicated tier**.
+>
+> | Tier | Kafka Protocol | Kafka Compression |
+> |------|---------------|-------------------|
+> | Basic | ❌ | ❌ |
+> | Standard | ✅ | ❌ |
+> | Premium | ✅ | ✅ |
+> | Dedicated | ✅ | ✅ |
+>
+> To enable compression in Premium/Dedicated tier, configure the producer:
+> ```python
+> config = {
+>     'bootstrap.servers': 'mypremium.servicebus.windows.net:9093',
+>     'security.protocol': 'SASL_SSL',
+>     'sasl.mechanism': 'PLAIN',
+>     'sasl.username': '$ConnectionString',
+>     'sasl.password': 'Endpoint=sb://...',
+>     'compression.type': 'gzip'  # Options: gzip, snappy, lz4, zstd
+> }
+> ```
+
 #### 2. Capture to Storage
 
 ```bash
@@ -1133,6 +1156,58 @@ az eventhubs namespace create \
 > **Exam Tip:** When the question mentions replicating **both metadata AND event data**, the answer is always **Geo-replication on Premium or Dedicated tier**. Standard tier's Geo-Disaster Recovery only handles metadata and does NOT replicate event data!
 
 > **Important:** Microsoft Entra RBAC assignments are NOT replicated to the secondary namespace in either Geo-Disaster Recovery or Geo-replication. You must create role assignments manually in the secondary namespace.
+
+### Question 8: Kafka Compression Support
+
+**Scenario:** You are configuring an Azure Event Hubs namespace to receive data from Apache Kafka producers. The producers use compression to optimize bandwidth usage.
+
+**Question:** Which configuration enables Kafka compression support?
+
+**Answer:** **Use Premium or Dedicated tier and set compression.type in the Kafka producer**
+
+**Reasoning:**
+- ✅ **Kafka compression is only supported in Event Hubs Premium and Dedicated tiers**
+- ✅ Producers must set the `compression.type` property (e.g., to `gzip`, `snappy`, `lz4`, or `zstd`) to enable client-side compression
+- ✅ The compressed messages are sent as-is to Event Hubs, and consumers decompress them
+
+**Configuration Example:**
+```python
+from confluent_kafka import Producer
+
+config = {
+    'bootstrap.servers': 'mypremiumnamespace.servicebus.windows.net:9093',
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanism': 'PLAIN',
+    'sasl.username': '$ConnectionString',
+    'sasl.password': 'Endpoint=sb://...',
+    'compression.type': 'gzip'  # Enable compression
+}
+
+producer = Producer(config)
+producer.produce('myeventhub', value='Hello from Kafka with compression')
+producer.flush()
+```
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| Use Standard tier and enable compression in the namespace settings | The Standard tier does not support Kafka compression, and there are no namespace-level compression settings to enable this feature. Compression is configured at the producer level, not the namespace. |
+| Use Basic tier and configure the Kafka consumer decompression settings | The Basic tier doesn't support the Kafka protocol at all, making Kafka compression impossible regardless of consumer configuration. |
+| Use Standard tier and set message.compression.codec in the producer | Even with correct producer configuration, the Standard tier does not support Kafka compression. The feature requires Premium or Dedicated tier regardless of producer settings. |
+
+**Key Points:**
+
+| Tier | Kafka Protocol | Kafka Compression Support |
+|------|---------------|---------------------------|
+| Basic | ❌ No | ❌ No |
+| Standard | ✅ Yes | ❌ No |
+| Premium | ✅ Yes | ✅ Yes |
+| Dedicated | ✅ Yes | ✅ Yes |
+
+> **Exam Tip:** Remember that **Kafka protocol support** (available in Standard+) is different from **Kafka compression support** (only in Premium/Dedicated). If a question mentions Kafka producers using compression, the answer always requires Premium or Dedicated tier.
+
+> **Important:** The compression configuration (`compression.type`) is set on the **producer side**, not through any Event Hubs namespace settings. Event Hubs receives and stores the compressed messages, and consumers are responsible for decompression.
 
 ## Best Practices
 
