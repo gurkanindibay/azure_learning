@@ -44,6 +44,8 @@ Azure Event Hubs offers four pricing tiers: **Basic**, **Standard**, **Premium**
 | **Private Endpoints** | ❌ | ❌ | ✅ | ✅ |
 | **Availability Zones** | ❌ | ❌ | ✅ | ✅ |
 | **Customer-Managed Keys** | ❌ | ❌ | ✅ | ✅ |
+| **Geo-Disaster Recovery** | ❌ | ✅ (metadata only) | ✅ (metadata only) | ✅ (metadata only) |
+| **Geo-replication** | ❌ | ❌ | ✅ (metadata + data) | ✅ (metadata + data) |
 | **Resource Type** | Shared | Shared | Isolated | Fully Dedicated |
 | **SLA** | 99.9% | 99.9% | 99.95% | 99.99% |
 | **Best For** | Dev/Test | Production | Enterprise | Very High-Scale |
@@ -275,6 +277,44 @@ var eventData = new EventData(serializedData);
 await producerClient.SendAsync(new[] { eventData });
 ```
 
+#### 5. Geo-Disaster Recovery (Metadata Only)
+
+Standard tier supports Geo-Disaster Recovery which replicates **metadata only** (not event data):
+
+```bash
+# Create secondary namespace in different region
+az eventhubs namespace create \
+  --name mystandardnamespace-secondary \
+  --resource-group myResourceGroup \
+  --location westus \
+  --sku Standard
+
+# Create geo-disaster recovery pairing
+az eventhubs georecovery-alias create \
+  --namespace-name mystandardnamespace \
+  --resource-group myResourceGroup \
+  --alias myalias \
+  --partner-namespace /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.EventHub/namespaces/mystandardnamespace-secondary
+```
+
+**What Gets Replicated (Metadata):**
+- Event Hubs entities
+- Consumer groups
+- Namespace configuration and settings
+
+**What Does NOT Get Replicated:**
+- ❌ Event data (messages/payloads)
+- ❌ Consumer offsets
+- ❌ Microsoft Entra RBAC assignments
+
+**Important Considerations:**
+- Failover is **manual** and **one-way** (fail-forward only)
+- After failover, you must create a new pairing for future DR
+- Event data from primary namespace can be recovered after the region is restored (unless total regional loss)
+- Use the **alias connection string** in applications for automatic failover routing
+
+> **Note:** If you need to replicate event data, use **Geo-replication on Premium or Dedicated tier** instead.
+
 ### When to Use
 
 ✅ **Use Standard tier when:**
@@ -479,6 +519,71 @@ az eventhubs namespace create \
 - No manual intervention required
 - Charged for actual PUs used
 
+#### 7. Geo-replication (Premium and Dedicated Only)
+
+Geo-replication provides replication of both **metadata and event data** across regions, enabling true geo-disaster recovery. This feature ensures business continuity and disaster recovery for all streaming data on your namespace.
+
+> **Note:** The Event Hubs Geo-replication feature is available on the **Premium and Dedicated tiers only**.
+
+**What Gets Replicated:**
+- Metadata (entities, configuration, and properties)
+- Event data (event payloads)
+- Consumer offsets
+- Schema registry metadata and data
+
+**Key Concepts:**
+- **Primary-secondary replication model** - At any time, there's only one primary namespace serving producers and consumers
+- **Single namespace hostname** - The hostname always points to the primary region, regardless of configured secondaries
+- **Customer-managed promotion** - All promotions/failovers are customer-initiated (not automatic)
+- **Hot stand-by** - Secondary regions run in the same configuration, ready for fast promotion
+
+**Replication Modes:**
+
+| Capability | Synchronous Replication | Asynchronous Replication |
+|------------|------------------------|--------------------------|
+| **Latency** | Longer due to distributed commit | Minimally impacted |
+| **Availability** | Tied to availability of secondary regions | Loss of secondary doesn't immediately impact availability |
+| **Data Consistency** | Data always committed in both regions before acknowledgment | Data committed in primary only before acknowledgment |
+| **RPO (Recovery Point Objective)** | RPO 0, no data loss on promotion | RPO > 0, possible data loss on promotion |
+
+**Scenarios for Geo-replication:**
+1. **Business Continuity & Disaster Recovery** - Safeguard against data loss during regional outages
+2. **Global Data Distribution** - Reduce latency by accessing data from the nearest region
+3. **Data Sovereignty & Compliance** - Replicate data to regions that comply with local regulations
+4. **Migration & Upgrades** - Migrate namespace proactively during maintenance windows
+
+**Criteria to Trigger Promotion:**
+- Regional outage affecting the primary region
+- Planned maintenance activities in the primary region
+- Disaster recovery scenarios
+- Performance issues impacting primary region availability
+
+**Key Differences: Geo-Disaster Recovery vs Geo-replication:**
+
+| Feature | Geo-Disaster Recovery | Geo-replication |
+|---------|----------------------|-----------------|
+| **Metadata Replication** | ✅ Yes | ✅ Yes |
+| **Event Data Replication** | ❌ No | ✅ Yes |
+| **Consumer Offset Replication** | ❌ No | ✅ Yes |
+| **Schema Registry Replication** | ❌ No | ✅ Yes |
+| **Failover Type** | Manual, one-way | Manual, bidirectional |
+| **Tier Availability** | Standard, Premium, Dedicated | **Premium and Dedicated only** |
+| **Use Case** | Configuration DR (tolerate data loss) | Full disaster recovery (low data loss tolerance) |
+| **Replication Mode** | Asynchronous only | Synchronous or Asynchronous |
+
+**Important Considerations:**
+- **Standard tier Geo-Disaster Recovery** only replicates namespace configuration (metadata) but **NOT event data**
+- **Premium/Dedicated tier Geo-replication** replicates BOTH metadata AND event payloads across regions
+- For full disaster recovery with data replication, **Premium or Dedicated tier with Geo-replication** is required
+- Microsoft Entra RBAC assignments are NOT replicated - create role assignments manually in secondary namespace
+- Geo-replication requires primary and secondary regions to be on the **same tier**
+- It's recommended to test failover mechanisms occasionally to ensure business continuity plans are effective
+
+**Private Endpoints with Geo-replication:**
+- Create private endpoints for both primary and secondary namespaces
+- Configure private endpoints against VNets hosting both primary and secondary application instances
+- DNS must be managed to point namespace endpoint to the IP of the private endpoint in the current primary region
+
 ### When to Use
 
 ✅ **Use Premium tier when:**
@@ -492,6 +597,7 @@ az eventhubs namespace create \
 - Many consumer groups (up to 100)
 - Mission-critical applications
 - High-throughput scenarios
+- **Geo-disaster recovery with event data replication required**
 
 ### Cost Example
 
@@ -986,6 +1092,47 @@ az eventhubs namespace create \
 > **Exam Tip:** Remember the **20 TU self-serve limit** for Standard tier. If you need more than 20 TUs (up to 40), you must **file a support ticket**. Auto-inflate helps with automatic scaling but doesn't bypass this limit.
 
 > **Important:** Auto-inflate's maximum throughput units setting is also limited to your account's throughput unit limit. If your account limit is 20 TUs, auto-inflate can only scale up to 20 TUs.
+
+### Question 7: Geo-Disaster Recovery with Data Replication
+
+**Scenario:** You need to implement geo-disaster recovery for an Azure Event Hubs namespace. The solution must replicate both metadata and event data across regions.
+
+**Question:** Which configuration should you use?
+
+**Answer:** **Enable Geo-replication on a Premium tier namespace**
+
+**Reasoning:**
+- ✅ **Geo-replication** provides replication of both metadata AND data for the namespace
+- ✅ Available on **Premium and Dedicated tiers only**
+- ✅ Meets the requirement to replicate both configuration and event payloads across regions
+- ✅ Supports both synchronous replication (RPO 0) and asynchronous replication
+- ✅ Also replicates consumer offsets and schema registry data
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| Implement Azure Functions to copy events between namespaces | Using Azure Functions to manually copy events adds complexity, latency, and doesn't provide the automatic failover capabilities and consistency guarantees of the native Geo-replication feature. |
+| Configure Geo-Disaster recovery on a Standard tier namespace | Geo-Disaster recovery on Standard tier only replicates metadata (namespace configuration) but does NOT replicate event data, failing to meet the requirement for data replication. |
+| Use Event Hubs Capture with cross-region storage replication | Event Hubs Capture archives data to storage but doesn't provide active replication or failover capabilities for the Event Hubs namespace itself, making it unsuitable for geo-disaster recovery scenarios. |
+
+**Key Distinction:**
+
+| Recovery Type | Tier Availability | Metadata | Event Data | Consumer Offsets |
+|---------------|-------------------|----------|------------|------------------|
+| Geo-Disaster Recovery | Standard, Premium, Dedicated | ✅ | ❌ | ❌ |
+| Geo-replication | **Premium and Dedicated only** | ✅ | ✅ | ✅ |
+
+**Replication Modes in Geo-replication:**
+
+| Mode | RPO | Use Case |
+|------|-----|----------|
+| Synchronous | 0 (no data loss) | Maximum data assurance, critical workloads |
+| Asynchronous | > 0 (possible data loss) | Better availability and lower latency |
+
+> **Exam Tip:** When the question mentions replicating **both metadata AND event data**, the answer is always **Geo-replication on Premium or Dedicated tier**. Standard tier's Geo-Disaster Recovery only handles metadata and does NOT replicate event data!
+
+> **Important:** Microsoft Entra RBAC assignments are NOT replicated to the secondary namespace in either Geo-Disaster Recovery or Geo-replication. You must create role assignments manually in the secondary namespace.
 
 ## Best Practices
 
