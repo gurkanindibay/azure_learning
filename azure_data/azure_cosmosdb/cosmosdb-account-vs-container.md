@@ -22,6 +22,7 @@
     - [What are Hierarchical Partition Keys?](#what-are-hierarchical-partition-keys)
     - [How Hierarchical Partition Keys Solve the 20 GB Problem](#how-hierarchical-partition-keys-solve-the-20-gb-problem)
     - [Multi-Tenant SaaS Best Practices with Hierarchical Partition Keys](#multi-tenant-saas-best-practices-with-hierarchical-partition-keys)
+    - [Query Routing with Hierarchical Partition Keys](#query-routing-with-hierarchical-partition-keys)
 11. [Change Feed](#change-feed)
     - [What is Change Feed?](#what-is-change-feed)
     - [Azure Functions Cosmos DB Trigger](#azure-functions-cosmos-db-trigger)
@@ -680,6 +681,83 @@ QueryDefinition query = new QueryDefinition(
 // The query routes to relevant physical partitions for this tenant
 FeedIterator<Order> iterator = container.GetItemQueryIterator<Order>(query);
 ```
+
+### Query Routing with Hierarchical Partition Keys
+
+When using hierarchical partition keys, understanding how to structure queries for efficient routing is crucial. The partition key hierarchy determines how queries are routed to physical partitions.
+
+#### Query Routing Rules
+
+| Partition Key Provided | Routing Behavior | Efficiency |
+|------------------------|------------------|------------|
+| **First level only** (e.g., tenantId) | Routes to all physical partitions containing that value | ✅ Efficient |
+| **First + second level** (e.g., tenantId + year) | Routes to narrower set of partitions | ✅ More Efficient |
+| **All levels** (e.g., tenantId + year + month) | Routes to specific partition | ✅ Most Efficient |
+| **Lower level only** (e.g., userId without tenantId) | Fan-out to ALL partitions | ❌ Inefficient |
+| **No partition key** (cross-partition) | Fan-out to ALL partitions | ❌ Inefficient |
+| **Wildcards in partition key values** | Not supported | ❌ Invalid |
+
+#### Example: Querying Across All Users for a Tenant
+
+With hierarchical partition keys configured as `['/tenantId', '/userId']`:
+
+```csharp
+// EFFICIENT: Provide only tenantId to query all users for a tenant
+var queryOptions = new QueryRequestOptions
+{
+    PartitionKey = new PartitionKeyBuilder()
+        .Add("tenant-123")  // Only first level
+        .Build()
+};
+
+QueryDefinition query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.tenantId = @tenantId")
+    .WithParameter("@tenantId", "tenant-123");
+
+// Routes to all physical partitions containing tenant-123's data
+FeedIterator<Document> iterator = container.GetItemQueryIterator<Document>(query, requestOptions: queryOptions);
+```
+
+```csharp
+// INEFFICIENT: Cross-partition query without partition key
+var queryOptions = new QueryRequestOptions
+{
+    EnableCrossPartitionQuery = true  // Avoid this when possible
+};
+
+// This fans out to ALL physical partitions - very expensive!
+FeedIterator<Document> iterator = container.GetItemQueryIterator<Document>(query, requestOptions: queryOptions);
+```
+
+```csharp
+// INEFFICIENT: Providing only lower-level partition key
+var queryOptions = new QueryRequestOptions
+{
+    PartitionKey = new PartitionKeyBuilder()
+        .Add("user-456")  // Only userId without tenantId - BAD!
+        .Build()
+};
+
+// This causes a fan-out because the hierarchy isn't respected
+```
+
+#### Key Takeaways for Query Routing
+
+1. **Always provide partition key values from the top of the hierarchy**
+   - Providing `tenantId` alone efficiently routes to tenant-specific partitions
+   - You don't need to provide all levels of the hierarchy
+
+2. **Lower-level keys without higher-level keys cause fan-out**
+   - Providing `userId` without `tenantId` cannot leverage the partition hierarchy
+   - Results in expensive cross-partition queries
+
+3. **Wildcards are NOT supported**
+   - You cannot use wildcard patterns in partition key values
+   - Must provide actual values for the partition key levels you want to target
+
+4. **Cross-partition queries should be avoided**
+   - Enable only when absolutely necessary
+   - Always try to include at least the first-level partition key
 
 ---
 
@@ -1713,6 +1791,92 @@ You need to ensure that email addresses are unique within each company in an Azu
 
 - [Unique keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/unique-keys)
 - [Define unique keys for Azure Cosmos DB containers](https://learn.microsoft.com/azure/cosmos-db/how-to-define-unique-keys)
+
+---
+
+### Question 6: Query Routing with Hierarchical Partition Keys
+
+**Question:**
+You have an Azure Cosmos DB container with hierarchical partition keys configured as `['/tenantId', '/userId']`. You need to query all documents for a specific tenant across all users. How should you structure your query to ensure it is efficiently routed?
+
+**Options:**
+- A) Provide only the tenantId value in the partition key parameter
+- B) Enable cross-partition query and omit the partition key
+- C) Provide userId only and filter by tenantId in the WHERE clause
+- D) Provide both tenantId and a wildcard for userId
+
+---
+
+### Answer: A ✅
+
+**Correct Answer: A) Provide only the tenantId value in the partition key parameter**
+
+---
+
+### Detailed Explanation
+
+**Option A - Provide only the tenantId value in the partition key parameter** ✅
+- **Correct**: When using hierarchical partition keys, providing only the first level (tenantId) routes the query to all physical partitions containing that tenant's data
+- This efficiently handles the cross-user query requirement without scanning the entire container
+- Cosmos DB understands the hierarchy and optimizes routing to only the relevant partitions
+- Example:
+  ```csharp
+  var queryOptions = new QueryRequestOptions
+  {
+      PartitionKey = new PartitionKeyBuilder()
+          .Add("tenant-123")  // Only first level
+          .Build()
+  };
+  ```
+
+**Option B - Enable cross-partition query and omit the partition key**
+- **Incorrect**: This would create an inefficient fan-out query across ALL physical partitions in the container
+- The query would scan partitions that don't contain the specific tenant's data
+- Results in higher RU consumption and longer query times
+- Only use cross-partition queries when you truly need data from multiple tenants
+
+**Option C - Provide userId only and filter by tenantId in the WHERE clause**
+- **Incorrect**: Providing only a lower-level partition key value (userId) without the higher levels creates a cross-partition query
+- The partition key hierarchy must be respected from top to bottom
+- This approach fans out to all physical partitions because Cosmos DB cannot route based on userId alone when tenantId is the first level
+- The WHERE clause filter happens AFTER the partition routing, so it doesn't help with routing efficiency
+
+**Option D - Provide both tenantId and a wildcard for userId**
+- **Incorrect**: Wildcards are NOT supported in partition key values for hierarchical partition keys
+- You cannot use patterns like `*`, `%`, or any other wildcard syntax
+- This approach is invalid and will result in an error
+- To query across all users, simply omit the userId level and provide only tenantId
+
+---
+
+### Key Concepts: Hierarchical Partition Key Query Routing
+
+1. **Top-Down Routing**
+   - Provide partition key values starting from the first level
+   - You can stop at any level - you don't need all levels
+   - Each additional level narrows the query scope
+
+2. **Efficient Query Patterns**
+   | Levels Provided | Routing Result |
+   |----------------|----------------|
+   | tenantId only | Routes to all tenant's partitions |
+   | tenantId + userId | Routes to specific user's partition |
+   | userId only (without tenantId) | Fan-out to ALL partitions ❌ |
+
+3. **No Wildcard Support**
+   - Partition key values must be exact matches
+   - Use partial hierarchy (fewer levels) instead of wildcards
+
+4. **Cross-Partition vs Partial Partition Key**
+   - Cross-partition: No partition key, scans everything
+   - Partial partition key: Provides top levels, efficient routing to subset
+
+---
+
+### References
+
+- [Hierarchical Partition Keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/hierarchical-partition-keys)
+- [Query items in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/nosql/query/getting-started)
 
 ---
 
