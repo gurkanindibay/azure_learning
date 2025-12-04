@@ -7,10 +7,11 @@
 4. [Subscription Keys](#subscription-keys)
 5. [Certificates](#certificates)
 6. [Simple Usage Examples](#simple-usage-examples)
-7. [Networking Configurations](#networking-configurations)
-8. [API Versioning](#api-versioning)
-9. [Operational Best Practices](#operational-best-practices)
-10. [Practice Questions](#practice-questions)
+7. [Policy Sections](#policy-sections)
+8. [Networking Configurations](#networking-configurations)
+9. [API Versioning](#api-versioning)
+10. [Operational Best Practices](#operational-best-practices)
+11. [Practice Questions](#practice-questions)
 
 ## Purpose
 Azure API Manager (API Management) is the turnkey service on Microsoft Azure that lets teams publish, secure, transform, maintain, and monitor APIs. It is designed to sit between consumers (internal applications, partners, or external developers) and backend services, applying consistent security, routing, and transformation policies without touching the target APIs.
@@ -181,6 +182,142 @@ Invoke-RestMethod -Uri "https://contoso.azure-api.net/products" -Headers $header
 	</outbound>
 </policies>
 ```
+
+## Policy Sections
+
+Azure API Management policies are defined within four distinct sections, each executing at a specific point in the request/response lifecycle. Understanding when each section executes is critical for implementing the correct logic.
+
+### Policy Section Overview
+
+| Section | Execution Timing | Purpose | Use Cases |
+|---------|-----------------|---------|------------|
+| **inbound** | Before backend call | Process incoming requests | Authentication, validation, rate limiting, request transformation |
+| **backend** | Configures backend call | Configure how to call the backend | Set backend URL, client certificates, forwarding rules |
+| **outbound** | After successful backend response | Process successful responses | Response transformation, caching, header manipulation |
+| **on-error** | When an error occurs | Handle errors during processing | Custom error responses, logging, returning cached data on failure |
+
+### Section Details
+
+#### 1. Inbound Section
+
+The **inbound** section processes incoming requests **before** they reach the backend service. Policies here execute in order and can:
+- Validate authentication tokens (JWT validation)
+- Check subscription keys
+- Apply rate limiting and quotas
+- Transform request headers and body
+- Cache lookup for cached responses
+
+**Key Point**: Inbound policies cannot handle backend errors because they execute before the backend call is made.
+
+#### 2. Backend Section
+
+The **backend** section configures how API Management calls the backend service. Policies here:
+- Set the backend service URL
+- Configure client certificates for mutual TLS
+- Forward requests to specific backends
+
+**Key Point**: The backend section executes **before** the actual backend call is made to configure it. It does not receive or process backend responses or errors.
+
+#### 3. Outbound Section
+
+The **outbound** section processes **successful** responses from the backend. Policies here:
+- Transform response headers and body
+- Store responses in cache
+- Add custom headers to responses
+- Format or filter response data
+
+**Key Point**: The outbound section only executes when the backend returns a **successful** response. If the backend returns an error (like 503 Service Unavailable), the outbound section is **skipped**.
+
+#### 4. On-Error Section
+
+The **on-error** section is specifically designed to handle **error conditions** during request processing. This section executes when:
+- The backend returns an error response (4xx, 5xx status codes)
+- A policy in any section throws an exception
+- Any error occurs during the request lifecycle
+
+**Key Point**: The on-error section is the **only** place where you can handle backend failures and implement custom error responses.
+
+### Error Handling Example
+
+Here's an example of handling backend 503 errors with cached data fallback:
+
+```xml
+<policies>
+	<inbound>
+		<base />
+		<cache-lookup vary-by-developer="false" vary-by-developer-groups="false" />
+	</inbound>
+	<backend>
+		<base />
+	</backend>
+	<outbound>
+		<base />
+		<cache-store duration="3600" />
+	</outbound>
+	<on-error>
+		<choose>
+			<when condition="@(context.Response.StatusCode == 503)">
+				<!-- Return cached data when backend is unavailable -->
+				<cache-lookup-value key="fallback-data" variable-name="cachedResponse" />
+				<choose>
+					<when condition="@(context.Variables.ContainsKey("cachedResponse"))">
+						<return-response>
+							<set-status code="200" reason="OK (Cached)" />
+							<set-header name="X-Cache-Status" exists-action="override">
+								<value>fallback</value>
+							</set-header>
+							<set-body>@((string)context.Variables["cachedResponse"])</set-body>
+						</return-response>
+					</when>
+					<otherwise>
+						<return-response>
+							<set-status code="503" reason="Service Temporarily Unavailable" />
+							<set-body>{"error": "Service temporarily unavailable. Please try again later."}</set-body>
+						</return-response>
+					</otherwise>
+				</choose>
+			</when>
+		</choose>
+	</on-error>
+</policies>
+```
+
+### Execution Flow Diagram
+
+```
+Client Request
+      ↓
+┌─────────────────┐
+│    INBOUND      │  ← Process incoming request
+└────────┬────────┘
+         ↓
+┌─────────────────┐
+│    BACKEND      │  ← Configure backend call
+└────────┬────────┘
+         ↓
+   Backend Service
+         ↓
+    ┌─────────┐
+    │ Success │───→ ┌─────────────────┐
+    └────┬────┘     │    OUTBOUND     │  ← Process successful response
+         │          └────────┬────────┘
+    ┌────┴────┐              ↓
+    │  Error  │         Client Response
+    └────┬────┘
+         ↓
+┌─────────────────┐
+│    ON-ERROR     │  ← Handle errors
+└────────┬────────┘
+         ↓
+   Client Response
+```
+
+### Key Takeaways
+
+- **Error handling belongs in `on-error`**: When you need to handle backend failures (like 503 errors), always use the `on-error` section.
+- **`outbound` skips on errors**: The outbound section does not execute when the backend returns an error.
+- **`inbound` and `backend` cannot handle backend errors**: These sections execute before the backend response is received.
+- **`on-error` is your safety net**: Use it for logging errors, returning custom error messages, or providing fallback responses.
 
 ## Azure API Management Pricing Tiers
 
@@ -1084,3 +1221,32 @@ The other options are incorrect because:
 **Reference**: 
 - [Azure API Management developer portal overview](https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-developer-portal)
 - [Self-host the developer portal](https://learn.microsoft.com/en-us/azure/api-management/developer-portal-self-host)
+
+### Question 12: Backend Error Handling with Cached Data
+
+**Scenario**: You need to handle backend service errors gracefully in Azure API Management by returning a custom error response with cached data when the backend returns a 503 Service Unavailable error.
+
+**Question**: Which policy section should contain your error handling logic?
+
+**Options**:
+- backend
+- on-error ✓
+- outbound
+- inbound
+
+**Answer**: on-error
+
+**Explanation**: 
+The **on-error** section is specifically designed to handle error conditions including backend failures. It executes when an error occurs during request processing, allowing you to implement custom error responses and return cached data when backends fail. This section is triggered when:
+- The backend returns an error response (like 503 Service Unavailable)
+- A policy throws an exception
+- Any error occurs during the request lifecycle
+
+The other options are incorrect because:
+- **backend**: The backend section configures how to call the backend service but executes **before** the backend call is made. It cannot handle errors returned by the backend service because those errors occur after the backend section has completed.
+- **outbound**: The outbound section processes **successful** responses from the backend. It does not execute when the backend returns an error like 503, making it unsuitable for error handling logic. The outbound section is skipped entirely when an error occurs.
+- **inbound**: The inbound section processes incoming requests **before** they reach the backend. It cannot handle backend errors as these occur after inbound processing is complete. By the time a backend error occurs, the inbound section has already finished executing.
+
+**Reference**: 
+- [Error handling in Azure API Management policies](https://learn.microsoft.com/en-us/azure/api-management/api-management-error-handling-policies)
+- [API Management policy reference](https://learn.microsoft.com/en-us/azure/api-management/api-management-policies)
