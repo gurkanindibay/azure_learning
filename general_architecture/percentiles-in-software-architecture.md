@@ -44,20 +44,54 @@ A **percentile** indicates the value below which a given percentage of observati
 ### Visual Representation
 
 ```
-Number of
-Requests
-    │
-    │████
-    │████████
-    │████████████████
-    │██████████████████████████
-    │██████████████████████████████████████
-    └──────────────────────────────────────────► Latency (ms)
-              │       │     │    │
-             P50     P90   P95  P99
+                        Latency Distribution Histogram
+                        ════════════════════════════════
+ 
+ Frequency
+ (requests)
+     │
+ 450 ┤ ██
+     │ ██
+ 400 ┤ ██
+     │ ██
+ 350 ┤ ██  ██
+     │ ██  ██
+ 300 ┤ ██  ██
+     │ ██  ██
+ 250 ┤ ██  ██  ██
+     │ ██  ██  ██
+ 200 ┤ ██  ██  ██
+     │ ██  ██  ██
+ 150 ┤ ██  ██  ██  ██
+     │ ██  ██  ██  ██
+ 100 ┤ ██  ██  ██  ██  ██
+     │ ██  ██  ██  ██  ██
+  50 ┤ ██  ██  ██  ██  ██  ██  ██
+     │ ██  ██  ██  ██  ██  ██  ██  ██  ██  ██
+   0 ┴────────────────────────────────────────────────────► Latency (ms)
+       0   50  100 150 200 250 300 400 500 1000
+       └────────┴───────────┴───────┴──────────┘
+           │         │          │         │
+          P50       P90        P95       P99
+         (55ms)   (180ms)    (280ms)   (520ms)
+ 
+ ┌─────────────────────────────────────────────────────────┐
+ │  Distribution: 1000 API requests                        │
+ │  ─────────────────────────────────────────────────────  │
+ │  • 50% of requests (P50) complete within 55ms           │
+ │  • 90% of requests (P90) complete within 180ms          │
+ │  • 95% of requests (P95) complete within 280ms          │
+ │  • 99% of requests (P99) complete within 520ms          │
+ │  • The remaining 1% (tail) can take 500ms - 2000ms+     │
+ └─────────────────────────────────────────────────────────┘
 ```
 
-Most requests cluster on the left (fast), with a "long tail" extending right (slow outliers).
+**Key Insight:** Most requests cluster on the left (fast), with a "long tail" extending right (slow outliers). The tail represents edge cases like:
+- Network congestion
+- Cold starts
+- Garbage collection pauses
+- Database locks
+- Resource contention
 
 ### Sorted Distribution Example
 
