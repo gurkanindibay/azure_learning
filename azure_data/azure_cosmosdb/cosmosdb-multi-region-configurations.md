@@ -13,6 +13,7 @@
   - [Decision Matrix by Workload Type](#decision-matrix-by-workload-type)
   - [Decision Tree](#decision-tree)
 - [Consistency Levels and Multi-Region](#consistency-levels-and-multi-region)
+- [Analytical Store in Multi-Region Accounts](#analytical-store-in-multi-region-accounts)
 - [Cost Considerations](#cost-considerations)
 - [Implementation Examples](#implementation-examples)
   - [Azure CLI Examples](#azure-cli-examples)
@@ -279,6 +280,74 @@ Start: Multi-Region Cosmos DB Configuration
 | **Eventual** | ✅ | ✅ | ✅ |
 
 **Key Point:** Strong and Bounded Staleness consistency are NOT available with multi-region writes because they require linearizability which cannot be guaranteed across distributed write regions.
+
+---
+
+## Analytical Store in Multi-Region Accounts
+
+### Overview
+
+Azure Cosmos DB Analytical Store is a fully isolated column store for enabling large-scale analytics against operational data without impacting transactional workloads. In multi-region accounts, analytical store is **automatically globally distributed**.
+
+### Key Characteristics
+
+| Feature | Behavior |
+|---------|----------|
+| **Global Distribution** | Analytical store exists in **all regions** where transactional store exists |
+| **Automatic Replication** | Data is automatically synced to analytical store in all regions |
+| **Query Routing** | Synapse Analytics routes queries to the **closest region** |
+| **Independence** | No dependency on primary write region for analytical reads |
+
+### How Analytical Store Multi-Region Works
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Multi-Region Analytical Store                            │
+│                                                                             │
+│   ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
+│   │    East US      │    │    West US      │    │    Europe       │        │
+│   │                 │    │                 │    │                 │        │
+│   │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │        │
+│   │ │Transactional│ │    │ │Transactional│ │    │ │Transactional│ │        │
+│   │ │   Store     │ │    │ │   Store     │ │    │ │   Store     │ │        │
+│   │ └──────┬──────┘ │    │ └──────┬──────┘ │    │ └──────┬──────┘ │        │
+│   │        │        │    │        │        │    │        │        │        │
+│   │        ▼        │    │        ▼        │    │        ▼        │        │
+│   │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │        │
+│   │ │ Analytical  │ │    │ │ Analytical  │ │    │ │ Analytical  │ │        │
+│   │ │   Store     │ │    │ │   Store     │ │    │ │   Store     │ │        │
+│   │ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │        │
+│   └─────────────────┘    └─────────────────┘    └─────────────────┘        │
+│            ▲                                                                │
+│            │                                                                │
+│   ┌────────┴────────┐                                                       │
+│   │  Synapse Query  │  ← Routes to CLOSEST region (East US for East US user)│
+│   │  (East US User) │                                                       │
+│   └─────────────────┘                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Query Routing Behavior
+
+| User Location | Query Served From | Reason |
+|---------------|-------------------|--------|
+| East US | East US analytical store | Closest region |
+| West Europe | Europe analytical store | Closest region |
+| Southeast Asia | Closest available region | Intelligent routing |
+
+### Important Points for Exams
+
+> **Key Insight:** Analytical store queries are served from the **closest Cosmos DB region** with analytical store, NOT:
+> - ❌ The primary write region
+> - ❌ The Synapse workspace region
+> - ❌ A random region
+
+### Benefits of Global Analytical Store
+
+1. **Low Latency**: Queries served from local region
+2. **No Cross-Region Traffic**: Analytics don't require routing to primary region
+3. **Scalable Analytics**: Each region handles its local analytical workload
+4. **Automatic Sync**: No manual replication configuration needed
 
 ---
 
@@ -754,6 +823,47 @@ Container container = await database.CreateContainerIfNotExistsAsync(containerPr
 
 ---
 
+### Question 7: Analytical Store Query Region Routing
+
+**Scenario:** You have an Azure Cosmos DB container with analytical store enabled in a multi-region account. A user in the East US region queries the analytical store using Azure Synapse Analytics.
+
+**Question:** Which region serves the query?
+
+**Options:**
+- A. The primary write region only.
+- B. The region where Synapse workspace is located.
+- C. The closest region with analytical store (East US).
+- D. A random region with analytical store.
+
+**Answer:** C ✅
+
+**Explanation:**
+
+**Why C is Correct:**
+- **Analytical store exists in all regions** where the transactional store exists
+- It is **globally distributed** just like the transactional store
+- Azure Synapse Analytics **intelligently routes queries to the closest local region** for optimal performance
+- This provides low-latency analytical queries for users worldwide
+
+**Why A is Incorrect:**
+- Analytical store is **globally distributed** in multi-region accounts
+- It does **NOT** require routing to the primary write region for read queries
+- Analytical queries are served from local replicas, not the write region
+
+**Why B is Incorrect:**
+- The query is served from the **closest Cosmos DB region** with analytical store
+- It is **NOT** based on where the Synapse workspace is located
+- Synapse workspace location and Cosmos DB analytical store region are independent
+
+**Why D is Incorrect:**
+- Synapse Analytics does **NOT** route queries randomly
+- It **intelligently routes** to the closest region with analytical store
+- This ensures optimal performance and predictable latency
+
+**Key Takeaway:** In multi-region Cosmos DB accounts, analytical store is automatically replicated to all regions. Azure Synapse Analytics queries are served from the closest Cosmos DB region to the user, providing low-latency analytical access regardless of where the Synapse workspace is deployed.
+
+---
+
 ## Summary
 
 | Scenario | Recommended Configuration |
@@ -766,6 +876,7 @@ Container container = await database.CreateContainerIfNotExistsAsync(containerPr
 | Gaming/Real-time collaboration | Multi-region with multi-master |
 | Content delivery/CDN | Multi-region with read replicas |
 | Financial transactions (ACID) | Multi-region read replicas + strong consistency |
+| Global analytics with Synapse | Multi-region with analytical store enabled |
 
 ---
 
@@ -777,3 +888,5 @@ Container container = await database.CreateContainerIfNotExistsAsync(containerPr
 - [Manage consistency levels](https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels)
 - [Conflict resolution types and resolution policies](https://learn.microsoft.com/en-us/azure/cosmos-db/conflict-resolution-policies)
 - [Automatic and manual failover](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-manage-database-account#automatic-failover)
+- [Azure Cosmos DB analytical store overview](https://learn.microsoft.com/en-us/azure/cosmos-db/analytical-store-introduction)
+- [Configure Azure Synapse Link for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/configure-synapse-link)
