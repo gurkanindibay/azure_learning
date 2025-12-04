@@ -345,6 +345,21 @@ await processor.StartProcessingAsync();
 ### Description
 Track processing progress by storing offset positions, enabling recovery from failures.
 
+### Why Checkpointing?
+
+Checkpointing saves the progress of a long-running process so it can **resume from that point** if interrupted, rather than starting over.
+
+| Without Checkpointing | With Checkpointing |
+|-----------------------|-------------------|
+| Process E1-E5, crash → Restart from E1 | Process E1-E5, checkpoint, crash → Restart from E6 |
+| E1-E5 processed **twice** (duplicates!) | No duplicates, no wasted work |
+
+**Key Benefits:**
+- **Fault Tolerance** – Recover from failures without losing progress
+- **Exactly-Once Semantics** – Prevent duplicate processing
+- **Cost Savings** – Avoid reprocessing already-completed work
+- **Scalability** – Track progress per partition for parallel processing
+
 ### Use Cases
 - Reliable event processing
 - Failure recovery
