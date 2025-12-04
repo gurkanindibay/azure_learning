@@ -699,7 +699,38 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 5: Social Network Application
+### Scenario 5: MongoDB RBAC Roles and Users Storage
+
+**Question:** You need to create a custom RBAC role for Azure Cosmos DB for MongoDB. Where are roles and users stored?
+
+**Options:**
+- A) In the Azure Resource Manager
+- B) Within a specific database in the Azure Cosmos DB account ✅
+- C) In Azure Active Directory
+- D) In the master database at account level
+
+**Correct Answer: B) Within a specific database in the Azure Cosmos DB account**
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **Azure Resource Manager** ❌ | ARM is used to manage roles and users but doesn't store them; the actual storage is within the MongoDB database |
+| **Within a specific database** ✅ | In Azure Cosmos DB for MongoDB, RBAC roles and users are stored within a database and managed using Azure CLI, PowerShell, or ARM templates |
+| **Azure Active Directory** ❌ | Azure Cosmos DB for MongoDB uses its own RBAC system separate from Azure AD, with users and roles stored within the database itself |
+| **Master database at account level** ❌ | There is no master database at account level for MongoDB API; roles and users are stored within individual databases |
+
+**Key Points:**
+- Azure Cosmos DB for MongoDB has its own RBAC implementation
+- Roles and users are database-scoped, not account-scoped
+- Management can be done via Azure CLI, PowerShell, or ARM templates
+- This is different from Azure AD RBAC which controls Azure resource access
+
+**Reference:** [Azure Cosmos DB for MongoDB RBAC](https://docs.microsoft.com/en-us/azure/cosmos-db/mongodb/how-to-setup-rbac)
+
+---
+
+### Scenario 6: Social Network Application
 
 **Question:** You're building a social network application that needs to efficiently query friend relationships and friend-of-friend connections. Which API should you use?
 
@@ -712,7 +743,7 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 6: IoT Time-Series Data
+### Scenario 7: IoT Time-Series Data
 
 **Question:** You're collecting high-volume sensor data from IoT devices that needs to be written quickly and queried by time ranges. Which API should you use?
 
@@ -725,7 +756,7 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
-### Scenario 7: Flexible JSON Documents
+### Scenario 8: Flexible JSON Documents
 
 **Question:** You're building a new e-commerce application that needs to store product catalogs with varying attributes depending on product category. You want SQL-like query capabilities. Which API should you use?
 
