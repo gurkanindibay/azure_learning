@@ -6,6 +6,7 @@
   - [Events](#events)
   - [Event Sources (Publishers)](#event-sources-publishers)
   - [Topics](#topics)
+    - [Topic Types and Authentication](#topic-types-and-authentication)
   - [Event Subscriptions](#event-subscriptions)
   - [Event Handlers](#event-handlers)
 - [3. Filtering](#3-filtering)
@@ -48,7 +49,72 @@ Where the event comes from.
 The endpoint where publishers send events.
 - **System Topics:** Built-in topics for Azure services (hidden management).
 - **Custom Topics:** Application-specific topics you create.
+- **Partner Topics:** Topics for subscribing to events from third-party SaaS providers.
 - **Domains:** Management tool for large numbers of topics (e.g., one topic per customer for a SaaS app).
+
+#### Topic Types and Authentication
+
+Azure Event Grid supports different topic types, each with specific authentication characteristics:
+
+| Topic Type | Description | Authentication Methods | Managed Identity Support |
+|------------|-------------|------------------------|-------------------------|
+| **System Topic** | Built-in topics for Azure service events | Managed identity only | ✅ Required (no keys/SAS) |
+| **Custom Topic** | Application-specific topics you create | Access keys, SAS tokens, Managed identity | ✅ Optional |
+| **Domain Topic** | Topics within an Event Grid domain | Access keys, SAS tokens, Managed identity | ✅ Optional |
+| **Partner Topic** | Third-party SaaS provider events | Access keys, SAS tokens, Managed identity | ✅ Optional |
+
+##### System Topics (Managed Identity Only)
+- **Authentication:** System topics **only support managed identity authentication** and cannot use access keys or SAS tokens.
+- **Use Case:** When you need authentication without managing keys or tokens.
+- **Automatic Creation:** Created automatically when you subscribe to Azure service events (e.g., Blob Storage, Resource Groups).
+- **No Key Management:** Ideal for security-conscious scenarios where credential rotation overhead must be eliminated.
+
+```csharp
+// System topics use managed identity - no keys to manage
+// Events are published automatically by Azure services
+// You only create subscriptions to receive events
+```
+
+##### Custom Topics (Key Management Required)
+- **Authentication:** Support SAS keys if "Enable authentication using SAS keys" is selected during resource creation.
+- **Key Management:** Requires managing access keys or SAS tokens for publishing events.
+- **Flexibility:** Offers more control over authentication but adds operational overhead.
+
+```bash
+# Create custom topic with SAS key authentication
+az eventgrid topic create \
+  --name mycustomtopic \
+  --resource-group myResourceGroup \
+  --location eastus
+  
+# Get access keys (must be managed/rotated)
+az eventgrid topic key list \
+  --name mycustomtopic \
+  --resource-group myResourceGroup
+```
+
+##### Domain Topics
+- **Authentication:** Part of Event Grid domains and support the same authentication methods as custom topics.
+- **Key Management:** Requires key or SAS token management at the domain level.
+- **Use Case:** Multi-tenant scenarios where you need one topic per customer/entity.
+
+##### Partner Topics
+- **Authentication:** Used to subscribe to events from third-party SaaS providers.
+- **Key Management:** Follow the same authentication model as custom topics, requiring key management.
+- **Use Case:** Integrating with external SaaS services like Auth0, SAP, etc.
+
+#### Exam Scenario: Authentication Without Key Management
+
+**Question:** You are developing a solution that publishes events to Azure Event Grid. The solution must use authentication without managing keys or SAS tokens. You need to identify which type of Event Grid topic supports this requirement. Which topic type should you use?
+
+| Option | Explanation |
+|--------|-------------|
+| **System topic** ✅ | System topics only support managed identity authentication and cannot use access keys or SAS tokens, making them the correct choice when you need authentication without managing keys or tokens. |
+| **Domain topic** ❌ | Domain topics are part of Event Grid domains and support the same authentication methods as custom topics, requiring key or SAS token management. |
+| **Partner topic** ❌ | Partner topics are used to subscribe to events from third-party SaaS providers and follow the same authentication model as custom topics, requiring key management. |
+| **Custom topic** ❌ | Custom topics support SAS keys if "Enable authentication using SAS keys" is selected during resource creation, which means they require key management, violating the requirement. |
+
+**Key Takeaway:** When the requirement specifies "no key or SAS token management," **System topics** are the answer because they exclusively use managed identity authentication.
 
 ### Event Subscriptions
 The mechanism to route events from a topic to a handler. Contains filtering logic.
