@@ -69,6 +69,12 @@
   - [WadCfg Configuration for Profiler](#wadcfg-configuration-for-profiler)
   - [Key Takeaway](#key-takeaway-9)
   - [Related Learning Resources](#related-learning-resources-9)
+- [Question 11: Custom Filtering for Live Metrics Stream](#question-11-custom-filtering-for-live-metrics-stream)
+  - [Explanation](#explanation-10)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-9)
+  - [Live Metrics Custom Filtering Security](#live-metrics-custom-filtering-security)
+  - [Key Takeaway](#key-takeaway-10)
+  - [Related Learning Resources](#related-learning-resources-10)
 
 ## Overview
 
@@ -1028,3 +1034,69 @@ When configuring Application Insights Profiler for a .NET application on an Azur
 - Azure Diagnostics extension overview
 - Configure Azure Diagnostics extension for Virtual Machines
 - Profiler for Cloud Services and Virtual Machines
+
+---
+
+## Question 11: Custom Filtering for Live Metrics Stream
+
+**Scenario:**
+You are implementing custom filtering for Live Metrics Stream in Application Insights. The solution must support filtering by custom dimensions and complex criteria.
+
+**Requirement:**
+You need to determine the minimum requirement to enable this functionality.
+
+**Question:**
+What is the minimum requirement to enable custom filtering for Live Metrics Stream?
+
+**Options:**
+
+1. **Enable Microsoft Entra authentication for the control channel to secure custom filters** ✅ *Correct*
+2. **Configure filters using the filter control in the portal without additional security** ❌ *Incorrect*
+3. **Enable sampling to support custom filtering capabilities** ❌ *Incorrect*
+4. **Implement custom filters in application code using the SDK filtering methods** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: Enable Microsoft Entra authentication for the control channel to secure custom filters**
+
+When implementing custom filters for Live Metrics Stream in Application Insights, you must **secure the control channel by enabling Microsoft Entra authentication**. This is required to prevent unauthorized access to filter configurations when using custom filters.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Configure filters using the filter control in the portal without additional security** | Using unsecured channels is strongly discouraged and will be **automatically disabled after six months** when using custom filters. The control channel must be secured. |
+| **Enable sampling to support custom filtering capabilities** | Sampling is **separate from Live Metrics filtering**. You can monitor custom performance indicators live by applying arbitrary filters on any Application Insights telemetry from the portal. Sampling doesn't enable or disable custom filtering. |
+| **Implement custom filters in application code using the SDK filtering methods** | Live Metrics Stream filters are configured through the **portal filter control**, not through SDK code. However, proper authentication is still required for the control channel. |
+
+### Live Metrics Custom Filtering Security
+
+| Aspect | Details |
+|--------|--------|
+| **Authentication Requirement** | Microsoft Entra authentication must be enabled for the control channel |
+| **Purpose** | Prevents unauthorized access to filter configurations |
+| **Filter Configuration** | Done through the Azure portal filter control |
+| **Unsecured Channels** | Will be automatically disabled after 6 months when using custom filters |
+| **Sampling Relationship** | Independent - sampling doesn't affect custom filtering capabilities |
+
+### Custom Filtering Capabilities
+
+With properly secured Live Metrics Stream, you can:
+- Filter telemetry by **custom dimensions**
+- Apply **complex filter criteria** to narrow down real-time data
+- Monitor **custom performance indicators** live
+- Apply **arbitrary filters** on any Application Insights telemetry
+
+### Key Takeaway
+
+To implement custom filtering for Live Metrics Stream:
+- **Enable Microsoft Entra authentication** for the control channel as a minimum requirement
+- Filters are configured through the **portal**, not through SDK code
+- **Sampling is independent** from Live Metrics filtering
+- **Unsecured channels will be disabled** after six months when using custom filters
+
+### Related Learning Resources
+- Live Metrics: Monitor and diagnose with 1-second latency
+- Secure the Live Metrics control channel
+- Application Insights Live Metrics Stream
+- Microsoft Entra authentication for Application Insights
