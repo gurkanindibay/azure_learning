@@ -19,6 +19,7 @@
   - [Question 8: Eliminating File Lock Conflicts](#question-8-eliminating-file-lock-conflicts)
   - [Question 9: Temporary Diagnostic Logging Configuration](#question-9-temporary-diagnostic-logging-configuration)
   - [Question 10: Deployment Package Size Limits on Consumption Plan](#question-10-deployment-package-size-limits-on-consumption-plan)
+  - [Question 11: Custom Initialization Actions Before Handling Requests](#question-11-custom-initialization-actions-before-handling-requests)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -508,6 +509,67 @@ Which deployment method should you avoid when using a Consumption plan?
 - Use container-based deployment for applications exceeding package size limits
 - Implement incremental deployment strategies to reduce transfer sizes
 - Consider external URL deployment for large static assets
+
+---
+
+### Question 11: Custom Initialization Actions Before Handling Requests
+
+**Scenario:**
+You need to configure custom initialization actions for an Azure App Service web app that run before the app handles requests. The initialization must complete before considering the instance healthy.
+
+**Question:**
+What should you configure?
+
+**Options:**
+
+1. ❌ WEBSITE_WARMUP_PATH app setting
+   - **Incorrect**: WEBSITE_WARMUP_PATH is an app setting that works with application initialization but by itself does not define the full initialization behavior and completion requirements.
+
+2. ❌ Startup command in container settings
+   - **Incorrect**: Startup commands are for container-based deployments and run when the container starts, not specifically for request initialization in traditional web apps.
+
+3. ❌ Health check path in configuration
+   - **Incorrect**: Health check paths monitor application health after initialization but do not control the initialization process or define initialization actions.
+
+4. ✅ applicationInitialization element in web.config
+   - **Correct**: The applicationInitialization configuration element in web.config allows you to specify initialization pages that must complete successfully before the instance is considered ready to handle requests.
+
+---
+
+**Key Concepts:**
+
+| Configuration Method | Purpose | Use Case |
+|---------------------|---------|----------|
+| **applicationInitialization (web.config)** | Define initialization URLs that must complete before instance is healthy | Pre-warming cache, loading dependencies, initializing connections |
+| **WEBSITE_WARMUP_PATH** | Works with applicationInitialization to specify warmup path | Supplements web.config initialization |
+| **Health check path** | Monitors ongoing health of running instances | Post-initialization health monitoring |
+| **Startup command** | Container startup behavior | Container-based deployments only |
+
+**applicationInitialization Example:**
+
+```xml
+<system.webServer>
+  <applicationInitialization doAppInitAfterRestart="true" skipManagedModules="true">
+    <add initializationPage="/warmup" />
+    <add initializationPage="/api/health" />
+    <add initializationPage="/cache/prime" />
+  </applicationInitialization>
+</system.webServer>
+```
+
+**How applicationInitialization Works:**
+1. When the app starts (or after a restart), the configured initialization pages are requested
+2. These requests must complete successfully (HTTP 200) before the instance is marked as healthy
+3. Only after initialization completes will the instance receive production traffic
+4. This is particularly important during deployment slot swaps to ensure the staging slot is fully warmed before swap
+
+**Benefits:**
+- Prevents cold-start latency for end users
+- Ensures caches are populated before serving traffic
+- Validates that dependencies are available before accepting requests
+- Works seamlessly with deployment slot swaps for zero-downtime deployments
+
+> 💡 **Exam Tip**: For .NET applications on Windows App Service, the `applicationInitialization` element in web.config is the correct way to configure initialization actions that must complete before the instance handles requests. This is different from health checks which monitor ongoing health, and different from container startup commands which only apply to container deployments.
 
 ---
 
