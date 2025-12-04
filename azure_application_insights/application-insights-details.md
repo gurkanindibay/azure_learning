@@ -75,6 +75,13 @@
   - [Live Metrics Custom Filtering Security](#live-metrics-custom-filtering-security)
   - [Key Takeaway](#key-takeaway-10)
   - [Related Learning Resources](#related-learning-resources-10)
+- [Question 12: Adding Custom Properties Across All Telemetry Types](#question-12-adding-custom-properties-across-all-telemetry-types)
+  - [Explanation](#explanation-11)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-10)
+  - [Telemetry Enrichment Methods Comparison](#telemetry-enrichment-methods-comparison)
+  - [Telemetry Initializer Implementation Example](#telemetry-initializer-implementation-example)
+  - [Key Takeaway](#key-takeaway-11)
+  - [Related Learning Resources](#related-learning-resources-11)
 
 ## Overview
 
@@ -1100,3 +1107,137 @@ To implement custom filtering for Live Metrics Stream:
 - Secure the Live Metrics control channel
 - Application Insights Live Metrics Stream
 - Microsoft Entra authentication for Application Insights
+
+## Question 12: Adding Custom Properties Across All Telemetry Types
+
+**Scenario:**
+You are implementing custom telemetry in an Application Insights-enabled application. You need to add a custom property that will be available across all telemetry types including requests, dependencies, and exceptions.
+
+**Question:**
+What should you implement?
+
+**Options:**
+
+1. **Custom dimensions in TrackMetric() calls** ❌ *Incorrect*
+2. **Custom event properties in TrackEvent() calls** ❌ *Incorrect*
+3. **A telemetry initializer** ✅ *Correct*
+4. **A telemetry processor** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: A telemetry initializer**
+
+Telemetry initializers allow you to enrich **all telemetry items** with custom properties before they are sent. They run for every telemetry type, making them ideal for adding properties that should appear across all telemetry including requests, dependencies, and exceptions.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Custom dimensions in TrackMetric() calls** | Custom dimensions in TrackMetric() calls only apply to those **specific metric telemetry items**, not to all telemetry types across the application. |
+| **Custom event properties in TrackEvent() calls** | Properties added to TrackEvent() calls only apply to those **specific custom events**, not to all telemetry types like requests, dependencies, and exceptions. |
+| **A telemetry processor** | Telemetry processors are primarily used for **filtering and modifying telemetry after initializers run**, not for adding properties across all telemetry types. They're typically used for sampling or filtering scenarios. While processors can add properties, initializers are the correct pattern for enriching all telemetry. |
+
+### Telemetry Enrichment Methods Comparison
+
+| Method | Scope | Use Case |
+|--------|-------|----------|
+| **Telemetry Initializer** | All telemetry types (requests, dependencies, exceptions, events, metrics, etc.) | Add common properties to ALL telemetry |
+| **TrackMetric() dimensions** | Only metric telemetry items | Add properties to specific metrics |
+| **TrackEvent() properties** | Only custom event telemetry items | Add properties to specific custom events |
+| **Telemetry Processor** | All telemetry (after initializers) | Filter, sample, or conditionally modify telemetry |
+
+### Telemetry Initializer Implementation Example
+
+```csharp
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
+
+public class CustomPropertyInitializer : ITelemetryInitializer
+{
+    public void Initialize(ITelemetry telemetry)
+    {
+        // Add custom property to ALL telemetry types
+        if (telemetry is ISupportProperties telemetryWithProperties)
+        {
+            // Add environment information
+            telemetryWithProperties.Properties["Environment"] = "Production";
+            
+            // Add application version
+            telemetryWithProperties.Properties["AppVersion"] = "1.2.3";
+            
+            // Add custom business context
+            telemetryWithProperties.Properties["Region"] = "US-East";
+            
+            // Add machine/instance information
+            telemetryWithProperties.Properties["MachineName"] = Environment.MachineName;
+        }
+    }
+}
+```
+
+**Registration in ASP.NET Core:**
+
+```csharp
+// In Program.cs or Startup.cs
+builder.Services.AddSingleton<ITelemetryInitializer, CustomPropertyInitializer>();
+
+// Or in ConfigureServices method
+services.AddSingleton<ITelemetryInitializer, CustomPropertyInitializer>();
+```
+
+**Registration in .NET Framework:**
+
+```csharp
+// In ApplicationInsights.config or code
+TelemetryConfiguration.Active.TelemetryInitializers.Add(new CustomPropertyInitializer());
+```
+
+### How Telemetry Initializers Work in the Pipeline
+
+```
+Telemetry Created (Request, Dependency, Exception, Event, Metric, etc.)
+       │
+       ▼
+┌─────────────────────────────────────┐
+│  Telemetry Initializers             │  ← ALL telemetry passes through
+│  ┌─────────────────────────────┐    │
+│  │ CustomPropertyInitializer   │    │  ← Adds properties to EVERY item
+│  │ CloudRoleNameInitializer    │    │
+│  │ Other Initializers...       │    │
+│  └─────────────────────────────┘    │
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│  Telemetry Processors (Optional)    │  ← Filter/modify/sample
+│  └── Sampling, Filtering, etc.      │
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│  Telemetry Channel                  │  ← Send to Application Insights
+└─────────────────────────────────────┘
+```
+
+### Common Use Cases for Telemetry Initializers
+
+| Use Case | Property Example |
+|----------|------------------|
+| **Environment identification** | `Environment = "Production"` |
+| **Version tracking** | `AppVersion = "2.1.0"` |
+| **Regional context** | `Region = "US-East"` |
+| **Tenant identification** | `TenantId = "customer-123"` |
+| **Deployment tracking** | `DeploymentId = "deploy-456"` |
+| **Feature flags** | `FeatureFlags = "NewUI,BetaAPI"` |
+
+### Key Takeaway
+
+When you need to add custom properties that appear across **all telemetry types** (requests, dependencies, exceptions, events, metrics), implement a **telemetry initializer** (`ITelemetryInitializer`). Initializers run early in the telemetry pipeline and enrich every telemetry item before processing or transmission. This is different from:
+- **TrackMetric()/TrackEvent()** properties which only affect those specific items
+- **Telemetry processors** which are for filtering and conditional modification after initializers
+
+### Related Learning Resources
+- Filtering and preprocessing telemetry in Application Insights SDK
+- ITelemetryInitializer interface documentation
+- Application Insights for ASP.NET Core applications
+- Custom telemetry data in Application Insights
