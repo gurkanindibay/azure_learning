@@ -510,6 +510,37 @@ Azure Container Apps supports health probes to monitor the health of your contai
 | **Readiness** | Determines if the container is ready to accept traffic. If it fails, the container is removed from load balancing. |
 | **Startup** | Determines if the container has started successfully. Useful for slow-starting containers. |
 
+### Probe Failure Behavior
+
+Understanding what happens when each probe type fails is critical for designing resilient applications:
+
+| Probe Type | Failure Action | What Doesn't Happen |
+|------------|----------------|--------------------|
+| **Liveness** | Container replica is marked as unhealthy and **restarted** | Does NOT create new instances, scale to zero, or remove from load balancing |
+| **Readiness** | Container is **removed from load balancing** (stops receiving traffic) | Does NOT restart the container or affect other replicas |
+| **Startup** | Container initialization is considered failed; liveness/readiness probes don't start | Does NOT restart until startup probe succeeds or exceeds failure threshold |
+
+#### Liveness Probe Failure Details
+
+When a liveness probe fails repeatedly:
+1. The container app's replica is marked as **unhealthy**
+2. The Container Apps service attempts to **restart the unhealthy replica**
+3. The service does NOT create new container instances for liveness failures
+4. The service does NOT scale the container to zero replicas
+5. The service does NOT remove the container from load balancing (that's what readiness probes do)
+
+> **Key Point**: Liveness probe failures trigger **container restarts**, not new instance creation or scaling actions.
+
+#### Readiness Probe Failure Details
+
+When a readiness probe fails:
+1. The container is **removed from the load balancer's backend pool**
+2. Traffic is no longer routed to that specific replica
+3. The container continues running and is NOT restarted
+4. Once the readiness probe succeeds again, traffic routing resumes
+
+> **Key Point**: Readiness probe failures affect **traffic routing**, not container lifecycle.
+
 ### HTTP Health Probe Success Criteria
 
 **HTTP Status Code Range for Success**: **200 to 399**
@@ -1089,6 +1120,23 @@ az containerapp ingress traffic set \
 | 200 only | ❌ No | A single status code is too restrictive; any code from 200 to less than 400 indicates success. |
 
 **Key Takeaway**: HTTP health probes in Azure Container Apps consider status codes **200-399** as successful. This includes both 2xx (success) and 3xx (redirect) status codes. Status codes 400 and above are considered failures.
+
+---
+
+### Question 3: Liveness Probe Failure Behavior
+
+**Scenario**: A container app fails its liveness probe repeatedly. You need to determine what action Azure Container Apps takes.
+
+**Question**: What action does Azure Container Apps take when a container app fails its liveness probe repeatedly?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| Creates a new container instance | ❌ No | Container Apps attempts to restart the unhealthy replica rather than creating new instances for liveness failures. |
+| **Restarts the container** | ✅ Yes | If the liveness probe fails, the container app's replica is marked as unhealthy. The Container Apps service will attempt to restart the unhealthy replica. |
+| Scales the container to zero replicas | ❌ No | Liveness probe failures don't trigger scale-to-zero; instead the service attempts to restart the unhealthy replica. |
+| Removes the container from load balancing | ❌ No | Removing from load balancing is the action for failed readiness probes, not liveness probes which trigger container restarts. |
+
+**Key Takeaway**: Liveness probe failures result in **container restarts**. This is different from readiness probe failures, which remove the container from load balancing. Understanding this distinction is important for designing proper health check strategies.
 
 ---
 
