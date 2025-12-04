@@ -44,6 +44,9 @@ Azure Functions use configuration files to define function behavior, triggers, b
   - [Practice Question](#practice-question-1)
   - [Custom Handlers vs Native Language Support](#custom-handlers-vs-native-language-support)
   - [Best Practices for Custom Handlers](#best-practices-for-custom-handlers)
+- [Function App Lifecycle and Cleanup Operations](#function-app-lifecycle-and-cleanup-operations)
+  - [Handling Shutdown and Cleanup](#handling-shutdown-and-cleanup)
+  - [Practice Question: Cleanup Operations During Shutdown](#practice-question-cleanup-operations-during-shutdown)
 - [Related Topics](#related-topics)
 
 ## Key Configuration Files
@@ -2127,6 +2130,153 @@ Which feature of Azure Functions allows you to use a runtime not currently suppo
 3. **Log effectively**: Include logs in the response for debugging
 4. **Use environment variables**: Read `FUNCTIONS_CUSTOMHANDLER_PORT` for the port to listen on
 5. **Test locally**: Use Azure Functions Core Tools for local development and testing
+
+## Function App Lifecycle and Cleanup Operations
+
+### Handling Shutdown and Cleanup
+
+Azure Functions apps may need to perform cleanup operations during shutdown, such as releasing resources, closing connections, or flushing buffers. Understanding how to properly handle these scenarios is important for building robust serverless applications.
+
+**Key Concepts:**
+
+| Approach | Purpose | When It Runs |
+|----------|---------|-------------|
+| **IDisposable + DI** | Cleanup resources during graceful shutdown | When function app shuts down |
+| **finally block** | Cleanup after individual function execution | After function method completes |
+| **Timer-triggered function** | Scheduled cleanup tasks | On a schedule, not shutdown-aware |
+| **CancellationToken** | Handle graceful cancellation | When function execution is cancelled |
+
+**Recommended Pattern: IDisposable with Dependency Injection**
+
+For cleanup operations that need to run when the function app is shutting down, implement the `IDisposable` interface and register the service through dependency injection.
+
+```csharp
+// Startup.cs - Register the service
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+
+[assembly: FunctionsStartup(typeof(MyFunctionApp.Startup))]
+
+namespace MyFunctionApp
+{
+    public class Startup : FunctionsStartup
+    {
+        public override void Configure(IFunctionsHostBuilder builder)
+        {
+            // Register as singleton to ensure single instance across function invocations
+            builder.Services.AddSingleton<ICleanupService, CleanupService>();
+        }
+    }
+}
+```
+
+```csharp
+// CleanupService.cs - Implement IDisposable
+public interface ICleanupService
+{
+    void DoWork();
+}
+
+public class CleanupService : ICleanupService, IDisposable
+{
+    private bool _disposed = false;
+    
+    public void DoWork()
+    {
+        // Service logic here
+    }
+    
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            // Cleanup operations when function app shuts down
+            // - Close database connections
+            // - Flush buffers
+            // - Release unmanaged resources
+            // - Send final telemetry
+            
+            _disposed = true;
+        }
+    }
+}
+```
+
+```csharp
+// MyFunction.cs - Use the service via constructor injection
+public class MyFunction
+{
+    private readonly ICleanupService _cleanupService;
+    
+    public MyFunction(ICleanupService cleanupService)
+    {
+        _cleanupService = cleanupService;
+    }
+    
+    [FunctionName("MyFunction")]
+    public async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+    {
+        _cleanupService.DoWork();
+        return new OkResult();
+    }
+}
+```
+
+**Why IDisposable with DI Works:**
+1. The DI container manages the service lifecycle
+2. When the function app shuts down gracefully, the DI container disposes all registered `IDisposable` services
+3. This provides a reliable hook for cleanup operations at the app level
+
+**Alternative: IAsyncDisposable for Async Cleanup**
+
+For cleanup operations that require async operations:
+
+```csharp
+public class AsyncCleanupService : IAsyncDisposable
+{
+    public async ValueTask DisposeAsync()
+    {
+        // Async cleanup operations
+        await FlushBuffersAsync();
+        await CloseConnectionsAsync();
+    }
+}
+```
+
+### Practice Question: Cleanup Operations During Shutdown
+
+**Question:**
+You have an Azure Functions app that needs to perform cleanup operations when the function app is shutting down. Which method should you implement in your function code?
+
+**Options:**
+
+1. ❌ Add a finally block in the main function method
+   - **Incorrect**: A finally block only executes after the function method completes, not when the entire function app is shutting down. It doesn't handle app-level lifecycle events.
+
+2. ✅ Implement IDisposable interface and use dependency injection to register the cleanup service
+   - **Correct**: In Azure Functions, implementing IDisposable and registering services through dependency injection ensures that cleanup code runs when the function app shuts down. The Dispose method is called during graceful shutdown.
+
+3. ❌ Create a separate timer-triggered function that runs cleanup tasks
+   - **Incorrect**: A timer-triggered function runs on a schedule and cannot detect when the function app is shutting down. It's not suitable for shutdown cleanup operations.
+
+4. ❌ Use the FunctionContext.OnShutdown event handler
+   - **Incorrect**: There is no OnShutdown event handler on FunctionContext. Lifecycle management should be done through dependency injection and IDisposable pattern.
+
+---
+
+**Key Concepts Summary:**
+
+| Approach | Handles App Shutdown? | Use Case |
+|----------|----------------------|----------|
+| **IDisposable + DI** | ✅ Yes | App-level cleanup (connections, resources) |
+| **finally block** | ❌ No | Function-level cleanup (local resources) |
+| **Timer trigger** | ❌ No | Scheduled maintenance tasks |
+| **FunctionContext.OnShutdown** | ❌ Doesn't exist | N/A |
+
+> 💡 **Exam Tip**: When asked about cleanup operations during function app shutdown, the correct approach is implementing `IDisposable` and registering the service via dependency injection. The DI container calls `Dispose()` during graceful shutdown. Don't confuse this with function-level cleanup (finally blocks) or scheduled tasks (timer triggers).
+
+**Reference**: [Azure Functions Dependency Injection](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection)
 
 ## Related Topics
 
