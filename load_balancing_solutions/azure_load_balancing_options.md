@@ -10,6 +10,7 @@ This document summarizes the Azure services you can use as an API proxy or gatew
 - [Azure Application Gateway](#azure-application-gateway)
 - [Decision Flow Diagram](#decision-flow-diagram)
 - [Azure Traffic Manager](#azure-traffic-manager)
+- [Azure CDN](#azure-cdn)
 - [Comparison Table](#comparison-table)
 - [Deployment Patterns](#deployment-patterns)
 - [Additional Notes](#additional-notes)
@@ -25,6 +26,7 @@ This document summarizes the Azure services you can use as an API proxy or gatew
     - [Application Gateway v2 Standard](#application-gateway-v2-standard)
     - [Application Gateway v2 WAF](#application-gateway-v2-waf)
   - [Azure Traffic Manager Pricing](#azure-traffic-manager-pricing)
+  - [Azure CDN Pricing](#azure-cdn-pricing)
   - [Pricing Comparison Table](#pricing-comparison-table)
   - [Service Comparison by Cost and Use Case](#service-comparison-by-cost-and-use-case)
     - [Lowest Cost Options](#lowest-cost-options)
@@ -108,6 +110,49 @@ This document summarizes the Azure services you can use as an API proxy or gatew
 - **Typical topology:** Traffic Manager stands in front of regional endpoints (which may include Front Door, APIM, or Load Balancer) and keeps DNS responses aligned with availability goals.
 - **Why use it as a proxy:** It does not proxy traffic itself but provides DNS-level failover and routing to other proxy services; useful when you need simple global traffic controls without an extra hop.
 
+## Azure CDN
+- **Layer/scope:** Global content delivery network for caching and accelerating static content.
+- **Purpose:** Caches static content at edge locations worldwide to reduce latency and offload origin servers. Also provides **HTTPS support for custom domains** on Azure Blob Storage static websites.
+- **Key features:**
+  - Global network of edge servers (Points of Presence - POPs)
+  - Content caching with configurable TTL and cache rules
+  - **HTTPS termination for custom domains** (critical for static websites in Blob Storage)
+  - Custom domain support with free managed certificates
+  - Compression and optimization
+  - Geo-filtering and token authentication
+  - Integration with Azure Blob Storage, App Service, and custom origins
+- **Typical topology:** CDN sits between end users and origin servers (Blob Storage, App Service, custom servers), caching content at edge locations closest to users.
+- **Why use it as a proxy:** Use Azure CDN when you need to:
+  - **Enable HTTPS on custom domains for Azure Blob Storage static websites** (Blob Storage doesn't natively support HTTPS with custom domains)
+  - Accelerate static content delivery globally
+  - Reduce load on origin servers
+  - Improve performance for geographically distributed users
+
+### Azure CDN vs Azure Front Door
+
+| Feature | Azure CDN | Azure Front Door |
+|---------|-----------|------------------|
+| **Primary Purpose** | Content caching/delivery | Global load balancing + WAF |
+| **HTTPS Custom Domains** | ✅ Yes | ✅ Yes |
+| **Static Website Hosting** | ✅ Recommended | ⚠️ Works but overkill |
+| **WAF** | ❌ No (Standard) / ✅ Yes (Premium from Edgio) | ✅ Yes |
+| **Dynamic Content** | ⚠️ Limited | ✅ Full support |
+| **Load Balancing** | ❌ No | ✅ Yes |
+| **Cost** | Lower | Higher |
+
+**Key Insight for Exams:**
+> Azure Blob Storage does **NOT** natively support HTTPS with custom domains for static websites. You must use **Azure CDN** (recommended) or Azure Front Door to enable HTTPS on custom domains.
+
+### When to Use Azure CDN
+
+| Scenario | Use CDN? | Alternative |
+|----------|----------|-------------|
+| Static website with custom domain + HTTPS | ✅ **Yes** | Front Door (overkill) |
+| Serving images/videos globally | ✅ **Yes** | - |
+| API acceleration | ⚠️ Maybe | Front Door preferred |
+| WAF protection needed | ❌ No | Front Door or App Gateway |
+| Dynamic web application | ❌ No | Front Door |
+
 ## Comparison Table
 | Service | Layer | Global/Regional | Policy Engine | Developer Facing | Typical Role |
 | --- | --- | --- | --- | --- | --- |
@@ -116,6 +161,7 @@ This document summarizes the Azure services you can use as an API proxy or gatew
 | Azure Load Balancer | Layer 4 | Regional | None | No | High-performance TCP/UDP distribution |
 | Azure Traffic Manager | DNS/global | Global | None | No | DNS-based failover/routing (fronts proxies or endpoints) |
 | Azure Application Gateway | Layer 7 | Regional | WAF/policy rules | No | TLS termination + WAF before APIs |
+| **Azure CDN** | Layer 7 | Global | Cache rules only | No | Content caching + HTTPS for custom domains |
 
 ## Deployment Patterns
 1. **Global API facade plus governance:** Use Azure Front Door for resilience and acceleration, with APIM behind it to enforce policies and provide the developer portal.
@@ -345,6 +391,62 @@ Total: ~$3.24/month
 
 ---
 
+### Azure CDN Pricing
+
+Azure CDN offers multiple providers with different pricing models. The most common options are Microsoft CDN (Standard) and CDN from Edgio (formerly Verizon/Akamai).
+
+#### Azure CDN from Microsoft (Standard)
+
+**Pricing Components**:
+- **No base fee**: Pay only for data transfer
+- **Outbound data transfer** (Zone 1 - North America, Europe):
+  - First 10 TB: ~$0.081/GB
+  - 10-50 TB: ~$0.075/GB
+  - 50-150 TB: ~$0.053/GB
+  - 150+ TB: Volume pricing
+- **HTTPS custom domain**: Free (managed certificates included)
+
+**Features**:
+- ✅ Global edge network
+- ✅ Free managed SSL certificates for custom domains
+- ✅ Compression (gzip, brotli)
+- ✅ Geo-filtering
+- ✅ Query string caching
+- ✅ Core analytics
+- ❌ No WAF
+- ❌ No real-time analytics
+
+**Best For**: Simple static content delivery, enabling HTTPS on Blob Storage static websites
+
+#### Azure CDN from Edgio (Premium)
+
+**Pricing Components**:
+- **Outbound data transfer**: ~$0.17/GB (varies by region)
+- **HTTP requests**: ~$0.0075 per 10,000 requests
+
+**Features**:
+- ✅ All Standard features
+- ✅ Real-time analytics
+- ✅ Advanced rules engine
+- ✅ Token authentication
+- ✅ Mobile device detection
+- ✅ Customizable cache behaviors
+
+**Best For**: Advanced caching scenarios requiring real-time analytics
+
+**Cost Example (Microsoft Standard)**:
+```
+Setup: Static website with 100 GB/month data transfer, custom HTTPS domain
+- Data transfer: 100 × $0.081 = $8.10/month
+- HTTPS custom domain: Free
+Total: ~$8.10/month
+```
+
+**Key Point for Static Websites:**
+> Azure CDN is the **most cost-effective solution** for enabling HTTPS on custom domains for Azure Blob Storage static websites. It costs significantly less than Front Door (~$8/month vs ~$50+/month) for simple static content scenarios.
+
+---
+
 ### Pricing Comparison Table
 
 | Service | Tier | Monthly Base Cost | Data Processing | Per Request/Rule | WAF Included | SLA |
@@ -356,6 +458,8 @@ Total: ~$3.24/month
 | **App Gateway** | Standard v2 | ~$179 | ~$0.008/GB | ~$6/CU | ❌ No | 99.95% |
 | **App Gateway** | WAF v2 | ~$323 | ~$0.008/GB | ~$11/CU | ✅ Yes | 99.95% |
 | **Traffic Manager** | N/A | $0 | N/A | ~$0.54/endpoint | ❌ No | 99.99% |
+| **Azure CDN** | Microsoft | $0 | ~$0.081/GB | N/A | ❌ No | 99.9% |
+| **Azure CDN** | Edgio Premium | $0 | ~$0.17/GB | ~$0.75/100K | ❌ No | 99.9% |
 
 ---
 
@@ -368,12 +472,17 @@ Total: ~$3.24/month
    - No data plane costs
    - Best for simple failover
 
-2. **Load Balancer Basic** (Free)
+2. **Azure CDN** (~$5-20/month for typical usage)
+   - No base fee, pay per GB
+   - Best for static content and HTTPS custom domains
+   - **Recommended for Blob Storage static websites**
+
+3. **Load Balancer Basic** (Free)
    - Development/testing only
    - No SLA
    - TCP/UDP only
 
-3. **Load Balancer Standard** (~$20-100/month)
+4. **Load Balancer Standard** (~$20-100/month)
    - Production TCP/UDP
    - High throughput, low cost per GB
 
@@ -436,6 +545,7 @@ Total: ~$3.24/month
 
 | Requirement | Recommended Service | Estimated Monthly Cost |
 |-------------|---------------------|------------------------|
+| **Static website + HTTPS custom domain** | Azure CDN | $5-20 |
 | **Global routing, no WAF** | Front Door Standard | $50-150 |
 | **Global routing + WAF** | Front Door Premium | $400-1500 |
 | **Regional Layer 7, no WAF** | Application Gateway Standard v2 | $240-400 |
@@ -485,11 +595,19 @@ Internet → Load Balancer Standard → VM Scale Set
 Cost: ~$20-50/month
 ```
 
+#### Pattern 7: Static Website with Custom HTTPS Domain
+```
+Internet → Azure CDN → Azure Blob Storage (Static Website)
+Cost: ~$5-20/month
+```
+**Note**: This is the recommended pattern for enabling HTTPS on custom domains for Azure Blob Storage static websites.
+
 ---
 
 ### Key Takeaways
 
 ✅ **Traffic Manager**: Cheapest option (~$3/month) but DNS-only, no proxying  
+✅ **Azure CDN**: Best for static content + HTTPS custom domains (~$5-20/month)  
 ✅ **Load Balancer Basic**: Free but no SLA, dev/test only  
 ✅ **Load Balancer Standard**: Best price/performance for Layer 4 (~$20-100/month)  
 ✅ **Front Door Standard**: Global Layer 7 without WAF (~$50-150/month)  
@@ -503,6 +621,7 @@ Cost: ~$20-50/month
 - Capacity units (App Gateway) scale with traffic
 - Multi-region deployments multiply costs
 - Combining services increases complexity and cost
+- **Azure Blob Storage static websites don't support HTTPS with custom domains natively — use Azure CDN**
 
 ## References
 - [Confusion between WAF with Application Gateway and FrontDoor when securing custom Web Apps running on Azure VM published to the internet](https://learn.microsoft.com/en-us/answers/questions/1655290/confusion-between-waf-with-application-gateway-and)
@@ -511,5 +630,8 @@ Cost: ~$20-50/month
 - [Azure Load Balancer pricing](https://azure.microsoft.com/en-us/pricing/details/load-balancer/)
 - [Azure Application Gateway pricing](https://azure.microsoft.com/en-us/pricing/details/application-gateway/)
 - [Azure Traffic Manager pricing](https://azure.microsoft.com/en-us/pricing/details/traffic-manager/)
+- [Azure CDN pricing](https://azure.microsoft.com/en-us/pricing/details/cdn/)
+- [Host a static website in Azure Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-static-website)
+- [Use Azure CDN to access blobs with custom domains over HTTPS](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-https-custom-domain-cdn)
 
 

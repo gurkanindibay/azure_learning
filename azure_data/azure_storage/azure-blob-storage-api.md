@@ -36,6 +36,7 @@
   - [Question: Implementing Retry Logic for Large File Uploads](#question-implementing-retry-logic-for-large-file-uploads)
   - [Question: Implementing Blob Lease for Exclusive Write Access](#question-implementing-blob-lease-for-exclusive-write-access)
   - [Question: Storing Custom Application-Specific Data with Blobs](#question-storing-custom-application-specific-data-with-blobs)
+  - [Question: HTTPS with Custom Domain for Static Website](#question-https-with-custom-domain-for-static-website)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -1590,6 +1591,96 @@ await foreach (TaggedBlobItem item in blobServiceClient.FindBlobsByTagsAsync(que
 - 🎯 **Blob Properties** = System-defined attributes only
 - 🎯 **Blob Snapshots** = Read-only copies for backup/versioning
 - 🎯 **Blob Index Tags** = Search and filter across storage account
+
+---
+
+### Question: HTTPS with Custom Domain for Static Website
+
+**Scenario:**
+You have a static website hosted in Azure Blob Storage. You need to serve the website through Azure CDN with HTTPS support on a custom domain.
+
+**Question:**
+What must you configure because Azure Storage doesn't natively support this scenario?
+
+---
+
+#### Option A: ✅ CORRECT - Azure CDN to enable HTTPS with custom domains
+
+**Why This Is Correct:**
+- ✅ Azure Blob Storage **doesn't natively support HTTPS with custom domains** for static websites
+- ✅ Azure CDN provides **HTTPS termination** for custom domains
+- ✅ CDN is the **recommended solution** for enabling HTTPS on custom domains for static websites
+- ✅ Simple to configure and purpose-built for this scenario
+
+**How It Works:**
+1. Enable static website hosting in Azure Blob Storage
+2. Create an Azure CDN profile and endpoint
+3. Configure the CDN endpoint to use your custom domain
+4. Enable HTTPS on the custom domain (CDN provides free managed certificates)
+
+---
+
+#### Option B: ❌ INCORRECT - Azure Traffic Manager with SSL certificates
+
+**Why This Is Wrong:**
+- ❌ Traffic Manager is a **DNS-based traffic load balancer**
+- ❌ Traffic Manager does **NOT** provide SSL/HTTPS termination
+- ❌ It only routes traffic based on DNS - cannot solve the HTTPS custom domain requirement
+- ❌ Traffic Manager works at the DNS layer, not the HTTP/HTTPS layer
+
+**What Traffic Manager Is For:**
+- Load balancing across multiple Azure regions
+- Geographic routing
+- Priority-based failover
+- Performance-based routing
+
+---
+
+#### Option C: ❌ INCORRECT - Azure Front Door with Web Application Firewall
+
+**Why This Is Wrong:**
+- ⚠️ Azure Front Door **can** provide HTTPS and custom domains
+- ❌ However, it's **unnecessarily complex** for this scenario
+- ❌ Front Door includes global load balancing, caching, and WAF - overkill for a simple static website
+- ❌ Azure CDN is the **recommended and simpler solution** for static website HTTPS
+
+**When to Use Front Door:**
+- Global load balancing requirements
+- Advanced WAF protection needed
+- Complex routing rules
+- Multi-region deployments
+
+---
+
+#### Option D: ❌ INCORRECT - Azure Application Gateway with SSL termination
+
+**Why This Is Wrong:**
+- ❌ Application Gateway is designed for **load balancing web applications**, not serving static content
+- ❌ It's **overly complex** for adding HTTPS to static website custom domains
+- ❌ Requires a virtual network and more infrastructure
+- ❌ Not the appropriate solution for this use case
+
+**When to Use Application Gateway:**
+- Layer 7 load balancing for web applications
+- SSL offloading for backend servers
+- URL-based routing
+- Session affinity requirements
+
+---
+
+### Key Takeaways for Static Website HTTPS
+
+| Solution | Can Provide HTTPS? | Recommended? | Why/Why Not |
+|----------|-------------------|--------------|-------------|
+| **Azure CDN** | ✅ Yes | ✅ **Recommended** | Purpose-built, simple, free managed certs |
+| **Azure Front Door** | ✅ Yes | ⚠️ Overkill | Too complex for simple static sites |
+| **Traffic Manager** | ❌ No | ❌ No | DNS-only, no HTTPS termination |
+| **Application Gateway** | ✅ Yes | ❌ No | Designed for apps, not static content |
+
+**For the Exam, Remember:**
+- 🎯 **Azure Blob Storage** does NOT support HTTPS with custom domains for static websites
+- 🎯 **Azure CDN** is the recommended solution for HTTPS on custom domains
+- 🎯 **Traffic Manager** is DNS-based and cannot provide HTTPS termination
 
 ---
 
