@@ -21,6 +21,7 @@
 - [Dapr Integration](#dapr-integration)
 - [Secrets Management](#secrets-management)
 - [Observability](#observability)
+- [Health Probes](#health-probes)
 - [Deployment Strategies](#deployment-strategies)
   - [Blue-Green Deployments](#blue-green-deployments)
   - [Traffic Splitting](#traffic-splitting)
@@ -496,6 +497,54 @@ az containerapp create \
 - Dependency tracking
 - Live metrics
 - Custom telemetry
+
+## Health Probes
+
+Azure Container Apps supports health probes to monitor the health of your containers. Health probes are essential for ensuring your application is running correctly and can handle traffic.
+
+### Types of Health Probes
+
+| Probe Type | Purpose |
+|------------|----------|
+| **Liveness** | Determines if the container is running. If it fails, the container is restarted. |
+| **Readiness** | Determines if the container is ready to accept traffic. If it fails, the container is removed from load balancing. |
+| **Startup** | Determines if the container has started successfully. Useful for slow-starting containers. |
+
+### HTTP Health Probe Success Criteria
+
+**HTTP Status Code Range for Success**: **200 to 399**
+
+Configure your health probe endpoints to respond with an HTTP status code **greater than or equal to 200 and less than 400** to indicate success.
+
+| Status Code Range | Result | Explanation |
+|-------------------|--------|-------------|
+| **200-399** | ✅ Success | Valid range includes 2xx success codes and 3xx redirect codes |
+| **200-299 only** | ⚠️ Partial | While 2xx codes indicate success, the valid range extends to less than 400, including 3xx redirect codes |
+| **200 only** | ❌ Too restrictive | A single status code is too restrictive; any code from 200 to less than 400 indicates success |
+| **Non-5xx** | ❌ Too broad | Any response code outside the 200-399 range indicates a failure |
+
+> **Exam Tip**: When asked about HTTP health probe success codes for Azure Container Apps, remember that the valid range is **200 to 399** (inclusive of 200, exclusive of 400). This includes both success codes (2xx) and redirect codes (3xx).
+
+### Configuring Health Probes
+
+**Example - HTTP Liveness Probe:**
+```yaml
+probes:
+  - type: liveness
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+```
+
+**Probe Configuration Options:**
+- `initialDelaySeconds`: Time to wait before starting probes
+- `periodSeconds`: How often to perform the probe
+- `timeoutSeconds`: Probe timeout duration
+- `failureThreshold`: Number of consecutive failures before taking action
+- `successThreshold`: Number of consecutive successes to consider healthy
 
 ## Deployment Strategies
 
@@ -1023,6 +1072,23 @@ az containerapp ingress traffic set \
   --name myapp \
   --revision-weight myapp--new=100
 ```
+
+---
+
+### Question 2: HTTP Health Probe Status Codes
+
+**Scenario**: You configure HTTP health probes for a container app. You need to determine what HTTP status code range indicates a successful probe.
+
+**Question**: What HTTP status code range indicates a successful probe?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| **200 to 399** | ✅ Yes | Configure your health probe endpoints to respond with an HTTP status code greater than or equal to 200 and less than 400 to indicate success. |
+| 200 to 299 | ❌ No | While 2xx codes indicate success, the valid range extends to less than 400, including 3xx redirect codes. |
+| Any non-5xx code | ❌ No | This is too broad; any response code outside the 200-399 range indicates a failure. |
+| 200 only | ❌ No | A single status code is too restrictive; any code from 200 to less than 400 indicates success. |
+
+**Key Takeaway**: HTTP health probes in Azure Container Apps consider status codes **200-399** as successful. This includes both 2xx (success) and 3xx (redirect) status codes. Status codes 400 and above are considered failures.
 
 ---
 
