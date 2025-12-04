@@ -392,7 +392,60 @@ Multiple Microservices → Payment Processing Queue → Payment Processor → Sh
 
 ### Dead-Letter Queues (DLQ)
 A sub-queue for holding messages that cannot be delivered or processed.
-- **Reasons:** Max delivery count exceeded, TTL expired, filter evaluation exceptions, or explicit dead-lettering by consumer.
+
+#### Key Characteristics
+- **Subqueue Structure:** Dead-letter queues are **not separate entities** but **subqueues of the original queue**. Each queue (and each topic subscription) has its own associated dead-letter queue.
+  
+  > **What is a Subqueue?** A subqueue is a secondary queue that exists within the context of a parent queue. Unlike regular queues that are created explicitly as top-level entities in a namespace, subqueues are automatically created and managed by Service Bus as part of the parent queue. They share the same namespace and are accessed through the parent queue's path with a special suffix (e.g., `/$deadletterqueue`). Subqueues cannot exist independently—they are always tied to their parent queue's lifecycle.
+- **Naming Convention:** The dead-letter queue has a special endpoint: `<queuename>/$deadletterqueue` (e.g., `orders/$deadletterqueue`).
+- **Parent Relationship:** The original queue acts as the parent of the dead-letter subqueue.
+- **Regular Queue Behavior:** Despite being a subqueue, the DLQ acts like any regular queue - you can receive, peek, and complete messages from it.
+
+#### Reasons for Dead-Lettering
+- **Max delivery count exceeded:** When a message fails processing repeatedly and exceeds the maximum delivery attempts configured for the queue.
+- **TTL expired:** When a message's time-to-live expires before successful delivery.
+- **Filter evaluation exceptions:** When subscription filter evaluation fails for a message.
+- **Explicit dead-lettering:** When the consumer application explicitly dead-letters the message using the SDK.
+
+#### Common Misconceptions
+| Misconception | Reality |
+|---------------|---------|
+| Dead-letter queues are separate entities in the namespace | DLQs are subqueues of the original queue, not separate queues |
+| Failed messages go to Event Hub | Service Bus doesn't automatically send failed messages to Event Hubs; dead-lettering is handled within Service Bus |
+| Failed messages go to Azure Blob Storage | Service Bus doesn't automatically move messages to external storage |
+| There's a shared dead-letter queue per namespace | Each queue/subscription has its own associated dead-letter queue |
+
+#### Accessing Dead-Letter Queue
+
+```csharp
+// Access dead-letter queue using Azure.Messaging.ServiceBus SDK
+var client = new ServiceBusClient(connectionString);
+
+// Create receiver for dead-letter queue
+var dlqReceiver = client.CreateReceiver("myqueue", 
+    new ServiceBusReceiverOptions 
+    { 
+        SubQueue = SubQueue.DeadLetter 
+    });
+
+// Receive dead-lettered messages
+var deadLetteredMessage = await dlqReceiver.ReceiveMessageAsync();
+
+// Inspect dead-letter reason
+var deadLetterReason = deadLetteredMessage.DeadLetterReason;
+var deadLetterDescription = deadLetteredMessage.DeadLetterErrorDescription;
+```
+
+```bash
+# View dead-letter queue messages using Azure CLI
+az servicebus queue show \
+  --namespace-name mynamespace \
+  --resource-group myResourceGroup \
+  --name myqueue \
+  --query "countDetails.deadLetterMessageCount"
+```
+
+> **Important:** Messages remain in the dead-letter queue until explicitly processed by an application or tool. They are not automatically deleted or moved elsewhere.
 
 ### Message Sessions (FIFO)
 - **Function:** Guarantees ordered processing of unbounded sequences of related messages.
