@@ -27,6 +27,7 @@ Because Azure Cosmos DB supports multiple API models, version 3 of the .NET SDK 
    - [Read an Item](#read-an-item)
    - [Query Items](#query-items)
    - [Update an Item](#update-an-item)
+   - [Optimistic Concurrency Control](#optimistic-concurrency-control)
    - [Delete an Item](#delete-an-item)
 6. [Server-Side Programming](#server-side-programming)
    - [Overview](#server-side-programming-overview)
@@ -347,6 +348,152 @@ ItemResponse<Product> upsertResponse = await container.UpsertItemAsync(
     new PartitionKey(product.categoryId)
 );
 ```
+
+### Optimistic Concurrency Control
+
+Azure Cosmos DB uses ETags (entity tags) to implement optimistic concurrency control. Every item in Cosmos DB has an `_etag` property that changes whenever the item is modified.
+
+#### How It Works
+
+When you read an item, you receive its current ETag. When updating, you can specify that the update should only succeed if the ETag hasn't changed (meaning no other client modified the item).
+
+#### HTTP Headers for Concurrency Control
+
+| Header | Expected Value | Purpose | Use Case |
+|--------|---------------|---------|----------|
+| **If-Match** | ETag | Proceed if ETag matches | Optimistic concurrency (updates) |
+| **If-None-Match** | ETag | Proceed if ETag does NOT match | Caching, prevent overwrite of existing |
+| **If-Modified-Since** | Date | Proceed if modified after date | Time-based caching |
+| **If-Unmodified-Since** | Date | Proceed if NOT modified after date | Time-based conditional updates |
+
+#### SDK Implementation
+
+```csharp
+// Step 1: Read the item and get its ETag
+ItemResponse<Product> readResponse = await container.ReadItemAsync<Product>(
+    "product-1", 
+    new PartitionKey("electronics")
+);
+
+Product product = readResponse.Resource;
+string originalETag = readResponse.ETag;
+
+// Step 2: Modify the item
+product.price = 89.99m;
+
+// Step 3: Update with optimistic concurrency
+var requestOptions = new ItemRequestOptions
+{
+    IfMatchEtag = originalETag  // Only update if ETag still matches
+};
+
+try
+{
+    ItemResponse<Product> updateResponse = await container.ReplaceItemAsync(
+        product,
+        product.id,
+        new PartitionKey(product.categoryId),
+        requestOptions
+    );
+    Console.WriteLine("Update succeeded!");
+}
+catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
+{
+    Console.WriteLine("Conflict detected - item was modified by another client");
+    // Implement retry logic: re-read item, resolve conflict, retry update
+}
+```
+
+#### Exam Question: Optimistic Concurrency Control for Updates
+
+**Scenario:**
+You need to implement optimistic concurrency control for item updates in your Cosmos DB application. An item was retrieved with ETag value `'ABC123'`.
+
+**Question:**
+Which HTTP header and value should you include in your update request to ensure the update only succeeds if the item hasn't been modified?
+
+---
+
+##### Option A: ❌ INCORRECT
+
+```http
+If-Unmodified-Since: ABC123
+```
+
+**Why This Is Wrong:**
+- ❌ The `If-Unmodified-Since` header expects a **date value**, not an ETag
+- ❌ Cannot be used with ETag values for concurrency control
+- ❌ This header is used for **time-based conditional requests**, not ETag-based
+
+---
+
+##### Option B: ❌ INCORRECT
+
+```http
+If-Modified-Since: ABC123
+```
+
+**Why This Is Wrong:**
+- ❌ The `If-Modified-Since` header expects a **date value**, not an ETag
+- ❌ Used for time-based conditional requests rather than ETag-based concurrency control
+- ❌ This header is typically used for caching scenarios, not for updates
+
+---
+
+##### Option C: ❌ INCORRECT
+
+```http
+If-None-Match: ABC123
+```
+
+**Why This Is Wrong:**
+- ❌ The `If-None-Match` header performs operations only if the ETag does **NOT** match
+- ❌ This is the **opposite** of what's needed for optimistic concurrency updates
+- ❌ Typically used for caching (GET requests) or preventing overwriting existing resources
+
+---
+
+##### Option D: ✅ CORRECT
+
+```http
+If-Match: ABC123
+```
+
+**Why This Is Correct:**
+- ✅ The `If-Match` header with the original ETag value ensures the update **only succeeds if the current ETag matches**
+- ✅ Implements **optimistic concurrency control** by verifying the item hasn't changed
+- ✅ If another client modified the item (changing its ETag), the request fails with HTTP 412 (Precondition Failed)
+
+---
+
+#### Optimistic Concurrency Control Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                 OPTIMISTIC CONCURRENCY CONTROL                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  1. Read item and get ETag                                          │
+│     GET /dbs/{db}/colls/{coll}/docs/{id}                            │
+│     Response: { ..., "_etag": "ABC123" }                            │
+│                                                                      │
+│  2. Update item with If-Match header                                │
+│     PUT /dbs/{db}/colls/{coll}/docs/{id}                            │
+│     Headers: If-Match: "ABC123"                                      │
+│     Body: <updated item>                                            │
+│                                                                      │
+│  3a. If item unchanged → 200 OK (update succeeds)                   │
+│  3b. If item modified → 412 Precondition Failed (retry required)    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### Key Takeaways
+
+- 🎯 Use `If-Match` header with the ETag value from when you read the item
+- 🎯 In .NET SDK, use `ItemRequestOptions.IfMatchEtag` property
+- 🎯 Handle `CosmosException` with status code 412 for conflicts
+- 🎯 `If-None-Match` is the opposite - it ensures the ETag does NOT match
 
 ### Delete an Item
 
