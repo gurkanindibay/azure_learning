@@ -31,6 +31,9 @@
   - [Using Managed Identity with User Delegation SAS](#using-managed-identity-with-user-delegation-sas)
 - [Comparison: Authentication Methods](#comparison-authentication-methods)
 - [Additional Security Features](#additional-security-features)
+  - [Storage Account Firewall](#1-storage-account-firewall)
+  - [Storage Firewall Network Rule Types](#storage-firewall-network-rule-types)
+  - [Resource Instance Rules](#resource-instance-rules)
   - [Azure Storage Encryption Options](#6-azure-storage-encryption-options)
   - [Exam Question: Multi-Tenant Encryption](#exam-question-multi-tenant-encryption)
 - [Troubleshooting SAS Issues](#troubleshooting-sas-issues)
@@ -1782,6 +1785,8 @@ var sasToken = sasBuilder.ToSasQueryParameters(
 
 ### 1. Storage Account Firewall
 
+Azure Storage firewall provides network-level security by restricting access to storage accounts based on network rules.
+
 ```bash
 # Configure network rules
 az storage account update \
@@ -1795,6 +1800,41 @@ az storage account network-rule add \
     --resource-group myresourcegroup \
     --ip-address 203.0.113.10
 ```
+
+#### Storage Firewall Network Rule Types
+
+Azure Storage firewalls support the following types of network rules:
+
+| Rule Type | Description | Use Case |
+|-----------|-------------|----------|
+| **Virtual Network Rules** | Allow traffic from specific VNet subnets using service endpoints | Resources in your VNet that need storage access |
+| **IP Rules** | Allow traffic from specific public IP addresses or ranges | On-premises systems or known external IP addresses |
+| **Resource Instance Rules** | Allow traffic from specific Azure resource instances | Azure services that cannot use VNet or IP rules |
+| **Trusted Service Exceptions** | Allow trusted Microsoft services to bypass firewall | Azure Backup, Azure Site Recovery, etc. |
+
+#### Resource Instance Rules
+
+**Resource instance rules** allow traffic from specific Azure resource instances that cannot be isolated through virtual network or IP address rules. This is the appropriate solution when Azure services need access to your storage account but cannot be configured with traditional network rules.
+
+**When to Use Resource Instance Rules:**
+- The Azure service cannot be deployed in a VNet
+- The Azure service doesn't have a static public IP address
+- The service cannot use service endpoints
+- You need to grant access to a specific resource instance, not all resources of that type
+
+**Example - Adding a Resource Instance Rule:**
+```bash
+# Allow a specific Azure resource instance to access storage
+az storage account network-rule add \
+    --account-name mystorageaccount \
+    --resource-group myresourcegroup \
+    --resource-id /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/{resource-provider}/{resource-type}/{resource-name}
+```
+
+> **Exam Tip**: When an Azure service needs access to a storage account but cannot be included in virtual network or IP rules, **resource instance rules** are the correct solution. Don't confuse this with:
+> - **Private endpoint rules** - Not a valid storage firewall rule type. Private endpoints create private connections but are separate from firewall rules.
+> - **Service endpoint rules** - Part of virtual network rules and require the service to support service endpoints.
+> - **Application rules** - Not a valid Azure Storage firewall rule type.
 
 ### 2. Private Endpoints
 
