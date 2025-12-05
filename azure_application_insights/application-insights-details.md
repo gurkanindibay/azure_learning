@@ -6,6 +6,7 @@
   - [What is Application Insights?](#what-is-application-insights)
   - [Key Capabilities](#key-capabilities)
   - [Telemetry Types](#telemetry-types)
+  - [Telemetry Dimensions and Properties](#telemetry-dimensions-and-properties)
   - [How It Works](#how-it-works)
   - [Integration Points](#integration-points)
   - [Pricing Considerations](#pricing-considerations)
@@ -135,6 +136,335 @@ Application Insights collects several types of telemetry:
 6. **Traces**: Diagnostic log messages from your application code
 7. **Page Views**: Browser-side telemetry for web applications
 8. **Availability Results**: Results from availability tests
+
+### Telemetry Dimensions and Properties
+
+Each telemetry type in Application Insights has specific dimensions (properties) that are tracked. Understanding these dimensions is crucial for querying, filtering, and analyzing telemetry data.
+
+#### Common Context Properties (All Telemetry Types)
+
+All telemetry types share these common context properties:
+
+| Property | Description | Example |
+|----------|-------------|---------|
+| **timestamp** | When the telemetry was generated | `2025-12-05T10:30:00Z` |
+| **operation_Id** | Unique ID for the distributed operation | `abc123-def456-ghi789` |
+| **operation_ParentId** | ID of the parent operation for correlation | `parent-operation-id` |
+| **operation_Name** | Name of the operation | `GET /api/orders` |
+| **session_Id** | User session identifier | `session-12345` |
+| **user_Id** | Authenticated user identifier | `user@example.com` |
+| **user_AuthenticatedId** | Authenticated user ID | `auth-user-id` |
+| **user_AccountId** | User account identifier | `account-12345` |
+| **application_Version** | Application version | `1.2.3` |
+| **client_Type** | Type of client (PC, Browser, etc.) | `PC` |
+| **client_Model** | Device model | `Windows 10` |
+| **client_OS** | Operating system | `Windows 10` |
+| **client_IP** | Client IP address | `192.168.1.100` |
+| **client_City** | Client city (geo-location) | `Seattle` |
+| **client_StateOrProvince** | Client state/province | `Washington` |
+| **client_CountryOrRegion** | Client country | `United States` |
+| **client_Browser** | Browser name (for web) | `Chrome 120` |
+| **cloud_RoleName** | Service/component name | `OrderService` |
+| **cloud_RoleInstance** | Instance identifier | `instance-001` |
+| **appId** | Application Insights resource ID | `app-insights-id` |
+| **appName** | Application name | `MyWebApp` |
+| **iKey** | Instrumentation key | `instrumentation-key` |
+| **sdkVersion** | SDK version used | `dotnet:2.21.0` |
+| **itemId** | Unique telemetry item ID | `item-unique-id` |
+| **itemType** | Type of telemetry | `request`, `dependency`, etc. |
+| **itemCount** | Count (for sampled data) | `1` |
+
+#### Request Telemetry Dimensions
+
+Request telemetry tracks incoming HTTP requests to your application.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Request name (usually HTTP method + route) | `GET /api/orders/{id}` | `name` |
+| **url** | Full request URL | `https://api.example.com/api/orders/123` | `url` |
+| **source** | Source of the request | `caller-service` | `source` |
+| **duration** | Request duration in milliseconds | `125.5` | `duration` |
+| **resultCode** | HTTP status code | `200`, `404`, `500` | `resultCode` |
+| **success** | Whether request was successful | `true`, `false` | `success` |
+| **performanceBucket** | Duration bucket for grouping | `<250ms`, `250ms-500ms` | `performanceBucket` |
+| **customDimensions** | Custom properties dictionary | `{"tenantId": "abc"}` | `customDimensions` |
+| **customMeasurements** | Custom metrics dictionary | `{"itemCount": 5}` | `customMeasurements` |
+
+**KQL Query Example:**
+```kusto
+requests
+| where timestamp > ago(1h)
+| project timestamp, name, url, duration, resultCode, success, 
+          cloud_RoleName, operation_Id, customDimensions
+| order by duration desc
+```
+
+#### Dependency Telemetry Dimensions
+
+Dependency telemetry tracks outgoing calls to external services, databases, and APIs.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Dependency name | `GET /api/users` | `name` |
+| **data** | Command/URL being called | `SELECT * FROM Users WHERE Id = @id` | `data` |
+| **target** | Target service/host | `sql-server.database.windows.net` | `target` |
+| **type** | Dependency type | `SQL`, `HTTP`, `Azure Table`, `Azure Blob` | `type` |
+| **duration** | Call duration in milliseconds | `45.2` | `duration` |
+| **resultCode** | Result code | `200`, `0` (for SQL) | `resultCode` |
+| **success** | Whether call was successful | `true`, `false` | `success` |
+| **performanceBucket** | Duration bucket | `<250ms` | `performanceBucket` |
+| **customDimensions** | Custom properties | `{"database": "OrdersDB"}` | `customDimensions` |
+| **customMeasurements** | Custom metrics | `{"rowCount": 100}` | `customMeasurements` |
+
+**Common Dependency Types:**
+
+| Type | Description |
+|------|-------------|
+| `SQL` | SQL Server, Azure SQL Database |
+| `HTTP` | HTTP/HTTPS calls to external APIs |
+| `Azure Table` | Azure Table Storage |
+| `Azure Blob` | Azure Blob Storage |
+| `Azure Queue` | Azure Queue Storage |
+| `Azure Service Bus` | Service Bus messaging |
+| `Azure Event Hubs` | Event Hubs |
+| `Azure Cosmos DB` | Cosmos DB operations |
+| `Redis` | Redis cache operations |
+| `WCF` | WCF service calls |
+
+**KQL Query Example:**
+```kusto
+dependencies
+| where timestamp > ago(1h)
+| project timestamp, name, target, type, duration, success, resultCode,
+          data, cloud_RoleName, operation_Id
+| summarize avgDuration=avg(duration), count() by target, type
+```
+
+#### Exception Telemetry Dimensions
+
+Exception telemetry tracks handled and unhandled exceptions in your application.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **type** | Exception type/class | `System.NullReferenceException` | `type` |
+| **message** | Exception message | `Object reference not set...` | `message` |
+| **outerType** | Outer exception type | `System.AggregateException` | `outerType` |
+| **outerMessage** | Outer exception message | `One or more errors occurred` | `outerMessage` |
+| **outerAssembly** | Assembly where exception occurred | `MyApp.dll` | `outerAssembly` |
+| **outerMethod** | Method where exception occurred | `ProcessOrder` | `outerMethod` |
+| **innermostType** | Innermost exception type | `SqlException` | `innermostType` |
+| **innermostMessage** | Innermost exception message | `Connection timeout` | `innermostMessage` |
+| **innermostAssembly** | Innermost exception assembly | `System.Data.dll` | `innermostAssembly` |
+| **innermostMethod** | Innermost exception method | `ExecuteReader` | `innermostMethod` |
+| **severityLevel** | Severity level | `Error`, `Critical`, `Warning` | `severityLevel` |
+| **problemId** | Problem identifier for grouping | `problem-hash-123` | `problemId` |
+| **handledAt** | Where exception was handled | `UserCode`, `Platform` | `handledAt` |
+| **assembly** | Assembly name | `MyApp.Core.dll` | `assembly` |
+| **method** | Method name | `OrderController.GetOrder` | `method` |
+| **details** | Stack trace details | Full stack trace array | `details` |
+| **customDimensions** | Custom properties | `{"orderId": "123"}` | `customDimensions` |
+
+**Severity Levels:**
+
+| Level | Value | Description |
+|-------|-------|-------------|
+| Verbose | 0 | Detailed diagnostic information |
+| Information | 1 | Informational messages |
+| Warning | 2 | Potential issues |
+| Error | 3 | Error conditions |
+| Critical | 4 | Critical failures |
+
+**KQL Query Example:**
+```kusto
+exceptions
+| where timestamp > ago(24h)
+| project timestamp, type, message, outerType, innermostType,
+          method, severityLevel, problemId, cloud_RoleName
+| summarize count() by type, problemId
+| order by count_ desc
+```
+
+#### Event Telemetry Dimensions (Custom Events)
+
+Event telemetry tracks custom events that you define in your application.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Event name | `OrderPlaced`, `UserLoggedIn` | `name` |
+| **itemCount** | Number of occurrences (for aggregation) | `1` | `itemCount` |
+| **customDimensions** | Custom properties dictionary | `{"orderId": "123", "amount": "99.99"}` | `customDimensions` |
+| **customMeasurements** | Custom numeric measurements | `{"itemCount": 5, "totalValue": 99.99}` | `customMeasurements` |
+
+**Code Example:**
+```csharp
+// Track custom event with dimensions
+telemetryClient.TrackEvent("OrderPlaced", 
+    properties: new Dictionary<string, string> 
+    { 
+        {"OrderId", "12345"},
+        {"CustomerId", "cust-abc"},
+        {"PaymentMethod", "CreditCard"}
+    },
+    metrics: new Dictionary<string, double> 
+    { 
+        {"OrderTotal", 99.99},
+        {"ItemCount", 5}
+    });
+```
+
+**KQL Query Example:**
+```kusto
+customEvents
+| where timestamp > ago(1h)
+| where name == "OrderPlaced"
+| extend orderId = tostring(customDimensions.OrderId),
+         orderTotal = todouble(customMeasurements.OrderTotal)
+| summarize totalOrders=count(), totalRevenue=sum(orderTotal) by bin(timestamp, 1h)
+```
+
+#### Metric Telemetry Dimensions
+
+Metric telemetry tracks custom numeric measurements.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Metric name | `QueueLength`, `ActiveUsers` | `name` |
+| **value** | Metric value (for single values) | `42.5` | `value` |
+| **valueSum** | Sum of values (aggregated) | `1250.0` | `valueSum` |
+| **valueCount** | Count of values (aggregated) | `100` | `valueCount` |
+| **valueMin** | Minimum value | `5.0` | `valueMin` |
+| **valueMax** | Maximum value | `150.0` | `valueMax` |
+| **valueStdDev** | Standard deviation | `12.5` | `valueStdDev` |
+| **customDimensions** | Custom properties | `{"region": "us-west"}` | `customDimensions` |
+
+**Code Example:**
+```csharp
+// Track single metric value
+telemetryClient.TrackMetric("QueueLength", 42);
+
+// Track metric with dimensions
+var metric = telemetryClient.GetMetric("OrderProcessingTime", "Region", "Priority");
+metric.TrackValue(125.5, "us-west", "high");
+```
+
+**KQL Query Example:**
+```kusto
+customMetrics
+| where timestamp > ago(1h)
+| where name == "QueueLength"
+| summarize avgValue=avg(value), maxValue=max(value) by bin(timestamp, 5m)
+| render timechart
+```
+
+#### Trace Telemetry Dimensions
+
+Trace telemetry captures diagnostic log messages from your application.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **message** | Log message | `Processing order 12345` | `message` |
+| **severityLevel** | Log severity | `Information`, `Warning`, `Error` | `severityLevel` |
+| **customDimensions** | Custom properties | `{"orderId": "12345"}` | `customDimensions` |
+
+**Severity Levels:**
+
+| Level | Numeric Value | Typical Use |
+|-------|---------------|-------------|
+| Verbose | 0 | Detailed debugging information |
+| Information | 1 | General operational messages |
+| Warning | 2 | Potential issues or concerns |
+| Error | 3 | Errors that don't stop the application |
+| Critical | 4 | Critical failures requiring immediate attention |
+
+**KQL Query Example:**
+```kusto
+traces
+| where timestamp > ago(1h)
+| where severityLevel >= 3  // Errors and Critical
+| project timestamp, message, severityLevel, cloud_RoleName, operation_Id
+| order by timestamp desc
+```
+
+#### Page View Telemetry Dimensions
+
+Page view telemetry tracks browser-side page loads in web applications.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Page name/title | `Home Page`, `Order Details` | `name` |
+| **url** | Full page URL | `https://example.com/orders/123` | `url` |
+| **duration** | Page load duration (ms) | `1250.5` | `duration` |
+| **performanceBucket** | Duration bucket | `1sec-3sec` | `performanceBucket` |
+| **customDimensions** | Custom properties | `{"category": "orders"}` | `customDimensions` |
+| **customMeasurements** | Custom metrics | `{"loadTime": 1.25}` | `customMeasurements` |
+
+**KQL Query Example:**
+```kusto
+pageViews
+| where timestamp > ago(24h)
+| summarize avgDuration=avg(duration), views=count() by name
+| order by views desc
+```
+
+#### Availability Telemetry Dimensions
+
+Availability telemetry tracks results from availability/ping tests.
+
+| Property | Description | Example | KQL Table Column |
+|----------|-------------|---------|------------------|
+| **name** | Test name | `Homepage Availability` | `name` |
+| **location** | Test location | `West US`, `UK South` | `location` |
+| **success** | Test result | `true`, `false` | `success` |
+| **message** | Result message | `Passed`, `Connection timeout` | `message` |
+| **duration** | Test duration (ms) | `250.5` | `duration` |
+| **performanceBucket** | Duration bucket | `<250ms` | `performanceBucket` |
+| **customDimensions** | Custom properties | `{"testType": "ping"}` | `customDimensions` |
+
+**KQL Query Example:**
+```kusto
+availabilityResults
+| where timestamp > ago(24h)
+| summarize successRate=avg(success)*100, avgDuration=avg(duration) 
+  by name, location
+| order by successRate asc
+```
+
+#### Browser Timing Telemetry Dimensions
+
+Browser timing provides detailed performance metrics for page loads.
+
+| Property | Description | Example |
+|----------|-------------|---------|
+| **name** | Page name | `Order Checkout` |
+| **url** | Page URL | `https://example.com/checkout` |
+| **totalDuration** | Total page load time | `2500` |
+| **networkDuration** | Network request time | `150` |
+| **sendDuration** | Time to send request | `5` |
+| **receiveDuration** | Time to receive response | `200` |
+| **processingDuration** | Browser processing time | `1500` |
+
+**KQL Query Example:**
+```kusto
+browserTimings
+| where timestamp > ago(1h)
+| summarize avgTotal=avg(totalDuration), 
+            avgNetwork=avg(networkDuration),
+            avgProcessing=avg(processingDuration) by name
+```
+
+#### Quick Reference: Telemetry Tables in Log Analytics
+
+| Telemetry Type | Log Analytics Table | Primary Key Fields |
+|---------------|--------------------|--------------------|
+| Requests | `requests` | `name`, `url`, `resultCode`, `duration` |
+| Dependencies | `dependencies` | `name`, `target`, `type`, `duration` |
+| Exceptions | `exceptions` | `type`, `message`, `problemId` |
+| Custom Events | `customEvents` | `name`, `customDimensions` |
+| Custom Metrics | `customMetrics` | `name`, `value` |
+| Traces | `traces` | `message`, `severityLevel` |
+| Page Views | `pageViews` | `name`, `url`, `duration` |
+| Availability | `availabilityResults` | `name`, `location`, `success` |
+| Browser Timings | `browserTimings` | `name`, `totalDuration` |
 
 ### How It Works
 
