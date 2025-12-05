@@ -33,6 +33,8 @@
   - [General Recommendations](#general-recommendations)
   - [Security Considerations](#security-considerations)
   - [Performance Optimization](#performance-optimization)
+  - [Warmup Triggers for Premium Plan](#warmup-triggers-for-premium-plan)
+  - [Practice Question: Warmup Trigger Configuration](#practice-question-warmup-trigger-configuration)
   - [ReadyToRun Compilation for .NET Isolated Worker Model](#readytorun-compilation-for-net-isolated-worker-model)
   - [Practice Question: Improving Cold Start Performance](#practice-question-improving-cold-start-performance)
   - [Scaling Configuration](#scaling-configuration)
@@ -463,6 +465,94 @@ az functionapp create \
 4. **Implement retry logic**: Handle transient failures gracefully
 5. **Monitor with Application Insights**: Track performance metrics and errors
 6. **Enable ReadyToRun compilation**: For .NET isolated worker model apps, use ahead-of-time compilation to improve startup performance
+7. **Use warmup triggers**: Initialize dependencies before instances receive traffic (Premium plan)
+
+### Warmup Triggers for Premium Plan
+
+**Overview:**
+When using Azure Functions on a Premium plan with pre-warmed instances, you may still experience cold starts when the app scales beyond the pre-warmed instance count. Warmup triggers allow you to initialize dependencies (e.g., database connections, caches, or HTTP clients) before the instance receives traffic.
+
+**Key Points:**
+- The warmup trigger function **must be named `warmup`** (case-insensitive)
+- This is the **only recognized name** for warmup trigger functions
+- Executes when new instances are added during scale-out operations
+- Allows you to pre-initialize expensive resources
+
+**Example (C#):**
+
+```csharp
+[FunctionName("warmup")]
+public static void Warmup([WarmupTrigger] WarmupContext context, ILogger log)
+{
+    log.LogInformation("Warmup function triggered");
+    
+    // Initialize dependencies
+    // - Database connections
+    // - Cache clients
+    // - HTTP clients
+    // - Other expensive resources
+}
+```
+
+**Example (JavaScript):**
+
+```javascript
+module.exports = async function (context, warmupContext) {
+    context.log('Warmup function triggered');
+    
+    // Initialize dependencies here
+};
+```
+
+With `function.json`:
+```json
+{
+  "bindings": [
+    {
+      "type": "warmupTrigger",
+      "direction": "in",
+      "name": "warmupContext"
+    }
+  ]
+}
+```
+
+**Important:** The function name must be exactly `warmup`. Other names like `startup`, `initialize`, or `preload` will **not** work.
+
+---
+
+### Practice Question: Warmup Trigger Configuration
+
+**Question:**
+
+You have an Azure Functions app running on a Premium plan with pre-warmed instances enabled. The app experiences cold starts when scaling beyond the pre-warmed instance count. You need to configure a warmup trigger to initialize dependencies before the instance receives traffic. Which function name should you use for the warmup trigger?
+
+**Options:**
+
+A) startup
+
+B) warmup ✅
+
+C) preload
+
+D) initialize
+
+---
+
+**Correct Answer: B) warmup**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) startup** | ❌ Incorrect - The name `startup` is not the correct naming convention for warmup triggers in Azure Functions. The function must be named `warmup` to work properly. |
+| **B) warmup** | ✅ **Correct** - The warmup trigger function must be named `warmup` (case-insensitive) as per Azure Functions requirements. This is the only recognized name for warmup trigger functions that execute when new instances are added during scale-out operations. |
+| **C) preload** | ❌ Incorrect - The name `preload` is not recognized for warmup triggers. Azure Functions specifically looks for a function named `warmup` to execute during instance initialization. |
+| **D) initialize** | ❌ Incorrect - The name `initialize` is not recognized by Azure Functions for warmup triggers. The function must be specifically named `warmup` to be triggered when new instances are added. |
+
+---
 
 ### ReadyToRun Compilation for .NET Isolated Worker Model
 
