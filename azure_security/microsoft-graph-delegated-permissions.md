@@ -44,6 +44,13 @@
   - [OBO Flow vs Other Flows](#obo-flow-vs-other-flows)
   - [OBO Flow Requirements](#obo-flow-requirements)
   - [OBO Flow Security Considerations](#obo-flow-security-considerations)
+- [Continuous Access Evaluation (CAE)](#continuous-access-evaluation-cae)
+  - [Question 3: Enabling CAE in MSAL.NET](#question-3-enabling-cae-in-msalnet)
+  - [What is Continuous Access Evaluation?](#what-is-continuous-access-evaluation)
+  - [How to Enable CAE in MSAL.NET](#how-to-enable-cae-in-msalnet)
+  - [Why Other Options Are Incorrect](#why-other-cae-options-are-incorrect)
+  - [Handling Claims Challenges](#handling-claims-challenges)
+  - [CAE Critical Events](#cae-critical-events)
 - [Comparison Table](#comparison-table)
 - [Troubleshooting](#troubleshooting)
   - [Common Issues](#common-issues)
@@ -529,6 +536,155 @@ var user = await graphClient.Me.GetAsync();
 - **Token caching**: Cache OBO tokens to reduce authentication overhead
 - **Error handling**: Handle consent and permission errors gracefully
 - **Token lifetime**: Be aware of token expiration in the chain
+
+## Continuous Access Evaluation (CAE)
+
+### Question 3: Enabling CAE in MSAL.NET
+
+**Scenario**: You are developing a web application that accesses Microsoft Graph API. You need to implement Continuous Access Evaluation (CAE) to ensure tokens are revoked immediately when critical events occur.
+
+**Question**: Which code modification should you implement in your MSAL.NET application?
+
+**Options**:
+- **Configure the client capabilities by adding `WithClientCapabilities(new[] { "cp1" })` to the application builder** ✅ (Correct Answer)
+- Add `WithClaims()` to every token acquisition call in the application
+- Configure `WithAuthority()` to use the CAE-enabled endpoint
+- Set `EnableContinuousAccessEvaluation = true` in the application configuration
+
+**Solution**: Configure client capabilities with `WithClientCapabilities(new[] { "cp1" })`
+
+### What is Continuous Access Evaluation?
+
+Continuous Access Evaluation (CAE) is a security feature that enables near real-time token revocation when critical security events occur. Instead of waiting for tokens to expire naturally (typically 1 hour), CAE allows tokens to be revoked immediately when:
+
+- A user account is disabled or deleted
+- A user's password is changed or reset
+- Multi-factor authentication is enabled for the user
+- An administrator explicitly revokes all refresh tokens for a user
+- High user risk is detected by Microsoft Entra ID Protection
+- Network location changes (IP-based policies)
+
+### How to Enable CAE in MSAL.NET
+
+To enable CAE support in your MSAL.NET application, you must advertise client capabilities during application initialization:
+
+```csharp
+// Correct implementation - Enable CAE support
+var app = ConfidentialClientApplicationBuilder
+    .Create(clientId)
+    .WithClientSecret(clientSecret)
+    .WithAuthority(new Uri($"https://login.microsoftonline.com/{tenantId}"))
+    .WithClientCapabilities(new[] { "cp1" })  // Enable CAE support
+    .Build();
+```
+
+**For public client applications:**
+
+```csharp
+var app = PublicClientApplicationBuilder
+    .Create(clientId)
+    .WithAuthority(new Uri($"https://login.microsoftonline.com/{tenantId}"))
+    .WithClientCapabilities(new[] { "cp1" })  // Enable CAE support
+    .WithRedirectUri("http://localhost")
+    .Build();
+```
+
+**Key Points**:
+- The `"cp1"` capability signals that the client can handle claim challenges
+- This must be set during application builder configuration
+- Once configured, CAE-enabled APIs can issue claims challenges to the client
+
+### Why Other CAE Options Are Incorrect
+
+#### Add `WithClaims()` to every token acquisition call
+
+**What it does**: `WithClaims()` is used to respond to claim challenges after they occur.
+
+**Why it's incorrect**:
+- ❌ Does not enable CAE support initially
+- ❌ Should only be used when responding to a claims challenge from the API
+- ❌ Not a proactive configuration, but a reactive response
+
+**Correct usage**: Use `WithClaims()` only when handling a `MsalUiRequiredException` with claims:
+
+```csharp
+try
+{
+    var result = await app.AcquireTokenSilent(scopes, account).ExecuteAsync();
+}
+catch (MsalUiRequiredException ex) when (ex.Claims != null)
+{
+    // Respond to claims challenge
+    var result = await app.AcquireTokenInteractive(scopes)
+        .WithClaims(ex.Claims)  // Use claims from the exception
+        .ExecuteAsync();
+}
+```
+
+#### Configure `WithAuthority()` to use the CAE-enabled endpoint
+
+**What it does**: `WithAuthority()` specifies the token issuing authority (e.g., Microsoft Entra ID endpoint).
+
+**Why it's incorrect**:
+- ❌ The authority endpoint remains the same for CAE-enabled applications
+- ❌ There is no separate "CAE-enabled" endpoint
+- ❌ CAE support is advertised through client capabilities, not endpoint changes
+
+#### Set `EnableContinuousAccessEvaluation = true`
+
+**Why it's incorrect**:
+- ❌ There is **no** `EnableContinuousAccessEvaluation` property in MSAL.NET
+- ❌ This property does not exist in any MSAL configuration
+- ❌ CAE is enabled through client capabilities, not boolean settings
+
+### Handling Claims Challenges
+
+When a CAE-enabled API detects a critical event, it returns a `401 Unauthorized` response with a `WWW-Authenticate` header containing claims. Your application should:
+
+1. **Detect the claims challenge** from the API response
+2. **Extract the claims** from the WWW-Authenticate header
+3. **Request a new token** using `WithClaims()` with the extracted claims
+
+```csharp
+public async Task<string> CallGraphApiWithCaeAsync()
+{
+    try
+    {
+        var token = await _app.AcquireTokenSilent(_scopes, _account).ExecuteAsync();
+        return await CallApiAsync(token.AccessToken);
+    }
+    catch (HttpRequestException ex) when (IsClaimsChallenge(ex))
+    {
+        // Extract claims from the WWW-Authenticate header
+        var claims = ExtractClaimsFromResponse(ex);
+        
+        // Acquire new token with claims challenge
+        var token = await _app.AcquireTokenInteractive(_scopes)
+            .WithClaims(claims)
+            .ExecuteAsync();
+            
+        return await CallApiAsync(token.AccessToken);
+    }
+}
+```
+
+### CAE Critical Events
+
+| Event | Description | Token Impact |
+|-------|-------------|-------------|
+| User Disabled | User account disabled in Entra ID | Immediate revocation |
+| Password Changed | User changes or resets password | Immediate revocation |
+| MFA Enabled | MFA enabled for the user | Re-authentication required |
+| Refresh Token Revoked | Admin revokes all refresh tokens | Immediate revocation |
+| High Risk Detected | Identity Protection detects risk | Immediate revocation |
+| IP Policy Violation | User accesses from blocked location | Claims challenge issued |
+
+### CAE Benefits
+
+- **Enhanced Security**: Near real-time response to security events
+- **Reduced Risk Window**: No waiting for 1-hour token expiration
+- **Compliance**: Better alignment with zero-trust security models
+- **Seamless Integration**: Works with existing MSAL authentication flows
 
 ## Comparison Table
 
