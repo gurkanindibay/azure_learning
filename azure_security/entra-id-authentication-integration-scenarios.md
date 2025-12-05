@@ -11,6 +11,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 1. [Authentication Methods Overview](#authentication-methods-overview)
    - [Certificate-Based Authentication (CBA)](#certificate-based-authentication-cba)
    - [FIDO2 Passwordless Authentication](#fido2-passwordless-authentication)
+   - [Conditional Access Authentication Context](#conditional-access-authentication-context)
 2. [Azure App Service Authentication (Easy Auth)](#azure-app-service-authentication-easy-auth)
 3. [OpenID Connect and OAuth 2.0 Integration](#openid-connect-and-oauth-20-integration)
    - [MSAL Client Application Types](#msal-client-application-types)
@@ -178,6 +179,124 @@ Users must complete multifactor authentication (MFA) within the past five minute
 - Legacy systems don't support WebAuthn
 
 > **Exam Tip:** When users report they cannot register their FIDO2 security keys (registration fails), the most likely cause is that they have not completed multifactor authentication within the past five minutes. This MFA requirement ensures proper user verification before allowing passwordless credential registration.
+
+### Conditional Access Authentication Context
+
+**Conditional Access Authentication Context** is a feature in Microsoft Entra ID that enables applications to trigger step-up authentication for specific sensitive actions or resources, rather than requiring the same level of authentication for all operations.
+
+#### Overview
+
+Authentication contexts allow you to:
+- **Define granular access controls**: Different authentication requirements for different actions within the same application
+- **Implement step-up authentication**: Require additional verification (like MFA) when users perform sensitive operations
+- **Create context-aware security**: Apply stronger authentication only when accessing sensitive data or performing critical actions
+
+#### How Authentication Context Works
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Application Flow                                 │
+│                                                                      │
+│  ┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐  │
+│  │ Normal       │    │ Sensitive Action │    │ Token Request    │  │
+│  │ Operations   │───►│ (e.g., financial │───►│ with acrs claim  │  │
+│  │ (No step-up) │    │ data access)     │    │                  │  │
+│  └──────────────┘    └──────────────────┘    └────────┬─────────┘  │
+│                                                        │            │
+└────────────────────────────────────────────────────────┼────────────┘
+                                                         │
+                                                         ▼
+                          ┌──────────────────────────────────────────┐
+                          │         Microsoft Entra ID               │
+                          │                                          │
+                          │  1. Receives token request with acrs     │
+                          │  2. Evaluates Conditional Access policy  │
+                          │  3. Triggers step-up authentication      │
+                          │     (e.g., MFA) if required              │
+                          │  4. Returns token with auth context      │
+                          └──────────────────────────────────────────┘
+```
+
+#### Implementing Step-Up Authentication
+
+To implement step-up authentication using authentication context:
+
+**Step 1: Create Authentication Context in Microsoft Entra ID**
+```plaintext
+Microsoft Entra admin center → Protection → Conditional Access → Authentication context
+1. Click "New authentication context"
+2. Provide a name (e.g., "Require MFA for sensitive data")
+3. Provide a description
+4. Assign an ID (c1, c2, c3, etc.)
+5. Publish to apps (make available to applications)
+```
+
+**Step 2: Create Conditional Access Policy**
+```plaintext
+1. Create a new Conditional Access policy
+2. Under "Cloud apps or actions" → select "Authentication context"
+3. Select your created authentication context
+4. Under "Grant" → select "Require multifactor authentication"
+5. Enable the policy
+```
+
+**Step 3: Reference in Application Using the acrs Claim**
+```csharp
+// Request a token with the authentication context
+var scopes = new[] { "api://your-api/.default" };
+
+// Include the acrs (authentication context class reference) claim
+var claims = new ClaimsRequest();
+claims.AccessToken.Add(new ClaimRequest
+{
+    Type = "acrs",
+    Value = "c1"  // Your authentication context ID
+});
+
+var result = await app.AcquireTokenInteractive(scopes)
+    .WithClaims(claims.ToString())
+    .ExecuteAsync();
+```
+
+#### The acrs Claim
+
+The **acrs** (Authentication Context Class Reference String) claim is the key mechanism for triggering authentication context-based policies:
+
+| Property | Description |
+|----------|-------------|
+| **Claim Name** | `acrs` |
+| **Purpose** | Tells Entra ID which authentication context to evaluate |
+| **Values** | c1 through c99 (predefined context IDs) |
+| **Trigger** | Include in token request to trigger Conditional Access evaluation |
+
+#### Why Other Approaches Don't Work for Step-Up Authentication
+
+| Approach | Why It's Incorrect |
+|----------|-------------------|
+| **Custom claim validation in application** | Can verify if MFA was completed but **cannot trigger step-up authentication on demand** for specific actions. The application can only read claims, not enforce new authentication requirements. |
+| **Sign-in frequency session control** | Controls how often users must re-authenticate but **doesn't provide context-aware step-up authentication** for specific sensitive actions within an application. |
+| **Named locations in Conditional Access** | Based on IP addresses or geographic locations, **not application-specific actions or contexts**. Cannot provide step-up authentication for sensitive operations. |
+
+#### Use Cases for Authentication Context
+
+✅ **Use authentication context when:**
+- Users access sensitive financial data and need additional MFA
+- Administrative actions require step-up authentication
+- Compliance requires stronger authentication for specific operations
+- Different security levels needed within the same application
+
+#### Exam Scenario: Step-Up Authentication
+
+**Question:** You need to implement step-up authentication in your application using Conditional Access authentication context. Users accessing sensitive financial data must complete additional authentication. What should you configure?
+
+| Option | Correct? | Explanation |
+|--------|----------|-------------|
+| Implement custom claim validation in your application to check for MFA completion | ❌ | Custom claim validation can verify if MFA was completed but cannot trigger step-up authentication on demand for specific actions. This must be done through authentication context. |
+| Configure a Conditional Access policy with a session control for sign-in frequency | ❌ | Sign-in frequency controls how often users must re-authenticate but doesn't provide context-aware step-up authentication for specific sensitive actions within an application. |
+| **Create an authentication context in Microsoft Entra ID and reference it using the acrs claim in your application's token request** | ✅ | Authentication contexts allow applications to trigger step-up authentication by including the acrs claim in token requests, which causes Conditional Access to evaluate policies assigned to that specific authentication context and enforce additional requirements like MFA. |
+| Create a named location in Conditional Access and require MFA for that location | ❌ | Named locations are based on IP addresses or geographic locations, not application-specific actions or contexts, so they cannot provide step-up authentication for sensitive operations. |
+
+> **Exam Tip:** When implementing step-up authentication for specific sensitive actions within an application, always use **Conditional Access authentication context** with the **acrs claim**. This is the only approach that allows applications to dynamically trigger additional authentication requirements based on the action being performed.
 
 ---
 
