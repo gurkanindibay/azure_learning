@@ -96,6 +96,12 @@
   - [Telemetry Processor Implementation Example](#telemetry-processor-implementation-example)
   - [Key Takeaway](#key-takeaway-12)
   - [Related Learning Resources](#related-learning-resources-12)
+- [Question 14: Distributed Tracing Correlation Property Across Microservices](#question-14-distributed-tracing-correlation-property-across-microservices)
+  - [Explanation](#explanation-13)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-12)
+  - [Distributed Tracing Correlation Properties Comparison](#distributed-tracing-correlation-properties-comparison)
+  - [Key Takeaway](#key-takeaway-13)
+  - [Related Learning Resources](#related-learning-resources-13)
 
 ## Overview
 
@@ -1978,3 +1984,117 @@ When you need to **filter out** or **exclude** specific telemetry items (like su
 - ITelemetryProcessor interface documentation
 - Sampling in Application Insights
 - Reduce telemetry volume in Application Insights
+
+---
+
+## Question 14: Distributed Tracing Correlation Property Across Microservices
+
+**Scenario:**
+You are implementing distributed tracing across microservices using Application Insights. Service A calls Service B, which calls Service C. You need to ensure all operations are correlated in transaction diagnostics.
+
+**Question:**
+Which property must be consistent across all services?
+
+**Options:**
+
+1. **`operation_Id`** ✅ *Correct*
+
+2. **`request_Id`** ❌ *Incorrect*
+
+3. **`user_Id`** ❌ *Incorrect*
+
+4. **`session_Id`** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: operation_Id**
+
+The **`operation_Id`** property must be consistent across all telemetry items in a distributed trace. It serves as the correlation identifier that links all requests, dependencies, and other telemetry across different services into a single logical operation in transaction diagnostics.
+
+```
+Service A (operation_Id: abc123)
+    │
+    ├── Request: GET /api/orders
+    │
+    └── Dependency Call to Service B
+            │
+            ▼
+Service B (operation_Id: abc123)  ← Same operation_Id
+    │
+    ├── Request: GET /api/inventory
+    │
+    └── Dependency Call to Service C
+            │
+            ▼
+Service C (operation_Id: abc123)  ← Same operation_Id
+    │
+    └── Request: GET /api/warehouse
+```
+
+In the transaction diagnostics view, all telemetry items sharing the same `operation_Id` are grouped together, allowing you to see the complete end-to-end flow of a distributed operation.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **request_Id** | The `request_Id` uniquely identifies individual requests within a service but **changes for each service call**. It's used to establish parent-child relationships (via `operation_ParentId`) but isn't the property that remains consistent across all services. |
+| **user_Id** | `user_Id` identifies the user making requests but **doesn't provide operation-level correlation**. Multiple operations from the same user would have the same `user_Id`, making it unsuitable for correlating specific distributed transactions. |
+| **session_Id** | `session_Id` tracks user sessions and is primarily used for **client-side scenarios**. It doesn't provide the operation-level correlation needed for distributed tracing across backend services. |
+
+### Distributed Tracing Correlation Properties Comparison
+
+| Property | Scope | Purpose | Consistent Across Services |
+|----------|-------|---------|---------------------------|
+| **operation_Id** | Single distributed operation | Correlates all telemetry in a transaction | ✅ Yes |
+| **operation_ParentId** | Parent-child relationship | Links child operations to parent | ❌ No (changes per hop) |
+| **request_Id** | Individual request | Uniquely identifies each request | ❌ No (unique per request) |
+| **user_Id** | User identity | Identifies authenticated user | ✅ Yes (but not operation-specific) |
+| **session_Id** | User session | Tracks client session | ✅ Yes (but not operation-specific) |
+
+### How Distributed Tracing Works
+
+```csharp
+// Service A - Initiating the distributed operation
+public async Task<IActionResult> GetOrder(string orderId)
+{
+    // Application Insights automatically generates operation_Id
+    // and propagates it via HTTP headers (Request-Id, traceparent)
+    
+    var inventory = await _httpClient.GetAsync($"http://service-b/api/inventory/{orderId}");
+    // The operation_Id is automatically passed to Service B
+    
+    return Ok(order);
+}
+
+// Service B - Receiving the correlated request
+public async Task<IActionResult> GetInventory(string orderId)
+{
+    // Application Insights automatically extracts operation_Id from incoming headers
+    // All telemetry in this request shares the same operation_Id
+    
+    var warehouse = await _httpClient.GetAsync($"http://service-c/api/warehouse/{orderId}");
+    // The operation_Id is automatically passed to Service C
+    
+    return Ok(inventory);
+}
+```
+
+### Querying Correlated Telemetry
+
+```kusto
+// Find all telemetry for a specific distributed operation
+union requests, dependencies, exceptions, traces
+| where operation_Id == "abc123-def456-ghi789"
+| project timestamp, itemType, name, duration, success, cloud_RoleName
+| order by timestamp asc
+```
+
+### Key Takeaway
+
+When implementing distributed tracing across microservices, the **`operation_Id`** is the critical property that must remain consistent across all services. It serves as the unique correlation identifier that links all telemetry items (requests, dependencies, exceptions, traces) into a single logical operation in Application Insights transaction diagnostics. Application Insights SDKs automatically propagate this ID via HTTP headers (W3C Trace Context or Request-Id), ensuring seamless correlation across service boundaries.
+
+### Related Learning Resources
+- Telemetry correlation in Application Insights
+- Distributed tracing in Application Insights
+- W3C Trace Context support in Application Insights
+- Transaction diagnostics in Application Insights
