@@ -37,6 +37,7 @@
   - [Question: Implementing Blob Lease for Exclusive Write Access](#question-implementing-blob-lease-for-exclusive-write-access)
   - [Question: Storing Custom Application-Specific Data with Blobs](#question-storing-custom-application-specific-data-with-blobs)
   - [Question: HTTPS with Custom Domain for Static Website](#question-https-with-custom-domain-for-static-website)
+  - [Question: Optimizing Blob Storage Performance with Partition Strategy](#question-optimizing-blob-storage-performance-with-partition-strategy)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -1681,6 +1682,105 @@ What must you configure because Azure Storage doesn't natively support this scen
 - 🎯 **Azure Blob Storage** does NOT support HTTPS with custom domains for static websites
 - 🎯 **Azure CDN** is the recommended solution for HTTPS on custom domains
 - 🎯 **Traffic Manager** is DNS-based and cannot provide HTTPS termination
+
+---
+
+### Question: Optimizing Blob Storage Performance with Partition Strategy
+
+**Scenario:**
+You are developing an application that stores related blobs in Azure Blob Storage. You need to optimize performance by ensuring related blobs are served from the same partition.
+
+**Question:**
+Which naming strategy should you use?
+
+**Options:**
+
+1. **Use hash values as blob name prefixes** ❌ *Incorrect*
+2. **Use random GUIDs as blob names** ❌ *Incorrect*
+3. **Use timestamps as blob name suffixes** ❌ *Incorrect*
+4. **Use a common prefix for related blobs** ✅ *Correct*
+
+### Explanation
+
+**Correct Answer: Use a common prefix for related blobs**
+
+Azure Storage can serve data in a single partition more quickly than data spanning multiple partitions. Using **common prefixes for related blobs** helps ensure they are stored in the same partition for optimal read performance.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Hash values as blob name prefixes** | Hash prefixes would **distribute blobs across partitions** rather than keeping related blobs together, reducing performance for grouped access. |
+| **Random GUIDs as blob names** | Random GUIDs would **distribute blobs across multiple partitions**, which would decrease performance for accessing related blobs together. |
+| **Timestamps as blob name suffixes** | Timestamp suffixes might help with ordering but **don't ensure related blobs are stored in the same partition** for performance optimization. |
+
+### Blob Naming Strategy for Partition Optimization
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PARTITION BEHAVIOR                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ✅ COMMON PREFIX (Related blobs in SAME partition)                 │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  Partition: "orders/2025/"                                     │ │
+│  │  ├── orders/2025/order-001.json                                │ │
+│  │  ├── orders/2025/order-002.json                                │ │
+│  │  └── orders/2025/order-003.json                                │ │
+│  │  → Fast grouped access ✅                                      │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ❌ RANDOM/HASH PREFIX (Blobs DISTRIBUTED across partitions)        │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  Partition A: a1b2c3-order-001.json                            │ │
+│  │  Partition B: d4e5f6-order-002.json                            │ │
+│  │  Partition C: g7h8i9-order-003.json                            │ │
+│  │  → Slow grouped access ❌                                      │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Naming Strategy Comparison
+
+| Strategy | Partition Behavior | Best For |
+|----------|-------------------|----------|
+| **Common Prefix** | Groups related blobs in same partition | Accessing related blobs together |
+| **Hash Prefix** | Distributes blobs across partitions | High write throughput, avoiding hot partitions |
+| **Random GUID** | Maximum distribution | Write-heavy workloads with no grouping needs |
+| **Timestamp Suffix** | Ordering within existing grouping | Time-based queries within a partition |
+
+### Best Practices for Blob Naming
+
+```csharp
+// ✅ Good - Related blobs share common prefix for partition co-location
+string orderBlob1 = "orders/customer-123/order-001.json";
+string orderBlob2 = "orders/customer-123/order-002.json";
+string orderBlob3 = "orders/customer-123/order-003.json";
+
+// ❌ Bad - Hash prefix distributes related blobs across partitions
+string orderBlob1 = $"{ComputeHash("order-001")}/orders/order-001.json";
+string orderBlob2 = $"{ComputeHash("order-002")}/orders/order-002.json";
+string orderBlob3 = $"{ComputeHash("order-003")}/orders/order-003.json";
+```
+
+### When to Use Each Strategy
+
+| Scenario | Recommended Strategy |
+|----------|---------------------|
+| **Reading related blobs together** | Common prefix |
+| **High write throughput needed** | Hash/random prefix (distribute load) |
+| **Avoiding hot partitions** | Hash prefix |
+| **Time-series data within a group** | Common prefix + timestamp suffix |
+| **Log aggregation by source** | Source identifier as prefix |
+
+**Key Takeaway:**
+For **optimizing read performance** when accessing related blobs together, use a **common prefix** naming strategy to ensure blobs are stored in the same partition. This allows Azure Storage to serve the data more quickly than if the blobs were distributed across multiple partitions.
+
+### Related Learning Resources
+- [Azure Blob Storage performance and scalability checklist](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-performance-checklist)
+- [Naming and Referencing Containers, Blobs, and Metadata](https://learn.microsoft.com/en-us/rest/api/storageservices/naming-and-referencing-containers--blobs--and-metadata)
+- [Partitioning in Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-performance-checklist#partitioning)
 
 ---
 
