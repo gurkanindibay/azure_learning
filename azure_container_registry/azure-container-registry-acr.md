@@ -692,6 +692,95 @@ az acr repository delete \
 
 **Note:** Most scenarios use `--name` parameter with registry-level access.
 
+### Repository-Scoped Tokens and Scope Maps
+
+**Tokens** provide a mechanism for repository-scoped permissions in Azure Container Registry. Unlike registry-level access (RBAC roles, service principals, or managed identities), tokens allow fine-grained access control at the repository level.
+
+**Key Concepts:**
+
+| Component | Description |
+|-----------|-------------|
+| **Token** | A credential (username/password) that authenticates with the registry |
+| **Scope Map** | Defines the specific permissions (actions) a token has on specific repositories |
+| **Actions** | Operations like `content/read`, `content/write`, `metadata/read`, `content/delete` |
+
+**How Tokens Work:**
+1. Create a scope map that defines repository permissions
+2. Create a token and associate it with the scope map
+3. Generate credentials (password) for the token
+4. Use the token name as username and generated password to authenticate
+
+**Creating a Scope Map:**
+```bash
+az acr scope-map create \
+  --name my-scope-map \
+  --registry myregistry \
+  --repository myrepo content/read content/write \
+  --description "Read and write access to myrepo"
+```
+
+**Creating a Token:**
+```bash
+az acr token create \
+  --name my-token \
+  --registry myregistry \
+  --scope-map my-scope-map
+
+# Generate credentials
+az acr token credential generate \
+  --name my-token \
+  --registry myregistry \
+  --password1
+```
+
+**Using the Token:**
+```bash
+docker login myregistry.azurecr.io \
+  --username my-token \
+  --password <generated-password>
+```
+
+---
+
+### Practice Question: ACR Token and Scope Map
+
+**Scenario:**
+You need to create an Azure Container Registry token that provides repository-scoped permissions for IoT devices. The token should only allow access to specific repositories, not the entire registry.
+
+**Question:**
+What must you associate with the token to configure repository-scoped permissions?
+
+**Options:**
+
+1. ✅ **Scope map**
+   - **Correct**: To configure repository-scoped permissions, you create a token with an associated scope map. A token along with a generated password lets the user authenticate with the registry. Every token **must** be associated with a scope map to define permissions.
+
+2. ❌ **Managed identity**
+   - **Incorrect**: Managed identities cannot be used with tokens for repository-scoped permissions. Tokens use username and password authentication, while managed identities are used for Azure-to-Azure service authentication with registry-wide access.
+
+3. ❌ **RBAC role assignment**
+   - **Incorrect**: RBAC role assignments apply to the entire registry and cannot provide repository-scoped permissions through tokens. RBAC is for registry-level access control, not repository-level.
+
+4. ❌ **Service principal**
+   - **Incorrect**: Service principals provide registry-wide access and cannot be used with tokens for repository-scoped permissions. Service principals authenticate at the registry level, not at the repository level.
+
+**Key Points:**
+- **Tokens require scope maps** - Every token must have an associated scope map
+- **Scope maps define permissions** - They specify which repositories and what actions are allowed
+- **Username/password authentication** - Tokens use generated credentials, not Azure AD
+- **Repository-level granularity** - Unlike RBAC, service principals, or managed identities which are registry-scoped
+
+**Comparison of Authentication Methods:**
+
+| Method | Scope | Use Case |
+|--------|-------|----------|
+| **Token + Scope Map** | Repository-level | IoT devices, CI/CD with limited access, multi-tenant scenarios |
+| **RBAC Role Assignment** | Registry-level | Azure users and groups |
+| **Service Principal** | Registry-level | CI/CD pipelines, automation |
+| **Managed Identity** | Registry-level | Azure services (AKS, ACI, App Service) |
+
+---
+
 ## Retention Policy for Untagged Manifests
 
 Azure Container Registry allows you to set a **retention policy** for stored image manifests that don't have any associated tags (untagged manifests). When a retention policy is enabled, untagged manifests in the registry are automatically deleted after the number of days you set.
