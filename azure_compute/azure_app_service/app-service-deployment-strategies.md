@@ -20,6 +20,7 @@
   - [Question 9: Temporary Diagnostic Logging Configuration](#question-9-temporary-diagnostic-logging-configuration)
   - [Question 10: Deployment Package Size Limits on Consumption Plan](#question-10-deployment-package-size-limits-on-consumption-plan)
   - [Question 11: Custom Initialization Actions Before Handling Requests](#question-11-custom-initialization-actions-before-handling-requests)
+  - [Question 12: Secure Authentication for GitHub Actions Continuous Deployment](#question-12-secure-authentication-for-github-actions-continuous-deployment)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -570,6 +571,93 @@ What should you configure?
 - Works seamlessly with deployment slot swaps for zero-downtime deployments
 
 > 💡 **Exam Tip**: For .NET applications on Windows App Service, the `applicationInitialization` element in web.config is the correct way to configure initialization actions that must complete before the instance handles requests. This is different from health checks which monitor ongoing health, and different from container startup commands which only apply to container deployments.
+
+---
+
+### Question 12: Secure Authentication for GitHub Actions Continuous Deployment
+
+**Scenario:**
+You are configuring continuous deployment for an Azure App Service web app using GitHub Actions. You want to use the most secure authentication method.
+
+**Question:**
+Which approach should you use?
+
+**Options:**
+
+1. ❌ Use basic authentication with deployment credentials
+   - **Incorrect**: Basic authentication is the least secure option and Microsoft recommends against using basic authentication for deployments when more secure options are available.
+
+2. ❌ Use a publish profile stored as a GitHub secret
+   - **Incorrect**: While publish profiles work and can be stored as secrets, they are app-level credentials that are less secure than OpenID Connect with managed identities.
+
+3. ❌ Configure a service principal with a client secret
+   - **Incorrect**: Service principals with client secrets require managing and rotating secrets, making them less secure than OpenID Connect with managed identities.
+
+4. ✅ Configure OpenID Connect with a user-assigned managed identity
+   - **Correct**: By using Deployment Center, you can easily configure the more secure OpenID Connect authentication with a user-assigned identity. This authentication method uses short-lived tokens and offers hardened security.
+
+---
+
+**Key Concepts:**
+
+| Authentication Method | Security Level | Key Characteristics |
+|----------------------|----------------|---------------------|
+| **Basic Authentication** | ❌ Lowest | Username/password credentials, not recommended |
+| **Publish Profile** | ⚠️ Low-Medium | App-level credentials, stored as secrets |
+| **Service Principal with Client Secret** | ⚠️ Medium | Requires secret management and rotation |
+| **OpenID Connect with Managed Identity** | ✅ Highest | Short-lived tokens, no secrets to manage |
+
+**Why OpenID Connect with Managed Identity is Most Secure:**
+
+1. **No long-lived secrets**: Uses short-lived tokens instead of static credentials
+2. **No secret rotation needed**: Eliminates the operational burden of rotating secrets
+3. **Azure-managed authentication**: Leverages Azure's identity platform for secure authentication
+4. **Federated credentials**: GitHub Actions can authenticate directly with Azure using OIDC federation
+5. **Reduced attack surface**: No credentials stored in GitHub secrets that could be compromised
+
+**Configuring OpenID Connect with Deployment Center:**
+
+1. Create a user-assigned managed identity in Azure
+2. Configure federated credentials for GitHub Actions
+3. In App Service Deployment Center, select GitHub as the source
+4. Choose OpenID Connect as the authentication type
+5. Select the user-assigned managed identity
+
+**GitHub Actions Workflow with OIDC:**
+
+```yaml
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Azure Login with OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'my-app-service'
+          package: '.'
+```
+
+> 💡 **Exam Tip**: When asked about the most secure authentication method for GitHub Actions deployments to Azure App Service, always prefer OpenID Connect with managed identities over publish profiles, service principals with secrets, or basic authentication. OIDC eliminates the need to store and rotate secrets.
 
 ---
 
