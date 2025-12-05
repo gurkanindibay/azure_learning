@@ -23,6 +23,7 @@
   - [Question 1: Container Access with Entra ID and RBAC](#question-1-container-access-with-entra-id-and-rbac)
   - [Question 3: SAS with Microsoft Entra ID Credentials for Enhanced Security](#question-3-sas-with-microsoft-entra-id-credentials-for-enhanced-security)
   - [Question 4: RBAC Action Required for User Delegation Key](#question-4-rbac-action-required-for-user-delegation-key)
+  - [Question 5: Identity-Based Connection Settings for User-Assigned Managed Identity](#question-5-identity-based-connection-settings-for-user-assigned-managed-identity)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -1543,6 +1544,100 @@ When implementing user delegation SAS, ensure the security principal has the `Mi
 - **Storage Blob Delegator** - Minimal role specifically for delegation key generation
 - **Storage Blob Data Contributor/Owner/Reader** - Data access roles that also include delegation
 - **Contributor** - Broader role that includes this permission
+
+### Question 5: Identity-Based Connection Settings for User-Assigned Managed Identity
+
+**Scenario:**
+You have an Azure App Service that needs to access blob storage using a user-assigned managed identity.
+
+**Question:**
+Which properties must you configure in the identity-based connection settings?
+
+**Options:**
+1. `managedIdentityType` and `objectID`
+2. `credential` and `resourceID`
+3. `principalID` and `tenantID`
+4. `credential` and `clientID` ✅
+
+**Correct Answer: `credential` and `clientID`**
+
+**Detailed Analysis:**
+
+#### Why `credential` and `clientID` is CORRECT ✅
+
+**Key Points:**
+- ✅ **credential**: Required to indicate that managed identity authentication should be used
+- ✅ **clientID**: Required to identify which specific user-assigned managed identity to use
+- ✅ **Azure Functions/App Service**: These are the correct properties for identity-based connections in Azure Functions bindings and App Service configurations
+
+**Configuration Example (host.json or app settings):**
+```json
+{
+  "AzureWebJobsStorage__accountName": "mystorageaccount",
+  "AzureWebJobsStorage__credential": "managedidentity",
+  "AzureWebJobsStorage__clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+```
+
+**Why These Properties:**
+- `credential`: Tells the Azure SDK to use managed identity instead of connection strings or keys
+- `clientID`: Uniquely identifies the user-assigned managed identity (required because a resource can have multiple user-assigned identities)
+
+#### Why `managedIdentityType` and `objectID` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Not Valid Properties**: These are not valid properties for configuring identity-based connections in Azure Storage SDK or Azure Functions bindings
+- ❌ **objectID**: While object ID identifies an identity in Entra ID, it's not used in connection settings
+
+#### Why `credential` and `resourceID` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **resourceID Not Supported**: While `credential` is required, `resourceID` is not a supported property for configuring user-assigned managed identities in identity-based connections for blob storage
+- ⚠️ The correct identifier for user-assigned managed identity is `clientID`, not `resourceID`
+
+#### Why `principalID` and `tenantID` is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Identity Properties, Not Connection Properties**: `principalID` and `tenantID` are properties that identify a managed identity in Entra ID, but they are not the correct properties for configuring identity-based connections
+- ❌ **Not Used in Bindings**: Azure Functions and App Service bindings don't use these properties for connection configuration
+
+**System-Assigned vs User-Assigned Managed Identity Configuration:**
+
+| Identity Type | credential | clientID Required? |
+|--------------|------------|-------------------|
+| **System-Assigned** | `managedidentity` | ❌ No (uses the single system identity) |
+| **User-Assigned** | `managedidentity` | ✅ Yes (identifies which identity to use) |
+
+**Example: Azure Function Blob Trigger with User-Assigned Managed Identity:**
+```csharp
+// Function.cs
+[FunctionName("ProcessBlob")]
+public static void Run(
+    [BlobTrigger("samples-workitems/{name}", 
+        Connection = "MyStorageConnection")] 
+    Stream myBlob,
+    string name,
+    ILogger log)
+{
+    log.LogInformation($"Processing blob: {name}");
+}
+```
+
+```json
+// local.settings.json or App Settings
+{
+  "MyStorageConnection__accountName": "mystorageaccount",
+  "MyStorageConnection__credential": "managedidentity",
+  "MyStorageConnection__clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+```
+
+**Key Takeaway:**
+When using a **user-assigned managed identity** for blob storage access in Azure App Service or Azure Functions:
+1. Set `credential` to `managedidentity` to enable identity-based authentication
+2. Set `clientID` to the client ID of the specific user-assigned managed identity to use
+
+**Domain:** Develop for Azure storage
 
 ## SAS Security Best Practices
 
