@@ -17,18 +17,24 @@
 7. [Practical Examples](#practical-examples)
 8. [When to Use Multiple Accounts vs Multiple Containers](#when-to-use-multiple-accounts-vs-multiple-containers)
 9. [Best Practices](#best-practices)
-10. [Hierarchical Partition Keys](#hierarchical-partition-keys)
+10. [Access Control and Authentication](#access-control-and-authentication)
+    - [Authentication Options Overview](#authentication-options-overview)
+    - [Master Keys (Primary and Secondary)](#master-keys-primary-and-secondary)
+    - [Resource Tokens](#resource-tokens)
+    - [Microsoft Entra ID (Azure AD) Authentication](#microsoft-entra-id-azure-ad-authentication)
+    - [Shared Access Signatures (SAS) - Not Applicable](#shared-access-signatures-sas---not-applicable)
+11. [Hierarchical Partition Keys](#hierarchical-partition-keys)
     - [Understanding the 20 GB Logical Partition Limit](#understanding-the-20-gb-logical-partition-limit)
     - [What are Hierarchical Partition Keys?](#what-are-hierarchical-partition-keys)
     - [How Hierarchical Partition Keys Solve the 20 GB Problem](#how-hierarchical-partition-keys-solve-the-20-gb-problem)
     - [Multi-Tenant SaaS Best Practices with Hierarchical Partition Keys](#multi-tenant-saas-best-practices-with-hierarchical-partition-keys)
     - [Query Routing with Hierarchical Partition Keys](#query-routing-with-hierarchical-partition-keys)
-11. [Change Feed](#change-feed)
+12. [Change Feed](#change-feed)
     - [What is Change Feed?](#what-is-change-feed)
     - [Azure Functions Cosmos DB Trigger](#azure-functions-cosmos-db-trigger)
     - [Lease Collection Concept](#lease-collection-concept)
-12. [Single Partition Queries vs Cross-Partition Queries](#single-partition-queries-vs-cross-partition-queries)
-13. [Practice Questions](#practice-questions)
+13. [Single Partition Queries vs Cross-Partition Queries](#single-partition-queries-vs-cross-partition-queries)
+14. [Practice Questions](#practice-questions)
 
 ---
 
@@ -513,6 +519,258 @@ az cosmosdb sql container create \
    - Use clear, descriptive names
    - Follow naming conventions: `users`, `orders`, `products`
    - Avoid special characters
+
+---
+
+## Access Control and Authentication
+
+Azure Cosmos DB provides multiple authentication and access control mechanisms to secure your data. Understanding these options is crucial for implementing the right security model for your application.
+
+### Authentication Options Overview
+
+| Method | Scope | Use Case | Fine-Grained Control |
+|--------|-------|----------|---------------------|
+| **Primary/Secondary Keys** | Entire account | Administrative access | ❌ No |
+| **Resource Tokens** | Specific resources | User-level access | ✅ Yes |
+| **Microsoft Entra ID (Azure AD)** | RBAC-based | Enterprise scenarios | ✅ Yes |
+| **Shared Access Signatures (SAS)** | N/A | **Not supported** in Cosmos DB | ❌ N/A |
+
+---
+
+### Master Keys (Primary and Secondary)
+
+Master keys provide **full administrative access** to all resources within a Cosmos DB account.
+
+#### Characteristics
+
+- **Scope**: Account-level (all databases, containers, items)
+- **Access Type**: Full read/write access to everything
+- **Primary Key**: Main administrative key
+- **Secondary Key**: Backup key for key rotation without downtime
+
+#### When to Use
+
+- Administrative operations and management
+- Backend services with full access requirements
+- Development and testing environments
+
+#### Limitations
+
+- ❌ **Cannot be scoped** to specific containers or resources
+- ❌ **Not suitable** for fine-grained access control
+- ❌ Should **never be exposed** to client applications
+- ⚠️ If compromised, entire account is at risk
+
+```csharp
+// Using master keys - provides FULL account access
+CosmosClient client = new CosmosClient(
+    accountEndpoint: "https://your-account.documents.azure.com:443/",
+    authKeyOrResourceToken: "YOUR_PRIMARY_KEY"  // Full access to everything
+);
+```
+
+---
+
+### Resource Tokens
+
+**Resource tokens** provide **fine-grained access control** to specific resources within Azure Cosmos DB without using Microsoft Entra ID.
+
+#### What Are Resource Tokens?
+
+Resource tokens are created when users in a database are set up with access permissions for precise access control on a resource, also known as a **permission resource**. A permission resource contains a **hash resource token** constructed with the information regarding:
+- The **resource path** the user has access to
+- The **access type** (read, all) the user has
+
+#### Key Characteristics
+
+- **Scope**: Can be restricted to specific containers, documents, stored procedures, etc.
+- **Access Types**: Read-only or All (read/write)
+- **Time-Limited**: Tokens have a configurable expiration (default: 1 hour, max: 5 hours)
+- **User-Based**: Associated with database users and their permissions
+
+#### When to Use Resource Tokens
+
+✅ **Fine-grained access control** to specific containers without Microsoft Entra ID  
+✅ **Multi-tenant applications** where each tenant should only access their data  
+✅ **Mobile/client applications** that need limited access  
+✅ **Temporary access** to specific resources  
+
+#### How Resource Tokens Work
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Resource Token Flow                           │
+│                                                                  │
+│  1. Backend creates User in Cosmos DB                            │
+│  2. Backend creates Permission for User on specific resource     │
+│  3. Cosmos DB generates Resource Token (hash)                    │
+│  4. Backend sends Resource Token to client                       │
+│  5. Client uses Resource Token to access only allowed resources  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Code Example: Creating and Using Resource Tokens
+
+```csharp
+// Step 1: Create a user in the database (backend/admin operation)
+UserResponse userResponse = await database.CreateUserAsync("user123");
+User user = userResponse.User;
+
+// Step 2: Create a permission for the user on a specific container
+PermissionProperties permissionProperties = new PermissionProperties(
+    id: "readOnlyPermission",
+    permissionMode: PermissionMode.Read,  // Read-only access
+    container: container,
+    resourcePartitionKey: new PartitionKey("tenant-abc")  // Optional: limit to partition
+);
+
+PermissionResponse permissionResponse = await user.CreatePermissionAsync(permissionProperties);
+
+// Step 3: Get the resource token
+string resourceToken = permissionResponse.Resource.Token;
+
+// Step 4: Client uses the resource token (limited access)
+CosmosClient clientApp = new CosmosClient(
+    accountEndpoint: "https://your-account.documents.azure.com:443/",
+    authKeyOrResourceToken: resourceToken  // Limited to specific resource
+);
+
+// Client can only access the container/partition specified in the permission
+Container limitedContainer = clientApp.GetContainer("myDatabase", "myContainer");
+```
+
+#### Permission Modes
+
+| Mode | Description |
+|------|-------------|
+| `PermissionMode.Read` | Read-only access to the resource |
+| `PermissionMode.All` | Read and write access to the resource |
+
+#### Resource Token vs Master Keys Comparison
+
+| Aspect | Master Keys | Resource Tokens |
+|--------|-------------|-----------------|
+| **Scope** | Entire account | Specific resource |
+| **Fine-Grained Control** | ❌ No | ✅ Yes |
+| **Time-Limited** | ❌ No | ✅ Yes (1-5 hours) |
+| **User Association** | ❌ No | ✅ Yes |
+| **Client-Safe** | ❌ No | ✅ Yes |
+| **Partition-Level** | ❌ No | ✅ Yes |
+
+#### Comparison with SQL Server Security
+
+Resource tokens are a **built-in mechanism specific to Azure Cosmos DB**. SQL Server doesn't have an exact equivalent, but it has similar concepts for fine-grained access control:
+
+| Cosmos DB | SQL Server Equivalent |
+|-----------|----------------------|
+| **Resource Tokens** | **Database Users + Permissions** |
+| User + Permission → Token | Login + User + GRANT/DENY statements |
+| Scoped to container/partition | Scoped to tables/views/schemas |
+| Time-limited (1-5 hours) | No automatic expiration |
+| Token-based (stateless) | Session-based (stateful) |
+
+**SQL Server Approaches for Fine-Grained Access:**
+
+1. **Row-Level Security (RLS)** - Filter rows based on user context
+   ```sql
+   -- Create a security predicate function
+   CREATE FUNCTION dbo.fn_TenantPredicate(@TenantId INT)
+   RETURNS TABLE
+   WITH SCHEMABINDING
+   AS
+   RETURN SELECT 1 AS result WHERE @TenantId = CAST(SESSION_CONTEXT(N'TenantId') AS INT);
+
+   -- Apply the security policy
+   CREATE SECURITY POLICY TenantFilter
+   ADD FILTER PREDICATE dbo.fn_TenantPredicate(TenantId) ON dbo.Orders;
+   ```
+
+2. **Database Users with Object Permissions**
+   ```sql
+   -- Create a user with limited permissions
+   CREATE USER AppUser WITHOUT LOGIN;
+   GRANT SELECT ON dbo.SpecificTable TO AppUser;
+   DENY SELECT ON dbo.SensitiveTable TO AppUser;
+   ```
+
+3. **Application Roles** - Temporary elevated permissions
+   ```sql
+   -- Activate application role for the session
+   EXEC sp_setapprole 'AppRole', 'password';
+   ```
+
+4. **Contained Database Users** - Users scoped to a specific database
+
+**Key Architectural Difference:**
+
+The main distinction is that Cosmos DB resource tokens are **stateless tokens** that can be passed to clients directly, while SQL Server relies on **connection-based authentication** where permissions are evaluated per session. This makes resource tokens more suitable for distributed, scalable architectures where you want to give limited access to client applications without exposing master credentials.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              Cosmos DB Resource Tokens (Stateless)               │
+│                                                                  │
+│  Client App ──[Resource Token]──► Cosmos DB                      │
+│     │                                 │                          │
+│     └── Token contains:               └── Validates token        │
+│         • Resource path                   • No session state     │
+│         • Access type                     • Scalable             │
+│         • Expiration                      • Direct access        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│              SQL Server Permissions (Stateful)                   │
+│                                                                  │
+│  Client App ──[Connection]──► SQL Server                         │
+│     │                             │                              │
+│     └── Authenticates via:        └── Maintains session:         │
+│         • Windows Auth                • Connection pooling       │
+│         • SQL Login                   • Per-session context      │
+│         • Contained User              • RBAC evaluation          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Microsoft Entra ID (Azure AD) Authentication
+
+Microsoft Entra ID provides **role-based access control (RBAC)** for Azure Cosmos DB using Azure AD identities.
+
+#### Characteristics
+
+- **Enterprise-grade** identity management
+- **RBAC roles**: Built-in and custom roles
+- **Managed identities**: No credential management
+- **Fine-grained**: Can be scoped to account, database, or container level
+
+#### When to Use
+
+- Enterprise applications with Azure AD integration
+- Services using managed identities
+- When centralized identity management is required
+
+```csharp
+// Using Entra ID with managed identity
+CosmosClient client = new CosmosClient(
+    accountEndpoint: "https://your-account.documents.azure.com:443/",
+    new DefaultAzureCredential()  // Uses Entra ID authentication
+);
+```
+
+---
+
+### Shared Access Signatures (SAS) - Not Applicable
+
+⚠️ **Important**: Shared Access Signatures (SAS) are used for **Azure Storage services** (Blob, Queue, Table, File), **NOT for Azure Cosmos DB**.
+
+| Service | Uses SAS? |
+|---------|-----------|
+| Azure Blob Storage | ✅ Yes |
+| Azure Queue Storage | ✅ Yes |
+| Azure Table Storage | ✅ Yes |
+| Azure File Storage | ✅ Yes |
+| **Azure Cosmos DB** | ❌ **No - Uses Resource Tokens** |
+
+**For fine-grained access control in Cosmos DB without Microsoft Entra ID, use Resource Tokens.**
 
 ---
 
@@ -1877,6 +2135,115 @@ You have an Azure Cosmos DB container with hierarchical partition keys configure
 
 - [Hierarchical Partition Keys in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/hierarchical-partition-keys)
 - [Query items in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/nosql/query/getting-started)
+
+---
+
+### Question 7: Fine-Grained Access Control Without Microsoft Entra ID
+
+**Question:**
+You need to implement fine-grained access control for a specific container in Azure Cosmos DB without using Microsoft Entra ID. What should you use?
+
+**Options:**
+- A) Shared access signatures
+- B) Secondary keys
+- C) Primary keys
+- D) Resource tokens
+
+---
+
+### Answer: D ✅
+
+**Correct Answer: D) Resource tokens**
+
+---
+
+### Detailed Explanation
+
+**Option D - Resource tokens** ✅
+- **Correct**: Resource tokens are created when users in a database are set up with access permissions for precise access control on a resource, also known as a permission resource
+- A permission resource contains a **hash resource token** constructed with the information regarding:
+  - The **resource path** the user has access to
+  - The **access type** (read, all) the user has access to
+- Resource tokens provide **fine-grained access control** to specific resources
+- Can be scoped to:
+  - Specific containers
+  - Specific partitions within a container
+  - Specific documents
+  - Stored procedures, triggers, and user-defined functions
+- Time-limited (default: 1 hour, max: 5 hours)
+- User-associated for tracking and auditing
+
+**Example:**
+```csharp
+// Create a permission for a user on a specific container
+PermissionProperties permissionProperties = new PermissionProperties(
+    id: "readOnlyPermission",
+    permissionMode: PermissionMode.Read,  // Fine-grained: Read-only
+    container: specificContainer,         // Fine-grained: Specific container
+    resourcePartitionKey: new PartitionKey("tenant-abc")  // Fine-grained: Specific partition
+);
+
+PermissionResponse response = await user.CreatePermissionAsync(permissionProperties);
+string resourceToken = response.Resource.Token;  // Use this token for limited access
+```
+
+**Option A - Shared access signatures** ❌
+- **Incorrect**: Shared access signatures (SAS) are used for **Azure Storage services** (Blob, Queue, Table, File), **NOT for Azure Cosmos DB**
+- Cosmos DB uses resource tokens instead of SAS for fine-grained access control
+- This is a common source of confusion on exams
+
+**Option B - Secondary keys** ❌
+- **Incorrect**: Secondary keys provide the **same full access as primary keys**
+- They cannot be restricted to specific containers or resources
+- Secondary keys are meant for key rotation scenarios, not for fine-grained access
+- Fail to meet the fine-grained requirement
+
+**Option C - Primary keys** ❌
+- **Incorrect**: Primary keys provide **full control over all resources** in the account
+- Cannot be scoped to specific containers, partitions, or documents
+- Unsuitable for fine-grained access control
+- Should only be used for administrative/backend operations
+
+---
+
+### Comparison: Access Control Methods in Cosmos DB
+
+| Method | Scope | Fine-Grained | Time-Limited | Use Case |
+|--------|-------|--------------|--------------|----------|
+| **Primary Key** | Entire account | ❌ No | ❌ No | Admin/backend operations |
+| **Secondary Key** | Entire account | ❌ No | ❌ No | Key rotation |
+| **Resource Token** | Specific resource | ✅ Yes | ✅ Yes | User/client access |
+| **SAS** | N/A | N/A | N/A | **Not applicable to Cosmos DB** |
+
+---
+
+### Key Takeaways
+
+1. **Resource Tokens for Fine-Grained Access**
+   - The only non-Entra ID method for fine-grained access control in Cosmos DB
+   - Created from user permissions on specific resources
+   - Contains hash with resource path and access type information
+
+2. **SAS is NOT for Cosmos DB**
+   - SAS is for Azure Storage services only
+   - Don't confuse Azure Storage security with Cosmos DB security
+   - This is a common exam trap
+
+3. **Keys Provide Full Access**
+   - Both primary and secondary keys have account-wide scope
+   - Cannot be restricted to specific resources
+   - Use only for administrative operations
+
+4. **For Enterprise Scenarios**
+   - If Microsoft Entra ID can be used, consider RBAC for centralized identity management
+   - Resource tokens are best when Entra ID is not an option
+
+---
+
+### References
+
+- [Secure access to data in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/secure-access-to-data)
+- [Resource tokens in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/how-to-provision-users)
 
 ---
 
