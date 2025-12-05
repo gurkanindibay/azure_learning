@@ -27,6 +27,7 @@
   - [Transactions](#transactions)
   - [Duplicate Detection](#duplicate-detection)
   - [Scheduled Delivery](#scheduled-delivery)
+  - [Message Deferral](#message-deferral)
 - [4. Data Integration Model: Push-Pull (Hybrid)](#4-data-integration-model-push-pull-hybrid)
   - [Publisher Side (Push)](#publisher-side-push)
   - [Consumer Side (Pull with Push Characteristics)](#consumer-side-pull-with-push-characteristics)
@@ -570,6 +571,107 @@ await sender.SendMessageAsync(message);
 - The returned sequence number should be stored if cancellation might be required
 - Use `ScheduledEnqueueTime` property for simple fire-and-forget scheduled messages
 - Both methods support scheduling messages to queues and topics
+
+### Message Deferral
+Message deferral allows a receiver to postpone processing of a message without losing it. When a message is deferred, it remains in the queue but is moved to a deferred state and can only be retrieved using its **sequence number**.
+
+#### When to Use Deferral
+- **Dependency Not Ready:** When processing depends on external data that is not yet available (e.g., inventory data unavailable for order processing).
+- **Out-of-Order Messages:** When messages arrive out of sequence and you need to process them in a specific order.
+- **Temporary Resource Unavailability:** When required resources are temporarily unavailable but expected to become available.
+
+#### How Deferral Works
+
+1. **Receive a message** using Peek-Lock mode
+2. **Defer the message** if processing cannot proceed - this moves it to a deferred state
+3. **Store the sequence number** - this is the **only way** to retrieve a deferred message later
+4. **Retrieve the deferred message** using `ReceiveDeferredMessageAsync` with the stored sequence number
+
+#### Code Example
+
+```csharp
+var client = new ServiceBusClient(connectionString);
+var receiver = client.CreateReceiver("order-queue");
+
+// Receive message
+var message = await receiver.ReceiveMessageAsync();
+
+// Check if inventory data is available
+bool inventoryAvailable = await CheckInventoryDataAsync(message);
+
+if (!inventoryAvailable)
+{
+    // Store the sequence number - REQUIRED for later retrieval
+    long sequenceNumber = message.SequenceNumber;
+    await StoreSequenceNumberAsync(sequenceNumber); // Persist this!
+    
+    // Defer the message
+    await receiver.DeferMessageAsync(message);
+    Console.WriteLine($"Message deferred. Sequence Number: {sequenceNumber}");
+}
+else
+{
+    // Process normally
+    await ProcessOrderAsync(message);
+    await receiver.CompleteMessageAsync(message);
+}
+
+// Later, when inventory data becomes available...
+long storedSequenceNumber = await GetStoredSequenceNumberAsync();
+
+// Retrieve the deferred message using the sequence number
+ServiceBusReceivedMessage deferredMessage = await receiver.ReceiveDeferredMessageAsync(storedSequenceNumber);
+
+// Process and complete
+await ProcessOrderAsync(deferredMessage);
+await receiver.CompleteMessageAsync(deferredMessage);
+```
+
+#### Key Point: What to Store for Retrieval
+
+| Property | Can Retrieve Deferred Message? | Purpose |
+|----------|-------------------------------|---------|
+| **Sequence Number** | ✅ **YES** | The **only** way to directly retrieve a deferred message using `ReceiveDeferredMessageAsync` |
+| Correlation ID | ❌ No | User-defined property for correlating related messages; cannot retrieve deferred messages |
+| Lock Token | ❌ No | Used for renewing locks and completing messages; not for retrieving deferred messages |
+| Session ID | ❌ No | Used for message sessions and grouping related messages; not for individual deferred messages |
+| Message ID | ❌ No | Used for duplicate detection; cannot be used to retrieve deferred messages |
+
+#### Exam Scenario: Order Processing with Inventory Check
+
+**Scenario:** You have an Azure Service Bus queue that receives order messages. A message handler must defer processing when inventory data is unavailable. You need to implement message deferral and later retrieve the deferred message. What should you store to retrieve the deferred message?
+
+**Correct Answer:** The message sequence number
+
+**Why This Works:**
+- To retrieve a deferred message, you **must** use the `ReceiveDeferredMessageAsync` method
+- This method requires the **sequence number** as a parameter
+- The sequence number is the **only** identifier that can directly access a deferred message
+
+**Common Misconceptions:**
+
+| Answer | Why It's Wrong |
+|--------|----------------|
+| **Correlation ID** | The correlation ID is a user-defined property for correlating related messages but **cannot** be used to retrieve deferred messages directly. |
+| **Lock Token** | The lock token is used for renewing locks and completing messages but **cannot** be used to retrieve deferred messages from the queue. |
+| **Session ID** | The session ID is used for message sessions and grouping related messages but is **not** used for retrieving individual deferred messages. |
+
+#### Deferred vs Dead-Lettered Messages
+
+| Aspect | Deferred Messages | Dead-Lettered Messages |
+|--------|-------------------|------------------------|
+| **Location** | Remain in the queue (deferred state) | Moved to dead-letter subqueue |
+| **Retrieval** | By sequence number only | By receiving from DLQ like a normal queue |
+| **Purpose** | Temporary postponement; intent to process later | Failed/poison messages; may need manual intervention |
+| **Automatic Movement** | No (explicitly deferred by application) | Can be automatic (max delivery count, TTL) |
+| **Visibility** | Not visible to regular receive operations | Visible in DLQ via receiver |
+
+#### Best Practices
+- **Always persist the sequence number** in a durable store (database, cache) when deferring messages
+- Use deferral for **temporary** processing delays, not permanent storage
+- Consider implementing a background process to periodically check and process deferred messages
+- Monitor deferred message counts to prevent buildup
+- Set appropriate message TTL to ensure deferred messages don't remain indefinitely
 
 ## 4. Data Integration Model: Push-Pull (Hybrid)
 
