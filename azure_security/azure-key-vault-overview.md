@@ -24,6 +24,11 @@
   - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-2)
   - [Permission Model Comparison](#permission-model-comparison)
   - [Key Takeaway](#key-takeaway-2)
+- [Question 4: FIPS 140-3 Level 3 Validation Requirements](#question-4-fips-140-3-level-3-validation-requirements)
+  - [Explanation](#explanation-3)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-3)
+  - [Key Vault vs Managed HSM Comparison](#key-vault-vs-managed-hsm-comparison)
+  - [Key Takeaway](#key-takeaway-3)
 
 ## Overview
 
@@ -79,10 +84,24 @@ Azure Key Vault has specific properties that control integration with other Azur
 
 ### Pricing Tiers
 
-| Tier | Features | Key Protection |
-|------|----------|----------------|
-| **Standard** | Secrets, keys, certificates | Software-protected keys |
-| **Premium** | All Standard features + HSM-backed keys | HSM-protected keys (FIPS 140-2 Level 2) |
+| Tier | Features | Key Protection | FIPS Validation |
+|------|----------|----------------|----------------|
+| **Standard** | Secrets, keys, certificates | Software-protected keys | N/A |
+| **Premium** | All Standard features + HSM-backed keys | HSM-protected keys | FIPS 140-3 Level 3 |
+
+### Azure Managed HSM
+
+Azure Managed HSM is a fully managed, highly available, single-tenant HSM service for scenarios requiring the highest level of security and compliance.
+
+| Feature | Azure Key Vault Premium | Azure Managed HSM |
+|---------|------------------------|-------------------|
+| **HSM Type** | Multi-tenant | Single-tenant, dedicated |
+| **FIPS Validation** | FIPS 140-3 Level 3 | FIPS 140-3 Level 3 |
+| **Key Control** | Microsoft manages HSM | Customer controls HSM |
+| **Use Case** | Most enterprise scenarios | Regulatory/compliance requirements needing dedicated HSM |
+| **Pricing** | Per operation | Per HSM pool hour |
+
+> **Note:** Both Azure Key Vault Premium and Azure Managed HSM now support **FIPS 140-3 Level 3** validated HSMs after recent firmware updates. Previously, Key Vault Premium only supported FIPS 140-2 Level 2.
 
 ---
 
@@ -446,3 +465,89 @@ Azure RBAC Model (Secure):
 ### Key Takeaway
 
 When you need to prevent users with **Contributor** role from granting themselves data plane access to Key Vault, implement the **Azure RBAC permission model**. This model restricts permission management to **Owner** and **User Access Administrator** roles only, providing clear separation between security operations and administrative duties. The Access Policy model has a fundamental security limitation where anyone with `Microsoft.KeyVault/vaults/write` permission can grant themselves data plane access.
+
+---
+
+## Question 4: FIPS 140-3 Level 3 Validation Requirements
+
+**Scenario:**
+You need to choose between Azure Key Vault Premium and Azure Managed HSM for storing cryptographic keys. Your requirement is FIPS 140-3 Level 3 validation.
+
+**Question:**
+Which service should you use?
+
+**Options:**
+
+1. **Azure Managed HSM only** ❌ *Incorrect*
+
+2. **Azure Key Vault Premium only** ❌ *Incorrect*
+
+3. **Neither service supports this requirement** ❌ *Incorrect*
+
+4. **Either Azure Key Vault Premium or Azure Managed HSM** ✅ *Correct*
+
+### Explanation
+
+**Correct Answer: Either Azure Key Vault Premium or Azure Managed HSM**
+
+Both Azure Key Vault Premium and Azure Managed HSM now support **FIPS 140-3 Level 3** validated HSMs after recent firmware updates. This makes either service suitable for meeting FIPS 140-3 Level 3 compliance requirements.
+
+**FIPS 140-3 Level 3** provides:
+- Tamper-evident physical security mechanisms
+- Identity-based authentication
+- Physical or logical separation between interfaces
+- Protection against physical tampering attempts
+
+```
+FIPS 140-3 Level 3 Compliance Options:
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   ┌─────────────────────┐    ┌─────────────────────┐       │
+│   │  Key Vault Premium  │    │   Azure Managed HSM │       │
+│   │                     │    │                     │       │
+│   │  ✅ FIPS 140-3 L3   │    │  ✅ FIPS 140-3 L3   │       │
+│   │  Multi-tenant HSM   │    │  Single-tenant HSM  │       │
+│   │  Shared infra       │    │  Dedicated infra    │       │
+│   │  Lower cost         │    │  Higher cost        │       │
+│   └─────────────────────┘    └─────────────────────┘       │
+│                                                             │
+│   Both options meet FIPS 140-3 Level 3 requirements!        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Azure Managed HSM only** | While Azure Managed HSM supports FIPS 140-3 Level 3, Azure Key Vault Premium has also been upgraded to support the same validation level, so this is not the only option. |
+| **Azure Key Vault Premium only** | Azure Key Vault Premium supports FIPS 140-3 Level 3, but it's not the only option as Azure Managed HSM also provides the same validation level. |
+| **Neither service supports this requirement** | This is incorrect as both Azure Key Vault Premium and Azure Managed HSM have been upgraded to support FIPS 140-3 Level 3 validated HSMs. |
+
+### Key Vault vs Managed HSM Comparison
+
+| Feature | Azure Key Vault Premium | Azure Managed HSM |
+|---------|------------------------|-------------------|
+| **FIPS 140-3 Level 3** | ✅ Yes | ✅ Yes |
+| **HSM Type** | Multi-tenant (shared) | Single-tenant (dedicated) |
+| **Key Sovereignty** | Keys in shared HSM pool | Full control over HSM |
+| **Regulatory Compliance** | Most compliance needs | Strictest compliance requirements |
+| **Cost Model** | Per-operation pricing | Per HSM pool hour |
+| **Best For** | General enterprise use | Financial services, government, healthcare |
+
+### When to Choose Each Option
+
+**Choose Azure Key Vault Premium when:**
+- You need FIPS 140-3 Level 3 compliance at lower cost
+- Multi-tenant HSM infrastructure is acceptable
+- You have standard enterprise security requirements
+
+**Choose Azure Managed HSM when:**
+- You need single-tenant, dedicated HSM infrastructure
+- Regulations require full key sovereignty
+- You need to bring your own key (BYOK) with full control
+- You have the strictest compliance requirements (e.g., PCI DSS, HIPAA)
+
+### Key Takeaway
+
+For **FIPS 140-3 Level 3** validation requirements, you can use **either Azure Key Vault Premium or Azure Managed HSM**. Both services have been upgraded to support FIPS 140-3 Level 3 validated HSMs. The choice between them depends on other requirements such as key sovereignty, dedicated vs. shared infrastructure, cost considerations, and specific regulatory compliance needs.
