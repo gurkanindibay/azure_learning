@@ -624,6 +624,69 @@ Expression D: 5 * * * 1-5
 
 ---
 
+##### Practice Question: Timer Trigger - Daily Execution at Specific Time
+
+**Question:**
+
+You have a timer-triggered Azure Functions app that must run exactly at 2:30 AM UTC every day. Which CRON expression should you use in the function.json binding?
+
+**Options:**
+
+A) `0 2 30 * * *`
+
+B) `30 2 * * *`
+
+C) `* 30 2 * * *`
+
+D) `0 30 2 * * *` ✅
+
+---
+
+**Correct Answer: D) `0 30 2 * * *`**
+
+---
+
+**Explanation:**
+
+Azure Functions uses a **six-field CRON format** (NCRONTAB) where the fields represent:
+```
+{second} {minute} {hour} {day} {month} {day-of-week}
+```
+
+| Option | Expression | Why Correct/Incorrect |
+|--------|------------|----------------------|
+| **A) `0 2 30 * * *`** | 0 seconds, 2 minutes, 30 hours | ❌ Incorrect - This expression would attempt to run at 2:00 AM on the 30th day of each month (interpreting 30 as day field due to invalid hour value), not at 2:30 AM daily. The hour and day fields are incorrectly positioned. |
+| **B) `30 2 * * *`** | 5-field format | ❌ Incorrect - This is a five-field CRON expression missing the seconds field. Azure Functions requires a six-field CRON expression (NCRONTAB format), so this format would not be valid. |
+| **C) `* 30 2 * * *`** | Every second at 2:30 | ❌ Incorrect - Using `*` for seconds means the function would trigger every second during the minute 2:30 AM, resulting in 60 executions instead of one single execution. |
+| **D) `0 30 2 * * *`** | 0 seconds, 30 minutes, 2 hours | ✅ **Correct** - This CRON expression represents '0 seconds, 30 minutes, 2 hours' which translates to exactly 2:30:00 AM every day. The wildcards `*` for day, month, and day-of-week ensure it runs every day. |
+
+**Visual Breakdown of the Correct Expression:**
+
+```
+0 30 2 * * *
+│ │  │ │ │ │
+│ │  │ │ │ └── Day of week: * (every day of the week)
+│ │  │ │ └──── Month: * (every month)
+│ │  │ └────── Day: * (every day of the month)
+│ │  └──────── Hour: 2 (2 AM)
+│ └─────────── Minute: 30 (30 minutes)
+└───────────── Second: 0 (0 seconds)
+
+Result: Runs at exactly 02:30:00 AM UTC every day
+```
+
+**Common CRON Mistakes:**
+
+| Mistake | Problem |
+|---------|---------|
+| Using 5-field format | Azure Functions requires 6 fields (includes seconds) |
+| Swapping hour and minute | Results in wrong execution time |
+| Using `*` for seconds | Causes 60 executions per minute instead of 1 |
+
+**Reference:** [Timer trigger for Azure Functions - NCRONTAB expressions](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer?tabs=csharp#ncrontab-expressions)
+
+---
+
 ##### Timer Trigger - TimerInfo Object
 
 When using a Timer Trigger, the function receives a `TimerInfo` object that provides information about the timer invocation. This object includes useful properties for handling late executions.
