@@ -9,6 +9,13 @@
   - [How It Works](#how-it-works)
   - [Integration Points](#integration-points)
   - [Pricing Considerations](#pricing-considerations)
+- [Telemetry Pipeline Components: Initializers, Processors, and Channels](#telemetry-pipeline-components-initializers-processors-and-channels)
+  - [Telemetry Pipeline Architecture](#telemetry-pipeline-architecture)
+  - [Telemetry Initializers](#telemetry-initializers)
+  - [Telemetry Processors](#telemetry-processors)
+  - [Telemetry Channels](#telemetry-channels)
+  - [Decision Guide: Which Component to Use](#decision-guide-which-component-to-use)
+  - [Quick Reference Summary](#quick-reference-summary)
 - [Question 1: Telemetry Data Types for User Activity Tracking](#question-1-telemetry-data-types-for-user-activity-tracking)
   - [Explanation](#explanation)
   - [Why Other Options Are Incorrect](#why-other-options-are-incorrect)
@@ -82,6 +89,12 @@
   - [Telemetry Initializer Implementation Example](#telemetry-initializer-implementation-example)
   - [Key Takeaway](#key-takeaway-11)
   - [Related Learning Resources](#related-learning-resources-11)
+- [Question 13: Filtering Telemetry to Exclude Successful Dependency Calls](#question-13-filtering-telemetry-to-exclude-successful-dependency-calls)
+  - [Explanation](#explanation-12)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-11)
+  - [Telemetry Processor Implementation Example](#telemetry-processor-implementation-example)
+  - [Key Takeaway](#key-takeaway-12)
+  - [Related Learning Resources](#related-learning-resources-12)
 
 ## Overview
 
@@ -145,6 +158,263 @@ Application Insights collects several types of telemetry:
 - **Daily cap**: Set limits to control costs
 - **Data retention**: 90 days included, up to 730 days available
 - **Free tier**: 5 GB per month included with Azure subscription
+
+---
+
+## Telemetry Pipeline Components: Initializers, Processors, and Channels
+
+Understanding when to use **Telemetry Initializers**, **Telemetry Processors**, and **Telemetry Channels** is crucial for effectively customizing Application Insights telemetry. Each component serves a specific purpose in the telemetry pipeline.
+
+### Telemetry Pipeline Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        TELEMETRY PIPELINE                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Telemetry Created (Request, Dependency, Exception, Event, Metric, Trace)
+         │
+         ▼
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  1. TELEMETRY INITIALIZERS (ITelemetryInitializer)                   │
+  │  ────────────────────────────────────────────────────────────────────│
+  │  ✅ ENRICH: Add/modify properties on ALL telemetry                   │
+  │  ❌ CANNOT: Filter, drop, or exclude telemetry                       │
+  │  📍 Runs: FIRST in pipeline, before any processing                   │
+  └────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ▼
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  2. TELEMETRY PROCESSORS (ITelemetryProcessor)                       │
+  │  ────────────────────────────────────────────────────────────────────│
+  │  ✅ FILTER: Drop/exclude specific telemetry items                    │
+  │  ✅ MODIFY: Change telemetry based on conditions                     │
+  │  ✅ SAMPLE: Implement custom sampling logic                          │
+  │  📍 Runs: AFTER initializers, in registration order                  │
+  └────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ▼
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  3. TELEMETRY CHANNEL (ITelemetryChannel)                            │
+  │  ────────────────────────────────────────────────────────────────────│
+  │  ✅ BUFFER: Queue telemetry for batch transmission                   │
+  │  ✅ TRANSMIT: Send telemetry to Application Insights                 │
+  │  ✅ RETRY: Handle transmission failures and retries                  │
+  │  ❌ CANNOT: Filter based on telemetry content/properties             │
+  │  📍 Runs: LAST in pipeline, handles delivery                         │
+  └────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ▼
+                    Application Insights Service
+```
+
+### Telemetry Initializers
+
+**When to Use: ENRICHMENT**
+
+Use Telemetry Initializers when you need to **add or modify properties on ALL telemetry** before any processing occurs.
+
+| Use Case | Example |
+|----------|--------|
+| Add environment info to all telemetry | `Environment = "Production"` |
+| Set cloud role name for service identification | `Cloud.RoleName = "OrderService"` |
+| Add application version | `AppVersion = "2.1.0"` |
+| Add tenant/customer context | `TenantId = "customer-123"` |
+| Add deployment information | `DeploymentId = "deploy-456"` |
+| Add correlation IDs from headers | `CorrelationId = Request.Headers["X-Correlation-Id"]` |
+| Add user context | `UserId = HttpContext.User.Identity.Name` |
+
+**Key Characteristics:**
+- ✅ Runs on **every telemetry item** automatically
+- ✅ Executes **before** processors and sampling
+- ✅ Can modify any telemetry property
+- ❌ **Cannot filter or drop** telemetry items
+- ❌ Cannot prevent telemetry from being sent
+
+**Implementation Example:**
+
+```csharp
+public class CustomTelemetryInitializer : ITelemetryInitializer
+{
+    public void Initialize(ITelemetry telemetry)
+    {
+        // Add properties to ALL telemetry types
+        if (telemetry is ISupportProperties props)
+        {
+            props.Properties["Environment"] = "Production";
+            props.Properties["AppVersion"] = "2.1.0";
+        }
+        
+        // Set cloud role for Application Map
+        telemetry.Context.Cloud.RoleName = "MyService";
+    }
+}
+
+// Registration
+services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
+```
+
+### Telemetry Processors
+
+**When to Use: FILTERING, SAMPLING, or CONDITIONAL MODIFICATION**
+
+Use Telemetry Processors when you need to **filter out, sample, or conditionally modify** telemetry items.
+
+| Use Case | Example |
+|----------|--------|
+| Exclude successful dependency calls | Filter where `dependency.Success == true` |
+| Drop health check requests | Filter requests to `/health` or `/ping` |
+| Exclude specific telemetry types | Drop all trace telemetry |
+| Implement custom sampling logic | Sample 10% of successful requests |
+| Redact sensitive data | Remove PII before transmission |
+| Filter by response code | Exclude 404 responses |
+| Conditional enrichment | Add properties only to failed requests |
+
+**Key Characteristics:**
+- ✅ **Can filter and drop** telemetry items
+- ✅ Runs in a **chain** - order matters
+- ✅ Executes **after** initializers
+- ✅ Can **reduce costs** by dropping telemetry before transmission
+- ✅ Can implement **custom sampling** logic
+- ⚠️ Must call `Next.Process(item)` to pass telemetry forward
+
+**Implementation Example:**
+
+```csharp
+public class FilteringTelemetryProcessor : ITelemetryProcessor
+{
+    private readonly ITelemetryProcessor _next;
+
+    public FilteringTelemetryProcessor(ITelemetryProcessor next)
+    {
+        _next = next;
+    }
+
+    public void Process(ITelemetry item)
+    {
+        // FILTER: Exclude successful dependency calls
+        if (item is DependencyTelemetry dep && dep.Success == true)
+        {
+            return; // Don't call _next.Process() = DROP this item
+        }
+
+        // FILTER: Exclude health check requests
+        if (item is RequestTelemetry req && req.Url?.AbsolutePath == "/health")
+        {
+            return; // DROP
+        }
+
+        // CONDITIONAL MODIFICATION: Add property only to failures
+        if (item is RequestTelemetry failedReq && failedReq.Success == false)
+        {
+            ((ISupportProperties)failedReq).Properties["NeedsReview"] = "true";
+        }
+
+        // Pass to next processor in chain
+        _next.Process(item);
+    }
+}
+
+// Registration (order matters!)
+services.AddApplicationInsightsTelemetryProcessor<FilteringTelemetryProcessor>();
+```
+
+### Telemetry Channels
+
+**When to Use: TRANSMISSION CONFIGURATION**
+
+Use Telemetry Channels when you need to **control how telemetry is buffered and transmitted** to Application Insights.
+
+| Use Case | Example |
+|----------|--------|
+| Adjust buffer size | Change from default 500 items |
+| Configure transmission interval | Send every 30 seconds vs immediate |
+| Handle offline scenarios | Store telemetry when network unavailable |
+| Synchronous sending | For console apps that exit quickly |
+| Custom retry logic | Different retry policies |
+
+**Key Characteristics:**
+- ✅ Controls **buffering and batching** of telemetry
+- ✅ Handles **network transmission** to Application Insights
+- ✅ Manages **retry logic** for failed transmissions
+- ❌ **Cannot filter** based on telemetry content or properties
+- ❌ **Cannot access** telemetry properties for decisions
+- 📍 Runs **last** in the pipeline
+
+**Built-in Channels:**
+
+| Channel | Description | Use Case |
+|---------|-------------|----------|
+| `InMemoryChannel` | Buffers in memory, sends asynchronously | Default for most applications |
+| `ServerTelemetryChannel` | Persistent storage, better reliability | Production web apps |
+
+**Configuration Example:**
+
+```csharp
+// Configure ServerTelemetryChannel
+services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = "your-connection-string";
+});
+
+services.ConfigureTelemetryModule<ServerTelemetryChannel>((channel, options) =>
+{
+    // How long to wait before sending buffered telemetry
+    channel.SendingInterval = TimeSpan.FromSeconds(30);
+    
+    // Max items to buffer before forced send
+    channel.MaxTelemetryBufferCapacity = 1000;
+    
+    // Folder for persistent storage (reliability)
+    channel.StorageFolder = "/tmp/telemetry";
+});
+```
+
+### Decision Guide: Which Component to Use
+
+```
+                    What do you need to do?
+                            │
+            ┌───────────────┼───────────────┐
+            ▼               ▼               ▼
+    Add properties    Filter/Drop     Control how
+    to ALL telemetry  telemetry       data is sent
+            │               │               │
+            ▼               ▼               ▼
+    ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+    │  TELEMETRY    │ │  TELEMETRY    │ │  TELEMETRY    │
+    │  INITIALIZER  │ │  PROCESSOR    │ │  CHANNEL      │
+    └───────────────┘ └───────────────┘ └───────────────┘
+```
+
+| Question | Answer | Use |
+|----------|--------|-----|
+| Do you need to add properties to **all** telemetry? | Yes | **Initializer** |
+| Do you need to **exclude/filter** specific telemetry? | Yes | **Processor** |
+| Do you need to **reduce telemetry volume** and costs? | Yes | **Processor** |
+| Do you need **custom sampling** logic? | Yes | **Processor** |
+| Do you need to **conditionally modify** telemetry? | Yes | **Processor** |
+| Do you need to control **transmission/buffering**? | Yes | **Channel** |
+| Do you need to handle **offline storage**? | Yes | **Channel** |
+| Can the component prevent telemetry from being sent? | Initializer: ❌ No, Processor: ✅ Yes, Channel: ❌ No | - |
+
+### Quick Reference Summary
+
+| Aspect | Initializer | Processor | Channel |
+|--------|------------|-----------|----------|
+| **Primary Purpose** | Enrich telemetry | Filter/modify telemetry | Transmit telemetry |
+| **Can Add Properties** | ✅ Yes | ✅ Yes | ❌ No |
+| **Can Filter/Drop** | ❌ No | ✅ Yes | ❌ No |
+| **Can Reduce Costs** | ❌ No | ✅ Yes | ❌ No |
+| **Execution Order** | First | Second | Last |
+| **Interface** | `ITelemetryInitializer` | `ITelemetryProcessor` | `ITelemetryChannel` |
+| **Affects All Telemetry** | ✅ Always | ⚠️ If passed through | ✅ Always |
+| **Common Use Cases** | Cloud role, version, environment | Exclude health checks, filter successful calls, sampling | Buffer size, send interval |
+
+**Remember:**
+- **Initializers** = ENRICH (add data to everything)
+- **Processors** = FILTER (drop/modify selectively)
+- **Channels** = TRANSMIT (control delivery)
 
 ---
 
@@ -1241,3 +1511,140 @@ When you need to add custom properties that appear across **all telemetry types*
 - ITelemetryInitializer interface documentation
 - Application Insights for ASP.NET Core applications
 - Custom telemetry data in Application Insights
+
+---
+
+## Question 13: Filtering Telemetry to Exclude Successful Dependency Calls
+
+**Scenario:**
+You are troubleshooting an Application Insights-enabled web application. Failed dependency calls are consuming excessive telemetry volume.
+
+**Requirement:**
+You need to exclude successful dependency calls while keeping all other telemetry.
+
+**Question:**
+Where should you implement this filtering?
+
+**Options:**
+
+1. **In the Application Insights portal using continuous export filters** ❌ *Incorrect*
+2. **In a telemetry processor after telemetry initializers** ✅ *Correct*
+3. **In the telemetry channel configuration** ❌ *Incorrect*
+4. **In a telemetry initializer before telemetry processors** ❌ *Incorrect*
+
+### Explanation
+
+**Correct Answer: In a telemetry processor after telemetry initializers**
+
+Telemetry processors run after initializers and are designed for filtering telemetry before it's sent. Implementing the logic here allows you to examine the success property of dependency telemetry and exclude successful calls while preserving all other telemetry types.
+
+### Why Other Options Are Incorrect
+
+- **In the Application Insights portal using continuous export filters**: Continuous export filters affect only exported data, not the telemetry ingestion itself. This wouldn't reduce telemetry volume or associated costs at the source.
+- **In the telemetry channel configuration**: Telemetry channels handle buffering and transmission but don't provide filtering capabilities based on telemetry properties like success status. Filtering must be implemented at the processor level.
+- **In a telemetry initializer before telemetry processors**: Telemetry initializers are meant for enriching telemetry with additional properties, not for filtering. They cannot prevent telemetry from being sent, making them inappropriate for excluding specific telemetry items.
+
+### Telemetry Processor Implementation Example
+
+```csharp
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
+
+public class SuccessfulDependencyFilter : ITelemetryProcessor
+{
+    private ITelemetryProcessor Next { get; set; }
+
+    public SuccessfulDependencyFilter(ITelemetryProcessor next)
+    {
+        this.Next = next;
+    }
+
+    public void Process(ITelemetry item)
+    {
+        // Check if the telemetry is a dependency call
+        if (item is DependencyTelemetry dependency)
+        {
+            // Filter out successful dependency calls
+            if (dependency.Success == true)
+            {
+                // Don't pass to next processor - effectively filtering it out
+                return;
+            }
+        }
+
+        // Pass all other telemetry (including failed dependencies) to next processor
+        this.Next.Process(item);
+    }
+}
+```
+
+**Registration in ASP.NET Core:**
+
+```csharp
+// In Program.cs or Startup.cs
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddApplicationInsightsTelemetryProcessor<SuccessfulDependencyFilter>();
+```
+
+**Registration in .NET Framework:**
+
+```csharp
+// In ApplicationInsights.config
+<TelemetryProcessors>
+    <Add Type="YourNamespace.SuccessfulDependencyFilter, YourAssemblyName" />
+</TelemetryProcessors>
+```
+
+### Telemetry Pipeline Processing Order
+
+```
+Telemetry Created (Request, Dependency, Exception, Event, Metric, etc.)
+       │
+       ▼
+┌─────────────────────────────────────┐
+│  Telemetry Initializers             │  ← ENRICH telemetry (add properties)
+│  └── Cannot filter/exclude items    │     - Add custom properties
+│                                     │     - Set cloud role name
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│  Telemetry Processors               │  ← FILTER telemetry here!
+│  ┌─────────────────────────────┐    │     - Exclude successful deps ✓
+│  │ SuccessfulDependencyFilter  │────┼───► Can prevent items from being sent
+│  │ Sampling Processor          │    │
+│  │ Other Custom Processors     │    │
+│  └─────────────────────────────┘    │
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│  Telemetry Channel                  │  ← TRANSMIT telemetry
+│  └── Buffering and sending only     │     - No filtering capability
+└───────────────┬─────────────────────┘
+                │
+                ▼
+       Application Insights Service
+```
+
+### Comparison: Initializers vs Processors
+
+| Aspect | Telemetry Initializer | Telemetry Processor |
+|--------|----------------------|--------------------|
+| **Purpose** | Enrich/modify telemetry | Filter/sample/modify telemetry |
+| **Can exclude items** | ❌ No | ✅ Yes |
+| **Execution order** | First | After initializers |
+| **Interface** | `ITelemetryInitializer` | `ITelemetryProcessor` |
+| **Use case** | Add properties to all telemetry | Exclude specific telemetry types |
+| **Cost impact** | No reduction | Can reduce ingestion costs |
+
+### Key Takeaway
+
+When you need to **filter out** or **exclude** specific telemetry items (like successful dependency calls) to reduce telemetry volume and costs, implement a **telemetry processor** (`ITelemetryProcessor`). Processors run after initializers and can prevent telemetry from being sent by simply not calling `this.Next.Process(item)`. This is the only place in the SDK pipeline where you can effectively exclude telemetry before it's transmitted to Application Insights.
+
+### Related Learning Resources
+- Filtering and preprocessing telemetry in Application Insights SDK
+- ITelemetryProcessor interface documentation
+- Sampling in Application Insights
+- Reduce telemetry volume in Application Insights
