@@ -170,6 +170,45 @@ Event Grid supports multiple schemas for event data:
 - **CloudEvents Schema:** An open standard (CNCF) for describing event data, enabling interoperability across different cloud providers and platforms.
 - **Custom Input Schema:** Allows mapping custom JSON fields to Event Grid requirements, useful when you cannot change the event publisher's format.
 
+#### Schema Transformation in Event Subscriptions
+
+Azure Event Grid supports schema transformation between different formats at the event subscription level:
+
+| Input Schema | Supported Output Schemas |
+|--------------|-------------------------|
+| **Event Grid Schema** | Event Grid Schema, CloudEvents v1.0 |
+| **CloudEvents v1.0** | Event Grid Schema, CloudEvents v1.0 |
+| **Custom Input Schema** | Event Grid Schema, CloudEvents v1.0, Custom Schema |
+
+**Key Points:**
+- **System Topics:** Automatically use Event Grid schema for Azure service events and cannot be changed at the source.
+- **Output Schema Configuration:** Set the output schema in the event subscription to transform events before delivery.
+- **Native Transformation:** Event Grid handles schema conversion natively—no intermediary services (like Azure Functions) are needed.
+
+#### Practice Question: Schema Transformation Between Topics and Handlers
+
+**Question:** You are configuring Event Grid to forward events between different schemas. A system topic uses Event Grid schema and needs to send events to a handler expecting CloudEvents format. What should you configure?
+
+| Option | Description |
+|--------|-------------|
+| A | Use an Azure Function to transform the schema |
+| B | Create a custom topic with CloudEvents input schema |
+| C | Set the output schema to CloudEvents in the event subscription |
+| D | Convert events to CloudEvents format before publishing |
+
+<details>
+<summary>Answer</summary>
+
+**Correct Answer: C**
+
+**Explanation:**
+- **Option A (Incorrect):** While possible, using an intermediary Function adds unnecessary complexity when Event Grid natively supports schema transformation in event subscriptions.
+- **Option B (Incorrect):** System topics are created in the same Azure subscription that has the event source and cannot be replaced with custom topics for Azure service events.
+- **Option C (Correct):** Azure Event Grid supports transformation when using CloudEvents and Event Grid formats as an input schema in topics and as an output schema in event subscriptions, allowing schema conversion at the subscription level.
+- **Option D (Incorrect):** System topics automatically use Event Grid schema for Azure service events and cannot be changed at the source, so pre-conversion is not possible.
+
+</details>
+
 ### Retry & Retry Policies
 When Event Grid fails to deliver an event to an endpoint, it retries based on a schedule:
 - **Schedule:** It uses an exponential backoff policy (e.g., 10s, 30s, 1m, 5m, 10m, 30m, 1h) up to 24 hours.
