@@ -14,6 +14,12 @@
   - [Soft Delete for Blobs](#soft-delete-for-blobs)
   - [Soft Delete for Containers](#soft-delete-for-containers)
 - [Blob Versioning](#blob-versioning)
+- [Change Feed](#change-feed)
+  - [What is Change Feed?](#what-is-change-feed)
+  - [Key Characteristics](#key-characteristics-1)
+  - [Supported Storage Account Types](#supported-storage-account-types)
+  - [Change Feed vs Event Grid](#change-feed-vs-event-grid)
+  - [How to Enable](#how-to-enable-1)
 - [Azure Backup for Blobs](#azure-backup-for-blobs)
 - [Immutable Storage for Blob Data](#immutable-storage-for-blob-data)
   - [Time-Based Retention Policy](#time-based-retention-policy)
@@ -36,6 +42,7 @@ Azure Storage provides multiple data protection features to help you recover fro
 | **Soft Delete for Blobs** | Individual blobs | Retain deleted blobs | Recover deleted blobs |
 | **Soft Delete for Containers** | Containers | Retain deleted containers | Recover deleted containers |
 | **Blob Versioning** | Individual blobs | Maintain previous versions | Track and restore previous versions |
+| **Change Feed** | Storage account | Ordered change log | Auditing, compliance, data replication |
 | **Azure Backup** | Storage account | Operational backup | Enterprise backup solution |
 
 ## Point-in-Time Restore
@@ -218,6 +225,153 @@ az storage account blob-service-properties update \
     --account-name <storage-account-name> \
     --resource-group <resource-group-name> \
     --enable-versioning true
+```
+
+## Change Feed
+
+### What is Change Feed?
+
+The **Change Feed** provides a persistent, ordered, read-only log of changes (creates, updates, and deletes) to blobs and blob metadata in your storage account. Change feed is essential for:
+
+- **Auditing and compliance**: Maintain an ordered log of all changes for regulatory requirements
+- **Data replication**: Synchronize data to another storage account or external system
+- **Analytics and reporting**: Track blob modifications for business intelligence
+- **Event-driven processing**: Process changes asynchronously in the correct order
+- **Point-in-time restore prerequisite**: Required for enabling point-in-time restore
+
+> 💡 **Key Concept**: Change feed is different from Event Grid. Change feed provides a **durable, ordered log** for processing changes, while Event Grid provides **real-time notifications** for triggering actions.
+
+### Key Characteristics
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Ordered Log** | Changes are recorded in the order they occur within a partition |
+| **Persistent Storage** | Stored as blobs in a special `$blobchangefeed` container |
+| **Retention Period** | Configurable retention (minimum 1 day, no maximum limit) |
+| **Read-Only** | Cannot be modified; append-only log |
+| **Apache Avro Format** | Records stored in Avro format for efficient processing |
+| **Partitioned** | Organized by hour for efficient querying |
+
+**Events Captured:**
+
+| Event Type | Description |
+|------------|-------------|
+| **BlobCreated** | A blob was created or replaced |
+| **BlobDeleted** | A blob was deleted |
+| **BlobPropertiesUpdated** | Blob properties were modified |
+| **BlobSnapshotCreated** | A snapshot was created |
+| **BlobTierChanged** | Blob access tier was changed |
+
+### Supported Storage Account Types
+
+| Storage Account Type | Change Feed Support |
+|---------------------|---------------------|
+| **Standard general-purpose v2** | ✅ Supported |
+| **Premium block blob** | ✅ Supported |
+| **Standard Blob storage** | ✅ Supported |
+| **General-purpose v1** | ❌ Not Supported (upgrade to v2) |
+| **Premium page blob** | ❌ Not Supported |
+| **Premium file share** | ❌ Not Supported |
+| **Data Lake Storage Gen2 (HNS enabled)** | ❌ Not Supported |
+
+> ⚠️ **Important**: Accounts with hierarchical namespace (HNS) enabled do NOT support change feed.
+
+### Change Feed vs Event Grid
+
+| Feature | Change Feed | Event Grid |
+|---------|-------------|------------|
+| **Primary Purpose** | Audit log, change tracking, data replication | Real-time event notifications |
+| **Ordering Guarantee** | ✅ Ordered within partition | ❌ No ordering guarantee |
+| **Persistence** | ✅ Durable log retained for configured period | ❌ Events delivered once (fire-and-forget) |
+| **Processing Model** | Pull-based (you read the feed) | Push-based (events sent to subscribers) |
+| **Format** | Apache Avro | JSON (Event Grid Schema or CloudEvents) |
+| **Latency** | Minutes (near real-time) | Seconds (real-time) |
+| **Replay Capability** | ✅ Can reprocess historical changes | ❌ Cannot replay past events |
+| **Use Case** | Compliance, auditing, ordered processing | Trigger Functions, Logic Apps, webhooks |
+
+**When to Use Each:**
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| **Audit logging and compliance** | Change Feed |
+| **Real-time notifications** | Event Grid |
+| **Data replication to another system** | Change Feed |
+| **Trigger Azure Function on blob upload** | Event Grid |
+| **Process changes in strict order** | Change Feed |
+| **React immediately to events** | Event Grid |
+| **Replay historical changes** | Change Feed |
+| **Low-latency event processing** | Event Grid |
+
+### How to Enable
+
+**Azure Portal:**
+1. Navigate to your storage account
+2. Go to **Data protection** under **Data management**
+3. Enable **Change feed**
+4. Set the retention period (optional)
+
+**Azure CLI:**
+```bash
+# Enable change feed with default retention (infinite)
+az storage account blob-service-properties update \
+    --account-name <storage-account-name> \
+    --resource-group <resource-group-name> \
+    --enable-change-feed true
+
+# Enable change feed with specific retention (in days)
+az storage account blob-service-properties update \
+    --account-name <storage-account-name> \
+    --resource-group <resource-group-name> \
+    --enable-change-feed true \
+    --change-feed-retention-days 30
+```
+
+**PowerShell:**
+```powershell
+# Enable change feed
+Update-AzStorageBlobServiceProperty `
+    -ResourceGroupName <resource-group-name> `
+    -StorageAccountName <storage-account-name> `
+    -EnableChangeFeed $true
+
+# Enable with retention
+Update-AzStorageBlobServiceProperty `
+    -ResourceGroupName <resource-group-name> `
+    -StorageAccountName <storage-account-name> `
+    -EnableChangeFeed $true `
+    -ChangeFeedRetentionInDays 30
+```
+
+**Reading Change Feed (C# SDK):**
+```csharp
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.ChangeFeed;
+
+// Create a BlobServiceClient
+BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+
+// Get a BlobChangeFeedClient
+BlobChangeFeedClient changeFeedClient = blobServiceClient.GetChangeFeedClient();
+
+// Read all changes
+await foreach (BlobChangeFeedEvent changeFeedEvent in changeFeedClient.GetChangesAsync())
+{
+    Console.WriteLine($"Event Type: {changeFeedEvent.EventType}");
+    Console.WriteLine($"Blob Path: {changeFeedEvent.Subject}");
+    Console.WriteLine($"Event Time: {changeFeedEvent.EventTime}");
+    Console.WriteLine($"Event Data: {changeFeedEvent.EventData.BlobOperationName}");
+}
+
+// Read changes within a time range
+DateTimeOffset startTime = DateTimeOffset.UtcNow.AddDays(-7);
+DateTimeOffset endTime = DateTimeOffset.UtcNow;
+
+await foreach (BlobChangeFeedEvent changeFeedEvent in 
+    changeFeedClient.GetChangesAsync(start: startTime, end: endTime))
+{
+    // Process events from the last 7 days
+    Console.WriteLine($"{changeFeedEvent.EventTime}: {changeFeedEvent.EventType}");
+}
 ```
 
 ## Azure Backup for Blobs
@@ -633,6 +787,58 @@ Change feed is supported on **standard general-purpose v2**, **premium block blo
 | **Data Lake Storage Gen2 (HNS enabled)** | ❌ Not Supported |
 
 > 💡 **Exam Tip**: Change feed requires specific storage account types. Remember that hierarchical namespace (HNS) accounts and general-purpose v1 accounts do NOT support change feed. This is also important for point-in-time restore since it requires change feed to be enabled.
+
+**Domain:** Develop for Azure storage
+
+---
+
+### Question: Processing Blob Transaction Logs for Auditing
+
+**Question:**
+You have an Azure Storage account that stores transaction data as blobs. You need to read transaction logs of changes that occur to the blobs and blob metadata in the storage account. The transaction logs will be processed asynchronously and must be in the correct order for auditing purposes. What should you do?
+
+**Options:**
+- A) Process all Azure Blob storage events using Azure Event Grid with a subscriber Azure Function app
+- B) Enable the change feed on the storage account and process all changes for available events ✅
+- C) Process all Azure Storage Analytics logs for successful blob events
+- D) Use the Azure Monitor HTTP Data Collector API and scan the request body for successful blob events
+
+**Correct Answer: B) Enable the change feed on the storage account and process all changes for available events**
+
+**Explanation:**
+Enabling the change feed on the storage account is the correct approach for processing all changes for available events. The change feed provides a **persistent, ordered, and durable log of changes** that occur to the blobs and blob metadata in the storage account. This ensures that the transaction logs are processed asynchronously, in the correct order, and retained for compliance reasons.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Event Grid with Azure Function** | While this is a valid approach for processing blob storage events, Event Grid is designed for **reactive, real-time event processing** rather than ordered auditing. Event Grid does not guarantee event ordering across partitions and is better suited for triggering actions on events rather than maintaining an ordered audit log. |
+| **Azure Storage Analytics logs** | Storage Analytics logs provide metrics and logs related to the **performance and availability** of the storage account, but they do not specifically track individual blob changes in the required order for auditing purposes. Analytics logs are focused on access patterns and diagnostics, not change tracking. |
+| **Azure Monitor HTTP Data Collector API** | The Azure Monitor API is primarily used for **collecting and analyzing monitoring data** from various Azure resources. It is not designed to track and process individual blob changes and does not provide the necessary functionality to maintain ordered change logs for auditing purposes. |
+
+**Change Feed vs Event Grid for Blob Changes:**
+
+| Feature | Change Feed | Event Grid |
+|---------|-------------|------------|
+| **Primary Purpose** | Audit log, change tracking | Real-time event notifications |
+| **Ordering Guarantee** | ✅ Ordered within partition key | ❌ No ordering guarantee |
+| **Persistence** | ✅ Durable log retained for configured period | ❌ Events delivered once |
+| **Processing Model** | Pull-based (you read the feed) | Push-based (events sent to subscribers) |
+| **Use Case** | Compliance, auditing, data replication | Trigger workflows, real-time processing |
+| **Replay Capability** | ✅ Can reprocess historical changes | ❌ Cannot replay past events |
+
+**When to Use Each:**
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| **Audit logging and compliance** | Change Feed |
+| **Real-time notifications** | Event Grid |
+| **Data replication to another system** | Change Feed |
+| **Trigger Azure Function on blob upload** | Event Grid |
+| **Process changes in order** | Change Feed |
+| **React immediately to events** | Event Grid |
+
+> 💡 **Exam Tip**: When the question mentions **auditing**, **compliance**, **ordered processing**, or **transaction logs**, think **Change Feed**. When the question mentions **real-time notifications**, **triggering functions**, or **event-driven processing**, think **Event Grid**.
 
 **Domain:** Develop for Azure storage
 
