@@ -3,6 +3,24 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Storage Account Types](#storage-account-types)
+  - [Standard General-Purpose v2](#standard-general-purpose-v2)
+  - [Premium Block Blobs](#premium-block-blobs)
+  - [Premium File Shares](#premium-file-shares)
+  - [Premium Page Blobs](#premium-page-blobs)
+- [Storage Account Types Comparison](#storage-account-types-comparison)
+- [Storage Redundancy Options](#storage-redundancy-options)
+  - [Locally Redundant Storage (LRS)](#locally-redundant-storage-lrs)
+  - [Zone-Redundant Storage (ZRS)](#zone-redundant-storage-zrs)
+  - [Geo-Redundant Storage (GRS)](#geo-redundant-storage-grs)
+  - [Read-Access Geo-Redundant Storage (RA-GRS)](#read-access-geo-redundant-storage-ra-grs)
+  - [Geo-Zone-Redundant Storage (GZRS)](#geo-zone-redundant-storage-gzrs)
+  - [Read-Access Geo-Zone-Redundant Storage (RA-GZRS)](#read-access-geo-zone-redundant-storage-ra-gzrs)
+- [Redundancy Options Comparison](#redundancy-options-comparison)
+  - [Durability and Availability](#durability-and-availability)
+  - [Outage Scenario Support](#outage-scenario-support)
+  - [Supported Services by Redundancy Type](#supported-services-by-redundancy-type)
+  - [Archive Tier Support by Storage Account Type](#archive-tier-support-by-storage-account-type)
 - [Available Access Tiers](#available-access-tiers)
   - [Hot Tier](#hot-tier)
   - [Cool Tier](#cool-tier)
@@ -46,6 +64,185 @@
 ## Overview
 
 Azure Blob Storage offers different access tiers to help you store blob object data in the most cost-effective manner based on how frequently the data is accessed. The access tier of a blob can be set at the blob level, allowing you to optimize costs based on your specific usage patterns.
+
+## Storage Account Types
+
+Azure Storage offers several types of storage accounts, each supporting different features with its own pricing model. Microsoft recommends using the Azure Resource Manager deployment model for all storage accounts.
+
+### Standard General-Purpose v2
+
+- **Supported Services**: Blob Storage (including Data Lake Storage), Queue Storage, Table Storage, and Azure Files
+- **Redundancy Options**: LRS, GRS, RA-GRS, ZRS, GZRS, RA-GZRS
+- **Use Case**: Standard storage account type for blobs, file shares, queues, and tables
+- **Recommendation**: Recommended for most scenarios using Azure Storage
+- **Note**: If you need NFS support in Azure Files, use Premium File Shares instead
+
+### Premium Block Blobs
+
+- **Supported Services**: Blob Storage (including Data Lake Storage) - Block blobs and append blobs only
+- **Redundancy Options**: LRS, ZRS
+- **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
+- **Use Case**: High transaction rates, smaller objects, or consistently low storage latency requirements
+- **Examples**: Real-time analytics, IoT data ingestion, gaming applications
+
+### Premium File Shares
+
+- **Supported Services**: Azure Files only
+- **Redundancy Options**: LRS, ZRS
+- **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
+- **Use Case**: Enterprise or high-performance scale applications
+- **Features**: Supports both SMB and NFS file shares
+
+### Premium Page Blobs
+
+- **Supported Services**: Page blobs only
+- **Redundancy Options**: LRS, ZRS
+- **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
+- **Use Case**: Azure IaaS disks for virtual machines, databases requiring random read/write operations
+
+## Storage Account Types Comparison
+
+| Account Type | Supported Services | Redundancy Options | Performance | Use Case |
+|-------------|-------------------|-------------------|-------------|----------|
+| **Standard GPv2** | Blobs, Files, Queues, Tables, Data Lake | LRS, ZRS, GRS, RA-GRS, GZRS, RA-GZRS | Standard | Most scenarios |
+| **Premium Block Blobs** | Block blobs, Append blobs | LRS, ZRS | Premium (SSD) | High transactions, low latency |
+| **Premium File Shares** | Azure Files | LRS, ZRS | Premium (SSD) | Enterprise file shares, SMB/NFS |
+| **Premium Page Blobs** | Page blobs | LRS, ZRS | Premium (SSD) | VM disks, databases |
+
+> **Important**: You cannot change a storage account to a different type after creation. To move data to a different account type, you must create a new account and copy the data.
+
+## Storage Redundancy Options
+
+Azure Storage maintains multiple copies of your data to protect against planned and unplanned events including hardware failures, network outages, power outages, and natural disasters.
+
+### Locally Redundant Storage (LRS)
+
+- **Replication**: Copies data synchronously within one or more availability zones in the primary region
+- **Durability**: At least 99.999999999% (11 nines) over a given year
+- **Availability**: At least 99.9% (99% for cool/cold/archive tiers)
+- **Cost**: Lowest-cost redundancy option
+- **Protection**: Protects against drive, server, and rack failures
+- **Limitation**: Does NOT protect against data center disasters (fire, flooding)
+
+**Best for**:
+- Data that can be easily reconstructed if lost
+- Data governance requirements restricting replication within a region
+- Development and testing environments
+
+### Zone-Redundant Storage (ZRS)
+
+- **Replication**: Copies data synchronously across three or more Azure availability zones in the primary region
+- **Durability**: At least 99.9999999999% (12 nines) over a given year
+- **Availability**: At least 99.9% (99% for cool/cold tiers)
+- **Protection**: Protects against zone-level failures while maintaining read/write access
+- **Limitation**: Does NOT protect against regional disasters
+
+**Best for**:
+- High availability scenarios
+- Azure Files workloads (no remounting required during zone failover)
+- Applications requiring data to stay within a specific region
+
+### Geo-Redundant Storage (GRS)
+
+- **Replication**: LRS in primary region + asynchronous copy to secondary region (using LRS)
+- **Durability**: At least 99.99999999999999% (16 nines) over a given year
+- **Availability**: At least 99.9% (99% for cool/cold/archive tiers)
+- **Secondary Region**: Data not accessible until failover occurs
+- **RPO**: Less than or equal to 15 minutes with Geo Priority Replication
+
+**Best for**:
+- Disaster recovery scenarios
+- Compliance requirements for geographic redundancy
+- Critical data requiring protection against regional outages
+
+### Read-Access Geo-Redundant Storage (RA-GRS)
+
+- **Replication**: Same as GRS
+- **Additional Feature**: Read access to secondary region (without failover)
+- **Availability**: At least 99.99% (99.9% for cool/cold/archive tiers) for read requests
+- **Secondary Endpoint**: `<account-name>-secondary.blob.core.windows.net`
+
+**Best for**:
+- Applications requiring high read availability
+- Read-heavy workloads that can leverage the secondary region
+- Business continuity with minimal downtime
+
+### Geo-Zone-Redundant Storage (GZRS)
+
+- **Replication**: ZRS in primary region + asynchronous copy to secondary region (using LRS)
+- **Durability**: At least 99.99999999999999% (16 nines) over a given year
+- **Availability**: At least 99.9% (99% for cool/cold tiers)
+- **Protection**: Maximum consistency, durability, availability, excellent performance, and disaster recovery resilience
+
+**Best for**:
+- Mission-critical applications
+- Maximum data protection requirements
+- Applications requiring both zone and regional redundancy
+
+### Read-Access Geo-Zone-Redundant Storage (RA-GZRS)
+
+- **Replication**: Same as GZRS
+- **Additional Feature**: Read access to secondary region (without failover)
+- **Availability**: At least 99.99% (99.9% for cool/cold tiers) for read requests
+- **Secondary Endpoint**: `<account-name>-secondary.blob.core.windows.net`
+
+**Best for**:
+- Highest availability requirements
+- Critical applications with read-heavy workloads
+- Enterprise applications requiring maximum protection
+
+## Redundancy Options Comparison
+
+### Durability and Availability
+
+| Parameter | LRS | ZRS | GRS/RA-GRS | GZRS/RA-GZRS |
+|-----------|-----|-----|------------|--------------|
+| **Durability (per year)** | 11 nines (99.999999999%) | 12 nines (99.9999999999%) | 16 nines (99.99999999999999%) | 16 nines (99.99999999999999%) |
+| **Read Availability** | 99.9% | 99.9% | 99.9% (GRS) / 99.99% (RA-GRS) | 99.9% (GZRS) / 99.99% (RA-GZRS) |
+| **Write Availability** | 99.9% | 99.9% | 99.9% | 99.9% |
+| **Zones in Primary** | 1+ | 3+ | 1+ | 3+ |
+| **Secondary Region** | ❌ | ❌ | ✅ | ✅ |
+| **Read from Secondary** | ❌ | ❌ | ❌ (GRS) / ✅ (RA-GRS) | ❌ (GZRS) / ✅ (RA-GZRS) |
+
+### Outage Scenario Support
+
+| Scenario | LRS | ZRS | GRS/RA-GRS | GZRS/RA-GZRS |
+|----------|-----|-----|------------|--------------|
+| Node unavailable | ✅ | ✅ | ✅ | ✅ |
+| Data center unavailable | ❌ | ✅ | ✅ (with failover) | ✅ |
+| Region-wide outage | ❌ | ❌ | ✅ (with failover) | ✅ (with failover) |
+| Read during primary outage | ❌ | ❌ | ❌ (GRS) / ✅ (RA-GRS) | ❌ (GZRS) / ✅ (RA-GZRS) |
+
+### Supported Services by Redundancy Type
+
+| Service | LRS | ZRS | GRS | RA-GRS | GZRS | RA-GZRS |
+|---------|-----|-----|-----|--------|------|---------|
+| **Blob Storage** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Queue Storage** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Table Storage** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Azure Files** | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| **Azure Managed Disks** | ✅ | ✅ (with limitations) | ❌ | ❌ | ❌ | ❌ |
+| **Archive Tier** | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
+
+> **Note**: Archive tier for Blob Storage is NOT supported for ZRS, GZRS, or RA-GZRS accounts.
+
+### Archive Tier Support by Storage Account Type
+
+Not all storage account types support the Archive access tier:
+
+| Storage Account Type | Archive Tier Support | Notes |
+|---------------------|---------------------|-------|
+| **Standard GPv2** | ✅ Yes | Only with LRS, GRS, or RA-GRS redundancy |
+| **Premium Block Blobs** | ❌ No | Premium accounts use SSDs, no archive tier |
+| **Premium File Shares** | ❌ No | Azure Files does not support archive tier |
+| **Premium Page Blobs** | ❌ No | Premium accounts use SSDs, no archive tier |
+
+**Key Archive Tier Restrictions:**
+- ⚠️ Archive tier is **ONLY available** for **Standard General-Purpose v2** storage accounts
+- ⚠️ Archive tier is **NOT supported** with zone-redundant options (ZRS, GZRS, RA-GZRS)
+- ✅ Archive tier works with **LRS, GRS, and RA-GRS** redundancy only
+- ❌ Premium storage accounts (Block Blobs, File Shares, Page Blobs) do **NOT** support archive tier
+- ❌ Azure Files does **NOT** support archive tier regardless of account type
 
 ## Available Access Tiers
 
