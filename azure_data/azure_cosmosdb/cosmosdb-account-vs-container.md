@@ -2247,6 +2247,26 @@ string resourceToken = response.Resource.Token;  // Use this token for limited a
 
 ---
 
+### Question 8: Secure Storage of Medical Records with Third-Party Download Protection
+
+**Question:** You are developing a medical records document management website. The website is used to store scanned copies of patient intake forms. If the stored intake forms are downloaded from storage by a third party the contents of the forms must not be compromised. You need to store the intake forms according to the requirements.
+
+**Proposed Solution:**
+1. Create an Azure Cosmos DB database with Storage Service Encryption enabled.
+2. Store the intake forms in the Azure Cosmos DB database.
+
+**Does the solution meet the goal?**
+
+**Your answer is incorrect:** Yes.
+
+**Explanation:** Azure Cosmos DB is a globally distributed, multi-model database service that supports document, key-value, graph, and column-family data models. While Azure Cosmos DB provides encryption at rest with Storage Service Encryption, it may not be the most suitable solution for storing scanned copies of patient intake forms with the requirement of ensuring the contents are not compromised when downloaded by a third party.
+
+**Correct Answer:** No.
+
+**Explanation:** While Azure Cosmos DB provides encryption at rest with Storage Service Encryption, it does not offer the level of control and security required to ensure that the contents of the intake forms are not compromised when downloaded by a third party. A more suitable solution for this scenario would involve using Azure Blob Storage with Azure Key Vault for encryption and access control.
+
+---
+
 ## Summary
 
 ### Database Account
