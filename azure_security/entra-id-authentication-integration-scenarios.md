@@ -2579,6 +2579,107 @@ Azure Portal → App Service → Authentication → Add identity provider → Mi
 
 ---
 
+### Exam Question 3: Group-Based Authorization for Azure Web Apps
+
+**Scenario:** You are developing a website that will run as an Azure Web App. Users will authenticate by using their Microsoft Entra ID credentials. You plan to assign users one of the following permission levels for the website: `admin`, `normal`, and `reader`. A user's Microsoft Entra ID group membership must be used to determine the permission level.
+
+You need to configure authorization.
+
+**Proposed Solution:** Configure and use Integrated Windows Authentication in the website. In the website, query Microsoft Graph API to load the group to which the user is a member.
+
+**Question:** Does the solution meet the goal?
+
+### Answer Analysis
+
+#### ❌ Correct Answer: No
+
+**Why this solution does NOT meet the goal:**
+
+1. **Integrated Windows Authentication (IWA) is NOT appropriate for Azure Web Apps:**
+   - IWA is designed for **desktop and mobile applications** running on domain-joined or Microsoft Entra joined Windows computers
+   - IWA relies on Kerberos authentication, which requires a domain environment
+   - Azure Web Apps are cloud-hosted and don't natively support IWA authentication flows
+   - IWA is not the recommended authentication method for web applications hosted in Azure
+
+2. **Querying Microsoft Graph API for group membership is suboptimal:**
+   - While technically possible, this approach adds unnecessary complexity
+   - Requires additional API calls after authentication
+   - Increases latency and potential points of failure
+   - Not aligned with Azure AD best practices for role-based authorization
+
+3. **Better Alternatives Exist:**
+   - **Azure AD App Roles**: Define application-specific roles (admin, normal, reader) in the app registration
+   - **Security Groups with Token Claims**: Configure the app to include group claims in the token
+   - **Claims-based authorization**: Process roles/groups directly from the ID token
+
+#### ✅ Recommended Approach: Azure AD App Roles or Security Groups in Token Claims
+
+**Option 1: Azure AD App Roles (Recommended)**
+
+```plaintext
+1. Define App Roles in Azure AD App Registration:
+   - Navigate to Azure Portal → App registrations → Your app
+   - Go to "App roles" → Create app role
+   - Create roles: "Admin", "Normal", "Reader"
+
+2. Assign Users/Groups to App Roles:
+   - Go to Enterprise Applications → Your app
+   - Select "Users and groups" → Add user/group
+   - Assign users or groups to the appropriate app role
+
+3. Configure App to Receive Role Claims:
+   - The 'roles' claim will automatically be included in the token
+```
+
+**Option 2: Security Groups in Token Claims**
+
+```plaintext
+1. Configure Token to Include Group Claims:
+   - App registrations → Your app → Token configuration
+   - Add optional claim → Select "groups"
+   - Choose claim type (Security groups, Directory roles, etc.)
+
+2. Map Groups to Permission Levels in Application:
+   - Read the 'groups' claim from the token
+   - Map group IDs to permission levels in your application logic
+```
+
+**Implementation Example (.NET):**
+```csharp
+// Using App Roles
+[Authorize(Roles = "Admin")]
+public IActionResult AdminDashboard()
+{
+    return View();
+}
+
+[Authorize(Roles = "Admin,Normal")]
+public IActionResult EditContent()
+{
+    return View();
+}
+
+[Authorize(Roles = "Admin,Normal,Reader")]
+public IActionResult ViewContent()
+{
+    return View();
+}
+```
+
+#### Why Integrated Windows Authentication is Wrong
+
+| Aspect | IWA | Azure AD with OpenID Connect |
+|--------|-----|------------------------------|
+| **Designed For** | On-premises/domain-joined devices | Cloud applications |
+| **Authentication Protocol** | Kerberos | OAuth 2.0 / OpenID Connect |
+| **Azure Web App Support** | ❌ Not natively supported | ✅ Fully supported |
+| **Group/Role Claims** | Requires additional queries | ✅ Built into token |
+| **Cloud-Native** | ❌ No | ✅ Yes |
+
+> **Exam Tip:** When asked about implementing group-based authorization for Azure Web Apps with Microsoft Entra ID, the answer is to use **Azure AD App Roles** or configure **group claims in tokens**. Integrated Windows Authentication is NOT appropriate for cloud-hosted web applications.
+
+---
+
 ## Summary and Key Takeaways
 
 ### Choose the Right Method
