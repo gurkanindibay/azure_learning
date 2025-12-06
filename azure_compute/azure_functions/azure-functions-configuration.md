@@ -44,6 +44,8 @@ Azure Functions use configuration files to define function behavior, triggers, b
   - [Practice Question](#practice-question-1)
   - [Custom Handlers vs Native Language Support](#custom-handlers-vs-native-language-support)
   - [Best Practices for Custom Handlers](#best-practices-for-custom-handlers)
+  - [Extension Bundles](#extension-bundles)
+  - [Practice Question: Rust Language Support and Blob Storage Connection](#practice-question-rust-language-support-and-blob-storage-connection)
 - [Function App Lifecycle and Cleanup Operations](#function-app-lifecycle-and-cleanup-operations)
   - [Handling Shutdown and Cleanup](#handling-shutdown-and-cleanup)
   - [Practice Question: Cleanup Operations During Shutdown](#practice-question-cleanup-operations-during-shutdown)
@@ -2193,6 +2195,60 @@ Which feature of Azure Functions allows you to use a runtime not currently suppo
 3. **Log effectively**: Include logs in the response for debugging
 4. **Use environment variables**: Read `FUNCTIONS_CUSTOMHANDLER_PORT` for the port to listen on
 5. **Test locally**: Use Azure Functions Core Tools for local development and testing
+
+### Extension Bundles
+
+**Extension bundles** are a deployment technology for Azure Functions that automatically adds a curated set of extension packages to your function app. This eliminates the need to manually install and manage individual extension packages.
+
+**Key Features:**
+- **Automatic Updates**: Extension bundles are updated regularly with the latest versions of extensions
+- **Simplified Deployment**: No need to include extension packages in your deployment package
+- **Declarative Configuration**: Extensions are declared in `host.json` rather than installed via NuGet
+- **Version Management**: Specify bundle versions to control which extensions are included
+
+**Configuration in host.json:**
+```json
+{
+  "version": "2.0",
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.*, 5.0.0)"
+  }
+}
+```
+
+**Benefits for Blob Storage Integration:**
+- Automatically includes Azure Storage extensions
+- Provides bindings for Blob triggers, input/output bindings
+- Enables declarative connection to Azure Blob Storage without manual package management
+- Supports connection strings and managed identity authentication
+
+### Practice Question: Rust Language Support and Blob Storage Connection
+
+**Question:**
+You are developing an Azure Function app. The app must meet the following requirements:
+- Enable developers to write the functions by using the Rust language
+- Declaratively connect to an Azure Blob Storage account
+
+You need to implement the app. Which Azure Function app features should you use?
+
+**Options:**
+
+1. ❌ **Enable developers to write the functions by using the Rust language: Hosting plan. Declaratively connect to an Azure Blob Storage account: Custom handler.**
+   - **Incorrect**: The hosting plan in Azure Functions determines how the functions are executed and scaled. It is not directly related to enabling developers to write functions in a specific language like Rust. Custom handlers are used to define custom behavior for function execution and are not specifically tied to language support. Therefore, this choice does not meet the requirements specified in the question.
+
+2. ❌ **Enable developers to write the functions by using the Rust language: Runtime. Declaratively connect to an Azure Blob Storage account: Policy.**
+   - **Incorrect**: The runtime in Azure Functions defines the programming language and version used to run the functions. While it is important for language support, it does not specifically enable developers to write functions in Rust. Policies in Azure Functions are used for authorization and access control, not for connecting to Azure Blob Storage. Therefore, this choice does not meet the requirements specified in the question.
+
+3. ❌ **Enable developers to write the functions by using the Rust language: Custom handler. Declaratively connect to an Azure Blob Storage account: Trigger.**
+   - **Incorrect**: Custom handlers in Azure Functions allow for customizing the function execution process, but they do not directly enable developers to write functions in a specific language like Rust. Triggers in Azure Functions are used to define the events that can start the execution of a function, not for connecting to Azure Blob Storage. Therefore, this choice does not meet the requirements specified in the question.
+
+4. ✅ **Enable developers to write the functions by using the Rust language: Custom handler. Declaratively connect to an Azure Blob Storage account: Extension bundle.**
+   - **Correct**: Using a custom handler in Azure Functions allows developers to define custom behavior for function execution, which can be used to support writing functions in Rust. Extension bundles in Azure Functions provide additional functionality and dependencies that can be used to connect to external services like Azure Blob Storage. Therefore, this choice meets the requirements specified in the question.
+
+**Explanation:**
+- **Custom Handler for Rust**: Custom handlers enable Azure Functions to work with any language that supports HTTP primitives, including Rust. The custom handler acts as a lightweight web server that receives events from the Azure Functions host and processes them using Rust code.
+- **Extension Bundle for Blob Storage**: Extension bundles automatically include Azure Storage extensions, providing declarative bindings for connecting to Azure Blob Storage without manual package installation.
 
 ## Function App Lifecycle and Cleanup Operations
 
