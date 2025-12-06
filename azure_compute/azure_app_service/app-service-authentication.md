@@ -17,6 +17,7 @@
   - [Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID](#question-1-blocking-unauthenticated-requests-with-microsoft-entra-id)
   - [Question 2: Token Validation in ASP.NET Core Web APIs](#question-2-token-validation-in-aspnet-core-web-apis)
   - [Question 3: Extending Session Expiration for App Service Authentication](#question-3-extending-session-expiration-for-app-service-authentication)
+  - [Question 4: TLS Mutual Authentication Client Certificate Validation](#question-4-tls-mutual-authentication-client-certificate-validation)
 - [Token Validation for Web APIs](#token-validation-for-web-apis)
   - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
   - [Implementing JWT Validation](#implementing-jwt-validation)
@@ -236,6 +237,58 @@ az webapp auth update \
 ```
 
 **Key Takeaway:** App Service authentication session lifetime is managed at the **platform level** using Azure CLI or Azure Portal settings, not through identity provider configurations (Azure AD), client libraries (MSAL), or application code. The `token-refresh-extension-hours` parameter specifically controls how long the App Service authenticated session remains valid.
+
+---
+
+### Question 4: TLS Mutual Authentication Client Certificate Validation
+
+**Question:** You are developing an Azure Web App. You configure TLS mutual authentication for the web app. You need to validate the client certificate in the web app. Where is the client certificate located and what encoding type is used?
+
+**Options:**
+- A) Client certificate location: Client cookie. Encoding type: URL.
+- B) Client certificate location: HTTP message body. Encoding type: Base64.
+- C) Client certificate location: HTTP request header. Encoding type: Unicode.
+- D) Client certificate location: HTTP request header. Encoding type: Base64.
+
+**Correct Answer: D) Client certificate location: HTTP request header. Encoding type: Base64.**
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Client cookie with URL encoding** ❌ | Storing the client certificate in the client cookie with URL encoding is not a common or recommended practice for validating client certificates in an Azure Web App. Client certificates are typically transmitted in the HTTP request header for validation. |
+| **B) HTTP message body with Base64 encoding** ❌ | Storing the client certificate in the HTTP message body with Base64 encoding is not a standard method for validating client certificates in an Azure Web App. Client certificates are usually sent in the HTTP request header for validation purposes. |
+| **C) HTTP request header with Unicode encoding** ❌ | Storing the client certificate in the HTTP request header with Unicode encoding is not the correct approach. While client certificates are transmitted in the HTTP request header, Unicode encoding is not typically used for this purpose. |
+| **D) HTTP request header with Base64 encoding** ✅ | Storing the client certificate in the HTTP request header with Base64 encoding is the correct method for validating client certificates in an Azure Web App. The client certificate is included in the `X-ARR-ClientCert` HTTP request header with Base64 encoding to ensure secure transmission and proper validation within the web application. |
+
+**How TLS Mutual Authentication Works in Azure App Service:**
+
+1. **Enable client certificates** - Configure your App Service to require client certificates
+2. **Client sends certificate** - The client includes its certificate during the TLS handshake
+3. **App Service forwards certificate** - The platform extracts the certificate and forwards it in the `X-ARR-ClientCert` request header
+4. **Application validates** - Your application code reads and validates the Base64-encoded certificate from the header
+
+**Code Example (C#):**
+
+```csharp
+public void ValidateClientCertificate(HttpRequest request)
+{
+    // Get the client certificate from the request header
+    string clientCertHeader = request.Headers["X-ARR-ClientCert"];
+    
+    if (!string.IsNullOrEmpty(clientCertHeader))
+    {
+        // Decode the Base64-encoded certificate
+        byte[] certBytes = Convert.FromBase64String(clientCertHeader);
+        var certificate = new X509Certificate2(certBytes);
+        
+        // Validate the certificate (thumbprint, issuer, expiration, etc.)
+        // ...
+    }
+}
+```
+
+**Key Takeaway:** In Azure App Service with TLS mutual authentication enabled, the client certificate is transmitted in the **`X-ARR-ClientCert` HTTP request header** using **Base64 encoding**. This allows your application code to extract and validate the certificate for authentication purposes.
 
 ## Token Validation for Web APIs
 
