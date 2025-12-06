@@ -10,6 +10,7 @@
   - [4. App Service Environment (ASE)](#4-app-service-environment-ase)
 - [Practice Question](#practice-question)
   - [Question: Selecting the Appropriate Hosting Plan](#question-selecting-the-appropriate-hosting-plan)
+  - [Practice Question: Resolving Function Timeout Issues](#practice-question-resolving-function-timeout-issues)
 - [Scaling Behavior: Event-Based vs Performance-Based](#scaling-behavior-event-based-vs-performance-based)
   - [Event-Based Scaling (Consumption & Premium)](#event-based-scaling-consumption-premium)
   - [Performance-Based Scaling (Dedicated & ASE)](#performance-based-scaling-dedicated-ase)
@@ -214,6 +215,74 @@ Which hosting plan should you use?
 
 4. ❌ Functions Premium
    - **Incorrect**: While the Functions Premium plan supports autoscaling and has event-based scaling behavior, it does **not provide a true serverless pricing model**. The Premium plan requires you to pay for pre-warmed instances that are always running, resulting in a minimum monthly cost regardless of usage. This is beneficial for eliminating cold starts and providing consistent performance, but it doesn't meet the serverless pricing requirement.
+
+---
+
+### Practice Question: Resolving Function Timeout Issues
+
+**Question:**
+
+You develop an HTTP triggered Azure Function app to process Azure Storage blob data. The app is triggered using an output binding on the blob. The app continues to time out after four minutes. The app must process the blob data.
+
+You need to ensure the app does not time out and processes the blob data.
+
+**Proposed Solution:** Configure the app to use an App Service hosting plan and enable the Always On setting.
+
+Does the solution meet the goal?
+
+**Options:**
+
+A) Yes
+
+B) No ✅
+
+---
+
+**Correct Answer: B) No**
+
+---
+
+**Explanation:**
+
+Using an App Service hosting plan and enabling the Always On setting can help keep the Azure Function app warm and prevent cold starts, but it **does not directly address the timeout issue**.
+
+| Aspect | What Always On Does | What It Doesn't Do |
+|--------|---------------------|-------------------|
+| **Cold Starts** | ✅ Prevents cold starts by keeping the app warm | - |
+| **Function Timeout** | ❌ Does not change timeout limits | Does not extend execution time |
+| **Execution Duration** | - | ❌ Does not allow longer-running functions |
+
+**The Correct Solution:**
+
+The timeout for Azure Functions is controlled by the `functionTimeout` setting in the **host.json** file. To address the timeout issue and ensure the app processes the blob data without timing out, you should:
+
+1. **Adjust the `functionTimeout` setting** in host.json to allow for longer processing times
+2. **Or migrate to a Premium or Dedicated plan** which support unlimited execution duration
+
+**host.json Configuration Example:**
+
+```json
+{
+  "version": "2.0",
+  "functionTimeout": "00:10:00"
+}
+```
+
+**Timeout Limits by Plan:**
+
+| Plan | Default Timeout | Maximum Timeout |
+|------|-----------------|-----------------|
+| Consumption | 5 minutes | 10 minutes |
+| Premium | 30 minutes | **Unlimited** |
+| Dedicated (App Service) | 30 minutes | **Unlimited** |
+
+**Key Takeaways:**
+- **Always On** prevents cold starts but doesn't affect execution timeout
+- **functionTimeout** in host.json controls execution duration
+- For functions requiring more than 10 minutes, use Premium or Dedicated plans
+- Consider breaking long-running operations into smaller chunks or using Durable Functions for very long processes
+
+---
 
 ## Scaling Behavior: Event-Based vs Performance-Based
 
