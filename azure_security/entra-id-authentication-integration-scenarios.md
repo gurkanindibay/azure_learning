@@ -2727,6 +2727,8 @@ public IActionResult ViewContent()
    - Even if not explicitly mentioned in the scenario, this is the proper configuration for user-context applications
    - Maintains consistency in permission model across all Azure services
 
+**Additional Explanation:** The configuration with Azure Storage Permission set to `user_impersonation`, Azure Storage Type set to `delegated`, and Microsoft Graph Type set to `delegated` is correct. User_impersonation is the appropriate permission for users to act on behalf of the application, delegated permissions are necessary for accessing resources on behalf of a user, and Microsoft Graph Type should also be set to `delegated` for this scenario.
+
 **How it works:**
 
 ```plaintext
@@ -2887,6 +2889,8 @@ builder.Services.AddSingleton<BlobStorageService>(sp =>
    - Shows confused understanding of permission models
    - `user_impersonation` is not a standard Microsoft Graph permission name
 
+**Additional Explanation:** The configuration with Azure Storage Permission set to `client_id`, Azure Storage Type set to `application`, and Microsoft Graph Type set to `user_impersonation` is incorrect because user_impersonation typically requires delegated permissions, not application permissions, for accessing resources on behalf of a user.
+
 **Result:** This configuration is invalid and would not work.
 
 ---
@@ -2918,6 +2922,8 @@ builder.Services.AddSingleton<BlobStorageService>(sp =>
    - This configuration shows fundamental misunderstanding of Azure permissions
    - Mixes unrelated concepts (client_id, profile, application)
 
+**Additional Explanation:** The configuration with Azure Storage Permission set to `client_id`, Azure Storage Type set to `profile`, and Microsoft Graph Type set to `application` is incorrect. The profile type is not relevant for Azure Blob Storage permissions, and the client_id parameter is not suitable for this scenario.
+
 **Result:** This configuration is completely invalid.
 
 ---
@@ -2948,6 +2954,8 @@ builder.Services.AddSingleton<BlobStorageService>(sp =>
 - Gets 2 out of 3 parameters correct
 - However, in exam scenarios, all parameters must be correct
 - `profile` as a permission type is a fundamental error
+
+**Additional Explanation:** The configuration with Azure Storage Permission set to `user_impersonation`, Azure Storage Type set to `delegated`, and Microsoft Graph Type set to `profile` is incorrect. The profile type is not relevant for Azure Blob Storage permissions, and the Microsoft Graph Type should be set to `delegated` for accessing resources on behalf of a user.
 
 **Result:** Partially correct, but invalid overall due to wrong Microsoft Graph configuration.
 
