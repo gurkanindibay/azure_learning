@@ -22,6 +22,7 @@
   - [Question 11: Custom Initialization Actions Before Handling Requests](#question-11-custom-initialization-actions-before-handling-requests)
   - [Question 12: Secure Authentication for GitHub Actions Continuous Deployment](#question-12-secure-authentication-for-github-actions-continuous-deployment)
   - [Question 13: Running Static Content Generation Script Before Deployment](#question-13-running-static-content-generation-script-before-deployment)
+  - [Question 14: Accessing Real-Time Console Logs for Containerized App](#question-14-accessing-real-time-console-logs-for-containerized-app)
 - [Application Logging in Azure App Service](#application-logging-in-azure-app-service)
   - [What is Application Logging?](#what-is-application-logging)
   - [Types of Logs in App Service](#types-of-logs-in-app-service)
@@ -728,6 +729,31 @@ echo Deploying to Azure...
 - Build-time asset optimization
 - Content preprocessing before deployment
 - Database migrations or setup scripts
+
+### Question 14: Accessing Real-Time Console Logs for Containerized App
+
+**Scenario:**
+You plan to deploy a web app to App Service on Linux. You create an App Service plan. You create and push a custom Docker image that contains the web app to Azure Container Registry. You need to access the console logs generated from inside the container in real-time.
+
+**Question:**
+How should you complete the Azure CLI command?
+
+**Correct Command:**
+```bash
+az webapp log config --docker-container-logging filesystem
+az webapp log tail
+```
+
+**Explanation:**
+- **Box 1 (`config`)**: The `config` subcommand is used to modify the logging configuration.
+- **Box 2 (`--docker-container-logging`)**: This parameter enables logging for the Docker container (stdout/stderr) to the filesystem.
+- **Box 3 (`webapp`)**: The command targets the `webapp` service.
+- **Box 4 (`tail`)**: The `tail` subcommand is used to stream the logs in real-time.
+
+**Incorrect Choices:**
+- **`tail`, `--web-server-logging`, `aks`, `show`**: `tail` is for viewing, not configuring. `--web-server-logging` is for web server logs, not container logs. `aks` is for Kubernetes.
+- **`show`, `--web-server-logging`, `acr`, `config`**: `show` displays settings but doesn't change them. `acr` is for Container Registry, not the running app.
+- **`config`, `--application-logging`, `webapp`, `show`**: `--application-logging` is typically for Windows apps or code-level logs, while `--docker-container-logging` is specific for container console output. `show` does not stream logs.
 
 ---
 
