@@ -917,5 +917,84 @@ Using an **X.509 certificate alone** establishes authentication but does not dir
 
 ---
 
+### Practice Question: Invoke-RestMethod for Managed Identity Token
+
+#### Scenario
+
+You develop Azure solutions. You must grant a virtual machine (VM) access to specific resource groups in Azure Resource Manager.
+
+You need to obtain an Azure Resource Manager access token.
+
+**Solution:** Run the `Invoke-RestMethod` cmdlet to make a request to the local managed identity for Azure resources endpoint.
+
+**Does the solution meet the goal?**
+
+---
+
+#### Answer: Yes ✅
+
+---
+
+#### Explanation
+
+Yes, the solution is correct. By running the `Invoke-RestMethod` cmdlet to make a request to the local managed identity for Azure resources endpoint, you can obtain an Azure Resource Manager access token. This token can then be used to grant the virtual machine access to specific resource groups in Azure Resource Manager.
+
+#### How It Works
+
+When a VM has a managed identity enabled, Azure provides a local endpoint (Azure Instance Metadata Service - IMDS) that the VM can call to obtain access tokens without needing any credentials.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│           Invoke-RestMethod with Managed Identity                │
+│                                                                  │
+│  [VM with Managed Identity]                                      │
+│       │                                                          │
+│       ├──► Invoke-RestMethod to IMDS endpoint                    │
+│       │    (http://169.254.169.254/metadata/identity/oauth2/token)│
+│       │         │                                                │
+│       │         └──► [Azure AD] ──► [Access Token]               │
+│       │                                                          │
+│       └──[Access Token]──► [Azure Resource Manager]              │
+│                                                                  │
+│  ✅ Valid approach to obtain access token                        │
+│  ✅ Uses local managed identity endpoint                         │
+│  ✅ No credentials required in code                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### PowerShell Example
+
+```powershell
+# Request access token from the local managed identity endpoint
+$response = Invoke-RestMethod -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/' -Headers @{Metadata="true"}
+
+# Extract the access token
+$accessToken = $response.access_token
+
+# Use the token to call Azure Resource Manager
+$headers = @{
+    'Authorization' = "Bearer $accessToken"
+    'Content-Type' = 'application/json'
+}
+
+# Example: List resource groups
+Invoke-RestMethod -Uri 'https://management.azure.com/subscriptions/{subscription-id}/resourcegroups?api-version=2021-04-01' -Headers $headers -Method Get
+```
+
+#### Key Points
+
+| Aspect | Description |
+|--------|-------------|
+| **IMDS Endpoint** | `http://169.254.169.254/metadata/identity/oauth2/token` - Local endpoint only accessible from within the VM |
+| **Metadata Header** | Must include `Metadata: true` header to prevent SSRF attacks |
+| **Resource Parameter** | Specify the resource you want the token for (e.g., `https://management.azure.com/`) |
+| **No Credentials** | The managed identity handles authentication automatically |
+
+#### Key Takeaway
+
+Using `Invoke-RestMethod` to call the local managed identity endpoint (IMDS) is a **valid and correct approach** to obtain Azure Resource Manager access tokens. This is the PowerShell equivalent of using the Azure SDK's `ManagedIdentityCredential` class.
+
+---
+
 End of Document
 
