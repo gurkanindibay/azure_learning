@@ -21,6 +21,10 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 7. [Comparison of Authentication Approaches](#comparison-of-authentication-approaches)
 8. [Implementation Scenarios](#implementation-scenarios)
 9. [Best Practices and Recommendations](#best-practices-and-recommendations)
+10. [Exam Scenario Analysis](#exam-scenario-analysis)
+    - [Question 1: Authentication with OpenID Connect](#exam-question-1-authentication-with-openid-connect)
+    - [Question 2: App Service Authentication (Easy Auth)](#exam-question-2-app-service-authentication-easy-auth)
+    - [Question 3: Configuring Entra ID for Azure Blob Storage with RBAC](#exam-question-3-configuring-entra-id-for-azure-blob-storage-with-rbac)
 
 ---
 
@@ -2677,6 +2681,329 @@ public IActionResult ViewContent()
 | **Cloud-Native** | ❌ No | ✅ Yes |
 
 > **Exam Tip:** When asked about implementing group-based authorization for Azure Web Apps with Microsoft Entra ID, the answer is to use **Azure AD App Roles** or configure **group claims in tokens**. Integrated Windows Authentication is NOT appropriate for cloud-hosted web applications.
+
+---
+
+### Exam Question 3: Configuring Entra ID for Azure Blob Storage with RBAC
+
+**Scenario:** You are developing an ASP.NET Core website that can be used to manage photographs which are stored in Azure Blob Storage containers. Users of the website authenticate by using their Microsoft Entra ID credentials. You implement role-based access control (RBAC) role permissions on the containers that store photographs. You assign users to RBAC roles.
+
+**Question:** You need to configure the website's Microsoft Entra ID Application so that user's permissions can be used with the Azure Blob containers. How should you configure the application?
+
+**Configuration Options:**
+
+| Option | Azure Storage Permission | Azure Storage Type | Microsoft Graph Type |
+|--------|-------------------------|-------------------|---------------------|
+| A | `client_id` | `application` | `user_impersonation` |
+| B | `client_id` | `profile` | `application` |
+| C | `user_impersonation` | `delegated` | `delegated` |
+| D | `user_impersonation` | `delegated` | `profile` |
+
+### Answer Analysis
+
+#### ✅ Option C: CORRECT ANSWER
+
+**Configuration:**
+- **Azure Storage Permission:** `user_impersonation`
+- **Azure Storage Type:** `delegated`
+- **Microsoft Graph Type:** `delegated`
+
+**Why this is CORRECT:**
+
+1. **`user_impersonation` Permission for Azure Storage:**
+   - This is the standard delegated permission scope for Azure Storage
+   - Allows the application to access Azure Storage resources on behalf of the signed-in user
+   - Enables the application to inherit the user's RBAC permissions
+   - When a user accesses blob storage through the app, their assigned RBAC roles are enforced
+
+2. **`delegated` Permission Type for Azure Storage:**
+   - Delegated permissions require a signed-in user to be present
+   - The application acts on behalf of the user, using their identity and permissions
+   - This is exactly what's needed when users authenticate with their Entra ID credentials
+   - Azure Storage will check the user's RBAC role assignments (e.g., Storage Blob Data Contributor, Storage Blob Data Reader)
+
+3. **`delegated` Permission Type for Microsoft Graph:**
+   - Allows the application to access Microsoft Graph resources on behalf of the signed-in user
+   - Even if not explicitly mentioned in the scenario, this is the proper configuration for user-context applications
+   - Maintains consistency in permission model across all Azure services
+
+**How it works:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────┐
+│                     Authentication Flow                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. User logs in with Entra ID credentials                  │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+│  2. App requests delegated permissions                      │
+│     - Azure Storage: user_impersonation                     │
+│     - Microsoft Graph: delegated                            │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+│  3. User consents (or admin pre-consents)                   │
+│  ◄──────────────────────────────────────────────────────────│
+│                                                              │
+│  4. Access token issued with user's identity                │
+│  ◄──────────────────────────────────────────────────────────│
+│                                                              │
+│  5. App accesses Blob Storage with user's token             │
+│     - User's RBAC permissions are checked                   │
+│     - Storage Blob Data Contributor? → Read/Write           │
+│     - Storage Blob Data Reader? → Read only                 │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Configuration Steps:**
+
+```plaintext
+1. Register Application in Entra ID:
+   Azure Portal → Microsoft Entra ID → App registrations → New registration
+
+2. Configure API Permissions:
+   API permissions → Add a permission
+   
+   For Azure Storage:
+   - Select "Azure Storage"
+   - Select "Delegated permissions"
+   - Check "user_impersonation"
+   
+   For Microsoft Graph (if needed):
+   - Select "Microsoft Graph"
+   - Select "Delegated permissions"
+   - Add required scopes (e.g., User.Read)
+
+3. Grant Admin Consent (if required):
+   API permissions → Grant admin consent for [tenant]
+
+4. Assign RBAC Roles to Users:
+   Storage Account → Access Control (IAM) → Add role assignment
+   - Storage Blob Data Contributor (read/write)
+   - Storage Blob Data Reader (read-only)
+   - Assign to users or groups
+```
+
+**Code Example (C# with Azure.Identity):**
+
+```csharp
+using Azure.Identity;
+using Azure.Storage.Blobs;
+
+public class BlobStorageService
+{
+    private readonly BlobServiceClient _blobServiceClient;
+
+    public BlobStorageService(string storageAccountName)
+    {
+        // Use DefaultAzureCredential to authenticate
+        // This will use the signed-in user's credentials in web apps
+        var credential = new DefaultAzureCredential();
+        
+        string blobUri = $"https://{storageAccountName}.blob.core.windows.net";
+        _blobServiceClient = new BlobServiceClient(new Uri(blobUri), credential);
+    }
+
+    public async Task<List<string>> ListPhotographsAsync(string containerName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var photos = new List<string>();
+
+        // This call will use the user's RBAC permissions
+        // If user lacks permissions, this will throw UnauthorizedException
+        await foreach (var blobItem in containerClient.GetBlobsAsync())
+        {
+            photos.Add(blobItem.Name);
+        }
+
+        return photos;
+    }
+
+    public async Task UploadPhotographAsync(string containerName, string fileName, Stream content)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(fileName);
+        
+        // This requires Storage Blob Data Contributor role
+        await blobClient.UploadAsync(content, overwrite: true);
+    }
+}
+```
+
+**Startup Configuration:**
+
+```csharp
+// Program.cs or Startup.cs
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+builder.Services.AddAuthorization();
+
+// Register blob storage service
+builder.Services.AddSingleton<BlobStorageService>(sp => 
+    new BlobStorageService("yourstorageaccount"));
+```
+
+**appsettings.json:**
+
+```json
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "Domain": "yourdomain.onmicrosoft.com",
+    "TenantId": "your-tenant-id",
+    "ClientId": "your-client-id",
+    "ClientSecret": "your-client-secret",
+    "CallbackPath": "/signin-oidc"
+  }
+}
+```
+
+---
+
+#### ❌ Option A: Incorrect
+
+**Configuration:**
+- **Azure Storage Permission:** `client_id`
+- **Azure Storage Type:** `application`
+- **Microsoft Graph Type:** `user_impersonation`
+
+**Why this is WRONG:**
+
+1. **`client_id` is NOT a permission scope:**
+   - `client_id` is an identifier for the application, not a permission
+   - Azure Storage API permissions use `user_impersonation` for delegated access
+   - This configuration would fail at the permission request stage
+
+2. **`application` type conflicts with user context:**
+   - Application permissions are used for service-to-service scenarios (no user present)
+   - The scenario explicitly states users authenticate with their Entra ID credentials
+   - Application permissions would grant the app access to ALL blobs, ignoring user RBAC
+
+3. **`user_impersonation` for Microsoft Graph is inconsistent:**
+   - Mixing application type for Storage with delegated type for Graph is invalid
+   - Shows confused understanding of permission models
+   - `user_impersonation` is not a standard Microsoft Graph permission name
+
+**Result:** This configuration is invalid and would not work.
+
+---
+
+#### ❌ Option B: Incorrect
+
+**Configuration:**
+- **Azure Storage Permission:** `client_id`
+- **Azure Storage Type:** `profile`
+- **Microsoft Graph Type:** `application`
+
+**Why this is WRONG:**
+
+1. **`client_id` is not a valid permission:**
+   - As mentioned above, this is an identifier, not a permission scope
+   - Cannot be requested as a permission
+
+2. **`profile` is not a valid Azure Storage permission type:**
+   - `profile` is an OpenID Connect scope for user profile information
+   - Azure Storage API uses either `delegated` or `application` permission types
+   - `profile` has nothing to do with storage access
+
+3. **`application` type for Microsoft Graph is inappropriate:**
+   - Application permissions don't require a signed-in user
+   - Would grant app-level access instead of user-level access
+   - Doesn't align with the scenario where users authenticate
+
+4. **Completely wrong permission model:**
+   - This configuration shows fundamental misunderstanding of Azure permissions
+   - Mixes unrelated concepts (client_id, profile, application)
+
+**Result:** This configuration is completely invalid.
+
+---
+
+#### ❌ Option D: Incorrect
+
+**Configuration:**
+- **Azure Storage Permission:** `user_impersonation`
+- **Azure Storage Type:** `delegated`
+- **Microsoft Graph Type:** `profile`
+
+**Why this is WRONG:**
+
+1. **Azure Storage configuration is CORRECT:**
+   - `user_impersonation` with `delegated` is the right approach
+   - This part would work fine
+
+2. **`profile` is NOT a Microsoft Graph permission type:**
+   - `profile` is an OpenID Connect scope, not a permission type
+   - Microsoft Graph permission types are `delegated` or `application`
+   - `profile` is used for authentication, not for API permissions
+
+3. **Inconsistent permission configuration:**
+   - While the Storage configuration is correct, the Graph configuration is invalid
+   - Shows incomplete understanding of Azure permission structure
+
+**Why it's close but wrong:**
+- Gets 2 out of 3 parameters correct
+- However, in exam scenarios, all parameters must be correct
+- `profile` as a permission type is a fundamental error
+
+**Result:** Partially correct, but invalid overall due to wrong Microsoft Graph configuration.
+
+---
+
+### Summary: Understanding Azure Permission Types
+
+#### Delegated Permissions vs Application Permissions
+
+| Aspect | Delegated Permissions | Application Permissions |
+|--------|----------------------|------------------------|
+| **User Context** | ✅ Requires signed-in user | ❌ No user required |
+| **Permissions** | User's permissions | App-level permissions |
+| **Use Case** | User acts through app | Background services |
+| **RBAC** | ✅ User's RBAC roles enforced | ❌ App has its own RBAC |
+| **Consent** | User or admin consent | Admin consent required |
+| **Example Scenario** | Photo management web app | Nightly backup job |
+
+#### Azure Storage Permission Scopes
+
+| Permission Scope | Type | Description |
+|-----------------|------|-------------|
+| **`user_impersonation`** | Delegated | Access storage as the signed-in user |
+| **No specific scope name** | Application | Service-level access (uses app's managed identity or service principal) |
+
+#### Microsoft Graph Permission Types
+
+| Type | Use When | Examples |
+|------|---------|----------|
+| **`delegated`** | User is present | User.Read, Mail.Read, Files.Read |
+| **`application`** | Background service | User.Read.All, Mail.Read.All |
+
+> **Exam Tip:** When users authenticate with Entra ID credentials and the app accesses Azure resources on their behalf, ALWAYS use:
+> - **Delegated permissions** for the permission type
+> - **`user_impersonation`** for Azure Storage
+> - This ensures user RBAC permissions are enforced
+
+---
+
+### Key Takeaways for This Scenario
+
+✅ **DO:**
+- Use delegated permissions when users authenticate
+- Configure `user_impersonation` for Azure Storage
+- Assign RBAC roles to users on storage resources
+- Use Azure.Identity library for seamless authentication
+- Test with users having different RBAC roles
+
+❌ **DON'T:**
+- Use application permissions for user-context scenarios
+- Use `client_id` as a permission (it's an identifier)
+- Use `profile` as a permission type (it's an OIDC scope)
+- Mix application and delegated permission types incorrectly
+- Forget to assign RBAC roles to users
+
+**Remember:** The combination of Entra ID authentication + delegated permissions + RBAC enables fine-grained, user-specific access control to Azure Storage resources.
 
 ---
 
