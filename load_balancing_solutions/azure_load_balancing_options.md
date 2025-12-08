@@ -680,6 +680,126 @@ Yes, this solution meets the goal. By configuring the Azure Application Gateway'
 
 ---
 
+### Question 2: Authentication Certificate vs. Complete SSL Configuration
+
+**Scenario:**  
+You are developing a web app named `mywebapp1`. `Mywebapp1` uses the address `myapp1.azurewebsites.net`. You protect `mywebapp1` by implementing an Azure Web Application Firewall (WAF). The traffic to `mywebapp1` is routed through an Azure Application Gateway instance that is also used by other web apps.
+
+**Question:**  
+You want to secure all traffic to `mywebapp1` by using SSL.
+
+**Solution:**  
+You open the Azure Application Gateway's HTTP setting and set the `Override backend path` option to `mywebapp1.azurewebsites.net`. You then add an authentication certificate for `mywebapp1.azurewebsites.net`.
+
+Does this meet the goal?
+
+---
+
+#### ❌ Answer: No
+
+**Explanation:**
+
+No, this solution does **NOT** meet the goal. While the steps described are part of the configuration, they are **insufficient** to fully secure all traffic to `mywebapp1` by using SSL.
+
+**Why This Configuration Is Incomplete:**
+
+1. **Override Backend Path Alone Is Not Enough:**
+   - Setting the override backend path configures routing but doesn't establish SSL/TLS settings
+   - It only tells the gateway where to send traffic, not how to secure it
+
+2. **Authentication Certificate vs. Complete SSL Configuration:**
+   - Adding an authentication certificate is just **one component** of SSL configuration
+   - An authentication certificate is used for backend authentication in Application Gateway v1 (legacy)
+   - In Application Gateway v2, you should use **trusted root certificates** instead
+   - This alone doesn't enable SSL termination at the gateway or configure HTTPS listeners
+
+**What's Missing for Complete SSL Configuration:**
+
+| Missing Component | Purpose | Why It's Needed |
+|-------------------|---------|-----------------|
+| **HTTPS Listener** | Frontend SSL termination | Accept encrypted traffic from clients |
+| **SSL Certificate Binding** | Client-facing encryption | Secure the connection between client and gateway |
+| **Backend HTTPS Settings** | Backend encryption | Configure SSL/TLS for backend communication |
+| **"Use for App Service" Option** | App Service integration | Ensure proper hostname handling for App Service |
+| **HTTPS-Only on App Service** | End-to-end encryption | Force HTTPS on the backend web app |
+
+**Complete SSL Configuration Steps:**
+
+```bash
+# 1. Create/upload SSL certificate to Application Gateway
+az network application-gateway ssl-cert create \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name mySslCert \
+  --cert-file certificate.pfx \
+  --cert-password <password>
+
+# 2. Create HTTPS listener with SSL certificate
+az network application-gateway http-listener create \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name httpsListener \
+  --frontend-port 443 \
+  --ssl-cert mySslCert
+
+# 3. Configure backend HTTP settings with SSL
+az network application-gateway http-settings create \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name appServiceHttpsSettings \
+  --port 443 \
+  --protocol Https \
+  --host-name-from-backend-pool false \
+  --host-name myapp1.azurewebsites.net \
+  --probe appServiceProbe
+
+# 4. Enable HTTPS-only on the App Service
+az webapp update \
+  --name mywebapp1 \
+  --resource-group myResourceGroup \
+  --https-only true
+
+# 5. Create routing rule to connect listener to backend
+az network application-gateway rule create \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name httpsRule \
+  --http-listener httpsListener \
+  --address-pool myBackendPool \
+  --http-settings appServiceHttpsSettings
+```
+
+**Key Differences from Question 1:**
+
+| Aspect | Question 1 (✅ Correct) | Question 2 (❌ Incomplete) |
+|--------|------------------------|---------------------------|
+| **HTTP Settings** | Override backend path + **"Use for App Service"** | Override backend path only |
+| **Certificate** | Not mentioned (handled by proper HTTPS config) | Authentication certificate added (insufficient) |
+| **Completeness** | Complete SSL configuration implied | Missing HTTPS listener, SSL binding, backend HTTPS settings |
+
+**What the Proposed Solution Actually Does:**
+- ✅ Routes traffic to the correct App Service backend
+- ❌ Does NOT configure HTTPS listener for client connections
+- ❌ Does NOT bind SSL certificate for frontend encryption
+- ❌ Does NOT configure backend HTTPS settings properly
+- ❌ Does NOT enable "Use for App Service" option
+
+**Correct Approach:**
+To fully secure all traffic with SSL, you need:
+1. **Frontend SSL:** HTTPS listener with SSL certificate binding (client → gateway)
+2. **Backend SSL:** HTTPS backend settings with proper configuration (gateway → App Service)
+3. **App Service Settings:** Enable HTTPS-only on the App Service itself
+4. **Integration Options:** Enable "Use for App Service" for proper hostname handling
+5. **Health Probes:** Configure HTTPS health probes to monitor backend health
+
+**Note on Authentication Certificates:**
+- **Application Gateway v1:** Uses authentication certificates for backend SSL
+- **Application Gateway v2:** Uses trusted root certificates (recommended)
+- Authentication certificates alone don't provide complete SSL configuration
+- They're just one piece of the backend authentication puzzle
+
+---
+
 ## References
 - [Confusion between WAF with Application Gateway and FrontDoor when securing custom Web Apps running on Azure VM published to the internet](https://learn.microsoft.com/en-us/answers/questions/1655290/confusion-between-waf-with-application-gateway-and)
 - [Azure load balancing overview (architecture guide)](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
