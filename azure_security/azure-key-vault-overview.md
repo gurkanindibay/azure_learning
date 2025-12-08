@@ -29,6 +29,16 @@
   - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-3)
   - [Key Vault vs Managed HSM Comparison](#key-vault-vs-managed-hsm-comparison)
   - [Key Takeaway](#key-takeaway-3)
+- [Question 5: Bring Your Own Key (BYOK) Process for On-Premises HSM](#question-5-bring-your-own-key-byok-process-for-on-premises-hsm)
+  - [Explanation](#explanation-4)
+  - [Step-by-Step BYOK Process](#step-by-step-byok-process)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-4)
+  - [BYOK Process Flow Diagram](#byok-process-flow-diagram)
+  - [BYOK vs. Key Generation in Azure](#byok-vs-key-generation-in-azure)
+  - [Complete BYOK Example](#complete-byok-example)
+  - [Security Considerations](#security-considerations)
+  - [Supported HSM Vendors](#supported-hsm-vendors)
+  - [Key Takeaway](#key-takeaway-4)
 
 ## Overview
 
@@ -551,3 +561,279 @@ FIPS 140-3 Level 3 Compliance Options:
 ### Key Takeaway
 
 For **FIPS 140-3 Level 3** validation requirements, you can use **either Azure Key Vault Premium or Azure Managed HSM**. Both services have been upgraded to support FIPS 140-3 Level 3 validated HSMs. The choice between them depends on other requirements such as key sovereignty, dedicated vs. shared infrastructure, cost considerations, and specific regulatory compliance needs.
+
+---
+
+## Question 5: Bring Your Own Key (BYOK) Process for On-Premises HSM
+
+**Scenario:**
+You are developing an Azure-hosted application that must use an on-premises hardware security module (HSM) key. The key must be transferred to your existing Azure Key Vault by using the Bring Your Own Key (BYOK) process.
+
+**Question:**
+Which four actions should you perform in sequence to securely transfer the key to Azure Key Vault?
+
+**Options:**
+
+1. **Box 1:** Create a custom policy definition in Azure Policy. **Box 2:** Generate a Key Exchange Key (KEK). **Box 3:** Retrieve the Key Exchange Key (KEK) public key. **Box 4:** Run the `az keyvault key import` command. ❌ *Incorrect*
+
+2. **Box 1:** Create a custom policy definition in Azure Policy. **Box 2:** Retrieve the Key Exchange Key (KEK) public key. **Box 3:** Generate a key transfer blob file by using the HSM vendor-provided tool. **Box 4:** Run the `az keyvault key import` command. ❌ *Incorrect*
+
+3. **Box 1:** Generate a Key Exchange Key (KEK). **Box 2:** Retrieve the Key Exchange Key (KEK) public key. **Box 3:** Generate a key transfer blob file by using the HSM vendor-provided tool. **Box 4:** Run the `az keyvault key restore` command. ❌ *Incorrect*
+
+4. **Box 1:** Generate a Key Exchange Key (KEK). **Box 2:** Retrieve the Key Exchange Key (KEK) public key. **Box 3:** Generate a key transfer blob file by using the HSM vendor-provided tool. **Box 4:** Run the `az keyvault key import` command. ✅ *Correct*
+
+### Explanation
+
+**Correct Answer: Generate KEK → Retrieve KEK public key → Generate key transfer blob → Import key**
+
+This sequence correctly outlines the steps required to securely transfer an on-premises HSM key to Azure Key Vault using the BYOK (Bring Your Own Key) process:
+
+1. **Generate a Key Exchange Key (KEK)** in Azure Key Vault
+2. **Retrieve the KEK public key** from Azure Key Vault
+3. **Generate a key transfer blob file** using the HSM vendor-provided tool
+4. **Run the `az keyvault key import` command** to import the key into Azure Key Vault
+
+### Step-by-Step BYOK Process
+
+#### Step 1: Generate a Key Exchange Key (KEK)
+
+First, create a KEK in your Azure Key Vault. This key will be used to protect your HSM key during transfer.
+
+```bash
+# Generate a KEK in Azure Key Vault
+az keyvault key create \
+  --vault-name myKeyVault \
+  --name myKEK \
+  --kty RSA-HSM \
+  --size 4096 \
+  --ops import
+
+# Verify the KEK was created
+az keyvault key show \
+  --vault-name myKeyVault \
+  --name myKEK
+```
+
+```powershell
+# PowerShell equivalent
+Add-AzKeyVaultKey -VaultName 'myKeyVault' `
+  -Name 'myKEK' `
+  -Destination 'HSM' `
+  -KeyOps import `
+  -Size 4096
+```
+
+#### Step 2: Retrieve the Key Exchange Key (KEK) Public Key
+
+Download the KEK public key to use with your on-premises HSM tooling.
+
+```bash
+# Download the KEK public key
+az keyvault key download \
+  --vault-name myKeyVault \
+  --name myKEK \
+  --file KEKforBYOK.publickey.pem
+```
+
+```powershell
+# PowerShell equivalent
+$kek = Get-AzKeyVaultKey -VaultName 'myKeyVault' -KeyName 'myKEK'
+[System.IO.File]::WriteAllBytes("KEKforBYOK.publickey.pem", $kek.Key.N)
+```
+
+#### Step 3: Generate a Key Transfer Blob Using HSM Vendor-Provided Tool
+
+Use your HSM vendor's tool to wrap your on-premises HSM key with the KEK public key and generate a key transfer blob. This step is vendor-specific.
+
+**Example for Thales nShield HSM:**
+
+```bash
+# Use Thales nShield tool to generate key transfer blob
+generatekey --generate simple \
+  type=RSA size=2048 \
+  plainname=myHSMkey \
+  nvram=no \
+  protect=module \
+  ident=key_ident \
+  wrap=KEKforBYOK.publickey.pem \
+  out=myHSMkey.byok
+```
+
+**Example for generic HSM vendor tool:**
+
+```bash
+# Vendor-specific command to wrap the key
+# This varies by HSM vendor (Thales, SafeNet, etc.)
+hsm-tool export-key \
+  --key-name myHSMkey \
+  --wrap-with-kek KEKforBYOK.publickey.pem \
+  --output myHSMkey.byok
+```
+
+The key transfer blob (`.byok` file) contains:
+- Your HSM key encrypted with the KEK public key
+- Key metadata and attributes
+- Cryptographic proof of key protection
+
+#### Step 4: Import the Key Transfer Blob into Azure Key Vault
+
+Finally, import the protected key transfer blob into Azure Key Vault.
+
+```bash
+# Import the key transfer blob
+az keyvault key import \
+  --vault-name myKeyVault \
+  --name myImportedHSMKey \
+  --byok-file myHSMkey.byok \
+  --kty RSA-HSM \
+  --ops encrypt decrypt sign verify wrapKey unwrapKey
+```
+
+```powershell
+# PowerShell equivalent
+Add-AzKeyVaultKey -VaultName 'myKeyVault' `
+  -Name 'myImportedHSMKey' `
+  -KeyFilePath 'myHSMkey.byok' `
+  -KeyFilePassword $securePwd `
+  -Destination 'HSM'
+```
+
+**Verify the imported key:**
+
+```bash
+# Verify the key was imported successfully
+az keyvault key show \
+  --vault-name myKeyVault \
+  --name myImportedHSMKey
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Create a custom policy definition in Azure Policy first** | Creating an Azure Policy definition is not part of the BYOK process. Azure Policy is for governance and compliance enforcement, not for key transfer operations. The BYOK process is purely about cryptographic key exchange. |
+| **Retrieve KEK public key before generating KEK** | You cannot retrieve a KEK public key before the KEK exists. You must first **create** the KEK in Azure Key Vault before you can download its public key. |
+| **Use `az keyvault key restore` command** | The `restore` command is for restoring keys from Key Vault backups, not for importing external HSM keys. The correct command for BYOK is `az keyvault key import` with the `--byok-file` parameter. |
+
+### BYOK Process Flow Diagram
+
+```
+On-Premises HSM                    Azure Key Vault
+┌─────────────────┐                ┌─────────────────┐
+│                 │                │                 │
+│  HSM Key        │                │   Step 1:       │
+│  (to transfer)  │                │   Generate KEK  │
+│                 │                │                 │
+└─────────────────┘                └────────┬────────┘
+                                            │
+                                            ▼
+                                   ┌─────────────────┐
+                                   │   Step 2:       │
+                    ◄──────────────│   Download KEK  │
+                    │              │   Public Key    │
+                    │              └─────────────────┘
+                    │
+                    ▼
+       ┌─────────────────────────┐
+       │   Step 3:               │
+       │   Wrap HSM key with KEK │
+       │   Generate .byok file   │
+       │   (vendor tool)         │
+       └───────────┬─────────────┘
+                   │
+                   │  myHSMkey.byok
+                   ▼
+           ┌─────────────────┐
+           │   Step 4:       │
+           │   az keyvault   │──────────►  Key imported
+           │   key import    │             securely!
+           └─────────────────┘
+```
+
+### BYOK vs. Key Generation in Azure
+
+| Aspect | BYOK (Import) | Generate in Azure |
+|--------|---------------|------------------|
+| **Key Origin** | On-premises HSM | Azure Key Vault HSM |
+| **Control** | Full control over key generation | Azure generates key |
+| **Compliance** | Meets "customer-generated key" requirements | Standard Azure key management |
+| **Process Complexity** | More complex (4 steps) | Simple (1 step) |
+| **Use Case** | Regulatory requirements, existing HSM infrastructure | Standard cloud-native applications |
+| **Key Never Leaves HSM** | ✅ Yes (wrapped during transfer) | ✅ Yes (generated in Azure HSM) |
+
+### Commands Comparison
+
+| Command | Purpose | Use Case |
+|---------|---------|----------|
+| `az keyvault key import --byok-file` | Import HSM-protected key | BYOK process |
+| `az keyvault key import --pem-file` | Import software-protected key | Software keys |
+| `az keyvault key create` | Generate new key in Azure | Standard key generation |
+| `az keyvault key restore` | Restore from backup | Disaster recovery |
+
+### Complete BYOK Example
+
+```bash
+# Complete BYOK workflow
+VAULT_NAME="myKeyVault"
+KEK_NAME="myKEK"
+IMPORTED_KEY_NAME="myImportedHSMKey"
+
+# Step 1: Generate KEK
+az keyvault key create \
+  --vault-name $VAULT_NAME \
+  --name $KEK_NAME \
+  --kty RSA-HSM \
+  --size 4096 \
+  --ops import
+
+# Step 2: Download KEK public key
+az keyvault key download \
+  --vault-name $VAULT_NAME \
+  --name $KEK_NAME \
+  --file KEKforBYOK.publickey.pem
+
+# Step 3: Generate key transfer blob (vendor-specific)
+# Use your HSM vendor's tool to create myHSMkey.byok
+# Example: ./hsm-tool export-key --wrap-with-kek KEKforBYOK.publickey.pem
+
+# Step 4: Import the key
+az keyvault key import \
+  --vault-name $VAULT_NAME \
+  --name $IMPORTED_KEY_NAME \
+  --byok-file myHSMkey.byok \
+  --kty RSA-HSM
+
+# Verify import
+az keyvault key show \
+  --vault-name $VAULT_NAME \
+  --name $IMPORTED_KEY_NAME \
+  --query "{name:name, keyType:key.kty, managed:attributes.managed}"
+```
+
+### Security Considerations
+
+1. **KEK Protection**: The KEK is stored in Azure Key Vault's HSM and never leaves it
+2. **Key Transfer Blob**: Your HSM key is encrypted with the KEK during transfer
+3. **No Plain Text**: Your HSM key never exists in plain text during the BYOK process
+4. **HSM-to-HSM Transfer**: The key is transferred from your on-premises HSM to Azure's HSM without exposure
+5. **Audit Trail**: All Key Vault operations are logged in Azure Monitor
+
+### Supported HSM Vendors
+
+Azure Key Vault BYOK supports keys from major HSM vendors:
+- **Thales** (formerly nCipher) nShield HSMs
+- **SafeNet** Luna HSMs
+- **Utimaco** HSMs
+- **Futurex** HSMs
+- **nCipher** HSMs
+- Other PKCS#11-compatible HSMs
+
+### Key Takeaway
+
+The correct BYOK process sequence is:
+1. **Generate a Key Exchange Key (KEK)** in Azure Key Vault
+2. **Retrieve the KEK public key**
+3. **Generate a key transfer blob file** using your HSM vendor's tool
+4. **Run `az keyvault key import`** with the `--byok-file` parameter
+
+This process ensures secure transfer of your on-premises HSM key to Azure Key Vault without the key ever being exposed in plain text. The process does **not** involve Azure Policy definitions, and uses `import` (not `restore`) as the final command.
