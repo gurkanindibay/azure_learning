@@ -1250,3 +1250,45 @@ The other options are incorrect because:
 **Reference**: 
 - [Error handling in Azure API Management policies](https://learn.microsoft.com/en-us/azure/api-management/api-management-error-handling-policies)
 - [API Management policy reference](https://learn.microsoft.com/en-us/azure/api-management/api-management-policies)
+
+### Question 13: Authentication Policies for Backend Services
+
+**Scenario**: You provide an Azure API Management managed web service to clients. The back-end web service implements HTTP Strict Transport Security (HSTS). Every request to the backend service must include a valid HTTP authorization header. You need to configure the Azure API Management instance with an authentication policy.
+
+**Question**: Which two policies can you use?
+
+**Options**:
+- Basic Authentication ✓
+- Digest Authentication
+- Certificate Authentication ✓
+- OAuth Client Credential Grant
+
+**Answer**: Basic Authentication and Certificate Authentication
+
+**Explanation**:
+
+**Basic Authentication**:
+Basic Authentication is a simple authentication scheme built into the HTTP protocol. It allows clients to authenticate themselves with a username and password. This policy can be used to include a valid HTTP authorization header in every request to the backend service, meeting the requirement for authentication.
+
+**How it works**: The policy adds an `Authorization` header with the format `Basic <base64-encoded-credentials>` to outbound requests. This ensures every request to the backend includes the required HTTP authorization header.
+
+**Certificate Authentication**:
+Certificate Authentication involves using client certificates to authenticate clients. This policy can be used to ensure that every request to the backend service includes a valid HTTP authorization header, as the client certificate serves as a form of authentication. It is a suitable choice for configuring the Azure API Management instance with an authentication policy in this scenario.
+
+**How it works**: The policy validates client certificates presented during the TLS handshake. When configured, it requires clients to provide a valid certificate, which serves as the authentication mechanism. This can be combined with other policies to add authorization headers if needed.
+
+**Why the other options are incorrect**:
+
+**Digest Authentication**:
+Digest Authentication is another authentication scheme built into the HTTP protocol, but it is more secure than Basic Authentication. However, it does not directly address the need to include a valid HTTP authorization header in every request to the backend service, so it is not the most suitable choice for this scenario.
+
+**Why not suitable**: While Digest Authentication does use HTTP headers for authentication, it's less commonly used in modern API scenarios and may not be supported by all backend services. The scenario specifically requires HTTP authorization headers, and Basic Authentication is more straightforward for this requirement.
+
+**OAuth Client Credential Grant**:
+OAuth Client Credential Grant is a flow in OAuth 2.0 that allows a client to authenticate itself and obtain an access token. While this policy can be used for authentication, it may not directly address the requirement to include a valid HTTP authorization header in every request to the backend service. Therefore, it may not be the most appropriate choice for this specific scenario.
+
+**Why not suitable**: OAuth Client Credential Grant typically results in obtaining an access token that can be used in subsequent requests, but it doesn't automatically add HTTP authorization headers to every request. The scenario requires that "every request to the backend service must include a valid HTTP authorization header," which Basic and Certificate Authentication handle more directly.
+
+**Reference**:
+- [Authentication policies in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-authentication-policies)
+- [API Management policy reference](https://learn.microsoft.com/en-us/azure/api-management/api-management-policies)
