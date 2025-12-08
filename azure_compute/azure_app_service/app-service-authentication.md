@@ -13,11 +13,16 @@
   - [Return HTTP 401 Unauthorized](#return-http-401-unauthorized)
   - [Return HTTP 403 Forbidden](#return-http-403-forbidden)
   - [Redirect to Custom Page](#redirect-to-custom-page)
+- [Group-Based Authorization with Microsoft Entra ID](#group-based-authorization-with-microsoft-entra-id)
+  - [Overview](#overview-1)
+  - [End-to-End Setup Process](#end-to-end-setup-process)
+  - [Implementation Example](#implementation-example)
 - [Practice Questions](#practice-questions)
   - [Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID](#question-1-blocking-unauthenticated-requests-with-microsoft-entra-id)
   - [Question 2: Token Validation in ASP.NET Core Web APIs](#question-2-token-validation-in-aspnet-core-web-apis)
   - [Question 3: Extending Session Expiration for App Service Authentication](#question-3-extending-session-expiration-for-app-service-authentication)
   - [Question 4: TLS Mutual Authentication Client Certificate Validation](#question-4-tls-mutual-authentication-client-certificate-validation)
+  - [Question 5: Configuring Authorization with Microsoft Entra ID Group Membership Claims](#question-5-configuring-authorization-with-microsoft-entra-id-group-membership-claims)
 - [Token Validation for Web APIs](#token-validation-for-web-apis)
   - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
   - [Implementing JWT Validation](#implementing-jwt-validation)
@@ -146,6 +151,377 @@ When configured:
 - **Does not automatically enforce authentication**
 - Requires additional implementation to ensure users actually authenticate
 - The custom page must handle the authentication flow
+
+## Group-Based Authorization with Microsoft Entra ID
+
+### Overview
+
+Group-based authorization allows you to control access to your Azure Web App based on a user's membership in Microsoft Entra ID (formerly Azure AD) groups. This approach enables you to implement role-based access control (RBAC) by mapping security groups to application roles or permission levels.
+
+**Key Concepts:**
+- **groupMembershipClaims**: A setting in the Microsoft Entra ID application manifest that controls whether group memberships are included in tokens
+- **groups claim**: A claim in the JWT token that contains an array of group Object IDs the user belongs to
+- **Role mapping**: Your application logic that maps group IDs to specific permissions or roles
+
+### End-to-End Setup Process
+
+#### Step 1: Create Microsoft Entra ID Groups
+
+First, create security groups in Microsoft Entra ID that represent your permission levels:
+
+```bash
+# Create groups for different permission levels
+az ad group create --display-name "WebApp-Admins" --mail-nickname "webapp-admins"
+az ad group create --display-name "WebApp-Normal" --mail-nickname "webapp-normal"
+az ad group create --display-name "WebApp-Readers" --mail-nickname "webapp-readers"
+
+# Note the Object IDs returned - you'll need these for your application
+```
+
+#### Step 2: Assign Users to Groups
+
+```bash
+# Get user Object ID
+USER_ID=$(az ad user show --id user@contoso.com --query id -o tsv)
+
+# Get group Object ID
+ADMIN_GROUP_ID=$(az ad group show --group "WebApp-Admins" --query id -o tsv)
+
+# Add user to group
+az ad group member add --group $ADMIN_GROUP_ID --member-id $USER_ID
+```
+
+#### Step 3: Register Microsoft Entra ID Application
+
+```bash
+# Create app registration
+az ad app create \
+  --display-name "MyWebApp" \
+  --sign-in-audience AzureADMyOrg \
+  --web-redirect-uris "https://mywebapp.azurewebsites.net/.auth/login/aad/callback"
+
+# Get the Application (client) ID
+APP_ID=$(az ad app list --display-name "MyWebApp" --query [0].appId -o tsv)
+```
+
+#### Step 4: Configure groupMembershipClaims in Application Manifest
+
+You need to modify the application manifest to include group memberships in tokens:
+
+**Option A: Using Azure Portal**
+1. Navigate to Azure Portal → Microsoft Entra ID → App registrations
+2. Select your application
+3. Click on "Manifest" in the left menu
+4. Find the `groupMembershipClaims` property
+5. Change the value from `null` to `"All"` or `"SecurityGroup"`
+6. Click "Save"
+
+**Option B: Using Azure CLI**
+
+```bash
+# Download the current manifest
+az ad app show --id $APP_ID > manifest.json
+
+# Edit manifest.json and change:
+# "groupMembershipClaims": null
+# to:
+# "groupMembershipClaims": "All"
+
+# Or use jq to modify it programmatically
+jq '.groupMembershipClaims = "All"' manifest.json > manifest-updated.json
+
+# Update the application
+az ad app update --id $APP_ID --set groupMembershipClaims=All
+```
+
+**groupMembershipClaims Options:**
+
+| Value | Description |
+|-------|-------------|
+| `null` | No groups included in tokens (default) |
+| `"SecurityGroup"` | Only security groups included |
+| `"All"` | Security groups, distribution groups, and directory roles |
+| `"ApplicationGroup"` | Only groups assigned to the application |
+
+#### Step 5: Configure App Service Authentication
+
+```bash
+# Enable App Service authentication with Microsoft Entra ID
+az webapp auth update \
+  --name mywebapp \
+  --resource-group myResourceGroup \
+  --enabled true \
+  --action LoginWithAzureActiveDirectory \
+  --aad-client-id $APP_ID \
+  --aad-token-issuer-url "https://sts.windows.net/<tenant-id>/" \
+  --token-store true
+```
+
+#### Step 6: Implement Authorization Logic in Your Application
+
+Now implement the code to read group claims and determine permissions:
+
+**ASP.NET Core Example:**
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Define your group IDs (get these from Azure Portal)
+        var adminGroupId = "12345678-1234-1234-1234-123456789abc";
+        var normalGroupId = "87654321-4321-4321-4321-cba987654321";
+        var readerGroupId = "11111111-2222-3333-4444-555555555555";
+
+        services.AddAuthorization(options =>
+        {
+            // Define policies based on group membership
+            options.AddPolicy("AdminOnly", policy =>
+                policy.RequireClaim("groups", adminGroupId));
+                
+            options.AddPolicy("NormalOrAbove", policy =>
+                policy.RequireClaim("groups", adminGroupId, normalGroupId));
+                
+            options.AddPolicy("ReaderOrAbove", policy =>
+                policy.RequireClaim("groups", adminGroupId, normalGroupId, readerGroupId));
+        });
+
+        services.AddControllersWithViews();
+    }
+}
+
+// Use in controllers
+[Authorize(Policy = "AdminOnly")]
+public class AdminController : Controller
+{
+    public IActionResult Index()
+    {
+        return View();
+    }
+}
+
+[Authorize(Policy = "ReaderOrAbove")]
+public class ReportsController : Controller
+{
+    public IActionResult Index()
+    {
+        // Get user's groups from claims
+        var groups = User.Claims
+            .Where(c => c.Type == "groups")
+            .Select(c => c.Value)
+            .ToList();
+            
+        return View();
+    }
+}
+```
+
+**Node.js/Express Example:**
+
+```javascript
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const app = express();
+
+// Group IDs from Microsoft Entra ID
+const GROUPS = {
+    admin: '12345678-1234-1234-1234-123456789abc',
+    normal: '87654321-4321-4321-4321-cba987654321',
+    reader: '11111111-2222-3333-4444-555555555555'
+};
+
+// Middleware to extract and validate groups
+function checkGroupMembership(requiredGroups) {
+    return (req, res, next) => {
+        // App Service passes the JWT token in headers
+        const token = req.headers['x-ms-token-aad-access-token'];
+        
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Decode token (App Service already validated it)
+        const decoded = jwt.decode(token);
+        const userGroups = decoded.groups || [];
+        
+        // Check if user belongs to any required group
+        const hasAccess = requiredGroups.some(group => 
+            userGroups.includes(group)
+        );
+        
+        if (!hasAccess) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+        
+        req.user = {
+            groups: userGroups,
+            isAdmin: userGroups.includes(GROUPS.admin),
+            isNormal: userGroups.includes(GROUPS.normal),
+            isReader: userGroups.includes(GROUPS.reader)
+        };
+        
+        next();
+    };
+}
+
+// Use middleware in routes
+app.get('/admin', 
+    checkGroupMembership([GROUPS.admin]), 
+    (req, res) => {
+        res.json({ message: 'Admin area', user: req.user });
+    }
+);
+
+app.get('/reports', 
+    checkGroupMembership([GROUPS.admin, GROUPS.normal, GROUPS.reader]), 
+    (req, res) => {
+        res.json({ message: 'Reports area', user: req.user });
+    }
+);
+```
+
+#### Step 7: Test the Configuration
+
+1. **Verify group claims in token:**
+
+```bash
+# Access the token endpoint (when logged in)
+curl https://mywebapp.azurewebsites.net/.auth/me
+```
+
+The response should include the groups claim:
+
+```json
+[
+  {
+    "access_token": "eyJ0eXAiOi...",
+    "user_claims": [
+      {
+        "typ": "groups",
+        "val": "12345678-1234-1234-1234-123456789abc"
+      },
+      {
+        "typ": "groups",
+        "val": "87654321-4321-4321-4321-cba987654321"
+      }
+    ]
+  }
+]
+```
+
+2. **Test authorization:**
+   - Log in as a user who is only in the "WebApp-Readers" group
+   - Try to access an admin-only endpoint
+   - Verify you receive a 403 Forbidden response
+   - Access a reader-allowed endpoint and verify success
+
+### Implementation Example
+
+**Complete ASP.NET Core Implementation:**
+
+```csharp
+// Program.cs
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add Microsoft Entra ID authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+// Configure authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    var config = builder.Configuration.GetSection("Authorization:Groups");
+    
+    options.AddPolicy("RequireAdminRole", policy =>
+        policy.RequireClaim("groups", config["Admin"]));
+        
+    options.AddPolicy("RequireNormalRole", policy =>
+        policy.RequireClaim("groups", config["Admin"], config["Normal"]));
+        
+    options.AddPolicy("RequireReaderRole", policy =>
+        policy.RequireClaim("groups", 
+            config["Admin"], 
+            config["Normal"], 
+            config["Reader"]));
+});
+
+builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapRazorPages();
+app.MapControllers();
+
+app.Run();
+```
+
+```json
+// appsettings.json
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "your-tenant-id",
+    "ClientId": "your-client-id",
+    "CallbackPath": "/signin-oidc"
+  },
+  "Authorization": {
+    "Groups": {
+      "Admin": "12345678-1234-1234-1234-123456789abc",
+      "Normal": "87654321-4321-4321-4321-cba987654321",
+      "Reader": "11111111-2222-3333-4444-555555555555"
+    }
+  }
+}
+```
+
+```csharp
+// Controllers/AdminController.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+[Authorize(Policy = "RequireAdminRole")]
+[ApiController]
+[Route("api/[controller]")]
+public class AdminController : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetAdminData()
+    {
+        var userGroups = User.Claims
+            .Where(c => c.Type == "groups")
+            .Select(c => c.Value);
+            
+        return Ok(new 
+        { 
+            message = "Admin data",
+            groups = userGroups 
+        });
+    }
+}
+```
+
+**Key Considerations:**
+
+1. **Group ID Limits**: If a user belongs to more than 200 groups, Microsoft Entra ID will not include the groups claim. Instead, it includes an `_claim_names` claim with a link to Microsoft Graph to retrieve groups.
+
+2. **Token Size**: Including many groups can increase token size. Consider using `ApplicationGroup` instead of `All` if you only need specific groups.
+
+3. **Security**: Store group IDs in configuration (Azure Key Vault, App Configuration) rather than hardcoding them.
+
+4. **Caching**: Consider caching group membership lookups to improve performance.
+
+5. **Testing**: Always test with users in different groups to ensure authorization logic works correctly.
 
 ## Practice Questions
 
@@ -289,6 +665,24 @@ public void ValidateClientCertificate(HttpRequest request)
 ```
 
 **Key Takeaway:** In Azure App Service with TLS mutual authentication enabled, the client certificate is transmitted in the **`X-ARR-ClientCert` HTTP request header** using **Base64 encoding**. This allows your application code to extract and validate the certificate for authentication purposes.
+
+---
+
+### Question 5: Configuring Authorization with Microsoft Entra ID Group Membership Claims
+
+**Question:** You are developing a website that will run as an Azure Web App. Users will authenticate by using their Microsoft Entra ID credentials. You plan to assign users one of the following permission levels for the website: `admin`, `normal`, and `reader`. A user's Microsoft Entra ID group membership must be used to determine the permission level. You need to configure authorization. 
+
+**Solution:** Create a new Microsoft Entra ID application. In the application's manifest, set value of the `groupMembershipClaims` option to All. In the website, use the value of the groups claim from the JWT for the user to determine permissions. 
+
+Does the solution meet the goal?
+
+**Correct Answer: Yes**
+
+**Explanation:** Yes, the solution meets the goal. By setting the `groupMembershipClaims` option to All in the Microsoft Entra ID application's manifest, all group memberships for the user will be included in the JWT token. This allows the website to access the groups claim from the JWT token and determine the user's permission level based on their group membership.
+
+**Why the "No" Explanation is Incorrect:** The "No" explanation states that setting `groupMembershipClaims` to All includes group memberships but doesn't specify how to use them. However, the solution explicitly states "In the website, use the value of the groups claim from the JWT for the user to determine permissions," which provides the necessary logic to map group memberships to permission levels.
+
+**Key Takeaway:** To include group membership information in JWT tokens for authorization purposes, set `groupMembershipClaims` to "All" in the Microsoft Entra ID application manifest. Your application code can then read the `groups` claim from the JWT to implement role-based access control.
 
 ## Token Validation for Web APIs
 
