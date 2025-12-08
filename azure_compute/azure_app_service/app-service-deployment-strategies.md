@@ -1457,10 +1457,10 @@ WebJobs is a feature of Azure App Service that enables you to run programs or sc
 
 ### Types of WebJobs
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| **Continuous** | Runs continuously in an endless loop. Automatically restarts if stopped. | Background processing, queue monitoring, real-time data processing |
-| **Triggered** | Runs on a schedule (CRON) or on-demand | Scheduled tasks, batch processing, periodic cleanup jobs |
+| Type | Description | Single Instance Support | Use Case |
+|------|-------------|------------------------|----------|
+| **Continuous** | Runs continuously in an endless loop. Automatically restarts if stopped. | ✅ Yes (with `is_singleton: true`) | Background processing, queue monitoring, real-time data processing |
+| **Triggered** | Runs on a schedule (CRON) or on-demand | ❌ No | Scheduled tasks, batch processing, periodic cleanup jobs |
 
 ### WebJobs vs Other Background Processing Options
 
@@ -1482,6 +1482,7 @@ WebJobs is a feature of Azure App Service that enables you to run programs or sc
 ### WebJobs Features
 
 - **Automatic Restart**: Continuous WebJobs automatically restart if they stop or crash
+- **Single Instance Execution**: Continuous WebJobs can be restricted to run on a single instance using `is_singleton: true` in `settings.job`
 - **Remote Debugging**: Attach Visual Studio debugger to running WebJobs
 - **Logging**: Built-in logging through Kudu dashboard
 - **SDK Support**: WebJobs SDK provides triggers and bindings similar to Azure Functions
@@ -1572,6 +1573,64 @@ You need to implement background processing for an Azure App Service web app. Th
    - Require additional Azure resources
    - Not suitable for "within App Service" requirements
    - Timer triggers are schedule-based, not continuous
+
+---
+
+### Practice Question: Single-Instance WebJob Restriction
+
+**Question:**
+
+You are designing an Azure WebJob that will run on the same instances as a web app. You want to make use of a suitable WebJob type. The WebJob type should also allow for the option to restrict the WebJob to a single instance.
+
+**Solution:** You configure the use of the Triggered WebJob type.
+
+**Does the solution meet the goal?**
+
+---
+
+### Answer: No ❌
+
+**Correct Answer: No**
+
+---
+
+### Explanation
+
+**Why Triggered WebJob is NOT Correct:**
+
+The **Triggered WebJob type** does not meet the requirement of restricting the WebJob to a single instance. Here's why:
+
+- **Triggered WebJobs** run on a schedule (CRON expression) or on-demand
+- They can run on multiple instances when the App Service is scaled out
+- **No built-in option** to restrict execution to a single instance
+- Each instance of the web app can execute the triggered WebJob independently
+
+**Why Continuous WebJob is the Correct Solution:**
+
+The **Continuous WebJob type** is the suitable option for this scenario:
+
+- **Runs continuously** on the same instances as the web app
+- **Single instance restriction available**: Can be configured to run on only one instance using the `is_singleton` setting in the `settings.job` file
+- Ensures that only one instance of the WebJob is active at a time, even when the App Service scales to multiple instances
+
+**Configuring Single-Instance Continuous WebJob:**
+
+To restrict a Continuous WebJob to a single instance, create a `settings.job` file in the WebJob's directory:
+
+```json
+{
+  "is_singleton": true
+}
+```
+
+**Key Differences:**
+
+| Feature | Continuous WebJob | Triggered WebJob |
+|---------|------------------|------------------|
+| **Execution Pattern** | Runs continuously | Runs on schedule or on-demand |
+| **Single Instance Support** | ✅ Yes (with `is_singleton: true`) | ❌ No built-in support |
+| **Use Case** | Background processing, queue monitoring | Scheduled tasks, batch jobs |
+| **Scaling Behavior** | Can restrict to single instance | Runs on all instances by default |
 
 ---
 
