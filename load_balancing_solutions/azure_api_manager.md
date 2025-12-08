@@ -1292,3 +1292,71 @@ OAuth Client Credential Grant is a flow in OAuth 2.0 that allows a client to aut
 **Reference**:
 - [Authentication policies in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-authentication-policies)
 - [API Management policy reference](https://learn.microsoft.com/en-us/azure/api-management/api-management-policies)
+
+### Question 14: API Caching Policies for OAuth-Authenticated APIs
+
+**Scenario**: A web service provides customer summary information for e-commerce partners. The web service is implemented as an Azure Function app with an HTTP trigger. Access to the API is provided by an Azure API Management instance configured in consumption plan mode. All API calls are authenticated by using OAuth. API calls must be cached. Customers must not be able to view cached data for other customers.
+
+**Question**: You need to configure API Management policies for caching. How should you complete the policy statement?
+
+**Options**:
+- **Choice A**: `caching-type: Internal`, `downstream-caching-type: Private`, `vary-by-header: Authorization`
+- **Choice B**: `caching-type: Public`, `downstream-caching-type: Expect`, `vary-by-header: Private`
+- **Choice C**: `caching-type: Internal`, `downstream-caching-type: External`, `vary-by-header: Authorization`
+- **Choice D**: `caching-type: External`, `downstream-caching-type: Private`, `vary-by-header: Authorization` ✓
+
+**Answer**: **Choice D** - `caching-type: External`, `downstream-caching-type: Private`, `vary-by-header: Authorization`
+
+**Explanation**: 
+
+**Why Choice D is correct**:
+The policy statement in Choice D specifies:
+- **`caching-type: External`**: In the Consumption tier, only external caching is available (internal caching is not supported). External caching allows the cache to be shared across multiple instances of API Management while still respecting the `vary-by-header` setting for user-specific caching.
+- **`downstream-caching-type: Private`**: This ensures that cached data is specific to each user and prevents intermediate proxies or CDNs from caching responses that could be served to other users. The `Private` directive instructs downstream caches (like browsers) to cache responses only for the specific user who made the request.
+- **`vary-by-header: Authorization`**: This is critical for OAuth-authenticated APIs. It ensures that the cache creates separate entries based on the `Authorization` header, preventing one customer from seeing another customer's cached data. Each unique OAuth token will result in a separate cache entry.
+
+**Why other choices are incorrect**:
+
+**Choice A** - `caching-type: Internal`, `downstream-caching-type: Private`, `vary-by-header: Authorization`:
+- **Incorrect**: The Consumption tier **does not support internal caching**. Internal caching is only available in Developer, Basic, Standard, and Premium tiers. Since the scenario explicitly states the API Management is in Consumption plan mode, internal caching cannot be used.
+- The `downstream-caching-type: Private` and `vary-by-header: Authorization` settings are correct, but the incorrect `caching-type` makes this choice invalid.
+
+**Choice B** - `caching-type: Public`, `downstream-caching-type: Expect`, `vary-by-header: Private`:
+- **Incorrect**: `caching-type: Public` is not a valid value for this parameter. The valid options are `Internal` and `External`.
+- **Incorrect**: `downstream-caching-type: Expect` is not a valid caching type. The valid values are `None`, `Private`, and `Public`.
+- **Incorrect**: `vary-by-header: Private` doesn't make sense in this context. `Private` is not a valid HTTP header name. The `vary-by-header` should specify `Authorization` to ensure caching varies by the OAuth token.
+
+**Choice C** - `caching-type: Internal`, `downstream-caching-type: External`, `vary-by-header: Authorization`:
+- **Incorrect**: As with Choice A, `caching-type: Internal` is not supported in the Consumption tier.
+- **Incorrect**: `downstream-caching-type: External` is not a valid caching type. The valid values are `None`, `Private`, and `Public`.
+- The `vary-by-header: Authorization` setting is correct, but the other two parameters are invalid.
+
+**Key Concepts**:
+
+1. **Consumption Tier Caching Limitations**: The Consumption tier only supports external caching, not internal caching. This is important to remember when designing caching strategies for serverless API Management instances.
+
+2. **OAuth and Cache Separation**: When using OAuth authentication, it's essential to vary the cache by the `Authorization` header to ensure each user's data is cached separately. This prevents security issues where one user could see another user's cached data.
+
+3. **Downstream Caching Control**: The `downstream-caching-type: Private` setting adds the `Cache-Control: private` header to responses, instructing browsers and intermediate proxies to cache the response only for the specific user, not for multiple users.
+
+**Example Policy Implementation**:
+```xml
+<policies>
+    <inbound>
+        <cache-lookup vary-by-header="Authorization" downstream-caching-type="private" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <cache-store duration="3600" caching-type="external" />
+        <base />
+    </outbound>
+</policies>
+```
+
+**Reference**:
+- [Caching in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-cache)
+- [Cache lookup policy](https://learn.microsoft.com/en-us/azure/api-management/cache-lookup-policy)
+- [Cache store policy](https://learn.microsoft.com/en-us/azure/api-management/cache-store-policy)
+- [API Management Consumption tier features](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
