@@ -623,6 +623,63 @@ Cost: ~$5-20/month
 - Combining services increases complexity and cost
 - **Azure Blob Storage static websites don't support HTTPS with custom domains natively — use Azure CDN**
 
+## Exam Questions
+
+### Question 1: Securing App Service Traffic with Application Gateway and WAF
+
+**Scenario:**  
+You are developing a web app named `mywebapp1`. `Mywebapp1` uses the address `myapp1.azurewebsites.net`. You protect `mywebapp1` by implementing an Azure Web Application Firewall (WAF). The traffic to `mywebapp1` is routed through an Azure Application Gateway instance that is also used by other web apps. 
+
+**Question:**  
+You want to secure all traffic to `mywebapp1` by using SSL. 
+
+**Solution:**  
+You open the Azure Application Gateway's HTTP setting and set the `Override backend path` option to `mywebapp1.azurewebsites.net`. You then enable the `Use for App service` option. 
+
+Does this meet the goal?
+
+---
+
+#### ✅ Answer: Yes
+
+**Explanation:**
+
+Yes, this solution meets the goal. By configuring the Azure Application Gateway's HTTP settings with these specific options, you are properly securing the traffic to `mywebapp1`:
+
+**What This Configuration Does:**
+
+1. **Override Backend Path to `mywebapp1.azurewebsites.net`:**
+   - This setting ensures that the Application Gateway correctly routes traffic to the specific App Service backend
+   - It overrides the default backend path to point to the correct App Service endpoint
+
+2. **Enable "Use for App Service" Option:**
+   - This is a critical setting for App Service integration with Application Gateway
+   - It ensures proper hostname preservation and SSL/TLS handling
+   - Handles the hostname correctly when routing to App Service backends
+   - Manages the required headers for App Service to accept the traffic
+
+**How SSL is Secured:**
+
+- Azure Application Gateway provides **SSL/TLS termination** at the gateway level
+- Traffic between the client and Application Gateway is encrypted
+- The gateway can re-encrypt traffic to the backend (end-to-end SSL) or use HTTP to the backend
+- The **WAF** operates on the decrypted traffic at the gateway, inspecting for security threats
+- The "Use for App service" option ensures SSL configuration works properly with App Service backends
+
+**Key Points:**
+- ✅ All traffic from clients to the gateway is secured with SSL
+- ✅ The WAF can inspect traffic for threats (requires decrypted traffic)
+- ✅ The backend communication to App Service is properly configured
+- ✅ This meets the requirement of securing all traffic to `mywebapp1` by using SSL
+
+**Best Practices:**
+- Enable **HTTPS-only** on the App Service itself for end-to-end encryption
+- Configure proper health probes to monitor backend availability
+- Use Application Gateway's autoscaling features for high availability
+- Implement custom WAF rules as needed for additional security
+
+---
+
 ## References
 - [Confusion between WAF with Application Gateway and FrontDoor when securing custom Web Apps running on Azure VM published to the internet](https://learn.microsoft.com/en-us/answers/questions/1655290/confusion-between-waf-with-application-gateway-and)
 - [Azure load balancing overview (architecture guide)](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
