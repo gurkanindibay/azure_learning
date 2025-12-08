@@ -226,6 +226,44 @@ BSON supports additional data types not available in standard JSON:
 - Want SQL-like query syntax
 - Don't have MongoDB dependencies
 
+### MongoDB Migration to Azure Cosmos DB
+
+When migrating an on-premises MongoDB deployment to Azure Cosmos DB (using MongoDB API), you need to use the appropriate migration tools.
+
+#### Correct Migration Tool: `mongorestore`
+
+✅ **`mongorestore`** is the recommended tool for migrating MongoDB data to Azure Cosmos DB.
+
+**Why use mongorestore:**
+- Restores MongoDB backups directly to Azure Cosmos DB
+- Works seamlessly with Cosmos DB's MongoDB API
+- Maintains data integrity and structure during migration
+- Supports the MongoDB wire protocol
+
+**Migration Process:**
+1. Export data from on-premises MongoDB using `mongodump`
+2. Use `mongorestore` to restore the data to Azure Cosmos DB MongoDB API account
+3. Verify data migration and update connection strings in applications
+
+#### Incorrect Migration Tools
+
+❌ **Data Management Gateway**
+- Not suitable for MongoDB to Cosmos DB migration
+- Designed for hybrid data integration scenarios
+- Does not provide MongoDB-specific migration capabilities
+
+❌ **Azure Storage Explorer**
+- Used for managing Azure Storage resources (blobs, files, queues, tables)
+- Not designed for database migrations
+- Cannot migrate MongoDB data to Cosmos DB
+
+❌ **AzCopy**
+- Command-line tool for copying data to/from Azure Storage services
+- Works with Azure Storage (blobs, files), not databases
+- Not the recommended tool for MongoDB to Cosmos DB migration
+
+**Exam Tip**: When migrating MongoDB to Azure Cosmos DB with MongoDB API, always use MongoDB-native tools like `mongorestore` rather than generic Azure tools.
+
 ### Important Exam Note
 
 ⚠️ **For the exam question "Which API works best with document (JSON) data?"**
