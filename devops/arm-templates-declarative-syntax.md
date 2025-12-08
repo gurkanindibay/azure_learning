@@ -327,6 +327,43 @@ The `copy` element allows you to deploy multiple copies of a resource with diffe
 
 When you need to ensure that one resource is created only after another resource is successfully deployed (e.g., subnets after VNet), use **`dependsOn`**. This is the correct and explicit way to define resource deployment order in ARM templates.
 
+## Practice Questions
+
+### Question 1: Identifying ARM Template Used for Resource Deployment
+
+**Scenario:**
+Your company has an Azure subscription that includes a storage account, a resource group, a blob container, and a file share. A fellow administrator named Jon Ross used an Azure Resource Manager template to deploy a virtual machine and an Azure Storage account. You need to identify the Azure Resource Manager template that Jon Ross used.
+
+**Solution:** You access the Resource Group blade.
+
+**Does the solution meet the goal?**
+
+**Answer: Yes** ✅
+
+**Explanation:**
+
+Yes, accessing the Resource Group blade allows you to view all the resources deployed within that specific resource group. By navigating to the Resource Group blade, you can:
+
+1. **View Deployment History**: The Resource Group blade contains a "Deployments" section that shows all ARM template deployments that have been executed
+2. **Access Deployment Details**: Click on any deployment to view:
+   - The complete ARM template that was used
+   - Input parameters that were provided
+   - Deployment outputs
+   - Deployment status and logs
+3. **Identify the Template**: Review the template content to understand what resources were deployed and how they were configured
+
+**How to Access Deployment History:**
+
+1. Navigate to Azure Portal
+2. Go to **Resource Groups**
+3. Select the resource group containing the deployed resources
+4. In the left menu, click **Deployments** (under Settings)
+5. Select the specific deployment to view the ARM template details
+
+This is the correct and most straightforward approach to identify the Azure Resource Manager template that was used by Jon Ross for the deployment.
+
+---
+
 ## Related Technologies
 
 | Technology | Type | Description |
