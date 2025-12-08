@@ -23,6 +23,7 @@
   - [Question 3: Extending Session Expiration for App Service Authentication](#question-3-extending-session-expiration-for-app-service-authentication)
   - [Question 4: TLS Mutual Authentication Client Certificate Validation](#question-4-tls-mutual-authentication-client-certificate-validation)
   - [Question 5: Configuring Authorization with Microsoft Entra ID Group Membership Claims](#question-5-configuring-authorization-with-microsoft-entra-id-group-membership-claims)
+  - [Question 6: Using Application Roles vs Group Claims for Authorization](#question-6-using-application-roles-vs-group-claims-for-authorization)
 - [Token Validation for Web APIs](#token-validation-for-web-apis)
   - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
   - [Implementing JWT Validation](#implementing-jwt-validation)
@@ -683,6 +684,166 @@ Does the solution meet the goal?
 **Why the "No" Explanation is Incorrect:** The "No" explanation states that setting `groupMembershipClaims` to All includes group memberships but doesn't specify how to use them. However, the solution explicitly states "In the website, use the value of the groups claim from the JWT for the user to determine permissions," which provides the necessary logic to map group memberships to permission levels.
 
 **Key Takeaway:** To include group membership information in JWT tokens for authorization purposes, set `groupMembershipClaims` to "All" in the Microsoft Entra ID application manifest. Your application code can then read the `groups` claim from the JWT to implement role-based access control.
+
+---
+
+### Question 6: Using Application Roles vs Group Claims for Authorization
+
+**Question:** You are developing a website that will run as an Azure Web App. Users will authenticate by using their Microsoft Entra ID credentials. You plan to assign users one of the following permission levels for the website: `admin`, `normal`, and `reader`. A user's Microsoft Entra ID group membership must be used to determine the permission level. You need to configure authorization.
+
+**Solution:** Create a new Microsoft Entra ID application. In the application's manifest, define application roles that match the required permission levels for the application. Assign the appropriate Microsoft Entra ID group to each role. In the website, use the value of the roles claim from the JWT for the user to determine permissions.
+
+Does the solution meet the goal?
+
+**Correct Answer: No**
+
+**Explanation:** 
+
+This solution **does NOT meet the goal** as stated. The question specifically asks to use "**Microsoft Entra ID group membership**" to determine permission levels. However, the proposed solution actually uses **Application Roles**, which is a different authorization mechanism.
+
+**Why This Solution is Problematic:**
+
+While the solution described would technically work for authorization, it misunderstands the distinction between two different approaches:
+
+1. **Group-Based Authorization (What the question asks for):**
+   - Uses the `groups` claim in the JWT
+   - Requires setting `groupMembershipClaims` in the manifest
+   - Application reads group Object IDs directly from the token
+   - Groups are managed in Microsoft Entra ID independently of the application
+
+2. **App Roles-Based Authorization (What the solution proposes):**
+   - Uses the `roles` claim in the JWT
+   - Requires defining `appRoles` in the application manifest
+   - Groups are **assigned to roles**, creating an abstraction layer
+   - Application reads role names from the token instead of group IDs
+
+**The Correct Explanation:**
+
+The "Yes" explanation is misleading because it states the solution "may not effectively determine the permission level based on group membership." This is inaccurate. The App Roles approach **can** effectively determine permissions, but it doesn't use group membership **directly** as the question requires—it uses groups assigned to roles, which is an indirect approach.
+
+**Comparison of Both Approaches:**
+
+| Aspect | Group Claims Approach | App Roles Approach |
+|--------|----------------------|--------------------|
+| **Claim Type** | `groups` | `roles` |
+| **Manifest Setting** | `groupMembershipClaims: "All"` | Define `appRoles` array |
+| **What's in Token** | Group Object IDs (GUIDs) | Role names (strings) |
+| **Group Assignment** | Users/groups added to Entra ID groups | Groups assigned to app roles |
+| **Application Logic** | Maps group IDs to permissions | Maps role names to permissions |
+| **Decoupling** | Tight coupling to Entra ID groups | Abstraction layer between groups and permissions |
+| **Meets Question Goal** | ✅ Yes - uses group membership directly | ❌ No - uses roles (groups assigned to roles) |
+
+**When to Use Each Approach:**
+
+**Use Group Claims When:**
+- You want direct group membership authorization
+- Your groups already exist and are managed in Entra ID
+- You want to avoid defining roles in the application manifest
+- The question specifically asks to use group membership
+
+**Use App Roles When:**
+- You want application-specific role names (more readable than GUIDs)
+- You need to decouple application permissions from Entra ID group structure
+- You want role names to appear in the Azure Portal UI for assignments
+- You prefer semantic role names (`"Admin"`) over group IDs
+- You need to support users being assigned to roles directly (not just groups)
+
+**Implementation Comparison:**
+
+**Group Claims Approach (Correct for this question):**
+
+```json
+// Application Manifest
+{
+  "groupMembershipClaims": "All"
+}
+```
+
+```csharp
+// Application Code - Maps group IDs to permissions
+var adminGroupId = "12345678-1234-1234-1234-123456789abc";
+var normalGroupId = "87654321-4321-4321-4321-cba987654321";
+var readerGroupId = "11111111-2222-3333-4444-555555555555";
+
+var userGroups = User.Claims
+    .Where(c => c.Type == "groups")
+    .Select(c => c.Value)
+    .ToList();
+
+if (userGroups.Contains(adminGroupId))
+{
+    // User has admin permissions
+}
+```
+
+**App Roles Approach (What the solution proposes):**
+
+```json
+// Application Manifest
+{
+  "appRoles": [
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Admin users have full access",
+      "displayName": "Admin",
+      "id": "<unique-guid>",
+      "isEnabled": true,
+      "value": "Admin"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Normal users have standard access",
+      "displayName": "Normal",
+      "id": "<unique-guid>",
+      "isEnabled": true,
+      "value": "Normal"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Readers have read-only access",
+      "displayName": "Reader",
+      "id": "<unique-guid>",
+      "isEnabled": true,
+      "value": "Reader"
+    }
+  ]
+}
+```
+
+```csharp
+// Application Code - Uses role names instead of group IDs
+var roles = User.Claims
+    .Where(c => c.Type == ClaimTypes.Role)
+    .Select(c => c.Value)
+    .ToList();
+
+if (roles.Contains("Admin"))
+{
+    // User has admin permissions
+}
+
+// Or use role-based authorization
+[Authorize(Roles = "Admin")]
+public class AdminController : Controller { }
+```
+
+**Then Assign Groups to Roles (additional step not required for group claims):**
+- Azure Portal → Enterprise Applications → Your App → Users and groups
+- Add assignment → Select your Entra ID group → Select the role → Assign
+
+**Key Takeaway:** 
+
+When a question specifically asks to use **"Microsoft Entra ID group membership"** to determine permissions, you should use the **group claims approach** (`groupMembershipClaims` + `groups` claim). Using **App Roles** with groups assigned to those roles is a valid and often preferred authorization pattern in practice, but it doesn't directly answer the question as stated because it introduces an abstraction layer. The question tests your understanding of the difference between direct group-based authorization and role-based authorization with group assignments.
+
+**Best Practice in Real-World Scenarios:**
+
+While the group claims approach is what the question asks for, **App Roles are generally considered a best practice** for production applications because:
+1. More maintainable (readable role names vs GUIDs)
+2. Better separation of concerns (app roles vs infrastructure groups)
+3. More flexible (users can be assigned directly or via groups)
+4. Better Azure Portal UX for managing assignments
+
+However, for exam questions, always answer based on what is explicitly asked, not what you would do in practice.
 
 ## Token Validation for Web APIs
 
