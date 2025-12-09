@@ -102,6 +102,17 @@
   - [Distributed Tracing Correlation Properties Comparison](#distributed-tracing-correlation-properties-comparison)
   - [Key Takeaway](#key-takeaway-13)
   - [Related Learning Resources](#related-learning-resources-13)
+- [Question 15: Implementing Website Availability Monitoring with Minimal Effort](#question-15-implementing-website-availability-monitoring-with-minimal-effort)
+  - [Explanation](#explanation-14)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-13)
+  - [Application Insights Availability Test Types Comparison](#application-insights-availability-test-types-comparison)
+  - [Standard Test Configuration](#standard-test-configuration)
+  - [Parse Dependent Requests Feature](#parse-dependent-requests-feature)
+  - [Multi-Location Retry Behavior](#multi-location-retry-behavior)
+  - [Code Example: Custom Track Availability (For Comparison)](#code-example-custom-track-availability-for-comparison)
+  - [Standard Test Kusto Query Examples](#standard-test-kusto-query-examples)
+  - [Key Takeaway](#key-takeaway-14)
+  - [Related Learning Resources](#related-learning-resources-14)
 
 ## Overview
 
@@ -2098,3 +2109,207 @@ When implementing distributed tracing across microservices, the **`operation_Id`
 - Distributed tracing in Application Insights
 - W3C Trace Context support in Application Insights
 - Transaction diagnostics in Application Insights
+
+---
+
+## Question 15: Implementing Website Availability Monitoring with Minimal Effort
+
+**Scenario**: You are developing applications for a company and plan to host them on Azure App Services. The company has the following requirements:
+
+- Every five minutes verify that the websites are responsive
+- Verify that the websites respond within a specified time threshold
+- Dependent requests such as images and JavaScript files must load properly
+- Generate alerts if a website is experiencing issues
+- If a website fails to load, the system must attempt to reload the site three more times
+
+You need to implement this process with the least amount of effort. What should you do?
+
+**Options**:
+
+1. **Create a Selenium web test and configure it to run from your workstation as a scheduled task** ❌
+2. **Set up a URL ping test to query the home page** ✅
+3. **Create an Azure function to query the home page** ❌
+4. **Create a multi-step web test to query the home page** ❌
+5. **Create a Custom Track Availability Test to query the home page** ❌
+
+### Explanation
+
+**Correct Answer: Set up a URL ping test to query the home page**
+
+The optimal solution is to use **Application Insights Standard Tests** (formerly URL ping tests), which meet all requirements with minimal effort:
+
+✅ **Every 5 minutes verification**: Configurable test frequency with a minimum of 5 minutes  
+✅ **Response time thresholds**: Built-in timeout and performance threshold configuration  
+✅ **Dependent requests (images, JS)**: Option to parse dependent requests  
+✅ **Generate alerts**: Native integration with Azure Monitor alert rules  
+✅ **Retry logic (3 retries)**: Configurable failure criteria across multiple test locations  
+✅ **Least effort**: No custom code required, fully managed service  
+
+**Implementation Overview**:
+
+Application Insights Standard Tests provide a comprehensive, no-code solution for availability monitoring. By configuring tests from multiple geographic locations (e.g., 5 locations worldwide), you can implement retry-like behavior: if 2 out of 5 locations fail, the system can trigger alerts, effectively providing multiple retry attempts.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Selenium from workstation** | ❌ High maintenance burden, requires infrastructure management, creates a single point of failure, doesn't integrate natively with Azure alerting |
+| **Azure Function** | ❌ Requires custom code development, doesn't include built-in alerting or retry logic out of the box, more effort than managed service |
+| **Multi-step web test** | ❌ Designed for complex user workflows and interactions; overkill for basic availability monitoring; requires Visual Studio to create |
+| **Custom Track Availability Test** | ❌ Requires custom coding using the Application Insights SDK; more effort than using Standard Tests; no built-in UI configuration |
+
+### Application Insights Availability Test Types Comparison
+
+| Test Type | Use Case | Configuration | Effort | Dependent Requests | Retry Logic |
+|-----------|----------|---------------|--------|-------------------|-------------|
+| **Standard Test (URL Ping)** | Simple endpoint availability | Portal UI | ✅ Low | ✅ Yes (optional) | ✅ Multi-location |
+| **Multi-step Test** | Complex user workflows | Visual Studio WebTest | ❌ High | ✅ Yes | ✅ Multi-location |
+| **Custom Track Availability** | Custom logic/scenarios | Code (TrackAvailability) | ❌ High | Custom | Custom |
+
+### Standard Test Configuration
+
+**Portal Configuration Steps**:
+
+1. **Enable Application Insights** for your App Service
+2. **Create a Standard Test**:
+   - Navigate to Application Insights → Availability
+   - Click "+ Add Standard test"
+3. **Configure Test Parameters**:
+   ```
+   Test name: Homepage Availability Check
+   URL: https://your-app-service.azurewebsites.net
+   Test frequency: 5 minutes
+   Test locations: 5 locations (e.g., US East, West Europe, Southeast Asia, etc.)
+   Success criteria: 
+     - Response timeout: 30 seconds
+     - HTTP status code: 200
+     - Parse dependent requests: Enabled ✅
+     - Retries: Enabled for test failures
+   ```
+4. **Configure Alert Rules**:
+   ```
+   Alert condition: When availability < 80% (4 out of 5 locations)
+   Evaluation frequency: 5 minutes
+   Action group: Email/SMS notification
+   ```
+
+### Parse Dependent Requests Feature
+
+When "Parse dependent requests" is enabled, Standard Tests will:
+- Download and validate all images referenced in the HTML
+- Load and verify CSS stylesheets
+- Execute and validate JavaScript file loading
+- Check other embedded resources (fonts, icons, etc.)
+
+This ensures the complete page loads correctly, not just the HTML document.
+
+### Multi-Location Retry Behavior
+
+**How it provides retry-like functionality**:
+
+```
+Test Locations: 5 worldwide locations (US East, West Europe, Southeast Asia, Australia, Brazil)
+
+Scenario: Site is temporarily unreachable
+┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│ Time            │ US East  │ W Europe │ SE Asia  │ Australia│ Brazil   │
+├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+│ 10:00 AM        │ ❌ Fail  │ ❌ Fail  │ ✅ Pass  │ ✅ Pass  │ ✅ Pass  │
+│ Success Rate    │          3/5 = 60% (Below 80% threshold)              │
+│ Alert Status    │          ⚠️ Alert triggered                          │
+└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+
+Multiple test locations act as implicit retries:
+- Each location tests independently
+- Failures must occur across multiple locations to trigger alerts
+- Provides more reliable detection than single-location testing
+```
+
+### Code Example: Custom Track Availability (For Comparison)
+
+While not recommended for this scenario, here's how a custom availability test would look:
+
+```csharp
+// Custom Azure Function (more effort, not recommended for this scenario)
+public static async Task<IActionResult> Run(
+    [TimerTrigger("0 */5 * * * *")] TimerInfo timer,
+    ILogger log)
+{
+    var telemetryClient = new TelemetryClient();
+    var stopwatch = Stopwatch.StartNew();
+    bool success = false;
+    
+    try
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        var response = await client.GetAsync("https://your-app.azurewebsites.net");
+        
+        success = response.IsSuccessStatusCode;
+        stopwatch.Stop();
+        
+        // Track availability manually
+        telemetryClient.TrackAvailability(
+            "Homepage",
+            DateTimeOffset.UtcNow,
+            stopwatch.Elapsed,
+            "CustomTest",
+            success,
+            message: $"Status: {response.StatusCode}"
+        );
+    }
+    catch (Exception ex)
+    {
+        stopwatch.Stop();
+        telemetryClient.TrackAvailability(
+            "Homepage",
+            DateTimeOffset.UtcNow,
+            stopwatch.Elapsed,
+            "CustomTest",
+            success: false,
+            message: ex.Message
+        );
+    }
+    
+    return new OkResult();
+}
+```
+
+**Why this is more effort**: Requires writing code, deploying Azure Function, managing function execution, implementing retry logic, and manually integrating with alerting.
+
+### Standard Test Kusto Query Examples
+
+Monitor availability test results:
+
+```kusto
+// View all availability test results
+availabilityResults
+| where timestamp > ago(1h)
+| project timestamp, name, location, success, duration, message
+| order by timestamp desc
+
+// Calculate success rate by location
+availabilityResults
+| where timestamp > ago(24h)
+| summarize 
+    Total = count(),
+    Successes = countif(success == true),
+    SuccessRate = 100.0 * countif(success == true) / count()
+    by location
+| order by SuccessRate asc
+
+// Identify failing dependent requests
+availabilityResults
+| where timestamp > ago(1h) and success == false
+| extend dependencies = parse_json(message)
+| project timestamp, name, location, message
+```
+
+### Key Takeaway
+
+For monitoring Azure App Services with requirements for regular health checks, response time validation, dependent request verification, and alerting with minimal effort, **Application Insights Standard Tests (URL ping tests)** provide the optimal solution. They offer a fully managed, no-code approach with built-in support for parsing dependent requests, configurable test frequency, multi-location testing (providing retry-like behavior), and seamless integration with Azure Monitor alerts. This eliminates the need for custom code, infrastructure management, or complex test authoring tools.
+
+### Related Learning Resources
+- [Monitor availability with URL ping tests (Standard tests)](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-standard-tests)
+- [Availability tests overview in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-overview)
+- [Multi-step web tests in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-multistep)
+- [Create and run custom availability tests](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-azure-functions)
