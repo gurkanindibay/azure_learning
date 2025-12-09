@@ -24,7 +24,9 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 10. [Exam Scenario Analysis](#exam-scenario-analysis)
     - [Question 1: Authentication with OpenID Connect](#exam-question-1-authentication-with-openid-connect)
     - [Question 2: App Service Authentication (Easy Auth)](#exam-question-2-app-service-authentication-easy-auth)
-    - [Question 3: Configuring Entra ID for Azure Blob Storage with RBAC](#exam-question-3-configuring-entra-id-for-azure-blob-storage-with-rbac)
+    - [Question 3: Group-Based Authorization for Azure Web Apps](#exam-question-3-group-based-authorization-for-azure-web-apps)
+    - [Question 4: Configuring Entra ID for Azure Blob Storage with RBAC](#exam-question-4-configuring-entra-id-for-azure-blob-storage-with-rbac)
+    - [Question 5: Configuring Multifactor Authentication for Web App](#exam-question-5-configuring-multifactor-authentication-for-web-app)
 
 ---
 
@@ -2684,7 +2686,7 @@ public IActionResult ViewContent()
 
 ---
 
-### Exam Question 3: Configuring Entra ID for Azure Blob Storage with RBAC
+### Exam Question 4: Configuring Entra ID for Azure Blob Storage with RBAC
 
 **Scenario:** You are developing an ASP.NET Core website that can be used to manage photographs which are stored in Azure Blob Storage containers. Users of the website authenticate by using their Microsoft Entra ID credentials. You implement role-based access control (RBAC) role permissions on the containers that store photographs. You assign users to RBAC roles.
 
@@ -3012,6 +3014,293 @@ builder.Services.AddSingleton<BlobStorageService>(sp =>
 - Forget to assign RBAC roles to users
 
 **Remember:** The combination of Entra ID authentication + delegated permissions + RBAC enables fine-grained, user-specific access control to Azure Storage resources.
+
+---
+
+### Exam Question 5: Configuring Multifactor Authentication for Web App
+
+**Scenario:** You are developing a web app that uses Microsoft Entra ID for authentication. You want to configure the web app to use multifactor authentication.
+
+**Question:** What should you do?
+
+### Answer Options Analysis
+
+#### ❌ Option 1: Enable mobile app authentication
+
+**Why this is WRONG:**
+- Enabling mobile app authentication is NOT directly related to configuring multifactor authentication for a web app
+- While mobile app authentication (Microsoft Authenticator) can be **part** of multifactor authentication, it is not the only step required
+- Mobile app authentication is a **method/factor** that users can use, not the configuration that enforces MFA
+- Simply enabling it does not ensure that users will be required to use MFA
+
+**What mobile app authentication actually is:**
+- One of several possible second-factor authentication methods
+- Includes Microsoft Authenticator app for push notifications or time-based codes
+- Can be used after MFA is enforced through Conditional Access
+
+---
+
+#### ❌ Option 2: In Microsoft Entra ID conditional access, enable the baseline policy
+
+**Why this is NOT specifically correct:**
+- Baseline policies were **legacy** Conditional Access policies that are now **deprecated**
+- They focused on enforcing security requirements for all users in an organization
+- They were replaced by more flexible and customizable Conditional Access policies
+- While baseline policies could enforce MFA, they are no longer the recommended approach
+- Modern Conditional Access policies provide better control and customization
+
+**About baseline policies:**
+- Pre-configured security policies that were available in earlier versions of Azure AD
+- Provided basic security protections but lacked flexibility
+- **Deprecated** in favor of custom Conditional Access policies and security defaults
+- Not the current best practice for configuring MFA
+
+---
+
+#### ✅ Option 3: In Microsoft Entra ID, create a conditional access policy - CORRECT ANSWER
+
+**Why this is CORRECT:**
+
+1. **Conditional Access is the primary method for enforcing MFA:**
+   - Allows you to define specific conditions under which users must provide MFA
+   - Provides granular control over when and how MFA is required
+   - Can be applied to specific users, groups, applications, or scenarios
+
+2. **Flexible and customizable:**
+   - Target specific applications (your web app)
+   - Target specific user groups or roles
+   - Define conditions (location, device state, risk level)
+   - Control session behavior and access requirements
+
+3. **Modern best practice:**
+   - Microsoft's recommended approach for enforcing MFA
+   - Part of Microsoft Entra ID Premium P1 or P2 licenses
+   - Integrates with other security features like Identity Protection
+
+4. **Meets the scenario requirements:**
+   - Specifically configures MFA enforcement for the web app
+   - Ensures users authenticate with multiple factors before accessing the app
+   - Provides control over authentication requirements
+
+**How Conditional Access works:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────┐
+│           Conditional Access Policy Flow                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  User attempts to sign in to web app                        │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+│  Conditional Access evaluates policies:                     │
+│  • Which user/group? (Assignment)                           │
+│  • Which application? (Cloud apps)                          │
+│  • From where? (Conditions: location, device, risk)         │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+│  Policy requires MFA:                                        │
+│  • Grant access only after MFA                              │
+│  ──────────────────────────────────────────────────────────►│
+│                                                              │
+│  User completes MFA (second factor):                        │
+│  • Microsoft Authenticator                                  │
+│  • SMS/Phone call                                           │
+│  • FIDO2 security key                                       │
+│  • Windows Hello                                            │
+│  ◄──────────────────────────────────────────────────────────│
+│                                                              │
+│  Access granted to web app                                  │
+│  ◄──────────────────────────────────────────────────────────│
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Configuration Steps:**
+
+```plaintext
+1. Navigate to Conditional Access:
+   Azure Portal → Microsoft Entra ID → Security → Conditional Access
+
+2. Create new policy:
+   → New policy → Name: "Require MFA for Web App"
+
+3. Configure Assignments:
+   Users:
+   - Select users or groups that need MFA
+   - Or select "All users"
+   
+   Cloud apps or actions:
+   - Select your web app from the list
+   - Or select "All cloud apps" for organization-wide MFA
+
+4. Configure Conditions (optional but recommended):
+   Locations:
+   - Require MFA when accessing from outside corporate network
+   
+   Device platforms:
+   - Require MFA for specific platforms (iOS, Android, etc.)
+   
+   Sign-in risk:
+   - Require MFA for medium or high-risk sign-ins
+
+5. Configure Access Controls:
+   Grant:
+   - Select "Grant access"
+   - Check "Require multifactor authentication"
+   - Can also add: "Require device to be marked as compliant"
+
+6. Enable policy:
+   - Set "Enable policy" to "On"
+   - Choose "Report-only" for testing first (recommended)
+   - Click "Create"
+
+7. Test the policy:
+   - Test with a user account
+   - Verify MFA prompt appears when accessing the web app
+   - Move to "On" after successful testing
+```
+
+**Example Conditional Access Policy Configuration:**
+
+| Setting | Value |
+|---------|-------|
+| **Name** | Require MFA for Web App |
+| **Assignments - Users** | All users (or specific group) |
+| **Assignments - Cloud apps** | Select your web app |
+| **Conditions - Locations** | Any location (or exclude trusted locations) |
+| **Access Controls - Grant** | Grant access + Require multifactor authentication |
+| **Enable policy** | On |
+
+**Code Example - No changes needed in application code:**
+
+Your web app code remains the same. When users authenticate through Microsoft Entra ID, the Conditional Access policy automatically enforces MFA:
+
+```csharp
+// Program.cs or Startup.cs
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+builder.Services.AddAuthorization();
+
+// The Conditional Access policy handles MFA enforcement
+// No additional code required
+```
+
+**What happens from user perspective:**
+
+1. User navigates to your web app
+2. App redirects to Microsoft Entra ID sign-in
+3. User enters username and password (first factor)
+4. **Conditional Access policy triggers**
+5. User prompted for second factor (MFA):
+   - Microsoft Authenticator push notification
+   - Or SMS code
+   - Or phone call
+   - Or FIDO2 security key
+6. After successful MFA, user redirected back to app with token
+7. User authenticated and authorized
+
+---
+
+#### ❌ Option 4: Install the Azure Multi-Factor Authentication Server
+
+**Why this is WRONG:**
+- Azure Multi-Factor Authentication Server is an **on-premises solution**
+- Designed for legacy applications and services that cannot integrate with cloud-based Azure MFA
+- Typically used for on-premises VPN, RADIUS-based applications, and legacy systems
+- **NOT necessary** for cloud-based web apps using Microsoft Entra ID
+- Adds unnecessary complexity and infrastructure maintenance
+- Microsoft recommends cloud-based MFA (via Conditional Access) for modern applications
+
+**When Azure MFA Server might be used:**
+- On-premises applications that cannot use modern authentication
+- RADIUS-based authentication (VPN, network devices)
+- IIS-based applications using forms authentication
+- Legacy scenarios where cloud integration is not possible
+
+**Why it's wrong for this scenario:**
+- The web app already uses Microsoft Entra ID for authentication
+- Cloud-based MFA through Conditional Access is the modern, simpler approach
+- No need for additional servers or infrastructure
+- Azure MFA Server is being phased out by Microsoft
+
+---
+
+### Summary: Configuring MFA for Web Apps with Microsoft Entra ID
+
+#### Comparison of Options
+
+| Option | Purpose | Appropriate for Web App MFA? | Notes |
+|--------|---------|------------------------------|-------|
+| **Create Conditional Access policy** | ✅ Enforce MFA requirements | ✅ YES - Correct approach | Modern, flexible, recommended |
+| **Enable mobile app authentication** | Configure authentication method | ❌ NO - Incomplete | Only enables a method, doesn't enforce |
+| **Enable baseline policy** | Legacy security policies | ❌ NO - Deprecated | Use custom Conditional Access instead |
+| **Install MFA Server** | On-premises MFA solution | ❌ NO - Wrong architecture | For legacy/on-premises apps only |
+
+#### The Correct Approach: Conditional Access
+
+**Key Benefits:**
+- ✅ Cloud-native solution (no infrastructure to manage)
+- ✅ Granular control (target specific apps, users, conditions)
+- ✅ No code changes required in application
+- ✅ Integrates with Microsoft Entra ID seamlessly
+- ✅ Supports multiple MFA methods automatically
+- ✅ Can enforce additional security controls (compliant devices, etc.)
+
+**MFA Methods Supported (automatically):**
+- Microsoft Authenticator app (push notification)
+- Microsoft Authenticator app (verification code)
+- SMS text message
+- Phone call
+- FIDO2 security key
+- Windows Hello for Business
+- Certificate-based authentication
+
+> **Exam Tip:** When asked about configuring MFA for a web app using Microsoft Entra ID, the correct answer is to **create a Conditional Access policy**. This is the modern, cloud-based approach that provides granular control over when and how MFA is enforced.
+
+---
+
+### Additional Considerations
+
+#### Licensing Requirements
+
+| Feature | Required License |
+|---------|-----------------|
+| **Conditional Access policies** | Microsoft Entra ID Premium P1 or P2 |
+| **Security Defaults (basic MFA)** | Free with any Microsoft Entra ID |
+| **Risk-based Conditional Access** | Microsoft Entra ID Premium P2 |
+| **Identity Protection** | Microsoft Entra ID Premium P2 |
+
+#### Security Defaults vs Conditional Access
+
+**Security Defaults** (simpler but less flexible):
+- Free with any Microsoft Entra ID tenant
+- Automatically enforces MFA for all users
+- No customization or exceptions
+- Good for small organizations or quick setup
+
+**Conditional Access** (more control):
+- Requires Premium P1 or P2 license
+- Granular control over policies
+- Target specific apps, users, or conditions
+- Better for enterprise scenarios
+- **Recommended for the exam scenario**
+
+#### Best Practices
+
+✅ **DO:**
+- Use Conditional Access for MFA enforcement
+- Test policies in "Report-only" mode first
+- Enable MFA for administrator accounts first
+- Provide clear communication to users before rollout
+- Register multiple MFA methods for redundancy
+
+❌ **DON'T:**
+- Rely only on mobile app authentication configuration
+- Use deprecated baseline policies
+- Install on-premises MFA Server for cloud apps
+- Lock yourself out (exclude emergency access accounts)
+- Enable policies without testing
 
 ---
 
