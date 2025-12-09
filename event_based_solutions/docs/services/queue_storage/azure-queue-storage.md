@@ -59,9 +59,24 @@ Queue Storage is commonly used to:
 ### Components
 
 1. **Storage Account**: Provides a unique namespace in Azure for your data
-2. **Queue**: Contains a set of messages organized in FIFO (First In, First Out) order
+2. **Queue**: Contains a set of messages generally processed in FIFO (First In, First Out) order
 3. **Message**: A message in any format, up to 64 KB in size
 4. **URL Format**: `https://<storage-account>.queue.core.windows.net/<queue>`
+
+### Message Ordering
+
+**Important**: Azure Queue Storage **does not guarantee strict FIFO ordering**. While messages are generally processed in the order they were added under normal conditions, the following scenarios can cause out-of-order processing:
+
+- **Multiple consumers**: When multiple consumers retrieve messages simultaneously
+- **Visibility timeouts**: Messages with different visibility timeout values may reappear at different times
+- **Failed processing**: Messages that fail and reappear after visibility timeout will be processed out of order relative to newer messages
+- **High concurrency**: Under high-load scenarios, message ordering is not guaranteed
+- **Message updates**: Updated messages may be reordered in the queue
+
+**If strict FIFO ordering is required**, use **Azure Service Bus Queues with sessions** instead, which provides:
+- Guaranteed ordering within a session
+- Session-based message grouping
+- First-in, first-out delivery guarantees per session
 
 ### Message Properties
 
@@ -76,18 +91,20 @@ Queue Storage is commonly used to:
 
 ### When to Use Queue Storage
 
-- **Simple FIFO queue**: Basic message queuing without advanced features
+- **Basic message queuing**: Simple asynchronous message processing where strict ordering is not critical
 - **Cost-effective**: Lower cost for simple scenarios
 - **Large message volume**: Handle millions of messages
 - **HTTP/HTTPS access**: Access from anywhere via REST API
 - **Auditing**: Need detailed tracking of all operations via Storage Analytics
-
+- **Loose ordering requirements**: Application can tolerate messages being processed out of order
 ### When to Use Service Bus
 
 - **Advanced messaging patterns**: Publish/subscribe, sessions, transactions
 - **Message size > 64 KB**: Support for messages up to 256 KB (Standard) or 1 MB (Premium)
-- **Guaranteed ordering**: Session-based ordering guarantees
+- **Guaranteed FIFO ordering**: Strict first-in, first-out delivery with session-based ordering guarantees
 - **Duplicate detection**: Automatic detection of duplicate messages
+- **Complex routing**: Topic filters and actions
+- **Strict ordering requirements**: Application requires messages to be processed in exact orderf duplicate messages
 - **Complex routing**: Topic filters and actions
 
 ## Working with Azure Queue Storage in .NET
