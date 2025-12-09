@@ -34,7 +34,9 @@
   - [Benefits](#benefits)
   - [Considerations](#considerations)
 - [5. Tiers](#5-tiers)
-- [6. Best Practices](#6-best-practices)
+- [6. Exam Scenarios](#6-exam-scenarios)
+  - [Exam Question 1: Selecting Technologies for Transactional, Duplicate-Free, Unlimited Storage Messaging](#exam-question-1-selecting-technologies-for-transactional-duplicate-free-unlimited-storage-messaging)
+- [7. Best Practices](#7-best-practices)
 
 ## 1. Overview
 Azure Service Bus is a fully managed enterprise message broker with message queues and publish-subscribe topics. It is used to decouple applications and services.
@@ -708,7 +710,358 @@ Service Bus follows a **hybrid push-pull** delivery model:
 - **Standard:** Queues & Topics, variable latency, shared resources.
 - **Premium:** Dedicated resources (Messaging Units), predictable latency, support for large messages (up to 100 MB), VNET integration.
 
-## 6. Best Practices
+## 6. Exam Scenarios
+
+### Exam Question 1: Selecting Technologies for Transactional, Duplicate-Free, Unlimited Storage Messaging
+
+**Scenario:** You are developing an Azure messaging solution. You need to ensure that the solution meets the following requirements:
+- Provide transactional support
+- Provide duplicate detection
+- Store the messages for an unlimited period of time
+
+**Question:** Which two technologies will meet the requirements?
+
+### Answer Analysis
+
+#### ✅ Correct Answer 1: Azure Service Bus Queue
+
+**Why this is CORRECT:**
+
+1. **Transactional Support ✅**
+   - Service Bus Queues support atomic transactions across multiple operations
+   - Can send, receive, and complete messages within a single transaction scope
+   - Ensures all-or-nothing delivery guarantees
+   
+   ```csharp
+   using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+   {
+       await sender1.SendMessageAsync(new ServiceBusMessage("Message 1"));
+       await sender2.SendMessageAsync(new ServiceBusMessage("Message 2"));
+       scope.Complete(); // Both committed atomically
+   }
+   ```
+
+2. **Duplicate Detection ✅**
+   - Built-in duplicate detection based on `MessageId` property
+   - Configurable detection window (up to 7 days)
+   - Available in Standard and Premium tiers
+   - Automatically discards duplicate messages without application code
+   
+   ```csharp
+   var message = new ServiceBusMessage("Transaction data")
+   {
+       MessageId = "txn-12345"  // Unique identifier for deduplication
+   };
+   await sender.SendMessageAsync(message);
+   ```
+
+3. **Unlimited Message Storage ✅**
+   - **Messages can be stored indefinitely** by setting Time-To-Live (TTL) to `TimeSpan.MaxValue`
+   - Default TTL is 14 days, but can be configured to never expire
+   - Messages remain in the queue until explicitly consumed or deleted
+   - No automatic expiration when TTL is set to maximum
+   
+   ```csharp
+   // Configure queue with unlimited TTL
+   var queueDescription = new QueueDescription("myqueue")
+   {
+       DefaultMessageTimeToLive = TimeSpan.MaxValue  // Unlimited storage
+   };
+   ```
+
+**Point-to-Point Messaging:**
+- Single consumer processes each message
+- Ideal for command processing and work queue patterns
+- Messages removed after successful processing
+
+---
+
+#### ✅ Correct Answer 2: Azure Service Bus Topic
+
+**Why this is CORRECT:**
+
+1. **Transactional Support ✅**
+   - Same transactional capabilities as Service Bus Queue
+   - Supports atomic operations within a single namespace
+   - Multiple subscriptions can participate in transactional workflows
+   
+2. **Duplicate Detection ✅**
+   - Same duplicate detection mechanism as queues
+   - Configured at the topic level
+   - Applies to all subscriptions under the topic
+   - Each subscription receives deduplicated messages
+
+3. **Unlimited Message Storage ✅**
+   - **Messages stored indefinitely** with TTL set to `TimeSpan.MaxValue`
+   - Each subscription independently stores message copies
+   - Messages remain until consumed by all interested subscribers
+   - No forced expiration with maximum TTL configuration
+
+**Publish-Subscribe Messaging:**
+- Multiple subscribers can receive copies of the same message
+- Ideal for event broadcasting and fan-out scenarios
+- Each subscription acts like an independent queue
+
+**When to Choose Topic Over Queue:**
+- Multiple independent services need to process the same message
+- Event-driven microservices architecture
+- Broadcasting domain events across bounded contexts
+
+---
+
+#### ❌ Incorrect Answer: Azure Storage Queue
+
+**Why this is WRONG:**
+
+1. **No Transactional Support ❌**
+   - Azure Storage Queue **does not support transactions** across multiple operations
+   - Cannot perform atomic operations on multiple messages
+   - Each operation (enqueue, dequeue, delete) is independent
+   - No guarantee of all-or-nothing message delivery
+
+2. **No Duplicate Detection ❌**
+   - Azure Storage Queue **does not provide built-in duplicate detection**
+   - Application must implement custom deduplication logic
+   - No automatic tracking of message IDs or deduplication windows
+   - Duplicate messages can be processed multiple times
+
+3. **Unlimited Storage ✅ (Only Requirement Met)**
+   - Messages can be stored for up to 7 days (not truly unlimited without manual intervention)
+   - Default TTL is 7 days, maximum is 7 days
+   - Messages automatically expire after 7 days
+   - Requires external archiving for longer retention
+
+**When to Use Azure Storage Queue:**
+- Simple message queuing without enterprise features
+- Cost-sensitive scenarios (lower cost than Service Bus)
+- No transactional or deduplication requirements
+- High message volumes with simple processing
+
+**Feature Comparison:**
+
+| Feature | Service Bus Queue/Topic | Storage Queue |
+|---------|------------------------|---------------|
+| **Transactions** | ✅ Yes | ❌ No |
+| **Duplicate Detection** | ✅ Yes | ❌ No |
+| **Unlimited Storage** | ✅ Yes (TTL = MaxValue) | ⚠️ Limited (7 days max) |
+| **Message Size** | Up to 256 KB (1 MB batched) | Up to 64 KB |
+| **Ordering (FIFO)** | ✅ Yes (with sessions) | ❌ No guarantee |
+| **Dead-Letter Queue** | ✅ Yes | ❌ No |
+| **Cost** | Higher | Lower |
+
+---
+
+#### ❌ Incorrect Answer: Azure Event Hub
+
+**Why this is WRONG:**
+
+1. **No Transactional Support (as Required) ❌**
+   - Event Hub **does not provide transactional guarantees** in the traditional messaging sense
+   - No support for atomic operations across multiple events
+   - Events are immediately committed upon receipt
+   - Cannot roll back or commit multiple events as a single transaction
+   - Designed for high-throughput streaming, not transactional messaging
+
+2. **No Duplicate Detection ❌**
+   - Event Hub **does not provide built-in duplicate detection**
+   - No automatic tracking of event IDs or deduplication logic
+   - Application must implement custom deduplication if needed
+   - Duplicate events can be processed multiple times
+
+3. **Different Storage Model ⚠️**
+   - Event Hub stores events for a **retention period** (1-90 days, 7 days default)
+   - Not designed for indefinite message storage
+   - Events are automatically purged after retention period
+   - Storage is time-based, not consumption-based
+
+**Event Hub Design Philosophy:**
+- **Event streaming** platform, not a message queue
+- Optimized for **high-throughput, low-latency** event ingestion
+- Multiple consumers can read the same event stream (similar to Kafka)
+- Events are **append-only** and cannot be deleted individually
+- No concept of message completion or dead-lettering
+
+**When to Use Event Hub:**
+- Real-time telemetry and event ingestion
+- IoT device data streaming
+- Application logging and diagnostics
+- Big data scenarios with millions of events per second
+- Time-series data collection
+
+**Feature Comparison:**
+
+| Feature | Service Bus | Event Hub |
+|---------|-------------|-----------|
+| **Use Case** | Enterprise messaging | Event streaming |
+| **Transactions** | ✅ Yes | ❌ No |
+| **Duplicate Detection** | ✅ Yes | ❌ No |
+| **Message Completion** | ✅ Yes (Peek-Lock) | ❌ No (Offset-based) |
+| **Dead-Letter Queue** | ✅ Yes | ❌ No |
+| **FIFO Ordering** | ✅ Yes (sessions) | ⚠️ Per partition |
+| **Throughput** | Moderate (thousands/sec) | Very High (millions/sec) |
+| **Message TTL** | Unlimited (configurable) | Retention period (1-90 days) |
+
+---
+
+### Summary: Technology Selection Matrix
+
+#### Requirements Analysis
+
+| Requirement | Service Bus Queue | Service Bus Topic | Storage Queue | Event Hub |
+|-------------|-------------------|-------------------|---------------|-----------|
+| **Transactional Support** | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+| **Duplicate Detection** | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+| **Unlimited Storage** | ✅ Yes | ✅ Yes | ⚠️ Limited (7 days) | ⚠️ Retention-based |
+| **Meets All Requirements** | ✅ YES | ✅ YES | ❌ NO | ❌ NO |
+
+#### Key Differentiators
+
+**Why Service Bus (Queue & Topic) is the ONLY Correct Choice:**
+
+✅ **Enterprise Messaging Features:**
+- Atomic transactions across operations
+- Built-in duplicate detection with configurable windows
+- Truly unlimited message storage with `TimeSpan.MaxValue` TTL
+- Dead-letter queues for failed messages
+- Message sessions for FIFO ordering
+- At-least-once delivery guarantees
+
+✅ **Flexible Message Retention:**
+```csharp
+// Unlimited storage configuration
+var queueDescription = new QueueDescription("financial-transactions")
+{
+    DefaultMessageTimeToLive = TimeSpan.MaxValue,  // Never expires
+    EnableDeadLetteringOnMessageExpiration = true,
+    RequiresDuplicateDetection = true,
+    DuplicateDetectionHistoryTimeWindow = TimeSpan.FromDays(1)
+};
+```
+
+❌ **Why Others Don't Meet Requirements:**
+
+**Storage Queue:**
+- Lacks enterprise features (transactions, deduplication)
+- Limited to 7-day maximum retention
+- No built-in reliability mechanisms
+
+**Event Hub:**
+- Different architectural model (streaming vs. messaging)
+- No transactional support for individual events
+- Retention-based storage, not message completion-based
+- No duplicate detection or dead-lettering
+
+---
+
+### Decision Tree: Choosing the Right Messaging Service
+
+```
+Need enterprise messaging features?
+    │
+    ├─ Need transactions AND duplicate detection?
+    │   └─ ✅ Service Bus (Queue or Topic)
+    │       │
+    │       ├─ Single consumer?
+    │       │   └─ ✅ Service Bus Queue
+    │       │
+    │       └─ Multiple subscribers?
+    │           └─ ✅ Service Bus Topic
+    │
+    ├─ Simple queuing, cost-sensitive?
+    │   └─ ✅ Azure Storage Queue
+    │       (Note: No transactions or duplicate detection)
+    │
+    └─ High-throughput event streaming?
+        └─ ✅ Azure Event Hub
+            (Note: Different model, not for transactional messaging)
+```
+
+---
+
+### Best Practices for Service Bus with Unlimited Storage
+
+#### Configuration Recommendations
+
+```csharp
+// Production-grade Service Bus configuration
+var queueOptions = new CreateQueueOptions("critical-transactions")
+{
+    // Unlimited storage
+    DefaultMessageTimeToLive = TimeSpan.MaxValue,
+    
+    // Duplicate detection
+    RequiresDuplicateDetection = true,
+    DuplicateDetectionHistoryTimeWindow = TimeSpan.FromHours(24),
+    
+    // Reliability features
+    DeadLetteringOnMessageExpiration = true,
+    EnableBatchedOperations = true,
+    MaxDeliveryCount = 10,
+    
+    // Ordering (optional)
+    RequiresSession = false,  // Set to true if FIFO needed
+    
+    // Size limits
+    MaxSizeInMegabytes = 5120,  // 5 GB
+};
+
+await adminClient.CreateQueueAsync(queueOptions);
+```
+
+#### Monitoring and Maintenance
+
+✅ **DO:**
+- Monitor queue/topic size and message counts
+- Implement dead-letter queue processing
+- Set up alerts for message backlog
+- Use batching for high-throughput scenarios
+- Configure appropriate max delivery counts
+
+❌ **DON'T:**
+- Set unlimited TTL without monitoring storage growth
+- Ignore dead-letter queues (can grow indefinitely)
+- Skip duplicate detection for critical business messages
+- Use Service Bus for high-volume telemetry (use Event Hub instead)
+- Forget to handle transient failures and implement retry logic
+
+#### Cost Considerations with Unlimited Storage
+
+**Important:** While Service Bus supports unlimited message storage by setting TTL to `TimeSpan.MaxValue`, be aware of:
+
+- **Storage costs:** Messages consume namespace storage quota
+- **Premium tier benefits:** Dedicated resources, larger message sizes
+- **Message size limits:** 256 KB in Standard, up to 100 MB in Premium
+- **Pricing model:** Based on operations and message units, not just storage
+
+**Monitor these metrics:**
+- Active message count
+- Dead-letter message count
+- Queue/topic size in MB
+- Scheduled message count
+- Deferred message count
+
+---
+
+### Exam Tips
+
+> **When asked about messaging solutions requiring transactions, duplicate detection, AND unlimited storage:**
+> - ✅ **Correct answers:** Azure Service Bus Queue and/or Azure Service Bus Topic
+> - ❌ **Incorrect:** Azure Storage Queue (no transactions/deduplication), Azure Event Hub (different model)
+
+> **Key phrases to recognize:**
+> - "Transactional support" → Service Bus only
+> - "Duplicate detection" → Service Bus only
+> - "Unlimited period of time" → Service Bus with `TimeSpan.MaxValue` TTL
+> - "Multiple subscribers" → Service Bus Topic (not Queue)
+
+> **Remember:**
+> - Service Bus is the ONLY Azure messaging service that provides all three features together
+> - Both Queue and Topic variants support the same core features (transactions, deduplication, unlimited storage)
+> - Choose Queue for point-to-point, Topic for publish-subscribe patterns
+
+---
+
+## 7. Best Practices
 - **Peek-Lock vs Receive-and-Delete:** Always use Peek-Lock for reliability (default). It allows abandoning the message if processing fails.
 - **Prefetch Count:** Increase prefetch count for high throughput scenarios to reduce round-trips.
 - **Exception Handling:** Handle `MessageLockLostException` (processing took too long) and `ServiceBusException` (transient errors).
