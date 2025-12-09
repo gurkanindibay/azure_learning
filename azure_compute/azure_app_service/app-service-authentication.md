@@ -17,6 +17,13 @@
   - [Overview](#overview-1)
   - [End-to-End Setup Process](#end-to-end-setup-process)
   - [Implementation Example](#implementation-example)
+- [Managed Service Identity (Managed Identity)](#managed-service-identity-managed-identity)
+  - [What is Managed Identity?](#what-is-managed-identity)
+  - [Types of Managed Identities](#types-of-managed-identities)
+  - [Using Managed Identity with Azure Key Vault](#using-managed-identity-with-azure-key-vault)
+  - [Using Managed Identity with Other Azure Services](#using-managed-identity-with-other-azure-services)
+  - [Managed Identity vs Service Principal](#managed-identity-vs-service-principal)
+  - [Best Practices for Managed Identity](#best-practices-for-managed-identity)
 - [Practice Questions](#practice-questions)
   - [Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID](#question-1-blocking-unauthenticated-requests-with-microsoft-entra-id)
   - [Question 2: Token Validation in ASP.NET Core Web APIs](#question-2-token-validation-in-aspnet-core-web-apis)
@@ -524,6 +531,767 @@ public class AdminController : ControllerBase
 
 5. **Testing**: Always test with users in different groups to ensure authorization logic works correctly.
 
+## Managed Service Identity (Managed Identity)
+
+### What is Managed Identity?
+
+**Managed Identity** (formerly known as Managed Service Identity or MSI) is an Azure feature that provides Azure services with an automatically managed identity in Microsoft Entra ID. This identity can be used to authenticate to any service that supports Microsoft Entra ID authentication, without storing credentials in your code.
+
+**Key Benefits:**
+- ✅ **No credential management** - Azure automatically creates and manages the identity
+- ✅ **Automatic rotation** - Credentials are rotated automatically by Azure
+- ✅ **Zero secrets in code** - No need to store connection strings, passwords, or keys
+- ✅ **Enhanced security** - Reduces the risk of credential leaks
+- ✅ **Simplified configuration** - Easier to set up than service principals
+- ✅ **Built-in compliance** - All access is logged for audit trails
+
+**How It Works:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│              Managed Identity Authentication Flow                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  1. App Service enables Managed Identity                            │
+│     └─► Azure creates identity in Entra ID                          │
+│                                                                      │
+│  2. Grant permissions to the identity                                │
+│     └─► Assign RBAC roles or access policies                        │
+│                                                                      │
+│  3. App requests token from Azure Instance Metadata Service (IMDS)  │
+│     └─► GET http://169.254.169.254/metadata/identity/oauth2/token   │
+│                                                                      │
+│  4. Azure returns access token                                       │
+│     └─► Token is automatically managed and rotated                  │
+│                                                                      │
+│  5. App uses token to access Azure services                         │
+│     └─► Key Vault, Storage, SQL Database, etc.                      │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Types of Managed Identities
+
+Azure supports two types of managed identities:
+
+#### 1. System-Assigned Managed Identity
+
+A managed identity that is tied directly to an Azure resource. When you enable it, Azure creates an identity for the resource in the Microsoft Entra ID tenant.
+
+**Characteristics:**
+- ✅ **Lifecycle tied to resource** - Deleted when resource is deleted
+- ✅ **One-to-one relationship** - Each resource has its own unique identity
+- ✅ **Simple setup** - Just toggle "On" in Azure Portal
+- ✅ **Strong isolation** - Each app has separate permissions
+- ✅ **No management overhead** - Automatically cleaned up
+
+**Enable System-Assigned Identity:**
+
+```bash
+# Enable system-assigned managed identity
+az webapp identity assign \
+    --name <app-name> \
+    --resource-group <resource-group>
+
+# Get the principal ID
+az webapp identity show \
+    --name <app-name> \
+    --resource-group <resource-group> \
+    --query principalId \
+    --output tsv
+```
+
+**When to Use:**
+- Single app accessing Azure services
+- You want automatic cleanup when app is deleted
+- Strong security isolation per application
+- Simple scenarios with 1:1 mapping
+
+#### 2. User-Assigned Managed Identity
+
+A standalone Azure resource that can be assigned to one or more Azure resources. The identity's lifecycle is independent of the resources it's assigned to.
+
+**Characteristics:**
+- ✅ **Independent lifecycle** - Persists after resource deletion
+- ✅ **Reusable** - Can be shared across multiple resources
+- ✅ **Centralized management** - Single identity for multiple apps
+- ✅ **Persistent permissions** - Permissions survive resource redeployment
+
+**Create and Assign User-Assigned Identity:**
+
+```bash
+# Create user-assigned managed identity
+az identity create \
+    --name <identity-name> \
+    --resource-group <resource-group>
+
+# Get the identity resource ID
+identityId=$(az identity show \
+    --name <identity-name> \
+    --resource-group <resource-group> \
+    --query id \
+    --output tsv)
+
+# Assign to App Service
+az webapp identity assign \
+    --name <app-name> \
+    --resource-group <resource-group> \
+    --identities $identityId
+
+# Get the principal ID for permission assignment
+principalId=$(az identity show \
+    --name <identity-name> \
+    --resource-group <resource-group> \
+    --query principalId \
+    --output tsv)
+```
+
+**When to Use:**
+- Multiple apps need the same permissions
+- You want identity to persist across redeployments
+- Centralized permission management
+- Sharing access across different resource types
+
+**Comparison:**
+
+| Feature | System-Assigned | User-Assigned |
+|---------|----------------|---------------|
+| **Created by** | Enabling on resource | Explicit creation |
+| **Lifecycle** | Tied to resource | Independent |
+| **Can be shared** | ❌ No | ✅ Yes |
+| **Cleanup** | Automatic | Manual |
+| **Use case** | Single app | Multiple apps with same permissions |
+| **Isolation** | ✅ Strong | ⚠️ Shared (less isolation) |
+| **Management** | Per-resource | Centralized |
+
+### Using Managed Identity with Azure Key Vault
+
+Azure Key Vault is one of the most common use cases for Managed Identity, allowing you to securely store and retrieve secrets without embedding them in your code.
+
+#### Step 1: Enable Managed Identity on App Service
+
+```bash
+# Enable system-assigned managed identity
+az webapp identity assign \
+    --name mywebapp \
+    --resource-group myResourceGroup
+```
+
+#### Step 2: Grant Key Vault Access
+
+You can grant access using either **Access Policies** (classic) or **RBAC** (recommended).
+
+**Option A: Using Access Policies**
+
+```bash
+# Get the principal ID
+principalId=$(az webapp identity show \
+    --name mywebapp \
+    --resource-group myResourceGroup \
+    --query principalId \
+    --output tsv)
+
+# Grant Key Vault access
+az keyvault set-policy \
+    --name mykeyvault \
+    --object-id $principalId \
+    --secret-permissions get list \
+    --key-permissions get list \
+    --certificate-permissions get list
+```
+
+**Option B: Using RBAC (Recommended)**
+
+```bash
+# Enable RBAC on Key Vault (if not already enabled)
+az keyvault update \
+    --name mykeyvault \
+    --resource-group myResourceGroup \
+    --enable-rbac-authorization true
+
+# Assign role to the managed identity
+az role assignment create \
+    --role "Key Vault Secrets User" \
+    --assignee $principalId \
+    --scope /subscriptions/<subscription-id>/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/mykeyvault
+```
+
+**Available Key Vault RBAC Roles:**
+
+| Role | Permissions |
+|------|-------------|
+| **Key Vault Secrets User** | Read secret contents |
+| **Key Vault Secrets Officer** | Read, write, delete secrets |
+| **Key Vault Crypto User** | Perform cryptographic operations |
+| **Key Vault Certificate User** | Read certificate contents |
+| **Key Vault Reader** | Read metadata (not secret values) |
+
+#### Step 3: Access Key Vault from Application Code
+
+**C# / .NET:**
+
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Certificates;
+
+public class KeyVaultService
+{
+    private readonly SecretClient _secretClient;
+    private readonly KeyClient _keyClient;
+    private readonly CertificateClient _certificateClient;
+
+    public KeyVaultService(IConfiguration configuration)
+    {
+        var keyVaultUrl = configuration["KeyVault:Url"]; // https://mykeyvault.vault.azure.net/
+        
+        // DefaultAzureCredential automatically uses Managed Identity when running in Azure
+        var credential = new DefaultAzureCredential();
+
+        _secretClient = new SecretClient(new Uri(keyVaultUrl), credential);
+        _keyClient = new KeyClient(new Uri(keyVaultUrl), credential);
+        _certificateClient = new CertificateClient(new Uri(keyVaultUrl), credential);
+    }
+
+    // Get a secret
+    public async Task<string> GetSecretAsync(string secretName)
+    {
+        KeyVaultSecret secret = await _secretClient.GetSecretAsync(secretName);
+        return secret.Value;
+    }
+
+    // Get multiple secrets
+    public async Task<Dictionary<string, string>> GetSecretsAsync(params string[] secretNames)
+    {
+        var secrets = new Dictionary<string, string>();
+        
+        foreach (var secretName in secretNames)
+        {
+            var secret = await _secretClient.GetSecretAsync(secretName);
+            secrets[secretName] = secret.Value;
+        }
+        
+        return secrets;
+    }
+
+    // Set a secret
+    public async Task SetSecretAsync(string secretName, string secretValue)
+    {
+        await _secretClient.SetSecretAsync(secretName, secretValue);
+    }
+}
+
+// Usage in Startup.cs / Program.cs
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        
+        // Register KeyVaultService
+        builder.Services.AddSingleton<KeyVaultService>();
+        
+        var app = builder.Build();
+        
+        // Use KeyVault secrets in configuration
+        var keyVaultService = app.Services.GetRequiredService<KeyVaultService>();
+        var connectionString = await keyVaultService.GetSecretAsync("SqlConnectionString");
+        
+        app.Run();
+    }
+}
+```
+
+**Node.js / JavaScript:**
+
+```javascript
+const { SecretClient } = require('@azure/keyvault-secrets');
+const { DefaultAzureCredential } = require('@azure/identity');
+
+class KeyVaultService {
+    constructor(keyVaultUrl) {
+        // DefaultAzureCredential automatically uses Managed Identity in Azure
+        const credential = new DefaultAzureCredential();
+        this.client = new SecretClient(keyVaultUrl, credential);
+    }
+
+    // Get a secret
+    async getSecret(secretName) {
+        const secret = await this.client.getSecret(secretName);
+        return secret.value;
+    }
+
+    // Get multiple secrets
+    async getSecrets(...secretNames) {
+        const secrets = {};
+        for (const name of secretNames) {
+            secrets[name] = await this.getSecret(name);
+        }
+        return secrets;
+    }
+
+    // Set a secret
+    async setSecret(secretName, secretValue) {
+        await this.client.setSecret(secretName, secretValue);
+    }
+}
+
+// Usage
+const keyVaultUrl = process.env.KEY_VAULT_URL; // https://mykeyvault.vault.azure.net/
+const kvService = new KeyVaultService(keyVaultUrl);
+
+// Get connection string
+const connectionString = await kvService.getSecret('SqlConnectionString');
+
+// Get multiple secrets
+const secrets = await kvService.getSecrets('ApiKey', 'DatabasePassword', 'StorageAccount');
+console.log(secrets.ApiKey);
+```
+
+**Python:**
+
+```python
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+class KeyVaultService:
+    def __init__(self, key_vault_url):
+        # DefaultAzureCredential automatically uses Managed Identity in Azure
+        credential = DefaultAzureCredential()
+        self.client = SecretClient(vault_url=key_vault_url, credential=credential)
+    
+    def get_secret(self, secret_name):
+        """Get a single secret"""
+        secret = self.client.get_secret(secret_name)
+        return secret.value
+    
+    def get_secrets(self, *secret_names):
+        """Get multiple secrets"""
+        return {name: self.get_secret(name) for name in secret_names}
+    
+    def set_secret(self, secret_name, secret_value):
+        """Set a secret"""
+        self.client.set_secret(secret_name, secret_value)
+
+# Usage
+key_vault_url = "https://mykeyvault.vault.azure.net/"
+kv_service = KeyVaultService(key_vault_url)
+
+# Get connection string
+connection_string = kv_service.get_secret("SqlConnectionString")
+
+# Get multiple secrets
+secrets = kv_service.get_secrets("ApiKey", "DatabasePassword", "StorageAccount")
+print(secrets["ApiKey"])
+```
+
+#### Common Key Vault Use Cases with Managed Identity
+
+| Use Case | Secret Name Example | Description |
+|----------|---------------------|-------------|
+| **Database Connection** | `SqlConnectionString` | Store connection strings securely |
+| **API Keys** | `OpenAI-ApiKey`, `Stripe-ApiKey` | Third-party service credentials |
+| **OAuth Secrets** | `GitHub-ClientSecret` | OAuth client secrets for authentication |
+| **Storage Accounts** | `StorageAccountKey` | Azure Storage access keys |
+| **Service Principals** | `ServicePrincipal-Secret` | Credentials for other service principals |
+| **Encryption Keys** | `DataEncryptionKey` | Keys for application-level encryption |
+| **Certificates** | `TLS-Certificate` | SSL/TLS certificates |
+| **Redis Cache** | `Redis-ConnectionString` | Cache connection strings |
+
+### Using Managed Identity with Other Azure Services
+
+Managed Identity can authenticate to any Azure service that supports Microsoft Entra ID authentication.
+
+#### Azure SQL Database
+
+```csharp
+using Microsoft.Data.SqlClient;
+using Azure.Identity;
+using Azure.Core;
+
+public class SqlService
+{
+    private readonly string _connectionString;
+    
+    public SqlService(IConfiguration configuration)
+    {
+        var server = configuration["Sql:Server"];
+        var database = configuration["Sql:Database"];
+        
+        // Connection string without password
+        _connectionString = $"Server={server}; Database={database}; Authentication=Active Directory Default;";
+    }
+    
+    public async Task<List<Product>> GetProductsAsync()
+    {
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        
+        using var command = new SqlCommand("SELECT * FROM Products", connection);
+        using var reader = await command.ExecuteReaderAsync();
+        
+        var products = new List<Product>();
+        while (await reader.ReadAsync())
+        {
+            products.Add(new Product
+            {
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1)
+            });
+        }
+        
+        return products;
+    }
+}
+```
+
+**Grant SQL Access:**
+
+```sql
+-- Connect to SQL Database as an admin and run:
+CREATE USER [mywebapp] FROM EXTERNAL PROVIDER;
+ALTER ROLE db_datareader ADD MEMBER [mywebapp];
+ALTER ROLE db_datawriter ADD MEMBER [mywebapp];
+```
+
+#### Azure Storage
+
+```csharp
+using Azure.Identity;
+using Azure.Storage.Blobs;
+
+public class StorageService
+{
+    private readonly BlobServiceClient _blobServiceClient;
+    
+    public StorageService(IConfiguration configuration)
+    {
+        var storageAccountUrl = configuration["Storage:Url"]; // https://mystorageaccount.blob.core.windows.net/
+        
+        // Use Managed Identity to authenticate
+        var credential = new DefaultAzureCredential();
+        _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUrl), credential);
+    }
+    
+    public async Task<string> UploadFileAsync(string containerName, string fileName, Stream content)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        await containerClient.CreateIfNotExistsAsync();
+        
+        var blobClient = containerClient.GetBlobClient(fileName);
+        await blobClient.UploadAsync(content, overwrite: true);
+        
+        return blobClient.Uri.ToString();
+    }
+}
+```
+
+**Grant Storage Access:**
+
+```bash
+# Assign Storage Blob Data Contributor role
+az role assignment create \
+    --role "Storage Blob Data Contributor" \
+    --assignee $principalId \
+    --scope /subscriptions/<subscription-id>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/mystorageaccount
+```
+
+#### Azure Service Bus
+
+```csharp
+using Azure.Identity;
+using Azure.Messaging.ServiceBus;
+
+public class ServiceBusService
+{
+    private readonly ServiceBusClient _client;
+    
+    public ServiceBusService(IConfiguration configuration)
+    {
+        var serviceBusNamespace = configuration["ServiceBus:Namespace"]; // myservicebus.servicebus.windows.net
+        
+        var credential = new DefaultAzureCredential();
+        _client = new ServiceBusClient(serviceBusNamespace, credential);
+    }
+    
+    public async Task SendMessageAsync(string queueName, string message)
+    {
+        var sender = _client.CreateSender(queueName);
+        await sender.SendMessageAsync(new ServiceBusMessage(message));
+    }
+}
+```
+
+**Grant Service Bus Access:**
+
+```bash
+# Assign Service Bus Data Sender role
+az role assignment create \
+    --role "Azure Service Bus Data Sender" \
+    --assignee $principalId \
+    --scope /subscriptions/<subscription-id>/resourceGroups/myResourceGroup/providers/Microsoft.ServiceBus/namespaces/myservicebus
+```
+
+#### Azure Cosmos DB
+
+```csharp
+using Microsoft.Azure.Cosmos;
+using Azure.Identity;
+
+public class CosmosDbService
+{
+    private readonly CosmosClient _client;
+    
+    public CosmosDbService(IConfiguration configuration)
+    {
+        var cosmosDbUrl = configuration["CosmosDb:Url"];
+        
+        var credential = new DefaultAzureCredential();
+        _client = new CosmosClient(cosmosDbUrl, credential);
+    }
+    
+    public async Task<T> GetItemAsync<T>(string databaseId, string containerId, string itemId, string partitionKey)
+    {
+        var container = _client.GetContainer(databaseId, containerId);
+        var response = await container.ReadItemAsync<T>(itemId, new PartitionKey(partitionKey));
+        return response.Resource;
+    }
+}
+```
+
+**Summary of Azure Services Supporting Managed Identity:**
+
+| Service | SDK / Library | Required Role |
+|---------|--------------|---------------|
+| **Key Vault** | `Azure.Security.KeyVault.*` | Key Vault Secrets User |
+| **SQL Database** | `Microsoft.Data.SqlClient` | SQL DB Contributor (or SQL User) |
+| **Storage** | `Azure.Storage.Blobs` | Storage Blob Data Contributor |
+| **Service Bus** | `Azure.Messaging.ServiceBus` | Service Bus Data Sender/Receiver |
+| **Event Hubs** | `Azure.Messaging.EventHubs` | Event Hubs Data Sender/Receiver |
+| **Cosmos DB** | `Microsoft.Azure.Cosmos` | Cosmos DB Built-in Data Contributor |
+| **App Configuration** | `Azure.Data.AppConfiguration` | App Configuration Data Reader |
+| **Container Registry** | `Azure.Containers.ContainerRegistry` | AcrPull |
+| **Microsoft Graph** | `Microsoft.Graph` | Various Graph API permissions |
+
+### Managed Identity vs Service Principal
+
+Understanding when to use Managed Identity versus a Service Principal is crucial for secure Azure application design.
+
+| Aspect | Managed Identity | Service Principal |
+|--------|-----------------|-------------------|
+| **Credential Storage** | ❌ Not required (Azure manages) | ✅ Required (secret or certificate) |
+| **Credential Rotation** | ✅ Automatic | ❌ Manual |
+| **Security Risk** | ✅ Low (no exposed secrets) | ⚠️ Higher (secret can leak) |
+| **Setup Complexity** | ✅ Simple (one command) | ⚠️ Complex (create + store credentials) |
+| **Use Case** | Azure resources (App Service, VMs, Functions) | Non-Azure apps, CI/CD pipelines, scripts |
+| **Lifecycle Management** | ✅ Automatic (tied to resource) | ❌ Manual |
+| **Multi-tenant Apps** | ❌ Not supported | ✅ Supported |
+| **Cost** | ✅ Free | ✅ Free |
+| **Audit Trail** | ✅ Built-in | ✅ Built-in |
+| **When to Use** | **Always for Azure-hosted apps** | Only when Managed Identity isn't available |
+
+**When You MUST Use Service Principal:**
+- Applications running **outside Azure** (on-premises, other clouds)
+- **CI/CD pipelines** (GitHub Actions, Azure DevOps) - though GitHub has OIDC option
+- **Multi-tenant applications** that need to access customer tenants
+- Legacy systems that don't support Managed Identity
+
+**When to Use Managed Identity (Preferred):**
+- ✅ Azure App Service
+- ✅ Azure Functions
+- ✅ Azure Virtual Machines
+- ✅ Azure Container Instances
+- ✅ Azure Kubernetes Service (AKS)
+- ✅ Azure Logic Apps
+- ✅ Azure Data Factory
+- ✅ Any Azure resource that supports it
+
+**Migration from Service Principal to Managed Identity:**
+
+```bash
+# Before (with Service Principal)
+az webapp config appsettings set \
+    --name mywebapp \
+    --resource-group myResourceGroup \
+    --settings \
+    KeyVault__ClientId="<client-id>" \
+    KeyVault__ClientSecret="<client-secret>" \
+    KeyVault__TenantId="<tenant-id>"
+
+# After (with Managed Identity)
+# 1. Enable Managed Identity
+az webapp identity assign \
+    --name mywebapp \
+    --resource-group myResourceGroup
+
+# 2. Grant permissions (no secrets needed!)
+principalId=$(az webapp identity show \
+    --name mywebapp \
+    --resource-group myResourceGroup \
+    --query principalId \
+    --output tsv)
+
+az role assignment create \
+    --role "Key Vault Secrets User" \
+    --assignee $principalId \
+    --scope /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
+
+# 3. Remove the secret app settings (no longer needed!)
+az webapp config appsettings delete \
+    --name mywebapp \
+    --resource-group myResourceGroup \
+    --setting-names KeyVault__ClientId KeyVault__ClientSecret KeyVault__TenantId
+```
+
+### Best Practices for Managed Identity
+
+#### 1. Always Use DefaultAzureCredential
+
+The `DefaultAzureCredential` class automatically uses the best available credential:
+- Managed Identity when running in Azure
+- Visual Studio credentials when developing locally
+- Azure CLI credentials as fallback
+- Environment variables if configured
+
+```csharp
+// ✅ Recommended - Works everywhere
+var credential = new DefaultAzureCredential();
+
+// ❌ Avoid - Only works with Managed Identity
+var credential = new ManagedIdentityCredential();
+```
+
+#### 2. Prefer System-Assigned for Most Scenarios
+
+System-assigned managed identities provide better security isolation:
+
+```bash
+# ✅ Recommended for single app scenarios
+az webapp identity assign --name myapp --resource-group myRG
+
+# ⚠️ Use only when multiple apps need same permissions
+az webapp identity assign --name myapp --resource-group myRG --identities <user-assigned-id>
+```
+
+#### 3. Apply Least Privilege Principle
+
+Grant only the minimum permissions needed:
+
+```bash
+# ✅ Good - Specific role for specific resource
+az role assignment create \
+    --role "Key Vault Secrets User" \
+    --assignee $principalId \
+    --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv>
+
+# ❌ Bad - Too broad permissions
+az role assignment create \
+    --role "Contributor" \
+    --assignee $principalId \
+    --scope /subscriptions/<subscription-id>
+```
+
+#### 4. Use RBAC Instead of Access Policies for Key Vault
+
+RBAC provides better granularity and integrates with Azure's permission model:
+
+```bash
+# ✅ Recommended - RBAC
+az keyvault update --name mykeyvault --enable-rbac-authorization true
+az role assignment create --role "Key Vault Secrets User" --assignee $principalId --scope <kv-scope>
+
+# ⚠️ Legacy - Access Policies (being deprecated)
+az keyvault set-policy --name mykeyvault --object-id $principalId --secret-permissions get list
+```
+
+#### 5. Test Locally with Azure CLI or Visual Studio
+
+`DefaultAzureCredential` works locally without code changes:
+
+```bash
+# Login with Azure CLI
+az login
+
+# Your app will automatically use your Azure CLI credentials locally
+# and Managed Identity when deployed to Azure
+```
+
+#### 6. Handle Transient Failures
+
+Implement retry logic for token acquisition:
+
+```csharp
+using Polly;
+
+var retryPolicy = Policy
+    .Handle<Azure.RequestFailedException>()
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+
+await retryPolicy.ExecuteAsync(async () =>
+{
+    var secret = await secretClient.GetSecretAsync("MySecret");
+    return secret.Value;
+});
+```
+
+#### 7. Monitor and Audit Access
+
+Enable diagnostic logging for Key Vault and other services:
+
+```bash
+# Enable Key Vault diagnostic logs
+az monitor diagnostic-settings create \
+    --name KeyVaultAudit \
+    --resource <key-vault-resource-id> \
+    --logs '[{"category": "AuditEvent", "enabled": true}]' \
+    --workspace <log-analytics-workspace-id>
+```
+
+#### 8. Document Your Managed Identities
+
+Maintain documentation of which identities have access to what resources:
+
+```yaml
+# Example: managed-identities.yml
+app-services:
+  - name: mywebapp
+    managed-identity:
+      type: system-assigned
+      principal-id: "12345678-1234-1234-1234-123456789abc"
+    permissions:
+      - resource: keyvault/mykeyvault
+        role: Key Vault Secrets User
+      - resource: storage/mystorageaccount
+        role: Storage Blob Data Contributor
+```
+
+#### 9. Separate Identities for Different Environments
+
+Use different managed identities for dev, staging, and production:
+
+```bash
+# Development
+az webapp identity assign --name mywebapp-dev --resource-group dev-rg
+
+# Production
+az webapp identity assign --name mywebapp-prod --resource-group prod-rg
+
+# Different identities prevent dev apps from accessing prod resources
+```
+
+#### 10. Clean Up Unused Identities
+
+Remove managed identities that are no longer needed:
+
+```bash
+# Remove system-assigned identity
+az webapp identity remove --name myapp --resource-group myRG
+
+# Delete user-assigned identity
+az identity delete --name myidentity --resource-group myRG
+```
+
 ## Practice Questions
 
 ### Question 1: Blocking Unauthenticated Requests with Microsoft Entra ID
@@ -844,6 +1612,123 @@ While the group claims approach is what the question asks for, **App Roles are g
 4. Better Azure Portal UX for managing assignments
 
 However, for exam questions, always answer based on what is explicitly asked, not what you would do in practice.
+
+---
+
+### Question 7: Securing App Service with Azure Key Vault and Managed Identity
+
+**Question:** You are developing an e-Commerce Web App. You want to use Azure Key Vault to ensure that sign-ins to the e-Commerce Web App are secured by using Azure App Service authentication and Microsoft Entra ID. What should you do on the e-Commerce Web App?
+
+**Options:**
+1. Run the `az keyvault secret` command.
+2. Enable Microsoft Entra ID Connect.
+3. Enable Managed Service Identity (MSI).
+4. Create a Microsoft Entra ID service principal.
+
+**Correct Answer: 3) Enable Managed Service Identity (MSI).**
+
+**Explanation:**
+
+Enabling **Managed Service Identity (MSI)**, now commonly referred to as **Managed Identity**, on the e-Commerce Web App allows the App Service to authenticate to Azure services (including Azure Key Vault) without storing credentials in the code. This is essential for securing sign-ins to the e-Commerce Web App using Azure App Service authentication and Microsoft Entra ID.
+
+**How Managed Identity Works with App Service and Key Vault:**
+
+1. **Enable Managed Identity** on the App Service
+2. **Grant Key Vault Access** to the Managed Identity (via access policies or RBAC)
+3. **App Service authenticates to Key Vault** using its Managed Identity (no credentials needed)
+4. **Retrieve secrets securely** for authentication configuration and other sensitive data
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|--------------|
+| **Run the `az keyvault secret` command** ❌ | The `az keyvault secret` command is used to manage secrets in Azure Key Vault (create, read, update, delete), but it is not directly related to securing sign-ins to the e-Commerce Web App using Azure App Service authentication and Microsoft Entra ID. This command doesn't establish the authentication mechanism needed for the App Service to access Key Vault securely. |
+| **Enable Microsoft Entra ID Connect** ❌ | Microsoft Entra ID Connect (formerly Azure AD Connect) is a tool used to synchronize on-premises Active Directory with Microsoft Entra ID in hybrid identity scenarios. It is not relevant to configuring authentication for an Azure Web App or enabling secure access to Key Vault. This option confuses hybrid identity synchronization with cloud application authentication. |
+| **Create a Microsoft Entra ID service principal** ❌ | While creating a service principal could technically be used for authentication, it requires managing credentials (client secret or certificate), which defeats the purpose of using a secrets management solution like Key Vault. Managed Identity is the preferred approach because it eliminates the need to manage and rotate credentials manually. Service principals require storing secrets somewhere, creating a "chicken and egg" problem. |
+
+**Managed Identity vs Service Principal:**
+
+| Aspect | Managed Identity | Service Principal |
+|--------|-----------------|-------------------|
+| **Credential Management** | Automatic (Azure manages) | Manual (you manage) |
+| **Secret Storage** | Not required | Required (secret or certificate) |
+| **Rotation** | Automatic | Manual |
+| **Security** | Higher (no exposed secrets) | Lower (risk of leaked credentials) |
+| **Use Case** | Azure resources accessing Azure services | Applications running outside Azure, automation scripts |
+| **Best Practice for App Service** | ✅ Recommended | ❌ Not recommended |
+
+**Implementation Steps:**
+
+**1. Enable Managed Identity on App Service:**
+
+```bash
+# Enable system-assigned managed identity
+az webapp identity assign \
+    --name <app-name> \
+    --resource-group <resource-group>
+```
+
+**2. Grant Key Vault Access to the Managed Identity:**
+
+```bash
+# Get the principal ID of the managed identity
+principalId=$(az webapp identity show \
+    --name <app-name> \
+    --resource-group <resource-group> \
+    --query principalId \
+    --output tsv)
+
+# Grant Key Vault access (using Access Policies)
+az keyvault set-policy \
+    --name <keyvault-name> \
+    --object-id $principalId \
+    --secret-permissions get list
+
+# OR grant Key Vault access (using RBAC - recommended)
+az role assignment create \
+    --role "Key Vault Secrets User" \
+    --assignee $principalId \
+    --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.KeyVault/vaults/<keyvault-name>
+```
+
+**3. Access Key Vault from Application Code:**
+
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
+// Use DefaultAzureCredential which automatically uses Managed Identity in Azure
+var client = new SecretClient(
+    new Uri("https://<keyvault-name>.vault.azure.net/"),
+    new DefaultAzureCredential());
+
+// Retrieve a secret
+KeyVaultSecret secret = await client.GetSecretAsync("ConnectionString");
+string connectionString = secret.Value;
+```
+
+**Benefits of Using Managed Identity with Key Vault:**
+
+1. **No credentials in code** - Eliminates the risk of exposing secrets in source code
+2. **Automatic credential rotation** - Azure manages the identity credentials and rotates them automatically
+3. **Simplified configuration** - No need to manage client secrets or certificates
+4. **Enhanced security** - Follows the principle of least privilege with granular access control
+5. **Audit trail** - All Key Vault access is logged for compliance and security monitoring
+
+**Common Use Cases:**
+
+- Storing database connection strings
+- API keys and authentication tokens
+- Certificates for HTTPS/TLS
+- OAuth client secrets
+- Encryption keys
+- Any sensitive configuration data
+
+**Key Takeaway:** 
+
+To enable an Azure App Service to securely access Azure Key Vault for storing authentication secrets and configuration, you should **enable Managed Service Identity (Managed Identity)**. This provides a secure, credential-free way for your App Service to authenticate to Azure Key Vault without storing any secrets in your application code or configuration.
+
+---
 
 ## Token Validation for Web APIs
 
