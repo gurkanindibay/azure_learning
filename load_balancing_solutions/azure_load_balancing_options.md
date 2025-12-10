@@ -153,6 +153,92 @@ This document summarizes the Azure services you can use as an API proxy or gatew
 | WAF protection needed | ❌ No | Front Door or App Gateway |
 | Dynamic web application | ❌ No | Front Door |
 
+### Azure CDN Caching Rules Configuration
+
+Azure CDN provides flexible caching rules to control how content is cached at edge locations (POPs). Understanding these configurations is critical for optimizing content delivery performance.
+
+#### Caching Behavior Options
+
+| Caching Behavior | Description | Use Case |
+|-----------------|-------------|----------|
+| **Override** | CDN caches content regardless of origin server's cache headers | When you want CDN to control caching completely, ignoring origin directives |
+| **Set if missing** | CDN caches only if origin doesn't provide cache headers | When you want to respect origin cache settings but provide defaults |
+| **Bypass cache** | CDN doesn't cache content at all | For dynamic content that changes frequently or user-specific data |
+
+#### Cache Expiration Duration
+
+- Defines how long content stays in the CDN cache before requesting a fresh copy from origin
+- Common values: seconds, minutes, hours, or days
+- Example: 1 hour, 1 day, 7 days
+- **Best Practice**: Match expiration to content update frequency
+
+#### Query String Caching Behavior
+
+Query string caching is crucial for content that varies based on URL parameters (e.g., video quality, image size, user preferences).
+
+| Query String Behavior | Description | Example Impact |
+|----------------------|-------------|----------------|
+| **Cache every unique URL** | Each unique URL (including query parameters) is cached separately | `video.mp4?quality=1` and `video.mp4?quality=2` are cached as different objects |
+| **Ignore query strings** | All URLs with different query strings are treated as the same cached object | `video.mp4?quality=1` and `video.mp4?quality=2` serve the same cached content |
+| **Bypass caching for query strings** | URLs with query strings are never cached | All parameterized requests go directly to origin |
+
+#### Real-World Example: Video-on-Demand Streaming
+
+**Scenario**: Azure App Service hosting video-on-demand with CDN, where videos have quality parameters.
+
+**URL Pattern**: `http://www.contoso.com/content.mp4?quality=1`
+
+**Requirements**:
+- Content expires after 1 hour
+- Different quality versions must be cached separately
+- Deliver to closest regional POP node
+
+**Correct Configuration**:
+```
+✅ Caching behavior: Override
+✅ Cache expiration duration: 1 hour
+✅ Query string caching behavior: Cache every unique URL
+```
+
+**Why This Works**:
+- **Override**: Forces CDN to cache content for exactly 1 hour, regardless of origin headers
+- **1 hour expiration**: Meets the requirement for content freshness
+- **Cache every unique URL**: Each quality variant (`quality=1`, `quality=2`, etc.) is cached separately at each POP, ensuring optimal delivery of the requested quality to users
+
+**Common Mistakes**:
+
+❌ **Ignore query strings** - Would serve the same video quality to all users regardless of their request
+```
+Caching behavior: Override
+Cache expiration duration: 1 hour
+Query string caching behavior: Ignore query strings  ⬅️ WRONG
+```
+*Problem*: All quality variants would share the same cached object, breaking quality selection.
+
+❌ **Bypass cache** - Defeats the purpose of using CDN
+```
+Caching behavior: Bypass cache  ⬅️ WRONG
+Cache expiration duration: 1 day
+Query string caching behavior: Bypass caching for query strings
+```
+*Problem*: No caching occurs, forcing all requests to origin server.
+
+❌ **Set if missing with too short duration**
+```
+Caching behavior: Set if missing  ⬅️ WRONG FOR THIS SCENARIO
+Cache expiration duration: 1 second  ⬅️ WRONG
+Query string caching behavior: Ignore query strings  ⬅️ WRONG
+```
+*Problem*: Multiple issues - doesn't override origin headers, 1 second is too short, and query strings are ignored.
+
+#### Key Takeaways for CDN Caching
+
+1. **Use "Override" behavior** when you need strict control over cache duration
+2. **Use "Cache every unique URL"** when query parameters indicate different content variants
+3. **Match cache duration** to your content update frequency and freshness requirements
+4. **Consider bandwidth costs** - longer cache durations reduce origin requests but may serve stale content
+5. **Test query string behavior** - incorrect configuration can break parameterized content delivery
+
 ## Comparison Table
 | Service | Layer | Global/Regional | Policy Engine | Developer Facing | Typical Role |
 | --- | --- | --- | --- | --- | --- |
