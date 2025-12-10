@@ -2267,6 +2267,84 @@ string resourceToken = response.Resource.Token;  // Use this token for limited a
 
 ---
 
+### Question 9: In-Partition Query with Range Condition on Partition Key
+
+**Scenario:**
+
+You have an Azure Web app that uses Cosmos DB as a data store. You create a CosmosDB container by running the following PowerShell script:
+
+```powershell
+$resourceGroupName = 'testResourceGroup'
+$accountName = 'testCosmosAccount'
+$databaseName = 'testDatabase'
+$containerName = 'testContainer'
+$partitionKeyPath = '/EmployeeId'
+$autoscaleMaxThroughput = 5000
+New-AzCosmosDBSqlContainer -ResourceGroupName $resourceGroupName -AccountName $accountName -DatabaseName $databaseName -Name $containerName -PartitionKeyKind Hash -PartitionKeyPath $partitionKeyPath -AutoscaleMaxThroughput $autoscaleMaxThroughput
+```
+
+You create the following queries that target the container:
+
+```sql
+SELECT * FROM c WHERE c.EmployeeId > '12345'
+SELECT * FROM c WHERE c.UserID = '12345'
+```
+
+**Question:**
+
+Is the first query statement an in-partition query?
+
+**Yes/No**
+
+---
+
+### Answer: No
+
+**The first query (SELECT * FROM c WHERE c.EmployeeId > '12345') is NOT an in-partition query.**
+
+---
+
+### Detailed Explanation
+
+In Azure Cosmos DB, queries are considered in-partition only if they include an exact equality filter (=) on the partition key path, allowing the query to target a single logical partition efficiently.
+
+The first query uses a range condition (>) on the partition key (EmployeeId). Since Cosmos DB uses hash-based partitioning, range queries cannot be scoped to just one partition—they require scanning across all physical partitions to evaluate the condition. This makes it a cross-partition query, which is less efficient, incurs higher RU (Request Unit) charges, and has higher latency compared to in-partition queries.
+
+The second query (SELECT * FROM c WHERE c.UserID = '12345') would also be a cross-partition query because UserID is not the partition key—it's querying on a different field entirely.
+
+If you need range queries on the partition key field, consider redesigning your partition key or using features like composite indexes or Global Secondary Indexes (if available in your setup) to optimize performance. For more details, refer to the Azure Cosmos DB query documentation.
+
+---
+
+### Key Takeaways
+
+1. **In-Partition Queries Require Exact Equality on Partition Key**
+   - Only queries with `partitionKey = value` can be in-partition
+   - Range conditions (> , < , >= , <=) on partition key create cross-partition queries
+   - Hash partitioning doesn't support efficient range queries on partition key
+
+2. **Cross-Partition Query Characteristics**
+   - Scans all physical partitions
+   - Higher RU consumption
+   - Higher latency
+   - Less predictable performance
+
+3. **Partition Key Design Impact**
+   - Choose partition keys that align with equality-based query patterns
+   - Avoid partition keys that require frequent range queries
+   - Consider synthetic partition keys for complex query requirements
+
+---
+
+### References
+
+- [Partitioning and horizontal scaling in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/partitioning-overview)
+- [Query an Azure Cosmos DB container](https://learn.microsoft.com/azure/cosmos-db/sql-query-getting-started)
+- [Optimize query performance in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/sql-query-performance-tuning)
+- [Understanding Azure Cosmos DB partitioning](https://learn.microsoft.com/azure/cosmos-db/partitioning-overview)
+
+---
+
 ## Summary
 
 ### Database Account
