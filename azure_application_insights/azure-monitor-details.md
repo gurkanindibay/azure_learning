@@ -40,6 +40,7 @@
   - [Summary](#summary)
 - [Practice Questions](#practice-questions)
   - [Question 1: Centralized Log Collection and Analysis](#question-1-centralized-log-collection-and-analysis)
+  - [Question 2: Azure Monitor Private Link Scope (AMPLS)](#question-2-azure-monitor-private-link-scope-ampls)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -802,6 +803,92 @@ Which feature within Azure collects all of the logs from various resources into 
 │ • Events      │         │ • Workbooks   │         │ • Notifications│
 └───────────────┘         └───────────────┘         └───────────────┘
 ```
+
+**Reference:** [Azure Monitor Overview](https://docs.microsoft.com/en-us/azure/azure-monitor/overview)
+
+---
+
+### Question 2: Azure Monitor Private Link Scope (AMPLS)
+
+**Scenario:**
+You have an Azure subscription that contains the following resources:
+
+| Name | Type | Description |
+|------|------|-------------|
+| contoso.com | Azure Private DNS zone | None |
+| VNet1 | Virtual network | Linked to contoso.com<br>Peered with VNet2 |
+| VNet2 | Virtual network | Linked to contoso.com<br>Peered with VNet1 |
+| VNet3 | Virtual network | Linked to contoso.com<br>Isolated from VNet1 and VNet2 |
+| Workspace1 | Log Analytics workspace | Stores logs collected from the virtual machines on all the virtual networks |
+
+VNet1, VNet2, and VNet3 each has multiple virtual machines connected. The virtual machines use the Azure DNS service for name resolution.
+
+**Question:**
+You need to recommend an Azure Monitor log routing solution that meets the following requirements:
+
+- Ensures that the logs collected from the virtual machines and sent to Workspace1 are routed over the Microsoft backbone network
+- Minimizes administrative effort
+
+What should you recommend for the **minimum number** of Azure Monitor Private Link Scope (AMPLS) objects?
+
+**Options:**
+
+1. ✅ **1**
+   - **Correct**: A single Azure Monitor Private Link Scope (AMPLS) can be associated with multiple virtual networks, as long as the virtual networks are peered or can access each other. Since VNet1, VNet2, and VNet3 are all linked to contoso.com and Workspace1 stores logs from all the virtual networks, creating one AMPLS and linking it to Workspace1 will ensure that the logs are routed over the Microsoft backbone network. This setup also minimizes administrative effort by using only one AMPLS object.
+
+2. ❌ **2**
+   - **Incorrect**: While you could create 2 AMPLS objects (one for VNet1/VNet2 and one for VNet3), this would increase administrative overhead without providing additional benefits. A single AMPLS can handle all three VNets even though VNet3 is isolated from VNet1 and VNet2, as long as each VNet has its own private endpoint connection to the AMPLS.
+
+3. ❌ **3**
+   - **Incorrect**: Creating 3 AMPLS objects (one per VNet) would significantly increase administrative effort and complexity. This approach does not align with the requirement to minimize administrative effort. Multiple VNets can share a single AMPLS through separate private endpoints.
+
+---
+
+### Why 1 AMPLS is the Answer
+
+**Key Concepts:**
+
+- **Azure Monitor Private Link Scope (AMPLS)**: Defines the boundaries of your private link monitoring setup and connects to Azure Monitor resources (Log Analytics workspaces, Application Insights components)
+- **Private Endpoint**: A network interface that connects your VNet privately to the AMPLS
+- **Microsoft Backbone Network**: Traffic stays within Azure's private network infrastructure
+
+**How it Works:**
+
+1. Create **1 AMPLS object** that includes Workspace1
+2. Create a **private endpoint in each VNet** (VNet1, VNet2, VNet3) that connects to the same AMPLS
+3. Each VNet's private endpoint provides a private connection to the AMPLS over the Microsoft backbone
+4. All VMs send logs to Workspace1 through their respective VNet's private endpoint
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                Azure Monitor Private Link Scope (AMPLS)       │
+│                  (Connected to Workspace1)                    │
+└────────────────┬────────────────┬────────────────┬───────────┘
+                 │                │                │
+         Private │Endpoint    Private │Endpoint    Private │Endpoint
+                 │                │                │
+         ┌───────▼──────┐  ┌──────▼─────┐  ┌──────▼─────┐
+         │    VNet1     │  │   VNet2    │  │   VNet3    │
+         │  (Peered)    │  │  (Peered)  │  │ (Isolated) │
+         │              │  │            │  │            │
+         │  VMs → Logs  │  │ VMs → Logs │  │ VMs → Logs │
+         └──────────────┘  └────────────┘  └────────────┘
+```
+
+**Why One AMPLS is Sufficient:**
+
+| Aspect | Explanation |
+|--------|-------------|
+| **Multiple VNets** | A single AMPLS can connect to multiple VNets simultaneously via separate private endpoints |
+| **Peering Status** | VNet peering status doesn't affect AMPLS requirements - each VNet connects independently |
+| **Private DNS** | All VNets are linked to contoso.com, enabling proper DNS resolution for the private endpoints |
+| **Single Workspace** | Since all VMs send logs to one workspace (Workspace1), one AMPLS is sufficient |
+| **Backbone Routing** | Each VNet's private endpoint ensures traffic uses the Microsoft backbone network |
+| **Minimal Administration** | One AMPLS means single management point, less configuration, fewer resources to maintain |
+
+**Reference:** [Azure Monitor Private Link documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security)
+
+---
 
 **Reference:** [Azure Monitor Overview](https://docs.microsoft.com/en-us/azure/azure-monitor/overview)
 
