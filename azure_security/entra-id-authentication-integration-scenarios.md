@@ -2163,6 +2163,288 @@ var users = await graphClient.Users.GetAsync();
 
 ---
 
+### Exam Question 6: Configuring App-to-App Authentication with App Roles
+
+**Scenario:** You have two app registrations named App1 and App2 in Microsoft Entra. App1 supports role-based access control (RBAC) and includes a role named Writer.
+
+**Question:** You need to ensure that when App2 authenticates to access App1, the tokens issued by Microsoft Entra ID include the Writer role claim. Which blade should you use to modify App2 registration?
+
+### Answer Options Analysis
+
+#### ✅ Option 1: API permissions - CORRECT ANSWER
+
+**Why this is CORRECT:**
+
+In Microsoft Entra, when one application (in this case, App2) needs to access another application (App1) and receive a role claim such as "Writer" in the token, you must configure App2's registration to have the appropriate permission to access App1's API. This is done in the **API permissions** blade of App2's registration, where you add the application permission corresponding to App1's Writer role.
+
+**How it works:**
+
+1. **App1 (Resource Application):**
+   - Defines and exposes an app role named "Writer"
+   - This role is created in App1's "App roles" blade
+   - The role is made available as an application permission
+
+2. **App2 (Client Application):**
+   - Needs to request permission to access App1 with the Writer role
+   - Configuration happens in App2's "API permissions" blade
+   - Admin grants consent for App2 to have this permission
+
+3. **Token Issuance:**
+   - Once permission is granted and admin consent is provided
+   - When App2 authenticates to access App1
+   - Microsoft Entra ID includes the Writer role claim in the access token
+   - App1 can read the role claim and enforce authorization
+
+**Configuration Steps:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────┐
+│              App-to-App Authentication Flow                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Step 1: Define App Role in App1                            │
+│  ──────────────────────────────────────────────────────────►│
+│  Azure Portal → App registrations → App1 → App roles        │
+│  • Create app role: "Writer"                                │
+│  • Allowed member types: Applications                       │
+│  • Value: Writer                                            │
+│                                                              │
+│  Step 2: Configure API Permissions in App2                  │
+│  ──────────────────────────────────────────────────────────►│
+│  Azure Portal → App registrations → App2 → API permissions  │
+│  • Add a permission → My APIs → App1                        │
+│  • Select Application permissions → Writer                  │
+│  • Grant admin consent                                      │
+│                                                              │
+│  Step 3: App2 Authenticates and Receives Token             │
+│  ──────────────────────────────────────────────────────────►│
+│  App2 requests token for App1 resource                     │
+│  Token includes "roles": ["Writer"] claim                  │
+│                                                              │
+│  Step 4: App1 Validates Token and Enforces Authorization   │
+│  ──────────────────────────────────────────────────────────►│
+│  App1 reads the roles claim from token                     │
+│  App1 checks if "Writer" role is present                   │
+│  App1 grants/denies access based on role                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Why API permissions is the correct blade:**
+
+| Aspect | Explanation |
+|--------|-------------|
+| **Purpose** | API permissions define what resources and roles App2 can access |
+| **Location** | Azure Portal → App registrations → App2 → API permissions |
+| **Configuration** | Add permission → Select App1 → Choose Writer role |
+| **Consent** | Requires admin consent to grant the permission |
+| **Result** | When App2 authenticates, token includes Writer role claim |
+
+**Code Example - App2 Requesting Token:**
+
+```csharp
+// App2 authenticates using client credentials flow
+var app = ConfidentialClientApplicationBuilder
+    .Create(app2ClientId)
+    .WithClientSecret(app2ClientSecret)
+    .WithAuthority(new Uri($"https://login.microsoftonline.com/{tenantId}"))
+    .Build();
+
+// Request token for App1 resource
+var scopes = new[] { $"api://{app1ClientId}/.default" };
+var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
+
+// Access token will include:
+// "roles": ["Writer"]
+```
+
+**Code Example - App1 Validating Role:**
+
+```csharp
+// App1 API endpoint protected by Writer role
+[Authorize(Roles = "Writer")]
+[HttpPost("api/documents")]
+public IActionResult CreateDocument([FromBody] DocumentModel document)
+{
+    // Only requests with Writer role can access this endpoint
+    // Token from App2 will include Writer role claim
+    return Ok(new { message = "Document created successfully" });
+}
+```
+
+**Additional Notes:**
+
+- This mechanism works because **app roles defined in App1 can be exposed as permissions that other applications request via their API permissions settings**
+- The permission grant happens at the application level, not at the user level
+- This is service-to-service authentication (application-only context)
+- App2 uses **Client Credentials Flow** to authenticate as itself
+
+**Reference:**
+- [Microsoft Learn: Assign app roles to applications](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-add-app-roles-in-apps#assign-app-roles-to-applications)
+
+---
+
+#### ❌ Option 2: App roles
+
+**Why this is INCORRECT for this context:**
+
+While app roles are essential to this scenario, modifying the **App roles** blade is **not the solution for App2**. Here's why:
+
+1. **App roles are defined on the resource application (App1), not on the client application (App2):**
+   - App roles blade is where you **create and manage** the roles that an application exposes
+   - In this scenario, the Writer role would already be defined in **App1's** App roles blade
+   - The question asks which blade to modify in **App2** registration
+
+2. **App roles blade is for defining roles, not requesting them:**
+   - When you create a role in the App roles blade, you're defining what roles your application exposes to others
+   - To consume a role from another application, you use API permissions, not App roles
+
+3. **Correct usage of App roles blade:**
+   - Used in App1 to create the Writer role
+   - Specifies who can be assigned the role (users, groups, or applications)
+   - Defines the role's value, display name, and description
+
+**When to use App roles blade:**
+- ✅ Creating roles that your application exposes
+- ✅ Defining role metadata (display name, description, value)
+- ✅ Specifying allowed member types (users, applications, both)
+
+**When NOT to use App roles blade:**
+- ❌ Requesting access to roles in another application (use API permissions)
+- ❌ Granting permissions to access another application
+- ❌ Configuring client application to receive role claims
+
+---
+
+#### ❌ Option 3: Token configuration
+
+**Why this is INCORRECT:**
+
+Token configuration is used to customize optional claims, group claims, or directory schema attributes that Microsoft Entra ID includes in tokens for the application. However, it does **not** handle the assignment of app roles from another application.
+
+**What Token configuration is for:**
+
+1. **Optional Claims:**
+   - Add additional user information to tokens (email, preferred_username, etc.)
+   - Include custom attributes in tokens
+   - Customize which claims appear in different token types (ID token, access token, SAML token)
+
+2. **Groups Claims:**
+   - Configure whether and how group memberships appear in tokens
+   - Choose format: object IDs, display names, SAM account names
+   - Limit groups to those assigned to the application
+
+3. **SAML Configuration:**
+   - Customize SAML token attributes
+   - Configure claim transformation rules
+
+**Why it doesn't work for this scenario:**
+
+| Aspect | Token Configuration | Correct Approach (API Permissions) |
+|--------|--------------------|------------------------------------|
+| **Purpose** | Customize claim content and format | Request access to another app's resources/roles |
+| **Use Case** | Add/modify user attributes in tokens | Grant app-to-app permissions |
+| **Result** | Changes what user claims are included | Includes app role claims from resource app |
+| **Location** | On the same app that issues tokens | On the client app requesting access |
+
+**Example of Token Configuration usage:**
+
+```plaintext
+Azure Portal → App registrations → Your App → Token configuration
+
+✅ Good uses:
+• Add "email" as optional claim in ID tokens
+• Include groups as "group names" instead of object IDs
+• Add custom directory extension attributes
+
+❌ NOT for:
+• Requesting roles from another application
+• Granting API permissions
+• Configuring app-to-app authentication
+```
+
+**Token configuration does NOT:**
+- ❌ Request permissions from other applications
+- ❌ Assign app roles from external applications
+- ❌ Grant access to other APIs
+- ❌ Configure application permissions
+
+**How roles appear in tokens:**
+- App roles from **your own application** automatically appear in tokens when assigned to users/apps
+- App roles from **another application** only appear when:
+  1. The other application exposes the role
+  2. Your application requests it via API permissions
+  3. Admin grants consent
+  
+Token configuration cannot substitute for this permission grant process.
+
+---
+
+### Key Takeaways: App-to-App Authentication with App Roles
+
+#### Configuration Summary
+
+| Configuration Location | Purpose | Action |
+|----------------------|---------|--------|
+| **App1 → App roles** | Define the Writer role | Create app role, set member type to "Applications" |
+| **App2 → API permissions** | Request Writer role from App1 | Add permission to App1, select Writer role, grant consent |
+| **App2 → Certificates & secrets** | Authenticate App2 | Create client secret or certificate for authentication |
+
+#### Authentication Flow Summary
+
+```plaintext
+┌────────────────────────────────────────────────────────────────┐
+│                    Complete Flow                                │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. Admin configures App1 (Resource Application)               │
+│     └─ App roles → Create "Writer" role                        │
+│                                                                 │
+│  2. Admin configures App2 (Client Application)                 │
+│     ├─ API permissions → Add App1 → Select Writer              │
+│     └─ Grant admin consent                                     │
+│                                                                 │
+│  3. App2 authenticates (runtime)                               │
+│     ├─ Uses client credentials flow                            │
+│     ├─ Requests token for App1 resource                        │
+│     └─ Receives token with "roles": ["Writer"] claim           │
+│                                                                 │
+│  4. App2 calls App1 API                                        │
+│     └─ Includes access token in Authorization header           │
+│                                                                 │
+│  5. App1 validates and authorizes                              │
+│     ├─ Validates token signature and claims                    │
+│     ├─ Checks for "Writer" role in roles claim                 │
+│     └─ Grants/denies access based on role                      │
+└────────────────────────────────────────────────────────────────┘
+```
+
+#### Common Mistakes to Avoid
+
+❌ **DON'T:**
+- Modify App roles blade in App2 (client app)
+- Use Token configuration to request permissions
+- Forget to grant admin consent after adding API permissions
+- Confuse user roles with application roles
+- Use delegated permissions for app-to-app scenarios (use application permissions)
+
+✅ **DO:**
+- Define app roles in App1 (resource app)
+- Request permissions in App2's API permissions blade
+- Grant admin consent for application permissions
+- Use application permissions (not delegated) for service-to-service scenarios
+- Set "Allowed member types" to "Applications" when creating the app role
+
+#### Permission Types Comparison
+
+| Permission Type | Scenario | User Context | Consent Type | Example |
+|----------------|----------|--------------|--------------|---------|
+| **Delegated** | User present | ✅ Yes | User or admin | Web app accessing Graph on behalf of user |
+| **Application** | No user (app-only) | ❌ No | Admin only | App2 accessing App1 with Writer role |
+
+> **Exam Tip:** When one application needs to access another application and receive role claims in the token, always configure the **API permissions** blade of the client application (App2) to request the appropriate permission from the resource application (App1). App roles are **defined** in the resource app but **requested** through API permissions in the client app.
+
+---
+
 ## Best Practices and Recommendations
 
 ### 1. Always Use OpenID Connect / OAuth 2.0 for Entra ID ✅
