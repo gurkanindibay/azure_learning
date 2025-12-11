@@ -41,6 +41,7 @@
 - [Practice Questions](#practice-questions)
   - [Question 1: Centralized Log Collection and Analysis](#question-1-centralized-log-collection-and-analysis)
   - [Question 2: Azure Monitor Private Link Scope (AMPLS)](#question-2-azure-monitor-private-link-scope-ampls)
+  - [Question 3: Minimum Number of Private Endpoints for AMPLS](#question-3-minimum-number-of-private-endpoints-for-ampls)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -887,6 +888,111 @@ What should you recommend for the **minimum number** of Azure Monitor Private Li
 | **Minimal Administration** | One AMPLS means single management point, less configuration, fewer resources to maintain |
 
 **Reference:** [Azure Monitor Private Link documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security)
+
+---
+
+### Question 3: Minimum Number of Private Endpoints for AMPLS
+
+**Scenario:**
+Using the same Azure subscription from Question 2:
+
+| Name | Type | Description |
+|------|------|-------------|
+| contoso.com | Azure Private DNS zone | None |
+| VNet1 | Virtual network | Linked to contoso.com<br>Peered with VNet2 |
+| VNet2 | Virtual network | Linked to contoso.com<br>Peered with VNet1 |
+| VNet3 | Virtual network | Linked to contoso.com<br>Isolated from VNet1 and VNet2 |
+| Workspace1 | Log Analytics workspace | Stores logs collected from the virtual machines on all the virtual networks |
+
+You have created one Azure Monitor Private Link Scope (AMPLS) connected to Workspace1.
+
+**Question:**
+What should you recommend as the **minimum number of private endpoints**?
+
+**Options:**
+
+1. ❌ **1**
+   - **Incorrect**: A single private endpoint cannot span isolated networks. VNet3, being isolated from VNet1 and VNet2, requires its own private endpoint. One private endpoint can only serve networks that are connected (either directly or through peering), so VNet3 cannot use the same private endpoint as VNet1/VNet2.
+
+2. ✅ **2**
+   - **Correct**: VNet1 and VNet2 are peered, and a single private endpoint in either of these virtual networks can serve both for routing logs to the Azure Monitor workspace over the Microsoft backbone network. However, VNet3 is isolated from VNet1 and VNet2, meaning it cannot share the private endpoint used by the other two virtual networks. Therefore, an additional private endpoint must be created in VNet3 to ensure logs are securely routed over the Microsoft backbone network. This setup satisfies both requirements: ensuring secure log routing over the Microsoft backbone and minimizing administrative effort.
+
+3. ❌ **3**
+   - **Incorrect**: Creating three private endpoints (one for each VNet) introduces unnecessary administrative overhead. VNet1 and VNet2 are peered and can share a single private endpoint. Only VNet3 requires a separate private endpoint due to its isolation.
+
+---
+
+### Why 2 Private Endpoints is the Answer
+
+**Key Difference: AMPLS vs Private Endpoints**
+
+- **1 AMPLS**: Defines the scope and connects to Azure Monitor resources (Workspace1)
+- **2 Private Endpoints**: Provide network connectivity from VNets to the AMPLS
+
+**Network Topology Matters for Private Endpoints:**
+
+| Network Relationship | Private Endpoint Sharing |
+|---------------------|-------------------------|
+| **VNet1 ↔ VNet2** (Peered) | ✅ Can share 1 private endpoint |
+| **VNet3** (Isolated) | ❌ Requires its own private endpoint |
+
+**Architecture:**
+
+```
+                    ┌─────────────────────────────────┐
+                    │  Azure Monitor Private Link     │
+                    │  Scope (AMPLS) - Workspace1     │
+                    └────────────┬────────────┬───────┘
+                                 │            │
+                      Private    │            │    Private
+                      Endpoint 1 │            │    Endpoint 2
+                                 │            │
+                    ┌────────────▼───┐   ┌────▼──────────┐
+                    │     VNet1      │   │     VNet3     │
+                    │   (10.0.0.0)   │   │  (10.2.0.0)   │
+                    │                │   │               │
+                    │  VMs → Logs    │   │  VMs → Logs   │
+                    └────────┬───────┘   └───────────────┘
+                             │ Peering
+                             │ (Shares PE1)
+                    ┌────────▼───────┐
+                    │     VNet2      │
+                    │   (10.1.0.0)   │
+                    │                │
+                    │  VMs → Logs    │
+                    └────────────────┘
+```
+
+**Detailed Explanation:**
+
+| Aspect | Configuration |
+|--------|---------------|
+| **Private Endpoint 1** | Created in VNet1 (or VNet2) connected to AMPLS |
+| **VNet1 & VNet2 Access** | Both VNets use Private Endpoint 1 via VNet peering |
+| **Traffic Flow** | VNet2 → Peering → VNet1 → Private Endpoint 1 → AMPLS → Workspace1 |
+| **Private Endpoint 2** | Created in VNet3 connected to the same AMPLS |
+| **VNet3 Access** | VNet3 uses its own Private Endpoint 2 (isolated from VNet1/VNet2) |
+| **Result** | 2 private endpoints serving 3 VNets with minimal administration |
+
+**Why This Design is Optimal:**
+
+1. **Peered Networks Share Resources**: VNet peering allows resources in one VNet to access private endpoints in the peered VNet, eliminating the need for duplicate endpoints
+
+2. **Isolated Networks Require Separate Endpoints**: VNet3 has no connectivity path to VNet1 or VNet2, so it cannot reach Private Endpoint 1
+
+3. **Cost Efficiency**: Private endpoints have associated costs; using 2 instead of 3 reduces expenses
+
+4. **Administrative Efficiency**: Fewer endpoints mean less configuration, monitoring, and maintenance
+
+5. **Security Maintained**: All traffic still routes over the Microsoft backbone network via private endpoints
+
+**Common Misconception:**
+
+> "Since we need 1 AMPLS, shouldn't we also need 1 private endpoint?"
+
+**Answer**: No. AMPLS is a logical boundary (scope), while private endpoints are network connections. The number of private endpoints depends on your network topology and connectivity, not the number of AMPLS objects.
+
+**Reference:** [Azure Monitor Private Link - Isolated Networks](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/private-link-design#isolated-networks)
 
 ---
 
