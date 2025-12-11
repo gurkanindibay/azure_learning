@@ -322,12 +322,235 @@ Azure Monitor pricing is primarily based on data volume:
 | **Data Retention** | 90 days included; extended retention charged per GB |
 | **Data Export** | Charges for outbound data transfer |
 
+### Log Analytics Pricing Models
+
+Log Analytics offers multiple pricing models to optimize costs based on your data ingestion patterns:
+
+#### Pay-As-You-Go (Default)
+**Characteristics**:
+- No upfront commitment
+- Pay per GB ingested
+- First 5 GB/month free per subscription
+- ~$2.76 per GB (varies by region)
+
+**Best For**:
+- Variable workloads
+- Development/test environments
+- Low data volume (< 100 GB/day)
+- Unpredictable ingestion patterns
+
+#### Commitment Tiers (Cost Savings)
+
+**Commitment-based pricing** offers significant discounts for consistent data ingestion:
+
+| Commitment Tier | Daily Ingestion | Monthly Cost | Per GB Cost | Savings vs PAYG |
+|----------------|-----------------|--------------|-------------|-----------------|
+| **Pay-As-You-Go** | Variable | Variable | ~$2.76/GB | Baseline |
+| **100 GB/day** | ≥100 GB | ~$5,000/month | ~$1.67/GB | ~40% |
+| **200 GB/day** | ≥200 GB | ~$9,500/month | ~$1.58/GB | ~43% |
+| **300 GB/day** | ≥300 GB | ~$14,000/month | ~$1.55/GB | ~44% |
+| **400 GB/day** | ≥400 GB | ~$18,000/month | ~$1.50/GB | ~46% |
+| **500 GB/day** | ≥500 GB | ~$22,000/month | ~$1.47/GB | ~47% |
+
+**Key Points**:
+- ✅ Commit to minimum daily data ingestion
+- ✅ Save 40-50% compared to pay-as-you-go
+- ⚠️ Pay for committed amount even if you ingest less
+- ✅ Overage charged at discounted commitment tier rate
+- ✅ Can change tier once per 31 days
+
+**Example Calculation**:
+```
+Scenario: 120 GB/day average ingestion
+
+Pay-As-You-Go:
+120 GB × 30 days × $2.76/GB = ~$9,936/month
+
+100 GB/day Commitment:
+$5,000/month (commitment) + (20 GB × 30 days × $1.67/GB) = ~$6,002/month
+
+Savings: ~$3,934/month (40%)
+```
+
+### Data Plans (Table-Level Configuration)
+
+Log Analytics tables can be configured with different **data plans** to optimize costs:
+
+#### Analytics Logs (Default)
+**Characteristics**:
+- Full query capabilities
+- Interactive queries
+- Alert support
+- 8-day search jobs
+- Best for operational data
+
+**Pricing**: Standard Log Analytics rates
+
+**Use Cases**:
+- Real-time monitoring
+- Alerting and dashboards
+- Troubleshooting and diagnostics
+- Security investigations
+
+#### Basic Logs
+**Characteristics**:
+- Reduced query capabilities
+- Limited to search jobs only
+- No alerting support
+- 30% cost reduction
+- 8-day retention minimum
+
+**Pricing**: ~$0.65 per GB (vs ~$2.76 for Analytics)
+
+**Use Cases**:
+- Verbose logs not needed for real-time monitoring
+- Audit logs for compliance
+- Debug logs for occasional troubleshooting
+- High-volume diagnostic logs
+
+**Limitations**:
+- ❌ No interactive queries (search jobs only)
+- ❌ No alert rules
+- ❌ Limited to specific tables
+- ❌ 8-day retention only
+
+#### Auxiliary Logs (Archive)
+**Characteristics**:
+- Very low cost storage
+- Query via search jobs only
+- Long-term retention
+- ~$0.25 per GB ingestion + $0.06/GB/month storage
+
+**Use Cases**:
+- Long-term compliance storage
+- Infrequently accessed logs
+- Historical data retention
+- Archival requirements
+
+### Cost Optimization Decision Flow
+
+```
+Daily Ingestion Volume?
+├─ < 100 GB → Use Pay-As-You-Go
+├─ > 100 GB consistently → Use Commitment Tier
+│
+Data Usage Pattern?
+├─ Real-time monitoring needed? → Analytics Logs
+├─ Occasional searches only? → Basic Logs
+├─ Long-term archive? → Auxiliary Logs
+│
+Alert Requirements?
+├─ Alerts needed? → Must use Analytics Logs
+├─ No alerts? → Can use Basic Logs (save 30%)
+```
+
 ### Cost Optimization Tips
-- Use daily cap to control Log Analytics ingestion
-- Configure data retention based on compliance needs
-- Sample high-volume telemetry in Application Insights
-- Use diagnostic settings to filter unnecessary logs
-- Archive old data to Azure Storage
+
+#### Workspace-Level Optimizations
+✅ **Use commitment tiers** for consistent ingestion (> 100 GB/day) → Save 40-50%  
+✅ **Set daily caps** to prevent unexpected costs (configure in workspace)  
+✅ **Configure data retention** based on compliance needs (default 90 days)  
+✅ **Use data collection rules** to filter unnecessary data at source  
+✅ **Archive old data** to Azure Storage for long-term retention  
+
+#### Table-Level Optimizations
+✅ **Use Basic Logs** for verbose non-alert data → Save 30%  
+✅ **Configure table retention** independently (shorter = cheaper)  
+✅ **Enable Auxiliary Logs** for compliance data → Save 75%  
+✅ **Filter at collection** using transformation rules  
+✅ **Sample high-volume data** (Application Insights sampling)  
+
+#### Application-Level Optimizations
+✅ **Reduce log verbosity** in application code  
+✅ **Filter diagnostic settings** to collect only necessary categories  
+✅ **Use sampling** for Application Insights telemetry  
+✅ **Optimize custom logs** to reduce data volume  
+✅ **Remove unnecessary logs** from development/debug builds  
+
+### Common Cost Optimization Scenarios
+
+#### Scenario 1: 120 GB/day with Alert Requirements
+**Setup**:
+- App1 generates 120 GB/day of logs
+- Alerts monitor for error messages
+- Real-time monitoring needed
+
+**Optimization**:
+1. ✅ Configure workspace with **100 GB/day commitment tier** → Save ~$4,000/month
+2. ✅ Keep App1Logs as **Analytics Logs** (alerts require this)
+3. ✅ Set appropriate retention (e.g., 30 days vs 90 days) → Additional savings
+4. ✅ Filter at source to reduce non-critical logs
+
+**Cost Comparison**:
+```
+Pay-As-You-Go:    120 GB × 30 × $2.76 = ~$9,936/month
+Commitment Tier:  $5,000 + (20 GB × 30 × $1.67) = ~$6,002/month
+Savings:          ~$3,934/month (40%)
+```
+
+#### Scenario 2: High-Volume Verbose Logs
+**Setup**:
+- 200 GB/day of logs
+- 150 GB is debug/verbose logs (no alerts needed)
+- 50 GB is operational logs (alerts needed)
+
+**Optimization**:
+1. ✅ Use **200 GB/day commitment tier**
+2. ✅ Configure debug logs as **Basic Logs** → 30% savings on 150 GB
+3. ✅ Keep operational logs as **Analytics Logs** for alerts
+4. ✅ Set shorter retention for debug logs (8 days)
+
+**Cost Comparison**:
+```
+All Analytics:
+200 GB × 30 × $1.58 = ~$9,480/month
+
+Optimized (Basic + Analytics):
+(150 GB × $0.65 + 50 GB × $1.58) × 30 = ~$5,295/month
+Savings: ~$4,185/month (44%)
+```
+
+#### Scenario 3: Mixed Usage with Archive
+**Setup**:
+- 100 GB/day operational logs
+- 50 GB/day compliance logs (1-year retention needed)
+- Alerts on operational logs only
+
+**Optimization**:
+1. ✅ Use **100 GB/day commitment tier**
+2. ✅ Operational logs → **Analytics Logs** (30-day retention)
+3. ✅ Compliance logs → **Auxiliary Logs** (365-day retention)
+4. ✅ Overage (50 GB) charged at commitment rate
+
+**Monthly Cost**:
+```
+Commitment: $5,000/month
+Compliance ingestion: 50 GB × 30 × $0.25 = $375/month
+Compliance storage: 1,500 GB × $0.06 = $90/month
+Total: ~$5,465/month (vs ~$12,420 without optimization)
+```
+
+### Key Insights for Exams
+
+1. **Workspace vs Table Configuration**
+   > Cost optimization happens at **workspace level** (commitment tiers) and **table level** (data plans). Modifying the workspace provides the most control and savings.
+
+2. **Commitment Tiers = Significant Savings**
+   > For consistent ingestion ≥100 GB/day, commitment tiers offer 40-50% cost reduction compared to pay-as-you-go.
+
+3. **Basic Logs Limitations**
+   > Basic Logs save 30% but **don't support alerts**. If alerts are required, must use Analytics Logs data plan.
+
+4. **Workspace Controls Everything**
+   > Workspace settings control commitment tiers, daily caps, retention policies, and data collection rules. This is where cost optimization happens.
+
+5. **Table-Level Data Plans**
+   > Individual tables can use different data plans (Analytics vs Basic vs Auxiliary), but alerts only work with Analytics Logs.
+
+6. **Why Modify Workspace, Not Table or App**
+   > - **Workspace**: Controls commitment tiers, daily caps, retention, data collection rules
+   > - **Table**: Limited to data plan selection, retention settings
+   > - **App**: Source of data, but doesn't control cost optimization settings
 
 ## Use Cases
 
