@@ -602,6 +602,181 @@ Savings: Up to 44%
 4. **Test failover** - Validate disaster recovery
 5. **Monitor performance** - Compare with on-premises
 
+### Migration Tools Comparison
+
+When migrating SQL Server databases to Azure, several tools are available. Understanding the purpose and best use cases for each tool is critical for choosing the right solution.
+
+#### Azure Database Migration Service (DMS)
+
+**Azure Database Migration Service** is a fully managed solution designed for smooth migrations from multiple database sources to Azure data platforms, supporting both online and offline scenarios.
+
+**Key Features**:
+- Fully managed migration service
+- Supports both online and offline migrations
+- Minimizes downtime during migration
+- Accessible through Azure portal, PowerShell, and Azure CLI
+- Powered by Azure SQL Migration extension for Azure Data Studio
+- Handles migrations to Azure SQL Database, Azure SQL Managed Instance, and SQL Server on Azure VMs
+- Resilient and reliable throughout the migration process
+- Minimal user involvement required
+
+**Best For**:
+- ✅ Offline migrations with minimal administrative effort
+- ✅ Online migrations requiring minimal downtime
+- ✅ Large-scale database migrations (50+ databases)
+- ✅ Production workloads requiring managed service reliability
+- ✅ Migrations to Azure SQL Managed Instance from on-premises SQL Server
+
+**Use Case Example**:
+*Migrating an on-premises SQL Server with 50 databases to Azure SQL Managed Instance in an offline scenario with minimal administrative effort.*
+
+#### Azure Migrate
+
+**Azure Migrate** is a comprehensive platform offering tools for discovery, assessment, and migration of servers, databases, and web applications.
+
+**Key Features**:
+- Discovery and assessment tools for on-premises resources
+- Evaluation of SQL Server instances and databases
+- Migration guidance to Azure SQL Managed Instance, Azure SQL Database, or SQL Server on Azure VMs
+- Web application assessment and migration to Azure App Service and Azure Kubernetes Service
+- Integration with Azure Data Box for large-scale data migrations
+- Seamless integration with other Azure services and ISV tools
+
+**Best For**:
+- ✅ Assessment and discovery phase of migration planning
+- ✅ Understanding migration readiness and compatibility
+- ✅ Large-scale infrastructure migrations beyond just databases
+- ✅ Migrating entire on-premises environments to Azure
+- ✅ Cost estimation and sizing recommendations
+
+**Limitations**:
+- ❌ Not optimized for direct offline database migration scenarios
+- ❌ Better suited for assessment than execution of migrations
+- ❌ Requires additional tools for actual database migration
+
+**When to Use**: Use Azure Migrate for the initial assessment phase to evaluate your on-premises SQL Server instances and determine the best Azure target (SQL Database, SQL Managed Instance, or SQL Server on Azure VMs). Follow up with Azure Database Migration Service for the actual migration execution.
+
+#### SQL Server Migration Assistant (SSMA)
+
+**SQL Server Migration Assistant** is a Microsoft tool designed to automate database migration to SQL Server from various non-Microsoft database platforms.
+
+**Key Features**:
+- Automated migration from Microsoft Access, DB2, MySQL, Oracle, and SAP ASE
+- Assessment reports for compatibility analysis
+- Converts database objects to SQL Server schema
+- Ensures compatibility with Azure SQL services
+- Schema and code conversion capabilities
+
+**Best For**:
+- ✅ Migrating from non-Microsoft database platforms to SQL Server
+- ✅ Oracle to SQL Server migrations
+- ✅ MySQL to Azure SQL Database migrations
+- ✅ DB2 to SQL Server migrations
+- ✅ Heterogeneous database migrations
+
+**Limitations**:
+- ❌ Not designed for SQL Server to SQL Server migrations
+- ❌ Limited automation for offline migration scenarios
+- ❌ Requires more manual intervention compared to DMS
+
+**When to Use**: Use SSMA when migrating from Oracle, MySQL, DB2, or other non-Microsoft databases to SQL Server or Azure SQL. For SQL Server to Azure SQL migrations, prefer Azure Database Migration Service.
+
+#### Data Migration Assistant (DMA)
+
+**Data Migration Assistant** is an assessment tool that helps identify compatibility issues and provides recommendations for upgrading to modern SQL Server versions or Azure SQL platforms.
+
+**Key Features**:
+- Detects compatibility issues affecting database functionality
+- Identifies potential migration blockers
+- Provides performance and reliability improvement recommendations
+- Assesses readiness for migration to Azure SQL Database or Azure SQL Managed Instance
+- Generates detailed assessment reports
+
+**Best For**:
+- ✅ Pre-migration assessment and compatibility checks
+- ✅ Identifying feature parity issues before migration
+- ✅ Understanding potential breaking changes
+- ✅ Planning and preparation phase of migration
+
+**Limitations**:
+- ❌ Does NOT perform actual database migration
+- ❌ Assessment-only tool, requires other tools for migration execution
+- ❌ Cannot minimize administrative effort for offline migrations
+
+**When to Use**: Use DMA as a preliminary assessment tool before migration. It helps identify compatibility issues and prepares databases for migration, but you must use Azure Database Migration Service or other tools to perform the actual migration.
+
+#### Tool Selection Guide
+
+| Scenario | Recommended Tool | Alternative Tools |
+|----------|------------------|-------------------|
+| **Offline SQL Server to SQL Managed Instance migration** | Azure Database Migration Service | - |
+| **Online SQL Server to SQL Managed Instance migration** | Azure Database Migration Service | - |
+| **Assessment and discovery** | Azure Migrate | Data Migration Assistant |
+| **Compatibility assessment** | Data Migration Assistant | Azure Migrate |
+| **Oracle to Azure SQL migration** | SQL Server Migration Assistant | - |
+| **MySQL to Azure SQL migration** | SQL Server Migration Assistant | Azure Database Migration Service |
+| **Large-scale infrastructure migration** | Azure Migrate + Azure Database Migration Service | - |
+
+#### Migration Workflow for SQL Server to Azure SQL Managed Instance
+
+**Recommended Approach**:
+
+1. **Assessment Phase**
+   - Use **Azure Migrate** for discovery and resource sizing
+   - Use **Data Migration Assistant (DMA)** for detailed compatibility analysis
+   - Review assessment reports and identify potential blockers
+
+2. **Planning Phase**
+   - Determine target Azure SQL configuration
+   - Plan networking (VNet integration for Managed Instance)
+   - Schedule downtime for offline migration
+   - Test migration in non-production environment
+
+3. **Migration Phase**
+   - Use **Azure Database Migration Service** for actual migration
+   - Choose online or offline migration mode
+   - Monitor migration progress through Azure portal
+
+4. **Validation Phase**
+   - Verify data integrity
+   - Test application connectivity
+   - Validate performance
+   - Conduct user acceptance testing
+
+5. **Cutover Phase**
+   - Switch applications to Azure SQL Managed Instance
+   - Monitor performance and errors
+   - Maintain on-premises backup for rollback period
+
+### Real-World Migration Question
+
+**Question**: You have an on-premises Microsoft SQL Server named SQL1 that hosts 50 databases. You plan to migrate SQL1 to Azure SQL Managed Instance. You need to perform an offline migration of SQL1. The solution must minimize administrative effort. What should you include in the solution?
+
+**Answer**: **Azure Database Migration Service (DMS)**
+
+**Explanation**: Azure Database Migration Service is the correct choice for this scenario because:
+- It is specifically designed for migrating SQL Server databases to Azure SQL Managed Instance
+- It supports offline migration scenarios where downtime is acceptable
+- It minimizes administrative effort through full automation and managed service capabilities
+- It can handle large-scale migrations (50 databases) efficiently
+- It provides resilience and reliability throughout the migration process
+- It requires minimal user involvement compared to other migration tools
+
+**Why Other Tools Are Not Suitable**:
+
+- **Azure Migrate**: Better suited for assessment and discovery rather than direct migration execution. While it helps evaluate on-premises resources, it requires additional tools like Azure Database Migration Service for actual migration.
+
+- **SQL Server Migration Assistant (SSMA)**: Designed for migrating from non-Microsoft database platforms (Oracle, MySQL, DB2) to SQL Server. Not optimized for SQL Server to Azure SQL Managed Instance migrations.
+
+- **Data Migration Assistant (DMA)**: An assessment tool that identifies compatibility issues but does NOT perform actual migration. It must be paired with other tools like Azure Database Migration Service to execute the migration.
+
+**References**:
+- [Azure Database Migration Service Overview](https://learn.microsoft.com/en-us/azure/dms/dms-overview)
+- [Compare SQL Server Database Migration Tools](https://learn.microsoft.com/en-us/sql/sql-server/migrate/dma-azure-migrate-compare-migration-tools?view=sql-server-ver16#azure-database-migration-service-dms)
+- [SQL Server Migration Assistant](https://learn.microsoft.com/en-us/sql/ssma/sql-server-migration-assistant?view=sql-server-ver16#migration-sources)
+- [Data Migration Assistant Overview](https://learn.microsoft.com/en-us/sql/dma/dma-overview?view=sql-server-ver16)
+- [Azure Migrate Overview](https://learn.microsoft.com/en-us/azure/migrate/migrate-services-overview)
+
 ## Common Scenarios and Recommendations
 
 ### Scenario 1: New Modern Web Application
