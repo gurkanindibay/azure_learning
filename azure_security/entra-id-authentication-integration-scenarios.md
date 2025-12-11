@@ -27,6 +27,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 3: Group-Based Authorization for Azure Web Apps](#exam-question-3-group-based-authorization-for-azure-web-apps)
     - [Question 4: Configuring Entra ID for Azure Blob Storage with RBAC](#exam-question-4-configuring-entra-id-for-azure-blob-storage-with-rbac)
     - [Question 5: Configuring Multifactor Authentication for Web App](#exam-question-5-configuring-multifactor-authentication-for-web-app)
+    - [Question 6: Microsoft Entra Connect Provisioning Agents for Workday Integration](#exam-question-6-microsoft-entra-connect-provisioning-agents-for-workday-integration)
 
 ---
 
@@ -3586,6 +3587,251 @@ builder.Services.AddAuthorization();
 
 ---
 
+### Exam Question 6: Microsoft Entra Connect Provisioning Agents for Workday Integration
+
+**Scenario:** Your on-premises network contains an Active Directory Domain Services (AD DS) forest. The forest contains a top-level domain, three child domains, and an on-premises server named Server1.
+
+You have a Microsoft Entra tenant. Server1 uses Microsoft Entra Connect Sync to replicate all the user objects from the three child domains to the tenant.
+
+New contractors and employees are onboarded manually by using the Workday cloud-based human resources (HR) application.
+
+You plan to automatically provision accounts for new users in one of the on-premises child domains and the Microsoft Entra tenant. The provisioning logic for the employees will be distinct from the provisioning logic for the contractors.
+
+**Question:** You need to identify the minimum number of Microsoft Entra Connect provisioning agents to deploy. The solution must minimize implementation effort. What should you identify?
+
+**Answer Options:**
+- A) 1 provisioning agent
+- B) 2 provisioning agents
+- C) 3 provisioning agents
+
+---
+
+### Answer Analysis
+
+#### ✅ Correct Answer: 1 Provisioning Agent
+
+**Why this is correct:**
+
+1. **Single Agent Capability**: Microsoft Entra Connect Sync and Microsoft Entra provisioning work efficiently with a single provisioning agent, even when there are:
+   - Multiple domains
+   - Distinct provisioning logic for different user types (employees vs. contractors)
+
+2. **Microsoft Entra Connect Sync Already in Place**:
+   - Server1 is already running Microsoft Entra Connect Sync
+   - This handles synchronization from the three child domains to Microsoft Entra tenant
+   - The existing infrastructure supports the necessary domain connectivity
+
+3. **Workday Integration with Single Agent**:
+   - Workday integration requires a provisioning agent to write back to on-premises AD
+   - A single provisioning agent can handle all provisioning from Workday
+   - The agent can connect to all child domains from a single deployment
+
+4. **Distinct Logic Handled Through Configuration**:
+   - Different provisioning logic for employees and contractors is managed through:
+     - **Scoped filters**: Define which users are employees vs. contractors
+     - **Attribute mappings**: Configure different attribute transformations
+     - **Conditional rules**: Apply different logic based on user type
+   - This is all configured in the provisioning rules, not by deploying multiple agents
+
+5. **Minimized Implementation Effort**:
+   - Single agent deployment = simpler architecture
+   - Less infrastructure to manage and maintain
+   - Reduced complexity in monitoring and troubleshooting
+   - Lower operational overhead
+
+**Architecture Overview:**
+
+```
+Workday (Cloud HR)
+        ↓
+Microsoft Entra Connect Provisioning Agent (1 agent)
+        ↓
+On-premises AD Child Domain
+        ↓
+Microsoft Entra Connect Sync (Server1)
+        ↓
+Microsoft Entra Tenant
+```
+
+**How It Works:**
+1. New employee/contractor created in Workday
+2. Provisioning agent detects the change
+3. Applies appropriate scoping filter (employee or contractor)
+4. Provisions user to on-premises child domain with correct attributes
+5. Microsoft Entra Connect Sync replicates to Microsoft Entra tenant
+
+---
+
+#### ❌ Incorrect: 2 Provisioning Agents
+
+**Why this is NOT necessary:**
+
+1. **Redundant Deployment**: Two agents would be redundant for this scenario
+2. **Misunderstanding of Agent Scope**: A single agent can:
+   - Handle multiple user types
+   - Connect to multiple domains
+   - Apply distinct provisioning logic through configuration
+3. **Over-Engineering**: Adding a second agent doesn't provide additional capability
+4. **Increased Complexity**: More agents = more infrastructure to manage
+5. **Higher Cost**: Additional server resources without benefit
+
+**Common Misconception:**
+- "We need one agent per user type (employee/contractor)" ❌
+- **Reality**: Scoped filters and attribute mappings handle user type differences ✅
+
+**When you actually need 2+ agents:**
+- **High availability**: Deploy multiple agents for redundancy (optional)
+- **Load balancing**: Very large deployments (10,000+ users)
+- **Network isolation**: Completely separate networks requiring separate agents
+- **Compliance requirements**: Strict segregation of systems
+
+---
+
+#### ❌ Incorrect: 3 Provisioning Agents
+
+**Why this is NOT necessary:**
+
+1. **Major Over-Provisioning**: Three agents would be excessive
+2. **Domain Count Confusion**: The number of agents is NOT related to:
+   - Number of child domains (3 in this case)
+   - Number of provisioning sources
+3. **Single Agent Capability**: One agent can connect to multiple domains through:
+   - Proper network connectivity
+   - Appropriate service account permissions
+4. **Minimizes Implementation Effort**: Goes against the requirement
+5. **Unnecessary Maintenance**: Three times the infrastructure to manage
+
+**Common Misconception:**
+- "We need one agent per child domain" ❌
+- **Reality**: A single agent can access all domains with proper configuration ✅
+
+---
+
+### Key Concepts: Microsoft Entra Connect Provisioning
+
+#### Provisioning Agent vs. Microsoft Entra Connect Sync
+
+| Component | Purpose | Function |
+|-----------|---------|----------|
+| **Microsoft Entra Connect Sync** | Sync on-premises AD → Microsoft Entra | Replicates existing user objects from AD to cloud |
+| **Provisioning Agent** | Cloud HR → on-premises AD | Writes new users from cloud HR systems to on-premises AD |
+
+**They work together:**
+1. Workday → Provisioning Agent → On-premises AD (creates user)
+2. On-premises AD → Entra Connect Sync → Microsoft Entra (syncs user)
+
+#### Scoped Filters for Different User Types
+
+**Example Configuration for Employees vs. Contractors:**
+
+```json
+{
+  "employeeProvisioning": {
+    "scopingFilter": {
+      "employeeType": "Employee"
+    },
+    "attributeMappings": {
+      "department": "Workday.Department",
+      "manager": "Workday.ManagerReference",
+      "extensionAttribute1": "FullTime"
+    }
+  },
+  "contractorProvisioning": {
+    "scopingFilter": {
+      "employeeType": "Contractor"
+    },
+    "attributeMappings": {
+      "department": "Workday.Department",
+      "extensionAttribute1": "Contractor",
+      "accountExpirationDate": "Workday.ContractEndDate"
+    }
+  }
+}
+```
+
+**Key Points:**
+- Same provisioning agent
+- Different rules applied based on user type
+- Conditional logic handles the distinct provisioning requirements
+
+#### Provisioning Agent Deployment Best Practices
+
+✅ **DO:**
+- Deploy one provisioning agent for basic scenarios
+- Add a second agent for high availability (optional)
+- Ensure agent has network connectivity to all target domains
+- Configure appropriate service account permissions
+- Use scoped filters for different user types
+- Test provisioning rules before production deployment
+
+❌ **DON'T:**
+- Deploy an agent per domain unnecessarily
+- Deploy an agent per user type
+- Over-complicate the architecture
+- Assume more agents = better performance (single agent is sufficient)
+
+#### When to Deploy Multiple Provisioning Agents
+
+**Scenarios requiring multiple agents:**
+
+| Scenario | Number of Agents | Reason |
+|----------|------------------|--------|
+| **Basic deployment** | 1 | Sufficient for most scenarios |
+| **High availability** | 2-3 | Redundancy and failover |
+| **Large scale (10,000+ users)** | 2-3 | Load balancing |
+| **Network isolation** | 1 per isolated network | Security/compliance requirements |
+| **Multiple HR sources with isolation** | 1 per source | Strict segregation needed |
+
+**For this exam scenario:**
+- ✅ **1 agent** is correct
+- Multiple domains ≠ multiple agents
+- Different user types ≠ multiple agents
+- Scoped filters handle logical separation
+
+---
+
+### Summary: Provisioning Agent Deployment
+
+#### Decision Matrix
+
+| Factor | Requirement | Number of Agents |
+|--------|-------------|------------------|
+| **Number of child domains** | 3 domains | 1 (agent can connect to all) |
+| **User types** | Employees + Contractors | 1 (scoped filters handle logic) |
+| **Implementation effort** | Minimize | 1 (simplest architecture) |
+| **High availability** | Not mentioned | 1 (not required) |
+
+#### The Correct Answer: 1 Agent
+
+**Rationale:**
+- ✅ Microsoft Entra provisioning agent can connect to multiple domains
+- ✅ Scoped filters and attribute mappings handle distinct provisioning logic
+- ✅ Single agent minimizes implementation effort
+- ✅ Existing Entra Connect Sync handles replication to cloud
+- ✅ No technical requirement for additional agents
+
+> **Exam Tip:** When asked about minimum provisioning agents for Microsoft Entra Connect with Workday integration, remember that a single agent can handle multiple domains and different provisioning logic through scoped filters. Only deploy multiple agents for high availability or network isolation requirements.
+
+---
+
+### Additional Resources
+
+#### Official Documentation
+
+- [Microsoft Entra Connect provisioning agent](https://learn.microsoft.com/en-us/entra/identity/app-provisioning/user-provisioning)
+- [Workday integration reference](https://learn.microsoft.com/en-us/entra/identity/app-provisioning/workday-integration-reference)
+- [Plan cloud HR provisioning](https://learn.microsoft.com/en-us/entra/identity/app-provisioning/plan-cloud-hr-provision)
+- [Workday tutorial](https://learn.microsoft.com/en-us/entra/identity/saas-apps/workday-tutorial)
+
+#### Related Topics
+
+- **Microsoft Entra Connect Sync**: For syncing existing on-premises users to cloud
+- **Scoped filters**: For applying different logic to user types
+- **Attribute mappings**: For transforming HR data to AD attributes
+- **High availability**: For deploying redundant provisioning agents
+
+---
+
 ## Summary and Key Takeaways
 
 ### Choose the Right Method
@@ -3597,6 +3843,7 @@ builder.Services.AddAuthorization();
 | **Consumer app** | ✅ External ID (B2C) | ❌ Standard Entra ID for internal use |
 | **Access Microsoft 365 data** | ✅ OAuth 2.0 + Microsoft Graph | ❌ Graph API for authentication |
 | **Enterprise authentication** | ✅ Standard Entra ID | ❌ Self-hosted provider |
+| **Workday to on-premises AD provisioning** | ✅ 1 Provisioning Agent | ❌ Multiple agents per domain/user type |
 
 ---
 
