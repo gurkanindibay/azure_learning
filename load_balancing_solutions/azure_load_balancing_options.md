@@ -9,6 +9,7 @@ Detailed documentation for each service has been separated into dedicated files:
 - **[Azure Front Door](./azure-front-door.md)** - Global Layer 7 load balancer with CDN and WAF capabilities
 - **[Azure API Management (APIM)](./azure_api_management.md)** - API gateway with governance and developer portal
 - **[Azure Load Balancer](./azure-load-balancer.md)** - Regional Layer 4 TCP/UDP load balancer
+- **[Azure Gateway Load Balancer](./azure-gateway-load-balancer.md)** - Transparent NVA insertion for traffic inspection
 - **[Azure Application Gateway](./azure-application-gateway.md)** - Regional Layer 7 load balancer with WAF
 - **[Azure Traffic Manager](./azure-traffic-manager.md)** - DNS-based global traffic routing
 - **[Azure CDN](./azure-cdn.md)** - Global content delivery network for caching
@@ -38,6 +39,13 @@ Detailed documentation for each service has been separated into dedicated files:
 - Internal and external load balancing
 - Most cost-effective load balancing option
 - [📖 Full Documentation](./azure-load-balancer.md)
+
+### Azure Gateway Load Balancer
+**Transparent NVA insertion for traffic inspection**
+- Chain third-party network virtual appliances (firewalls, IDS/IPS)
+- Transparent to applications - no configuration changes needed
+- High availability and scalability for NVAs
+- [📖 Full Documentation](./azure-gateway-load-balancer.md)
 
 ### Azure Application Gateway
 **Regional Layer 7 load balancer with WAF**
@@ -73,21 +81,23 @@ The diagram below captures the routing choices for public and private endpoints,
 | **Front Door** | Layer 7 | Global | Global HTTP load balancing with WAF | $50-1500/month | [Docs](./azure-front-door.md) |
 | **API Management** | Layer 7 | Regional | API governance with developer portal | $50-2700/month | [Docs](./azure-api-management.md) |
 | **Load Balancer** | Layer 4 | Regional | High-performance TCP/UDP distribution | Free-$100/month | [Docs](./azure-load-balancer.md) |
+| **Gateway Load Balancer** | Layer 4 | Regional | Transparent NVA chaining | $20-150/month | [Docs](./azure-gateway-load-balancer.md) |
 | **Application Gateway** | Layer 7 | Regional | Regional WAF and SSL termination | $240-800/month | [Docs](./azure-application-gateway.md) |
 | **Traffic Manager** | DNS | Global | DNS-based failover and routing | $3-10/month | [Docs](./azure-traffic-manager.md) |
 | **CDN** | Layer 7 | Global | Content caching and HTTPS for static sites | $5-20/month | [Docs](./azure-cdn.md) |
 
 ### Detailed Feature Comparison
 
-| Feature | Front Door | APIM | Load Balancer | App Gateway | Traffic Manager | CDN |
-|---------|-----------|------|---------------|-------------|-----------------|-----|
-| **WAF** | ✅ Premium | ❌ | ❌ | ✅ WAF SKU | ❌ | ⚠️ Premium only |
-| **Caching** | ✅ | ✅ Policies | ❌ | ❌ | ❌ | ✅ |
-| **SSL Termination** | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
-| **API Policies** | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Dev Portal** | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Health Probes** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Autoscaling** | ✅ | ⚠️ Varies | ⚠️ Standard | ✅ v2 | N/A | ✅ |
+| Feature | Front Door | APIM | Load Balancer | Gateway LB | App Gateway | Traffic Manager | CDN |
+|---------|-----------|------|---------------|------------|-------------|-----------------|-----|
+| **WAF** | ✅ Premium | ❌ | ❌ | ❌ | ✅ WAF SKU | ❌ | ⚠️ Premium only |
+| **Caching** | ✅ | ✅ Policies | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **SSL Termination** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **API Policies** | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Dev Portal** | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **NVA Chaining** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Health Probes** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Autoscaling** | ✅ | ⚠️ Varies | ⚠️ Standard | ✅ | ✅ v2 | N/A | ✅ |
 
 ## Common Deployment Patterns
 
@@ -162,6 +172,12 @@ Cost: ~$20-50/month
 - ✅ Cost-effective production solution
 - ❌ Don't need Layer 7 features
 
+#### Choose **Gateway Load Balancer** when:
+- ✅ Need to insert third-party NVAs (firewalls, IDS/IPS, DPI)
+- ✅ Require transparent traffic inspection
+- ✅ Want high availability for security appliances
+- ❌ Don't need simple load balancing without NVAs
+
 #### Choose **Application Gateway** when:
 - ✅ Regional Layer 7 load balancing
 - ✅ WAF protection needed
@@ -189,12 +205,15 @@ Cost: ~$20-50/month
    > Traffic Manager does not proxy traffic - it only handles DNS resolution. Use it for DNS-level routing to other services.
 
 3. **Layer 4 vs Layer 7**
-   > Load Balancer = Layer 4 (TCP/UDP), Application Gateway/Front Door = Layer 7 (HTTP/HTTPS)
+   > Load Balancer & Gateway Load Balancer = Layer 4 (TCP/UDP), Application Gateway/Front Door = Layer 7 (HTTP/HTTPS)
 
-4. **WAF Locations**
+4. **Gateway Load Balancer for NVAs**
+   > Use Gateway Load Balancer to transparently chain third-party network virtual appliances (firewalls, IDS/IPS) without changing application configuration
+
+5. **WAF Locations**
    > Application Gateway = Regional WAF, Front Door Premium = Global WAF
 
-5. **Cost Optimization**
+6. **Cost Optimization**
    > Traffic Manager (~$3-10/month) is cheapest for global routing, Load Balancer Standard (~$20-100/month) is most cost-effective for Layer 4
 
 ## Best Practices
@@ -218,6 +237,7 @@ Detailed pricing information has been moved to individual service documents. Her
 | **Traffic Manager** | Standard | ~$3-10/month | [Details](./azure-traffic-manager.md#pricing) |
 | **Load Balancer** | Basic | Free | [Details](./azure-load-balancer.md#pricing-tiers) |
 | **Load Balancer** | Standard | ~$20-100/month | [Details](./azure-load-balancer.md#pricing-tiers) |
+| **Gateway Load Balancer** | Standard | ~$20-150/month | [Details](./azure-gateway-load-balancer.md#pricing) |
 | **Front Door** | Standard | ~$50-150/month | [Details](./azure-front-door.md#pricing-tiers) |
 | **App Gateway** | Standard v2 | ~$240-400/month | [Details](./azure-application-gateway.md#pricing-tiers) |
 | **Front Door** | Premium | ~$400-1500/month | [Details](./azure-front-door.md#pricing-tiers) |
@@ -239,6 +259,7 @@ For detailed pricing breakdowns, cost examples, and optimization strategies, see
 - [Azure Front Door](./azure-front-door.md)
 - [Azure API Management](./azure_api_management.md)
 - [Azure Load Balancer](./azure-load-balancer.md)
+- [Azure Gateway Load Balancer](./azure-gateway-load-balancer.md)
 - [Azure Application Gateway](./azure-application-gateway.md)
 - [Azure Traffic Manager](./azure-traffic-manager.md)
 - [Azure CDN](./azure-cdn.md)
