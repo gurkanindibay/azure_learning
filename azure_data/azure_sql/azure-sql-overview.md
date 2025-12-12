@@ -748,6 +748,42 @@ Azure SQL managed instance is correct because it allows you to bring your on-pre
 
 ---
 
+### Question 2: Service Tier Selection for High-Availability Requirements (Litware Inc.)
+
+**Scenario**: Refer to the Litware Inc. case study. You plan to migrate DB1 and DB2 to Azure. You need to ensure that the Azure database and the service tier meet the resiliency and business requirements.
+
+**Question**: What should you configure for the Service tier?
+
+**Options**:
+- A) Hyperscale
+- B) Business Critical
+- C) General Purpose
+
+**Correct Answer**: **B) Business Critical**
+
+**Explanation**:
+
+**Business Critical** is correct because it is the only tier that meets all three resiliency requirements specified in the case study: 
+1. Maintain availability even if two availability zones fail
+2. Fail over automatically
+3. Minimize I/O latency
+
+The Business Critical tier is built for high-performance transactional workloads and provides zone-redundant configurations through synchronous replication across availability zones. It also uses local SSD-based storage, which ensures low latency and high throughput. Furthermore, since it is a platform-as-a-service (PaaS) offering, it also meets the requirement to minimize administrative effort.
+
+**Why Other Options Are Incorrect**:
+
+**General Purpose** is incorrect because although it offers zone redundancy, it relies on remote storage, which introduces higher I/O latency and lower throughput. This violates the requirement to minimize I/O latency. Additionally, the resiliency through zone redundancy in this tier is not generally available in all regions, making it less reliable for mission-critical workloads that demand proven zone failure resilience.
+
+**Hyperscale** is incorrect because it is designed for extremely large databases and scale-out read scenarios, not high-availability transactional systems. Importantly, Hyperscale does not currently support zone redundancy, so it cannot meet the requirement to maintain availability if two availability zones fail, making it an unsuitable choice in this scenario.
+
+**Reference Links**:
+- [Azure SQL Database Service Tiers - When to Choose Business Critical](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-sql-database-vcore?view=azuresql#when-to-choose-this-service-tier-1)
+- [Azure SQL High Availability SLA](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
