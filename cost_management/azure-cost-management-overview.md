@@ -15,9 +15,18 @@
 - [Management Groups vs Resource Tags](#management-groups-vs-resource-tags)
 - [Cost Allocation Strategies](#cost-allocation-strategies)
 - [Best Practices](#best-practices)
+- [Azure Cost Optimization Strategies](#azure-cost-optimization-strategies)
+  - [Azure Reservations (Reserved Instances)](#azure-reservations-reserved-instances)
+  - [Azure Hybrid Benefit](#azure-hybrid-benefit)
+  - [Azure Spot Virtual Machines](#azure-spot-virtual-machines)
+  - [Comparison Matrix](#comparison-matrix)
+  - [Decision Framework](#decision-framework-choosing-the-right-strategy)
+  - [Combining Strategies](#combining-strategies-for-maximum-savings)
+  - [Real-World Scenarios](#real-world-scenarios)
 - [Practice Questions](#practice-questions)
   - [Question 1: Per-Project Cost Monitoring Across Subscriptions](#question-1-per-project-cost-monitoring-across-subscriptions)
   - [Question 2: Estimating Migration Costs to Azure](#question-2-estimating-migration-costs-to-azure)
+  - [Question 3: Minimizing Compute Costs for Production App Migration](#question-3-minimizing-compute-costs-for-production-app-migration)
 - [References](#references)
 
 ## Overview
@@ -588,6 +597,286 @@ Cost Views:
 ❌ **No budget alerts** - No warning before cost overruns  
 ❌ **Manual processes** - Doesn't scale, error-prone  
 ❌ **Infrequent reviews** - Costs spiral before detection  
+
+## Azure Cost Optimization Strategies
+
+Azure provides several cost optimization mechanisms for compute resources. Understanding when to use each strategy is crucial for minimizing costs while meeting security, compliance, and availability requirements.
+
+### Azure Reservations (Reserved Instances)
+
+**Azure Reservations** allow you to commit to 1-year or 3-year terms for virtual machines and other Azure services in exchange for significant cost savings.
+
+**Key Characteristics**:
+- **Discount**: Up to 72% compared to pay-as-you-go pricing
+- **Commitment**: 1-year or 3-year term
+- **Payment Options**: Upfront, monthly, or no upfront (3-year only)
+- **Flexibility**: Can exchange or cancel with restrictions
+- **Scope**: Shared across subscription or management group
+
+**When to Use**:
+✅ Long-running production workloads  
+✅ Predictable and consistent resource usage  
+✅ Dedicated VMs with stable requirements  
+✅ Workloads that must meet strict compliance and availability requirements  
+✅ Known capacity needs for extended periods  
+
+**When NOT to Use**:
+❌ Variable or unpredictable workloads  
+❌ Short-term projects or POCs  
+❌ Workloads that may be scaled down or decommissioned  
+❌ When testing new services with uncertain requirements  
+
+**Example Scenario**:
+> **App1 Migration**: A production application running on Ubuntu VMs is being migrated to Azure. The workload is long-running and must meet strict security and compliance requirements. Since the compute needs are predictable and the VMs will run continuously, **Azure Reservations** provide up to 72% cost savings compared to pay-as-you-go pricing.
+
+**Supported Services**:
+- Virtual Machines
+- Azure SQL Database
+- Azure Cosmos DB
+- Azure Synapse Analytics
+- Azure App Service
+- Azure Storage (reserved capacity)
+
+**Cost Savings Calculation**:
+```
+Pay-as-you-go: $730/month (D4s v3 VM)
+1-year reservation: $450/month → 38% savings
+3-year reservation: $300/month → 59% savings
+
+Annual savings (3-year): ($730 - $300) × 12 = $5,160 per VM
+```
+
+---
+
+### Azure Hybrid Benefit
+
+**Azure Hybrid Benefit** allows you to use existing on-premises Windows Server and SQL Server licenses with Software Assurance on Azure, reducing compute costs.
+
+**Key Characteristics**:
+- **Discount**: Up to 40% on Windows VMs, up to 55% on SQL Server
+- **Requirements**: Active Software Assurance or subscription licenses
+- **License Coverage**: 1 Windows Server license = up to 2 VMs (8 cores each)
+- **No Commitment**: Can enable/disable at any time
+- **Flexibility**: Works with Reserved Instances for additional savings
+
+**When to Use**:
+✅ Existing Windows Server licenses with Software Assurance  
+✅ Existing SQL Server Enterprise or Standard licenses  
+✅ Migrating on-premises Windows workloads to Azure  
+✅ Maximizing value from existing license investments  
+
+**When NOT to Use**:
+❌ Linux-based workloads (Ubuntu, Red Hat, SUSE)  
+❌ No existing Windows Server or SQL Server licenses  
+❌ No active Software Assurance  
+❌ Short-term testing (may not justify license allocation)  
+
+**Example Scenario**:
+> **Linux Migration**: An application hosted on Ubuntu is being migrated to Azure. Since **Azure Hybrid Benefit only applies to Windows Server and SQL Server** workloads with active Software Assurance, it cannot be used for Linux-based applications. Alternative cost optimization strategies like Azure Reservations should be considered instead.
+
+**Supported Products**:
+- Windows Server Datacenter
+- Windows Server Standard
+- SQL Server Enterprise
+- SQL Server Standard
+- RedHat Enterprise Linux (RHEL) - separate RHEL benefit
+- SUSE Linux Enterprise Server (SLES) - separate SUSE benefit
+
+**Cost Savings Calculation**:
+```
+Windows VM Pay-as-you-go: $500/month
+Windows VM with Hybrid Benefit: $300/month → 40% savings
+Windows VM with Hybrid Benefit + 3-year RI: $180/month → 64% savings
+
+Combined savings: $500 - $180 = $320/month = $3,840/year per VM
+```
+
+---
+
+### Azure Spot Virtual Machines
+
+**Azure Spot VMs** offer deep discounts (up to 90% off) for workloads that can tolerate interruptions, utilizing Azure's unused compute capacity.
+
+**Key Characteristics**:
+- **Discount**: Up to 90% compared to pay-as-you-go pricing
+- **Availability**: Not guaranteed - can be evicted with 30-second notice
+- **Eviction Policy**: Capacity-based or price-based eviction
+- **No SLA**: No availability guarantee
+- **Pricing**: Variable based on demand
+
+**When to Use**:
+✅ Batch processing jobs  
+✅ Dev/test environments  
+✅ Stateless applications  
+✅ Non-critical background workloads  
+✅ Fault-tolerant distributed systems  
+✅ High-performance computing (HPC) with checkpointing  
+✅ Rendering and media processing  
+
+**When NOT to Use**:
+❌ Production workloads requiring high availability  
+❌ Applications with strict SLA requirements  
+❌ Workloads that must meet compliance requirements  
+❌ Stateful applications without checkpoint/restart capability  
+❌ Real-time processing systems  
+❌ Long-running jobs that can't be interrupted  
+
+**Example Scenario**:
+> **Production App with Compliance**: App1 is being migrated as a long-running production workload that must meet strict security and compliance requirements. Since **Spot VMs are designed for interruption-tolerant, non-production workloads** and offer no availability guarantees, they are **not appropriate** for this scenario. The application requires consistent availability that Spot VMs cannot provide.
+
+**Eviction Policies**:
+1. **Capacity**: Evicted when Azure needs capacity back
+2. **Price**: Evicted when Spot price exceeds your max price
+
+**Best Practices**:
+- Implement graceful shutdown handlers
+- Use eviction notifications (30 seconds)
+- Distribute workload across multiple Spot VMs
+- Combine Spot with regular VMs for hybrid approach
+- Enable auto-scaling to replace evicted instances
+
+**Cost Savings Calculation**:
+```
+Pay-as-you-go: $730/month (D4s v3 VM)
+Spot VM (average discount): $150/month → 79% savings
+
+Monthly savings: $730 - $150 = $580 per VM
+
+Note: Pricing varies based on region and demand
+```
+
+---
+
+### Comparison Matrix
+
+| Feature | Azure Reservations | Azure Hybrid Benefit | Spot VMs |
+|---------|-------------------|---------------------|----------|
+| **Max Discount** | Up to 72% | Up to 55% | Up to 90% |
+| **Commitment** | 1 or 3 years | None | None |
+| **Availability** | Guaranteed | Guaranteed | Not guaranteed |
+| **SLA** | Yes | Yes | No |
+| **Use Case** | Steady workloads | Windows/SQL migrations | Interruptible workloads |
+| **Flexibility** | Limited (term-based) | High (toggle on/off) | High (spot market) |
+| **Requirements** | Payment commitment | Software Assurance | Fault tolerance |
+| **Best For** | Production apps | License optimization | Batch processing |
+| **Eviction Risk** | None | None | High |
+| **Compliance Suitable** | Yes ✅ | Yes ✅ | No ❌ |
+
+---
+
+### Decision Framework: Choosing the Right Strategy
+
+```
+Start: Need to minimize compute costs?
+  │
+  ├─ Is this a production workload with compliance/SLA requirements?
+  │   │
+  │   ├─ Yes → Consider Azure Reservations
+  │   │   │
+  │   │   └─ Are you migrating Windows/SQL workloads with existing licenses?
+  │   │       │
+  │   │       ├─ Yes → Use Hybrid Benefit + Reservations (stackable!)
+  │   │       └─ No → Use Reservations only
+  │   │
+  │   └─ No → Is the workload interruption-tolerant?
+  │       │
+  │       ├─ Yes → Consider Spot VMs
+  │       └─ No → Consider pay-as-you-go or Reservations
+  │
+  └─ Additional Optimization
+      ├─ Right-size VMs using Azure Advisor
+      ├─ Auto-scale for variable workloads
+      ├─ Auto-shutdown for dev/test environments
+      └─ Use Azure Cost Management for ongoing monitoring
+```
+
+---
+
+### Combining Strategies for Maximum Savings
+
+Multiple cost optimization strategies can be combined for maximum savings:
+
+**Stack 1: Hybrid Benefit + Reservations**
+```
+Windows VM baseline: $500/month
+Apply Hybrid Benefit: $300/month (40% off)
+Apply 3-year RI: $180/month (additional 40% off)
+
+Total savings: 64% off pay-as-you-go pricing
+Combined discount: $500 - $180 = $320/month = $3,840/year
+```
+
+**Stack 2: Reservations + Auto-scaling**
+```
+Reserve baseline capacity: 10 VMs with RI (predictable load)
+Use pay-as-you-go for burst: 0-20 VMs with auto-scale (variable load)
+
+Result: Guaranteed savings on baseline + flexibility for spikes
+```
+
+**Stack 3: Spot VMs + Regular VMs (Hybrid Approach)**
+```
+Critical components: Regular VMs (guaranteed availability)
+Background processing: Spot VMs (deep discounts)
+Auto-scale replacement: Regular VMs replace evicted Spot instances
+
+Result: Cost savings on non-critical components + reliability where needed
+```
+
+---
+
+### Real-World Scenarios
+
+#### Scenario 1: E-commerce Platform Migration
+
+**Requirements**:
+- Production workload running 24/7
+- Windows Server and SQL Server
+- Must maintain 99.9% SLA
+- Predictable baseline load
+
+**Solution**:
+✅ **Azure Reservations** (3-year) for baseline capacity → 72% savings  
+✅ **Azure Hybrid Benefit** for Windows/SQL → additional 40% on OS costs  
+✅ **Auto-scaling** for peak shopping periods  
+
+**Result**: 64% combined savings on reserved capacity + flexibility for spikes
+
+---
+
+#### Scenario 2: Machine Learning Training
+
+**Requirements**:
+- GPU-intensive compute for model training
+- Jobs can be paused and resumed (checkpointing)
+- No SLA requirements
+- Cost minimization is priority
+
+**Solution**:
+✅ **Spot VMs** with GPU → up to 90% savings  
+✅ Implement checkpoint/restart logic  
+✅ Distribute across multiple regions  
+
+**Result**: Massive cost savings with acceptable interruption risk
+
+---
+
+#### Scenario 3: Dev/Test Environment
+
+**Requirements**:
+- Multiple environments (Dev, Test, UAT)
+- Used only during business hours (8 AM - 6 PM)
+- No production SLA needed
+- Mix of Windows and Linux
+
+**Solution**:
+✅ **Auto-shutdown** policy (nights and weekends) → 60% time savings  
+✅ **Spot VMs** for non-critical test environments → additional 80% savings  
+✅ **Hybrid Benefit** for Windows test VMs  
+
+**Result**: 80%+ savings compared to always-on pay-as-you-go
+
+---
 
 ## Practice Questions
 
@@ -1255,6 +1544,344 @@ Management Group (Governance)
 
 ---
 
+### Question 3: Minimizing Compute Costs for Production App Migration
+
+**Scenario**:
+Litware Inc. is migrating App1 to Azure. App1 is a long-running production application hosted on Ubuntu that must meet strict security and compliance requirements. The application will be hosted on dedicated Azure virtual machines.
+
+You need to estimate the compute costs for App1 in Azure and minimize the costs while meeting security and compliance requirements.
+
+**Question**: What should you implement to minimize the costs?
+
+**Options**:
+- A. Azure Reservations
+- B. Azure Hybrid Benefit
+- C. Azure Spot Virtual Machine pricing
+
+**Correct Answer**: A (Azure Reservations)
+
+---
+
+#### Explanation
+
+**Why Azure Reservations? ✅**
+
+Azure Reservations is the correct choice for this scenario because:
+
+1. **Long-Running Production Workload**: App1 is being migrated to Azure as a production application that will run continuously. Azure Reserved Instances (RIs) allow you to commit to 1-year or 3-year terms for virtual machines in exchange for **significant cost savings — up to 72%** compared to pay-as-you-go pricing.
+
+2. **Predictable and Consistent Usage**: Production applications typically have predictable compute needs, making them ideal candidates for reserved capacity commitments.
+
+3. **Security and Compliance Requirements**: Since App1 must meet **strict security and compliance requirements**, it needs guaranteed availability and dedicated resources. Azure Reservations provide:
+   - ✅ Guaranteed capacity
+   - ✅ Full SLA support
+   - ✅ No interruption risk
+   - ✅ Suitable for compliance workloads
+
+4. **Dedicated Azure Virtual Machines**: The scenario explicitly states that App1 will be hosted on dedicated Azure VMs, which is perfect for Reservations that optimize VM costs.
+
+5. **Cost Optimization for Predictable Workloads**: Reservations are designed specifically for steady-state workloads where you can forecast capacity needs, resulting in substantial savings without sacrificing availability.
+
+**Reservation Benefits**:
+```
+Pay-as-you-go pricing: $730/month per VM (example D4s v3)
+1-year reservation: $450/month → 38% savings
+3-year reservation: $300/month → 59% savings
+
+Annual savings (3-year): ($730 - $300) × 12 = $5,160 per VM
+
+For multiple VMs:
+10 VMs × $5,160 = $51,600 annual savings
+```
+
+**Key Points**:
+- ✅ Up to 72% discount vs pay-as-you-go
+- ✅ Guaranteed capacity and availability
+- ✅ Meets compliance requirements
+- ✅ Ideal for production workloads
+- ✅ Flexible payment options (upfront, monthly)
+- ✅ Can be exchanged or canceled (with restrictions)
+
+---
+
+**Why NOT Azure Hybrid Benefit? ❌**
+
+Azure Hybrid Benefit is **incorrect** for this scenario because:
+
+1. **Linux/Ubuntu Workload**: The case study states that App1 is **hosted on Ubuntu**, which is a Linux distribution. Azure Hybrid Benefit is **only available for**:
+   - Windows Server workloads
+   - SQL Server workloads
+   - With active Software Assurance
+
+2. **No License Reuse Indicated**: There is no mention in the scenario that Litware Inc. has existing Windows Server or SQL Server licenses to reuse.
+
+3. **Not Applicable to Linux**: While there are separate programs for RHEL and SLES, standard Azure Hybrid Benefit does not apply to Ubuntu or most Linux distributions.
+
+**Azure Hybrid Benefit Requirements**:
+```
+Supported:
+✅ Windows Server Datacenter/Standard with Software Assurance
+✅ SQL Server Enterprise/Standard with Software Assurance
+✅ RedHat Enterprise Linux (separate RHEL benefit)
+✅ SUSE Linux Enterprise Server (separate SUSE benefit)
+
+Not Supported:
+❌ Ubuntu
+❌ CentOS
+❌ Debian
+❌ Other Linux distributions without specific agreements
+```
+
+**When Hybrid Benefit Would Apply**:
+```
+Scenario: Migrating Windows Server application with existing licenses
+
+On-premises:
+  └─ Windows Server 2019 Datacenter with Software Assurance
+
+Azure Migration:
+  └─ Apply Azure Hybrid Benefit → Save up to 40% on Windows VM costs
+  └─ Combine with Reservations → Save up to 64% total
+
+Result: Valid cost optimization strategy for Windows workloads
+```
+
+**Conclusion**: Since App1 runs on Ubuntu, Azure Hybrid Benefit cannot be used. Alternative cost optimization strategies like Azure Reservations are appropriate.
+
+---
+
+**Why NOT Azure Spot Virtual Machines? ❌**
+
+Azure Spot VMs are **incorrect** for this scenario because:
+
+1. **Production Workload**: App1 is a production application that requires consistent availability. Spot VMs are designed for **interruption-tolerant, non-production workloads** such as:
+   - ✅ Batch processing jobs
+   - ✅ Dev/test environments
+   - ✅ Stateless applications
+   - ✅ Background processing
+   - ❌ Production apps with SLA requirements
+
+2. **No Availability Guarantee**: Spot VMs can be **evicted with only 30 seconds notice** when Azure needs the capacity back or when the spot price exceeds your maximum price. This makes them unsuitable for:
+   - ❌ Applications requiring high availability
+   - ❌ Workloads with strict SLA requirements
+   - ❌ Compliance-sensitive applications
+
+3. **Compliance and Security Requirements**: The scenario explicitly states that App1 must meet **strict security and compliance requirements**. Spot VMs:
+   - ❌ Provide no SLA guarantees
+   - ❌ Cannot guarantee continuous availability
+   - ❌ May be evicted during critical operations
+   - ❌ Not suitable for compliance workloads
+
+4. **Long-Running Workload**: The application is described as long-running, which means it needs to operate continuously without unexpected interruptions.
+
+**Spot VM Characteristics**:
+```
+Pros:
+✅ Up to 90% discount vs pay-as-you-go
+✅ Great for interruptible workloads
+✅ Cost-effective for batch jobs
+
+Cons:
+❌ Can be evicted with 30-second notice
+❌ No availability SLA
+❌ Not suitable for production apps
+❌ Cannot meet compliance requirements
+❌ Unpredictable availability
+```
+
+**Spot VM Eviction Scenarios**:
+```
+Capacity Eviction:
+  Azure needs capacity → Spot VM evicted → 30-second notice
+  
+Price Eviction:
+  Spot price > max price → VM evicted → 30-second notice
+
+Impact on App1:
+  ❌ Production service interrupted
+  ❌ Potential data loss if not checkpointed
+  ❌ Compliance violation (availability requirement)
+  ❌ User-facing downtime
+```
+
+**When Spot VMs Would Be Appropriate**:
+```
+Scenario 1: Batch Data Processing
+  └─ Job can be paused and resumed
+  └─ No real-time requirements
+  └─ Result: Spot VMs save 80-90% ✅
+
+Scenario 2: Machine Learning Training
+  └─ Checkpointing implemented
+  └─ Can restart from checkpoint
+  └─ Result: Spot VMs with GPU save massive costs ✅
+
+Scenario 3: Dev/Test Environment
+  └─ Non-production workload
+  └─ Stateless test instances
+  └─ Result: Spot VMs reduce dev/test costs ✅
+
+Scenario 4: Production App (like App1)
+  └─ Requires continuous availability
+  └─ Must meet compliance requirements
+  └─ Result: Spot VMs NOT suitable ❌
+```
+
+**Conclusion**: Spot VMs offer deep discounts but are fundamentally incompatible with the availability and compliance requirements of a production application like App1.
+
+---
+
+#### Cost Optimization Decision Matrix
+
+| Requirement | Reservations | Hybrid Benefit | Spot VMs |
+|-------------|-------------|----------------|----------|
+| **Long-running production** | ✅ Perfect fit | ❌ OS mismatch | ❌ No SLA |
+| **Ubuntu workload** | ✅ Supported | ❌ Windows/SQL only | ✅ Supported |
+| **Compliance required** | ✅ Full SLA | ✅ Full SLA | ❌ No guarantee |
+| **Predictable usage** | ✅ Ideal | N/A | ❌ Eviction risk |
+| **Cost savings** | ✅ Up to 72% | ✅ Up to 55% | ✅ Up to 90% |
+| **Dedicated VMs** | ✅ Yes | ✅ Yes | ⚠️ Shared capacity |
+| **Availability guarantee** | ✅ Yes | ✅ Yes | ❌ No |
+| **App1 suitability** | ✅ **CORRECT** | ❌ Incorrect | ❌ Incorrect |
+
+---
+
+#### Solution Architecture
+
+**Recommended Implementation for App1**:
+
+```
+Step 1: Size VMs Appropriately
+  └─ Assess App1 requirements
+  └─ Select appropriate VM SKU (e.g., D4s v3, E8s v3)
+  └─ Determine quantity needed
+
+Step 2: Purchase Azure Reservations
+  └─ Choose term: 1-year or 3-year (3-year = max savings)
+  └─ Payment option: Upfront, monthly, or no upfront
+  └─ Scope: Subscription or Management Group
+  └─ Region: Match App1 deployment region
+
+Step 3: Deploy App1 to Azure
+  └─ Provision VMs (Ubuntu)
+  └─ Apply security and compliance configurations
+  └─ Deploy application
+  └─ Configure monitoring
+
+Step 4: Monitor and Optimize
+  └─ Track reservation utilization
+  └─ Review Azure Advisor recommendations
+  └─ Adjust sizing if needed
+  └─ Consider auto-scaling for variable components
+
+Cost Structure:
+├─ Reserved VMs (baseline capacity): 72% savings
+├─ Auto-scale VMs (peaks): Pay-as-you-go
+└─ Storage, networking: Separate optimization
+```
+
+**Alternative Optimization Strategies for App1**:
+```
+✅ Right-size VMs based on actual usage
+✅ Use managed disks with appropriate tier
+✅ Implement auto-scaling for variable workload components
+✅ Use Azure Monitor for performance optimization
+✅ Schedule start/stop for non-production replicas
+✅ Optimize storage with lifecycle policies
+❌ Do NOT use Spot VMs for production instances
+❌ Do NOT use Hybrid Benefit (Ubuntu not supported)
+```
+
+---
+
+#### Key Takeaways
+
+1. **Reservations = Production + Predictable Workloads**
+   > Azure Reservations provide up to 72% savings for long-running production workloads with predictable capacity needs
+
+2. **Hybrid Benefit = Windows/SQL Only**
+   > Azure Hybrid Benefit applies only to Windows Server and SQL Server workloads with active Software Assurance, not Linux/Ubuntu
+
+3. **Spot VMs = Interruptible Workloads Only**
+   > Spot VMs offer massive discounts but lack availability guarantees, making them unsuitable for production apps with compliance requirements
+
+4. **Compliance Requires Guaranteed Availability**
+   > Security and compliance requirements typically demand SLAs and consistent availability, ruling out Spot VMs
+
+5. **Multiple Strategies Can Coexist**
+   ```
+   Production Tier (App1 Core):
+     └─ Azure Reservations (3-year) → 72% savings + guaranteed availability
+   
+   Background Processing:
+     └─ Spot VMs (if stateless/restartable) → 90% savings
+   
+   Dev/Test Environments:
+     └─ Spot VMs + auto-shutdown → 85%+ combined savings
+   ```
+
+---
+
+#### Related Concepts
+
+**Cost Optimization Hierarchy**:
+```
+1. Right-size resources (Baseline efficiency)
+   ├─ Use Azure Advisor recommendations
+   └─ Monitor actual vs provisioned capacity
+
+2. Choose pricing model (Strategic savings)
+   ├─ Production: Reservations
+   ├─ Windows migration: Hybrid Benefit
+   └─ Batch/dev: Spot VMs
+
+3. Implement auto-scaling (Dynamic optimization)
+   ├─ Scale out for peaks
+   └─ Scale in during off-hours
+
+4. Monitor and adjust (Continuous improvement)
+   ├─ Review monthly costs
+   ├─ Adjust reservations as needed
+   └─ Optimize based on usage patterns
+```
+
+**Migration Cost Optimization Workflow**:
+```
+Pre-Migration:
+1. Assess workload characteristics
+   └─ Production vs non-production
+   └─ Steady vs variable load
+   └─ Compliance requirements
+
+2. Select pricing strategy
+   └─ Reservations for production
+   └─ Pay-as-you-go for unknown loads
+   └─ Spot for dev/test
+
+Migration:
+3. Deploy with appropriate pricing
+   └─ Purchase reservations if confident
+   └─ Start with pay-as-you-go if uncertain
+
+Post-Migration:
+4. Monitor and optimize
+   └─ Track actual usage
+   └─ Purchase reservations once patterns clear
+   └─ Adjust sizing based on performance
+```
+
+---
+
+#### Reference Links
+
+- [Save Compute Costs with Azure Reservations](https://learn.microsoft.com/azure/cost-management-billing/reservations/save-compute-costs-reservations)
+- [Azure Hybrid Benefit for Windows Server](https://learn.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing)
+- [Azure Spot Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/spot-vms)
+- [Azure Cost Management Best Practices](https://learn.microsoft.com/azure/cost-management-billing/costs/cost-mgt-best-practices)
+- [Azure VM Pricing](https://azure.microsoft.com/pricing/details/virtual-machines/linux/)
+
+---
+
 ## References
 
 ### Microsoft Documentation
@@ -1268,14 +1895,22 @@ Management Group (Governance)
 - [Azure Boards](https://learn.microsoft.com/azure/devops/boards/get-started/what-is-azure-boards)
 - [Cost Optimization Best Practices](https://learn.microsoft.com/azure/architecture/framework/cost/overview)
 
+### Cost Optimization Strategies
+
+- [Azure Reservations Overview](https://learn.microsoft.com/azure/cost-management-billing/reservations/save-compute-costs-reservations)
+- [Azure Hybrid Benefit for Windows Server](https://learn.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing)
+- [Azure Spot Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/spot-vms)
+- [Azure VM Pricing Calculator](https://azure.microsoft.com/pricing/details/virtual-machines/)
+- [Cost Management Best Practices](https://learn.microsoft.com/azure/cost-management-billing/costs/cost-mgt-best-practices)
+
 ### Related Topics
 
 - [Azure Advisor](https://learn.microsoft.com/azure/advisor/advisor-overview)
 - [Azure Policy](https://learn.microsoft.com/azure/governance/policy/overview)
-- [Reserved Instances](https://learn.microsoft.com/azure/cost-management-billing/reservations/save-compute-costs-reservations)
 - [Azure Hybrid Benefit](https://azure.microsoft.com/pricing/hybrid-benefit/)
+- [Azure TCO Calculator](https://azure.microsoft.com/pricing/tco/calculator/)
 
 ---
 
 **Last Updated**: December 2025  
-**Document Version**: 1.0
+**Document Version**: 2.0
