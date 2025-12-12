@@ -683,6 +683,71 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 
 **Why**: Up to 80% cost savings, pay per second of use, auto-pause during inactivity
 
+### Scenario 7: Enterprise Migration with High Resiliency Requirements (Litware Inc. Case Study)
+**Requirements**: 
+- Migrating on-premises databases (DB1 and DB2) to Azure
+- Must maintain availability if two availability zones in the region fail
+- Minimal I/O latency for optimal performance
+- Minimal administrative effort and operational complexity
+- Near 100% SQL Server feature compatibility
+- Support for advanced features like automatic failover and geo-replication
+
+**Recommendation**:
+- **Azure SQL Managed Instance**
+- **Business Critical** service tier (for optimal I/O latency)
+- **Zone-redundant configuration** enabled
+- **Geo-replication** for disaster recovery
+
+**Why**: 
+- **Resiliency**: Azure SQL Managed Instance supports zone-redundant configuration and automatic failover, ensuring availability even if two availability zones fail. Geo-replication provides additional disaster recovery capabilities.
+- **Performance**: Business Critical tier uses local SSD storage, delivering minimal I/O latency required for DB1 and DB2.
+- **Minimal Administrative Effort**: As a fully managed PaaS service, it offloads tasks such as automated backups, patching, and high availability setup, significantly reducing operational complexity.
+- **SQL Server Compatibility**: Near 100% compatibility with on-premises SQL Server Enterprise Edition, allowing lift-and-shift migrations with minimal code changes.
+- **Advanced Features**: Supports enterprise-grade capabilities like SQL Server Agent, Service Broker, cross-database queries, and distributed transactions.
+
+**Why Other Options Are Incorrect**:
+- **Single Azure SQL Database**: While it can be made zone-redundant in premium tiers, it lacks the broad SQL Server feature compatibility and enterprise-grade scalability required for complex workloads like DB1 and DB2. It's best suited for standalone or less complex databases.
+- **Azure SQL Database Elastic Pool**: Designed for managing multiple databases with varying usage patterns in a cost-effective manner. It does not offer the resiliency features (zone redundancy across multiple zones) or low-latency performance needed for mission-critical databases that must remain available during zone failures.
+
+**Reference Links**:
+- [Azure SQL High Availability SLA](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
+- [Azure SQL Managed Instance PaaS Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
+
+---
+
+## Exam Practice Questions
+
+### Question 1: Enterprise Database Migration with Resiliency Requirements (Litware Inc.)
+
+**Scenario**: Refer to the Litware Inc. case study. You plan to migrate DB1 and DB2 to Azure. You need to ensure that the Azure database and the service tier meet the resiliency and business requirements.
+
+**Question**: What should you configure for the Database?
+
+**Options**:
+- A) A single Azure SQL database
+- B) Azure SQL managed instance
+- C) An Azure SQL Database elastic pool
+
+**Correct Answer**: **B) Azure SQL managed instance**
+
+**Explanation**:
+
+Azure SQL managed instance is correct because it allows you to bring your on-premises SQL Server databases to Azure with minimal administrative effort while maintaining high compatibility with existing SQL Server features. It supports advanced capabilities like automatic failover, zone-redundant configuration, and geo-replication, which satisfy the requirement to maintain availability if two availability zones in the region fail. Additionally, it is optimized for minimal I/O latency, meeting the performance expectations of DB1 and DB2. As a fully managed service, it also offloads tasks such as backups, patching, and high availability setup, directly supporting the business requirement to minimize both administrative effort and operational complexity.
+
+**Why Other Options Are Incorrect**:
+
+**A single Azure SQL database** is incorrect because it is best suited for standalone or less complex databases and may not support all SQL Server features. While it can be made zone-redundant in premium tiers, it lacks the broad feature compatibility and scalability required for enterprise-grade workloads like DB1 and DB2.
+
+**An Azure SQL Database elastic pool** is incorrect because it is designed to manage multiple databases with varying usage patterns in a cost-effective manner. It does not offer the resiliency features or low-latency performance needed for critical databases that must remain available and performant during zone failures.
+
+**Reference Links**:
+- [Azure SQL High Availability SLA](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
+- [Azure SQL Managed Instance PaaS Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -711,6 +776,9 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 8. **Single Database vs Elastic Pool**
    > Single DB = dedicated resources | Elastic Pool = shared resources across multiple DBs
 
+9. **Managed Instance for High Resiliency Requirements**
+   > When requirements include availability across multiple availability zone failures, minimal I/O latency, and minimal administrative effort, Azure SQL Managed Instance is the correct choice. It supports zone-redundant configuration, automatic failover, geo-replication, and uses local SSD storage (Business Critical tier) for optimal performance while being fully managed.
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -727,6 +795,9 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 | "Database > 4 TB" | **Hyperscale** tier |
 | "Development/test environment" | **Serverless General Purpose** |
 | "Modern cloud application" | **Single Database** |
+| "Availability if two zones fail" | **Managed Instance** with zone redundancy |
+| "Minimal I/O latency + minimal admin" | **Managed Instance Business Critical** |
+| "High resiliency + enterprise features" | **Managed Instance** with geo-replication |
 
 ## References
 
