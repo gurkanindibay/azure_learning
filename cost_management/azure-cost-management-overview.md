@@ -17,6 +17,7 @@
 - [Best Practices](#best-practices)
 - [Practice Questions](#practice-questions)
   - [Question 1: Per-Project Cost Monitoring Across Subscriptions](#question-1-per-project-cost-monitoring-across-subscriptions)
+  - [Question 2: Estimating Migration Costs to Azure](#question-2-estimating-migration-costs-to-azure)
 - [References](#references)
 
 ## Overview
@@ -849,6 +850,296 @@ Cost Management Needs:
 Azure Boards: ❌ Cannot answer these questions
 Cost Management: ✅ Designed for these questions
 ```
+
+---
+
+### Question 2: Estimating Migration Costs to Azure
+
+**Scenario**:
+You plan to migrate App1 (an on-premises application) to Azure.
+
+You need to estimate the compute costs for App1 in Azure. The solution must meet security and compliance requirements.
+
+**Question**: What should you use to estimate the costs?
+
+**Options**:
+- A. Azure Advisor
+- B. The Azure Cost Management Power BI App
+- C. The Azure Total Cost of Ownership (TCO) calculator
+
+**Correct Answer**: C (The Azure Total Cost of Ownership (TCO) calculator)
+
+---
+
+#### Explanation
+
+**Why Azure Total Cost of Ownership (TCO) Calculator? ✅**
+
+The **Azure TCO Calculator** is specifically designed to help estimate the cost savings and compute costs of migrating on-premises workloads to Azure. It is the ideal tool for **pre-migration cost estimation**.
+
+**Key Capabilities**:
+
+1. **Pre-Migration Cost Analysis**
+   - Estimates costs before migrating workloads to Azure
+   - Compares on-premises costs vs Azure costs
+   - Provides a comprehensive view of potential savings
+
+2. **Detailed Input Parameters**
+   ```
+   Infrastructure Inputs:
+   - Number of servers (physical/virtual)
+   - CPU cores and specifications
+   - RAM allocation
+   - Storage capacity and type
+   - Network bandwidth
+   - Software licenses (Windows Server, SQL Server, etc.)
+   - Power and cooling costs
+   - IT labor costs
+   ```
+
+3. **Security and Compliance Considerations**
+   - Includes Azure security benefits
+   - Factors in compliance capabilities
+   - Evaluates cost of maintaining on-premises security vs Azure's built-in security features
+   - Considers regulatory compliance costs
+
+4. **Comprehensive Cost Breakdown**
+   ```
+   On-Premises Costs:
+   ├─ Hardware (servers, storage, networking)
+   ├─ Software licenses
+   ├─ Data center costs (power, cooling, space)
+   ├─ IT labor (maintenance, management)
+   └─ Disaster recovery and backup
+   
+   Azure Costs:
+   ├─ Compute (VMs, App Services)
+   ├─ Storage
+   ├─ Networking
+   ├─ Security and compliance tools
+   └─ Backup and disaster recovery
+   
+   Result: Side-by-side comparison with projected savings
+   ```
+
+5. **Reports and Insights**
+   - 3-year or 5-year cost projection
+   - Break-even analysis
+   - Cost savings by category
+   - Downloadable reports for stakeholders
+
+**Use Case for App1 Migration**:
+```
+Step 1: Input current App1 infrastructure
+  - Servers: 4 physical servers
+  - CPU: 8 cores per server
+  - RAM: 64 GB per server
+  - Storage: 2 TB per server
+  - SQL Server licenses: 2 Enterprise licenses
+  
+Step 2: TCO Calculator analyzes
+  - Current on-premises annual cost: $120,000
+  - Projected Azure annual cost: $75,000
+  - Annual savings: $45,000 (37.5% reduction)
+  - Break-even point: 18 months
+  
+Step 3: Security & Compliance Benefits
+  - Built-in DDoS protection
+  - Azure Security Center included
+  - Compliance certifications (ISO, SOC, HIPAA)
+  - Reduced security overhead costs
+```
+
+**Benefits**:
+- ✅ **Pre-migration tool**: Designed for planning phase
+- ✅ **Comprehensive**: Includes compute, storage, networking, licenses
+- ✅ **Security-aware**: Considers security and compliance costs
+- ✅ **Decision support**: Provides business case for migration
+- ✅ **No Azure account required**: Can be used before commitment
+
+**When to Use TCO Calculator**:
+- Planning a migration from on-premises to Azure
+- Need to justify migration costs to stakeholders
+- Comparing cloud vs on-premises costs
+- Estimating pre-migration compute and infrastructure costs
+- Evaluating security and compliance cost benefits
+
+---
+
+#### Why Other Options Are Incorrect
+
+**Azure Advisor ❌**
+
+**Why Incorrect**:
+
+Azure Advisor is a **post-deployment optimization tool** that provides recommendations for already deployed Azure resources. It cannot be used for pre-migration cost estimation.
+
+**Azure Advisor Purpose**:
+```
+Provides recommendations for:
+✅ Cost optimization (after deployment)
+✅ Performance improvements
+✅ High availability
+✅ Security enhancements
+✅ Operational excellence
+
+Example Recommendations:
+- "Right-size or shutdown underutilized VMs"
+- "Use reserved instances to save costs"
+- "Enable backup for critical resources"
+- "Apply security patches to VMs"
+```
+
+**Limitations for Migration Planning**:
+- ❌ Requires resources to already be deployed in Azure
+- ❌ No pre-migration cost estimation capabilities
+- ❌ Cannot analyze on-premises infrastructure
+- ❌ Does not compare on-premises vs Azure costs
+- ❌ Not designed for migration planning
+
+**Timeline**:
+```
+Pre-Migration (Planning Phase):
+  → Azure TCO Calculator ✅
+  → Azure Advisor ❌ (nothing deployed yet)
+
+Post-Deployment (Optimization Phase):
+  → Azure TCO Calculator ❌ (migration complete)
+  → Azure Advisor ✅ (optimize existing resources)
+```
+
+**Conclusion**: Azure Advisor is valuable for optimizing costs **after** migration, not for estimating costs **before** migration.
+
+---
+
+**The Azure Cost Management Power BI App ❌**
+
+**Why Incorrect**:
+
+The **Azure Cost Management Power BI App** is used for analyzing and visualizing cost and usage data of **already deployed Azure resources**. It is not intended for pre-migration forecasting or cost estimation.
+
+**Power BI App Purpose**:
+```
+Capabilities:
+✅ Visualize actual Azure spending
+✅ Analyze cost trends over time
+✅ Create custom cost reports and dashboards
+✅ Track departmental chargebacks
+✅ Monitor budget vs actual spending
+✅ Identify cost anomalies
+
+Example Dashboards:
+- Monthly cost trends by service
+- Department-wise cost allocation
+- Cost comparison: This month vs last month
+- Top 10 most expensive resources
+```
+
+**Requirements**:
+- Requires active Azure subscription
+- Requires existing Azure resources with cost data
+- Requires Cost Management data to be available
+- Designed for **historical and current** cost analysis
+
+**Limitations for Migration Planning**:
+- ❌ Cannot estimate costs for resources not yet deployed
+- ❌ No on-premises infrastructure comparison
+- ❌ Requires actual Azure usage data
+- ❌ Not designed for pre-migration analysis
+- ❌ Does not support "what-if" scenarios for migration
+
+**Use Case Timeline**:
+```
+Pre-Migration:
+  → Power BI App ❌ (no Azure resources deployed yet)
+  → TCO Calculator ✅ (estimate migration costs)
+
+Post-Migration:
+  → Power BI App ✅ (analyze actual costs)
+  → TCO Calculator ❌ (migration already complete)
+```
+
+**Example Scenario**:
+```
+App1 Migration Status: Planning Phase
+Azure Resources: None deployed yet
+Cost Data Available: $0 (nothing to analyze)
+
+Power BI App Result:
+  ❌ Cannot generate reports without data
+  ❌ Cannot visualize costs that don't exist
+  ❌ Cannot forecast migration costs
+
+TCO Calculator Result:
+  ✅ Estimates future Azure costs based on inputs
+  ✅ Compares on-premises vs Azure
+  ✅ Provides migration cost projections
+```
+
+**Conclusion**: The Power BI App is an excellent tool for visualizing and analyzing costs **after** resources are deployed, but it cannot estimate pre-migration costs for App1.
+
+---
+
+#### Key Takeaways
+
+1. **TCO Calculator = Pre-Migration Cost Estimation**
+   > Use the TCO Calculator to estimate compute costs and compare on-premises vs Azure costs before migrating
+
+2. **Security and Compliance Included**
+   > TCO Calculator factors in security and compliance benefits, making it suitable for scenarios with strict requirements
+
+3. **Azure Advisor = Post-Deployment Optimization**
+   > Azure Advisor provides recommendations for optimizing costs after resources are deployed, not before
+
+4. **Power BI App = Post-Deployment Analysis**
+   > The Power BI App visualizes and analyzes actual Azure spending, requiring deployed resources with cost data
+
+5. **Migration Planning Tools vs Optimization Tools**
+   ```
+   Planning Phase (Pre-Migration):
+   ├─ Azure TCO Calculator ✅
+   ├─ Azure Migrate (assessment)
+   └─ Azure Pricing Calculator
+   
+   Optimization Phase (Post-Deployment):
+   ├─ Azure Advisor ✅
+   ├─ Azure Cost Management ✅
+   ├─ Power BI App ✅
+   └─ Cost Analysis ✅
+   ```
+
+---
+
+#### Tool Selection Decision Tree
+
+```
+Question: Need to estimate costs for App1 migration?
+  │
+  ├─ Has App1 been migrated to Azure yet?
+  │   │
+  │   ├─ No (Planning Phase)
+  │   │   └─ Use: Azure TCO Calculator ✅
+  │   │
+  │   └─ Yes (Already in Azure)
+  │       │
+  │       ├─ Need to optimize existing resources?
+  │       │   └─ Use: Azure Advisor ✅
+  │       │
+  │       └─ Need to analyze/visualize actual costs?
+  │           └─ Use: Azure Cost Management Power BI App ✅
+```
+
+---
+
+#### Reference Links
+
+- [Azure Total Cost of Ownership (TCO) Calculator](https://azure.microsoft.com/pricing/tco/calculator/)
+- [Azure Advisor Overview](https://learn.microsoft.com/azure/advisor/advisor-overview)
+- [Azure Cost Management Power BI App](https://learn.microsoft.com/azure/cost-management-billing/costs/analyze-cost-data-azure-cost-management-power-bi-template-app)
+- [Azure Migrate Documentation](https://learn.microsoft.com/azure/migrate/)
+- [Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/)
+
+---
 
 **Conclusion**: Azure Boards is effective for project work tracking and agile methodologies but lacks direct features for comprehensive cost management and financial monitoring. For the specific requirement of monitoring costs on a per-project basis with minimal administrative effort, Azure Cost Management with tags and budgets is the appropriate solution.
 
