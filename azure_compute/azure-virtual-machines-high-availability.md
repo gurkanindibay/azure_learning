@@ -171,16 +171,95 @@ Azure Region (East US)
    - Physical servers are dedicated to your organization
    - VMs from scale sets run on these dedicated physical hosts
 
-### Deployment Flow
+### Understanding the Relationship: Host Group vs. VM Scale Set
+
+**They are SEPARATE but LINKED concepts:**
+
+#### Host Group (Physical Infrastructure)
+- **What it is**: A container for dedicated hosts (physical servers)
+- **Purpose**: Provides the physical hardware where VMs will run
+- **Contains**: One or more dedicated hosts (actual physical machines)
+- **Always present**: Exists regardless of how many VMs are running
+
+#### VM Scale Set (VM Management)
+- **What it is**: A service that creates and manages VMs automatically
+- **Purpose**: Handles auto-scaling (adding/removing VMs based on demand)
+- **Contains**: Configuration and rules for VMs
+- **Dynamic**: Number of VMs changes based on load
+
+#### The Connection
+
+**Step 1: Configuration (Setup Time)**
+```
+You create:
+  1. Host Group 1 (with dedicated hosts inside)
+  2. VMSS 1 (configured to TARGET Host Group 1)
+     
+The VMSS is told: "When you create VMs, place them on 
+                   the dedicated hosts in Host Group 1"
+```
+
+**Step 2: Runtime (When Traffic Arrives)**
+```
+Low traffic:
+  VMSS 1 has 2 VMs → Both placed on Dedicated Hosts in Host Group 1
+  
+High traffic:
+  VMSS 1 scales to 10 VMs → All 10 placed on Dedicated Hosts in Host Group 1
+  
+Traffic drops:
+  VMSS 1 scales down to 3 VMs → Only 3 VMs remain on Dedicated Hosts
+  
+Note: Host Group and Dedicated Hosts remain unchanged
+```
+
+#### Analogy
+
+Think of it like a **parking lot and cars**:
 
 ```
-Configuration:
-  VMSS 1 (Zone 1) → configured to use → Host Group 1 → contains → Dedicated Hosts
+Host Group = Parking Lot (fixed infrastructure)
+  ├─ Dedicated Host 1 = Parking Spot A
+  ├─ Dedicated Host 2 = Parking Spot B
+  └─ Dedicated Host 3 = Parking Spot C
 
-Runtime:
-  VMSS scales out → Creates VM → VM placed ON Dedicated Host
-  VMSS scales in  → Removes VM → Dedicated Host remains available
+VMSS = Car Rental Service (manages vehicles)
+  - Adds cars when demand is high
+  - Removes cars when demand is low
+  - All cars PARK in the assigned parking lot (Host Group)
+  
+The parking lot (Host Group) doesn't go away when cars leave.
+The cars (VMs) are placed IN the parking spots (Dedicated Hosts).
 ```
+
+#### Visual Example
+
+```
+Before VMSS Scales Out:
+  Host Group 1
+    ├─ Dedicated Host A  [VM1] [VM2]      ← 2 VMs running
+    └─ Dedicated Host B  [empty]          ← No VMs yet
+
+After VMSS Scales Out (more traffic):
+  Host Group 1
+    ├─ Dedicated Host A  [VM1] [VM2] [VM3] [VM4]  ← 4 VMs now
+    └─ Dedicated Host B  [VM5] [VM6]              ← 2 VMs added
+
+After VMSS Scales In (less traffic):
+  Host Group 1
+    ├─ Dedicated Host A  [VM1]            ← Only 1 VM left
+    └─ Dedicated Host B  [empty]          ← VMs removed
+
+Note: Host Group and Dedicated Hosts A & B never change!
+```
+
+#### Key Takeaway
+
+**Host Group** = The **WHERE** (physical location/infrastructure)  
+**VM Scale Set** = The **MANAGER** (decides how many VMs to create)  
+**VMs** = Placed **ONTO** the dedicated hosts **INSIDE** the host group
+
+The VMSS doesn't "contain" the Host Group. Instead, the VMSS is **configured** to deploy its VMs **to** the Host Group's dedicated hosts.
 
 ### Resiliency Guarantees
 
