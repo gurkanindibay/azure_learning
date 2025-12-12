@@ -454,6 +454,79 @@ az role assignment list \
   --output table
 ```
 
+### 6. Understand Multi-Tenant RBAC Scope Limitations
+
+#### Important: RBAC Assignments Are Tenant-Scoped
+
+RBAC role assignments, including those at the management group level, are **scoped to a single Microsoft Entra tenant**. This means:
+
+- Each tenant has its own separate management group hierarchy
+- Role assignments in one tenant do not apply to resources in another tenant
+- You cannot create a single RBAC assignment that spans multiple tenants
+
+**Key Implication:**
+In multi-tenant scenarios, you must create separate RBAC role assignments for each tenant to achieve consistent permissions across your organization.
+
+## Practice Question: Multi-Tenant RBAC Role Assignments
+
+**Scenario: Litware Inc. Case Study**
+
+Litware Inc. has the following infrastructure:
+- **Tenant 1:** `litware.com` with 10 subscriptions
+- **Tenant 2:** `dev.litware.com` with 5 subscriptions
+
+**Requirement:**
+Network administrators must be granted the **Network Contributor** role across all virtual networks in both tenants. The solution should:
+- Meet authentication and authorization requirements
+- Use the minimum number of role assignments possible
+- Apply RBAC at the management group level for efficiency
+
+**Question:**
+What is the minimum number of RBAC role assignments required?
+
+**Options:**
+
+1. **1** ❌ *Incorrect*
+   - A single RBAC assignment cannot span multiple Microsoft Entra tenants, even when applied at the root management group level.
+
+2. **2** ✅ *Correct*
+   - **Explanation:** Since RBAC assignments are tenant-scoped, you need one assignment per tenant:
+     - **Assignment 1:** Network Contributor role at the root management group of `litware.com` tenant
+     - **Assignment 2:** Network Contributor role at the root management group of `dev.litware.com` tenant
+   - Each assignment covers all subscriptions within its respective tenant's management group hierarchy.
+
+3. **5** ❌ *Incorrect*
+   - This would be required if you were assigning at the subscription level in dev.litware.com only, but management group-level assignments eliminate this need.
+
+4. **10** ❌ *Incorrect*
+   - This would be required if you were assigning at the subscription level in litware.com only, but management group-level assignments eliminate this need.
+
+5. **15** ❌ *Incorrect*
+   - This would be required if you were assigning at the subscription level for all subscriptions across both tenants, but management group-level assignments eliminate this need.
+
+---
+
+**Key Takeaways:**
+
+1. **RBAC assignments are tenant-scoped:**
+   - Each Microsoft Entra tenant requires its own separate role assignments
+   - Management group hierarchies are isolated per tenant
+
+2. **Management group benefits:**
+   - Applying RBAC at the root management group level cascades permissions to all child subscriptions
+   - Reduces the number of assignments needed within a single tenant
+   - Cannot eliminate the need for multiple assignments across different tenants
+
+3. **Formula for multi-tenant scenarios:**
+   ```
+   Minimum assignments = Number of tenants × 1 (when using root management group)
+   ```
+
+4. **Real-world application:**
+   - Organizations with dev/test isolation in separate tenants
+   - Mergers and acquisitions maintaining separate tenant structures
+   - Partner organizations with managed service scenarios
+
 ## Practice Question: Preventing Contributor Role Data Plane Access
 
 **Scenario:**
