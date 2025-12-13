@@ -9,6 +9,7 @@
   - [Access Control](#access-control)
   - [Key Vault Properties for Azure Services Integration](#key-vault-properties-for-azure-services-integration)
   - [Pricing Tiers](#pricing-tiers)
+  - [Backup and Restore Constraints](#backup-and-restore-constraints)
 - [Question 1: VM Certificate Retrieval During Deployment](#question-1-vm-certificate-retrieval-during-deployment)
   - [Explanation](#explanation)
   - [Why Other Options Are Incorrect](#why-other-options-are-incorrect)
@@ -39,6 +40,13 @@
   - [Security Considerations](#security-considerations)
   - [Supported HSM Vendors](#supported-hsm-vendors)
   - [Key Takeaway](#key-takeaway-4)
+- [Question 6: Key Vault Backup and Restore Disaster Recovery](#question-6-key-vault-backup-and-restore-disaster-recovery)
+  - [Scenario](#scenario)
+  - [Explanation](#explanation-5)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-5)
+  - [Backup and Restore Restrictions](#backup-and-restore-restrictions)
+  - [Key Takeaway](#key-takeaway-5)
+  - [Reference(s)](#references)
 
 ## Overview
 
@@ -98,6 +106,29 @@ Azure Key Vault has specific properties that control integration with other Azur
 |------|----------|----------------|----------------|
 | **Standard** | Secrets, keys, certificates | Software-protected keys | N/A |
 | **Premium** | All Standard features + HSM-backed keys | HSM-protected keys | FIPS 140-3 Level 3 |
+
+### Backup and Restore Constraints
+
+Azure Key Vault backup and restore operations are subject to important **geography-based restrictions** to maintain data residency and compliance:
+
+| Constraint | Details | Impact |
+|------------|---------|--------|
+| **Same Geography Required** | Backups can only be restored to Key Vaults within the **same Azure geography** | Prevents cross-geography data movement |
+| **Same Subscription Required** | Backups must be restored within the **same Azure subscription** | Maintains security and ownership boundaries |
+| **Region Flexibility** | Can restore to **any region** within the same geography | Enables disaster recovery across regions |
+| **Vault Flexibility** | Can restore to **any Key Vault** (not just the original) | Supports migration and DR scenarios |
+
+**Key Points:**
+- A backup from a Key Vault in **West US** can be restored to **East US** (same geography: United States)
+- A backup from a Key Vault in **West US** **cannot** be restored to **West Europe** (different geography)
+- The encrypted backup blob is portable but geography-restricted during restore
+- This ensures compliance with data residency requirements and regulatory boundaries
+
+**Geography Examples:**
+- **United States**: East US, West US, Central US, North Central US, South Central US, West US 2, West Central US, East US 2
+- **Europe**: North Europe, West Europe
+- **Asia Pacific**: Southeast Asia, East Asia, Australia East, Australia Southeast
+- **Other Regions**: Each major geographic area has its own geography boundary
 
 ### Azure Managed HSM
 
@@ -837,3 +868,79 @@ The correct BYOK process sequence is:
 4. **Run `az keyvault key import`** with the `--byok-file` parameter
 
 This process ensures secure transfer of your on-premises HSM key to Azure Key Vault without the key ever being exposed in plain text. The process does **not** involve Azure Policy definitions, and uses `import` (not `restore`) as the final command.
+---
+
+## Question 6: Key Vault Backup and Restore Disaster Recovery
+
+### Scenario
+
+You have an Azure web app that uses an Azure key vault named **KeyVault1** in the **West US** Azure region.
+
+You are designing a disaster recovery plan for KeyVault1.
+
+You plan to back up the keys in KeyVault1.
+
+**Question:** You need to identify where you can restore the backup to. What should you identify?
+
+**Options:**
+- A. KeyVault1 only
+- B. the same region only
+- C. the same geography only ✅ *Correct*
+- D. any region worldwide
+
+### Explanation
+
+**The same geography only** is correct because when you back up a key, secret, or certificate from Azure Key Vault, the operation creates an **encrypted blob** that can only be restored to another Key Vault within:
+
+1. **The same Azure subscription**
+2. **The same Azure geography**
+
+This is a built-in limitation imposed by Azure to maintain **data residency** and **compliance boundaries**. While the backup file is portable and can be downloaded, restoration is restricted to ensure that sensitive data is not moved across geopolitical boundaries unintentionally.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **any region worldwide** | Although the backup file is downloadable and appears portable, Azure restricts the restore operation to Key Vaults within the same geography and subscription. Attempting to restore the data to a Key Vault outside the original geography will result in a failure. |
+| **the same region only** | Azure does **not** limit restore operations strictly to the same region. It allows restoring to any Key Vault within the same geography, which may include multiple regions (for example, both East US and West US fall under the United States geography). |
+| **KeyVault1 only** | You can restore the backup to **any Key Vault** within the same geography and subscription—not just the original vault from which it was backed up. This flexibility supports scenarios like disaster recovery or migration within the same geography. |
+
+### Backup and Restore Restrictions
+
+| Aspect | Restriction | Reason |
+|--------|-------------|--------|
+| **Geography** | Must restore within the same Azure geography | Maintains data residency and compliance boundaries |
+| **Subscription** | Must restore within the same Azure subscription | Security and ownership control |
+| **Region Flexibility** | Can restore to any region within the same geography | Supports disaster recovery across regions in the same geography |
+| **Vault Flexibility** | Can restore to any Key Vault (not just the original) | Enables migration and disaster recovery scenarios |
+
+**Example Geography Groupings:**
+- **United States**: East US, West US, Central US, etc.
+- **Europe**: North Europe, West Europe, etc.
+- **Asia Pacific**: Southeast Asia, East Asia, etc.
+
+**Disaster Recovery Scenario:**
+If KeyVault1 in West US becomes unavailable:
+- ✅ **Can restore to:** A Key Vault in East US (same geography: United States)
+- ✅ **Can restore to:** A Key Vault in Central US (same geography: United States)
+- ❌ **Cannot restore to:** A Key Vault in West Europe (different geography)
+- ❌ **Cannot restore to:** A Key Vault in Southeast Asia (different geography)
+
+### Key Takeaway
+
+Azure Key Vault backups can be restored to **any Key Vault within the same Azure geography and subscription**, but not to vaults in different geographies. This provides disaster recovery flexibility across regions while maintaining data residency compliance.
+
+**Backup Command:**
+```bash
+az keyvault key backup --vault-name KeyVault1 --name MyKey --file backup.blob
+```
+
+**Restore Command:**
+```bash
+az keyvault key restore --vault-name KeyVault2 --file backup.blob
+```
+
+### Reference(s)
+
+- [Azure Key Vault Backup](https://learn.microsoft.com/en-us/azure/key-vault/general/backup?tabs=azure-cli)
+- [Azure Key Vault Disaster Recovery Guidance](https://learn.microsoft.com/en-us/azure/key-vault/general/disaster-recovery-guidance)
