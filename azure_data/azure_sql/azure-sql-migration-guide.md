@@ -378,6 +378,75 @@ Which tool should you use to migrate the data from the table in the SQL Server 2
 
 ---
 
+### Scenario 4: Migrating Multi-Database Applications with Cross-Database Queries
+
+**Question**: You manage an application instance that consumes data from multiple databases. Application code references database tables using a combination of the server, database, and table name (three-part naming convention). You need to migrate the application data to Azure. To which two Azure services could you migrate the application to achieve the goal?
+
+**Answer**: **SQL Server in Azure Virtual Machine** and **Azure SQL Managed Instance**
+
+**Explanation**:
+
+**SQL Server in Azure Virtual Machine** is correct because:
+- Provides full control over the SQL Server instance, identical to on-premises behavior
+- Preserves the existing database structure without modifications
+- Supports multi-database references using three-part naming (server.database.table)
+- Offers maximum compatibility with on-premises SQL Server features and configurations
+- Requires minimal or no changes to existing application code
+- Ideal for "lift-and-shift" scenarios where application code cannot be easily modified
+- Allows complete administrative access for custom configurations and settings
+
+**Azure SQL Managed Instance** is correct because:
+- Supports cross-database queries natively, unlike Azure SQL Database
+- Fully supports three-part naming conventions (server.database.schema.table) required for multi-database applications
+- Provides near 100% compatibility with on-premises SQL Server features
+- Offers a platform-as-a-service (PaaS) option, reducing management overhead compared to VMs
+- Ideal for lifting and shifting complex applications with minimal code changes
+- Supports SQL Agent jobs, linked servers, and other enterprise features
+- Provides automatic patching, backups, and high availability
+
+**Why Other Options Are Not Suitable**:
+
+**SQL Server Stretch Database**:
+- Designed specifically for archival purposes, extending "cold" data to Azure
+- Only allows specific tables to be migrated to Azure for long-term storage
+- Does not support cross-database queries or complex multi-database applications
+- Primarily for data archiving scenarios, not full application migration
+- **Limitation**: Cannot serve as a complete migration target for applications with multi-database dependencies. It's a hybrid solution for archiving historical data while keeping active data on-premises.
+
+**Azure SQL Database**:
+- Each database is an isolated deployment unit in Azure SQL Database
+- Does not support cross-database queries using three-part naming in a straightforward manner
+- Databases cannot reference each other directly using standard T-SQL syntax
+- Would require significant application redesign to work around this limitation
+- **Limitation**: While elastic queries can provide some cross-database functionality, they come with significant limitations, performance overhead, and require extensive configuration. The application would need substantial refactoring to eliminate three-part naming references, which contradicts the requirement of migrating the application "as-is."
+
+**Migration Decision Criteria**:
+
+| Consideration | SQL Server on Azure VM | Azure SQL Managed Instance |
+|--------------|------------------------|---------------------------|
+| **Management Overhead** | High (full VM management) | Low (PaaS, managed service) |
+| **Cross-Database Support** | ✅ Full support | ✅ Full support |
+| **SQL Server Compatibility** | ✅ 100% | ✅ Near 100% |
+| **Administrative Control** | Complete | Limited (managed service) |
+| **Automatic Updates** | Manual | Automatic |
+| **Cost** | Higher (VM + licensing) | Moderate (PaaS pricing) |
+| **Best For** | Maximum control needed | Minimal management overhead |
+
+**Key Takeaway**: When migrating applications with cross-database dependencies:
+- **Choose SQL Server on Azure VM** if you need complete administrative control, have custom configurations, or require specific SQL Server features
+- **Choose Azure SQL Managed Instance** if you want a managed PaaS solution with reduced operational overhead while maintaining cross-database query support
+- **Avoid Azure SQL Database** for applications heavily dependent on cross-database queries
+- **Avoid SQL Server Stretch Database** for full application migrations (it's only for archival scenarios)
+
+**References**:
+- [SQL Server on Azure VMs Overview](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/sql-server-on-azure-vm-iaas-what-is-overview)
+- [Azure SQL Managed Instance Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview)
+- [Cross-Database Queries in SQL Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/features-comparison)
+- [Azure SQL Database Limitations](https://learn.microsoft.com/en-us/azure/azure-sql/database/features-comparison)
+- [SQL Server Stretch Database](https://learn.microsoft.com/en-us/sql/sql-server/stretch-database/stretch-database)
+
+---
+
 ## Quick Decision Matrix
 
 Use this matrix to quickly identify the right tool for your migration scenario:
@@ -391,6 +460,8 @@ Use this matrix to quickly identify the right tool for your migration scenario:
 | **Large-scale (100+ databases)** | Azure Database Migration Service |
 | **SQL Server 2008 to Azure SQL MI** | Azure Data Studio (online) or Azure DMS (offline) |
 | **SQL Server to Azure Cosmos DB** | Azure Cosmos DB Data Migration Tool |
+| **Cross-database queries + Full control** | SQL Server on Azure VM |
+| **Cross-database queries + PaaS** | Azure SQL Managed Instance |
 
 ---
 
