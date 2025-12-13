@@ -589,7 +589,59 @@ Savings: Up to 44%
 ✅ **Enable Advanced Threat Protection** - Detect anomalous activities  
 ✅ **Implement row-level security** - Fine-grained access control  
 ✅ **Enable auditing** - Track database activities  
-✅ **Regular security assessments** - Identify vulnerabilities  
+✅ **Regular security assessments** - Identify vulnerabilities
+
+#### Azure SQL Database Auditing
+
+**Azure SQL Database Auditing** tracks database events and writes them to an audit log. It helps maintain regulatory compliance, understand database activity, and gain insights into potential security violations.
+
+**Key Requirements and Constraints**:
+
+1. **Regional Constraint for Storage Accounts**
+   - The storage account used for storing audit logs **must be in the same region** as the SQL server
+   - Example: If your SQL server is in East US, the storage account must also be in East US
+   - Cross-region storage is not supported for audit log storage
+
+2. **Service Tier Support**
+   - Auditing is supported across all service tiers (Basic, Standard, Premium)
+   - Available for all purchasing models (DTU-based and vCore-based)
+
+3. **Storage Options**
+   - **Azure Storage Account**: Store audit logs in blob storage
+   - **Log Analytics Workspace**: Integrate with Azure Monitor for advanced querying
+   - **Event Hub**: Stream audit logs to SIEM tools or external systems
+
+4. **Audit Scope**
+   - Database-level auditing: Applies to a specific database
+   - Server-level auditing: Applies to all databases on the server
+
+**Example Scenario**:
+
+Given the following Azure resources:
+
+| Resource | Type | Region | Details |
+|----------|------|--------|---------|
+| SQLsvr1 | SQL Server | East US | - |
+| SQLsvr2 | SQL Server | West US | - |
+| SQLdb1 | SQL Database | East US | Standard tier on SQLsvr1 |
+| SQLdb2 | SQL Database | East US | Standard tier on SQLsvr1 |
+| SQLdb3 | SQL Database | West US | Premium tier on SQLsvr2 |
+| storage1 | Storage Account | East US | StorageV2 |
+| storage2 | Storage Account | Central US | BlobStorage |
+
+**Auditing Compatibility**:
+- ✅ SQLdb1 → storage1: **Supported** (same region: East US)
+- ✅ SQLdb2 → storage1: **Supported** (same region: East US)
+- ❌ SQLdb1 → storage2: **Not supported** (different regions: East US vs Central US)
+- ❌ SQLdb3 → storage1: **Not supported** (different regions: West US vs East US)
+
+**Best Practices**:
+- Enable auditing at the server level to audit all databases automatically
+- Use Log Analytics for long-term retention and advanced analysis
+- Configure retention policies based on compliance requirements
+- Monitor audit logs regularly for suspicious activities
+
+**Reference**: [Azure SQL Database Auditing Overview](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)  
 
 ### Migration to Azure SQL
 
@@ -784,6 +836,59 @@ The Business Critical tier is built for high-performance transactional workloads
 
 ---
 
+### Question 3: Azure SQL Database Auditing Storage Requirements
+
+**Scenario**: You have an Azure subscription that contains the following resources:
+
+**SQL Servers**:
+| Name | Resource Group | Location |
+|------|----------------|----------|
+| SQLsvr1 | RG1 | East US |
+| SQLsvr2 | RG2 | West US |
+
+**Storage Accounts**:
+| Name | Resource Group | Location | Account Kind |
+|------|----------------|----------|--------------|
+| storage1 | RG1 | East US | StorageV2 (general purpose v2) |
+| storage2 | RG2 | Central US | BlobStorage |
+
+**Azure SQL Databases**:
+| Name | Resource Group | Server | Pricing Tier |
+|------|----------------|--------|--------------|
+| SQLdb1 | RG1 | SQLsvr1 | Standard |
+| SQLdb2 | RG1 | SQLsvr1 | Standard |
+| SQLdb3 | RG2 | SQLsvr2 | Premium |
+
+**Question**: When you enable auditing for SQLdb1, can you store the audit information to storage1?
+
+**Options**:
+- A) Yes
+- B) No
+
+**Correct Answer**: **A) Yes**
+
+**Explanation**:
+
+Yes is correct because SQLdb1 is a Standard tier Azure SQL Database hosted on SQLsvr1, which is deployed in the East US region. The target storage account storage1 is also located in East US, which meets the requirement for storing audit logs — **the storage account must be in the same region as the SQL server**.
+
+Additionally, SQL auditing is supported for databases in the Standard tier, and since both the database and the storage account reside in the same region, storing audit logs from SQLdb1 to storage1 is fully supported.
+
+**Key Requirements for Azure SQL Database Auditing**:
+1. ✅ Storage account must be in the **same region** as the SQL server
+2. ✅ Auditing is supported across **all service tiers** (Basic, Standard, Premium)
+3. ✅ Both DTU-based and vCore-based purchasing models support auditing
+
+**Analysis of the Scenario**:
+- SQLdb1 is on SQLsvr1 (East US) → storage1 (East US): ✅ **Supported** (same region)
+- SQLdb1 is on SQLsvr1 (East US) → storage2 (Central US): ❌ **Not supported** (different regions)
+- SQLdb3 is on SQLsvr2 (West US) → storage1 (East US): ❌ **Not supported** (different regions)
+
+**Reference**: [Azure SQL Database Auditing Overview](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -815,6 +920,9 @@ The Business Critical tier is built for high-performance transactional workloads
 9. **Managed Instance for High Resiliency Requirements**
    > When requirements include availability across multiple availability zone failures, minimal I/O latency, and minimal administrative effort, Azure SQL Managed Instance is the correct choice. It supports zone-redundant configuration, automatic failover, geo-replication, and uses local SSD storage (Business Critical tier) for optimal performance while being fully managed.
 
+10. **Auditing Storage Account = Same Region as SQL Server**
+   > Azure SQL Database auditing requires the storage account to be in the same region as the SQL server. Cross-region storage is not supported for audit logs. Auditing is supported across all service tiers (Basic, Standard, Premium).
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -834,6 +942,7 @@ The Business Critical tier is built for high-performance transactional workloads
 | "Availability if two zones fail" | **Managed Instance** with zone redundancy |
 | "Minimal I/O latency + minimal admin" | **Managed Instance Business Critical** |
 | "High resiliency + enterprise features" | **Managed Instance** with geo-replication |
+| "Store audit logs to storage account" | Storage account must be in **same region** as SQL server |
 
 ## References
 
@@ -848,6 +957,7 @@ The Business Critical tier is built for high-performance transactional workloads
 - [Elastic Pools](https://learn.microsoft.com/azure/azure-sql/database/elastic-pool-overview)
 - [Service Tiers](https://learn.microsoft.com/azure/azure-sql/database/service-tiers-general-purpose-business-critical)
 - [Azure Hybrid Benefit](https://learn.microsoft.com/azure/azure-sql/azure-hybrid-benefit)
+- [Azure SQL Database Auditing](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)
 
 ### Pricing Calculators
 
