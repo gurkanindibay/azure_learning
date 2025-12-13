@@ -420,6 +420,15 @@ Which tool should you use to migrate the data from the table in the SQL Server 2
 - Would require significant application redesign to work around this limitation
 - **Limitation**: While elastic queries can provide some cross-database functionality, they come with significant limitations, performance overhead, and require extensive configuration. The application would need substantial refactoring to eliminate three-part naming references, which contradicts the requirement of migrating the application "as-is."
 
+> **Important Note**: If your application does NOT require cross-database queries, Azure SQL Database becomes a highly viable and often preferred option. It offers advantages including:
+> - Lower cost compared to SQL Managed Instance or VM-based solutions
+> - True serverless and elastic scaling capabilities
+> - Simplified management with automatic tuning and optimization
+> - Better for microservices architectures where each service has its own isolated database
+> - Faster provisioning and deployment
+> 
+> **Bottom Line**: Choose Azure SQL Database for single-database applications or when you can refactor to eliminate cross-database dependencies. It's the most cost-effective and scalable PaaS option when cross-database queries aren't required.
+
 **Migration Decision Criteria**:
 
 | Consideration | SQL Server on Azure VM | Azure SQL Managed Instance |
@@ -435,7 +444,8 @@ Which tool should you use to migrate the data from the table in the SQL Server 2
 **Key Takeaway**: When migrating applications with cross-database dependencies:
 - **Choose SQL Server on Azure VM** if you need complete administrative control, have custom configurations, or require specific SQL Server features
 - **Choose Azure SQL Managed Instance** if you want a managed PaaS solution with reduced operational overhead while maintaining cross-database query support
-- **Avoid Azure SQL Database** for applications heavily dependent on cross-database queries
+- **Choose Azure SQL Database** if you can refactor the application to eliminate cross-database queries (most cost-effective PaaS option)
+- **Avoid Azure SQL Database** for applications heavily dependent on cross-database queries (requires significant refactoring)
 - **Avoid SQL Server Stretch Database** for full application migrations (it's only for archival scenarios)
 
 **References**:
