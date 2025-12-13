@@ -43,6 +43,7 @@
   - [Question 2: Azure Monitor Private Link Scope (AMPLS)](#question-2-azure-monitor-private-link-scope-ampls)
   - [Question 3: Minimum Number of Private Endpoints for AMPLS](#question-3-minimum-number-of-private-endpoints-for-ampls)
   - [Question 4: Data Collection Endpoints (DCEs) Requirements](#question-4-data-collection-endpoints-dces-requirements)
+  - [Question 5: Tracking Azure Resource Manager (ARM) Resource Deployments](#question-5-tracking-azure-resource-manager-arm-resource-deployments)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -1163,6 +1164,193 @@ If the scenario changed to:
 - [Azure Monitor Agent Overview](https://learn.microsoft.com/azure/azure-monitor/agents/agents-overview)
 - [Data Collection Rules](https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Data Collection Endpoints](https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection-endpoint-overview)
+
+---
+
+### Question 5: Tracking Azure Resource Manager (ARM) Resource Deployments
+
+**Scenario:**
+
+You need to recommend a solution to generate a monthly report of all the new Azure Resource Manager (ARM) resource deployments in your Azure subscription.
+
+**Question:**
+What should you include in the recommendation?
+
+**Options:**
+
+1. ✅ **Azure Log Analytics**
+   - **Correct**: Azure Log Analytics is the ideal solution for tracking and reporting on ARM resource deployments. It can collect and analyze logs from multiple Azure services, including **activity logs** that record all ARM resource deployments. You can:
+     - Query the **AzureActivity** table using Kusto Query Language (KQL)
+     - Filter for Deployments and Start/Write operations
+     - Generate monthly reports or dashboards
+     - Schedule automated queries and exports
+     - Create custom workbooks for visualization
+   
+   This makes Azure Log Analytics the perfect solution for tracking and reporting on new resource deployments across your subscription.
+
+2. ❌ **Azure Arc**
+   - **Incorrect**: Azure Arc is used to manage and govern non-Azure (on-premises or multi-cloud) resources as if they were native Azure resources. It extends Azure management capabilities to resources outside Azure but does not provide reporting capabilities for ARM deployments within Azure itself. Azure Arc is focused on hybrid and multi-cloud management, not subscription-level deployment tracking.
+
+3. ❌ **Azure Analysis Services**
+   - **Incorrect**: Azure Analysis Services is designed for building analytical models over data, typically for business intelligence scenarios. It is not designed for operational monitoring or log analysis. It doesn't integrate directly with Azure activity logs or ARM deployment tracking. It's meant for semantic modeling and OLAP workloads, not for monitoring Azure operations.
+
+4. ❌ **Azure Monitor action groups**
+   - **Incorrect**: Action groups are notification mechanisms (e.g., send email, SMS, trigger webhooks, run Azure Functions) used in response to alerts. They don't store or analyze deployment data. Action groups are reactive components that execute actions when triggered by alerts, but they cannot generate reports or track historical deployment data.
+
+5. ❌ **Application Insights**
+   - **Incorrect**: Application Insights is primarily used to monitor application performance, usage, and telemetry. It focuses on:
+     - Application availability and responsiveness
+     - User behavior analytics
+     - Exception tracking
+     - Request and dependency monitoring
+   
+   It does not capture or analyze ARM deployment activity across a subscription. Application Insights is for application-level monitoring, not subscription-level infrastructure changes.
+
+---
+
+### Why Azure Log Analytics is the Answer
+
+**Key Capabilities for ARM Deployment Tracking:**
+
+| Capability | How It Helps |
+|------------|-------------|
+| **Activity Log Integration** | Automatically captures all ARM operations including resource deployments |
+| **AzureActivity Table** | Stores deployment events with detailed metadata (resource type, operation, caller, timestamp) |
+| **KQL Queries** | Powerful query language to filter, aggregate, and analyze deployment data |
+| **Time-based Filtering** | Easily query deployments by date range (e.g., monthly reports) |
+| **Scheduled Reports** | Create automated queries that run on schedule and export results |
+| **Workbooks & Dashboards** | Build visual reports showing deployment trends and patterns |
+| **Long-term Retention** | Store activity logs for extended periods (beyond default 90 days) |
+| **Export Capabilities** | Export query results to CSV, Power BI, or external systems |
+
+**Example KQL Query for Monthly ARM Deployments:**
+
+```kql
+AzureActivity
+| where TimeGenerated >= startofmonth(now())
+| where OperationNameValue endswith "WRITE" or OperationNameValue endswith "DELETE"
+| where ActivityStatusValue == "Success"
+| where CategoryValue == "Administrative"
+| summarize DeploymentCount = count() by ResourceType = tostring(split(ResourceId, "/")[6]), ResourceGroup = ResourceGroup
+| order by DeploymentCount desc
+```
+
+**Architecture for Deployment Tracking:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Azure Subscription                        │
+│                                                              │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐           │
+│  │  Resource  │  │  Resource  │  │  Resource  │           │
+│  │  Group 1   │  │  Group 2   │  │  Group 3   │           │
+│  │            │  │            │  │            │           │
+│  │ ARM        │  │ ARM        │  │ ARM        │           │
+│  │ Deployments│  │ Deployments│  │ Deployments│           │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘           │
+│        │               │               │                    │
+│        └───────────────┴───────────────┘                    │
+│                        │                                     │
+│                        ▼                                     │
+│              ┌──────────────────┐                           │
+│              │  Activity Logs   │                           │
+│              │  (ARM Operations)│                           │
+│              └────────┬─────────┘                           │
+└───────────────────────┼──────────────────────────────────────┘
+                        │
+                        ▼
+            ┌────────────────────────┐
+            │  Log Analytics         │
+            │  Workspace             │
+            │                        │
+            │  • AzureActivity Table │
+            │  • KQL Queries         │
+            │  • Scheduled Reports   │
+            └───────────┬────────────┘
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+        ▼               ▼               ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│  Workbooks   │ │  Dashboards  │ │  Alerts      │
+│  (Visual     │ │  (Real-time  │ │  (Automated  │
+│   Reports)   │ │   Overview)  │ │   Actions)   │
+└──────────────┘ └──────────────┘ └──────────────┘
+```
+
+**Sample Deployment Report Metrics:**
+
+| Metric | Description | KQL Example |
+|--------|-------------|-------------|
+| **Total Deployments** | Count of all resource deployments | `count()` |
+| **Deployments by Type** | Group by resource type | `summarize count() by ResourceType` |
+| **Deployments by User** | Track who deployed resources | `summarize count() by Caller` |
+| **Success/Failure Rate** | Deployment success ratio | `summarize count() by ActivityStatusValue` |
+| **Deployments by Region** | Geographic distribution | `summarize count() by Location` |
+| **Time-based Trends** | Deployments over time | `summarize count() by bin(TimeGenerated, 1d)` |
+
+**Step-by-Step Implementation:**
+
+1. **Enable Activity Log Collection**:
+   - Create a Log Analytics workspace
+   - Configure diagnostic settings to route activity logs to the workspace
+   - Activity logs are automatically collected at subscription level
+
+2. **Create Monthly Report Query**:
+   ```kql
+   AzureActivity
+   | where TimeGenerated between (startofmonth(now()) .. endofmonth(now()))
+   | where OperationNameValue endswith "WRITE"
+   | where ActivityStatusValue == "Success"
+   | project TimeGenerated, ResourceType, ResourceGroup, Caller, ResourceId
+   | order by TimeGenerated desc
+   ```
+
+3. **Schedule Automated Reports**:
+   - Use Azure Logic Apps or Power Automate to run queries on schedule
+   - Export results to email, storage, or external systems
+   - Create Power BI reports for executive dashboards
+
+4. **Build Workbook for Visualization**:
+   - Create custom workbooks showing deployment trends
+   - Add charts, graphs, and tables
+   - Share with stakeholders for monthly review
+
+**Comparison with Other Options:**
+
+| Solution | ARM Deployment Tracking | Monthly Reports | Query Capabilities | Cost |
+|----------|------------------------|-----------------|-------------------|------|
+| **Azure Log Analytics** | ✅ Full support via AzureActivity | ✅ KQL queries + scheduling | ✅ Powerful KQL | Pay per GB ingested |
+| **Azure Arc** | ❌ Multi-cloud management only | ❌ No reporting | ❌ Not applicable | N/A |
+| **Azure Analysis Services** | ❌ OLAP/BI models only | ⚠️ Requires data export | ⚠️ Different purpose | $$ Expensive |
+| **Action Groups** | ❌ Alert notifications only | ❌ No data storage | ❌ No query capability | $ Per action |
+| **Application Insights** | ❌ Application monitoring | ❌ Not for ARM deployments | ⚠️ Application-focused | Pay per GB |
+
+**Best Practices:**
+
+1. **Retention**: Configure Log Analytics workspace retention to keep activity logs beyond the default 90 days for compliance
+2. **Cost Management**: Monitor data ingestion and consider archiving old logs to Storage Accounts
+3. **Access Control**: Use Azure RBAC to control who can view deployment history
+4. **Automation**: Schedule queries to run monthly and automatically distribute reports
+5. **Alerting**: Set up alerts for unusual deployment patterns or unauthorized deployments
+6. **Tagging**: Encourage consistent resource tagging to enable better reporting and cost tracking
+
+**Common Use Cases:**
+
+- **Compliance Auditing**: Track who deployed what resources and when
+- **Cost Attribution**: Link deployments to departments or projects
+- **Change Management**: Correlate incidents with recent deployments
+- **Capacity Planning**: Analyze deployment trends to forecast growth
+- **Security Review**: Identify unauthorized or suspicious resource creation
+- **Governance**: Ensure deployments comply with organizational policies
+
+**References:**
+- [Azure Log Analytics Overview](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview)
+- [Azure Activity Log](https://learn.microsoft.com/azure/azure-monitor/essentials/activity-log)
+- [Log Analytics Tutorial](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial)
+- [Azure Arc Overview](https://learn.microsoft.com/azure/azure-arc/overview)
+- [Azure Monitor Action Groups](https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups)
+- [Application Insights Overview](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)
 
 ---
 
