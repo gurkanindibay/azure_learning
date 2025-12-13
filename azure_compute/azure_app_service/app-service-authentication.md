@@ -31,6 +31,8 @@
   - [Question 4: TLS Mutual Authentication Client Certificate Validation](#question-4-tls-mutual-authentication-client-certificate-validation)
   - [Question 5: Configuring Authorization with Microsoft Entra ID Group Membership Claims](#question-5-configuring-authorization-with-microsoft-entra-id-group-membership-claims)
   - [Question 6: Using Application Roles vs Group Claims for Authorization](#question-6-using-application-roles-vs-group-claims-for-authorization)
+  - [Question 7: Securing App Service with Azure Key Vault and Managed Identity](#question-7-securing-app-service-with-azure-key-vault-and-managed-identity)
+  - [Question 8: Enabling Single Sign-On for Entra ID Joined Devices](#question-8-enabling-single-sign-on-for-entra-id-joined-devices)
 - [Token Validation for Web APIs](#token-validation-for-web-apis)
   - [Understanding Token Validation Libraries](#understanding-token-validation-libraries)
   - [Implementing JWT Validation](#implementing-jwt-validation)
@@ -1727,6 +1729,120 @@ string connectionString = secret.Value;
 **Key Takeaway:** 
 
 To enable an Azure App Service to securely access Azure Key Vault for storing authentication secrets and configuration, you should **enable Managed Service Identity (Managed Identity)**. This provides a secure, credential-free way for your App Service to authenticate to Azure Key Vault without storing any secrets in your application code or configuration.
+
+---
+
+### Question 8: Enabling Single Sign-On for Entra ID Joined Devices
+
+**Scenario:** You plan to deploy an Azure web app named App1 that will use Microsoft Entra ID authentication. App1 will be accessed from the internet by users at your company. All users have computers that run Windows 10 and are joined to Microsoft Entra ID. You need to recommend a solution to ensure that users can connect to App1 without being prompted for authentication and can access App1 only from company-owned computers.
+
+**Question:** What should you recommend to enable users to connect to App1 without being prompted for authentication?
+
+**Options:**
+1. A Microsoft Entra app registration
+2. A Microsoft Entra managed identity
+3. Microsoft Entra Application Proxy
+
+**Correct Answer: 1) A Microsoft Entra app registration**
+
+**Explanation:**
+
+A **Microsoft Entra app registration** is the correct solution because it allows App1 to be integrated with Microsoft Entra ID for authentication. When users' Windows 10 devices are Microsoft Entra joined and single sign-on (SSO) is configured properly (using modern authentication protocols like OpenID Connect or SAML), users can access the application without being prompted for credentials. The app registration enables this integration and defines permissions, redirect URIs, and authentication flows, which are essential for enabling seamless SSO.
+
+**How SSO Works with Microsoft Entra App Registration:**
+
+1. **App Registration** - Create an app registration in Microsoft Entra ID that represents App1
+2. **Configure Authentication** - Set up OpenID Connect or SAML authentication flows in the app registration
+3. **Device Join** - Users' Windows 10 devices are Microsoft Entra joined
+4. **Seamless SSO** - When users access App1, their device credentials are automatically used for authentication
+5. **No Prompt** - Users are signed in without entering credentials because their device is already authenticated
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A Microsoft Entra managed identity** ❌ | Managed identities are used for allowing **Azure resources** (like VMs, App Services, Function Apps) to securely access other Azure services (like Key Vault, Storage, SQL Database) without needing credentials. They are **not used for user authentication or enabling single sign-on** for end-users accessing applications. Managed identities provide service-to-service authentication, not user authentication. |
+| **Microsoft Entra Application Proxy** ❌ | Microsoft Entra Application Proxy is used to provide **remote access to on-premises applications** by publishing them through Azure. Since App1 is a web app deployed in Azure (not on-premises), Application Proxy is not needed. Application Proxy is specifically designed for hybrid scenarios where you need to expose internal, on-premises web applications to external users securely. |
+
+**Comparison of Microsoft Entra Components:**
+
+| Component | Purpose | Use Case |
+|-----------|---------|----------|
+| **App Registration** | Integrate applications with Entra ID for user authentication and SSO | Web apps, mobile apps, APIs that need user authentication |
+| **Managed Identity** | Allow Azure resources to authenticate to Azure services without credentials | App Service accessing Key Vault, Function App accessing Storage |
+| **Application Proxy** | Provide secure remote access to on-premises applications | Publishing internal SharePoint, internal web apps to external users |
+
+**Complete Solution for SSO with Device Restrictions:**
+
+To fully meet the requirements (SSO + company-owned devices only), you would need:
+
+1. **Microsoft Entra App Registration** ✅ - Enables SSO for authenticated users
+2. **Conditional Access Policy** - Restrict access to Microsoft Entra joined or compliant devices
+3. **Device Compliance Policies** - Define what constitutes a "company-owned" device
+
+**Implementation Steps:**
+
+**1. Create App Registration:**
+
+```bash
+# Create app registration
+az ad app create \
+    --display-name "App1" \
+    --sign-in-audience AzureADMyOrg \
+    --web-redirect-uris "https://app1.azurewebsites.net/.auth/login/aad/callback"
+
+# Get the Application (client) ID
+appId=$(az ad app list --display-name "App1" --query "[0].appId" -o tsv)
+```
+
+**2. Configure App Service Authentication:**
+
+```bash
+# Enable Easy Auth with the app registration
+az webapp auth microsoft update \
+    --name app1 \
+    --resource-group myResourceGroup \
+    --client-id $appId \
+    --issuer "https://login.microsoftonline.com/<tenant-id>/v2.0" \
+    --allowed-audiences "api://$appId"
+
+# Require authentication for all requests
+az webapp auth update \
+    --name app1 \
+    --resource-group myResourceGroup \
+    --enabled true \
+    --action LoginWithAzureActiveDirectory
+```
+
+**3. Create Conditional Access Policy for Device Compliance:**
+
+In Microsoft Entra admin center:
+- Navigate to **Security** → **Conditional Access** → **Policies** → **New policy**
+- **Users**: Select your organization's users
+- **Target resources**: Select "App1" (the app registration)
+- **Conditions** → **Device platforms**: Windows
+- **Grant**: Require device to be marked as compliant OR Require Microsoft Entra joined device
+- Enable policy
+
+**Key Benefits of App Registration for SSO:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Seamless Authentication** | Users automatically signed in when accessing from Entra ID joined devices |
+| **Modern Protocols** | Support for OpenID Connect, OAuth 2.0, SAML 2.0 |
+| **Centralized Identity** | Single identity source for all organizational apps |
+| **Conditional Access Integration** | Apply device compliance, location, risk-based policies |
+| **No Credential Storage** | No passwords or credentials stored in the application |
+| **Audit Trail** | All sign-ins logged in Entra ID sign-in logs |
+
+**Key Takeaway:**
+
+To enable **single sign-on for Azure web apps** where users from Microsoft Entra joined devices can access without authentication prompts, you must create a **Microsoft Entra app registration**. This establishes the trust relationship between your web app and Microsoft Entra ID, enabling modern authentication protocols and seamless SSO. Managed identities are for service-to-service authentication, not user authentication. Application Proxy is for on-premises app publishing, not for cloud-native Azure web apps.
+
+**Reference:**
+- [Microsoft Entra Application Proxy Overview](https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy)
+- [Microsoft Entra Managed Identities Overview](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
+- [Configure App Service Authentication](https://learn.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad)
 
 ---
 
