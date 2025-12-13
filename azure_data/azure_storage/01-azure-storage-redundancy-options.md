@@ -407,6 +407,86 @@ Key Points:
 - **ZRS before failover (Action 3)**: ZRS only provides redundancy within a single region and doesn't enable failover to a secondary region
 - **ZRS after failover (Action 5)**: While ZRS is good for availability within a region, GRS is necessary to maintain disaster recovery capabilities and enable failback
 
+---
+
+### Practice Question: Storage Solution for Multiple Tables
+
+**Question:**
+You need to recommend a data storage solution that meets the following requirements:
+
+- Ensures that applications can access the data by using a REST connection
+- Hosts 20 independent tables of varying sizes and usage patterns
+- Automatically replicates the data to a second Azure region
+- Minimizes costs
+
+What should you recommend?
+
+**Options:**
+1. ❌ An Azure SQL Database elastic database pool that uses geo-replication
+2. ❌ Tables in an Azure Storage account that use read-access geo-redundant storage (RA-GRS)
+3. ✅ **Tables in an Azure Storage account that use geo-redundant storage (GRS)**
+4. ❌ An Azure SQL Database that uses active geo-replication
+
+**Answer: Tables in an Azure Storage account that use geo-redundant storage (GRS)**
+
+**Explanation:**
+
+**Why GRS is the correct answer:**
+- **Azure Table storage** offers a low-cost, highly durable solution for storing large volumes of semi-structured data using NoSQL key-value storage
+- **GRS** provides automatic replication of the data to a secondary Azure region for disaster recovery, fulfilling the requirement for regional redundancy
+- While GRS does not offer read access to the secondary region (unlike RA-GRS), the requirement only states that data must be **replicated**—not that it must be readable from the replica
+- **REST API support**: Azure Table storage natively supports REST-based access, enabling applications to interact with the data directly through HTTP endpoints
+- **Cost-effective**: Table storage with GRS is significantly cheaper than SQL Database solutions for hosting multiple independent tables
+
+**Why other options are incorrect:**
+
+**❌ Tables in an Azure Storage account that use read-access geo-redundant storage (RA-GRS):**
+- Although RA-GRS provides read access to the replicated data in the secondary region, it incurs **higher cost** than GRS
+- Since the requirement is to **minimize cost** and does not mandate read access from the secondary region, RA-GRS adds unnecessary expense
+- RA-GRS is the correct choice only when applications need to read from the secondary region during failover or for load distribution
+
+**❌ An Azure SQL Database elastic database pool that uses geo-replication:**
+- While elastic pools can host multiple databases and support geo-replication, this is a **relational database solution** that is **more expensive** than Table storage
+- Azure SQL Database does not natively expose data through REST APIs without adding additional service layers or APIs (such as Azure App Service or Azure Functions)
+- Elastic pools are designed for scenarios requiring complex queries, transactions, and relational data models—overkill for simple table storage needs
+- Cost is significantly higher compared to Table storage
+
+**❌ An Azure SQL Database that uses active geo-replication:**
+- Similar to elastic pools, Azure SQL Database is designed for relational data with high availability and performance needs
+- **Higher cost** compared to Table storage
+- Does not support REST-based interaction natively
+- Active geo-replication provides multiple readable secondaries, but at a premium cost that exceeds requirements
+
+**Key Differences: GRS vs. RA-GRS**
+
+| Feature | GRS | RA-GRS |
+|---------|-----|---------|
+| **Replication** | ✅ Automatic to secondary region | ✅ Automatic to secondary region |
+| **Read access to secondary** | ❌ No (only after failover) | ✅ Yes (always available) |
+| **Cost** | 💰 Lower | 💰💰 Higher |
+| **Use case** | Disaster recovery with cost optimization | Active read from secondary region for load distribution or DR testing |
+| **Endpoint** | Single endpoint | Two endpoints (primary + secondary) |
+
+**When to choose:**
+- **GRS**: When you need disaster recovery capability but don't need to read from the secondary region (most common scenario)
+- **RA-GRS**: When applications need to actively read from the secondary region for load balancing, DR testing, or reducing latency for geographically distributed users
+
+**Azure Table Storage Benefits:**
+- **REST API**: Native support for HTTP-based access patterns
+- **Scalability**: Handles tables of varying sizes automatically
+- **Independence**: Each table can scale independently
+- **Cost**: Pay only for storage used, no per-database costs
+- **Schema flexibility**: NoSQL structure accommodates varying data patterns
+
+**Reference(s):**
+- [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
+- [Azure Table storage overview](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview)
+- [Azure SQL Database REST API](https://learn.microsoft.com/en-us/rest/api/sql/)
+
+**Domain:** Design data storage solutions
+
+---
+
 ## Best Practices
 
 1. **Choose ZRS for high availability**: When applications need to continue operating during zone outages
