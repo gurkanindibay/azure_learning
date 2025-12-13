@@ -142,6 +142,48 @@ Don't choose Front Door when:
 - ❌ You need Layer 4 TCP/UDP balancing (use Load Balancer)
 - ❌ Budget is very limited and you don't need global reach (use Traffic Manager)
 
+## Real-World Scenario: Multi-Region App Service Deployment
+
+### Scenario
+Deploy an Azure App Service web app with multiple instances across multiple Azure regions requiring:
+- Maintain access during regional outages
+- Azure Web Application Firewall (WAF) support
+- Cookie-based affinity (session persistence)
+- URL routing capabilities
+
+### Solution: Azure Front Door
+
+**Why Azure Front Door is the correct choice:**
+
+1. **Global High Availability**: As a global Layer 7 load balancer, Front Door provides automatic failover across multiple Azure regions, ensuring continued access even if an entire region experiences an outage.
+
+2. **Integrated WAF Protection**: Front Door integrates with Azure Web Application Firewall (WAF) to provide centralized protection against web vulnerabilities and attacks (OWASP Top 10, bot protection, custom rules).
+
+3. **Session Affinity**: Supports cookie-based affinity (session affinity), ensuring that requests from the same client are consistently routed to the same backend instance, which is critical for stateful applications.
+
+4. **Advanced Routing**: Provides URL-based routing capabilities, enabling traffic distribution based on URL path patterns or host headers, allowing you to route different parts of your application to different backend pools.
+
+### Why Other Services Don't Fit
+
+**Azure Application Gateway** ❌
+- While it supports WAF, URL routing, and session affinity
+- It is a **regional service** and does not provide global failover or routing between multiple regions
+- Cannot maintain access during regional outages
+
+**Azure Load Balancer** ❌
+- Operates at **Layer 4** (TCP/UDP) only
+- No support for WAF, session affinity, or URL-based routing
+- Designed for basic VM-level load balancing, not web application scenarios
+
+**Azure Traffic Manager** ❌
+- Provides **DNS-based** traffic distribution across regions
+- No support for WAF, session affinity, or URL routing
+- Only handles DNS resolution, not actual traffic routing
+- Primarily used for DNS-level failover and latency-based routing
+
+### Key Takeaway
+For multi-region web applications requiring high availability, security (WAF), and advanced Layer 7 features (session affinity, URL routing), **Azure Front Door** is the only service that meets all requirements.
+
 ## References
 
 - [Azure Front Door pricing](https://azure.microsoft.com/en-us/pricing/details/frontdoor/)

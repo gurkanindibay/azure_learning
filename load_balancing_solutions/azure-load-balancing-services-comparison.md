@@ -163,6 +163,7 @@ This document provides a comprehensive feature-based comparison of Azure's load 
 | Global DNS-based routing | **Traffic Manager** | Protocol agnostic, DNS-based, cost-effective |
 | Global web app with CDN | **Front Door** | Edge optimization, CDN, global WAF |
 | Multi-region failover | **Traffic Manager** or **Front Door** | Global reach, automatic failover |
+| **Multi-region App Service with WAF** | **Front Door** | Only service with WAF, session affinity, URL routing, and regional failover |
 | Microservices API gateway | **API Management** | Service orchestration, transformations |
 | Static content delivery | **Front Door** | Built-in CDN, edge caching |
 | Legacy protocol load balancing | **Load Balancer** | Layer 4 supports all TCP/UDP |
