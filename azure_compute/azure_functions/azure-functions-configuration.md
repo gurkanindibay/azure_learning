@@ -525,6 +525,73 @@ Authorization Level: user
 
 ---
 
+##### Practice Question: Authorization Level for Public Read-Only API
+
+**Scenario:**
+
+A company plans to implement an HTTP-based API to support a web app. The web app allows customers to check the status of their orders. The API must meet the following requirements:
+
+- Implement Azure Functions
+- Provide public read-only operations
+- Prevent write operations
+
+**Question:**
+
+Which authorization level should you recommend to be configured?
+
+**Options:**
+
+A) Function
+
+B) Anonymous ✅
+
+C) Admin
+
+---
+
+**Correct Answer: B) Anonymous**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Function** | ❌ Incorrect - The `function` authorization level requires a function key to access the endpoint. This adds a layer of security suitable for internal or authenticated clients but contradicts the need for **public access**. Customers checking order status would need to know and provide function keys, which is not practical for public APIs. |
+| **B) Anonymous** | ✅ **Correct** - The `anonymous` authorization level is correct because the API is required to provide **public read-only operations**, meaning it should be accessible to anyone (e.g., customers checking order status) without requiring authentication keys. Setting the authorization level to `anonymous` allows anyone to invoke the function over HTTP, which supports the public accessibility requirement. This is appropriate for scenarios where the endpoint needs to be publicly available. |
+| **C) Admin** | ❌ Incorrect - The `admin` authorization level requires an admin-level (master/host) key, which is typically reserved for management or high-privilege operations. Using this level would unnecessarily restrict access and is not appropriate for a public read-only API. It provides the highest level of security but completely prevents public access. |
+
+**Additional Considerations:**
+
+While `anonymous` authorization meets the stated requirement for public access, consider these important points for production implementations:
+
+1. **Preventing Write Operations:**
+   - Use HTTP methods restriction: Configure only `GET` method in the HTTP trigger
+   - Implement application-level checks to ensure read-only access
+   - Example configuration:
+   ```json
+   {
+     "type": "httpTrigger",
+     "authLevel": "anonymous",
+     "methods": ["get"]  // Only allow GET requests
+   }
+   ```
+
+2. **Security Best Practices for Public APIs:**
+   - **Rate Limiting**: Use Azure API Management or Azure Front Door to prevent abuse
+   - **API Keys (Optional)**: Consider using Azure API Management with subscription keys for better control
+   - **Data Filtering**: Ensure customers can only see their own order data (implement proper authorization logic)
+   - **HTTPS Only**: Always use HTTPS for public APIs
+   - **Input Validation**: Validate all input parameters to prevent injection attacks
+
+3. **Alternative Approaches:**
+   - If you need better control and monitoring, consider placing Azure API Management in front of the function
+   - For customer-specific data, implement token-based authentication (e.g., Azure AD B2C) while keeping the auth level anonymous at the function level
+
+**Reference:** [Azure Functions HTTP trigger - Security concepts](https://learn.microsoft.com/en-us/azure/azure-functions/security-concepts)
+
+---
+
 #### Timer Trigger
 
 ```json
