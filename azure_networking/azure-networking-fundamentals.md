@@ -8,6 +8,7 @@
   - [2.2 Key Concepts](#22-key-concepts)
   - [2.3 Subnets](#23-subnets)
   - [2.4 Address Space](#24-address-space)
+    - [2.4.1 Subnet Planning for Hybrid Connectivity](#241-subnet-planning-for-hybrid-connectivity)
   - [2.5 VNet Peering](#25-vnet-peering)
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
 - [3. Private Endpoints](#3-private-endpoints)
@@ -138,6 +139,90 @@ VNet: 10.0.0.0/16 (65,536 addresses)
 ├── Subnet-PrivateEndpoints: 10.0.4.0/24 (256 addresses)
 └── GatewaySubnet: 10.0.255.0/27 (32 addresses)
 ```
+
+#### 2.4.1 Subnet Planning for Hybrid Connectivity
+
+When connecting Azure VNets to on-premises networks via **Site-to-Site VPN** or **ExpressRoute**, proper subnet planning is critical to avoid IP address conflicts.
+
+**Key Principle: No Overlapping Address Spaces**
+
+Azure VNets and on-premises networks must use **non-overlapping IP address ranges**. Overlapping addresses cause routing failures and prevent proper communication across the VPN connection.
+
+**Planning Scenario Example:**
+
+Consider the following requirements:
+- **On-premises network**: Uses 172.16.0.0/16
+- **Azure deployment**: 30 virtual machines on a single subnet
+- **Connectivity**: Site-to-Site VPN between on-premises and Azure
+
+**Subnet Size Calculations:**
+
+| Subnet | Total IPs | Azure Reserved IPs | Usable IPs | Notes |
+|--------|-----------|-------------------|-----------|-------|
+| /27 | 32 | 5 | 27 | Too small for 30 VMs |
+| /26 | 64 | 5 | 59 | Adequate for 30 VMs |
+| /25 | 128 | 5 | 123 | Good headroom |
+| /24 | 256 | 5 | 251 | Recommended for growth |
+
+**Correct vs Incorrect Subnet Choices:**
+
+| Subnet Address | Result | Explanation |
+|----------------|--------|-------------|
+| **172.16.0.0/16** | ❌ **Incorrect** | Exactly matches on-premises range. Causes IP conflicts and routing failures across VPN. |
+| **172.16.1.0/27** | ❌ **Incorrect** | Falls within on-premises 172.16.0.0/16 range. Creates routing conflicts. Also provides only 27 usable IPs, insufficient for 30 VMs. |
+| **192.168.1.0/27** | ❌ **Incorrect** | Avoids address space conflict but provides only 27 usable IPs, which is not enough for 30 VMs. |
+| **192.168.0.0/24** | ✅ **Correct** | Non-overlapping with on-premises (192.168.x.x ≠ 172.16.x.x). Provides 251 usable IPs, sufficient for 30 VMs with room for growth. |
+
+**Best Practices for Hybrid Connectivity:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   Hybrid Network Planning                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  On-Premises Network                                            │
+│  ┌────────────────────────┐                                     │
+│  │  172.16.0.0/16         │                                     │
+│  │  (1,048,576 addresses) │                                     │
+│  └────────────────────────┘                                     │
+│              │                                                   │
+│              │ Site-to-Site VPN                                 │
+│              ▼                                                   │
+│  Azure Virtual Network                                          │
+│  ┌────────────────────────┐                                     │
+│  │  192.168.0.0/16        │ ← Different address space          │
+│  │  ┌──────────────────┐  │                                     │
+│  │  │ Subnet1          │  │                                     │
+│  │  │ 192.168.0.0/24   │  │ ← 251 usable IPs                   │
+│  │  │ (30 VMs)         │  │                                     │
+│  │  └──────────────────┘  │                                     │
+│  │  ┌──────────────────┐  │                                     │
+│  │  │ GatewaySubnet    │  │                                     │
+│  │  │ 192.168.255.0/27 │  │                                     │
+│  │  └──────────────────┘  │                                     │
+│  └────────────────────────┘                                     │
+│                                                                  │
+│  Result: No routing conflicts, seamless connectivity            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Common Address Space Planning Strategies:**
+
+1. **Document Existing Ranges**: Inventory all on-premises IP ranges before designing Azure networks
+2. **Reserve Azure-Specific Ranges**: Use different RFC 1918 ranges for Azure (e.g., if on-prem uses 172.16.x.x, use 10.x.x.x or 192.168.x.x for Azure)
+3. **Plan for Growth**: Choose subnet sizes that accommodate future expansion (typically at least 2x current requirements)
+4. **Gateway Subnet Sizing**: Minimum /27 for VPN Gateway subnet, /26 or larger recommended for ExpressRoute
+5. **Avoid Fragmentation**: Use contiguous address spaces when possible for easier management
+
+**Address Space Isolation Example:**
+
+| Network Location | Address Range | Purpose |
+|------------------|---------------|---------|
+| On-Premises HQ | 172.16.0.0/16 | Corporate network |
+| On-Premises Branch 1 | 172.17.0.0/16 | Branch office |
+| Azure Production VNet | 10.0.0.0/16 | Production workloads |
+| Azure Dev/Test VNet | 10.1.0.0/16 | Development environment |
+| Azure DR VNet | 10.2.0.0/16 | Disaster recovery |
 
 ### 2.5 VNet Peering
 
