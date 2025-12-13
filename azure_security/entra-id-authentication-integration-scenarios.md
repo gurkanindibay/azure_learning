@@ -38,6 +38,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 7: MFA Registration for Production Environment Management (Litware Inc.)](#exam-question-7-mfa-registration-for-production-environment-management-litware-inc)
     - [Question 8: Enforcing Azure MFA Authentication with Conditional Access (Litware Inc.)](#exam-question-8-enforcing-azure-mfa-authentication-with-conditional-access-litware-inc)
     - [Question 9: Securing On-Premises Apps with Azure AD Application Proxy and MFA](#exam-question-9-securing-on-premises-apps-with-azure-ad-application-proxy-and-mfa)
+    - [Question 10: Migrating LDAP Applications to Azure with Entra Domain Services](#exam-question-10-migrating-ldap-applications-to-azure-with-entra-domain-services)
 
 ---
 
@@ -5456,6 +5457,565 @@ Azure Portal:
 - **Scoped filters**: For applying different logic to user types
 - **Attribute mappings**: For transforming HR data to AD attributes
 - **High availability**: For deploying redundant provisioning agents
+
+---
+
+### <a id="exam-question-10-migrating-ldap-applications-to-azure-with-entra-domain-services"></a>Question 10: Migrating LDAP Applications to Azure with Entra Domain Services
+
+---
+
+#### Scenario
+
+Your company has the following infrastructure:
+
+| Resource | Location |
+|----------|----------|
+| Active Directory Domain | On-premises |
+| Server1 (running App1) | On-premises |
+| Microsoft Entra ID | Cloud (synced from on-premises AD) |
+
+**Current State:**
+- On-premises Active Directory domain syncs to Microsoft Entra ID
+- Server1 runs an application named **App1** that uses **LDAP queries** to verify user identities in the on-premises Active Directory domain
+
+**Migration Plan:**
+- Migrate Server1 to a virtual machine in **Subscription1**
+
+**Security Policy:**
+- Virtual machines and services deployed to Subscription1 **must be prevented from accessing the on-premises network**
+
+**Requirement:**
+- Ensure that App1 continues to function after the migration
+- The solution must meet the security policy
+
+---
+
+#### Question
+
+**You need to recommend a solution to ensure that App1 continues to function after the migration. The solution must meet the security policy.**
+
+**What should you include in the recommendation?**
+
+A. the Active Directory Domain Services role on a virtual machine  
+B. Microsoft Entra Domain Services ✅  
+C. Microsoft Entra Application Proxy  
+D. an Azure VPN gateway  
+
+---
+
+#### Answer: B. Microsoft Entra Domain Services ✅
+
+---
+
+#### Detailed Explanation
+
+**Why Microsoft Entra Domain Services is correct:**
+
+Microsoft Entra Domain Services provides **managed domain services** in Azure that are compatible with on-premises Active Directory, including:
+
+✅ **LDAP (Lightweight Directory Access Protocol)**  
+✅ **Kerberos authentication**  
+✅ **NTLM authentication**  
+✅ **Domain join for Azure VMs**  
+✅ **Group Policy management**
+
+**Key advantages for this scenario:**
+
+| Feature | Benefit |
+|---------|---------|
+| **No on-premises connectivity required** | Fully cloud-based managed domain |
+| **LDAP support** | App1 can continue using LDAP queries |
+| **Syncs with Microsoft Entra ID** | Users from synced on-premises AD are available |
+| **Managed service** | No need to deploy/maintain domain controllers |
+| **Network isolation** | Complies with security policy (no on-prem access) |
+
+---
+
+#### Solution Architecture
+
+```plaintext
+┌─────────────────────────────────────────────────────────────┐
+│                        On-Premises                          │
+│                                                             │
+│  ┌──────────────────┐         ┌──────────────────┐        │
+│  │  Active Directory│◄────────┤  Server1 (App1)  │        │
+│  │     Domain       │  LDAP   │  Legacy location │        │
+│  └────────┬─────────┘         └──────────────────┘        │
+│           │                                                 │
+└───────────┼─────────────────────────────────────────────────┘
+            │
+            │ Microsoft Entra Connect
+            │ (One-way sync)
+            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Microsoft Cloud                         │
+│                                                             │
+│  ┌──────────────────────────────────────┐                  │
+│  │     Microsoft Entra ID (AAD)         │                  │
+│  │  - Synced users from on-premises AD  │                  │
+│  │  - Cloud-only users                  │                  │
+│  └─────────────┬────────────────────────┘                  │
+│                │                                            │
+│                │ Automatic sync                             │
+│                ▼                                            │
+│  ┌──────────────────────────────────────┐                  │
+│  │  Microsoft Entra Domain Services     │                  │
+│  │  (Managed Domain in Azure)           │                  │
+│  │  - LDAP support                      │                  │
+│  │  - Kerberos/NTLM authentication      │                  │
+│  │  - Domain join capability            │                  │
+│  └─────────────┬────────────────────────┘                  │
+│                │                                            │
+│                │ LDAP queries                               │
+│                ▼                                            │
+│  ┌──────────────────────────────────────┐                  │
+│  │   Azure VM (Server1 migrated)        │                  │
+│  │   - App1 (LDAP application)          │                  │
+│  │   - Domain-joined to Entra DS        │                  │
+│  │   - No on-premises connectivity      │                  │
+│  └──────────────────────────────────────┘                  │
+│                                                             │
+│  Subscription1 (isolated from on-premises)                  │
+└─────────────────────────────────────────────────────────────┘
+
+✅ Security policy satisfied: No connection to on-premises network
+✅ App1 functionality maintained: LDAP queries work via Entra Domain Services
+```
+
+---
+
+#### How It Works
+
+**1. Before Migration (On-Premises)**
+
+```plaintext
+App1 → LDAP query → On-premises Active Directory → User verification
+```
+
+**2. After Migration (Azure with Entra Domain Services)**
+
+```plaintext
+App1 → LDAP query → Microsoft Entra Domain Services → User verification
+                    (synced from Microsoft Entra ID)
+```
+
+**Data flow:**
+
+```plaintext
+On-premises AD
+    ↓
+    ↓ (Microsoft Entra Connect - one-way sync)
+    ↓
+Microsoft Entra ID
+    ↓
+    ↓ (Automatic sync)
+    ↓
+Microsoft Entra Domain Services
+    ↓
+    ↓ (LDAP queries)
+    ↓
+App1 on Azure VM
+```
+
+---
+
+#### Why Other Options Are Incorrect
+
+---
+
+##### Option A: Active Directory Domain Services role on a virtual machine ❌
+
+**Why incorrect:**
+
+❌ **Custom deployment and maintenance required**
+- Must manually deploy and configure domain controllers
+- Requires ongoing patching, monitoring, and maintenance
+- Need to manage replication, backup, and disaster recovery
+
+❌ **Potential security policy violation**
+- To maintain AD replication with on-premises, would need connectivity
+- Without on-premises connectivity, the domain would be isolated
+- Creates separate AD forest/domain, complicating identity management
+
+❌ **Not a managed service**
+- You're responsible for high availability
+- Must handle domain controller failures
+- Need to manage AD schema and forest functional levels
+
+**What's missing:**
+- Cloud-managed domain service
+- Automatic sync with Microsoft Entra ID
+- Built-in high availability and disaster recovery
+
+---
+
+##### Option C: Microsoft Entra Application Proxy ❌
+
+**Why incorrect:**
+
+❌ **Wrong purpose**
+- Application Proxy is for **publishing on-premises applications** to external users
+- NOT for providing LDAP/AD services to migrated applications
+- It's a reverse proxy for web applications, not a directory service
+
+❌ **Doesn't provide LDAP**
+- Cannot satisfy LDAP query requirements
+- Doesn't provide domain services
+- Only handles HTTP/HTTPS traffic
+
+❌ **Requires on-premises connectivity**
+- Application Proxy connector must communicate with on-premises resources
+- Violates the security policy
+
+**What's missing:**
+- LDAP protocol support
+- Domain services functionality
+- Identity directory for authentication
+
+---
+
+##### Option D: Azure VPN Gateway ❌
+
+**Why incorrect:**
+
+❌ **Violates security policy**
+- VPN Gateway creates site-to-site or point-to-site connectivity
+- Establishes network connection between Azure and on-premises
+- **Directly violates** the requirement to prevent on-premises network access
+
+❌ **Not an identity solution**
+- VPN Gateway is a networking service
+- Doesn't provide LDAP or domain services
+- Only establishes network connectivity
+
+❌ **Defeats the purpose of cloud migration**
+- Maintains dependency on on-premises infrastructure
+- No benefit from cloud-native services
+- On-premises AD becomes single point of failure
+
+**The fundamental problem:** VPN Gateway connects networks, which is explicitly prohibited by the security policy.
+
+---
+
+#### Microsoft Entra Domain Services Deep Dive
+
+---
+
+##### What is Microsoft Entra Domain Services?
+
+**Microsoft Entra Domain Services** is a managed domain service that provides domain services compatible with Windows Server Active Directory:
+
+| Feature | Description |
+|---------|-------------|
+| **Domain Join** | Join Azure VMs to a managed domain |
+| **LDAP** | Lightweight Directory Access Protocol for queries |
+| **Kerberos/NTLM** | Windows authentication protocols |
+| **Group Policy** | Manage VMs with Group Policy Objects (GPOs) |
+| **Managed** | Microsoft manages DCs, patching, backups |
+
+---
+
+##### How Entra Domain Services Works
+
+**1. Deployment**
+
+```plaintext
+Create Microsoft Entra Domain Services:
+  ├─ Select Azure region
+  ├─ Choose domain name (e.g., contoso.com)
+  ├─ Select virtual network
+  └─ Microsoft deploys managed domain controllers
+```
+
+**2. Synchronization**
+
+```plaintext
+Microsoft Entra ID
+    ↓
+    ↓ Automatic one-way sync
+    ↓
+Microsoft Entra Domain Services
+    ├─ Users (from Entra ID)
+    ├─ Groups (from Entra ID)
+    ├─ Password hashes (NTLM/Kerberos)
+    └─ Available for LDAP/Kerberos/NTLM
+```
+
+**3. Usage**
+
+```plaintext
+Azure VM (domain-joined)
+    ↓
+    ↓ LDAP query / Kerberos auth
+    ↓
+Microsoft Entra Domain Services
+    ↓
+    ↓ User lookup
+    ↓
+Returns user information
+```
+
+---
+
+##### Key Characteristics
+
+**Managed Service:**
+- ✅ Microsoft manages domain controllers
+- ✅ Automatic patching and updates
+- ✅ Built-in high availability (2 DCs per region)
+- ✅ Automatic backups
+- ✅ Monitoring and alerts
+
+**Compatibility:**
+- ✅ LDAP read operations (LDAP bind, LDAP search)
+- ✅ Kerberos and NTLM authentication
+- ✅ Domain join for Windows and Linux VMs
+- ✅ Group Policy management
+- ✅ Legacy application support
+
+**Limitations:**
+- ❌ No Schema extensions
+- ❌ LDAP write operations limited (can't create OUs, some attributes read-only)
+- ❌ No trust relationships with on-premises AD
+- ❌ Forest functional level fixed by Microsoft
+
+---
+
+##### Comparison: Identity Solutions for Migrated LDAP Apps
+
+| Solution | LDAP Support | No On-Prem Connectivity Required | Managed Service | Syncs with Entra ID | Meets All Requirements |
+|----------|--------------|----------------------------------|-----------------|---------------------|----------------------|
+| **Microsoft Entra Domain Services** ✅ | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Self-managed AD DS on VM** | ✅ Yes | ⚠️ Partial | ❌ No | ❌ No | ❌ No |
+| **Microsoft Entra Application Proxy** | ❌ No | ❌ No | ✅ Yes | N/A | ❌ No |
+| **Azure VPN Gateway** | ❌ No | ❌ No | ✅ Yes | N/A | ❌ No |
+| **Microsoft Entra ID (cloud-only)** | ❌ No | ✅ Yes | ✅ Yes | N/A | ❌ No |
+
+**Only Microsoft Entra Domain Services meets ALL requirements**
+
+---
+
+#### Implementation Steps
+
+**Step 1: Enable Microsoft Entra Domain Services**
+
+```plaintext
+Azure Portal → Microsoft Entra Domain Services → Create
+  ├─ Subscription: Subscription1
+  ├─ Resource group: rg-identity
+  ├─ DNS domain name: contoso.com
+  ├─ SKU: Enterprise (or Standard for smaller deployments)
+  ├─ Virtual network: vnet-domain-services
+  └─ Enable: Password hash synchronization
+```
+
+**Step 2: Configure Network Security**
+
+```plaintext
+Virtual Network: vnet-domain-services
+  └─ Subnet: DomainServicesSubnet (dedicated)
+      └─ Network Security Group
+          ├─ Allow LDAP (389/TCP)
+          ├─ Allow LDAPS (636/TCP)
+          ├─ Allow Kerberos (88/TCP, 88/UDP)
+          └─ Allow DNS (53/TCP, 53/UDP)
+```
+
+**Step 3: Wait for Deployment**
+
+```plaintext
+Deployment time: ~30-60 minutes
+  ├─ Microsoft provisions 2 domain controllers
+  ├─ Configures domain services
+  ├─ Starts syncing from Microsoft Entra ID
+  └─ Makes domain available for use
+```
+
+**Step 4: Migrate Server1 to Azure VM**
+
+```plaintext
+1. Create Azure VM in Subscription1
+2. Deploy VM in same VNet as Entra Domain Services
+   (or peer VNets)
+3. Configure DNS to point to Entra Domain Services DNS
+4. Domain-join the VM
+5. Install and configure App1
+6. Update App1 LDAP connection string to point to
+   Entra Domain Services domain
+```
+
+**Step 5: Test LDAP Queries**
+
+```plaintext
+From Azure VM (Server1):
+  ├─ Test LDAP bind
+  ├─ Test LDAP search queries
+  ├─ Verify user authentication works
+  └─ Confirm no on-premises connectivity needed
+```
+
+---
+
+#### Configuration Example
+
+**App1 LDAP Configuration (Before Migration):**
+
+```plaintext
+LDAP Server: dc01.contoso.local (on-premises)
+Port: 389 (LDAP) or 636 (LDAPS)
+Base DN: DC=contoso,DC=local
+Bind DN: CN=ServiceAccount,OU=ServiceAccounts,DC=contoso,DC=local
+```
+
+**App1 LDAP Configuration (After Migration):**
+
+```plaintext
+LDAP Server: contoso.com (Entra Domain Services)
+Port: 389 (LDAP) or 636 (LDAPS)
+Base DN: DC=contoso,DC=com
+Bind DN: CN=ServiceAccount,OU=AADDC Users,DC=contoso,DC=com
+```
+
+**Key changes:**
+- ✅ LDAP server points to Entra Domain Services managed domain
+- ✅ Distinguished Names updated to new domain structure
+- ✅ Service account exists in synced users from Entra ID
+- ✅ LDAP queries work the same way
+
+---
+
+#### Security and Compliance
+
+**How the solution meets the security policy:**
+
+| Requirement | How It's Met |
+|-------------|--------------|
+| **No on-premises network access** | ✅ Entra Domain Services is entirely cloud-based |
+| **No VPN or ExpressRoute needed** | ✅ All resources in Azure; no connection to on-premises |
+| **Complete network isolation** | ✅ Azure VMs in Subscription1 have no route to on-premises |
+| **LDAP functionality maintained** | ✅ Entra Domain Services provides full LDAP support |
+| **User identities available** | ✅ Users synced from on-premises AD via Entra ID |
+
+**Security benefits:**
+
+```plaintext
+✅ Reduced attack surface (no on-premises connectivity)
+✅ Microsoft-managed security patching
+✅ Built-in DDoS protection (Azure infrastructure)
+✅ Azure RBAC for management plane
+✅ Network isolation via VNet and NSG
+✅ Audit logging via Azure Monitor
+```
+
+---
+
+#### Troubleshooting Common Issues
+
+| Issue | Possible Cause | Solution |
+|-------|----------------|----------|
+| **LDAP queries fail** | DNS not configured correctly | Update VM DNS to Entra Domain Services DNS |
+| **Cannot domain-join VM** | Network connectivity issue | Verify NSG rules allow required ports |
+| **Users not found** | Sync not complete | Wait for initial sync (can take hours) |
+| **Password authentication fails** | Password hash sync not enabled | Enable password hash sync in Entra Connect |
+| **App1 cannot bind to LDAP** | Incorrect bind credentials | Verify service account exists and has permissions |
+
+---
+
+#### Best Practices
+
+**1. Network Design**
+- ✅ Deploy Entra Domain Services in dedicated subnet
+- ✅ Use Network Security Groups to control access
+- ✅ Peer VNets if VMs are in different networks
+- ✅ Configure custom DNS for domain resolution
+
+**2. High Availability**
+- ✅ Entra Domain Services provides 2 DCs automatically
+- ✅ Deploy VMs across availability zones
+- ✅ Use Azure Backup for VM protection
+- ✅ Monitor domain services health
+
+**3. Security**
+- ✅ Use LDAPS (LDAP over SSL) instead of plain LDAP
+- ✅ Enable Azure AD Connect password hash sync
+- ✅ Apply Group Policy for security settings
+- ✅ Use managed identities where possible
+
+**4. Migration**
+- ✅ Test LDAP queries thoroughly before cutover
+- ✅ Update all connection strings in App1
+- ✅ Document new domain structure
+- ✅ Plan for minimal downtime
+
+---
+
+#### Cost Considerations
+
+**Microsoft Entra Domain Services Pricing:**
+
+| SKU | Description | Use Case |
+|-----|-------------|----------|
+| **Enterprise** | Full features, unlimited objects | Production environments |
+| **Standard** | Basic features, object limits | Dev/test, small deployments |
+
+**Additional costs:**
+- Azure VMs (Server1 migrated)
+- Virtual Network (usually minimal)
+- Storage (for VM disks)
+- Data transfer (within Azure: minimal)
+
+**Cost savings:**
+- ✅ No Windows Server licenses for domain controllers
+- ✅ No infrastructure management overhead
+- ✅ Reduced operational costs
+- ✅ No on-premises hardware maintenance
+
+---
+
+#### Exam Tips
+
+> **Remember: LDAP in Azure = Entra Domain Services**
+> - If the scenario mentions LDAP, Kerberos, or NTLM, think Entra Domain Services
+> - It's the only Azure-native solution for legacy AD-integrated apps
+
+> **Security policy violation = VPN/ExpressRoute is wrong**
+> - Any solution requiring on-premises connectivity violates the policy
+> - VPN Gateway, ExpressRoute, Application Proxy with connector = all wrong
+
+> **Self-managed AD DS on VM = extra overhead**
+> - Not a managed service
+> - Still need to figure out identity sync
+> - Doesn't leverage cloud capabilities
+
+> **Application Proxy is for publishing on-premises apps, not LDAP**
+> - It's a reverse proxy for web applications
+> - Cannot provide directory services
+
+> **Data flow: On-prem AD → Entra Connect → Entra ID → Entra Domain Services**
+> - Users sync from on-premises to cloud
+> - Entra Domain Services gets users from Entra ID automatically
+> - LDAP queries work against Entra Domain Services
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [What is Microsoft Entra Domain Services?](https://learn.microsoft.com/en-us/entra/identity/domain-services/overview)
+- [Microsoft Entra Application Proxy overview](https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy)
+- [Compare identity solutions](https://learn.microsoft.com/en-us/entra/identity/domain-services/compare-identity-solutions)
+- [What is hybrid identity with Microsoft Entra ID?](https://learn.microsoft.com/en-us/entra/identity/hybrid/whatis-hybrid-identity)
+- [Tutorial: Create a management VM for Entra Domain Services](https://learn.microsoft.com/en-us/entra/identity/domain-services/tutorial-create-management-vm)
+
+**Related Topics:**
+- Microsoft Entra Connect (directory synchronization)
+- Azure VPN Gateway (site-to-site connectivity)
+- Azure ExpressRoute (private connectivity)
+- Active Directory Domain Services on Azure VMs
+- LDAP and Kerberos authentication protocols
+- Hybrid identity architectures
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
 
 ---
 
