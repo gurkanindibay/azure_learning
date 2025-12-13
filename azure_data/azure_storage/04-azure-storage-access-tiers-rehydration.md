@@ -620,7 +620,7 @@ Deleting or moving blobs before the minimum storage duration results in a prorat
 
 ## Choosing the Right Tier - Practical Scenarios
 
-### Scenario: 100 GB/day with 30-day retention and rare access
+### Scenario 1: 100 GB/day with 30-day retention and rare access
 
 **Question**: Your application generates 100 GB of data per day, and you need to keep that data for 30 days before deleting it. You may need to access the data occasionally. You will use a lifecycle rule to automatically delete the data after 30 days, and you won't likely need to read that data. Which is the most cost-effective storage option?
 
@@ -647,6 +647,64 @@ Deleting or moving blobs before the minimum storage duration results in a prorat
 - **Retention period**: 30 days → Cool Tier (matches minimum duration)
 - **Need for immediate access**: Yes (occasionally) → Cool (not Archive)
 - **Lifecycle automation**: Cool Tier supports lifecycle policies for automatic deletion
+
+### Scenario 2: Migrating 5 TB of rarely accessed files with 24-hour availability requirement
+
+**Question**: Your on-premises network contains a file server with 5 TB of company files that are accessed rarely. You need to copy the files to Azure Storage with the following requirements:
+- Files must be available within 24 hours of being requested
+- Storage costs must be minimized
+
+Which two storage solutions achieve this goal?
+
+**Correct Answers:**
+
+1. **Create an Azure Blob storage account configured for Cool default access tier, create a blob container, copy files to the container, and set each file to Archive access tier** ✅
+
+2. **Create a General-Purpose v2 storage account configured for Hot default access tier, create a blob container, copy files to the container, and set each file to Archive access tier** ✅
+
+**Why These Solutions Work:**
+
+Both solutions leverage the **Archive tier**, which provides the **lowest storage cost** in Azure Blob Storage. The key points are:
+
+| Aspect | Explanation |
+|--------|-------------|
+| **Archive tier cost** | Most cost-effective option at ~$0.002/GB/month (vs. Cool at ~$0.01/GB/month or Hot at ~$0.018/GB/month) |
+| **24-hour availability** | Archive rehydration with Standard priority takes **up to 15 hours**, which meets the 24-hour requirement |
+| **Upload strategy** | Initial upload via Cool (lower write costs) or Hot (both valid) before transitioning to Archive |
+| **Access pattern** | Rarely accessed files align perfectly with Archive tier use case |
+
+**Solution 1 Benefits (Cool → Archive):**
+- Lower initial write costs when uploading through Cool tier
+- Optimal cost at every stage of the process
+
+**Solution 2 Benefits (Hot → Archive):**
+- Higher write costs initially, but same long-term storage cost once in Archive
+- Still meets cost minimization requirement through Archive tier
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|--------------|
+| **General-Purpose v1 (GPv1) with blob container** ❌ | GPv1 accounts do **NOT support blob access tiers** (Hot, Cool, Archive), making them unsuitable for tiered, cost-optimized storage strategies |
+| **General-Purpose v1 (GPv1) with file share** ❌ | GPv1 does not support access tiers, and Azure Files is more expensive than Blob Archive tier for cold data |
+| **General-Purpose v2 (GPv2) Cool tier with file share** ❌ | **Azure Files does NOT support Archive tier**. While Cool tier reduces costs compared to Hot, it cannot match the cost-effectiveness of Blob Archive tier (~$0.01/GB vs. ~$0.002/GB/month) |
+
+**Critical Storage Account and Service Tier Support:**
+
+| Storage Account Type | Blob Access Tiers Support | Azure Files Tiers Support |
+|---------------------|--------------------------|--------------------------|
+| **GPv1** | ❌ No Hot/Cool/Archive support | ❌ No tier support |
+| **GPv2** | ✅ Supports Hot/Cool/Cold/Archive | ⚠️ Only Hot/Cool (NO Archive) |
+| **Premium** | ❌ No access tiers (SSD-based) | ❌ No access tiers (SSD-based) |
+
+**Key Takeaways:**
+- ✅ **Archive tier** is the most cost-effective for rarely accessed data
+- ✅ Archive rehydration (**up to 15 hours**) fits within 24-hour availability requirement
+- ✅ Use **GPv2** storage accounts for access tier support
+- ✅ Use **Blob Storage** (not Azure Files) for Archive tier support
+- ❌ GPv1 accounts do NOT support blob access tiers
+- ❌ Azure Files do NOT support Archive tier
+- 💡 Default account tier (Hot/Cool) only matters during initial upload; final Archive tier determines long-term costs
 
 ## Best Practices
 
