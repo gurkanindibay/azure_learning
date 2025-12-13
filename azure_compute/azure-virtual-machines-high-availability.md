@@ -333,7 +333,7 @@ Initial: Zone 1 ✅ | Zone 2 ✅ | Zone 3 ✅
 Failure 1: Zone 1 ❌ | Zone 2 ✅ | Zone 3 ✅ → Still Available
 Failure 2: Zone 1 ❌ | Zone 2 ❌ | Zone 3 ✅ → Still Available
 Result: App1 continues running in Zone 3
-```
+
 
 #### 2. **Dedicated Hosts with Zone Isolation** ✅
 
@@ -421,8 +421,152 @@ Each VM scale set is deployed to its corresponding host group in a specific zone
 
 ---
 
+### Question 2: Migrating On-Premises App with Custom COM Components
+
+**Scenario**: You plan to move a web app named App1 from an on-premises data center to Azure.
+
+**App Characteristics**:
+- App1 depends on a custom COM component that is installed on the host server
+- Must be available to users if an Azure data center becomes unavailable
+- Costs must be minimized
+
+**Question**: What should you include in the recommendation to host App1 in Azure?
+
+**Options**:
+
+A) In two Azure regions, deploy a load balancer and a web app
+
+B) In two Azure regions, deploy a load balancer and a virtual machine scale set
+
+C) **Deploy a load balancer and a virtual machine scale set across two availability zones**
+
+D) In two Azure regions, deploy an Azure Traffic Manager profile and a web app
+
+---
+
+**Correct Answer**: **C) Deploy a load balancer and a virtual machine scale set across two availability zones**
+
+---
+
+### Explanation
+
+**Why Load Balancer + VM Scale Set across Two Availability Zones?**
+
+#### 1. **COM Component Requirement → Virtual Machines Required** ✅
+
+- **Custom COM components** require Windows-based virtual machines
+- **Azure App Service (Web Apps) does NOT support** custom COM components
+- **VMs provide full OS access** needed to install and run COM components
+- Options A and D are immediately eliminated due to using Web Apps
+
+#### 2. **Data Center Availability → Availability Zones Provide Resiliency** ✅
+
+**Availability Zones vs. Multiple Regions**:
+
+| Approach | Availability | Cost | Complexity |
+|----------|-------------|------|------------|
+| **2 Availability Zones** | Survives datacenter failure | Lower | Simple |
+| 2 Azure Regions | Survives regional failure | Higher | Complex |
+
+- **Availability zones** are physically separate datacenters within a region
+- Deploying across **2 zones** protects against datacenter-level failures
+- Each zone has independent power, cooling, and networking
+- Meets requirement: "available if an Azure data center becomes unavailable"
+
+#### 3. **Cost Minimization → Single Region Deployment** ✅
+
+**Cost Comparison**:
+
+```
+Single Region (2 Zones):
+  ✅ Lower networking costs (intra-region traffic)
+  ✅ Single load balancer
+  ✅ Simplified management
+  ✅ Lower data transfer costs
+
+Multiple Regions:
+  ❌ Higher networking costs (cross-region replication)
+  ❌ Traffic Manager + multiple load balancers
+  ❌ Complex data synchronization
+  ❌ Higher data transfer costs
+```
+
+#### 4. **Architecture**
+
+```
+Azure Region (e.g., East US)
+│
+├─ Availability Zone 1
+│  ├─ VM Scale Set Instance 1
+│  ├─ VM Scale Set Instance 2
+│  └─ [COM Component installed on each VM]
+│
+├─ Availability Zone 2
+│  ├─ VM Scale Set Instance 3
+│  ├─ VM Scale Set Instance 4
+│  └─ [COM Component installed on each VM]
+│
+└─ Azure Load Balancer
+   └─ Distributes traffic across both zones
+```
+
+**Benefits**:
+- ✅ High availability across zones
+- ✅ Auto-scaling with VMSS
+- ✅ Load balancer distributes traffic
+- ✅ Cost-effective single-region deployment
+- ✅ Supports custom COM components
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) Two Azure regions, deploy a load balancer and a web app** ❌
+- **Web Apps cannot host COM components** - This is the fundamental blocker
+- Azure App Service has a managed environment without full OS access
+- Custom COM components require Windows Server with full administrative control
+
+**B) Two Azure regions, deploy a load balancer and a virtual machine scale set** ❌
+- **Correct technology choice** (VMs support COM), but **wrong scope**
+- Deploys across **multiple regions** → significantly higher cost
+- **Violates cost minimization requirement**
+- Cross-region deployment costs:
+  - Cross-region data transfer fees
+  - Duplicate infrastructure in each region
+  - Complex geo-replication setup
+- Availability zones provide sufficient datacenter resilience at lower cost
+
+**D) Two Azure regions, deploy an Azure Traffic Manager profile and a web app** ❌
+- **Traffic Manager** provides global load balancing across regions ✅
+- **Web Apps** cannot run custom COM components ❌
+- Same fundamental issue as Option A
+- Even with global distribution, incompatible technology choice
+
+---
+
+### Key Takeaways
+
+1. **COM Components = Virtual Machines Only**
+   > Azure Web Apps operate in a managed sandbox environment and cannot install or run custom COM components. Full Windows Server VMs are required.
+
+2. **Datacenter Availability = Availability Zones**
+   > Availability zones provide datacenter-level resiliency within a region. Each zone is an independent facility with separate power, cooling, and networking.
+
+3. **Cost Optimization = Avoid Multi-Region When Possible**
+   > Multi-region deployments significantly increase costs through data transfer fees, duplicate infrastructure, and complex replication. Use availability zones for datacenter resiliency within a single region.
+
+4. **VM Scale Sets = Automatic Scaling + High Availability**
+   > VMSS provides both auto-scaling capabilities and the ability to distribute instances across availability zones, combining elasticity with resiliency.
+
+5. **Load Balancer for Zone Distribution**
+   > Azure Load Balancer distributes traffic across VMs in different availability zones, ensuring requests are served even if one zone fails.
+
+---
+
 ### Reference Links
 
+- [Migration Checklist When Moving to Azure App Service](https://azure.microsoft.com/en-us/blog/migration-checklist-when-moving-to-azure-app-service/)
+- [.NET Application Migration to Azure](https://learn.microsoft.com/en-us/dotnet/azure/migration/app-service)
 - [Azure Dedicated Hosts Overview](https://docs.microsoft.com/en-us/azure/virtual-machines/dedicated-hosts)
 - [Azure Dedicated Hosts - How To](https://docs.microsoft.com/en-us/azure/virtual-machines/dedicated-hosts-how-to?tabs=portal%2Cportal2)
 - [Virtual Machine Scale Sets with Availability Zones](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-use-availability-zones)
