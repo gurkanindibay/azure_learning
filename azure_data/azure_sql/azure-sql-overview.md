@@ -566,6 +566,97 @@ Azure SQL Database provides built-in high availability features that vary by ser
 - Want automated patching/backups
 - PaaS benefits desired
 
+### Disk Caching Best Practices for SQL Server on Azure VMs
+
+When configuring SQL Server on Azure VMs, proper disk caching configuration is critical for optimal performance and data integrity. Azure offers three host caching policies for managed disks:
+
+#### Caching Options
+
+| Caching Policy | Description | Use Case |
+|----------------|-------------|----------|
+| **None** | No caching | Write-intensive workloads, transaction logs |
+| **ReadOnly** | Read caching only | Read-intensive workloads, data files |
+| **ReadWrite** | Read and write caching | OS disks (not recommended for SQL) |
+
+#### Recommended Configuration by Disk Type
+
+| SQL Server Disk Type | Recommended Caching | Rationale |
+|---------------------|--------------------|-----------|
+| **Data disk** | **ReadOnly** | Improves read performance while maintaining data integrity. SQL Server workloads typically involve frequent read operations from data files. Enables faster retrieval from host cache. |
+| **Transaction log disk** | **None** | No performance benefit for sequential write operations. Caching can degrade write performance and decrease available cache for data disk reads. |
+| **Operating OS disk** | **ReadWrite** (default) | Default OS configuration is optimal. Not recommended to change. |
+| **tempdb disk** | **ReadOnly** | If tempdb cannot fit on ephemeral drive (D:\), place on separate data disk with ReadOnly caching. |
+
+#### Detailed Recommendations
+
+**Data Disk (ReadOnly Caching)**:
+- **Enable ReadOnly caching** for the disks hosting SQL Server data files
+- Reads from cache will be faster than uncached reads from the data disk
+- Uncached IOPS and throughput plus Cached IOPS and throughput yield the total possible performance available from the VM within the VM's limits
+- Actual performance varies based on the workload's ability to use the cache (cache hit ratio)
+- **Best for**: Read-intensive database operations, OLTP workloads
+
+**Transaction Log Disk (None Caching)**:
+- **Set the caching policy to None** for disks hosting the transaction log
+- There's no performance benefit to enabling caching for the transaction log disk
+- Having either ReadOnly or ReadWrite caching enabled on the log drive can degrade performance of the writes against the drive
+- Caching reduces the amount of cache available for reads on the data drive
+- **Best for**: Sequential write operations that don't benefit from caching
+
+**Operating OS Disk (ReadWrite - Default)**:
+- The default caching policy is **ReadWrite** for the OS drive
+- **It is not recommended to change** the caching level of the OS drive
+- Standard OS workloads benefit from the default configuration
+
+**tempdb Configuration**:
+- If tempdb **can't be placed on the ephemeral drive D:\** due to capacity reasons:
+  - Either resize the VM to get a larger ephemeral drive
+  - Or place tempdb on a separate data drive with **ReadOnly caching** configured
+- The VM cache and ephemeral drive both use the local SSD
+- Keep this in mind when sizing as tempdb I/O will count against the cached IOPS and throughput VM limits when hosted on the ephemeral drive
+
+#### Performance Impact Examples
+
+**Scenario 1: Data Disk with ReadOnly Caching (Optimal)**
+```
+P40 Disk: 7,500 IOPS, 250 MB/s
+VM Cache: Additional cached reads
+Result: Improved query performance for read operations
+Cache Hit Ratio: 70% → 70% of reads served from fast cache
+```
+
+**Scenario 2: Transaction Log with None Caching (Optimal)**
+```
+P40 Disk: 7,500 IOPS, 250 MB/s
+No caching overhead
+Result: Maximum write throughput for transaction log
+Benefit: More cache available for data disk reads
+```
+
+**Scenario 3: Data Disk with ReadWrite Caching (Not Recommended)**
+```
+Risk: Data corruption during unexpected failures
+Issue: Writes cached in host memory may be lost
+Result: Unsuitable for transactional systems like SQL Server
+```
+
+#### Key Considerations
+
+✅ **Do**:
+- Use ReadOnly caching for data disks to optimize read performance
+- Use None caching for transaction log disks to optimize write performance
+- Place tempdb on ephemeral drive (D:\) when possible for best performance
+- Monitor cache hit ratios to validate effectiveness
+- Use Premium SSD (P-series) or Ultra Disks for SQL Server workloads
+
+❌ **Don't**:
+- Use ReadWrite caching for SQL Server data or log disks (risk of data corruption)
+- Enable any caching on transaction log disks (degrades performance)
+- Change OS disk caching from default ReadWrite
+- Place transaction log on the ephemeral drive (data loss risk on VM restart)
+
+**Reference**: [SQL Server on Azure VMs - Storage Performance Best Practices](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/performance-guidelines-best-practices-storage?view=azuresql#data-file-caching-policies)
+
 ## Pricing Tiers Comparison
 
 ### Single Database - General Purpose (Serverless vs Provisioned)
@@ -970,6 +1061,41 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 - [Azure SQL Database Reserved Capacity](https://learn.microsoft.com/en-us/azure/azure-sql/database/reserved-capacity-overview)
 - [Serverless Tier Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/serverless-tier-overview)
 
+### Scenario 9: SQL Server VM Storage Configuration
+**Requirements**: 
+- Virtual machine running Microsoft SQL Server
+- Two P40 managed disks: one for log files, one for data files
+- Need best overall performance
+- Must preserve integrity of SQL data and logs
+
+**Recommendation**:
+- **SQL Server on Azure VM** (IaaS)
+- **Data disk**: ReadOnly host caching
+- **Transaction log disk**: None host caching
+- **Premium SSD** (P40) managed disks
+
+**Why**: 
+- **Data Disk (ReadOnly Caching)**: Offers performance benefits through host caching while maintaining data integrity. SQL Server workloads typically involve frequent read operations from data files. Enabling ReadOnly caching allows Azure to cache data in the host machine's memory for faster retrieval, improving overall read performance. This setting is commonly recommended by Microsoft for SQL Server data disks as it optimizes read-intensive operations without risking corruption or integrity issues. Reads from cache will be faster than uncached reads, and the cache hit ratio determines actual performance gains.
+
+- **Transaction Log Disk (None Caching)**: Disables host caching completely for optimal write performance. While it's safe in terms of data integrity, sequential write operations to transaction logs don't benefit from caching. In fact, enabling caching on transaction log disks can degrade performance of writes and decrease the amount of cache available for reads on the data drive. Setting caching to None ensures maximum throughput for transaction log writes and preserves cache resources for data disk operations.
+
+**Why Other Options Are Incorrect**:
+- **None caching for data disk**: While safe for data integrity, it results in slower read performance for database queries that access data files frequently. This doesn't provide the best overall performance, even though it maintains integrity.
+
+- **ReadWrite caching for data disk**: Introduces the risk of data corruption, especially with transactional systems like SQL Server. Caching writes in host memory can lead to data loss during unexpected failures (such as VM crashes or power outages), making it unsuitable for SQL data or log disks where write consistency and durability are critical. This violates the requirement to preserve data integrity.
+
+- **ReadOnly or ReadWrite caching for transaction log disk**: Provides no performance benefit for sequential write operations characteristic of transaction logs. Can actually degrade write performance and reduce available cache for data disk reads.
+
+**Performance Impact**:
+- Data disk with ReadOnly: Faster query performance for read-heavy workloads
+- Transaction log with None: Maximum write throughput, no caching overhead
+- Combined configuration: Optimal balance of read and write performance
+- Cache hit ratio of 70%+ on data disk provides significant performance gains
+
+**Reference Links**:
+- [SQL Server on Azure VMs - Storage Performance Best Practices](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/performance-guidelines-best-practices-storage?view=azuresql#data-file-caching-policies)
+- [Azure Managed Disks - Host Caching](https://learn.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching)
+
 ---
 
 ## Exam Practice Questions
@@ -1143,6 +1269,90 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 
 ---
 
+### Question 5: SQL Server on Azure VM Disk Caching Configuration
+
+**Scenario**: You are designing a virtual machine that will run Microsoft SQL Server and will contain two data disks. The first data disk will store log files, and the second data disk will store data. Both disks are P40 managed disks.
+
+**Requirements**:
+- Provide the best overall performance for the virtual machine
+- Preserve integrity of the SQL data and logs
+
+**Question**: Which host caching method should you recommend for the **Data disk**?
+
+**Options**:
+- A) None
+- B) ReadOnly
+- C) ReadWrite
+
+**Correct Answer**: **B) ReadOnly**
+
+**Explanation**:
+
+**ReadOnly** is correct for the data disk because it offers performance benefits through host caching while maintaining data integrity. SQL Server workloads typically involve frequent read operations from data files. Enabling ReadOnly caching allows Azure to cache data in the host machine's memory for faster retrieval, improving overall read performance. This setting is commonly recommended by Microsoft for SQL Server data disks as it optimizes read-intensive operations without risking corruption or integrity issues.
+
+**How ReadOnly Caching Works**:
+- Reads are cached in the host machine's memory (faster access)
+- Writes bypass the cache and go directly to disk (maintains integrity)
+- Uncached IOPS and throughput **plus** Cached IOPS and throughput yield the total possible performance
+- Actual performance varies based on the workload's cache hit ratio
+- Typical cache hit ratios of 60-80% provide significant performance improvements
+
+**Why Other Options Are Incorrect**:
+
+**None** is incorrect because it disables host caching completely, resulting in slower read performance for database queries that access data files frequently. While it's safe in terms of data integrity, it doesn't provide the **best performance**. All read operations must go directly to the disk, missing out on the performance benefits of host-level caching.
+
+**ReadWrite** is incorrect because it introduces the **risk of data corruption**, especially with transactional systems like SQL Server. Caching writes in host memory can lead to data loss during unexpected failures (such as VM crashes, host failures, or power outages), making it unsuitable for SQL data or log disks where write consistency and durability are critical. Even though it might seem to offer better performance, it violates the requirement to **preserve integrity** of the SQL data.
+
+**Additional Context - Transaction Log Disk Recommendation**:
+
+For the **Transaction log disk** in this scenario, the correct answer would be **None**:
+- Set the caching policy to **None** for disks hosting the transaction log
+- There's no performance benefit to enabling caching for transaction log disks (sequential writes don't benefit from caching)
+- Having either ReadOnly or ReadWrite caching enabled on the log drive can **degrade performance** of the writes against the drive
+- Caching also decreases the amount of cache available for reads on the data drive
+
+**Complete Recommended Configuration**:
+
+| Disk Type | Caching Policy | Reason |
+|-----------|----------------|--------|
+| **Data disk** | **ReadOnly** | Optimizes read performance, maintains integrity |
+| **Transaction log disk** | **None** | Optimizes write performance, no caching benefit |
+| **OS disk** | **ReadWrite** (default) | Don't change from default |
+| **tempdb disk** | **ReadOnly** or **Ephemeral (D:\)** | Fast local storage |
+
+**Performance Example**:
+```
+P40 Premium SSD Specifications:
+- 7,500 IOPS (uncached)
+- 250 MB/s throughput (uncached)
+
+With ReadOnly Caching on Data Disk:
+- 7,500 IOPS (uncached) + additional cached IOPS from host
+- Cache hit ratio of 70% = 70% of reads served from fast host cache
+- Result: Significantly improved query performance
+
+With None Caching on Transaction Log Disk:
+- 7,500 IOPS for sequential writes
+- No caching overhead
+- Maximum write throughput maintained
+```
+
+**Key Takeaways**:
+- ✅ Data disks: ReadOnly caching for optimal read performance
+- ✅ Transaction log disks: None caching for optimal write performance  
+- ❌ Never use ReadWrite caching for SQL Server data or log disks
+- ✅ Cache hit ratio determines the actual performance benefit
+- ✅ This configuration provides the best **balance of performance and integrity**
+
+**Reference Links**:
+- [SQL Server on Azure VMs - Storage Performance Best Practices](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/performance-guidelines-best-practices-storage?view=azuresql#data-file-caching-policies)
+- [Azure Managed Disks - Host Caching](https://learn.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching)
+- [SQL Server on Azure VMs - Performance Guidelines](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/performance-guidelines-best-practices-checklist?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -1158,6 +1368,9 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 
 2b. **Serverless ≠ Reserved Capacity**
    > Serverless compute tier does NOT support reserved capacity. It's designed for intermittent workloads with auto-pause and per-second billing.
+
+2c. **SQL Server VM Disk Caching**
+   > Data disk = ReadOnly caching (optimizes reads) | Transaction log disk = None caching (optimizes writes) | Never use ReadWrite for SQL disks (data corruption risk)
 
 3. **Managed Instance = Near 100% SQL Server compatibility**
    > Choose for lift-and-shift migrations requiring instance-scoped features (SQL Agent, Service Broker)
@@ -1203,6 +1416,9 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 | "Dynamic scaling + multiple databases" | **Elastic Pool** |
 | "SQL Agent, Service Broker" | **Managed Instance** or **SQL VM** |
 | "Lift-and-shift from SQL Server" | **Managed Instance** |
+| "SQL Server VM data disk caching" | **ReadOnly caching** |
+| "SQL Server VM transaction log caching" | **None caching** |
+| "Best performance + data integrity for SQL VM" | **Data: ReadOnly, Log: None** |
 | "Full OS control" | **SQL Server on Azure VMs** |
 | "Mission-critical, low latency" | **Business Critical** tier |
 | "Database > 4 TB" | **Hyperscale** tier |
