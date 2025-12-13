@@ -326,6 +326,58 @@ When migrating SQL Server databases to Azure, several tools are available. Under
 
 ---
 
+### Scenario 3: Migrating SQL Server Data to Azure Cosmos DB
+
+**Question**: You plan to import data from your on-premises environment into Azure. The data sources are:
+- A Microsoft SQL Server 2014 database → Target: An Azure SQL database
+- A table in a Microsoft SQL Server 2016 database → Target: An Azure Cosmos DB for NoSQL account
+
+Which tool should you use to migrate the data from the table in the SQL Server 2016 database to Azure Cosmos DB?
+
+**Answer**: **Azure Cosmos DB Data Migration Tool**
+
+**Explanation**: Azure Cosmos DB Data Migration Tool is the correct choice for this scenario because:
+- It is specifically designed to migrate data from various sources, including SQL Server, to Azure Cosmos DB for NoSQL
+- It supports importing data from SQL Server tables and converting relational data into JSON documents suitable for Cosmos DB
+- It handles the schema transformation required when moving from a relational database structure to a NoSQL document model
+- It provides a straightforward migration path for structured data to Cosmos DB's document-oriented storage
+- It is optimized for one-time or periodic data migration scenarios from relational databases to Cosmos DB
+
+**Why Other Tools Are Not Suitable**:
+
+**AzCopy**:
+- Designed for transferring blobs and files to and from Azure Storage (Azure Blob Storage, Azure Files)
+- Operates at the storage level for unstructured data
+- Does not handle structured data migration or schema transformation
+- **Limitation**: Not designed for migrating relational data from SQL Server to Cosmos DB. It cannot convert table structures to JSON documents or handle the data format transformations required for NoSQL migration.
+
+**Data Management Gateway**:
+- Used to enable on-premises data access for Azure Data Factory
+- Acts as a bridge for Azure Data Factory to access on-premises data sources
+- Facilitates hybrid data integration scenarios
+- **Limitation**: Not a migration tool itself, but rather a connectivity component. It doesn't perform direct migration tasks or data transformation. It's used for ongoing data integration workflows, not for one-time migration projects.
+
+**Data Migration Assistant (DMA)**:
+- Designed for assessing and migrating SQL Server databases to Azure SQL Database or Azure SQL Managed Instance
+- Identifies compatibility issues when upgrading to modern SQL Server versions
+- Provides recommendations for performance and reliability improvements within SQL Server ecosystem
+- **Limitation**: Only works within the SQL Server ecosystem (on-premises SQL Server to Azure SQL services). It cannot migrate data to Azure Cosmos DB or handle relational-to-NoSQL transformations.
+
+**Key Considerations for SQL Server to Cosmos DB Migration**:
+- Understand your data model transformation needs (relational to document-based)
+- Plan for denormalization and embedding of related data
+- Consider partitioning strategy for Cosmos DB
+- Evaluate performance requirements and throughput (RU/s) needs
+- Test queries and application logic with the new NoSQL model
+
+**References**:
+- [Azure Cosmos DB Data Migration Tool](https://learn.microsoft.com/en-us/azure/cosmos-db/import-data)
+- [Migrate Data to Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/sql/migrate-relational-to-cosmos-db-sql-api)
+- [AzCopy Overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10)
+- [Data Management Gateway for Azure Data Factory](https://learn.microsoft.com/en-us/azure/data-factory/v1/data-factory-data-management-gateway)
+
+---
+
 ## Quick Decision Matrix
 
 Use this matrix to quickly identify the right tool for your migration scenario:
@@ -338,6 +390,7 @@ Use this matrix to quickly identify the right tool for your migration scenario:
 | **Migrating from Oracle/MySQL** | SQL Server Migration Assistant (SSMA) |
 | **Large-scale (100+ databases)** | Azure Database Migration Service |
 | **SQL Server 2008 to Azure SQL MI** | Azure Data Studio (online) or Azure DMS (offline) |
+| **SQL Server to Azure Cosmos DB** | Azure Cosmos DB Data Migration Tool |
 
 ---
 
