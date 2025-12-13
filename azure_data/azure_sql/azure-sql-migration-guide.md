@@ -457,6 +457,93 @@ Which tool should you use to migrate the data from the table in the SQL Server 2
 
 ---
 
+### Scenario 5: SQL Server Migration with CLR Support and Minimal Database Changes
+
+**Question**: You have 100 servers that run Windows Server 2012 R2 and host Microsoft SQL Server 2014 instances. The instances host databases that have the following characteristics:
+
+- Stored procedures are implemented by using CLR
+- The largest database is currently 3 TB. None of the databases will ever exceed 4 TB
+
+You plan to move all the data from SQL Server to Azure. You need to recommend a service to host the databases. The solution must meet the following requirements:
+
+- Whenever possible, minimize management overhead for the migrated databases
+- Ensure that users can authenticate by using Microsoft Entra ID credentials
+- Minimize the number of database changes required to facilitate the migration
+
+What should you include in the recommendation?
+
+**Answer**: **Azure SQL Database Managed Instance**
+
+**Explanation**:
+
+**Azure SQL Database Managed Instance** is correct because:
+- Offers **near 100% compatibility** with on-premises SQL Server, ensuring minimal code changes during migration
+- Supports **CLR (Common Language Runtime) stored procedures**, which is a critical requirement for the existing databases
+- Handles databases up to **8 TB in size**, meeting the requirement for databases currently at 3 TB and capped at 4 TB
+- Supports **Microsoft Entra ID authentication**, reducing the effort needed to integrate with Azure-based identity solutions
+- Provides **platform-as-a-service (PaaS) benefits** like automatic patching, automatic backups, and built-in high availability
+- **Minimizes management overhead** through automated maintenance, eliminating the need for OS patching, infrastructure management, and manual backup configuration
+- Preserves SQL Server enterprise features including SQL Agent, cross-database queries, linked servers, and Service Broker
+- Ideal for "lift-and-shift" scenarios where application code cannot be easily modified
+- Provides automatic tuning and performance optimization capabilities
+
+**Why Other Options Are Not Suitable**:
+
+**Azure SQL Database elastic pools**:
+- Provides a cost-efficient solution for managing multiple databases with variable usage patterns
+- Enables resource sharing across multiple databases to optimize costs
+- **Limitation**: Does not support all SQL Server features, particularly **CLR integration**
+- May not scale individual databases to 4 TB depending on the service tier
+- Requires significant code refactoring to remove CLR dependencies and other unsupported features
+- **Why incorrect**: The lack of CLR support means stored procedures would need to be rewritten, violating the requirement to minimize database changes
+
+**Azure SQL Database single databases**:
+- Supports Microsoft Entra ID authentication and provides PaaS benefits
+- Offers excellent scalability and performance for individual databases
+- **Limitation**: Lacks full compatibility with features like **CLR stored procedures**
+- Has database size limitations in certain tiers
+- Does not support cross-database queries or linked servers without workarounds
+- **Why incorrect**: Would require substantial code changes to remove CLR dependencies, rewrite stored procedures in T-SQL, and potentially refactor the application architecture
+
+**SQL Server 2016 on Azure virtual machines**:
+- Supports all required features including CLR, cross-database queries, and SQL Agent
+- Provides 100% compatibility with on-premises SQL Server
+- Handles databases of any size without limitations
+- Supports Microsoft Entra ID authentication through domain join or Azure AD DS
+- **Limitation**: Introduces **higher management overhead** including:
+  - Manual OS patching and updates
+  - Manual SQL Server patching and configuration
+  - Manual backup configuration and management
+  - Infrastructure management (VM sizing, storage, networking)
+  - High availability configuration and maintenance
+  - Performance tuning and monitoring setup
+- **Why incorrect**: While technically feasible, it conflicts with the requirement to **minimize management overhead**. The IaaS model requires significantly more administrative effort compared to the PaaS benefits of Managed Instance
+
+**Migration Decision Criteria**:
+
+| Consideration | SQL Managed Instance | SQL Database Elastic Pools | SQL Database Single | SQL Server on Azure VM |
+|--------------|---------------------|---------------------------|-------------------|----------------------|
+| **CLR Support** | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
+| **Database Size (4TB)** | ✅ Supported (up to 8TB) | ⚠️ Limited by tier | ⚠️ Limited by tier | ✅ No limit |
+| **Entra ID Auth** | ✅ Native support | ✅ Native support | ✅ Native support | ✅ Supported |
+| **Management Overhead** | ✅ Low (PaaS) | ✅ Low (PaaS) | ✅ Low (PaaS) | ❌ High (IaaS) |
+| **SQL Compatibility** | ✅ Near 100% | ⚠️ Limited | ⚠️ Limited | ✅ 100% |
+| **Code Changes** | ✅ Minimal | ❌ Significant | ❌ Significant | ✅ Minimal |
+
+**Key Takeaway**: When migrating SQL Server databases with advanced features like CLR:
+- **Choose Azure SQL Managed Instance** when you need PaaS benefits with near-complete SQL Server compatibility
+- **Avoid Azure SQL Database (elastic pools or single)** for applications using CLR, cross-database queries, or other advanced SQL Server features
+- **Avoid SQL Server on Azure VMs** when management overhead minimization is a priority (use only when you need complete control or specific SQL Server versions)
+- **Consider SQL Server on Azure VMs** only if Managed Instance doesn't support a specific feature you require or if you need complete administrative control
+
+**References**:
+- [Azure SQL Managed Instance PaaS Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
+- [Azure SQL Features Comparison](https://learn.microsoft.com/en-us/azure/azure-sql/database/features-comparison?view=azuresql)
+- [SQL Server Technical Documentation](https://learn.microsoft.com/en-us/sql/sql-server/sql-server-technical-documentation)
+- [CLR Integration in Azure SQL Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/clr-integration)
+
+---
+
 ## Quick Decision Matrix
 
 Use this matrix to quickly identify the right tool for your migration scenario:
