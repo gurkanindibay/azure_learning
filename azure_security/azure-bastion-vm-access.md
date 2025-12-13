@@ -128,10 +128,20 @@ To enforce MFA for VM access through Bastion:
 
 1. Create a **Conditional Access Policy** in Azure AD
 2. Target the policy to users/groups requiring VM access
-3. Set **Conditions**: 
-   - Cloud apps: Azure Management
-   - Grant controls: Require MFA
-4. Result: Users must complete MFA before accessing Bastion
+3. Set **Cloud apps assignment**: 
+   - **Azure Windows VM Sign-In** - For enforcing MFA specifically when users attempt to sign in to virtual machines using Azure Bastion (recommended for interactive VM access scenarios)
+   - Alternatively: **Microsoft Azure Management** - For management operations (Azure portal, PowerShell/CLI), but does NOT apply to VM sign-ins via Bastion
+4. Set **Grant controls**: Require multi-factor authentication
+5. Result: Users must complete MFA before accessing VMs through Bastion
+
+#### Important: Cloud Apps Assignment for VM Access
+
+| Cloud App Assignment | Use Case | Applies to VM Sign-In via Bastion |
+|---------------------|----------|----------------------------------|
+| **Azure Windows VM Sign-In** | Enforces MFA for interactive VM access (RDP/SSH) via Azure Bastion | ✅ Yes - Recommended |
+| **Microsoft Azure Management** | Enforces MFA for Azure management operations (portal, CLI, PowerShell) | ❌ No - Does not apply to VM sign-in sessions |
+
+**Key Point**: To enforce Azure MFA specifically for VM access through Bastion, you must use the **Azure Windows VM Sign-In** cloud app assignment in your Conditional Access policy. Using "Microsoft Azure Management" only applies to management plane operations and will not enforce MFA for the actual VM sign-in sessions.
 
 ---
 
@@ -322,6 +332,75 @@ D) Implement Azure Private Link
 - Used for accessing Azure PaaS services over private endpoints
 - Not designed for VM RDP/SSH access
 - Does not provide browser-based management interface
+
+</details>
+
+---
+
+### Question 4: Enforcing Azure MFA with Conditional Access
+
+**Scenario**: You have an Azure subscription that contains a virtual network named VNET1 and 10 virtual machines. The virtual machines are connected to VNET1.
+
+You need to design a solution to manage the virtual machines from the internet. The solution must meet the following requirements:
+- Incoming connections to the virtual machines must be authenticated by using Azure Multi-Factor Authentication (MFA) before network connectivity is allowed
+- Incoming connections must use TLS and connect to TCP port 443
+- The solution must support RDP and SSH
+
+You have decided to use Azure Bastion for VM access.
+
+**Question**: To enforce Azure MFA, use:
+
+A) An Azure Identity Governance access package  
+B) A Conditional Access policy that has the Cloud apps assignment set to Azure Windows VM Sign-In  
+C) A Conditional Access policy that has the Cloud apps assignment set to Microsoft Azure Management  
+
+<details>
+<summary><b>Answer</b></summary>
+
+**B) A Conditional Access policy that has the Cloud apps assignment set to Azure Windows VM Sign-In** ✅
+
+**Explanation**:
+
+**A Conditional Access policy with Cloud apps assignment set to Azure Windows VM Sign-In is correct** because:
+- ✅ This setting allows you to enforce Azure Multi-Factor Authentication (MFA) **specifically when users attempt to sign in to virtual machines** using Azure Bastion
+- ✅ This option targets **interactive VM access scenarios**, such as RDP or SSH via Azure Bastion
+- ✅ It enables enforcing MFA **before the user session is established**, which is exactly what's required in this scenario
+- ✅ The policy evaluates and enforces MFA at the point of VM sign-in, not just portal access
+
+**Why other options are incorrect**:
+
+**An Azure Identity Governance access package** ❌
+- Access packages are used for **governance of user access** to groups, applications, and resources over time
+- They provide **lifecycle management** and **approval workflows** for access requests
+- They do **not enforce MFA** for VM sign-in or control network connectivity directly
+- Not designed for authentication enforcement at connection time
+
+**A Conditional Access policy with Cloud apps assignment set to Microsoft Azure Management** ❌
+- This applies to **management operations**, such as:
+  - Accessing the Azure portal
+  - Using PowerShell/CLI to manage resources
+  - ARM API calls
+- It does **not apply to VM sign-ins** via Azure Bastion
+- Does **not control RDP/SSH access** to virtual machines
+- Only enforces MFA for management plane operations, not data plane (VM access) operations
+
+**Key Distinction**:
+- **Azure Windows VM Sign-In** = Enforces policies when users sign in to VMs (data plane)
+- **Microsoft Azure Management** = Enforces policies when users manage Azure resources (management plane)
+
+**Configuration Steps**:
+1. Navigate to **Microsoft Entra admin center** → **Protection** → **Conditional Access**
+2. Create a new policy
+3. **Assignments**:
+   - Users: Select target users/groups
+   - Cloud apps: Select **Azure Windows VM Sign-In**
+4. **Grant controls**: Require multi-factor authentication
+5. Enable policy
+
+**References**:
+- [Sign in to Windows VM with Azure AD](https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows)
+- [Conditional Access Cloud Apps](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps)
+- [Azure Bastion and Conditional Access](https://learn.microsoft.com/en-us/azure/bastion/bastion-overview)
 
 </details>
 
