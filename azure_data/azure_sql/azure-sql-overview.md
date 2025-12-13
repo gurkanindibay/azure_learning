@@ -938,6 +938,38 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 - [Azure SQL High Availability SLA](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
 - [Azure SQL Managed Instance PaaS Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
 
+### Scenario 8: Multiple Databases with Varying Usage Patterns
+**Requirements**: 
+- 20 databases that will be 20 GB each
+- Varying usage patterns across databases
+- 99.99% uptime SLA
+- Dynamic compute resource scaling
+- Reserved capacity support
+- Minimize compute charges
+
+**Recommendation**:
+- **Azure SQL Database Elastic Pool**
+- **General Purpose** service tier (or higher as needed)
+- **vCore-based** purchasing model (for reserved capacity)
+- Pool size configured based on aggregate usage patterns
+
+**Why**: 
+- **Resource Sharing**: Elastic pools allow multiple databases to share a pool of compute and storage resources, making them ideal for scenarios with varying usage patterns across databases. Databases can consume resources as needed from the shared pool, optimizing cost efficiency.
+- **99.99% SLA**: Built-in high availability meets the uptime requirement.
+- **Dynamic Scaling**: Elastic pools can automatically scale compute within the pool based on actual usage, addressing the need for dynamic resource allocation.
+- **Reserved Capacity**: Supports reserved capacity through the vCore purchasing model, providing cost savings for predictable workloads.
+- **Cost Minimization**: Pooling resources instead of provisioning separate resources for each database significantly reduces compute charges, especially when databases have complementary usage patterns (when some databases are busy, others may be idle).
+
+**Why Other Options Are Incorrect**:
+- **20 databases on a Microsoft SQL server on an Azure VM in an availability set**: While this provides control and high availability through availability sets, it does not support dynamic compute scaling and typically results in higher operational overhead and cost compared to PaaS offerings like Azure SQL. It also requires manual management of infrastructure, which goes against the goal of minimizing compute charges and ensuring simplicity.
+- **20 instances of Azure SQL Database serverless**: Although serverless can scale compute automatically and pause during inactivity to save costs, it does NOT support reserved capacity pricing, which is a requirement in this scenario. Serverless is best suited for intermittent workloads but not when reserved compute capacity is needed. Additionally, managing 20 separate serverless databases would be more complex and potentially more expensive than using a single elastic pool.
+- **20 databases on Microsoft SQL server on an Azure VM**: This option lacks dynamic scaling capabilities, does not support reserved PaaS-level pricing benefits, and requires managing infrastructure. This violates the requirement to minimize compute charges and ensure operational simplicity.
+
+**Reference Links**:
+- [Elastic Pool Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview)
+- [Azure SQL Database Reserved Capacity](https://learn.microsoft.com/en-us/azure/azure-sql/database/reserved-capacity-overview)
+- [Serverless Tier Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/serverless-tier-overview)
+
 ---
 
 ## Exam Practice Questions
@@ -1062,6 +1094,55 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 
 ---
 
+### Question 4: Elastic Pool for Multiple Databases with Varying Usage
+
+**Scenario**: You are designing a SQL database solution. The solution will include 20 databases that will be 20 GB each and have varying usage patterns.
+
+**Requirements**:
+- The solution must meet a Service Level Agreement (SLA) of 99.99% uptime
+- The compute resources allocated to the databases must scale dynamically
+- The solution must have reserved capacity
+- Compute charges must be minimized
+
+**Question**: What should you include in the recommendation?
+
+**Options**:
+- A) An elastic pool that contains 20 Azure SQL databases
+- B) 20 databases on a Microsoft SQL server that runs on an Azure virtual machine in an availability set
+- C) 20 instances of Azure SQL Database serverless
+- D) 20 databases on Microsoft SQL server that runs on an Azure virtual machine
+
+**Correct Answer**: **A) An elastic pool that contains 20 Azure SQL databases**
+
+**Explanation**:
+
+**An elastic pool that contains 20 Azure SQL databases** is correct because it allows multiple Azure SQL databases to share a pool of compute and storage resources, making it ideal for scenarios with varying usage patterns across databases. Elastic pools provide built-in high availability with a 99.99% SLA, support reserved capacity through vCore purchasing models, and help minimize compute charges by pooling resources instead of provisioning separate resources for each database. Additionally, elastic pools can automatically scale compute within the pool, addressing the need for dynamic resource usage. When some databases in the pool are experiencing high demand, they can consume more resources, while idle databases use minimal resources, resulting in optimal cost efficiency.
+
+**Why Other Options Are Incorrect**:
+
+**20 databases on a Microsoft SQL server that runs on an Azure virtual machine in an availability set** is incorrect because while it gives you full control and high availability through availability sets, it does not support dynamic compute scaling and typically results in higher operational overhead and cost compared to PaaS offerings like Azure SQL. Managing SQL Server on VMs requires infrastructure management, patching, and maintenance, which increases complexity and cost.
+
+**20 instances of Azure SQL Database serverless** is incorrect because although serverless can scale compute automatically and pause during inactivity to save costs, it does **not support reserved capacity pricing**, which is required in this scenario. Serverless is best suited for intermittent workloads but not when reserved compute is needed. Additionally, provisioning 20 separate serverless databases would lack the cost efficiency of a shared resource pool and could result in higher overall costs compared to an elastic pool.
+
+**20 databases on Microsoft SQL server that runs on an Azure virtual machine** is incorrect for similar reasons. Although it provides control and compatibility, it lacks dynamic scaling, reserved PaaS-level pricing benefits, and requires managing infrastructure, which goes against the goal of minimizing compute charges and ensuring simplicity. You would need to manually scale VMs and manage all operational aspects.
+
+**Key Advantages of Elastic Pools**:
+- ✅ Share resources across multiple databases with varying patterns
+- ✅ Built-in 99.99% SLA for high availability
+- ✅ Dynamic scaling at the pool level
+- ✅ Supports reserved capacity with vCore model
+- ✅ Significantly lower cost than individual databases
+- ✅ Minimal administrative overhead (fully managed PaaS)
+
+**Reference Links**:
+- [Elastic Pool Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview)
+- [Azure SQL Database Reserved Capacity](https://learn.microsoft.com/en-us/azure/azure-sql/database/reserved-capacity-overview)
+- [Serverless Tier Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/serverless-tier-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -1071,6 +1152,12 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 
 2. **Elastic Pool ≠ Auto-scaling per database**
    > Elastic pools scale at pool level, not individual database level. Resources are shared.
+
+2a. **Elastic Pool + Reserved Capacity = Cost Optimization**
+   > Elastic pools support reserved capacity through vCore model, providing up to 80% savings for predictable workloads. Ideal for multiple databases with varying usage patterns.
+
+2b. **Serverless ≠ Reserved Capacity**
+   > Serverless compute tier does NOT support reserved capacity. It's designed for intermittent workloads with auto-pause and per-second billing.
 
 3. **Managed Instance = Near 100% SQL Server compatibility**
    > Choose for lift-and-shift migrations requiring instance-scoped features (SQL Agent, Service Broker)
@@ -1111,6 +1198,9 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 | "Auto-scales based on workload" | **Serverless** compute tier |
 | "Per-second billing" | **Serverless** compute tier |
 | "Multiple databases, cost-effective" | **Elastic Pool** |
+| "Multiple databases with varying usage patterns" | **Elastic Pool** |
+| "Reserved capacity + multiple databases" | **Elastic Pool (vCore)** |
+| "Dynamic scaling + multiple databases" | **Elastic Pool** |
 | "SQL Agent, Service Broker" | **Managed Instance** or **SQL VM** |
 | "Lift-and-shift from SQL Server" | **Managed Instance** |
 | "Full OS control" | **SQL Server on Azure VMs** |
