@@ -37,6 +37,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 6: Microsoft Entra Connect Provisioning Agents for Workday Integration](#exam-question-6-microsoft-entra-connect-provisioning-agents-for-workday-integration)
     - [Question 7: MFA Registration for Production Environment Management (Litware Inc.)](#exam-question-7-mfa-registration-for-production-environment-management-litware-inc)
     - [Question 8: Enforcing Azure MFA Authentication with Conditional Access (Litware Inc.)](#exam-question-8-enforcing-azure-mfa-authentication-with-conditional-access-litware-inc)
+    - [Question 9: Securing On-Premises Apps with Azure AD Application Proxy and MFA](#exam-question-9-securing-on-premises-apps-with-azure-ad-application-proxy-and-mfa)
 
 ---
 
@@ -4921,6 +4922,520 @@ Layered Security:
 - Unconditional MFA enforcement vs risk-based MFA
 - Conditional Access policy design best practices
 - Break-glass account management
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+### <a id="exam-question-9-securing-on-premises-apps-with-azure-ad-application-proxy-and-mfa"></a>Question 9: Securing On-Premises Apps with Azure AD Application Proxy and MFA
+
+#### Scenario
+
+Your on-premises network contains a server named **Server1** that runs an ASP.NET application named **App1**.
+
+You have a **hybrid deployment of Azure Active Directory (Azure AD)**.
+
+You need to recommend a solution to ensure that users sign in by using their **Azure AD account and Azure Multi-Factor Authentication (MFA)** when they connect to App1 from the internet.
+
+**Question:** Which three features should you recommend be deployed and configured **in sequence**?
+
+---
+
+#### Available Features
+
+A. A public Azure Load Balancer  
+B. A managed identity  
+C. An internal Azure Load Balancer  
+D. A Conditional Access Policy  
+E. An Azure App Service plan  
+F. Azure AD Application Proxy  
+G. An Azure AD enterprise application
+
+---
+
+#### Answer Options
+
+**Option 1:** 1-7-4 (public Azure Load Balancer → Azure AD enterprise application → Conditional Access Policy)  
+**Option 2:** 6-7-4 (Azure AD Application Proxy → Azure AD enterprise application → Conditional Access Policy) ✅  
+**Option 3:** 3-2-6 (internal Azure Load Balancer → managed identity → Azure AD Application Proxy)  
+**Option 4:** 5-4-7 (Azure App Service plan → Conditional Access Policy → Azure AD enterprise application)  
+**Option 5:** 6-2-4 (Azure AD Application Proxy → managed identity → Conditional Access Policy)  
+**Option 6:** 7-1-5 (Azure AD enterprise application → public Azure Load Balancer → Azure App Service plan)
+
+---
+
+**Correct Answer:** **Option 2: 6-7-4**
+
+**(Azure AD Application Proxy → Azure AD enterprise application → Conditional Access Policy)**
+
+---
+
+### Detailed Explanation
+
+#### Why This Sequence is Correct
+
+The solution requires a **three-step sequence** that enables secure external access to an on-premises application with Azure AD authentication and MFA:
+
+---
+
+#### Step 1: Azure AD Application Proxy (Feature 6)
+
+**Purpose:** Publish the on-premises application to external users
+
+**Why Azure AD Application Proxy?**
+
+✅ **Secure bridge** between Microsoft Entra ID and on-premises applications  
+✅ **No inbound firewall rules** required - uses outbound connections only  
+✅ **Reverse proxy functionality** - Routes internet traffic to internal apps  
+✅ **Pre-authentication** - Users authenticate with Azure AD before reaching the app  
+✅ **Works with hybrid AD** - Integrates with existing on-premises infrastructure
+
+**How it works:**
+
+```plaintext
+Internet User
+     ↓
+     ↓ (HTTPS)
+     ↓
+Azure AD Application Proxy (Cloud)
+     ↓
+     ↓ (Outbound HTTPS connection)
+     ↓
+Application Proxy Connector (On-premises)
+     ↓
+     ↓ (Local network)
+     ↓
+Server1 (App1) - On-premises
+```
+
+**Key characteristics:**
+- Connector installed on-premises makes outbound connections to Azure
+- No need to open inbound ports in firewall
+- Users access via external URL provided by Application Proxy
+- Azure AD authenticates users before proxying requests
+
+---
+
+#### Step 2: Azure AD Enterprise Application (Feature 7)
+
+**Purpose:** Register the application in Azure AD for authentication
+
+**Why Azure AD Enterprise Application?**
+
+✅ **Application registration** - Makes App1 visible in Azure AD  
+✅ **SSO enablement** - Enables single sign-on with Azure AD  
+✅ **User assignment** - Controls which users can access the app  
+✅ **Conditional Access target** - Allows policies to be applied to the app  
+✅ **Published through Application Proxy** - The connector publishes App1 as an enterprise app
+
+**What happens:**
+
+```plaintext
+Azure AD Application Proxy Connector
+     ↓
+     ↓ (Publishes App1)
+     ↓
+Azure AD Enterprise Applications
+     ├─ App1 (registered)
+     ├─ SSO configured
+     ├─ User/group assignments
+     └─ Ready for Conditional Access policies
+```
+
+**Configuration:**
+- Enterprise application is created when you configure Application Proxy
+- Users authenticate using their Azure AD credentials
+- Application appears in users' My Apps portal
+- Can be targeted by Conditional Access policies
+
+---
+
+#### Step 3: Conditional Access Policy (Feature 4)
+
+**Purpose:** Enforce Azure Multi-Factor Authentication (MFA)
+
+**Why Conditional Access Policy?**
+
+✅ **MFA enforcement** - Requires multi-factor authentication  
+✅ **Conditional application** - Applied based on conditions (e.g., internet access)  
+✅ **Location-based** - Can require MFA only for external access  
+✅ **App-specific** - Targets the specific enterprise application (App1)  
+✅ **Grant control** - Uses grant controls to require MFA before access
+
+**Policy configuration:**
+
+```plaintext
+Conditional Access Policy: App1 MFA Requirement
+│
+├─ Assignments:
+│  ├─ Users: All users (or specific groups)
+│  └─ Cloud apps: App1 (enterprise application)
+│
+├─ Conditions:
+│  └─ Locations: Any location excluding corporate network
+│      (or simply: All locations to enforce MFA everywhere)
+│
+└─ Grant Controls:
+   ├─ Grant access
+   └─ Require multi-factor authentication ✅
+```
+
+**Enforcement flow:**
+
+```plaintext
+1. User accesses App1 from internet
+2. Azure AD Application Proxy intercepts request
+3. User redirected to Azure AD sign-in
+4. User enters Azure AD credentials
+5. Conditional Access evaluates:
+   ├─ User accessing App1? ✅
+   ├─ Location = internet? ✅
+   └─ Policy requires MFA? ✅
+6. User prompted for MFA (phone, authenticator app, etc.)
+7. After successful MFA: User authenticated
+8. Azure AD issues token
+9. Application Proxy forwards request to Server1/App1
+10. User accesses application
+```
+
+---
+
+### Complete Architecture
+
+```plaintext
+┌─────────────────────────────────────────────────────────┐
+│                      INTERNET                           │
+│                                                         │
+│  User Browser → https://app1-external.msappproxy.net   │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     │ HTTPS Request
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│                  MICROSOFT AZURE                        │
+│                                                         │
+│  ┌──────────────────────────────────────────────┐     │
+│  │  Azure AD (Microsoft Entra ID)               │     │
+│  │  ├─ Step 2: Enterprise Application (App1)    │     │
+│  │  └─ Step 3: Conditional Access Policy        │     │
+│  │     └─ Requires MFA for App1 access          │     │
+│  └──────────────────────────────────────────────┘     │
+│                     │                                   │
+│                     │ Authentication + MFA              │
+│                     ↓                                   │
+│  ┌──────────────────────────────────────────────┐     │
+│  │  Step 1: Azure AD Application Proxy          │     │
+│  │  └─ Routes authenticated traffic              │     │
+│  └──────────────────────────────────────────────┘     │
+│                     │                                   │
+└─────────────────────┼───────────────────────────────────┘
+                      │
+                      │ Outbound HTTPS (443)
+                      │ No inbound firewall rules needed!
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│              ON-PREMISES NETWORK                        │
+│                                                         │
+│  ┌──────────────────────────────────────────────┐     │
+│  │  Application Proxy Connector                 │     │
+│  │  (Installed on Windows Server)               │     │
+│  │  └─ Makes outbound connection to Azure       │     │
+│  └──────────────────────────────────────────────┘     │
+│                     │                                   │
+│                     │ Local network                     │
+│                     ↓                                   │
+│  ┌──────────────────────────────────────────────┐     │
+│  │  Server1                                      │     │
+│  │  └─ App1 (ASP.NET application)               │     │
+│  └──────────────────────────────────────────────┘     │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Why Other Options Are Incorrect
+
+#### Option 1: 1-7-4 (public Azure Load Balancer → Azure AD enterprise application → Conditional Access Policy) ❌
+
+**Why incorrect:**
+- **Public Azure Load Balancer** distributes traffic across Azure VMs
+- **Not designed for** publishing on-premises applications
+- **Requires inbound connectivity** to on-premises resources
+- **No built-in Azure AD authentication** - Load balancers operate at Layer 4
+- **Security concern:** Opens firewall ports to internet
+
+**Missing:** No mechanism to securely publish on-premises App1 to internet
+
+---
+
+#### Option 3: 3-2-6 (internal Azure Load Balancer → managed identity → Azure AD Application Proxy) ❌
+
+**Why incorrect:**
+- **Internal Azure Load Balancer** is for private Azure networks only
+- **Not accessible from internet** - Defeats the purpose
+- **Managed identity** is for Azure resources to authenticate to other Azure services
+- **Wrong sequence:** Application Proxy should come first, not last
+- **Managed identity irrelevant** for user authentication scenarios
+
+**Missing:** No way for internet users to reach the internal load balancer
+
+---
+
+#### Option 4: 5-4-7 (Azure App Service plan → Conditional Access Policy → Azure App Service plan) ❌
+
+**Why incorrect:**
+- **Azure App Service plan** is for hosting apps **in Azure**, not on-premises
+- **App1 is on-premises** on Server1 - Cannot be moved to App Service in this scenario
+- **Wrong sequence:** Conditional Access should come after app registration
+- **Doesn't address** the requirement to access an existing on-premises app
+
+**Missing:** Solution for accessing on-premises Server1/App1
+
+---
+
+#### Option 5: 6-2-4 (Azure AD Application Proxy → managed identity → Conditional Access Policy) ❌
+
+**Why incorrect:**
+- **Managed identity** is incorrect here
+- **Managed identities** are for Azure resources (VMs, App Services) to authenticate to other services
+- **Not for user authentication** - This scenario requires user sign-in with Azure AD
+- **Missing enterprise application registration** - Cannot apply Conditional Access without it
+
+**What's missing:** The enterprise application (Step 7) that registers App1 in Azure AD
+
+---
+
+#### Option 6: 7-1-5 (Azure AD enterprise application → public Azure Load Balancer → Azure App Service plan) ❌
+
+**Why incorrect:**
+- **Wrong sequence:** Cannot create enterprise application without first configuring Application Proxy
+- **Load balancer and App Service plan** are for Azure-hosted resources
+- **Doesn't solve** the on-premises publishing problem
+- **No Application Proxy:** No way to securely connect Azure AD to on-premises App1
+
+**Missing:** The core component (Application Proxy) that bridges cloud and on-premises
+
+---
+
+### Key Concepts Summary
+
+#### Azure AD Application Proxy
+
+**What it is:**
+- Reverse proxy service in Azure
+- Publishes on-premises web applications to external users
+- Provides secure remote access without VPN
+
+**How it works:**
+- Install Application Proxy Connector on-premises
+- Connector makes outbound HTTPS connections to Azure
+- Users access external URL (e.g., https://app1.msappproxy.net)
+- Azure AD authenticates users before proxying requests
+- No inbound firewall rules required
+
+**Use cases:**
+✅ Publishing on-premises apps to internet users  
+✅ Enabling SSO with Azure AD for legacy apps  
+✅ Securing on-premises apps with Conditional Access  
+✅ Providing remote access without VPN
+
+---
+
+#### Azure AD Enterprise Application
+
+**What it is:**
+- Application registration in Azure AD
+- Enables SSO and user access management
+- Required for Conditional Access policies
+
+**Created by:**
+- Application Proxy publishes App1 as an enterprise application
+- Enterprise app appears in Azure AD portal
+- Users can see it in My Apps portal
+
+**Enables:**
+✅ Single sign-on (SSO) with Azure AD  
+✅ User and group assignments  
+✅ Conditional Access policy targeting  
+✅ Access reviews and auditing
+
+---
+
+#### Conditional Access Policy
+
+**What it is:**
+- Policy-based access control in Azure AD
+- Enforces requirements before granting access
+- Evaluates conditions and applies controls
+
+**For this scenario:**
+- **Assignment:** Target App1 enterprise application
+- **Condition:** User accessing from internet
+- **Grant control:** Require multi-factor authentication
+- **Result:** Users must complete MFA to access App1
+
+---
+
+### Comparison: Technologies for Publishing On-Premises Apps
+
+| Solution | Internet Access | Azure AD Auth | MFA Support | Inbound Ports | Use Case |
+|----------|----------------|---------------|-------------|---------------|----------|
+| **Azure AD Application Proxy** ✅ | Yes | Yes | Yes | None required | On-premises web apps |
+| **Azure VPN Gateway** | Yes | No (VPN auth) | Limited | VPN port (UDP 500, 4500) | Full network access |
+| **Public Load Balancer** | Yes | No | No | Yes (expose app ports) | Azure VMs only |
+| **Azure Virtual WAN** | Yes | No | No | Yes | Hub-and-spoke networks |
+| **Azure Front Door** | Yes | No (app-level) | No | Yes (expose origin) | Azure-hosted apps |
+
+**Only Azure AD Application Proxy** provides all requirements:
+- ✅ No inbound firewall rules
+- ✅ Native Azure AD authentication
+- ✅ Conditional Access + MFA support
+- ✅ Works with on-premises apps
+
+---
+
+### Implementation Steps
+
+#### Step-by-Step Implementation
+
+**1. Install Application Proxy Connector**
+
+```powershell
+# On-premises Windows Server (not Server1, use dedicated server)
+# Download connector from Azure portal
+# Run installer: AADApplicationProxyConnectorInstaller.exe
+# Sign in with Global Administrator account
+# Connector registers with Azure AD
+```
+
+**2. Configure Application Proxy**
+
+```plaintext
+Azure Portal:
+├─ Microsoft Entra ID
+├─ Enterprise applications
+├─ New application → On-premises application
+├─ Configure:
+│  ├─ Name: App1
+│  ├─ Internal URL: http://server1/app1
+│  ├─ External URL: https://app1-external.msappproxy.net
+│  ├─ Pre-authentication: Azure Active Directory
+│  └─ Connector Group: Default (or custom)
+└─ Save
+```
+
+**Result:** App1 is now published as an enterprise application
+
+**3. Assign Users to Enterprise Application**
+
+```plaintext
+Azure Portal:
+├─ Enterprise applications → App1
+├─ Users and groups
+├─ Add user/group
+└─ Select users who should access App1
+```
+
+**4. Create Conditional Access Policy**
+
+```plaintext
+Azure Portal:
+├─ Microsoft Entra ID
+├─ Security → Conditional Access
+├─ New policy
+├─ Name: App1 - Require MFA from Internet
+├─ Assignments:
+│  ├─ Users: All users (or specific groups)
+│  └─ Cloud apps: App1 (enterprise application)
+├─ Conditions:
+│  └─ Locations: Any location (or exclude corporate network)
+├─ Grant:
+│  ├─ Grant access
+│  └─ Require multi-factor authentication ✅
+└─ Enable policy: On
+```
+
+**5. Test Access**
+
+```plaintext
+1. User navigates to: https://app1-external.msappproxy.net
+2. Redirected to Azure AD sign-in
+3. Enters Azure AD credentials
+4. Conditional Access evaluates: MFA required
+5. User completes MFA challenge
+6. Upon success: Redirected to App1
+7. User accesses application
+```
+
+---
+
+### Troubleshooting Common Issues
+
+| Issue | Possible Cause | Solution |
+|-------|----------------|----------|
+| **Cannot access external URL** | Connector not running | Check connector service on-premises |
+| **No MFA prompt** | Conditional Access policy not configured | Verify policy targets App1 |
+| **Connector offline** | Network connectivity issues | Check outbound HTTPS (443) connectivity |
+| **Users cannot sign in** | Users not assigned to app | Add users to enterprise application |
+| **Internal URL not reachable** | Connector cannot reach Server1 | Verify internal network connectivity |
+
+---
+
+### Best Practices
+
+**1. Connector Deployment**
+- Install connector on dedicated server (not application server)
+- Deploy multiple connectors for high availability
+- Use connector groups for segmentation
+
+**2. Security**
+- Always use pre-authentication with Azure AD
+- Enable Conditional Access policies
+- Require compliant devices when possible
+
+**3. Monitoring**
+- Monitor connector health in Azure portal
+- Review sign-in logs for authentication issues
+- Set up alerts for connector disconnections
+
+**4. Network**
+- Ensure outbound HTTPS (443) connectivity from connector
+- No inbound firewall rules needed
+- Use dedicated connector for each app or group related apps
+
+---
+
+### Exam Tips
+
+> **Remember the sequence:** Application Proxy **→** Enterprise Application **→** Conditional Access Policy
+
+> **Application Proxy is the bridge:** It's the only Azure service that securely publishes on-premises apps without inbound firewall rules.
+
+> **Enterprise application is the registration:** Without it, you cannot apply Conditional Access policies to the app.
+
+> **Conditional Access is the enforcer:** It's where you configure MFA requirements and other access controls.
+
+> **Managed identities are for Azure resources:** They are NOT used for user authentication to applications.
+
+> **Load balancers don't provide authentication:** They are Layer 4 devices and cannot integrate with Azure AD.
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [What is Azure AD Application Proxy?](https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy)
+- [Publish on-premises apps with Azure AD Application Proxy](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-add-on-premises-application)
+- [Conditional Access Overview](https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview)
+- [Plan an Azure AD Application Proxy deployment](https://learn.microsoft.com/en-us/entra/identity/app-proxy/conceptual-deployment-plan)
+
+**Related Topics:**
+- Azure AD Application Proxy architecture
+- Conditional Access policy design
+- Enterprise application management
+- Single sign-on (SSO) for on-premises apps
+- Hybrid identity scenarios
 
 **Domain:** Design Identity, Governance, and Monitoring Solutions
 
