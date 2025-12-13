@@ -9,6 +9,7 @@
   - [Purchasing Models](#purchasing-models)
   - [Service Tiers](#service-tiers)
   - [Compute Tiers](#compute-tiers)
+  - [High Availability and Zone Redundancy](#high-availability-and-zone-redundancy)
 - [Azure SQL Managed Instance](#azure-sql-managed-instance)
 - [SQL Server on Azure VMs](#sql-server-on-azure-vms)
 - [Pricing Tiers Comparison](#pricing-tiers-comparison)
@@ -282,6 +283,171 @@ Total: ~$156/month (vs $732 provisioned)
 | **Restore Time** | Depends on size | Depends on size | Fast (minutes) |
 | **Serverless** | ✅ | ❌ | ⚠️ Preview | 
 | **Price (4 vCore)** | ~$720/mo | ~$1,800/mo | ~$1,000/mo + storage |
+
+### High Availability and Zone Redundancy
+
+Azure SQL Database provides built-in high availability features that vary by service tier. Understanding these capabilities is crucial for designing business continuity solutions.
+
+#### High Availability Architecture by Tier
+
+**vCore-Based Service Tiers (General Purpose, Business Critical, Hyperscale)**:
+
+##### General Purpose (vCore)
+- **Standard Availability**: 99.99% SLA
+- **Architecture**: Remote storage with compute node redundancy
+- **Failover**: Automatic failover to standby replica
+- **Zone Redundancy**: ✅ Available (optional configuration)
+- **RPO (Recovery Point Objective)**: Typically < 30 seconds
+- **RTO (Recovery Time Objective)**: Typically < 30 seconds
+- **Data Loss During Failover**: Minimal (transactions in flight may be lost)
+
+##### Business Critical (vCore)
+- **Premium Availability**: 99.99% SLA (99.995% with zone redundancy)
+- **Architecture**: Always On availability groups with local SSD storage
+- **Failover**: Automatic failover with zero data loss
+- **Zone Redundancy**: ✅ Available (optional configuration)
+- **RPO (Recovery Point Objective)**: **0 (zero data loss)**
+- **RTO (Recovery Time Objective)**: Typically < 30 seconds
+- **Built-in Read Replicas**: 1 included for read scale-out
+- **Data Loss During Failover**: **None** - fully synchronous replication
+
+##### Hyperscale (vCore)
+- **Availability**: 99.99% SLA (99.995% with zone redundancy)
+- **Architecture**: Multi-tier storage with compute nodes
+- **Failover**: Fast failover to standby compute nodes
+- **Zone Redundancy**: ✅ Available (optional configuration)
+- **RPO**: Typically < 30 seconds
+- **RTO**: Typically < 30 seconds
+- **Read Replicas**: Up to 4 named replicas
+- **Note**: Does not support automatic failover with zero data loss like Business Critical
+
+**DTU-Based Service Tiers (Basic, Standard, Premium)**:
+
+##### Basic (DTU)
+- **Availability**: 99.99% SLA
+- **Architecture**: Single database instance with basic redundancy
+- **Failover**: Automatic but slower recovery
+- **Zone Redundancy**: ❌ Not supported
+- **RPO**: Up to 60 seconds
+- **RTO**: Can be several minutes
+- **Use Case**: Non-critical, small workloads only
+- **Limitations**: No zone redundancy, no active geo-replication
+
+##### Standard (DTU)
+- **Availability**: 99.99% SLA
+- **Architecture**: Standard redundancy with remote storage
+- **Failover**: Automatic failover to standby
+- **Zone Redundancy**: ❌ Not supported
+- **RPO**: Typically < 30 seconds
+- **RTO**: Typically < 30 seconds
+- **Data Loss During Failover**: Possible (transactions in flight)
+- **Limitations**: No zone redundancy support
+
+##### Premium (DTU)
+- **Premium Availability**: 99.99% SLA (99.995% with zone redundancy)
+- **Architecture**: Always On availability groups (similar to Business Critical)
+- **Failover**: Automatic failover with zero data loss
+- **Zone Redundancy**: ✅ **Supported**
+- **RPO (Recovery Point Objective)**: **0 (zero data loss)**
+- **RTO (Recovery Time Objective)**: Typically < 30 seconds
+- **Active Geo-Replication**: ✅ Supported
+- **Built-in Read Replicas**: 1 included for read scale-out
+- **Data Loss During Failover**: **None** - fully synchronous replication
+
+#### Zone Redundancy Support Summary
+
+| Tier | Zone Redundancy | Zero Data Loss Failover | Cost Efficiency |
+|------|----------------|-------------------------|-----------------|
+| **Basic (DTU)** | ❌ No | ❌ No | Lowest cost, minimal HA |
+| **Standard (DTU)** | ❌ No | ❌ No | Low cost, basic HA |
+| **Premium (DTU)** | ✅ **Yes** | ✅ **Yes** | ✅ **Best for HA + cost** |
+| **General Purpose (vCore)** | ✅ Yes | ❌ No | Medium cost |
+| **Business Critical (vCore)** | ✅ Yes | ✅ Yes | Highest cost |
+| **Hyperscale (vCore)** | ✅ Yes | ❌ No | High cost + scale |
+
+#### Choosing the Right Tier for High Availability
+
+**Scenario: Zero Data Loss + Zone Redundancy + Cost Optimization**
+
+**Requirements**:
+1. ✅ Failover between replicas must occur without any data loss (RPO = 0)
+2. ✅ Database must remain available during a zone outage
+3. ✅ Minimize costs
+
+**Solution**: **Azure SQL Database Premium (DTU)** ⭐
+
+**Why Premium is the Correct Choice**:
+
+1. **Zero Data Loss (RPO = 0)**:
+   - Uses Always On availability groups
+   - Synchronous replication to secondary replicas
+   - Automatic failover with no data loss
+
+2. **Zone Redundancy**:
+   - Supports zone-redundant configuration
+   - Distributes replicas across availability zones
+   - Database remains available during zone failures
+
+3. **Cost Optimization**:
+   - Less expensive than Business Critical (vCore)
+   - Comparable high availability features
+   - Suitable for most mission-critical workloads
+
+**Why Other Tiers Don't Meet Requirements**:
+
+❌ **Basic (DTU)**:
+- No zone redundancy support
+- Cannot guarantee zero data loss
+- Not suitable for mission-critical workloads
+
+❌ **Standard (DTU)**:
+- No zone redundancy support
+- Possible data loss during failover
+- Not designed for high availability scenarios
+
+❌ **Business Critical (vCore)**:
+- ✅ Meets all technical requirements
+- ❌ More expensive than Premium DTU
+- ❌ Does not minimize costs (violates requirement #3)
+
+❌ **Hyperscale (vCore)**:
+- ✅ Supports zone redundancy
+- ❌ Does not guarantee zero data loss (RPO not 0)
+- ❌ Optimized for scale, not zero-data-loss HA
+- ❌ Higher cost for features not needed
+
+❌ **General Purpose (vCore)**:
+- ✅ Supports zone redundancy
+- ❌ Does not guarantee zero data loss
+- ❌ Uses remote storage, not Always On
+
+#### Key Insights for Business Continuity Solutions
+
+**For Zero Data Loss Requirements**:
+- Choose **Premium (DTU)** or **Business Critical (vCore)**
+- Both use Always On availability groups
+- Both provide synchronous replication
+- Both support zone redundancy
+
+**For Zone Outage Protection**:
+- Enable zone-redundant configuration
+- Available in: Premium, General Purpose (vCore), Business Critical (vCore), Hyperscale
+- NOT available in: Basic, Standard
+
+**For Cost Optimization with High Availability**:
+- **Premium (DTU)** offers the best balance
+- Provides enterprise-grade HA at lower cost than Business Critical
+- Suitable for most mission-critical workloads
+
+**For Active Geo-Replication**:
+- Supported in Premium and Business Critical
+- Enables read-scale and disaster recovery across regions
+- Automatic failover groups provide seamless failover
+
+#### References
+- [Azure SQL Database High Availability](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql&tabs=azure-powershell)
+- [Azure SQL Database Service Tiers (DTU)](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu?view=azuresql)
+- [Azure SQL Database Hyperscale](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
 
 ## Azure SQL Managed Instance
 
@@ -573,12 +739,19 @@ Savings: Up to 44%
 
 ### High Availability
 
+> 📖 **For detailed high availability and zone redundancy information**, see the [High Availability and Zone Redundancy](#high-availability-and-zone-redundancy) section above.
+
+✅ **Choose the right tier for your HA requirements**:
+  - **Zero data loss required**: Premium (DTU) or Business Critical (vCore)
+  - **Zone redundancy required**: Premium, General Purpose, Business Critical, or Hyperscale
+  - **Cost optimization with HA**: Premium (DTU) offers best balance
+  
+✅ **Enable zone-redundancy** - Protect against datacenter/zone failures  
 ✅ **Enable geo-replication** - Disaster recovery across regions  
-✅ **Use zone-redundancy** - Protect against datacenter failures  
-✅ **Configure failover groups** - Automatic failover capability  
+✅ **Configure failover groups** - Automatic failover capability with zone redundancy
 ✅ **Test failover procedures** - Ensure recovery processes work  
 ✅ **Monitor backup status** - Verify backups are successful  
-✅ **Use Business Critical** - For mission-critical workloads  
+✅ **Understand RPO/RTO requirements** - Select tier that meets objectives  
 
 ### Security Best Practices
 
@@ -923,6 +1096,12 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 10. **Auditing Storage Account = Same Region as SQL Server**
    > Azure SQL Database auditing requires the storage account to be in the same region as the SQL server. Cross-region storage is not supported for audit logs. Auditing is supported across all service tiers (Basic, Standard, Premium).
 
+11. **Zero Data Loss Failover = Premium (DTU) or Business Critical (vCore)**
+   > Only Premium (DTU) and Business Critical (vCore) tiers provide zero data loss (RPO = 0) during failover. They use Always On availability groups with synchronous replication. For cost optimization with zero data loss and zone redundancy requirements, Premium (DTU) is the most cost-effective option.
+
+12. **Zone Redundancy for High Availability**
+   > Basic and Standard (DTU) tiers do NOT support zone redundancy. For zone outage protection, use Premium (DTU), General Purpose (vCore), Business Critical (vCore), or Hyperscale. However, only Premium and Business Critical guarantee zero data loss during failover.
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -943,6 +1122,10 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 | "Minimal I/O latency + minimal admin" | **Managed Instance Business Critical** |
 | "High resiliency + enterprise features" | **Managed Instance** with geo-replication |
 | "Store audit logs to storage account" | Storage account must be in **same region** as SQL server |
+| "Zero data loss + zone redundancy + minimize cost" | **Premium (DTU)** tier |
+| "No data loss during failover" | **Premium (DTU)** or **Business Critical (vCore)** |
+| "Zone outage protection" | **Premium**, **General Purpose**, **Business Critical**, or **Hyperscale** (NOT Basic/Standard) |
+| "RPO = 0 (zero data loss)" | **Premium (DTU)** or **Business Critical (vCore)** only |
 
 ## References
 
@@ -956,6 +1139,9 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 - [DTU Model](https://learn.microsoft.com/azure/azure-sql/database/service-tiers-dtu)
 - [Elastic Pools](https://learn.microsoft.com/azure/azure-sql/database/elastic-pool-overview)
 - [Service Tiers](https://learn.microsoft.com/azure/azure-sql/database/service-tiers-general-purpose-business-critical)
+- [High Availability and Zone Redundancy](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql&tabs=azure-powershell)
+- [Service Tiers - DTU Model](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu?view=azuresql)
+- [Hyperscale Service Tier](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
 - [Azure Hybrid Benefit](https://learn.microsoft.com/azure/azure-sql/azure-hybrid-benefit)
 - [Azure SQL Database Auditing](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)
 
