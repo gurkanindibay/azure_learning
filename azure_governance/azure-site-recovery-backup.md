@@ -427,13 +427,586 @@ On-Premises VMs
 
 ---
 
+---
+
+### Question 2: Service Recommendation for Reporting Application
+
+#### Scenario
+
+Your company identifies the following business continuity and disaster recovery objectives for virtual machines that host sales, finance, and reporting applications in the company's on-premises data center:
+
+**Sales Application:**
+- Must be able to failover to a second on-premises data center
+
+**Reporting Application:**
+- Must be able to recover point-in-time data at a daily granularity
+- RTO is eight hours
+
+**Finance Application:**
+- Requires that data be retained for seven years
+- In the event of a disaster, the application must be able to run from Azure
+- Recovery time objective (RTO) is 10 minutes
+
+You need to recommend which Azure services meet the business continuity and disaster recovery objectives. The solution must minimize costs.
+
+---
+
+#### Question
+
+**Which service should you recommend for the "Reporting" application?**
+
+A. Azure Backup only  
+B. Azure Site Recovery only  
+C. Azure Site Recovery and Azure Backup
+
+---
+
+**Correct Answer:** **A. Azure Backup only**
+
+---
+
+### Detailed Explanation
+
+#### Requirements Analysis
+
+The **reporting application** has the following requirements:
+- ✅ Must be able to **recover point-in-time data** at daily granularity
+- ✅ RTO is **eight hours**
+- ❌ No mention of failover requirements
+- ❌ No mention of long-term retention (like 7 years)
+
+---
+
+#### Why Azure Backup Only is Correct ✅
+
+**Azure Backup** is the correct and cost-effective choice for the reporting application because:
+
+##### 1. **Point-in-Time Recovery at Daily Granularity** ✅
+
+Azure Backup is specifically designed for point-in-time data recovery:
+
+```plaintext
+Backup Schedule: Daily at 2 AM
+┌─────────────────────────────────────────────────────┐
+│  Recovery Points Available                          │
+├─────────────────────────────────────────────────────┤
+│  - Day 1 (December 1)  → Full backup                │
+│  - Day 2 (December 2)  → Incremental backup         │
+│  - Day 3 (December 3)  → Incremental backup         │
+│  - Day 4 (December 4)  → Incremental backup         │
+│  - Day 5 (December 5)  → Incremental backup         │
+│  - Day 6 (December 6)  → Incremental backup         │
+│  - Day 7 (December 7)  → Full backup                │
+└─────────────────────────────────────────────────────┘
+
+Restore Scenario:
+"I need to restore data from December 3"
+      ↓
+Azure Backup → Selects December 3 recovery point
+      ↓
+Restores VM or specific files to that point in time ✅
+```
+
+**Key capabilities:**
+- ✅ Daily backup schedule (configurable)
+- ✅ Application-consistent recovery points
+- ✅ Granular restore options (full VM, disk, or file-level)
+- ✅ Retention policies (retain daily backups for weeks/months/years)
+- ✅ Multiple restore points per day (if needed)
+
+##### 2. **Meets the 8-Hour RTO** ✅
+
+Azure Backup can easily meet an 8-hour RTO:
+
+```plaintext
+Disaster Occurs at 10:00 AM
+      ↓
+Recovery Process:
+1. Identify latest backup (2 AM same day) ⏱️ 10 minutes
+2. Create restore configuration         ⏱️ 15 minutes
+3. Restore VM from backup              ⏱️ 1-3 hours (depending on VM size)
+4. Start restored VM                    ⏱️ 5 minutes
+5. Validate application                 ⏱️ 30 minutes
+      ↓
+Total Recovery Time: 2-4 hours ✅
+RTO Requirement: 8 hours ✅
+
+Result: Well within the 8-hour RTO ✅
+```
+
+**Why 8 hours is achievable:**
+- Backup restore is well-optimized in Azure
+- Can restore to a new VM or replace existing disks
+- Can restore to the same or different region
+- Parallel restore operations for faster recovery
+
+**Typical Azure Backup Restore Times:**
+
+| VM Size | Data Size | Typical Restore Time |
+|---------|-----------|---------------------|
+| Small | < 100 GB | 30 minutes - 1 hour |
+| Medium | 100-500 GB | 1-3 hours |
+| Large | 500 GB - 1 TB | 3-5 hours |
+| Very Large | > 1 TB | 5-7 hours |
+
+Even for large VMs, the restore typically completes well within 8 hours.
+
+##### 3. **Cost-Effective for Recovery-Only Scenarios** ✅
+
+Since the requirement is **data recovery only** (not continuous failover):
+
+**Azure Backup only** is the most cost-effective solution:
+
+```plaintext
+Cost Breakdown:
+
+Azure Backup Only:
+├─ Protected Instance: ~$10/month
+├─ Storage (500 GB): ~$10-20/month
+├─ Snapshot retention: Minimal
+└─ Total: ~$20-30/month ✅
+
+Azure Site Recovery Only:
+├─ Protected Instance: ~$25/month
+├─ Continuous replication: Ongoing cost
+├─ Compute resources: Standby costs
+└─ Total: ~$50-75/month ❌ (Unnecessary)
+
+Azure Site Recovery + Backup:
+├─ Protected Instance (ASR): ~$25/month
+├─ Protected Instance (Backup): ~$10/month
+├─ Storage costs for both
+└─ Total: ~$60-100/month ❌ (Excessive)
+```
+
+**Why Backup is cheaper:**
+- No continuous replication costs
+- No standby compute resources needed
+- Storage costs only for incremental backups
+- No orchestration overhead
+
+##### 4. **Daily Granularity Matches Backup Schedule** ✅
+
+The requirement states **daily granularity**, which perfectly aligns with Azure Backup:
+
+```plaintext
+Daily Granularity Requirement:
+"Recover data from any specific day"
+
+Azure Backup Schedule:
+Monday    → Backup at 2 AM → Recovery Point ✅
+Tuesday   → Backup at 2 AM → Recovery Point ✅
+Wednesday → Backup at 2 AM → Recovery Point ✅
+Thursday  → Backup at 2 AM → Recovery Point ✅
+Friday    → Backup at 2 AM → Recovery Point ✅
+Saturday  → Backup at 2 AM → Recovery Point ✅
+Sunday    → Backup at 2 AM → Recovery Point ✅
+
+Result: Can restore to any day ✅
+```
+
+If needed, Azure Backup can even provide **multiple backups per day** for finer granularity.
+
+##### 5. **Application-Consistent Backups** ✅
+
+Azure Backup provides application-consistent backups for reporting applications:
+
+```plaintext
+Application-Consistent Backup Process:
+
+1. Pre-backup
+   ├─ VSS (Volume Shadow Copy) triggered
+   ├─ Application (SQL/Oracle) quiesces writes
+   └─ Consistent state achieved
+
+2. Backup
+   ├─ Snapshot taken at consistent point
+   ├─ All in-memory data flushed to disk
+   └─ Transaction logs consistent
+
+3. Post-backup
+   ├─ Application resumes normal operations
+   └─ Backup metadata recorded
+
+Result: When restored, application is in a consistent state ✅
+```
+
+This is critical for reporting applications with databases.
+
+---
+
+#### Why Azure Site Recovery Only is Incorrect ❌
+
+**Azure Site Recovery** is designed for disaster recovery with low RTO, **not** for point-in-time recovery:
+
+❌ **No Point-in-Time Recovery**
+- ASR provides continuous replication, not snapshot-based recovery
+- Cannot restore to a specific day in the past
+- Only provides failover to the latest replicated state
+
+```plaintext
+What ASR Provides:
+Primary Site → Continuous Replication → Replica Site
+                                       ↓
+                                  Latest state only
+                                  (e.g., 5 minutes ago)
+
+What Reporting App Needs:
+"Restore data from December 3" ❌ ASR cannot do this
+
+ASR only has:
+"Restore to latest replica (5 minutes ago)" ❌ Wrong requirement
+```
+
+❌ **No Daily Granularity**
+- ASR replicates continuously (RPO in minutes)
+- Cannot provide specific daily recovery points
+- Not designed for "restore to day X" scenarios
+
+❌ **Overkill for 8-Hour RTO**
+- ASR is designed for RTOs in minutes (< 15 minutes typical)
+- Using ASR for an 8-hour RTO is cost-inefficient
+- Continuous replication is unnecessary for this RTO
+
+❌ **Cost Inefficient**
+- Continuous replication costs more than scheduled backups
+- Requires standby resources
+- No business value for the additional cost
+
+**When ASR is appropriate:**
+```plaintext
+✅ Use ASR when:
+   - RTO is minutes (< 1 hour)
+   - Need continuous replication
+   - Need automated failover
+   - Need failback capability
+
+Example: Finance app with 10-minute RTO ✅
+```
+
+**For reporting app:**
+```plaintext
+Requirement: 8-hour RTO + daily granularity
+ASR: ❌ Overengineered and expensive
+Backup: ✅ Perfect fit and cost-effective
+```
+
+---
+
+#### Why Azure Site Recovery and Azure Backup is Incorrect ❌
+
+Using **both services** would be **unnecessary and wasteful** for the reporting application:
+
+❌ **Unnecessary Failover Component**
+- The reporting app doesn't require instant failover (8-hour RTO is acceptable)
+- ASR's continuous replication provides no value
+- No requirement for automated failover orchestration
+
+❌ **Significant Cost Increase**
+- Paying for both ASR and Backup
+- ASR costs more than Backup alone
+- No business value from the ASR component
+
+❌ **Operational Overhead**
+- Managing two services instead of one
+- More complex architecture
+- Additional monitoring and maintenance
+
+**Cost comparison for reporting app:**
+
+| Solution | Monthly Cost | Meets Requirements | Verdict |
+|----------|--------------|-------------------|---------|
+| **Backup only** | ~$20-30 | ✅ Yes | ✅ **Optimal** |
+| **ASR only** | ~$50-75 | ❌ No (missing point-in-time) | ❌ Incorrect |
+| **ASR + Backup** | ~$60-100 | ✅ Yes | ❌ Wasteful |
+
+**When to use BOTH:**
+```plaintext
+✅ Use ASR + Backup when application needs:
+   - Low RTO failover (ASR) ← Finance app needs this
+   - AND long-term retention (Backup) ← Finance app needs this
+   - AND point-in-time recovery (Backup)
+
+Example: Finance application with:
+- 10-minute RTO → ASR ✅
+- 7-year retention → Backup ✅
+```
+
+**For reporting application:**
+```plaintext
+Needs: Daily recovery + 8-hour RTO
+Solution: Backup only ✅
+Cost: Minimized ✅
+```
+
+---
+
+### Comparison Across All Three Applications
+
+Let's see how each application maps to services:
+
+#### Sales Application
+
+**Requirements:**
+- Failover to second on-premises data center
+- No specific RTO mentioned
+- No recovery or retention requirements
+
+**Solution:** **Azure Site Recovery only** ✅
+
+**Why:**
+- Needs **failover capability only**
+- ASR handles on-premises-to-on-premises replication
+- No backup/recovery requirements
+
+**Service mapping:**
+```plaintext
+Requirement: Failover
+Service: ASR ✅
+Cost: Optimized for failover only
+```
+
+---
+
+#### Reporting Application
+
+**Requirements:**
+- Point-in-time data recovery at daily granularity
+- RTO: 8 hours
+- No failover requirements
+
+**Solution:** **Azure Backup only** ✅
+
+**Why:**
+- Needs **data recovery only**
+- Daily granularity matches backup schedules
+- 8-hour RTO easily met by backup restore
+- No need for continuous replication
+
+**Service mapping:**
+```plaintext
+Requirement: Daily recovery + 8-hour RTO
+Service: Azure Backup ✅
+Cost: Optimized for recovery only
+```
+
+---
+
+#### Finance Application
+
+**Requirements:**
+- 7-year data retention
+- Failover to Azure during disaster
+- RTO: 10 minutes
+
+**Solution:** **Azure Site Recovery and Azure Backup** ✅
+
+**Why:**
+- Needs **both failover AND long-term retention**
+- ASR: 10-minute RTO failover
+- Backup: 7-year compliance retention
+- Both services required
+
+**Service mapping:**
+```plaintext
+Requirement 1: 10-minute RTO → ASR ✅
+Requirement 2: 7-year retention → Backup ✅
+Cost: Justified by dual requirements
+```
+
+---
+
+### Summary Table
+
+| Application | Failover | Point-in-Time Recovery | Long-Term Retention | RTO | Solution |
+|-------------|----------|----------------------|-------------------|-----|----------|
+| **Sales** | ✅ Yes (On-prem to on-prem) | ❌ No | ❌ No | Not specified | **ASR only** |
+| **Reporting** | ❌ No | ✅ Yes (Daily) | ❌ No | 8 hours | **Backup only** |
+| **Finance** | ✅ Yes (To Azure) | ❌ No | ✅ Yes (7 years) | 10 minutes | **ASR + Backup** |
+
+---
+
+### Implementation for Reporting Application
+
+#### Step 1: Enable Azure Backup
+
+```bash
+# Create Recovery Services vault
+az backup vault create \
+  --resource-group myResourceGroup \
+  --name myRecoveryServicesVault \
+  --location eastus
+
+# Configure backup policy (daily backups)
+az backup policy create \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryServicesVault \
+  --policy-name DailyBackupPolicy \
+  --backup-management-type AzureIaasVM \
+  --workload-type VM
+```
+
+#### Step 2: Configure Backup for Reporting VM
+
+```bash
+# Enable backup for the VM
+az backup protection enable-for-vm \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryServicesVault \
+  --vm ReportingVM \
+  --policy-name DailyBackupPolicy
+```
+
+#### Step 3: Configure Backup Schedule
+
+```json
+{
+  "name": "DailyBackupPolicy",
+  "properties": {
+    "backupManagementType": "AzureIaasVM",
+    "schedulePolicy": {
+      "schedulePolicyType": "SimpleSchedulePolicy",
+      "scheduleRunFrequency": "Daily",
+      "scheduleRunTimes": ["2024-12-14T02:00:00Z"]
+    },
+    "retentionPolicy": {
+      "retentionPolicyType": "LongTermRetentionPolicy",
+      "dailySchedule": {
+        "retentionTimes": ["2024-12-14T02:00:00Z"],
+        "retentionDuration": {
+          "count": 30,
+          "durationType": "Days"
+        }
+      },
+      "weeklySchedule": {
+        "daysOfTheWeek": ["Sunday"],
+        "retentionTimes": ["2024-12-14T02:00:00Z"],
+        "retentionDuration": {
+          "count": 12,
+          "durationType": "Weeks"
+        }
+      }
+    }
+  }
+}
+```
+
+#### Step 4: Test Recovery
+
+```bash
+# List available recovery points
+az backup recoverypoint list \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryServicesVault \
+  --container-name ReportingVM \
+  --item-name ReportingVM
+
+# Restore VM to a specific recovery point
+az backup restore restore-disks \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryServicesVault \
+  --container-name ReportingVM \
+  --item-name ReportingVM \
+  --rp-name recoverypoint_date \
+  --storage-account mystorageaccount
+```
+
+---
+
+### Architecture Diagram for Reporting Application
+
+```plaintext
+On-Premises Data Center
+┌─────────────────────────────────────────┐
+│                                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Reporting Application VM        │   │
+│  │  ├─ SQL Server Database          │   │
+│  │  ├─ Reporting Services           │   │
+│  │  └─ 500 GB data                  │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+│               │ Daily Backup (2 AM)      │
+│               ▼                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Azure Backup Agent              │   │
+│  │  ├─ Application-consistent       │   │
+│  │  ├─ Encrypted transfer           │   │
+│  │  └─ Incremental backups          │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+└───────────────┼──────────────────────────┘
+                │ HTTPS to Azure
+                ▼
+┌─────────────────────────────────────────┐
+│  Azure Cloud                            │
+│                                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Recovery Services Vault         │   │
+│  │  ├─ Daily recovery points        │   │
+│  │  ├─ 30-day retention             │   │
+│  │  └─ Point-in-time restore        │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+│               │ Restore when needed      │
+│               │ (RTO: < 8 hours)         │
+│               ▼                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Restored VM (when needed)       │   │
+│  │  ├─ From specific recovery point │   │
+│  │  ├─ Application-consistent       │   │
+│  │  └─ Ready to use                 │   │
+│  └──────────────────────────────────┘   │
+│                                          │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Key Takeaways
+
+1. **Azure Backup for Point-in-Time Recovery**
+   > When the requirement is point-in-time recovery with daily granularity, Azure Backup is the appropriate service. It provides snapshot-based recovery with configurable retention.
+
+2. **8-Hour RTO is Backup Territory**
+   > RTOs measured in hours (not minutes) indicate that scheduled backups are sufficient. Azure Site Recovery is overkill for RTOs > 1 hour.
+
+3. **Daily Granularity = Daily Backups**
+   > Daily granularity requirements align perfectly with Azure Backup's daily backup schedules, making it the natural choice.
+
+4. **Cost Optimization**
+   > Using only the service that meets requirements (Azure Backup) minimizes costs. Adding ASR would provide no value and significantly increase costs.
+
+5. **Right Tool for the Right Job**
+   > - **ASR:** Fast failover (minutes RTO)
+   > - **Backup:** Point-in-time recovery (hours RTO)
+   > - **ASR + Backup:** Both failover AND retention
+
+---
+
+### Exam Tips
+
+> **Remember:** When you see **"point-in-time recovery"** or **"daily granularity"**, think **Azure Backup**, not Azure Site Recovery.
+
+> **RTO guidance:**
+> - RTO < 1 hour → Consider Azure Site Recovery
+> - RTO > 1 hour → Azure Backup is likely sufficient
+
+> **Key phrase to watch for:** "recover point-in-time data" = Azure Backup, not failover scenarios
+
+> **Cost consideration:** Always choose the minimum service set that meets all requirements
+
+---
+
 ### Reference Links
 
 **Official Documentation:**
+- [Azure Backup Overview](https://learn.microsoft.com/en-us/azure/backup/backup-overview)
+- [Back up Azure VMs](https://learn.microsoft.com/en-us/azure/backup/backup-azure-vms-first-look-arm)
 - [Azure Site Recovery Overview](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview)
 - [Azure Site Recovery: Azure to Azure Tutorial](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-dr-drill)
-- [Azure Backup Overview](https://learn.microsoft.com/en-us/azure/backup/backup-overview)
-- [Azure Site Recovery: On-premises to On-premises](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-secondary-disaster-recovery)
+- [Azure Backup Pricing](https://azure.microsoft.com/en-us/pricing/details/backup/)
+- [Azure Site Recovery Pricing](https://azure.microsoft.com/en-us/pricing/details/site-recovery/)
 - [Business Continuity and Disaster Recovery (BCDR)](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/backup-and-recovery)
 
 **Related Topics:**
