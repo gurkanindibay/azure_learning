@@ -11,6 +11,7 @@
 - [Related Services Comparison](#related-services-comparison)
 - [Practice Questions](#practice-questions)
   - [Question 1: On-Premises Oracle to Azure Databricks Data Pipeline](#question-1-on-premises-oracle-to-azure-databricks-data-pipeline)
+  - [Question 2: Copying On-Premises File Server Data to Azure Storage](#question-2-copying-on-premises-file-server-data-to-azure-storage)
 - [References](#references)
 
 ---
@@ -755,6 +756,291 @@ Daily ETL Pipeline:
 - Azure Data Lake Storage optimization for analytics
 - Azure Databricks data ingestion patterns
 - Incremental load patterns with watermarks
+
+**Domain:** Design data storage solutions
+
+---
+
+### Question 2: Copying On-Premises File Server Data to Azure Storage
+
+#### Scenario
+
+Your **on-premises network** contains a **file server named Server1** that stores **500 GB of data**.
+
+You need to use **Azure Data Factory** to copy the data from Server1 to **Azure storage**.
+
+You add a new data factory.
+
+**Question:** What should you do next?
+
+**From Server1 _________________________________________.**
+
+---
+
+#### Options
+
+A. Install an Azure File Sync agent  
+B. Install a self-hosted integration runtime  
+C. Install the File Server Resource Manager role service
+
+---
+
+**Correct Answer:** **B. Install a self-hosted integration runtime**
+
+---
+
+### Detailed Explanation
+
+#### Why Install a Self-hosted Integration Runtime is Correct ✅
+
+When using Azure Data Factory to move data from an **on-premises source** (like Server1) to Azure storage, you need a **self-hosted integration runtime (IR)** installed on the on-premises machine.
+
+##### What is Self-hosted Integration Runtime?
+
+The self-hosted integration runtime acts as a **secure bridge** that enables:
+
+- **Data movement** between on-premises data sources and Azure Data Factory
+- **Activity dispatch** from Azure Data Factory to on-premises resources
+- **Secure connectivity** without requiring inbound firewall rules
+
+```plaintext
+On-Premises Environment
+│
+├─ Server1 (File Server)
+│  └─ 500 GB of data
+│
+├─ Self-hosted Integration Runtime
+│  ├─ Installed on Server1 or network machine
+│  ├─ Secure outbound HTTPS connection to Azure
+│  ├─ Accesses local file system
+│  └─ No inbound ports required
+│
+      ↓
+      ↓ Secure data transfer
+      ↓
+Azure Data Factory
+      ↓
+      ↓ Data movement
+      ↓
+Azure Storage (Blob/ADLS)
+```
+
+##### Key Characteristics
+
+1. **Installation Location**
+   - Must be installed on **Server1** or another machine in the same network
+   - Requires access to the data source (Server1's file system)
+
+2. **Connectivity**
+   - Establishes **outbound HTTPS** connection to Azure (port 443)
+   - No inbound firewall rules needed
+   - Secure data transfer with encryption
+
+3. **Data Access**
+   - Reads data from local file system
+   - Supports various file formats (CSV, JSON, Parquet, etc.)
+   - Handles large data volumes efficiently
+
+---
+
+#### Why Azure File Sync Agent is Incorrect ❌
+
+**Azure File Sync** is a different service with a different purpose:
+
+- **Purpose**: Synchronizes on-premises file servers with Azure File shares
+- **Use case**: File server cloud tiering and multi-site file access
+- **Not for**: Data orchestration or data movement with Azure Data Factory
+
+**Key differences:**
+
+| Feature | Self-hosted IR (ADF) | Azure File Sync |
+|---------|---------------------|-----------------|
+| Purpose | Data movement & orchestration | File synchronization |
+| Used with | Azure Data Factory | Azure Files |
+| Data flow | One-time or scheduled copies | Continuous sync |
+| Transformation | Supports data transformations | No transformations |
+| Target storage | Any Azure storage type | Azure Files only |
+
+Azure File Sync is useful for keeping files synchronized between multiple locations, but **it does not integrate with Azure Data Factory** for orchestrated data movement.
+
+---
+
+#### Why File Server Resource Manager is Incorrect ❌
+
+**File Server Resource Manager (FSRM)** is a Windows Server role service:
+
+- **Purpose**: Provides quota management and file classification on Windows Server
+- **Capabilities**: File screening, storage reports, folder quotas
+- **Not for**: Data movement to Azure or integration with Data Factory
+
+FSRM helps manage on-premises file servers but does **not facilitate data transfer to Azure** or enable integration with Azure Data Factory.
+
+---
+
+### Implementation Steps
+
+#### Step 1: Create Azure Data Factory
+
+```bash
+# Using Azure CLI
+az datafactory create \
+  --resource-group myResourceGroup \
+  --factory-name myDataFactory \
+  --location eastus
+```
+
+#### Step 2: Install Self-hosted Integration Runtime on Server1
+
+1. **Download the runtime** from Azure portal or Microsoft Download Center
+2. **Install on Server1** (or a machine with access to Server1's data)
+3. **Register the runtime** with your Data Factory using authentication key
+4. **Verify connectivity** in Azure portal
+
+```powershell
+# Installation example (PowerShell on Server1)
+# Download and install the self-hosted IR
+# Register with authentication key from Azure portal
+```
+
+#### Step 3: Create Linked Services
+
+```json
+{
+  "name": "OnPremFileSystemLinkedService",
+  "properties": {
+    "type": "FileServer",
+    "connectVia": {
+      "referenceName": "SelfHostedIR",
+      "type": "IntegrationRuntimeReference"
+    },
+    "typeProperties": {
+      "host": "\\\\Server1\\share",
+      "userId": "username",
+      "password": {
+        "type": "SecureString",
+        "value": "password"
+      }
+    }
+  }
+}
+```
+
+#### Step 4: Create Pipeline with Copy Activity
+
+```json
+{
+  "name": "CopyFromServer1Pipeline",
+  "properties": {
+    "activities": [
+      {
+        "name": "CopyFromFileServer",
+        "type": "Copy",
+        "inputs": [
+          {
+            "referenceName": "OnPremFileDataset",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "AzureBlobDataset",
+            "type": "DatasetReference"
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "FileSystemSource"
+          },
+          "sink": {
+            "type": "BlobSink"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Architecture Diagram
+
+```plaintext
+┌─────────────────────────────────────────┐
+│  On-Premises Network                    │
+│                                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Server1 (File Server)           │   │
+│  │  └─ 500 GB of data               │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+│               │ Local Access             │
+│               ▼                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Self-hosted Integration Runtime │   │
+│  │  ├─ Reads from Server1           │   │
+│  │  ├─ Encrypts data                │   │
+│  │  └─ Transfers via HTTPS          │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+└───────────────┼──────────────────────────┘
+                │ Outbound HTTPS (443)
+                ▼
+┌─────────────────────────────────────────┐
+│  Azure Cloud                            │
+│                                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Azure Data Factory              │   │
+│  │  ├─ Orchestrates pipeline        │   │
+│  │  ├─ Copy activity                │   │
+│  │  └─ Monitors transfer            │   │
+│  └──────────────────────────────────┘   │
+│               │                          │
+│               │ Write Data               │
+│               ▼                          │
+│  ┌──────────────────────────────────┐   │
+│  │  Azure Storage                   │   │
+│  │  ├─ Blob Storage                 │   │
+│  │  ├─ Data Lake Storage            │   │
+│  │  └─ 500 GB data stored           │   │
+│  └──────────────────────────────────┘   │
+│                                          │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Key Takeaways
+
+1. **Self-hosted IR for On-Premises Connectivity**
+   > When copying data from on-premises sources to Azure using Data Factory, always install a self-hosted integration runtime on the on-premises environment.
+
+2. **Installation Location**
+   > The self-hosted IR must be installed on the source machine (Server1) or on another machine in the same network that has access to the data.
+
+3. **Secure Connectivity**
+   > Self-hosted IR uses outbound HTTPS connections only - no inbound firewall rules required, making it secure and easy to deploy.
+
+4. **Not Azure File Sync**
+   > Azure File Sync is for file synchronization scenarios, not for Data Factory data orchestration and movement.
+
+5. **Data Factory Copy Activity**
+   > After installing the self-hosted IR, use Data Factory's Copy Activity to move data from Server1 to any Azure storage service.
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [Create Self-hosted Integration Runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory)
+- [Azure Data Factory Introduction](https://learn.microsoft.com/en-us/azure/data-factory/introduction)
+- [Copy Data Tool](https://learn.microsoft.com/en-us/azure/data-factory/copy-data-tool)
+- [Integration Runtime Overview](https://learn.microsoft.com/en-us/azure/data-factory/concepts-integration-runtime)
+- [File System Connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-file-system)
+
+**Related Services:**
+- [Azure File Sync](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-introduction) - For file synchronization, not ADF integration
+- [File Server Resource Manager](https://learn.microsoft.com/en-us/windows-server/storage/fsrm/fsrm-overview) - For on-premises file management
 
 **Domain:** Design data storage solutions
 
