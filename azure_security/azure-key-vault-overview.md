@@ -54,6 +54,13 @@
   - [Key Vault Availability and Redundancy](#key-vault-availability-and-redundancy)
   - [Key Takeaway](#key-takeaway-6)
   - [Reference(s)](#references-1)
+- [Question 8: Authorizing App to Retrieve Secrets - Access Policy vs Role Assignment](#question-8-authorizing-app-to-retrieve-secrets---access-policy-vs-role-assignment)
+  - [Scenario](#scenario-2)
+  - [Explanation](#explanation-7)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-7)
+  - [Management Plane vs Data Plane Operations](#management-plane-vs-data-plane-operations)
+  - [Key Takeaway](#key-takeaway-7)
+  - [Reference(s)](#references-2)
 
 ## Overview
 
@@ -1013,4 +1020,139 @@ Azure Key Vault provides high availability and disaster recovery through **geo-r
 ### Reference(s)
 
 - [Azure Key Vault Disaster Recovery Guidance](https://learn.microsoft.com/en-us/azure/key-vault/general/disaster-recovery-guidance)
+- [Azure Key Vault Overview](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)
+
+---
+
+## Question 8: Authorizing App to Retrieve Secrets - Access Policy vs Role Assignment
+
+### Scenario
+
+**Contoso Ltd. Case Study (AZ-305)**
+
+Contoso, Ltd. is a research company with a main office in Montreal. They have a single Azure subscription and an on-premises Active Directory domain named contoso.com. Contoso has a business partnership with Fabrikam, Inc.
+
+**App1 Requirements:**
+- App1 will be a Python web app hosted in Azure App Service requiring a Linux runtime
+- App1 will access several services that require third-party credentials and access strings
+- The credentials and access strings are stored in Azure Key Vault
+
+**Security Requirements:**
+- All secrets used by Azure services must be stored in Azure Key Vault
+- Services that require credentials must have the credentials tied to the service instance
+- The credentials must NOT be shared between services
+
+**Question:** You need to recommend a solution to ensure that App1 can access the third-party credentials and access strings. The solution must meet the security requirements. What should you use to authorize App1 to retrieve secrets?
+
+**Options:**
+
+1. **An access policy** ✅ *Correct*
+
+2. **A connected service** ❌ *Incorrect*
+
+3. **A private link** ❌ *Incorrect*
+
+4. **A role assignment** ❌ *Incorrect (in this context)*
+
+### Explanation
+
+**Correct Answer: An access policy**
+
+An access policy is the mechanism that allows granular **data-plane permissions** on Azure Key Vault when not using Azure RBAC-based authorization. App1 accesses secrets and credentials stored in Key Vault, which is a **data-plane operation** (i.e., accessing the contents of the Key Vault).
+
+To grant the managed identity of App1 permission to retrieve secrets (such as **Get** access to secrets), you must configure a Key Vault access policy specifically assigning that permission.
+
+This approach aligns with the security requirement:
+> "Services that require credentials must have the credentials tied to the service instance. The credentials must NOT be shared between services."
+
+By using a **managed identity** for App1 and granting it an access policy with only the necessary permissions (like `Get` for secrets), each service instance has its own identity and credentials are tied to that specific service.
+
+**Azure CLI Example - Granting Access Policy:**
+
+```bash
+# Get the managed identity's object ID
+objectId=$(az webapp identity show --name App1 --resource-group myRG --query principalId -o tsv)
+
+# Set the access policy for the managed identity
+az keyvault set-policy --name myKeyVault \
+  --object-id $objectId \
+  --secret-permissions get list
+```
+
+**Bicep Example:**
+
+```bicep
+resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
+  name: 'add'
+  parent: keyVault
+  properties: {
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: app1ManagedIdentity.properties.principalId
+        permissions: {
+          secrets: ['get', 'list']
+        }
+      }
+    ]
+  }
+}
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **A connected service** | Connected services are relevant to DevOps tooling (e.g., Azure DevOps service connections), not for authorizing an app to retrieve secrets from Key Vault. They are used to establish connections between Azure DevOps pipelines and Azure resources. |
+| **A private link** | Private Link secures **network-level access**, ensuring traffic between App1 and Key Vault does not traverse the public internet. However, it does **not provide authorization** to access the secrets. Private Link addresses the "how to connect" question, not the "who can access" question. |
+| **A role assignment** | Role assignments are used for **management-plane operations** by default. If the Key Vault is not configured to use Azure RBAC for authorization (which is not mentioned in the case study), role assignments would not grant data-plane access to secrets. |
+
+### Management Plane vs Data Plane Operations
+
+Understanding the difference between management plane and data plane is crucial for Key Vault authorization:
+
+| Plane | Description | Authorization Method | Examples |
+|-------|-------------|---------------------|----------|
+| **Management Plane** | Operations on the Key Vault resource itself | Azure RBAC (Role Assignments) | Create/delete vault, configure access policies, modify vault properties |
+| **Data Plane** | Operations on the contents inside the vault | Access Policies OR Azure RBAC (if enabled) | Get/set secrets, encrypt/decrypt with keys, manage certificates |
+
+**Key Vault Permission Models Comparison:**
+
+| Aspect | Vault Access Policy | Azure RBAC |
+|--------|---------------------|------------|
+| **Default for new vaults** | Yes (traditional) | No (must be enabled) |
+| **Scope** | Per-vault | Subscription, resource group, or vault level |
+| **Granularity** | Per-identity permissions | Role-based with inheritance |
+| **Data Plane Access** | ✅ Yes | ✅ Yes (when enabled) |
+| **Management Plane Access** | ❌ No | ✅ Yes |
+| **Best for** | Simple scenarios, legacy apps | Enterprise scenarios, centralized management |
+
+**When to Use Each Model:**
+
+| Use Access Policies When | Use Azure RBAC When |
+|--------------------------|---------------------|
+| Key Vault RBAC is not enabled (default) | Key Vault RBAC is explicitly enabled |
+| You need per-vault granular control | You need centralized access management |
+| Working with legacy applications | Implementing enterprise governance |
+| Simple single-vault scenarios | Managing multiple vaults consistently |
+
+**Important Note:** If the Key Vault had RBAC authorization enabled, role assignments would be used to grant data-plane access (e.g., the **Key Vault Secrets User** role). But since the case study does not mention RBAC being used, access policies are the correct default answer.
+
+### Key Takeaway
+
+When authorizing an application to retrieve secrets from Azure Key Vault:
+
+1. **Use Access Policies** when Key Vault is using the traditional (default) permission model
+2. **Use Role Assignments** only when Azure RBAC is explicitly enabled on the Key Vault
+3. **Private Link** secures network connectivity but does not provide authorization
+4. **Connected Services** are for DevOps tooling, not application authorization
+
+The recommended pattern is to use a **managed identity** for the application (like App1) and grant it the minimum required permissions through an access policy, ensuring credentials are tied to the specific service instance.
+
+### Reference(s)
+
+- [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [Azure Key Vault Security Features](https://learn.microsoft.com/en-us/azure/key-vault/general/security-features)
+- [Azure RBAC for Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide)
+- [Azure Key Vault Network Security](https://learn.microsoft.com/en-us/azure/key-vault/general/network-security)
 - [Azure Key Vault Overview](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)
