@@ -10,6 +10,7 @@
   - [Service Tiers](#service-tiers)
   - [Compute Tiers](#compute-tiers)
   - [High Availability and Zone Redundancy](#high-availability-and-zone-redundancy)
+  - [Multi-Region Write Support](#multi-region-write-support)
 - [Azure SQL Managed Instance](#azure-sql-managed-instance)
 - [SQL Server on Azure VMs](#sql-server-on-azure-vms)
 - [Pricing Tiers Comparison](#pricing-tiers-comparison)
@@ -501,6 +502,41 @@ Azure SQL Database provides built-in high availability features that vary by ser
 - Supported in Premium and Business Critical
 - Enables read-scale and disaster recovery across regions
 - Automatic failover groups provide seamless failover
+
+#### Multi-Region Write Support
+
+> ⚠️ **Important: Azure SQL does NOT support multi-region writes (active-active writes)**
+
+Unlike Azure Cosmos DB which offers native multi-region write capabilities, **Azure SQL Database and Azure SQL Managed Instance do not support simultaneous writes to multiple regions**. The replication architecture is based on:
+
+| Aspect | Azure SQL Behavior | Cosmos DB Comparison |
+|--------|-------------------|---------------------|
+| **Write Region** | Single primary region only | Multiple regions can accept writes |
+| **Replication Type** | Active Geo-Replication (async) | Multi-master replication |
+| **Secondary Regions** | Read-only replicas | Read-write capable |
+| **Write Conflicts** | N/A (single writer) | Automatic conflict resolution |
+| **Failover for Writes** | Manual or automatic failover required | No failover needed |
+
+**Why Azure SQL Doesn't Support Multi-Region Writes**:
+1. **SQL Server Architecture**: Based on traditional RDBMS with single-primary design
+2. **ACID Compliance**: Strict transactional consistency requires single write endpoint
+3. **Conflict Resolution**: SQL databases lack built-in multi-master conflict resolution
+4. **Schema Enforcement**: Complex schema changes require coordination that multi-master complicates
+
+**Available Multi-Region Options in Azure SQL**:
+
+| Option | Description | Use Case |
+|--------|-------------|----------|
+| **Active Geo-Replication** | Up to 4 readable secondaries in different regions | Read scale-out, disaster recovery |
+| **Auto-Failover Groups** | Automatic failover with DNS endpoint | Business continuity with minimal RTO |
+| **Readable Secondary** | Read workloads on secondary replicas | Offload reporting queries |
+
+**If You Need Multi-Region Writes**:
+- ✅ **Azure Cosmos DB**: Native multi-region write support with automatic conflict resolution
+- ⚠️ **Application-Level Sharding**: Partition data by region at application level (complex)
+- ⚠️ **Distributed Transactions**: Use Azure SQL with application coordination (high latency)
+
+**Key Exam Point**: When a question asks about "multi-region writes" or "active-active database writes", Azure SQL is **NOT** the correct answer. Choose **Azure Cosmos DB** for true multi-region write scenarios.
 
 #### References
 - [Azure SQL Database High Availability](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql&tabs=azure-powershell)
