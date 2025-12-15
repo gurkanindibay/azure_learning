@@ -114,12 +114,38 @@ Automatically capture the streaming data in Azure Blob Storage or Azure Data Lak
 
 | Format | Portal Configuration | Notes |
 |--------|---------------------|-------|
-| **Apache Avro** | ✅ Supported | Default and standard format. Provides a compact binary format with inline schema. |
-| **JSON** | ❌ Not Supported | Not available for Event Hubs Capture configuration. |
+| **Apache Avro** | ✅ Supported | Default and standard format. Row-based compact binary format with inline schema. |
+| **JSON** | ❌ Not Supported | Not available for Event Hubs Capture configuration. JSON might be used inside the events themselves, but the file format written to storage is always Avro. |
 | **CSV** | ❌ Not Supported | Not available for Event Hubs Capture configuration. |
-| **Parquet** | ⚠️ Indirect Only | Only supported through Azure Stream Analytics integration using the no-code editor, not through direct Event Hubs Capture configuration in the portal. |
+| **Parquet** | ❌ Not Supported | Parquet is a columnar format commonly used in big data pipelines, but Event Hubs Capture does not support Parquet as a capture format. Only available through Azure Stream Analytics integration using the no-code editor. |
 
-> **Exam Tip:** When configuring Event Hubs Capture through the Azure portal, **Apache Avro** is the only supported file format. It provides a compact binary format with an inline schema, making it efficient for streaming data capture. If you need Parquet format, you must use Azure Stream Analytics with the no-code editor instead of direct Event Hubs Capture.
+**Why Apache Avro?**
+- **Row-based format:** Optimized for write-heavy streaming workloads.
+- **Compact binary:** Efficient storage with smaller file sizes compared to text formats.
+- **Inline schema:** Schema is embedded in each file, making files self-describing.
+- **Wide compatibility:** Supported by major analytics services including Azure Synapse Analytics, Azure Databricks, and HDInsight.
+
+#### Cold Path Processing Scenario
+
+Event Hubs Capture is ideal for **cold path processing** - storing streaming data for later batch analysis and reporting.
+
+| Scenario | Solution |
+|----------|----------|
+| **Stream 50,000+ events/day to storage for later reporting** | Use Event Hubs Capture to automatically write events to Azure Blob Storage or ADLS Gen2 in Avro format |
+| **Reporting system consumes captured data** | Reporting system must support **Apache Avro** format |
+
+**Architecture:**
+```
+[Event Producers] --> [Event Hub] --> [Event Hubs Capture] --> [Blob Storage/ADLS Gen2 (Avro files)]
+                                                                        |
+                                                                        v
+                                                              [Reporting System (reads Avro)]
+```
+
+> **Exam Tip:** When configuring Event Hubs Capture through the Azure portal, **Apache Avro** is the only supported file format. For cold path processing scenarios where captured data will be consumed by a reporting system, that system must support Avro format. Key points:
+> - **Avro** ✅ - Correct answer for Event Hubs Capture output format
+> - **Parquet** ❌ - Columnar format, NOT supported by Event Hubs Capture directly
+> - **JSON** ❌ - May be inside events, but capture file format is always Avro
 
 #### Cross-Subscription Capture with Managed Identity
 
