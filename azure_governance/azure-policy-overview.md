@@ -794,6 +794,116 @@ Initiatives (policy sets) group related policies together for simplified managem
 
 ---
 
+### Question 6: Enforcing Location-Based Deployment Restrictions
+
+**Scenario:**
+Your company plans to deploy various Azure App Service instances that will use Azure SQL databases. The App Service instances will be deployed at the same time as the Azure SQL databases.
+
+The company has a regulatory requirement to deploy the App Service instances only to specific Azure regions. The resources for the App Service instances must reside in the same region.
+
+You need to recommend a solution to meet the regulatory requirement.
+
+**Proposed Solution:**
+You recommend creating resource groups based on locations and implementing resource locks on the resource groups.
+
+**Question:**
+Does this meet the goal?
+
+**Options:**
+
+1. **Yes** ❌
+2. **No** ✅
+
+**Answer:** No
+
+**Explanation:**
+
+While creating resource groups based on location can help organize resources geographically, and resource locks can prevent deletion or modification of those groups, **neither ensures that new App Service instances can only be deployed to specific Azure regions**.
+
+**Why Resource Groups + Resource Locks Don't Work:**
+
+| Feature | What It Does | What It Doesn't Do |
+|---------|--------------|-------------------|
+| **Resource Groups by Location** | Organizes resources logically | Doesn't restrict where resources can be deployed |
+| **Resource Locks** | Prevents deletion (CanNotDelete) or any changes (ReadOnly) | Doesn't enforce location-based deployment restrictions |
+
+**Resource Locks Purpose:**
+- **CanNotDelete**: Prevents accidental deletion of resources
+- **ReadOnly**: Prevents any modifications to resources
+- Neither lock type enforces geographic restrictions on new deployments
+
+**Correct Solution: Azure Policy**
+
+To meet regulatory requirements that restrict deployments to specific regions, use **Azure Policy** to define and enforce allowed locations:
+
+```json
+{
+  "properties": {
+    "displayName": "Allowed locations",
+    "policyType": "BuiltIn",
+    "mode": "Indexed",
+    "parameters": {
+      "listOfAllowedLocations": {
+        "type": "Array",
+        "metadata": {
+          "description": "The list of allowed locations for resources.",
+          "strongType": "location",
+          "displayName": "Allowed locations"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "location",
+            "notIn": "[parameters('listOfAllowedLocations')]"
+          },
+          {
+            "field": "location",
+            "notEquals": "global"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
+```
+
+**Azure Policy Benefits for Location Restrictions:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Enforcement** | Denies deployment of resources outside allowed regions |
+| **Proactive** | Prevents non-compliant deployments before they happen |
+| **Built-in Policy** | "Allowed locations" is a built-in policy ready to use |
+| **Scope Control** | Can be applied at management group, subscription, or resource group level |
+| **Compliance Reporting** | Provides visibility into any violations |
+
+**Implementation Steps:**
+
+1. **Find the built-in policy**: Search for "Allowed locations" in Azure Policy
+2. **Assign the policy**: Apply to appropriate scope (subscription or management group)
+3. **Configure parameters**: Specify the allowed Azure regions
+4. **Test**: Attempt to deploy a resource to a non-allowed region (should be denied)
+
+**Key Difference:**
+
+| Approach | Purpose | Enforces Location? |
+|----------|---------|-------------------|
+| Resource Groups + Locks | Organization and protection | ❌ No |
+| Azure Policy (Allowed Locations) | Compliance and governance | ✅ Yes |
+
+**Reference Links:**
+- [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [Lock Resources](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources)
+- [Built-in Policy: Allowed Locations](https://learn.microsoft.com/en-us/azure/governance/policy/samples/built-in-policies#general)
+
+---
+
 ## Summary
 
 ### Key Takeaways
