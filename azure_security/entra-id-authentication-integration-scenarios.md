@@ -39,6 +39,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 8: Enforcing Azure MFA Authentication with Conditional Access (Litware Inc.)](#exam-question-8-enforcing-azure-mfa-authentication-with-conditional-access-litware-inc)
     - [Question 9: Securing On-Premises Apps with Azure AD Application Proxy and MFA](#exam-question-9-securing-on-premises-apps-with-azure-ad-application-proxy-and-mfa)
     - [Question 10: Migrating LDAP Applications to Azure with Entra Domain Services](#exam-question-10-migrating-ldap-applications-to-azure-with-entra-domain-services)
+    - [Question 11: Remote Access to On-Premises Apps with Application Proxy Connector](#exam-question-11-remote-access-to-on-premises-apps-with-application-proxy-connector)
 
 ---
 
@@ -6014,6 +6015,244 @@ Bind DN: CN=ServiceAccount,OU=AADDC Users,DC=contoso,DC=com
 - Active Directory Domain Services on Azure VMs
 - LDAP and Kerberos authentication protocols
 - Hybrid identity architectures
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+### <a id="exam-question-11-remote-access-to-on-premises-apps-with-application-proxy-connector"></a>Question 11: Remote Access to On-Premises Apps with Application Proxy Connector
+
+#### Scenario
+
+Your on-premises network contains an Active Directory Domain Services (AD DS) domain. The domain contains a server named **Server1**. Server1 contains an app named **App1** that uses AD DS authentication. Remote users access App1 by using a **VPN connection** to the on-premises network.
+
+You have a **Microsoft Entra tenant** that syncs with the AD DS domain by using **Microsoft Entra Connect**.
+
+You need to ensure that the remote users can access App1 **without using a VPN**. The solution must meet the following requirements:
+- Ensure that the users authenticate by using **Azure Multi-Factor Authentication (MFA)**
+- **Minimize administrative effort**
+
+**Question:** What should you include in the solution for the **on-premises** component?
+
+---
+
+#### Answer Options
+
+A. A server that runs Windows Server and has the **Microsoft Entra Application Proxy connector** installed  
+B. A server that runs Windows Server and has the **on-premises data gateway (standard mode)** installed  
+C. A server that runs Windows Server and has the **Web Application Proxy role service** installed
+
+---
+
+**Correct Answer:** **A. A server that runs Windows Server and has the Microsoft Entra Application Proxy connector installed**
+
+---
+
+### Detailed Explanation
+
+#### Why Microsoft Entra Application Proxy Connector is Correct
+
+The **Microsoft Entra Application Proxy connector** is the most suitable choice for enabling remote user access to App1 without a VPN while ensuring Azure Multi-Factor Authentication (MFA) and minimizing administrative effort.
+
+**Key Benefits:**
+
+✅ **Secure Gateway for On-Premises Apps** - Acts as a secure bridge between Microsoft Entra ID and on-premises applications  
+✅ **No VPN Required** - Provides secure remote access without exposing the entire corporate network  
+✅ **Azure MFA Integration** - Seamlessly integrates with Conditional Access policies to enforce MFA  
+✅ **Minimal Administrative Effort** - Lightweight connector installed on-premises, managed through Azure portal  
+✅ **No Inbound Firewall Rules** - Uses outbound HTTPS connections only (port 443)
+
+**How it works:**
+
+```plaintext
+Remote User (Internet)
+        ↓
+        ↓ HTTPS (No VPN needed)
+        ↓
+Microsoft Entra Application Proxy (Cloud)
+        ↓
+        ↓ Azure AD Authentication + MFA
+        ↓
+Application Proxy Connector (On-premises Windows Server)
+        ↓
+        ↓ Internal Network
+        ↓
+Server1 (App1 - AD DS authenticated)
+```
+
+**Key Characteristics:**
+- The connector installed on-premises makes **outbound connections only** to Azure
+- Users authenticate with their **Azure AD credentials** and complete **MFA** before accessing App1
+- The Application Proxy **pre-authenticates** users, adding a security layer before reaching the app
+- Works perfectly with **hybrid AD environments** synced via Microsoft Entra Connect
+- Supports various authentication methods including **SSO with Kerberos Constrained Delegation**
+
+---
+
+### Why Other Options Are Incorrect
+
+#### Option B: On-premises Data Gateway (Standard Mode) ❌
+
+**Why incorrect:**
+
+- The **on-premises data gateway** is primarily designed for **data integration**, not application access
+- Used to connect on-premises data sources (SQL Server, files, etc.) to cloud services like:
+  - Power BI
+  - Power Apps
+  - Azure Logic Apps
+  - Azure Analysis Services
+- **Lacks features** needed for secure remote access to applications
+- **Does not provide** user authentication or MFA enforcement
+- **Not designed** for publishing web applications to external users
+
+**Use Case for Data Gateway:**
+```plaintext
+Power BI (Cloud)
+        ↓
+On-Premises Data Gateway
+        ↓
+On-Premises SQL Server / Files / Oracle
+```
+
+**Key Point:** The on-premises data gateway handles **data flow**, not **user authentication and application access**.
+
+---
+
+#### Option C: Web Application Proxy (WAP) Role Service ❌
+
+**Why incorrect:**
+
+- **Web Application Proxy (WAP)** is a Windows Server role service that can publish applications externally
+- However, it has **significant limitations** compared to Microsoft Entra Application Proxy:
+
+| Aspect | Web Application Proxy | Microsoft Entra Application Proxy |
+|--------|----------------------|----------------------------------|
+| **Dependency** | Requires AD FS infrastructure | Works with Microsoft Entra ID directly |
+| **Administrative Effort** | High - requires AD FS, certificates, complex setup | Low - simple connector installation |
+| **MFA Integration** | Requires AD FS MFA or third-party | Native Azure MFA through Conditional Access |
+| **Management** | On-premises management | Cloud-based management via Azure portal |
+| **Scalability** | Complex to scale | Easy to add more connectors |
+| **Modern Features** | Limited | Conditional Access, Identity Protection |
+
+**When Web Application Proxy Might Be Used:**
+- Organizations already heavily invested in **AD FS infrastructure**
+- Specific scenarios requiring **AD FS-specific features**
+- Legacy environments where migration to cloud isn't feasible
+
+**Key Point:** While WAP can technically publish applications, the **requirement to minimize administrative effort** makes Microsoft Entra Application Proxy the better choice.
+
+---
+
+### Architecture Comparison
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│          MICROSOFT ENTRA APPLICATION PROXY (CORRECT) ✅                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Remote User ──→ Microsoft Entra ID ──→ MFA Enforcement               │
+│                          ↓                                              │
+│                   Application Proxy Service                             │
+│                          ↓                                              │
+│   On-premises: [Windows Server + Application Proxy Connector]          │
+│                          ↓                                              │
+│                   Server1 (App1)                                       │
+│                                                                         │
+│   ✅ No VPN | ✅ Azure MFA | ✅ Minimal Admin Effort                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│          WEB APPLICATION PROXY (INCORRECT) ❌                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Remote User ──→ Web Application Proxy Server                         │
+│                          ↓                                              │
+│                   AD FS Server (Required!)                             │
+│                          ↓                                              │
+│                   Federation Trust Setup                               │
+│                          ↓                                              │
+│                   Server1 (App1)                                       │
+│                                                                         │
+│   ❌ Requires AD FS | ❌ Complex Setup | ❌ High Admin Effort          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│          ON-PREMISES DATA GATEWAY (INCORRECT) ❌                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Purpose: Data Integration, NOT Application Access                    │
+│                                                                         │
+│   Cloud Services (Power BI, Logic Apps)                                │
+│                          ↓                                              │
+│   On-premises: [Windows Server + Data Gateway]                         │
+│                          ↓                                              │
+│                   Data Sources (SQL, Files)                            │
+│                                                                         │
+│   ❌ Wrong use case | ❌ No app publishing | ❌ No MFA for users       │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Key Concepts Summary
+
+#### Microsoft Entra Application Proxy
+
+| Aspect | Details |
+|--------|--------|
+| **Purpose** | Publish on-premises web applications to external users securely |
+| **On-premises Component** | Application Proxy Connector (lightweight Windows service) |
+| **Connection Type** | Outbound HTTPS only (no inbound firewall rules) |
+| **Authentication** | Pre-authentication via Microsoft Entra ID |
+| **MFA Support** | Native via Conditional Access policies |
+| **Management** | Cloud-based via Azure portal |
+| **Best For** | Remote access to on-premises apps without VPN |
+
+#### When to Use Each Technology
+
+| Technology | Use When |
+|------------|----------|
+| **Microsoft Entra Application Proxy** | Publishing on-premises web apps to remote users with Azure AD auth |
+| **Web Application Proxy** | AD FS is already in place and required by policy |
+| **On-premises Data Gateway** | Connecting cloud services (Power BI, Logic Apps) to on-premises data sources |
+| **VPN** | Full network access required or non-web applications |
+
+---
+
+### Exam Tips
+
+> **Application Proxy + Minimal Effort = Application Proxy Connector**
+> - When the scenario mentions "minimize administrative effort" with remote access, think Application Proxy
+> - It avoids the complexity of AD FS required by Web Application Proxy
+
+> **Data Gateway ≠ Application Access**
+> - On-premises data gateway is for **data integration** (Power BI, Logic Apps)
+> - It does NOT provide remote application access or user authentication
+
+> **Web Application Proxy = High Administrative Overhead**
+> - Requires AD FS infrastructure
+> - Complex certificate and trust management
+> - Not the "minimal effort" solution
+
+> **VPN Elimination Scenario = Application Proxy**
+> - If the question asks to replace VPN access to on-premises apps
+> - Application Proxy is the go-to solution for secure, VPN-less access
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [What is Application Proxy?](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy#what-is-application-proxy)
+- [Web Application Proxy in Windows Server](https://learn.microsoft.com/en-us/windows-server/remote/remote-access/web-application-proxy/web-app-proxy-windows-server)
+- [What is an on-premises data gateway?](https://learn.microsoft.com/en-us/data-integration/gateway/service-gateway-onprem)
+
+**Related Topics:**
+- Microsoft Entra Application Proxy Connector installation
+- Conditional Access policies for published apps
+- Kerberos Constrained Delegation for SSO
+- Application Proxy connector groups
+- Hybrid identity with Microsoft Entra Connect
 
 **Domain:** Design Identity, Governance, and Monitoring Solutions
 
