@@ -1454,3 +1454,4 @@ Cosmos DB supports private endpoints for each API type:
 - [Azure Relay Hybrid Connections](https://docs.microsoft.com/azure/app-service/app-service-hybrid-connections)
 - [Network Security Groups](https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview)
 - [VNet Peering](https://docs.microsoft.com/azure/virtual-network/virtual-network-peering-overview)
+- [Azure Network Watcher](./azure-network-watcher.md)
