@@ -733,20 +733,71 @@ The main distinction is that Cosmos DB resource tokens are **stateless tokens** 
 
 ### Microsoft Entra ID (Azure AD) Authentication
 
-Microsoft Entra ID provides **role-based access control (RBAC)** for Azure Cosmos DB using Azure AD identities.
+Microsoft Entra ID provides **role-based access control (RBAC)** for Azure Cosmos DB using Azure AD identities. This is the **recommended approach** for enterprise scenarios as it eliminates the need to manage keys manually and supports fine-grained, identity-based access control.
 
 #### Characteristics
 
 - **Enterprise-grade** identity management
-- **RBAC roles**: Built-in and custom roles
-- **Managed identities**: No credential management
+- **RBAC roles**: Built-in and custom roles for both control plane and data plane operations
+- **Managed identities**: No credential management required
 - **Fine-grained**: Can be scoped to account, database, or container level
+- **Resource tokens**: Users receive resource tokens that authorize access to specific resources
 
 #### When to Use
 
 - Enterprise applications with Azure AD integration
 - Services using managed identities
 - When centralized identity management is required
+- **Providing specific Microsoft Entra ID users with read access to Cosmos DB databases**
+
+#### Azure RBAC for Data Plane Operations
+
+Azure Cosmos DB supports **Azure RBAC for data plane operations**, allowing you to assign built-in or custom roles to Microsoft Entra ID identities via **Access control (IAM)**.
+
+##### Built-in Data Plane Roles
+
+| Role | Permissions | Use Case |
+|------|-------------|----------|
+| **Cosmos DB Built-in Data Reader** | Read all data (databases, containers, items) | Users who need read-only access |
+| **Cosmos DB Built-in Data Contributor** | Read, write, delete data | Applications that need full data access |
+| **Cosmos DB Operator** | Manage account (not data) | DevOps managing infrastructure |
+| **Cosmos DB Account Reader Role** | Read account metadata | Monitoring and auditing |
+
+##### Granting Read Access to Specific Users
+
+To provide specific Microsoft Entra ID user accounts with read access to Cosmos DB databases:
+
+1. **Navigate to Access control (IAM)** on your Cosmos DB account
+2. **Add role assignment**
+3. **Select role**: `Cosmos DB Built-in Data Reader`
+4. **Assign to**: Specific Microsoft Entra ID users or groups
+5. Users receive **resource tokens** that authorize read-only access
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│           Microsoft Entra ID RBAC for Cosmos DB                  │
+│                                                                  │
+│  Microsoft Entra ID User                                         │
+│           │                                                      │
+│           ▼                                                      │
+│  Access Control (IAM) ──► Role Assignment                        │
+│           │                 • Cosmos DB Built-in Data Reader     │
+│           │                 • Cosmos DB Built-in Data Contributor│
+│           ▼                                                      │
+│  Resource Token ──► Authorized access to Cosmos DB data          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+##### Why Use Entra ID + RBAC Instead of Other Methods?
+
+| Approach | Why Not Recommended for User-Specific Access |
+|----------|---------------------------------------------|
+| **Master Keys** | Provide full access to entire account, not scoped to specific users |
+| **SAS Tokens** | Not used with Cosmos DB SQL API for Azure AD users |
+| **Certificates + Key Vault** | Not used to grant read access to Cosmos DB |
+| **Azure Information Protection** | Not used to manage access to Cosmos DB data |
+
+#### Code Example: Using Entra ID Authentication
 
 ```csharp
 // Using Entra ID with managed identity
@@ -755,6 +806,21 @@ CosmosClient client = new CosmosClient(
     new DefaultAzureCredential()  // Uses Entra ID authentication
 );
 ```
+
+```csharp
+// Using Entra ID with specific user credentials
+var credential = new InteractiveBrowserCredential();
+CosmosClient client = new CosmosClient(
+    accountEndpoint: "https://your-account.documents.azure.com:443/",
+    tokenCredential: credential
+);
+```
+
+#### References
+
+- [Grant control plane RBAC access](https://learn.microsoft.com/azure/cosmos-db/nosql/security/how-to-grant-control-plane-role-based-access)
+- [Security overview for Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/security)
+- [Cosmos DB Built-in Data Reader role](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#cosmos-db-data-reader)
 
 ---
 
@@ -2342,6 +2408,166 @@ If you need range queries on the partition key field, consider redesigning your 
 - [Query an Azure Cosmos DB container](https://learn.microsoft.com/azure/cosmos-db/sql-query-getting-started)
 - [Optimize query performance in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/sql-query-performance-tuning)
 - [Understanding Azure Cosmos DB partitioning](https://learn.microsoft.com/azure/cosmos-db/partitioning-overview)
+
+---
+
+### Question 10: Microsoft Entra ID Read Access for Cosmos DB SQL API
+
+**Scenario:**
+
+You have a Microsoft Entra tenant.
+
+You plan to deploy Azure Cosmos DB databases that will use the SQL API.
+
+You need to recommend a solution to provide specific Microsoft Entra ID user accounts with read access to the Cosmos DB databases.
+
+**Question:**
+
+What should you include in the recommendation?
+
+**Select only one answer:**
+
+**A.** shared access signatures (SAS) and conditional access policies
+
+**B.** certificates and Azure Key Vault
+
+**C.** a resource token and an Access control (IAM) role assignment ✅
+
+**D.** master keys and Azure Information Protection policies
+
+---
+
+### Answer: C ✅
+
+**A resource token and an Access control (IAM) role assignment is correct.**
+
+---
+
+### Detailed Explanation
+
+#### Why Option C is Correct
+
+Azure Cosmos DB supports **Azure role-based access control (RBAC)** for data plane operations using Microsoft Entra identities. This approach provides several key benefits:
+
+1. **Built-in RBAC Roles**
+   - You can assign built-in roles like **Cosmos DB Built-in Data Reader** to specific Microsoft Entra ID user accounts
+   - Assignment is done via **Access control (IAM)** in the Azure portal
+   - No need to manage keys or credentials manually
+
+2. **Resource Tokens**
+   - Users receive **resource tokens** that authorize read access to the Cosmos DB databases
+   - Tokens are generated based on the role assignments
+   - Supports fine-grained, identity-based access control
+
+3. **Security Best Practices**
+   - Eliminates the need to share or rotate keys
+   - Integrates with Azure AD for centralized identity management
+   - Supports conditional access policies for additional security
+   - Audit logs track who accessed what data
+
+4. **Implementation Steps**
+   ```
+   ┌──────────────────────────────────────────────────────────────┐
+   │  1. Navigate to Cosmos DB account                            │
+   │  2. Go to Access control (IAM)                               │
+   │  3. Add role assignment                                      │
+   │  4. Select: Cosmos DB Built-in Data Reader                   │
+   │  5. Assign to specific Microsoft Entra ID users              │
+   │  6. Users authenticate with Azure AD and receive resource    │
+   │     tokens for read-only access                              │
+   └──────────────────────────────────────────────────────────────┘
+   ```
+
+---
+
+#### Why Option A is Incorrect
+
+**"shared access signatures (SAS) and conditional access policies"**
+
+**Problems:**
+
+1. **SAS tokens are NOT used with Cosmos DB SQL API**
+   - SAS is designed for Azure Storage services (Blob, Queue, Table, File)
+   - Does not integrate with Azure RBAC or Cosmos DB SQL API
+   - Not applicable for granting access to Cosmos DB databases
+
+2. **Service Applicability**
+   | Service | Uses SAS? |
+   |---------|----------|
+   | Azure Blob Storage | ✅ Yes |
+   | Azure Queue Storage | ✅ Yes |
+   | Azure Table Storage | ✅ Yes |
+   | Azure File Storage | ✅ Yes |
+   | **Azure Cosmos DB** | ❌ **No** |
+
+---
+
+#### Why Option B is Incorrect
+
+**"certificates and Azure Key Vault"**
+
+**Problems:**
+
+1. **Certificates are NOT used for Cosmos DB data access**
+   - Certificates don't grant read access to Cosmos DB data
+   - Key Vault is for storing and managing secrets—not assigning data access
+
+2. **Key Vault Use Cases (Not for Cosmos DB Read Access)**
+   - Storing application secrets
+   - Managing encryption keys
+   - Certificate lifecycle management
+   - NOT for fine-grained database access control
+
+---
+
+#### Why Option D is Incorrect
+
+**"master keys and Azure Information Protection policies"**
+
+**Problems:**
+
+1. **Master Keys Provide Full Access**
+   - Master keys grant **full administrative access** to ALL resources in the account
+   - Cannot be scoped to specific users
+   - Not suitable for fine-grained access control
+   - If compromised, entire account is at risk
+
+2. **Azure Information Protection**
+   - Used for classifying and protecting documents/emails
+   - NOT used to manage access to Cosmos DB data
+   - Wrong technology for database access control
+
+---
+
+### Key Takeaways
+
+1. **Use Azure RBAC + Access control (IAM) for Entra ID User Access**
+   - Recommended approach for enterprise scenarios
+   - Fine-grained, identity-based access control
+   - No key management required
+
+2. **Built-in Data Plane Roles**
+   - **Cosmos DB Built-in Data Reader**: Read-only access
+   - **Cosmos DB Built-in Data Contributor**: Read/write access
+
+3. **Resource Tokens are Generated Automatically**
+   - Users authenticate via Microsoft Entra ID
+   - Azure issues resource tokens based on role assignments
+   - Tokens authorize access to specific resources
+
+4. **SAS is NOT for Cosmos DB**
+   - Common exam trap - SAS is for Azure Storage, not Cosmos DB
+   - Use resource tokens or Azure RBAC instead
+
+---
+
+### References
+
+- [Grant control plane RBAC access - Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/nosql/security/how-to-grant-control-plane-role-based-access?tabs=built-in-definition%2Ccsharp&pivots=azure-interface-cli)
+- [Security overview - Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/security?tabs=using-primary-key)
+- [Cosmos DB Built-in Data Reader role](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#cosmos-db-data-reader)
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
 
 ---
 
