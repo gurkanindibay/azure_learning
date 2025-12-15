@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [What is Azure Data Lake Storage Gen2?](#what-is-azure-data-lake-storage-gen2)
+- [Storage Account Requirements for Data Lake Storage Gen2](#storage-account-requirements-for-data-lake-storage-gen2)
 - [Migration Tools Comparison](#migration-tools-comparison)
   - [AzCopy](#azcopy)
   - [Azure File Sync](#azure-file-sync)
@@ -37,6 +38,89 @@ Azure Data Lake Storage Gen2 is the result of converging the capabilities of Azu
 | **Performance** | Optimized for analytics workloads with high-throughput data processing |
 | **Compatibility** | Works with Azure Blob Storage APIs and Azure Data Lake Storage Gen2 APIs |
 | **Security** | Supports Azure RBAC and POSIX-like ACLs for fine-grained access control |
+
+---
+
+## Storage Account Requirements for Data Lake Storage Gen2
+
+To enable Azure Data Lake Storage Gen2 capabilities, you must use a **general-purpose v2 (GPv2) storage account** with **hierarchical namespace enabled**. This configuration is essential for accessing advanced features like directory-level ACLs and multi-level folder structures.
+
+### Key Requirements
+
+| Requirement | Solution | Why It Matters |
+|-------------|----------|----------------|
+| **Petabyte-scale storage** | General-purpose v2 with HNS enabled | Supports up to 5 PiB account capacity with blob storage |
+| **Blob storage** | General-purpose v2 account | Native blob storage support with all three blob types (block, append, page) |
+| **Multiple folder levels** | Hierarchical namespace enabled | Enables unlimited directory depth (3+ levels of subfolders) |
+| **Access Control Lists (ACLs)** | Hierarchical namespace enabled | Provides POSIX-compliant ACLs at directory and file level |
+
+### Storage Account Type Comparison
+
+When selecting a storage account type for large-scale blob storage with folder structures and ACLs, it's important to understand the differences:
+
+| Storage Account Type | Supports Hierarchical Namespace? | Supports ACLs? | Best Use Case |
+|---------------------|----------------------------------|----------------|---------------|
+| **General-purpose v2 (GPv2) with HNS** | ✅ Yes | ✅ Yes | **Data Lake Storage Gen2**: Big data analytics, hierarchical folders, fine-grained permissions |
+| Premium Block Blob | ❌ No | ❌ No | Low-latency scenarios requiring high transaction rates |
+| Premium Page Blob | ❌ No | ❌ No | IaaS virtual hard disks (VHDs) for Azure VMs |
+| Premium File Share | N/A (different service) | ✅ Yes (SMB ACLs) | Azure Files service, not Blob Storage |
+
+### Why General-Purpose v2 with Hierarchical Namespace?
+
+**General-purpose v2 storage accounts with hierarchical namespace enabled** are the correct choice when you need:
+
+1. **Blob Storage**: Data must be stored as blobs (block blobs, append blobs, or page blobs)
+2. **Large-Scale Storage**: Support for petabyte-level data storage
+3. **Hierarchical Folder Structure**: Three or more levels of nested directories/subfolders
+4. **Fine-Grained Permissions**: Directory-level and file-level ACLs using POSIX-compliant permissions
+5. **Analytics Workloads**: Integration with big data tools like Apache Hadoop, Azure Databricks, Azure Synapse Analytics
+
+### What Doesn't Work
+
+❌ **Premium Block Blob Storage**
+- Does not support hierarchical namespace
+- Cannot organize blobs into directories with multiple levels
+- Does not support ACLs at directory or file level
+- Best for: Low-latency, high-throughput scenarios without folder structure requirements
+
+❌ **Premium Page Blob Storage**
+- Designed for VM disk storage (VHDs), not general-purpose data storage
+- Does not support hierarchical namespace or ACLs
+- Best for: Azure VM operating system and data disks
+
+❌ **Premium File Share Storage**
+- Part of Azure Files service, not Blob Storage
+- Uses SMB protocol with SMB ACLs (different from POSIX ACLs)
+- Does not meet the requirement of storing data in **blob storage**
+- Best for: File shares requiring SMB protocol access
+
+### Enabling Hierarchical Namespace
+
+When creating a storage account, you must enable hierarchical namespace to unlock Data Lake Storage Gen2 capabilities:
+
+```bash
+# Azure CLI: Create GPv2 storage account with hierarchical namespace
+az storage account create \
+  --name mystorageaccount \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --sku Standard_LRS \
+  --kind StorageV2 \
+  --hierarchical-namespace true
+```
+
+```powershell
+# PowerShell: Create GPv2 storage account with hierarchical namespace
+New-AzStorageAccount `
+  -ResourceGroupName "myResourceGroup" `
+  -Name "mystorageaccount" `
+  -Location "eastus" `
+  -SkuName "Standard_LRS" `
+  -Kind "StorageV2" `
+  -EnableHierarchicalNamespace $true
+```
+
+> **⚠️ Important Note**: Hierarchical namespace **cannot be disabled** after it's enabled on a storage account. Plan your account configuration carefully before enabling this feature.
 
 ---
 
@@ -257,6 +341,68 @@ You have an Azure subscription with a storage account named **storage1** that ha
 
 **Explanation**:
 Hierarchical namespace (HNS) enables Azure Data Lake Storage Gen2 capabilities, allowing blobs to be organized into a directory structure similar to a file system. This is essential for big data analytics workloads that require efficient directory operations and POSIX-compliant access controls. Storage costs, encryption, and capacity limits are independent of HNS.
+
+</details>
+
+---
+
+### Question 3: Storage Account Configuration for Large-Scale Requirements
+
+**Scenario**: You need to recommend an Azure Storage solution that meets the following requirements:
+
+- The storage must support 1 PB of data
+- The data must be stored in blob storage
+- The storage must support three levels of subfolders
+- The storage must support Access Control Lists (ACLs)
+
+**Question**: What should you include in the recommendation?
+
+**Options**:
+- A) A premium storage account that is configured for page blobs
+- B) A premium storage account that is configured for block blobs
+- C) A premium storage account that is configured for file shares and supports large file shares
+- D) A general-purpose v2 storage account that has hierarchical namespace enabled
+
+<details>
+<summary>Click to reveal answer</summary>
+
+**Correct Answer**: D) A general-purpose v2 storage account that has hierarchical namespace enabled
+
+**Explanation**:
+
+✅ **A general-purpose v2 storage account with hierarchical namespace enabled** is correct because:
+- This configuration enables **Azure Data Lake Storage Gen2** capabilities
+- Supports **petabyte-scale storage** (up to 5 PiB capacity)
+- Uses **blob storage** as the underlying storage layer
+- Hierarchical namespace allows **unlimited directory depth** (3+ levels of subfolders)
+- Provides **POSIX-compliant ACLs** at both directory and file level
+- Enables fine-grained permissions management required for multi-level folder structures
+
+❌ **Premium storage account for page blobs** is incorrect because:
+- Page blobs are designed primarily for **IaaS virtual hard disks** (OS and data disks for Azure VMs)
+- Does **not support hierarchical namespace** or directory structures
+- Does **not support ACLs** at directory or file level
+- Not optimized for general-purpose data storage or analytics workloads
+
+❌ **Premium storage account for block blobs** is incorrect because:
+- While block blobs are suitable for storing unstructured data, premium block blob accounts do **not support hierarchical namespace**
+- Cannot organize blobs into **multi-level directories**
+- Does **not support ACLs** at directory or file level (only container-level permissions)
+- Optimized for low-latency, high-throughput scenarios, not hierarchical data organization
+
+❌ **Premium file share with large file shares** is incorrect because:
+- Azure Files is a **different service** from Blob Storage (uses SMB/NFS protocols)
+- Although it supports ACLs and folder structures, it does **not store data in blob storage**
+- Not optimized for petabyte-scale blob data scenarios
+- Uses SMB ACLs rather than POSIX-compliant ACLs provided by Data Lake Storage Gen2
+
+**Key Takeaway**: When requirements include blob storage, hierarchical folder structures (3+ levels), and ACLs, always choose a **general-purpose v2 storage account with hierarchical namespace enabled** (Data Lake Storage Gen2).
+
+**References**:
+- [Azure Data Lake Storage Gen2 Introduction](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction)
+- [Hierarchical Namespace](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-namespace)
+- [Access Control in Data Lake Storage Gen2](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-access-control)
+- [Storage Account Overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview)
 
 </details>
 
