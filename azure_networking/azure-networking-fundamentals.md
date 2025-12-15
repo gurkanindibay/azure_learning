@@ -16,6 +16,7 @@
   - [3.2 How Private Endpoints Work](#32-how-private-endpoints-work)
   - [3.3 Private Link Service](#33-private-link-service)
   - [3.4 DNS Configuration](#34-dns-configuration)
+    - [3.4.1 DNS Resolution for Hybrid/On-Premises Connectivity](#341-dns-resolution-for-hybridon-premises-connectivity)
   - [3.5 Supported Services](#35-supported-services)
   - [3.6 Benefits of Private Endpoints](#36-benefits-of-private-endpoints)
 - [4. Service Endpoints vs Private Endpoints](#4-service-endpoints-vs-private-endpoints)
@@ -364,6 +365,102 @@ CNAME: mystorageaccount.privatelink.blob.core.windows.net
          ▼
 Private DNS Zone resolves to: 10.0.1.5 (private endpoint IP)
 ```
+
+#### 3.4.1 DNS Resolution for Hybrid/On-Premises Connectivity
+
+When on-premises clients need to access Azure PaaS services through Private Endpoints, DNS resolution requires special configuration. Azure Private DNS zones only resolve names for linked virtual networks via Azure-provided DNS.
+
+**The Challenge:**
+- On-premises clients cannot directly query Azure Private DNS zones
+- The Azure-provided DNS (168.63.129.16) is only accessible from within Azure VMs
+- Public DNS zones return public IPs, bypassing the private endpoint
+
+**Solution Architecture: DNS Forwarder**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│              HYBRID DNS RESOLUTION FOR PRIVATE ENDPOINTS                     │
+│                                                                              │
+│  On-Premises Network                        Azure Virtual Network (VNET1)   │
+│  ┌─────────────────────┐                   ┌─────────────────────────────┐  │
+│  │                     │                   │                             │  │
+│  │  ┌───────────────┐  │   ExpressRoute    │  ┌───────────────────────┐  │  │
+│  │  │ On-Prem       │  │   or VPN          │  │ VM1 (DNS Forwarder)   │  │  │
+│  │  │ Client        │──┼───────────────────┼─▶│ Forwards contoso.com  │  │  │
+│  │  │               │  │                   │  │ to 168.63.129.16      │  │  │
+│  │  └───────────────┘  │                   │  └───────────┬───────────┘  │  │
+│  │         │           │                   │              │              │  │
+│  │         │ DNS Query │                   │              ▼              │  │
+│  │         │ for       │                   │  ┌───────────────────────┐  │  │
+│  │         │ sqldb1.   │                   │  │ Azure-Provided DNS    │  │  │
+│  │         │ contoso.  │                   │  │ 168.63.129.16         │  │  │
+│  │         │ com       │                   │  └───────────┬───────────┘  │  │
+│  │         │           │                   │              │              │  │
+│  │         ▼           │                   │              ▼              │  │
+│  │  ┌───────────────┐  │                   │  ┌───────────────────────┐  │  │
+│  │  │ On-Prem DNS   │  │                   │  │ Private DNS Zone      │  │  │
+│  │  │ Server        │  │                   │  │ contoso.com           │  │  │
+│  │  │ Forwards to   │──┼───────────────────┼─▶│ A Record: PE1 IP      │  │  │
+│  │  │ VM1 in Azure  │  │                   │  └───────────┬───────────┘  │  │
+│  │  └───────────────┘  │                   │              │              │  │
+│  └─────────────────────┘                   │              ▼              │  │
+│                                            │  ┌───────────────────────┐  │  │
+│                                            │  │ PE1 (Private Endpoint)│  │  │
+│                                            │  │ Provides connectivity │  │  │
+│                                            │  │ to SQLDB1             │  │  │
+│                                            │  └───────────────────────┘  │  │
+│                                            └─────────────────────────────┘  │
+│                                                                              │
+│  Result: On-prem client resolves sqldb1.contoso.com → Private IP of PE1     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Example Scenario:**
+
+| Resource | Type | Description |
+|----------|------|-------------|
+| **VNET1** | Virtual Network | Connected to on-premises via ExpressRoute |
+| **VM1** | Virtual Machine | Configured as DNS server/forwarder |
+| **PE1** | Private Endpoint | Provides connectivity to SQLDB1 |
+| **contoso.com** | Private DNS Zone | Linked to VNET1, contains A record for PE1 |
+| **contoso.com** | Public DNS Zone | Contains CNAME record for SQLDB1 (public) |
+
+**Configuration Options Analysis:**
+
+| Configuration | Result | Explanation |
+|---------------|--------|-------------|
+| **VM1 forwards to 168.63.129.16** | ✅ **Correct** | Azure-provided DNS resolves private DNS zones linked to the VNet. On-prem queries reach VM1 → forwarded to Azure DNS → resolves to PE1's private IP |
+| **VM1 forwards to public DNS zone** | ❌ **Incorrect** | Public DNS returns CNAME to public endpoint, bypassing the private endpoint entirely |
+| **VNet custom DNS set to 168.63.129.16** | ❌ **Incorrect** | 168.63.129.16 is implicit for Azure VMs; setting it explicitly as custom DNS causes resolution loops/issues |
+
+**Why 168.63.129.16?**
+
+The IP address `168.63.129.16` is a special Azure wireserver IP address that:
+- Is available **only from within Azure VMs**
+- Automatically resolves names in **private DNS zones linked to the VNet**
+- Cannot be reached directly from on-premises networks
+- Is used implicitly by Azure VMs when no custom DNS is configured
+
+**DNS Forwarder Configuration Steps:**
+
+1. **Deploy a DNS server VM** (e.g., VM1) in the Azure VNet
+2. **Configure conditional forwarding** on VM1 to forward queries for the private endpoint domain (e.g., contoso.com) to `168.63.129.16`
+3. **Link the Private DNS Zone** to the VNet containing VM1
+4. **Configure on-premises DNS** to forward queries for the domain to VM1's IP address
+5. **Ensure network connectivity** between on-premises and VM1 via VPN/ExpressRoute
+
+**Best Practices:**
+
+- Deploy DNS forwarders in a highly available configuration (multiple VMs across availability zones)
+- Use Azure DNS Private Resolver as a managed alternative to VM-based DNS forwarders
+- Ensure NSG rules allow DNS traffic (UDP/TCP port 53) between on-premises and the DNS forwarder VMs
+- Consider using Azure Firewall DNS proxy for centralized DNS management
+
+**References:**
+- [Private endpoint DNS integration](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns)
+- [Azure Private DNS overview](https://learn.microsoft.com/en-us/azure/dns/private-dns-overview)
+- [What is IP address 168.63.129.16](https://learn.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16)
+- [Name resolution for VMs and role instances](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
 
 ### 3.5 Supported Services
 
