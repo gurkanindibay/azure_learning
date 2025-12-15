@@ -7,11 +7,16 @@
   - [Overview](#mapping-data-flows-overview)
   - [Use Cases](#use-cases)
   - [Blob to Data Lake Transformation](#blob-to-data-lake-transformation)
+- [Azure-SSIS Integration Runtime](#azure-ssis-integration-runtime)
+  - [Overview](#azure-ssis-integration-runtime-overview)
+  - [Key Features](#azure-ssis-integration-runtime-key-features)
+  - [When to Use Azure-SSIS IR](#when-to-use-azure-ssis-ir)
 - [When to Use Azure Data Factory](#when-to-use-azure-data-factory)
 - [Related Services Comparison](#related-services-comparison)
 - [Practice Questions](#practice-questions)
   - [Question 1: On-Premises Oracle to Azure Databricks Data Pipeline](#question-1-on-premises-oracle-to-azure-databricks-data-pipeline)
   - [Question 2: Copying On-Premises File Server Data to Azure Storage](#question-2-copying-on-premises-file-server-data-to-azure-storage)
+  - [Question 3: Migrating SSIS Packages to Azure](#question-3-migrating-ssis-packages-to-azure)
 - [References](#references)
 
 ---
@@ -123,6 +128,66 @@ Azure Data Factory is the **correct choice** for this scenario because:
    - Add Sink transformation
 4. **Create Pipeline**: Add Data Flow activity and configure execution parameters
 5. **Test and Monitor**: Use Debug mode to test, then schedule and monitor
+
+---
+
+## Azure-SSIS Integration Runtime
+
+### Azure-SSIS Integration Runtime Overview
+
+**Azure-SSIS Integration Runtime (IR)** is a fully managed cluster of Azure VMs dedicated to running SQL Server Integration Services (SSIS) packages in the cloud. It enables you to **lift and shift** existing SSIS packages to Azure without redesigning them.
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                     Azure Data Factory                              │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Azure-SSIS Integration Runtime                   │  │
+│  │  ┌─────────────────┐    ┌─────────────────┐                  │  │
+│  │  │  SSIS Package 1 │    │  SSIS Package 2 │  ...             │  │
+│  │  └────────┬────────┘    └────────┬────────┘                  │  │
+│  │           │                      │                            │  │
+│  │           ▼                      ▼                            │  │
+│  │  ┌───────────────────────────────────────────────────────┐   │  │
+│  │  │              Azure SQL Database                        │   │  │
+│  │  │           (Destination Databases)                      │   │  │
+│  │  └───────────────────────────────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Azure-SSIS Integration Runtime Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Lift and Shift** | Run existing SSIS packages in Azure without modification |
+| **Fully Managed** | Azure manages the underlying VM cluster |
+| **SSISDB Support** | Store packages in Azure SQL Database (SSISDB catalog) |
+| **Scale Options** | Configure node size and count based on workload |
+| **Hybrid Connectivity** | Connect to on-premises data sources using VNet integration |
+| **Package Store** | Support for SSIS package stores (file system, MSDB) |
+
+### When to Use Azure-SSIS IR
+
+#### ✅ Use Azure-SSIS IR When:
+- You have existing SSIS packages that need to run in Azure
+- You're migrating on-premises SQL Server databases to Azure SQL Database
+- You need to maintain existing SSIS package investments
+- You want a managed environment without redesigning ETL logic
+- Your packages target Azure SQL Database, Azure SQL Managed Instance, or SQL Server in Azure VMs
+
+#### ❌ Don't Use Azure-SSIS IR When:
+- You're building new ETL pipelines (use Mapping Data Flows instead)
+- You need real-time data processing (use Azure Stream Analytics)
+- You don't have existing SSIS packages to migrate
+
+### Migration Comparison
+
+| Tool | Purpose | SSIS Package Support | Best For |
+|------|---------|---------------------|----------|
+| **Azure Data Factory + Azure-SSIS IR** | Run SSIS packages in Azure | ✅ Yes | Migrating existing SSIS workloads |
+| **Data Migration Assistant (DMA)** | Database schema and data migration | ❌ No | Assessing and migrating SQL Server databases |
+| **SQL Server Migration Assistant (SSMA)** | Migrate non-SQL Server to SQL Server | ❌ No | Oracle, MySQL, Access to SQL Server migration |
+| **Azure Data Catalog** | Data asset discovery and metadata | ❌ No | Data governance and discovery |
 
 ---
 
@@ -1046,15 +1111,187 @@ az datafactory create \
 
 ---
 
+### Question 3: Migrating SSIS Packages to Azure
+
+#### Scenario
+
+You have **100 Microsoft SQL Server Integration Services (SSIS) packages** that are configured to use **10 on-premises SQL Server databases** as their destinations.
+
+You plan to **migrate the 10 on-premises databases to Azure SQL Database**.
+
+You need to recommend a solution to create **Azure-SSIS packages**. The solution must ensure that the packages can target the **Azure SQL Database instances** as their destinations.
+
+**Question:** What should you include in the recommendation?
+
+---
+
+#### Options
+
+A. Data Migration Assistant (DMA)  
+B. Azure Data Factory  
+C. Azure Data Catalog  
+D. SQL Server Migration Assistant (SSMA)
+
+---
+
+**Correct Answer:** **B. Azure Data Factory**
+
+---
+
+### Detailed Explanation
+
+#### Why Azure Data Factory is Correct ✅
+
+Azure Data Factory supports running SQL Server Integration Services (SSIS) packages in Azure using **Azure-SSIS Integration Runtime (IR)**. This provides a fully managed environment to **lift and shift** existing SSIS packages to the cloud without needing to redesign them.
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                        Azure Data Factory                           │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │           Azure-SSIS Integration Runtime (IR)                 │  │
+│  │                                                               │  │
+│  │  ┌─────────────┐  ┌─────────────┐       ┌─────────────┐      │  │
+│  │  │ Package 1   │  │ Package 2   │  ...  │ Package 100 │      │  │
+│  │  │ (Migrated)  │  │ (Migrated)  │       │ (Migrated)  │      │  │
+│  │  └──────┬──────┘  └──────┬──────┘       └──────┬──────┘      │  │
+│  │         │                │                     │              │  │
+│  │         └────────────────┼─────────────────────┘              │  │
+│  │                          ▼                                    │  │
+│  │  ┌───────────────────────────────────────────────────────┐   │  │
+│  │  │              Azure SQL Database                        │   │  │
+│  │  │         (10 Migrated Databases)                        │   │  │
+│  │  └───────────────────────────────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Benefits of Azure Data Factory for SSIS Migration:
+
+1. **Lift and Shift**: Run existing 100 SSIS packages with minimal changes
+2. **Fully Managed Environment**: No need to manage underlying infrastructure
+3. **Native Azure SQL Support**: Seamless connectivity to Azure SQL Database
+4. **SSISDB Catalog**: Store packages in Azure SQL Database catalog
+5. **Scalability**: Configure node size and count based on workload requirements
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### ❌ A. Data Migration Assistant (DMA)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Assess and migrate database schema and data |
+| **SSIS Support** | ❌ Does not run or manage SSIS packages |
+| **Use For** | SQL Server database upgrades, compatibility assessment |
+
+Data Migration Assistant is excellent for migrating the **database schema and data** from on-premises SQL Server to Azure SQL Database, but it **cannot execute or manage SSIS packages**.
+
+---
+
+##### ❌ C. Azure Data Catalog
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Data asset discovery and metadata management |
+| **SSIS Support** | ❌ Does not migrate or execute SSIS packages |
+| **Use For** | Data governance, cataloging data sources |
+
+Azure Data Catalog is used for **discovering and managing metadata** about data assets. It has no capability to run or migrate SSIS packages.
+
+---
+
+##### ❌ D. SQL Server Migration Assistant (SSMA)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Migrate data from non-SQL Server platforms to SQL Server |
+| **SSIS Support** | ❌ Does not manage or execute SSIS packages |
+| **Use For** | Oracle, MySQL, Access, Sybase, DB2 to SQL Server migration |
+
+SQL Server Migration Assistant is designed to migrate data from **non-SQL Server databases** (like Oracle, MySQL, Access) to SQL Server or Azure SQL. It does **not handle SSIS package migration or execution**.
+
+---
+
+### Solution Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Migration Process                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Step 1: Migrate Databases                                               │
+│  ┌────────────────────────┐      ┌────────────────────────┐             │
+│  │ On-Premises SQL Server │ ───► │    Azure SQL Database   │             │
+│  │    (10 Databases)      │ DMA  │    (10 Databases)       │             │
+│  └────────────────────────┘      └────────────────────────┘             │
+│                                                                          │
+│  Step 2: Deploy SSIS Packages to Azure                                   │
+│  ┌────────────────────────┐      ┌────────────────────────┐             │
+│  │   On-Premises SSIS     │ ───► │   Azure Data Factory    │             │
+│  │   (100 Packages)       │ ADF  │   Azure-SSIS IR         │             │
+│  └────────────────────────┘      └────────────────────────┘             │
+│                                                                          │
+│  Step 3: Update Connection Strings                                       │
+│  - Update package connection managers to point to Azure SQL Database     │
+│  - Configure Azure-SSIS IR with appropriate permissions                  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Implementation Steps
+
+1. **Create Azure Data Factory Instance**
+   - Provision an Azure Data Factory in your Azure subscription
+
+2. **Provision Azure-SSIS Integration Runtime**
+   ```
+   Azure Portal → Data Factory → Integration Runtimes → New → Azure-SSIS
+   ```
+
+3. **Configure SSISDB Catalog**
+   - Use Azure SQL Database to host the SSIS catalog (SSISDB)
+   - Store all 100 packages in the catalog
+
+4. **Update Package Connections**
+   - Update connection managers to target Azure SQL Database endpoints
+   - Configure authentication (SQL authentication or Azure AD)
+
+5. **Deploy and Execute Packages**
+   - Deploy packages to SSISDB
+   - Execute using ADF pipelines or SSMS
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [Azure Data Factory Introduction](https://learn.microsoft.com/en-us/azure/data-factory/introduction)
+- [Deploy SSIS Packages to Azure](https://learn.microsoft.com/en-us/azure/data-factory/tutorial-deploy-ssis-packages-azure)
+- [Azure-SSIS Integration Runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-azure-ssis-integration-runtime)
+- [Data Migration Assistant Overview](https://learn.microsoft.com/en-us/sql/dma/dma-overview?view=sql-server-ver16)
+- [Azure Data Catalog](https://learn.microsoft.com/en-us/shows/azure/introducing-azure-data-catalog)
+- [SQL Server Migration Assistant](https://learn.microsoft.com/en-us/sql/ssma/sql-server-migration-assistant?view=sql-server-ver15)
+
+**Domain:** Design data storage solutions
+
+---
+
 ## References
 
 - [Azure Data Factory Overview](https://learn.microsoft.com/en-us/azure/data-factory/introduction)
 - [Mapping Data Flows Overview](https://learn.microsoft.com/en-us/azure/data-factory/concepts-data-flow-overview)
 - [Transform Data Using Mapping Data Flows](https://learn.microsoft.com/en-us/azure/data-factory/transform-data-using-data-flow)
+- [Azure-SSIS Integration Runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-azure-ssis-integration-runtime)
+- [Deploy SSIS Packages to Azure](https://learn.microsoft.com/en-us/azure/data-factory/tutorial-deploy-ssis-packages-azure)
 - [Azure Databricks Introduction](https://learn.microsoft.com/en-us/azure/databricks/introduction/)
 - [Azure Data Box Gateway Overview](https://learn.microsoft.com/en-us/azure/databox-gateway/data-box-gateway-overview)
 - [Azure File Sync Introduction](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-introduction)
 - [Azure Data Factory vs Azure Databricks](https://learn.microsoft.com/en-us/azure/architecture/data-guide/technology-choices/data-science-and-machine-learning)
+- [Data Migration Assistant Overview](https://learn.microsoft.com/en-us/sql/dma/dma-overview?view=sql-server-ver16)
+- [SQL Server Migration Assistant](https://learn.microsoft.com/en-us/sql/ssma/sql-server-migration-assistant?view=sql-server-ver15)
 
 ---
 
