@@ -7,6 +7,12 @@
 - [Protocols](#protocols)
   - [SMB Protocol](#smb-protocol)
   - [NFS Protocol](#nfs-protocol)
+- [Storage Tiers](#storage-tiers)
+  - [Premium Tier](#premium-tier)
+  - [Transaction Optimized Tier](#transaction-optimized-tier)
+  - [Hot Tier](#hot-tier)
+  - [Cool Tier](#cool-tier)
+  - [Storage Tier Comparison](#storage-tier-comparison)
 - [Supported Operating Systems](#supported-operating-systems)
 - [Mounting Azure File Shares](#mounting-azure-file-shares)
   - [Windows](#windows)
@@ -65,6 +71,149 @@ Azure Files supports two industry-standard file sharing protocols:
 |----------|---------|-------|-------|------------------|
 | **SMB** | ✅ | ✅ | ✅ | No |
 | **NFS** | ❌ | ✅ | ❌ | Yes |
+
+## Storage Tiers
+
+Azure Files offers different storage tiers optimized for various workload requirements, performance needs, and cost considerations. Understanding these tiers is crucial for selecting the right solution for your use case.
+
+### Premium Tier
+
+**Premium tier** is the highest performance tier, designed for **performance-sensitive and transaction-intensive workloads**.
+
+**Key Characteristics:**
+- **Storage Type**: SSD-backed storage (solid-state drives)
+- **Performance**: Low latency, high IOPS, consistent throughput
+- **Redundancy**: Supports **LRS (Locally Redundant Storage)** and **ZRS (Zone-Redundant Storage)**
+- **Use Cases**: 
+  - Transaction-intensive applications
+  - High-performance databases
+  - On-premises applications requiring fast and frequent access
+  - Latency-sensitive workloads
+- **Billing**: Based on provisioned capacity (you pay for what you provision, not what you use)
+
+**Why Premium for Transaction-Intensive Workloads?**
+
+Premium tier is specifically optimized for scenarios where low latency and high throughput are critical. The SSD-backed infrastructure ensures:
+- **Consistent Performance**: Predictable and low-latency responses
+- **High IOPS**: Ideal for applications with frequent read/write operations
+- **Maximum Resiliency**: ZRS provides highest availability within a region, protecting data even if an entire availability zone fails
+
+### Transaction Optimized Tier
+
+**Transaction optimized tier** is designed for **workloads with high transaction rates** but can tolerate slightly higher latency compared to Premium.
+
+**Key Characteristics:**
+- **Storage Type**: HDD-backed storage (hard disk drives)
+- **Performance**: Good for frequently accessed files, but with higher latency than Premium
+- **Redundancy**: Supports **LRS, ZRS, GRS (Geo-Redundant Storage), and GZRS (Geo-Zone-Redundant Storage)**
+- **Use Cases**:
+  - Web applications
+  - File shares with moderate transaction requirements
+  - Team collaboration and file sharing
+- **Billing**: Pay for storage used + per-transaction costs
+
+**Comparison with Premium:**
+- ✅ **More cost-effective** for moderate workloads
+- ❌ **Higher latency** due to HDD-backed storage
+- ❌ **Lower IOPS** compared to Premium
+- ✅ **Better redundancy options** (includes GRS and GZRS)
+
+### Hot Tier
+
+**Hot tier** is optimized for **general-purpose file shares** with regular access patterns.
+
+**Key Characteristics:**
+- **Storage Type**: HDD-backed storage
+- **Performance**: Balanced performance for frequently accessed data
+- **Redundancy**: Supports **LRS, ZRS, GRS, and GZRS**
+- **Use Cases**:
+  - Active data that is accessed regularly but not transaction-intensive
+  - General-purpose file shares
+  - Departmental file shares
+- **Billing**: Pay for storage used + per-transaction costs (lower storage costs than transaction optimized)
+
+### Cool Tier
+
+**Cool tier** is designed for **infrequently accessed data** where storage cost optimization is a priority.
+
+**Key Characteristics:**
+- **Storage Type**: HDD-backed storage
+- **Performance**: Lower performance expectations for infrequently accessed data
+- **Redundancy**: Supports **LRS, ZRS, GRS, and GZRS**
+- **Use Cases**:
+  - Archival data
+  - Long-term backup storage
+  - Compliance and retention data
+- **Billing**: Lowest storage cost + higher per-transaction costs
+
+### Storage Tier Comparison
+
+| Feature | Premium | Transaction Optimized | Hot | Cool |
+|---------|---------|----------------------|-----|------|
+| **Storage Medium** | SSD | HDD | HDD | HDD |
+| **Latency** | Lowest | Moderate | Moderate | Higher |
+| **IOPS** | Highest | Good | Moderate | Lower |
+| **Storage Cost** | Highest | Moderate-High | Moderate | Lowest |
+| **Transaction Cost** | Included in provisioning | Per transaction | Per transaction | Highest per transaction |
+| **Redundancy Options** | LRS, ZRS | LRS, ZRS, GRS, GZRS | LRS, ZRS, GRS, GZRS | LRS, ZRS, GRS, GZRS |
+| **Provisioned Model** | Yes | No (pay-as-you-go) | No (pay-as-you-go) | No (pay-as-you-go) |
+| **NFS Support** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Best For** | Transaction-intensive, low-latency workloads | Frequently accessed files | General-purpose file shares | Infrequently accessed data |
+
+---
+
+### Practice Question: Storage Tier for Transaction-Intensive Workloads
+
+**Scenario:**
+You plan to create an Azure storage account that will host file shares. The shares will be accessed from on-premises applications that are **transaction-intensive**.
+
+You need to recommend a solution to **minimize latency** when accessing the file shares. The solution must provide the **highest level of resiliency** for the selected storage tier.
+
+**Question:**
+What storage tier should you recommend?
+
+**Options:**
+1. ❌ **Hot**
+2. ✅ **Premium**
+3. ❌ **Transaction optimized**
+
+**Answer: Premium**
+
+**Explanation:**
+
+**Premium is correct** because:
+1. **Performance-Optimized**: Premium tier is designed specifically for **performance-sensitive and transaction-intensive workloads**
+2. **SSD-Backed Storage**: Uses solid-state drives (SSDs) which provide:
+   - **Low latency** (critical for on-premises applications)
+   - **High IOPS** (ideal for transaction-intensive workloads)
+   - **Consistent throughput**
+3. **Highest Resiliency**: Premium tier supports **ZRS (Zone-Redundant Storage)**, which provides the **highest level of resiliency within a region**. ZRS replicates data synchronously across three Azure availability zones, ensuring high availability even if an entire zone goes down.
+4. **Predictable Performance**: Provisioned capacity model ensures consistent performance characteristics
+
+**Why Other Options Are Incorrect:**
+
+❌ **Hot is incorrect** because:
+- While Hot tier IS available for Azure Files, it is **HDD-backed storage**, not SSD-backed
+- It offers relatively low storage costs for frequently accessed data, but does **not provide the low latency** required for transaction-intensive workloads
+- Hot tier is designed for **general-purpose file shares** with regular (but not intensive) access patterns
+- It cannot deliver the **high IOPS and consistent throughput** needed for on-premises transaction-intensive applications
+- The performance characteristics are similar to Transaction Optimized tier, making it unsuitable for performance-critical scenarios
+
+❌ **Transaction optimized is incorrect** because:
+- Although it's suitable for **frequently accessed file shares**, it is backed by **HDDs (hard disk drives)**, not SSDs
+- HDDs offer **lower performance and higher latency** compared to SSD-backed Premium tier
+- It's **more cost-effective** but does **not match the performance** required for transaction-intensive workloads
+- While it supports ZRS for resiliency, the **performance characteristics don't meet the low-latency requirement**
+
+**Key Takeaway:**
+For **transaction-intensive workloads with low-latency requirements**, always choose **Premium tier** with **ZRS** for the best combination of performance and resiliency. Transaction optimized and Hot tiers, while more cost-effective, cannot deliver the same level of performance due to their HDD-backed storage infrastructure.
+
+**References:**
+- [Azure Blob Storage Access Tiers](https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview)
+- [Azure Storage Account Overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview)
+- [Azure Files Storage Tiers](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-planning#storage-tiers)
+
+---
 
 ## Supported Operating Systems
 
