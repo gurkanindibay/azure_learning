@@ -1158,6 +1158,47 @@ Total: ~$142/month (vs ~$720/month with provisioned compute)
 
 ---
 
+### Scenario 11: Data Warehouse for Reporting with High Concurrent Read Operations
+**Requirements**: 
+- Design a data storage solution to support reporting
+- Ingest high volumes of JSON data using Azure Event Hubs
+- Data organized in directories by date and time
+- Stored data must be queryable directly, transformed into summarized tables, and stored in a data warehouse
+- Data warehouse must store **50 TB of relational data**
+- Support **200-300 concurrent read operations**
+
+**Recommendation**:
+- **Azure SQL Database Hyperscale** for the data warehouse
+
+**Why**: 
+- **Large-Scale Storage**: Azure SQL Database Hyperscale is specifically designed to handle large relational datasets, supporting up to **100 TB of storage**, which comfortably accommodates the 50 TB requirement.
+- **Independent Compute and Storage Scaling**: Hyperscale offers flexibility and cost efficiency by allowing compute and storage to scale independently, which is ideal for workloads with varying read demands.
+- **High Concurrent Read Support**: The Hyperscale tier can handle 200-300 concurrent read operations efficiently, making it suitable for enterprise-grade reporting workloads.
+- **High Performance**: Delivers fast backups and high performance, suitable for enterprise-grade data workloads.
+
+**Why Other Options Are Incorrect**:
+- **Azure Cosmos DB Cassandra API**: Incorrect because it is intended for NoSQL column-family workloads and not designed for storing or querying large volumes of relational, structured data. It does not support analytical queries efficiently and is not cost-effective for 50 TB data storage.
+- **Azure Cosmos DB SQL API**: Incorrect because although it supports JSON-based document storage with flexible schema, it is not a relational database and is unsuitable for warehouse-scale storage or complex SQL-based analytics at the scale described.
+- **Azure Synapse Analytics dedicated SQL pools**: Incorrect in this context because while it is designed for large-scale analytical processing, it is more suitable when working with pre-aggregated or summarized data from a data lake rather than being used as a primary data warehouse for high-volume relational storage with frequent concurrent read access. When relational consistency, transactional support, and high concurrent access are required, Hyperscale is more appropriate.
+
+**Architecture Pattern**:
+```
+Azure Event Hubs (JSON ingestion) 
+    → Azure Data Lake Storage (organized by date/time directories)
+    → Data transformation (Azure Data Factory / Databricks)
+    → Azure SQL Database Hyperscale (data warehouse for reporting)
+```
+
+**Reference Links**:
+- [Azure SQL Database Hyperscale](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
+- [Azure SQL Managed Instance Resource Limits](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/resource-limits?view=azuresql)
+- [Azure Cosmos DB Introduction](https://learn.microsoft.com/en-us/azure/cosmos-db/introduction)
+- [Azure Synapse Analytics Compute Management](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql-data-warehouse/sql-data-warehouse-manage-compute-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Exam Practice Questions
 
 ### Question 1: Enterprise Database Migration with Resiliency Requirements (Litware Inc.)
@@ -1413,6 +1454,47 @@ With None Caching on Transaction Log Disk:
 
 ---
 
+### Question 6: Data Warehouse Selection for Reporting Solution
+
+**Scenario**: You are designing a data storage solution to support reporting. The solution will ingest high volumes of data in JSON format by using Azure Event Hubs. As the data arrives, Event Hubs will write the data to storage.
+
+The solution must meet the following requirements:
+- Organize data in directories by date and time
+- Allow stored data to be queried directly, transformed into summarized tables, and then stored in a data warehouse
+- Ensure that the data warehouse can store **50 TB of relational data** and support **200-300 concurrent read operations**
+
+**Question**: Which service should you recommend for the data store for the data warehouse?
+
+**Options**:
+- A) Azure Cosmos DB Cassandra API
+- B) Azure Cosmos DB SQL API
+- C) Azure SQL Database Hyperscale
+- D) Azure Synapse Analytics dedicated SQL pools
+
+**Correct Answer**: **C) Azure SQL Database Hyperscale**
+
+**Explanation**:
+
+**Azure SQL Database Hyperscale** is correct because it is specifically designed to handle large relational datasets, supporting up to **100 TB of storage**, and offers independent compute and storage scaling, which provides flexibility and cost efficiency. The Hyperscale tier delivers high performance and fast backups, making it suitable for enterprise-grade data workloads. The scenario states that the data warehouse must support 50 TB of relational data and between 200–300 concurrent read operations, which falls well within the performance and scalability limits of Hyperscale.
+
+**Why Other Options Are Incorrect**:
+
+**Azure Cosmos DB Cassandra API** is incorrect because it is intended for NoSQL column-family workloads and not designed for storing or querying large volumes of relational, structured data. It also does not support analytical queries efficiently and is not cost-effective for 50 TB data storage.
+
+**Azure Cosmos DB SQL API** is incorrect because although it supports JSON-based document storage with flexible schema, it is not a relational database and is unsuitable for warehouse-scale storage or complex SQL-based analytics at the scale described.
+
+**Azure Synapse Analytics dedicated SQL pools** is incorrect in this context because while it is designed for large-scale analytical processing, it is more suitable when working with pre-aggregated or summarized data from a data lake rather than being used as a primary data warehouse for high-volume relational storage with frequent concurrent read access. In this scenario, where relational consistency, transactional support, and high concurrent access are required, Hyperscale is more appropriate.
+
+**Reference Links**:
+- [Azure SQL Database Hyperscale](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
+- [Azure SQL Managed Instance Resource Limits](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/resource-limits?view=azuresql)
+- [Azure Cosmos DB Introduction](https://learn.microsoft.com/en-us/azure/cosmos-db/introduction)
+- [Azure Synapse Analytics Compute Management](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql-data-warehouse/sql-data-warehouse-manage-compute-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -1462,6 +1544,9 @@ With None Caching on Transaction Log Disk:
 12. **Zone Redundancy for High Availability**
    > Basic and Standard (DTU) tiers do NOT support zone redundancy. For zone outage protection, use Premium (DTU), General Purpose (vCore), Business Critical (vCore), or Hyperscale. However, only Premium and Business Critical guarantee zero data loss during failover.
 
+13. **Hyperscale for Large-Scale Relational Data Warehouses**
+   > When you need a data warehouse that stores 50+ TB of relational data with 200-300+ concurrent read operations, Azure SQL Database Hyperscale is ideal. It supports up to 100 TB, offers independent compute/storage scaling, and is better suited than Synapse dedicated SQL pools when relational consistency and high concurrent access are required.
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -1492,6 +1577,9 @@ With None Caching on Transaction Log Disk:
 | "No data loss during failover" | **Premium (DTU)** or **Business Critical (vCore)** |
 | "Zone outage protection" | **Premium**, **General Purpose**, **Business Critical**, or **Hyperscale** (NOT Basic/Standard) |
 | "RPO = 0 (zero data loss)" | **Premium (DTU)** or **Business Critical (vCore)** only |
+| "50+ TB relational data warehouse" | **Hyperscale** tier |
+| "200-300 concurrent read operations" | **Hyperscale** tier |
+| "Data warehouse + relational consistency" | **Hyperscale** (not Synapse dedicated pools) |
 
 ## References
 
