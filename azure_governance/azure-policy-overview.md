@@ -904,6 +904,125 @@ To meet regulatory requirements that restrict deployments to specific regions, u
 
 ---
 
+### Question 7: Enforcing Location via Resource Group Policy
+
+**Scenario:**
+Your company plans to deploy various Azure App Service instances that will use Azure SQL databases. The App Service instances will be deployed at the same time as the Azure SQL databases.
+
+The company has a regulatory requirement to deploy the App Service instances only to specific Azure regions. The resources for the App Service instances must reside in the same region.
+
+You need to recommend a solution to meet the regulatory requirement.
+
+**Proposed Solution:**
+You recommend using an Azure Policy initiative to enforce the location of resource groups.
+
+**Question:**
+Does this meet the goal?
+
+**Options:**
+
+1. **Yes** ❌
+2. **No** ✅
+
+**Answer:** No
+
+**Explanation:**
+
+Azure Policy provides a robust mechanism to enforce location constraints on Azure resources. However, **using an Azure Policy initiative to enforce the location of resource groups does not help in restricting the deployment of App Services to a specific region**. The services can still be deployed to a region that is different than that of the resource group.
+
+**Why Enforcing Resource Group Location Doesn't Work:**
+
+| Aspect | Resource Group Location | Resource Location |
+|--------|------------------------|-------------------|
+| **Purpose** | Metadata storage location | Actual deployment location |
+| **Relationship** | Resources are associated with resource group | Resources can be deployed anywhere regardless of RG location |
+| **Policy Impact** | Only controls where RG metadata is stored | Does not restrict resource deployment regions |
+
+**Key Insight: Resource Location Independence**
+
+Azure resources deployed within a resource group **do not inherit the location of the resource group**. A resource group in "East US" can contain:
+- App Services deployed in "West Europe"
+- SQL Databases deployed in "Southeast Asia"
+- Storage Accounts deployed in "Japan East"
+
+The resource group's location only specifies where metadata about the group is stored, not where the resources themselves must reside.
+
+**Correct Solution: Azure Policy Targeting Specific Resource Types**
+
+To meet regulatory requirements, use Azure Policy scoped to the **specific resource types** (not resource groups):
+
+```json
+{
+  "properties": {
+    "displayName": "Restrict App Service and SQL Server locations",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "parameters": {
+      "allowedLocations": {
+        "type": "Array",
+        "metadata": {
+          "description": "The list of allowed locations for App Service and SQL resources"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Web/sites"
+              },
+              {
+                "field": "type",
+                "equals": "Microsoft.Sql/servers"
+              }
+            ]
+          },
+          {
+            "field": "location",
+            "notIn": "[parameters('allowedLocations')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
+```
+
+**Why Resource Type-Specific Policy Works:**
+
+| Approach | What It Controls | Enforces App Service Region? |
+|----------|-----------------|------------------------------|
+| Policy on Resource Group location | Only RG metadata location | ❌ No |
+| Policy on `Microsoft.Web/sites` type | App Service deployment location | ✅ Yes |
+| Policy on `Microsoft.Sql/servers` type | SQL Server deployment location | ✅ Yes |
+
+**Implementation Approach:**
+
+1. **Create or use built-in "Allowed locations" policy**
+2. **Scope to specific resource types** using the `type` field:
+   - `Microsoft.Web/sites` for App Services
+   - `Microsoft.Sql/servers` for Azure SQL
+3. **Assign at appropriate scope** (subscription or management group)
+4. **Configure allowed regions** in policy parameters
+5. **Use Deny effect** to block non-compliant deployments
+
+**Built-in Policy Alternative:**
+
+Azure provides a built-in policy called **"Allowed locations"** that can be applied with resource type filtering to achieve this goal without custom policy definitions.
+
+**Reference Links:**
+- [Restrict Resource Regions - Cloud Adoption Framework](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/manage/azure-server-management/common-policies#restrict-resource-regions)
+- [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [Policy Definition Structure Basics](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-basics)
+
+---
+
 ## Summary
 
 ### Key Takeaways
