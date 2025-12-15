@@ -7,6 +7,7 @@
 - [Node Types](#node-types)
 - [Practice Questions](#practice-questions)
   - [Question 1: Cost-Optimized Batch Solution with MPI Applications](#question-1-cost-optimized-batch-solution-with-mpi-applications)
+  - [Question 2: 3D Geometry Calculation with Inter-Node Communication](#question-2-3d-geometry-calculation-with-inter-node-communication)
 
 ---
 
@@ -536,6 +537,253 @@ Since there's no mention of these requirements, and the goal is to minimize cost
 - [Azure Batch Spot VMs](https://learn.microsoft.com/en-us/azure/batch/batch-spot-vms)
 - [Use Low-Priority VMs with Azure Machine Learning Batch](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-low-priority-batch)
 - [Azure Batch Technical Overview](https://learn.microsoft.com/en-us/azure/batch/batch-technical-overview)
+
+---
+
+**Domain:** Design Infrastructure Solutions
+
+---
+
+### Question 2: 3D Geometry Calculation with Inter-Node Communication
+
+#### Scenario
+
+You are designing a solution that calculates **3D geometry from height-map data**. You need to recommend a solution that meets the following requirements:
+
+- **Performs calculations in Azure**
+- **Ensures that each node can communicate data to every other node**
+- **Maximizes the number of nodes** to calculate multiple scenes as fast as possible
+- **Minimizes the amount of effort** to implement the solution
+
+**Question:** Which two actions should you include in the recommendation?
+
+---
+
+#### Options
+
+A. Enable parallel file systems on Azure  
+B. Create a render farm that uses virtual machines  
+C. Create a render farm that uses virtual machine scale sets  
+D. Create a render farm that uses Azure Batch ✅  
+E. Enable parallel task execution on compute nodes ✅
+
+---
+
+**Correct Answers:** **D. Create a render farm that uses Azure Batch** and **E. Enable parallel task execution on compute nodes**
+
+---
+
+### Detailed Explanation
+
+#### Why Azure Batch is Correct ✅
+
+**Azure Batch** is specifically designed for running large-scale parallel and high-performance computing (HPC) workloads in Azure. For 3D geometry calculation scenarios, Azure Batch provides:
+
+**Key Benefits:**
+
+1. **Automatic Job Scheduling** - Built-in scheduler handles task orchestration
+2. **Pool Scaling** - Automatically scales compute nodes based on workload
+3. **Task Distribution** - Distributes tasks efficiently across multiple nodes
+4. **Inter-Node Communication** - Supports node-to-node data sharing, essential for 3D geometry processing
+5. **Minimal Implementation Effort** - Handles infrastructure management, job queuing, and scaling automatically
+
+**Architecture for 3D Geometry Processing:**
+
+```plaintext
+Azure Batch Architecture for 3D Geometry:
+
+┌─────────────────────────────────────────────────────────┐
+│  Azure Batch Service                                     │
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  Compute Pool (Auto-scaling)                      │   │
+│  │                                                    │   │
+│  │  Node 1 ←──────→ Node 2 ←──────→ Node 3          │   │
+│  │    ↑               ↑               ↑              │   │
+│  │    │               │               │              │   │
+│  │    └───────────────┼───────────────┘              │   │
+│  │          Inter-node Communication                 │   │
+│  │                                                    │   │
+│  │  Each node processes height-map data              │   │
+│  │  and shares computed geometry results             │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                          │
+│  Job Scheduler → Task Queue → Auto-scaling               │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Why Enable Parallel Task Execution is Correct ✅
+
+**Enabling parallel task execution** on compute nodes allows each node to process multiple scenes or calculations concurrently. This is critical for:
+
+1. **Maximizing Resource Utilization** - Each compute node can run multiple tasks simultaneously
+2. **Improving Throughput** - Process more 3D scenes in less time
+3. **Optimizing Performance** - Fully utilize available CPU/GPU resources on each node
+
+**Parallel Task Execution Benefits:**
+
+```plaintext
+Without Parallel Tasks:          With Parallel Tasks:
+┌───────────────────┐           ┌───────────────────┐
+│  Compute Node     │           │  Compute Node     │
+│  ┌─────────────┐  │           │  ┌─────┐ ┌─────┐  │
+│  │  Task 1     │  │           │  │Task1│ │Task2│  │
+│  │  (Running)  │  │           │  └─────┘ └─────┘  │
+│  └─────────────┘  │           │  ┌─────┐ ┌─────┐  │
+│                   │           │  │Task3│ │Task4│  │
+│  Tasks 2-4:       │           │  └─────┘ └─────┘  │
+│  ⏳ Waiting...    │           │                   │
+└───────────────────┘           └───────────────────┘
+
+Time to complete 4 tasks:       Time to complete 4 tasks:
+4x (sequential)                 1x (parallel)
+```
+
+**Configuration in Azure Batch:**
+
+- Set `taskSlotsPerNode` to allow multiple concurrent tasks per node
+- Configure based on available CPU cores and memory
+- Enables efficient processing of multiple 3D scenes simultaneously
+
+---
+
+#### Why Other Options Are Incorrect
+
+##### ❌ A. Enable Parallel File Systems on Azure
+
+**Why Incorrect:**
+
+While high-performance parallel file systems (like Azure HPC Cache or Lustre) can help with I/O-intensive workloads, they:
+
+- Are **not necessary** for enabling inter-node communication
+- Do **not enable** parallel task execution
+- Add **complexity** to the implementation (contrary to "minimize effort")
+- Are overkill for this scenario's requirements
+
+**When Parallel File Systems ARE Appropriate:**
+
+✅ Extremely large datasets requiring shared storage  
+✅ HPC workloads with heavy file I/O  
+✅ When multiple nodes need simultaneous access to large files
+
+**For This Scenario:**  
+Inter-node communication and parallel task execution are the requirements - Azure Batch handles these natively without needing specialized file systems.
+
+---
+
+##### ❌ B. Create a Render Farm that Uses Virtual Machines
+
+**Why Incorrect:**
+
+Using standalone virtual machines requires:
+
+1. **Manual Provisioning** - Must deploy and configure each VM manually
+2. **Manual Scaling** - No automatic scaling based on workload
+3. **Manual Job Distribution** - Must build orchestration logic yourself
+4. **Manual Inter-Node Communication** - Must configure networking manually
+5. **High Implementation Effort** - Contradicts the "minimize effort" requirement
+
+**Comparison:**
+
+```plaintext
+Virtual Machines (Manual):        Azure Batch (Managed):
+┌──────────────────────────┐     ┌──────────────────────────┐
+│ YOU must manage:         │     │ Azure manages:           │
+│ ├─ VM provisioning       │     │ ├─ VM provisioning       │
+│ ├─ Auto-scaling logic    │     │ ├─ Auto-scaling          │
+│ ├─ Job scheduling        │     │ ├─ Job scheduling        │
+│ ├─ Task distribution     │     │ ├─ Task distribution     │
+│ ├─ Load balancing        │     │ ├─ Load balancing        │
+│ └─ Inter-node networking │     │ └─ Inter-node networking │
+│                          │     │                          │
+│ Effort: ⭐⭐⭐⭐⭐ High    │     │ Effort: ⭐ Low           │
+└──────────────────────────┘     └──────────────────────────┘
+```
+
+---
+
+##### ❌ C. Create a Render Farm that Uses Virtual Machine Scale Sets
+
+**Why Incorrect:**
+
+Virtual Machine Scale Sets (VMSS) provide auto-scaling and load balancing, but:
+
+1. **Designed for Stateless Applications** - Optimized for web servers, not HPC batch jobs
+2. **No Built-in Job Orchestration** - Must build task scheduling yourself
+3. **No Native Node Communication** - Lacks built-in inter-node communication capabilities
+4. **Higher Implementation Effort** - Must build much of the orchestration logic yourself
+
+**VMSS vs Azure Batch:**
+
+| Feature | VMSS | Azure Batch |
+|---------|------|-------------|
+| **Auto-scaling** | ✅ Yes | ✅ Yes |
+| **Load balancing** | ✅ Yes | ✅ Yes |
+| **Job scheduling** | ❌ Manual | ✅ Built-in |
+| **Task distribution** | ❌ Manual | ✅ Built-in |
+| **Inter-node communication** | ❌ Manual setup | ✅ Native support |
+| **HPC optimization** | ❌ No | ✅ Yes |
+| **Implementation effort** | High | Low |
+| **Best for** | Web apps, APIs | Batch processing, HPC |
+
+**VMSS is Better For:**
+
+✅ Stateless web applications  
+✅ API backends  
+✅ Microservices
+
+**Azure Batch is Better For:**
+
+✅ Batch processing  
+✅ HPC workloads  
+✅ 3D rendering  
+✅ Parallel computations
+
+---
+
+### Summary: Why Azure Batch + Parallel Task Execution
+
+| Requirement | Azure Batch | Parallel Task Execution |
+|-------------|-------------|-------------------------|
+| Performs calculations in Azure | ✅ Native Azure service | ✅ Runs on Azure compute |
+| Inter-node communication | ✅ Built-in support | ✅ Enables data sharing |
+| Maximize nodes for speed | ✅ Auto-scaling pools | ✅ Multiple tasks per node |
+| Minimize implementation effort | ✅ Managed service | ✅ Simple configuration |
+
+---
+
+### Key Takeaways
+
+1. **Azure Batch** is the ideal choice for:
+   - Large-scale parallel computing
+   - 3D rendering and geometry processing
+   - Workloads requiring inter-node communication
+   - Scenarios needing automatic scaling and job management
+
+2. **Parallel task execution** maximizes throughput by:
+   - Running multiple tasks concurrently on each node
+   - Utilizing all available compute resources
+   - Processing multiple scenes simultaneously
+
+3. **Avoid manual VM management** when:
+   - Azure Batch can handle the orchestration
+   - Minimizing implementation effort is a priority
+   - Built-in scheduling and scaling are beneficial
+
+4. **VMSS is not optimal** for HPC batch jobs because:
+   - Designed for stateless application scaling
+   - Lacks job orchestration capabilities
+   - Requires building custom scheduling logic
+
+---
+
+### Reference(s)
+
+- [Azure Batch Technical Overview](https://learn.microsoft.com/en-us/azure/batch/batch-technical-overview)
+- [Run Tasks Concurrently on Batch Compute Nodes](https://learn.microsoft.com/en-us/azure/batch/batch-parallel-node-tasks)
+- [Azure Batch Rendering](https://learn.microsoft.com/en-us/azure/batch/batch-rendering-service)
 
 ---
 
