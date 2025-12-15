@@ -44,6 +44,7 @@
   - [Question 3: Minimum Number of Private Endpoints for AMPLS](#question-3-minimum-number-of-private-endpoints-for-ampls)
   - [Question 4: Data Collection Endpoints (DCEs) Requirements](#question-4-data-collection-endpoints-dces-requirements)
   - [Question 5: Tracking Azure Resource Manager (ARM) Resource Deployments](#question-5-tracking-azure-resource-manager-arm-resource-deployments)
+  - [Question 6: Azure Log Analytics Data Retention for SQL Insights](#question-6-azure-log-analytics-data-retention-for-sql-insights)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -1355,6 +1356,152 @@ AzureActivity
 ---
 
 **Reference:** [Azure Monitor Overview](https://docs.microsoft.com/en-us/azure/azure-monitor/overview)
+
+---
+
+### Question 6: Azure Log Analytics Data Retention for SQL Insights
+
+**Scenario:**
+
+You deploy several Azure SQL Database instances. You plan to configure the Diagnostics settings on the databases as shown in the exhibit below:
+
+**Diagnostic Settings Configuration:**
+
+| Setting | Value |
+|---------|-------|
+| **Diagnostic setting name** | Diagnostic1 |
+| **Logs Selected** | SQLInsights (90 days retention), AutomaticTuning (30 days retention) |
+| **Destination - Send to Log Analytics** | ✅ Enabled |
+| **Log Analytics workspace** | sk200814 (East US) |
+| **Destination - Archive to storage account** | ✅ Enabled |
+| **Storage account** | contoso20 |
+
+**Question:**
+Based on the information presented, select the option that completes the following statement correctly:
+
+"The maximum amount of time that SQL Insights data will be stored in Azure Log Analytics is ___________."
+
+**Options:**
+
+1. ❌ **30 days**
+2. ❌ **90 days**
+3. ✅ **730 days**
+4. ❌ **Indefinite**
+
+**Answer:** 730 days
+
+---
+
+### Detailed Explanation
+
+**Why 730 Days is Correct:**
+
+The retention days shown in the diagnostic settings (90 days for SQLInsights, 30 days for AutomaticTuning) refer to the **retention at the storage account level** for archived data, NOT the Log Analytics workspace retention.
+
+In Azure Log Analytics:
+- The **maximum interactive retention** for data is **730 days** (2 years)
+- This is the maximum period during which data can be queried interactively
+- The retention period is configured at the **Log Analytics workspace level**, not in the diagnostic settings
+
+| Storage Location | Retention Setting in Screenshot | Actual Maximum Retention |
+|-----------------|--------------------------------|-------------------------|
+| **Log Analytics** | Not configured here (workspace-level setting) | **730 days** (interactive) |
+| **Storage Account** | 90 days (SQLInsights), 30 days (AutomaticTuning) | Based on storage lifecycle policies |
+
+**Key Concept - Log Analytics Retention Tiers:**
+
+| Tier | Duration | Purpose | Query Capability |
+|------|----------|---------|-----------------|
+| **Interactive Retention** | 30 - 730 days | Active analysis and monitoring | ✅ Full interactive queries |
+| **Archive** | Up to 12 years (4,383 days) | Long-term compliance storage | ⚠️ Requires restore to query |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **30 days** | This is the retention for AutomaticTuning in the storage account, not Log Analytics |
+| **90 days** | This is the retention for SQLInsights in the storage account, not Log Analytics. Also, 90 days is the **default** Application Insights retention, but can be extended |
+| **Indefinite** | "Indefinite" in Azure context refers to **archive retention**, where data is stored in an archived state. Archived data requires a restore process before querying and is not immediately accessible for interactive queries |
+
+**Understanding the Diagnostic Settings Screenshot:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Diagnostic Settings                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  Category Details (Logs)          │  Destination Details            │
+│                                   │                                  │
+│  ☑ SQLInsights                    │  ☑ Send to Log Analytics        │
+│    Retention: 90 days ←──────────┐│    Workspace: sk200814 (eastus) │
+│                                   ││                                  │
+│  ☑ AutomaticTuning               ││  ☑ Archive to storage account   │
+│    Retention: 30 days ←──────────┼│    Storage: contoso20           │
+│                                   ││                                  │
+│  ☐ QueryStoreRuntimeStatistics   ││                                  │
+│  ☐ QueryStoreWaitStatistics      ││                                  │
+│  ☐ Errors                        ││                                  │
+│  ☐ DatabaseWaitStatistics        ││                                  │
+│  ☐ Timeouts                      ││                                  │
+│  ☐ Blocks                        ││                                  │
+│  ☐ Deadlocks                     │└─→ Retention applies to STORAGE  │
+│                                   │    ACCOUNT, NOT Log Analytics!   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Log Analytics Workspace Retention Configuration:**
+
+The actual retention for Log Analytics is configured separately:
+- **Default retention**: 30 days (included in basic pricing)
+- **Extended retention**: Up to 730 days (additional cost per GB/month)
+- **Archive retention**: Up to 12 years (reduced cost, requires restore to query)
+
+**Where to Configure Log Analytics Retention:**
+
+1. Navigate to your **Log Analytics Workspace**
+2. Go to **Usage and estimated costs** → **Data Retention**
+3. Set the retention period (30-730 days)
+4. For longer retention, configure **Archive** settings at the table level
+
+**Architecture - Data Flow:**
+
+```
+┌─────────────────┐
+│  Azure SQL DB   │
+│   Instances     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Diagnostic Settings                           │
+│                      (Diagnostic1)                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   SQLInsights ──────────────┬───────────────► Storage Account   │
+│   AutomaticTuning ──────────┤                 (contoso20)        │
+│                             │                 Retention: 90/30   │
+│                             │                 days (configurable)│
+│                             │                                    │
+│                             └───────────────► Log Analytics      │
+│                                               (sk200814)         │
+│                                               Retention: Up to   │
+│                                               730 days (workspace│
+│                                               level config)      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Summary:**
+
+| Question | Answer |
+|----------|--------|
+| Maximum interactive retention in Log Analytics | **730 days** |
+| Default retention for Application Insights | 90 days (can be changed to 30-730 days) |
+| Maximum archive retention | 12 years (requires restore to query) |
+| Retention in diagnostic settings screenshot | Applies to **storage account**, not Log Analytics |
+
+**References:**
+- [Configure retention and archive at the table level](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-retention-archive?tabs=portal-1%2Cportal-2#configure-retention-and-archive-at-the-table-level)
+- [Data retention in Log Analytics workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/data-retention-configure)
+- [SQL Insights for Azure SQL](https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-insights-overview)
 
 ---
 
