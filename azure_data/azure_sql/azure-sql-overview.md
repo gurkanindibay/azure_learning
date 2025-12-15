@@ -1256,6 +1256,73 @@ Total Savings: $28,750/month (80%)
 
 ---
 
+### Scenario 13: Multiple Database Deployment with License Mobility and Cost Optimization
+**Requirements**: 
+- Deploy 50 databases to Azure
+- Microsoft Volume Licensing customer with License Mobility through Software Assurance
+- Support automatic scaling
+- Minimize Microsoft SQL Server licensing costs
+- Databases have varying and unpredictable usage patterns
+
+**Recommendation**:
+- **Azure SQL Database Elastic Pool** with **vCore-based** purchasing model
+- **General Purpose** service tier (or Business Critical based on performance needs)
+- **Azure Hybrid Benefit** enabled (to leverage existing licenses)
+
+**Why**: 
+- **Resource Sharing and Cost Efficiency**: Elastic pools allow you to deploy and manage multiple databases (such as 50 in this case) that share the same compute and storage resources. This enables cost efficiency by pooling resources across databases with varying and unpredictable usage patterns.
+- **Automatic Scaling**: Elastic pools support automatic scaling based on individual database usage patterns within the pool. When some databases are busy while others are idle, resources are dynamically allocated, helping minimize overall licensing and compute costs.
+- **License Mobility Support**: Since Contoso uses License Mobility through Software Assurance, they can take advantage of the **Azure Hybrid Benefit** under the vCore-based model within elastic pools, further reducing SQL Server licensing costs.
+- **Simplified Management**: Managing 50 databases in an elastic pool is significantly simpler than managing them individually or on managed instances.
+
+**Why Other Options Are Incorrect**:
+- **Azure SQL Managed Instance**: Incorrect because while it supports license mobility and is suitable for migrating on-premises SQL Server instances, it is **not optimized for managing a large number of small or variable-load databases**. Deploying 50 separate databases on managed instances would be more complex and expensive compared to using an elastic pool. Managed Instance is better suited for lift-and-shift scenarios requiring instance-scoped features.
+- **SQL Server Always On availability group**: Incorrect because it applies to **IaaS-based SQL Server deployments** running on Azure VMs, which involve higher licensing costs, manual scaling, and increased management overhead. It does not natively support automatic scaling or cost optimization across multiple databases like elastic pools do.
+
+**Elastic Pool Cost Optimization Example**:
+```
+Without Elastic Pool (50 separate databases):
+50 databases × 4 vCores × $720/month = $36,000/month
+
+With Elastic Pool (shared resources):
+1 pool × 50 vCores × $3,600/month = $3,600/month
+(assuming databases share resources efficiently)
+
+With Elastic Pool + Azure Hybrid Benefit:
+1 pool × 50 vCores × $1,620/month = $1,620/month
+
+Savings: Up to 95% compared to individual databases
+```
+
+**Key Considerations**:
+- ✅ Elastic pools are ideal for multiple databases with varying usage patterns
+- ✅ vCore model within elastic pools supports Azure Hybrid Benefit
+- ✅ Resources are shared and automatically allocated based on demand
+- ✅ Simplified management compared to individual databases or managed instances
+- ❌ Managed Instance is overkill for simple database hosting
+- ❌ SQL Server on VMs requires manual scaling and higher operational overhead
+
+**Deployment Option Comparison**:
+
+| Feature | Elastic Pool | Managed Instance | SQL Server Always On (VMs) |
+|---------|-------------|------------------|---------------------------|
+| License Mobility | ✅ Yes (vCore) | ✅ Yes | ✅ Yes |
+| Azure Hybrid Benefit | ✅ Yes (vCore) | ✅ Yes | ✅ Yes |
+| Automatic Scaling | ✅ Pool-level | ❌ Manual | ❌ Manual |
+| Resource Sharing | ✅ Yes | ❌ No | ❌ No |
+| Cost for 50 DBs | 💰 Low | 💰💰💰 High | 💰💰💰💰 Highest |
+| Management Overhead | Low (PaaS) | Low (PaaS) | High (IaaS) |
+| Best for Variable Workloads | ✅ Ideal | ❌ Not optimal | ❌ Not optimal |
+
+**Reference Links**:
+- [Azure SQL Database Elastic Pool Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview)
+- [SQL Managed Instance Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
+- [SQL Server Always On Availability Groups on Azure VMs](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/availability-group-overview?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Exam Practice Questions
 
 ### Question 1: Enterprise Database Migration with Resiliency Requirements (Litware Inc.)
@@ -1609,6 +1676,64 @@ The solution must meet the following requirements:
 
 ---
 
+### Question 8: Deployment Option for License Mobility Customer (Contoso, Ltd.)
+
+**Scenario**: You manage a database environment for a Microsoft Volume Licensing customer named Contoso, Ltd. Contoso uses License Mobility through Software Assurance.
+
+You need to deploy 50 databases. The solution must meet the following requirements:
+- Support automatic scaling
+- Minimize Microsoft SQL Server licensing costs
+
+**Question**: Which type of deployment option should you include in the recommendation?
+
+**Options**:
+- A) An Azure SQL managed instance
+- B) An Azure SQL Database elastic pool
+- C) A SQL Server Always On availability group
+
+**Correct Answer**: **B) An Azure SQL Database elastic pool**
+
+**Explanation**:
+
+**An Azure SQL Database elastic pool** is correct because it allows you to deploy and manage multiple databases (such as 50 in this case) that share the same compute and storage resources, enabling cost efficiency and automatic scaling based on individual database usage patterns. Elastic pools are designed specifically for scenarios where databases have varying and unpredictable usage, which helps minimize overall licensing and compute costs by pooling resources.
+
+Since Contoso uses License Mobility through Software Assurance, they can take advantage of the **Azure Hybrid Benefit** under the vCore-based model within elastic pools, further reducing SQL Server licensing costs.
+
+**Key Benefits of Elastic Pools for This Scenario**:
+- ✅ Shared compute and storage resources across 50 databases
+- ✅ Automatic scaling based on individual database usage
+- ✅ Azure Hybrid Benefit support (vCore model)
+- ✅ License Mobility through Software Assurance compatible
+- ✅ Cost-effective for varying and unpredictable workloads
+- ✅ Low management overhead (PaaS)
+
+**Why Other Options Are Incorrect**:
+
+**An Azure SQL managed instance** is incorrect because while it supports license mobility and is suitable for migrating on-premises SQL Server instances, it is **not optimized for managing a large number of small or variable-load databases**. Deploying 50 separate databases on managed instances would be more complex and expensive compared to using an elastic pool. Managed Instance excels at lift-and-shift migrations requiring instance-scoped features (SQL Agent, Service Broker, cross-database queries), not at hosting many independent databases with varying usage patterns.
+
+**A SQL Server Always On availability group** is incorrect because it applies to **IaaS-based SQL Server deployments** running on Azure VMs, which involve higher licensing costs, manual scaling, and increased management overhead. It does not natively support automatic scaling or cost optimization across multiple databases like elastic pools do. Always On availability groups are designed for high availability and disaster recovery, not for managing multiple databases cost-effectively.
+
+**Deployment Option Comparison**:
+
+| Feature | Elastic Pool | Managed Instance | Always On (VMs) |
+|---------|-------------|------------------|------------------|
+| License Mobility | ✅ Yes (vCore) | ✅ Yes | ✅ Yes |
+| Azure Hybrid Benefit | ✅ Yes (vCore) | ✅ Yes | ✅ Yes |
+| Automatic Scaling | ✅ Pool-level | ❌ Manual | ❌ Manual |
+| Resource Sharing | ✅ Yes | ❌ No | ❌ No |
+| Best for 50+ DBs | ✅ Ideal | ❌ Complex/Expensive | ❌ Highest cost |
+| Management Overhead | Low (PaaS) | Low (PaaS) | High (IaaS) |
+| Use Case | Variable workloads | Lift-and-shift | HA/DR for SQL VMs |
+
+**Reference Links**:
+- [Azure SQL Database Elastic Pool Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview)
+- [SQL Managed Instance Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
+- [SQL Server Always On Availability Groups on Azure VMs](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/availability-group-overview?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -1664,6 +1789,9 @@ The solution must meet the following requirements:
 14. **vCore Model for License Mobility and Azure Hybrid Benefit**
    > For Microsoft Volume Licensing customers with License Mobility through Software Assurance, the vCore purchasing model is required to leverage Azure Hybrid Benefit. DTU model does NOT support Azure Hybrid Benefit or License Mobility. vCore also supports automatic scaling via serverless tier and provides transparent resource control. Savings can reach up to 80% when combining Azure Hybrid Benefit with reserved capacity.
 
+15. **Elastic Pool for Multiple Databases with License Mobility**
+   > When deploying 50+ databases for a License Mobility customer requiring automatic scaling and cost minimization, Elastic Pool is the correct deployment option. It shares resources across databases with varying usage patterns, supports Azure Hybrid Benefit (vCore), and provides automatic scaling at pool level. Managed Instance is overkill for simple database hosting, and SQL Server Always On (VMs) has higher costs and manual scaling.
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -1700,6 +1828,9 @@ The solution must meet the following requirements:
 | "License Mobility through Software Assurance" | **vCore** model (supports Azure Hybrid Benefit) |
 | "Minimize SQL licensing costs + BYOL" | **vCore** model with Azure Hybrid Benefit |
 | "Volume Licensing customer" | **vCore** model (DTU doesn't support Hybrid Benefit) |
+| "50+ databases + License Mobility + auto-scaling" | **Elastic Pool** (vCore) |
+| "Multiple databases + minimize licensing costs" | **Elastic Pool** with Azure Hybrid Benefit |
+| "Variable workload databases + cost optimization" | **Elastic Pool** (not Managed Instance or VMs) |
 
 ## References
 
