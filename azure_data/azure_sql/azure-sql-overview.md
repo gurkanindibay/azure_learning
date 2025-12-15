@@ -268,6 +268,58 @@ Total: ~$156/month (vs $732 provisioned)
 - Not available in Hyperscale (preview support varies)
 - Resume delay (few seconds) on first connection after pause
 
+### Serverless vs Hyperscale: Understanding the Difference
+
+A common confusion is between **Serverless** and **Hyperscale**. They are fundamentally different concepts:
+
+| Aspect | Serverless | Hyperscale |
+|--------|------------|------------|
+| **What it is** | **Compute Tier** (billing model) | **Service Tier** (architecture) |
+| **Scaling Type** | Auto-scales compute based on workload demand | Fast manual/scheduled scaling of compute |
+| **Auto-Pause** | ✅ Yes - pauses when idle, **no compute charges** | ❌ No - always running, always billed |
+| **Billing Model** | Per-second for actual usage | Per-hour for provisioned resources |
+| **Max Storage** | 4 TB (General Purpose limit) | 100 TB |
+| **Best For** | Intermittent/unpredictable workloads | Very large databases needing rapid scale |
+
+#### The Critical Difference: Auto-Pause & Billing
+
+**Serverless (Compute Tier):**
+- Automatically **pauses** during inactivity → **$0 compute cost** when paused
+- Automatically **resumes** on connection (few seconds delay)
+- Scales between configured min/max vCores based on actual load
+- Only pay for compute seconds actually used
+- Best for: bursty workloads, dev/test, apps used occasionally, monthly processing
+
+**Hyperscale (Service Tier):**
+- Can scale compute quickly (minutes vs hours for other tiers)
+- But compute is **always provisioned and running**
+- You pay for compute 24/7 regardless of activity
+- Designed for massive databases that can't fit in 4 TB limit
+- Best for: very large databases (>4TB), need multiple read replicas, rapid scale-up/down
+
+#### Cost Impact Example
+
+```
+Scenario: Database used 8 hours/day for monthly payroll processing
+
+Serverless (General Purpose, 4 vCores max):
+├── Active: 8 hours × 30 days = 240 hours billed
+├── Paused: 16 hours × 30 days = 480 hours FREE
+├── Compute: ~$150/month
+└── Storage: ~$12/month (100 GB)
+    Total: ~$162/month
+
+Hyperscale (Provisioned, 4 vCores):
+├── Compute: 24 hours × 30 days = 720 hours billed
+├── Compute: ~$1,000/month
+└── Storage: ~$12/month (100 GB)
+    Total: ~$1,012/month
+
+Savings with Serverless: ~84%
+```
+
+> **Exam Tip:** When questions mention **"minimize costs"** combined with **"automatic scaling"** or **"bursty workloads"**, the answer is **Serverless (General Purpose)** - NOT Hyperscale. The key differentiator is **auto-pause** which eliminates compute charges during idle periods. Hyperscale scales fast but doesn't auto-pause, so you pay 24/7.
+
 ### Service Tier Comparison Table
 
 | Feature | General Purpose | Business Critical | Hyperscale |
@@ -281,8 +333,11 @@ Total: ~$156/month (vs $732 provisioned)
 | **Zone Redundancy** | ✅ Optional | ✅ Optional | ✅ Available |
 | **Backup Retention** | 7-35 days | 7-35 days | 7-35 days |
 | **Restore Time** | Depends on size | Depends on size | Fast (minutes) |
-| **Serverless** | ✅ | ❌ | ⚠️ Preview | 
+| **Serverless Compute** | ✅ **Supported** | ❌ **Not Supported** | ⚠️ Preview only |
+| **Always Encrypted** | ✅ Yes | ✅ Yes | ✅ Yes |
 | **Price (4 vCore)** | ~$720/mo | ~$1,800/mo | ~$1,000/mo + storage |
+
+> **Important:** When automatic scaling (Serverless) is required, **General Purpose is the only production-ready option**. Business Critical does NOT support Serverless compute tier.
 
 ### High Availability and Zone Redundancy
 
@@ -849,7 +904,7 @@ Savings: Up to 44%
 ✅ **Enable Azure AD authentication** - Centralized identity management  
 ✅ **Use private endpoints** - Eliminate public internet exposure  
 ✅ **Enable Transparent Data Encryption (TDE)** - Encrypt data at rest  
-✅ **Use Always Encrypted** - Protect sensitive data  
+✅ **Use Always Encrypted** - Protect sensitive data (see details below)  
 ✅ **Enable Advanced Threat Protection** - Detect anomalous activities  
 ✅ **Implement row-level security** - Fine-grained access control  
 ✅ **Enable auditing** - Track database activities  
@@ -906,6 +961,53 @@ Given the following Azure resources:
 - Monitor audit logs regularly for suspicious activities
 
 **Reference**: [Azure SQL Database Auditing Overview](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)  
+
+#### Always Encrypted (Column-Level Encryption)
+
+**Always Encrypted** is a feature designed to protect sensitive data, such as Personally Identifiable Information (PII), credit card numbers, and national identification numbers. It ensures data remains encrypted at rest, in transit, and during query processing.
+
+**Key Characteristics**:
+
+| Feature | Description |
+|---------|-------------|
+| **Encryption Location** | Client-side encryption - data is encrypted before leaving the application |
+| **Key Management** | Column Master Key (CMK) stored in Azure Key Vault or Windows Certificate Store |
+| **Tier Availability** | **All Azure SQL Database tiers** (Basic, Standard, Premium, General Purpose, Business Critical, Hyperscale) |
+| **Encryption Types** | Deterministic (allows equality comparisons) and Randomized (more secure) |
+| **Performance Impact** | Minimal - encryption/decryption handled by client driver |
+
+**How It Works**:
+```
+[Application] --> [Client Driver encrypts data] --> [Azure SQL Database (encrypted columns)]
+                                                              |
+[Application] <-- [Client Driver decrypts data] <-- [Query returns encrypted data]
+```
+
+**Always Encrypted vs. Other Encryption Methods**:
+
+| Method | Encryption Level | Use Case | Key Location |
+|--------|-----------------|----------|--------------|
+| **Always Encrypted** | Column-level | Sensitive columns (PII, SSN) | Client-side (Key Vault/Cert Store) |
+| **Transparent Data Encryption (TDE)** | Database-level | Entire database at rest | Server-side (Azure managed) |
+| **Dynamic Data Masking** | Display-level | Mask data in query results | N/A (not encryption) |
+| **Row-Level Security** | Row-level | Filter rows by user | N/A (access control) |
+
+**When to Use Always Encrypted**:
+- ✅ Storing PII (names, SSN, addresses, phone numbers)
+- ✅ Storing financial data (credit card numbers, salaries)
+- ✅ Compliance requirements (GDPR, HIPAA, PCI-DSS)
+- ✅ Need to prevent DBA access to sensitive data
+- ✅ Multi-tenant applications with data isolation requirements
+
+**Limitations**:
+- ❌ Cannot perform range queries on encrypted columns
+- ❌ Limited SQL operations on encrypted data (no LIKE, ORDER BY on randomized)
+- ❌ Requires application changes to use Always Encrypted-enabled drivers
+- ❌ Encryption keys must be accessible to applications
+
+> **Exam Tip:** When a scenario mentions encrypting **specific columns** containing sensitive/PII data, **Always Encrypted** is the answer. It's available across **all Azure SQL Database service tiers**, making it the go-to solution regardless of whether you're using General Purpose, Business Critical, or even Basic tier.
+
+**Reference**: [Always Encrypted Documentation](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine)
 
 ### Migration to Azure SQL
 
@@ -1098,7 +1200,71 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 
 ---
 
-### Scenario 10: Intermittent Monthly Workload Migration
+### Scenario 10: Web App with PII Data and Auto-Scaling Requirements
+**Requirements**: 
+- Azure web app storing Personally Identifiable Information (PII) of employees
+- Maintain availability in the event of a single datacenter outage
+- Support encryption of specific columns containing PII
+- Automatically scale up during payroll operations (bursty workloads)
+- Minimize costs
+
+**Recommendation**:
+- **Azure SQL Database** (Single Database)
+- **General Purpose** service tier
+- **Serverless** compute tier
+- **Zone-redundant configuration** enabled
+- **Always Encrypted** for column-level PII protection
+
+**Why**: 
+- **Datacenter Outage Protection**: The General Purpose tier supports **Zone-Redundant Configuration (ZRC)**, which distributes database replicas across Availability Zones within a region, ensuring resilience against a single datacenter failure.
+
+- **Column-Level Encryption for PII**: **All Azure SQL Database tiers support Always Encrypted**, which enables column-level encryption. This is ideal for protecting Personally Identifiable Information (PII) such as social security numbers, salaries, and other sensitive employee data. Always Encrypted ensures data remains encrypted at rest, in transit, and during query processing.
+
+- **Automatic Scaling for Payroll Operations**: The **Serverless compute tier** allows automatic scaling of compute resources based on workload demand. It supports auto-pausing during periods of inactivity and auto-resuming when connections are made. This is perfect for bursty workloads like monthly payroll processing where demand spikes temporarily.
+
+- **Cost Minimization**: Serverless with the General Purpose tier is the most cost-effective option among the viable choices:
+  - Per-second billing for actual compute used
+  - Auto-pause reduces costs during idle periods
+  - General Purpose is cheaper than Business Critical or Hyperscale
+  - Designed for intermittent or variable workloads
+
+**Why Other Options Are Incorrect**:
+
+❌ **Business Critical service tier and Serverless compute tier**:
+- **Business Critical does NOT support Serverless compute**. This combination is invalid.
+- Business Critical is designed for mission-critical workloads with low-latency, high-throughput needs using local SSD storage.
+- It's more expensive and exceeds the cost requirements for this scenario.
+- While it provides zone redundancy and supports Always Encrypted, the lack of Serverless support and higher costs make it unsuitable.
+
+❌ **Hyperscale service tier and Provisioned compute tier**:
+- **Hyperscale does NOT support Serverless compute** (only limited preview support).
+- Hyperscale is designed for massive, high-ingestion workloads with databases up to 100 TB.
+- It's not cost-effective for typical web app workloads.
+- While it supports zone redundancy and Always Encrypted, the provisioned compute model doesn't provide automatic scaling, and the tier is unnecessary for this scenario.
+
+**Service Tier and Serverless Compatibility**:
+
+| Service Tier | Serverless Support | Zone Redundancy | Always Encrypted |
+|--------------|-------------------|-----------------|------------------|
+| **General Purpose** | ✅ **Yes** | ✅ Yes | ✅ Yes |
+| **Business Critical** | ❌ **No** | ✅ Yes | ✅ Yes |
+| **Hyperscale** | ⚠️ Preview only | ✅ Yes | ✅ Yes |
+
+> **Exam Tip:** When a scenario requires automatic scaling (Serverless compute) AND cost minimization, **General Purpose with Serverless** is typically the correct answer. Remember:
+> - Serverless is **only available in General Purpose tier**
+> - **All tiers support Always Encrypted** for column-level encryption
+> - **Zone redundancy is available in General Purpose**, not just Business Critical
+> - Business Critical and Hyperscale are more expensive and don't support Serverless
+
+**Reference Links**:
+- [Azure SQL Database Service Tiers (vCore)](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-sql-database-vcore?view=azuresql)
+- [Azure SQL Database Serverless](https://learn.microsoft.com/en-us/azure/azure-sql/database/serverless-tier-overview?view=azuresql)
+- [Always Encrypted](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine)
+- [Zone-Redundant Configuration](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql)
+
+---
+
+### Scenario 11: Intermittent Monthly Workload Migration
 **Requirements**: 
 - Migrate on-premises SQL Server databases to Azure with the following sizes:
 
