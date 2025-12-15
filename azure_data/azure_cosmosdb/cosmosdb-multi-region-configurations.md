@@ -864,6 +864,120 @@ Container container = await database.CreateContainerIfNotExistsAsync(containerPr
 
 ---
 
+### Question 8: Contoso Ltd. Case Study - App1 Data Requirements
+
+**Scenario:** Refer to the Contoso Ltd. case study.
+
+Contoso, Ltd. is a research company that has a main office in Montreal. They plan to deploy an application named App1 to Azure.
+
+**App1 Requirements:**
+- App1 will be a Python web app hosted in Azure App Service that requires a Linux runtime
+- App1 will have six instances: three in the East US Azure region and three in the West Europe Azure region
+- **Data Requirements:**
+  - Each instance will write data to a data store in the same availability zone as the instance
+  - Data written by any App1 instance must be visible to all App1 instances
+
+**Question:** You need to recommend a solution that meets the data requirements for App1. What should you recommend deploying to each availability zone that contains an instance of App1?
+
+**Options:**
+- A. An Azure Storage account that uses geo-zone-redundant storage (GZRS)
+- B. An Azure Cosmos DB that uses multi-region writes
+- C. An Azure Data Lake store that uses geo-zone-redundant storage (GZRS)
+
+**Answer:** B ✅
+
+**Explanation:**
+
+**Why B is Correct:**
+
+**Azure Cosmos DB with multi-region writes** is the correct answer because the case study specifies these critical data requirements for App1:
+
+1. **"Each instance will write data to a data store in the same availability zone as the instance."**
+   - This requires **local write capability** in each region
+   - Multi-region writes allows write operations in both East US and West Europe regions
+   - Low-latency local writes for all App1 instances
+
+2. **"Data written by any App1 instance must be visible to all App1 instances."**
+   - This requires **global data synchronization** across all instances
+   - Cosmos DB automatically replicates data across all configured regions
+   - Data written in East US is visible to instances in West Europe (and vice versa)
+
+**Key Features that Address the Requirements:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    App1 Data Architecture with Cosmos DB                │
+│                                                                         │
+│   ┌──────────────────┐    ◄──── Automatic ────►   ┌──────────────────┐ │
+│   │   East US        │       Replication          │   West Europe    │ │
+│   │                  │                            │                  │ │
+│   │ ┌─────────────┐  │                            │ ┌─────────────┐  │ │
+│   │ │ App1 (x3)   │  │                            │ │ App1 (x3)   │  │ │
+│   │ │ Instances   │  │                            │ │ Instances   │  │ │
+│   │ └──────┬──────┘  │                            │ └──────┬──────┘  │ │
+│   │        │         │                            │        │         │ │
+│   │        ▼         │                            │        ▼         │ │
+│   │ ┌─────────────┐  │                            │ ┌─────────────┐  │ │
+│   │ │ Cosmos DB   │◄─┼────────────────────────────┼─►│ Cosmos DB   │  │ │
+│   │ │ Write Node  │  │    Bi-directional Sync     │ │ Write Node  │  │ │
+│   │ │ • Writes ✅ │  │                            │ │ • Writes ✅ │  │ │
+│   │ │ • Reads ✅  │  │                            │ │ • Reads ✅  │  │ │
+│   │ └─────────────┘  │                            │ └─────────────┘  │ │
+│   └──────────────────┘                            └──────────────────┘ │
+│                                                                         │
+│   ✅ Local writes in each region (low latency)                         │
+│   ✅ Data synchronized globally (visible to all instances)             │
+│   ✅ High availability (99.999% SLA)                                   │
+│   ✅ Automatic conflict resolution                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why A is Incorrect:**
+
+**Azure Storage account with GZRS** is incorrect because:
+- ❌ **GZRS does not support multi-region active-active writes**
+- GZRS provides redundancy across availability zones AND asynchronous replication to a secondary region
+- The secondary region in GZRS is **read-only** (not writable)
+- Write operations must go to the primary region only
+- Does not meet requirement: "Each instance will write data to a data store in the same availability zone"
+- East US instances could write locally, but West Europe instances would need to write to East US (cross-region latency)
+
+**GZRS Limitation:**
+```
+Primary Region (East US):     Secondary Region (West Europe):
+• Writes ✅                   • Writes ❌ (Read-only)
+• Reads ✅                    • Reads ✅ (only after failover or RA-GZRS)
+```
+
+**Why C is Incorrect:**
+
+**Azure Data Lake store with GZRS** is incorrect because:
+- ❌ Azure Data Lake Storage is built on **Azure Blob Storage**
+- ❌ Inherits the same limitations as Azure Storage accounts
+- ❌ **Does not support multi-region write capability**
+- ❌ GZRS in Data Lake provides zone + geo redundancy, but writes are single-region only
+- ❌ Cannot meet the requirement for local writes in both East US and West Europe
+
+**Comparison Table:**
+
+| Feature | Cosmos DB Multi-Region Writes | Azure Storage GZRS | Azure Data Lake GZRS |
+|---------|------------------------------|-------------------|---------------------|
+| Local writes in multiple regions | ✅ Yes | ❌ No (primary only) | ❌ No (primary only) |
+| Global data visibility | ✅ Automatic sync | ❌ Async to secondary | ❌ Async to secondary |
+| Multi-region active-active | ✅ Yes | ❌ No | ❌ No |
+| Secondary region writable | ✅ Yes | ❌ No (read-only) | ❌ No (read-only) |
+| Meets App1 requirements | ✅ Yes | ❌ No | ❌ No |
+
+**Reference(s):**
+- [High availability with Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/high-availability)
+- [Configure multi-region writes in Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-multi-master?tabs=api-async)
+- [Distribute data globally with Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/distribute-data-globally)
+- [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
+
+**Domain:** Design Infrastructure Solutions
+
+---
+
 ## Summary
 
 | Scenario | Recommended Configuration |
