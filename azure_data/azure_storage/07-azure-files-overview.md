@@ -215,6 +215,47 @@ For **transaction-intensive workloads with low-latency requirements**, always ch
 
 ---
 
+### Practice Question: Business Continuity for On-premises File Server
+
+**Scenario:**
+You have an on-premises network and an Azure subscription. The on-premises network has several branch offices.
+
+A branch office in Toronto contains a virtual machine named **VM1** that is configured as a file server. Users access the shared files on **VM1** from all offices.
+
+You need to recommend a solution to ensure that the users can access the shared files as quickly as possible if the Toronto branch office is inaccessible.
+
+**Question:**
+What should you include in the recommendation?
+
+**Options:**
+- a Recovery Services vault and Windows Server Backup
+- **an Azure file share and Azure File Sync**
+- a Recovery Services vault and Azure Backup
+- Azure blob containers and Azure File Sync
+
+**Answer: an Azure file share and Azure File Sync**
+
+**Explanation:**
+
+- **Azure File Sync is correct** because it allows you to replicate on-premises file server data (like **VM1** in Toronto) to an **Azure file share**, enabling centralized cloud storage with local caching servers at other branch offices. If the Toronto branch becomes inaccessible, users can access the files directly from Azure or from another on-premises server that has Azure File Sync configured as a cache/replica, providing high availability and low-latency access across locations.
+
+- **A Recovery Services vault and Windows Server Backup is incorrect** because this combination provides backups for point-in-time recovery and disaster recovery, but it does not provide continuous synchronization or immediate file sharing across branches.
+
+- **A Recovery Services vault and Azure Backup is incorrect** because Azure Backup protects VM1’s data for restore scenarios but does not enable real-time sync or continuous availability for user access.
+
+- **Azure blob containers and Azure File Sync is incorrect** because Azure File Sync works only with **Azure file shares**, not blob containers. Blob storage is optimized for object storage and does not natively support Windows file system semantics or File Sync integration.
+
+**References:**
+
+- https://learn.microsoft.com/en-us/azure/storage/files/storage-sync-files-deployment-guide
+- https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction
+- https://learn.microsoft.com/en-us/azure/backup/backup-overview
+- https://learn.microsoft.com/en-us/azure/backup/backup-azure-recovery-services-vault-overview
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
 ## Supported Operating Systems
 
 Azure Files SMB file shares are accessible from **Windows, Linux, and macOS** clients.
