@@ -1098,6 +1098,66 @@ For detailed explanations, real-world scenarios, and migration workflows, refer 
 
 ---
 
+### Scenario 10: Intermittent Monthly Workload Migration
+**Requirements**: 
+- Migrate on-premises SQL Server databases to Azure with the following sizes:
+
+| Name | Storage |
+|------|---------|
+| DB1  | 450 GB  |
+| DB2  | 250 GB  |
+| DB3  | 300 GB  |
+| DB4  | 50 GB   |
+| **Total** | **1,050 GB** |
+
+- Application and data used only on the first day of each month
+- Data growth expected to be less than 3% annually
+- Need to minimize costs while ensuring database availability for monthly usage
+
+**Recommendation**:
+- **Azure SQL Database** (Single Database)
+- **vCore-based General Purpose** service tier
+- **Serverless** compute tier
+- Auto-pause delay configured appropriately (e.g., 1-2 hours after inactivity)
+
+**Why**: 
+- **Serverless Compute with Auto-Pause**: The serverless compute tier supports automatic pausing and resuming of the database based on activity. Since the requirement specifies the database is only used on the first day of each month, the serverless capability enables the database to be paused for the remaining ~29 days, significantly reducing costs. During the paused state, you're only billed for storage, not compute, which aligns perfectly with the intermittent usage pattern.
+- **Cost Optimization**: With serverless, you can save up to 80% compared to provisioned compute for intermittent workloads. The database automatically resumes when accessed on the first day of the month and pauses again after the configured inactivity period.
+- **Scalability**: General Purpose with serverless can handle the database size requirements (supports up to 4 TB) and the minimal annual growth of 3%.
+- **Per-Second Billing**: You only pay for compute resources when the database is active, making it ideal for monthly usage patterns.
+
+**Cost Example**:
+```
+Active usage: 1 day/month (~24 hours)
+Paused: 29 days/month
+Average compute: 4 vCores during active time
+
+Compute cost: 24 hours × 4 vCores × ~$0.20/vCore-hour = ~$19.20/month
+Storage cost (1 TB): 1024 GB × $0.12/GB = ~$122.88/month
+Total: ~$142/month (vs ~$720/month with provisioned compute)
+```
+
+**Why Other Options Are Incorrect**:
+- **DTU-based Basic**: Incorrect because it supports databases only up to 2 GB in size, whereas the combined database size from the scenario exceeds 1 TB. This tier cannot accommodate the storage requirements.
+- **DTU-based Standard**: Incorrect because although it supports larger database sizes (up to 1 TB per database), DTUs are always provisioned and billed regardless of actual usage. Since the app is only used once a month, this model would result in paying for 29 days of unused compute resources, leading to unnecessary costs. DTU-based models do not support the serverless auto-pause capability.
+- **vCore-based Business Critical**: Incorrect because it is designed for mission-critical applications requiring the highest performance, lowest latency (<2ms), and built-in high availability through multiple replicas. The scenario does not indicate the need for such performance or availability requirements. Additionally, Business Critical does not support the serverless compute tier, making it unable to pause during inactive periods. This tier would be unnecessarily expensive for an intermittent monthly workload.
+
+**Key Considerations**:
+- **Auto-Pause Configuration**: Set an appropriate auto-pause delay (1-2 hours) to ensure the database pauses after completion of monthly processing
+- **Resume Time**: First connection after pause will have a brief delay (few seconds) while the database resumes
+- **Serverless Availability**: Only available in General Purpose tier, not Business Critical
+- **Storage Billing**: Storage is billed continuously even when paused, but at a much lower rate than compute
+
+**Reference Links**:
+- [Azure SQL Database Serverless Tier Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/serverless-tier-overview?view=azuresql&tabs=general-purpose)
+- [Azure SQL Database General Purpose Service Tier](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-general-purpose)
+- [Azure SQL Database DTU Service Tiers](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu)
+- [Azure SQL Database DTU Resource Limits](https://learn.microsoft.com/en-us/azure/azure-sql/database/resource-limits-dtu-single-databases?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Exam Practice Questions
 
 ### Question 1: Enterprise Database Migration with Resiliency Requirements (Litware Inc.)
