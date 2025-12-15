@@ -563,6 +563,117 @@ Azure Region (e.g., East US)
 
 ---
 
+### Question 3: SQL Server on Azure VMs - VM Series Selection
+
+**Scenario**: You need to deploy an instance of SQL Server on Azure Virtual Machines. The solution must meet the following requirements:
+
+- Support 15,000 disk IOPS
+- Support SR-IOV (Single Root I/O Virtualization)
+- Minimize costs
+
+**Question**: What should you include in the solution for the virtual machine series?
+
+**Options**:
+
+A) **DS**
+
+B) NC
+
+C) NV
+
+---
+
+**Correct Answer**: **A) DS**
+
+---
+
+### Explanation
+
+**Why DS-series Virtual Machines?**
+
+#### 1. **High Disk IOPS Support** ✅
+
+- **DS-series VMs** are optimized for disk-intensive workloads
+- Support **Premium SSDs** capable of delivering high IOPS
+- Can deliver well beyond 15,000 disk IOPS depending on VM size and disk configuration
+- Ideal for database workloads like SQL Server that require high disk throughput
+
+#### 2. **SR-IOV Support** ✅
+
+- DS-series VMs support **SR-IOV (Single Root I/O Virtualization)**
+- SR-IOV enables low-latency and high-throughput network performance
+- Critical for database performance where network I/O matters
+- Bypasses the hypervisor for network traffic, reducing latency
+
+#### 3. **Cost-Effective** ✅
+
+- DS-series are **general-purpose VMs**
+- More cost-effective than specialized GPU or compute-intensive series
+- Optimal price-to-performance ratio for SQL Server workloads
+- No unnecessary features that inflate costs
+
+---
+
+### Why Other Options Are Incorrect
+
+**B) NC-series** ❌
+
+- **GPU-intensive compute workloads** - Designed for machine learning and AI model training
+- **More expensive** than DS-series for database workloads
+- **Not optimized for disk IOPS** or database workloads
+- Overkill for SQL Server deployments with unnecessary GPU resources
+- Poor fit for SQL Server performance requirements
+
+**C) NV-series** ❌
+
+- **Graphics-intensive applications** - Optimized for remote visualization using GPU acceleration
+- **Not designed for high disk IOPS** or database hosting
+- Results in **unnecessary cost** for SQL Server deployments
+- **Suboptimal performance** for database workloads
+- GPU acceleration provides no benefit for SQL Server
+
+---
+
+### Azure VM Series Overview for Database Workloads
+
+| VM Series | Optimized For | Disk IOPS | SR-IOV | Cost | SQL Server Fit |
+|-----------|---------------|-----------|--------|------|----------------|
+| **DS-series** | Disk-intensive workloads | ✅ High | ✅ Yes | 💰 Moderate | ✅ Excellent |
+| NC-series | GPU compute (ML/AI) | ❌ Not optimized | ✅ Yes | 💰💰💰 High | ❌ Poor |
+| NV-series | Graphics/Visualization | ❌ Not optimized | ✅ Yes | 💰💰💰 High | ❌ Poor |
+| E-series | Memory-intensive | ✅ High | ✅ Yes | 💰💰 Higher | ✅ Good |
+| M-series | Memory-optimized (large DBs) | ✅ Very High | ✅ Yes | 💰💰💰 Highest | ✅ Large DBs |
+
+---
+
+### Key Takeaways
+
+1. **DS-series = Balanced Performance for SQL Server**
+   > DS-series VMs provide the optimal balance of disk IOPS, network performance (SR-IOV), and cost for SQL Server workloads.
+
+2. **Premium SSD Support is Critical**
+   > For high IOPS requirements (15,000+), Premium SSDs paired with DS-series VMs deliver consistent performance for database operations.
+
+3. **Avoid GPU-Optimized Series for Databases**
+   > NC-series (compute GPU) and NV-series (visualization GPU) add unnecessary cost without improving database performance.
+
+4. **SR-IOV for Low-Latency Networking**
+   > SR-IOV bypasses the hypervisor for network operations, critical for database workloads with high network I/O requirements.
+
+5. **Cost Optimization = Right-Sizing**
+   > Choosing the appropriate VM series (DS for disk-intensive workloads) avoids paying for unused GPU or specialized compute capabilities.
+
+---
+
+### Reference Links
+
+- [Dv2 and DSv2-series Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)
+- [Azure VM Sizes Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes)
+- [NC-series Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nc-series?tabs=sizebasic)
+- [NV-series Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nv-series?tabs=sizebasic)
+
+---
+
 ### Reference Links
 
 - [Migration Checklist When Moving to Azure App Service](https://azure.microsoft.com/en-us/blog/migration-checklist-when-moving-to-azure-app-service/)
