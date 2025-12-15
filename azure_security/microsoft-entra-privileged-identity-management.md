@@ -717,6 +717,95 @@ This is a **service-to-service** authentication scenario, not a human administra
 
 ---
 
+### Scenario 5: Changing Azure Subscription Tenant Association
+
+**Question:**
+
+You have two Microsoft Entra tenants named contoso.com and fabrikam.com. Each tenant is linked to 50 Azure subscriptions. Contoso.com contains two users named User1 and User2.
+
+You need to meet the following requirements:
+
+- Ensure that User1 can change the Microsoft Entra tenant linked to specific Azure subscriptions.
+- If an Azure subscription is linked to a new Microsoft Entra tenant, and no available Microsoft Entra accounts have full subscription-level permissions to the subscription, elevate the access of User2 to the subscription.
+- The solution must use the principle of least privilege.
+
+Which role should you assign to User1?
+
+**Options:**
+
+A. Co-administrator  
+B. Owner  
+C. Service administrator
+
+**Correct Answer: B - Owner**
+
+**Explanation:**
+
+**Why B is correct:**
+
+**Owner** is correct because in order to change the Microsoft Entra tenant associated with a subscription, the user must have Owner permissions on the subscription. The Owner role grants full access to all resources, including the ability to manage access control and initiate a tenant switch. This aligns with the requirement for User1 to reassign the subscription to a new Microsoft Entra tenant while adhering to the principle of least privilege — giving just enough access to perform the required task without unnecessary elevation.
+
+**Key Points about Subscription Tenant Changes:**
+
+1. **Owner Role is Required**: Only users with the Owner role at the subscription level can change the directory (tenant) association
+2. **Full Access Control**: The Owner role includes permissions to manage all aspects of the subscription, including transferring it to a different tenant
+3. **Principle of Least Privilege**: While Owner is a powerful role, it is the minimum required for this specific operation
+
+**Why other options are incorrect:**
+
+**Option A - Co-administrator:**
+- ❌ Co-administrator is a **legacy role** used in the classic deployment model
+- ❌ Does NOT have permissions to change the directory linked to a subscription
+- ❌ Lacks the modern flexibility and role granularity of RBAC
+- ❌ Not recommended for modern Azure management
+
+**Option C - Service administrator:**
+- ❌ This role is associated with managing **service-level settings and billing**
+- ❌ While it historically had broader access, it **cannot manage or change the directory (tenant) association** of a subscription
+- ❌ In current role-based models, the **Owner role is the required permission** for this task
+
+**Regarding User2 - Elevated Access:**
+
+When a subscription is moved to a new tenant and no accounts have subscription-level permissions:
+- A **Global Administrator** in the new tenant can use the **"Elevate access to manage all Azure subscriptions"** feature
+- This grants the User Access Administrator role at the root scope (/)
+- User2 would need to be a Global Administrator in the target tenant to use this feature
+
+**Visual Representation:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│           Subscription Tenant Change Requirements               │
+└─────────────────────────────────────────────────────────────────┘
+
+User1 needs to change subscription tenant:
+  └─> Required Role: Owner (at subscription level)
+  └─> Capability: Can transfer subscription to new Entra tenant
+
+User2 needs to regain access after tenant change:
+  └─> Scenario: No accounts in new tenant have subscription access
+  └─> Solution: Global Admin → "Elevate access" → User Access Admin at root
+  └─> Then: Can assign appropriate roles to recover subscription control
+
+Role Comparison for Tenant Change:
+
+| Role               | Can Change Tenant? | Deployment Model |
+|--------------------|-------------------|------------------|
+| Owner              | ✅ Yes            | ARM (Current)    |
+| Co-administrator   | ❌ No             | Classic (Legacy) |
+| Service administrator | ❌ No          | Classic (Legacy) |
+```
+
+**Reference(s):**
+- [Owner Role Built-in Roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner)
+- [Role Assignments Portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal)
+- [Associate or Add Azure Subscription to Tenant](https://learn.microsoft.com/en-us/entra/fundamentals/how-subscriptions-associated-directory)
+- [Classic Administrators](https://learn.microsoft.com/en-us/azure/role-based-access-control/classic-administrators)
+
+**Domain**: Design Identity, Governance, and Monitoring Solutions
+
+---
+
 ## Additional Resources
 
 ### Microsoft Learn Documentation
