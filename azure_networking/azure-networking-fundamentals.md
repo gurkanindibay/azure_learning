@@ -433,6 +433,48 @@ When on-premises clients need to access Azure PaaS services through Private Endp
 | **VM1 forwards to public DNS zone** | ❌ **Incorrect** | Public DNS returns CNAME to public endpoint, bypassing the private endpoint entirely |
 | **VNet custom DNS set to 168.63.129.16** | ❌ **Incorrect** | 168.63.129.16 is implicit for Azure VMs; setting it explicitly as custom DNS causes resolution loops/issues |
 
+**On-Premises DNS Configuration Options:**
+
+| Configuration | Result | Explanation |
+|---------------|--------|-------------|
+| **Forward contoso.com to VM1** | ✅ **Correct** | VM1 is configured as a DNS server within VNET1 and has access to the private DNS zone for contoso.com. VM1 can resolve queries using the private DNS zone linked to VNET1, returning PE1's private IP |
+| **Forward contoso.com to public DNS zone** | ❌ **Incorrect** | Public DNS zone contains CNAME record pointing to SQLDB1's public endpoint, which bypasses the private endpoint and exposes traffic over the public internet |
+| **Forward contoso.com to 168.63.129.16** | ❌ **Incorrect** | Azure-provided DNS (168.63.129.16) is **only accessible from within Azure VNets**, not from on-premises networks. This IP is non-routable from on-premises, so forwarding would fail |
+
+**Two-Tier DNS Resolution Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     COMPLETE DNS RESOLUTION CHAIN                            │
+│                                                                              │
+│   TIER 1: On-Premises DNS                   TIER 2: Azure DNS Forwarder     │
+│   ┌─────────────────────────┐              ┌─────────────────────────┐      │
+│   │  On-Premises DNS Server │              │  VM1 (Azure DNS Server) │      │
+│   │                         │              │                         │      │
+│   │  Conditional Forwarder: │    Query     │  Conditional Forwarder: │      │
+│   │  contoso.com ──────────────────────────▶  contoso.com ───────────│──┐   │
+│   │       → VM1's IP        │              │       → 168.63.129.16   │  │   │
+│   │                         │              │                         │  │   │
+│   └─────────────────────────┘              └─────────────────────────┘  │   │
+│              ▲                                                          │   │
+│              │                                                          ▼   │
+│         On-Prem                                          ┌──────────────────┐
+│         Client                                           │ Azure-Provided   │
+│                                                          │ DNS 168.63.129.16│
+│                                                          │ (Only reachable  │
+│                                                          │  from Azure VMs) │
+│                                                          └────────┬─────────┘
+│                                                                   │         │
+│                                                                   ▼         │
+│                                                          ┌──────────────────┐
+│                                                          │ Private DNS Zone │
+│                                                          │ A: PE1 → 10.0.x.x│
+│                                                          └──────────────────┘
+│                                                                              │
+│   Key: On-prem CANNOT reach 168.63.129.16 directly, must go through VM1    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 **Why 168.63.129.16?**
 
 The IP address `168.63.129.16` is a special Azure wireserver IP address that:
