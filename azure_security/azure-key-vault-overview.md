@@ -47,6 +47,13 @@
   - [Backup and Restore Restrictions](#backup-and-restore-restrictions)
   - [Key Takeaway](#key-takeaway-5)
   - [Reference(s)](#references)
+- [Question 7: Key Vault Regional Failover and Continuity](#question-7-key-vault-regional-failover-and-continuity)
+  - [Scenario](#scenario-1)
+  - [Explanation](#explanation-6)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-6)
+  - [Key Vault Availability and Redundancy](#key-vault-availability-and-redundancy)
+  - [Key Takeaway](#key-takeaway-6)
+  - [Reference(s)](#references-1)
 
 ## Overview
 
@@ -944,3 +951,66 @@ az keyvault key restore --vault-name KeyVault2 --file backup.blob
 
 - [Azure Key Vault Backup](https://learn.microsoft.com/en-us/azure/key-vault/general/backup?tabs=azure-cli)
 - [Azure Key Vault Disaster Recovery Guidance](https://learn.microsoft.com/en-us/azure/key-vault/general/disaster-recovery-guidance)
+
+---
+
+## Question 7: Key Vault Regional Failover and Continuity
+
+### Scenario
+
+You have an Azure web app named **App1** and an Azure key vault named **KV1**.
+
+App1 stores database connection strings in KV1.
+
+App1 performs the following types of requests to KV1:
+- Get
+- List
+- Wrap
+- Delete
+- Unwrap
+- Backup
+- Decrypt
+- Encrypt
+
+You are evaluating the continuity of service for App1.
+
+**Question:** You need to identify the following if the Azure region that hosts KV1 becomes unavailable: "To where will KV1 failover?"
+
+**Options:**
+- A. A server in the same availability set
+- B. A server in the same fault domain
+- C. A server in the paired region ✅ *Correct*
+- D. A virtual machine in a scale set
+
+### Explanation
+
+**A server in the paired region** is correct because Azure Key Vault is a regional service, but it supports **geo-redundant recovery** by replicating its contents to the paired Azure region if soft-delete and purge protection are enabled.
+
+In the event of a regional outage, Microsoft initiates a **manual failover** of the Key Vault to the paired region to restore access. This ensures continuity of service for applications like App1 that depend on the vault for secrets, encryption keys, or certificates.
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **A server in the same availability set** | Availability sets only apply to Azure virtual machines and are used to ensure high availability within a **single region**, not across regions. Azure Key Vault is a managed service and is not deployed in an availability set. |
+| **A server in the same fault domain** | Fault domains provide hardware isolation within a datacenter, which does not help in the case of **regional outages**. They protect against rack-level failures, not region-level disasters. |
+| **A virtual machine in a scale set** | Azure Key Vault is a **PaaS service** and is not hosted on user-managed VMs or VM scale sets. Scale sets provide compute scalability, not redundancy for PaaS services like Key Vault. |
+
+### Key Vault Availability and Redundancy
+
+| Feature | Description |
+|---------|-------------|
+| **Regional Service** | Key Vault is deployed in a specific region. |
+| **Data Replication** | Contents are replicated to the **paired region** (if available) for durability. |
+| **Failover Mechanism** | Microsoft-managed manual failover in case of critical regional disaster. |
+| **Read-Only Access** | During failover, the vault in the paired region is in **read-only mode**. |
+| **Failback** | Once the primary region is restored, Microsoft fails back the service. |
+
+### Key Takeaway
+
+Azure Key Vault provides high availability and disaster recovery through **geo-redundancy**. If a region becomes unavailable, the service fails over to the **paired region**. This process is managed by Microsoft and does not require user intervention, but users should be aware that the service might be in read-only mode during the failover period.
+
+### Reference(s)
+
+- [Azure Key Vault Disaster Recovery Guidance](https://learn.microsoft.com/en-us/azure/key-vault/general/disaster-recovery-guidance)
+- [Azure Key Vault Overview](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)
