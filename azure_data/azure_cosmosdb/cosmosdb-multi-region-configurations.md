@@ -978,6 +978,152 @@ Primary Region (East US):     Secondary Region (West Europe):
 
 ---
 
+### Question 9: On-Premises App Migration - Image Storage and Customer Accounts
+
+**Scenario:** You have an on-premises app named App1. Customers use App1 to manage digital images. You plan to migrate App1 to Azure.
+
+You need to recommend a data storage solution for App1. The solution must meet the following requirements:
+
+**Image Storage Requirements:**
+- Encrypt images at rest
+- Allow files up to 50 MB
+- Manage access to the images by using Azure Web Application Firewall (WAF) on Azure Front Door
+
+**Customer Account Requirements:**
+- Support automatic scale out of the storage
+- Maintain the availability of App1 if a datacenter fails
+- Support reading and writing data from multiple Azure regions
+
+**Question:** Which service should you include in the recommendation for **customer accounts**?
+
+**Options:**
+- A. Azure Blob storage
+- B. Azure Cosmos DB
+- C. Azure SQL Database
+- D. Azure Table storage
+
+**Answer:** B ✅
+
+**Explanation:**
+
+**Why B (Azure Cosmos DB) is Correct:**
+
+Azure Cosmos DB is the correct answer because it is designed for globally distributed applications that require high availability, automatic scaling, and multi-region read and write capabilities. For customer account data, Cosmos DB provides:
+
+- ✅ **Low-latency NoSQL data store** that can scale seamlessly across multiple Azure regions
+- ✅ **Automatic failover** - maintains availability if a datacenter fails
+- ✅ **Global data replication** with strong consistency options
+- ✅ **Multi-region writes** - supports reading AND writing from multiple Azure regions
+- ✅ **Automatic scaling** - throughput scales automatically with demand
+- ✅ **Encryption at rest** - data is encrypted by default
+- ✅ **Azure security integration** - works with Azure security features for access control
+
+**Cosmos DB Multi-Region Architecture for Customer Accounts:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│              Customer Account Data with Cosmos DB                       │
+│                                                                         │
+│   ┌──────────────────┐    ◄──── Automatic ────►   ┌──────────────────┐ │
+│   │   Region 1       │       Replication          │   Region 2       │ │
+│   │   (Primary)      │                            │   (Secondary)    │ │
+│   │                  │                            │                  │ │
+│   │ ┌─────────────┐  │                            │ ┌─────────────┐  │ │
+│   │ │ Cosmos DB   │◄─┼────────────────────────────┼─►│ Cosmos DB   │  │ │
+│   │ │             │  │    Bi-directional Sync     │ │             │  │ │
+│   │ │ • Writes ✅ │  │                            │ │ • Writes ✅ │  │ │
+│   │ │ • Reads ✅  │  │                            │ │ • Reads ✅  │  │ │
+│   │ │ • Auto-scale│  │                            │ │ • Auto-scale│  │ │
+│   │ └─────────────┘  │                            │ └─────────────┘  │ │
+│   └──────────────────┘                            └──────────────────┘ │
+│                                                                         │
+│   ✅ Datacenter failure: Automatic failover                            │
+│   ✅ Multi-region read/write capability                                │
+│   ✅ Automatic scaling based on demand                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why A (Azure Blob Storage) is Incorrect:**
+
+Azure Blob storage is incorrect **for customer account data** because:
+- ❌ **Excellent for unstructured data** (like images) but **not ideal for structured customer account data**
+- ❌ Lacks features like **indexing, querying, and transactional updates** necessary for managing account records efficiently
+- ❌ Not designed for relational or structured data operations
+
+> **Note:** Azure Blob storage **IS the correct choice for image storage** in this scenario because:
+> - ✅ Supports files up to 190.7 TiB (well above 50 MB requirement)
+> - ✅ Encryption at rest enabled by default
+> - ✅ Can be integrated with Azure Front Door + WAF for access management
+
+**Why C (Azure SQL Database) is Incorrect:**
+
+Azure SQL Database is incorrect because:
+- ❌ Supports structured data and can be geo-replicated
+- ❌ **Does NOT offer the same level of global distribution and write scalability as Cosmos DB**
+- ❌ **SQL Database supports geo-redundancy but only allows writes in the PRIMARY region**
+- ❌ Read replicas in secondary regions are **read-only**
+- ❌ Does not meet the requirement: "Support reading and writing data from multiple Azure regions"
+
+**SQL Database Geo-Replication Limitation:**
+```
+Primary Region:              Secondary Region(s):
+• Writes ✅                  • Writes ❌ (Read-only)
+• Reads ✅                   • Reads ✅
+```
+
+**Why D (Azure Table Storage) is Incorrect:**
+
+Azure Table storage is incorrect because:
+- ❌ Basic NoSQL key-value store with **limited features compared to Cosmos DB**
+- ❌ **Does NOT support automatic global distribution with write capabilities in multiple regions**
+- ❌ Does not offer the same level of consistency, availability, or scalability
+- ❌ Not suitable for robust customer account management requiring multi-region writes
+
+**Comparison Table:**
+
+| Feature | Cosmos DB | Blob Storage | SQL Database | Table Storage |
+|---------|-----------|--------------|--------------|---------------|
+| Multi-region writes | ✅ Yes | ❌ No | ❌ No (primary only) | ❌ No |
+| Automatic scale out | ✅ Yes | ✅ Yes | Limited | Limited |
+| Datacenter failover | ✅ Automatic | ✅ With redundancy | ✅ With geo-replica | ✅ With redundancy |
+| Structured data support | ✅ Yes | ❌ No | ✅ Yes | ✅ Limited |
+| Indexing & querying | ✅ Yes | ❌ No | ✅ Yes | ✅ Basic |
+| Best for customer accounts | ✅ **Yes** | ❌ No | Partial | ❌ No |
+
+**Complete Solution Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    App1 Complete Azure Architecture                     │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐   │
+│   │                    Azure Front Door + WAF                       │   │
+│   │              (Access management for images)                     │   │
+│   └─────────────────────────────────────────────────────────────────┘   │
+│                                │                                        │
+│               ┌────────────────┴────────────────┐                       │
+│               ▼                                 ▼                       │
+│   ┌─────────────────────┐           ┌─────────────────────┐            │
+│   │  Azure Blob Storage │           │   Azure Cosmos DB   │            │
+│   │                     │           │                     │            │
+│   │  ● Images (50MB+)   │           │  ● Customer Accounts│            │
+│   │  ● Encryption ✅    │           │  ● Multi-region R/W │            │
+│   │  ● CDN integration  │           │  ● Auto-scale       │            │
+│   │  ● Unstructured     │           │  ● Structured data  │            │
+│   └─────────────────────┘           └─────────────────────┘            │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Reference(s):**
+- [Introduction to Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/introduction)
+- [Introduction to Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction)
+- [What is Azure SQL Database?](https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview?view=azuresql)
+- [Azure Table Storage Overview](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview)
+
+**Domain:** Design Data Storage Solutions
+
+---
+
 ## Summary
 
 | Scenario | Recommended Configuration |
@@ -991,6 +1137,7 @@ Primary Region (East US):     Secondary Region (West Europe):
 | Content delivery/CDN | Multi-region with read replicas |
 | Financial transactions (ACID) | Multi-region read replicas + strong consistency |
 | Global analytics with Synapse | Multi-region with analytical store enabled |
+| Customer account data (multi-region R/W) | Azure Cosmos DB with multi-region writes |
 
 ---
 
