@@ -231,13 +231,118 @@ spec:
         averageUtilization: 70
 ```
 
+**Key Points:**
+- HPA is a core component of Kubernetes that dynamically adjusts the number of pod replicas
+- Can scale based on CPU, memory, or custom metrics
+- When used alongside KEDA, HPA can scale workloads in response to event-based triggers (e.g., Azure Queue Storage messages)
+- KEDA acts as a metrics adapter, feeding external event metrics into Kubernetes' HPA to drive autoscaling decisions
+
 ### Vertical Pod Autoscaler (VPA)
 
 Automatically adjusts CPU and memory requests/limits for containers.
 
 ### KEDA (Kubernetes Event-Driven Autoscaling)
 
-Scale based on external metrics and events (queues, databases, etc.).
+KEDA enables event-driven scaling for Kubernetes workloads, including the ability to **scale from zero** — which replicates the serverless, on-demand model used in the Azure Functions Consumption plan.
+
+**Key Features:**
+- **Scale to/from Zero**: Unlike standard HPA, KEDA can scale workloads down to zero replicas when there are no events
+- **Event-Driven**: Supports native integration with Azure Queue Storage triggers, Service Bus, Event Hubs, and more
+- **Metrics Adapter**: KEDA monitors queue length (or other event sources) and exposes metrics to HPA, allowing Kubernetes to adjust pod count accordingly
+- **Networking Support**: Works with both kubenet and Azure CNI networking models
+
+**How KEDA Works:**
+1. KEDA monitors external event sources (e.g., Azure Queue Storage)
+2. Exposes custom metrics to the Kubernetes metrics API
+3. HPA uses these metrics to make scaling decisions
+4. Pods scale up/down based on event volume (including scaling to zero)
+
+**Example: Azure Queue Storage Trigger**
+```yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: azure-queue-scaledobject
+spec:
+  scaleTargetRef:
+    name: myapp-deployment
+  minReplicaCount: 0   # Scale to zero when no messages
+  maxReplicaCount: 10
+  triggers:
+  - type: azure-queue
+    metadata:
+      queueName: myqueue
+      queueLength: "5"  # Scale when queue has 5+ messages
+      connectionFromEnv: AZURE_STORAGE_CONNECTION_STRING
+```
+
+**Installing KEDA on AKS:**
+```bash
+# Add KEDA Helm repository
+helm repo add kedacore https://kedacore.github.io/charts
+helm repo update
+
+# Install KEDA
+helm install keda kedacore/keda --namespace keda --create-namespace
+
+# Or enable KEDA add-on (preview)
+az aks update \
+  --resource-group myResourceGroup \
+  --name myAKSCluster \
+  --enable-keda
+```
+
+---
+
+## Exam Scenario: Migrating Azure Functions to AKS
+
+### Scenario
+
+You have an Azure Functions microservice app named App1 that is hosted in the **Consumption plan**. App1 uses an **Azure Queue Storage trigger**.
+
+You plan to migrate App1 to an Azure Kubernetes Service (AKS) cluster.
+
+**Requirements:**
+- Use the same scaling mechanism as the current deployment (event-driven, scale to zero)
+- Support kubenet and Azure Container Networking Interface (CNI) networking
+
+### Solution: Required Actions
+
+| Action | Required | Explanation |
+|--------|----------|-------------|
+| **Install KEDA** | ✅ Yes | KEDA enables event-driven scaling including scale-from-zero, replicating the Azure Functions Consumption plan behavior. KEDA supports Azure Queue Storage triggers natively. |
+| **Configure HPA** | ✅ Yes | HPA works with KEDA to dynamically adjust pod replicas based on queue metrics. KEDA feeds external event metrics to HPA for scaling decisions. |
+| Configure Cluster Autoscaler | ❌ No | Cluster autoscaler adjusts node count based on pod scheduling needs, not external events. It doesn't handle event-driven scaling or scale-to-zero. |
+| Configure Virtual Node Add-on | ❌ No | Virtual nodes allow bursting into Azure Container Instances but don't support event-driven autoscaling. It's a compute scaling feature, not an event-based trigger mechanism. |
+| Install Virtual Kubelet | ❌ No | Virtual Kubelet is the underlying open-source component used by virtual nodes add-on. Microsoft recommends using the managed virtual node add-on instead of direct Virtual Kubelet installation. |
+
+### Key Concepts Comparison
+
+| Feature | Cluster Autoscaler | HPA | KEDA |
+|---------|-------------------|-----|------|
+| **What it scales** | Nodes | Pods | Pods |
+| **Scaling trigger** | Pod scheduling pressure | CPU/Memory/Custom metrics | External events |
+| **Scale to zero** | ❌ No | ❌ No | ✅ Yes |
+| **Event-driven** | ❌ No | ❌ No (needs KEDA) | ✅ Yes |
+| **Azure Queue support** | ❌ No | Via KEDA | ✅ Native |
+
+### Virtual Nodes vs KEDA
+
+| Aspect | Virtual Nodes | KEDA |
+|--------|---------------|------|
+| **Purpose** | Burst compute capacity | Event-driven scaling |
+| **Mechanism** | Provisions ACI instances | Scales pod replicas |
+| **Scale to zero** | ❌ No | ✅ Yes |
+| **Event-driven** | ❌ No | ✅ Yes |
+| **Use case** | Handle compute spikes | Serverless-like behavior |
+
+### References
+
+- [KEDA Concepts](https://keda.sh/docs/2.0/concepts)
+- [KEDA on AKS](https://learn.microsoft.com/en-us/azure/aks/keda-about)
+- [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale)
+- [AKS Cluster Autoscaler](https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler)
+- [AKS Virtual Nodes](https://learn.microsoft.com/en-us/azure/aks/virtual-nodes-portal)
 
 ---
 
