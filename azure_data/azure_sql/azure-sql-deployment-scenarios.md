@@ -208,6 +208,58 @@ Availability: Availability Zones or Always On AG
 
 ---
 
+### Scenario 6a: SQL Server on Azure VMs - VM Series Selection
+
+**Context:**
+- Deploying SQL Server on Azure Virtual Machines
+- Need to support 15,000+ disk IOPS
+- Require SR-IOV (Single Root I/O Virtualization) for low-latency networking
+- Cost optimization is important
+
+**Recommendation:** ✅ **DS-series Virtual Machines**
+
+**Why DS-series is correct:**
+- **Disk-Intensive Optimization**: DS-series VMs are optimized for disk-intensive workloads and support Premium SSDs
+- **High IOPS Support**: Can deliver well beyond 15,000 disk IOPS depending on VM size and disk configuration
+- **SR-IOV Support**: Enables low-latency, high-throughput network performance critical for database workloads
+- **Cost-Effective**: General-purpose VMs that balance performance and cost for SQL Server workloads
+- **Ideal Use Case**: SQL Server workloads requiring both high disk performance and cost efficiency
+
+**Why NOT NC-series:**
+- ❌ Designed for GPU-intensive compute workloads (machine learning, AI model training)
+- ❌ More expensive than necessary for database workloads
+- ❌ Not optimized for disk IOPS or database operations
+- ❌ Poor fit for SQL Server deployments
+
+**Why NOT NV-series:**
+- ❌ Optimized for graphics-intensive applications (remote visualization)
+- ❌ Uses GPU acceleration not beneficial for database workloads
+- ❌ Not designed for high disk IOPS
+- ❌ Results in unnecessary cost and suboptimal performance for SQL Server
+
+**VM Series Comparison for SQL Server:**
+
+| VM Series | Primary Use Case | IOPS Optimization | SR-IOV | Cost for SQL Server |
+|-----------|------------------|-------------------|--------|---------------------|
+| **DS-series** | Disk-intensive, general purpose | ✅ High (Premium SSD) | ✅ Yes | ✅ Cost-effective |
+| NC-series | GPU compute (ML/AI) | ❌ Not optimized | ✅ Yes | ❌ Expensive, overkill |
+| NV-series | GPU visualization | ❌ Not optimized | ✅ Yes | ❌ Expensive, wrong fit |
+
+**Configuration Example:**
+```
+VM Series: DS-series (e.g., DS13_v2, DS14_v2)
+Premium SSD: P30 or higher for 15,000+ IOPS
+Networking: Accelerated networking enabled (SR-IOV)
+```
+
+**References:**
+- [Dv2 and DSv2-series](https://learn.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)
+- [Azure VM Sizes Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes)
+- [NC-series (GPU)](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nc-series)
+- [NV-series (GPU)](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nv-series)
+
+---
+
 ### Scenario 7: Development and Testing Environment
 
 **Context:**
