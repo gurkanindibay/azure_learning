@@ -21,7 +21,9 @@
   - [How Azure RBAC Solves This](#how-azure-rbac-solves-this)
 - [Azure Services Supporting RBAC Permission Model](#azure-services-supporting-rbac-permission-model)
 - [Best Practices](#best-practices)
+- [Practice Question: Multi-Tenant RBAC Role Assignments](#practice-question-multi-tenant-rbac-role-assignments)
 - [Practice Question: Preventing Contributor Role Data Plane Access](#practice-question-preventing-contributor-role-data-plane-access)
+- [Practice Question: Subscription Tenant Migration and Access Elevation](#practice-question-subscription-tenant-migration-and-access-elevation)
 
 ## Overview
 
@@ -562,3 +564,65 @@ This applies to multiple Azure services including:
 - Azure Event Hubs
 - Azure Cosmos DB
 - And others that support Azure RBAC for data plane operations
+
+## Practice Question: Subscription Tenant Migration and Access Elevation
+
+**Scenario:**
+You have two Microsoft Entra tenants named `contoso.com` and `fabrikam.com`. Each tenant is linked to 50 Azure subscriptions. `contoso.com` contains two users named User1 and User2.
+
+**Requirements:**
+- Ensure that User1 can change the Microsoft Entra tenant linked to specific Azure subscriptions
+- If an Azure subscription is linked to a new Microsoft Entra tenant, and no available Microsoft Entra accounts have full subscription-level permissions to the subscription, elevate the access of User2 to the subscription
+- The solution must use the principle of least privilege
+
+**Question:**
+Which role should you assign to User2?
+
+**Options:**
+
+1. **Co-administrator** ❌ *Incorrect*
+   - Co-administrator is a classic administrator role that offers management capabilities at the subscription level
+   - However, it **cannot assign RBAC roles** and **does not persist across tenant migrations**
+   - It does not meet the requirement of enabling User2 to elevate their own access or manage others
+
+2. **Owner** ✅ *Correct*
+   - The **Owner** role in Azure RBAC grants full access to all resources within a subscription, including the **ability to assign roles to others**
+   - If assigned the Owner role, User2 can elevate access and delegate permissions, which directly satisfies the requirement
+   - This solution aligns with the principle of least privilege, as User2 will have just enough access to manage permissions without being granted unnecessary broader administrative privileges across tenants
+
+3. **Service administrator** ❌ *Incorrect*
+   - Service administrator is a classic administrator role that can manage services and subscriptions
+   - It **does not have full RBAC integration** and **cannot assign RBAC roles** to other users unless elevated through a global admin or directory-wide operation
+   - It is insufficient for self-service elevation or assigning roles to others post-tenant migration
+
+---
+
+**Key Takeaways:**
+
+1. **Tenant Migration Impact on Access:**
+   - When an Azure subscription is transferred to a new Microsoft Entra tenant, existing RBAC role assignments may no longer have valid principals in the new tenant
+   - This can result in a subscription with no accounts having full permissions
+
+2. **Classic vs RBAC Roles for Tenant Migration:**
+
+   | Role Type | Can Assign RBAC Roles | Persists Across Tenant Migration | Full RBAC Integration |
+   |-----------|----------------------|----------------------------------|----------------------|
+   | **Owner** | ✅ Yes | N/A (needs reassignment) | ✅ Yes |
+   | **Service Administrator** | ❌ No (limited) | ❌ No | ❌ No |
+   | **Co-administrator** | ❌ No | ❌ No | ❌ No |
+
+3. **Global Administrator Access Elevation:**
+   - A Global Administrator in Microsoft Entra ID can elevate their access to manage all Azure subscriptions and management groups in the tenant
+   - This is done through the "Access management for Azure resources" setting in Entra ID properties
+   - After elevation, the Global Admin receives the **User Access Administrator** role at the root scope
+
+4. **Best Practice for Tenant Migration:**
+   - Plan access recovery before migrating subscriptions to new tenants
+   - Ensure at least one account will have Owner or elevated access post-migration
+   - Document the recovery process for emergency scenarios
+
+**References:**
+- [Azure Built-in Roles - Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner)
+- [Classic Subscription Administrator Roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/classic-administrators)
+- [Elevate Access for Global Administrators](https://learn.microsoft.com/en-us/azure/role-based-access-control/elevate-access-global-admin)
+- [Associate or Change Azure Subscription Directory](https://learn.microsoft.com/en-us/entra/fundamentals/how-subscriptions-associated-directory)
