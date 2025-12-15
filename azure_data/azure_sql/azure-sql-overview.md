@@ -1199,6 +1199,63 @@ Azure Event Hubs (JSON ingestion)
 
 ---
 
+### Scenario 12: Large-Scale Database Deployment with License Mobility
+**Requirements**: 
+- Deploy 50 databases to Azure
+- Microsoft Volume Licensing customer with License Mobility through Software Assurance
+- Support automatic scaling
+- Minimize Microsoft SQL Server licensing costs
+
+**Recommendation**:
+- **Azure SQL Database** with **vCore-based** purchasing model
+- **General Purpose** or **Business Critical** service tier (based on performance needs)
+- **Serverless** compute tier (for automatic scaling requirements)
+- **Azure Hybrid Benefit** enabled (to leverage existing licenses)
+
+**Why**: 
+- **License Mobility Support**: The vCore (virtual core) purchase model in Azure SQL Database supports License Mobility through Software Assurance. Since the customer is a Microsoft Volume Licensing customer participating in Software Assurance, they are eligible for the **Azure Hybrid Benefit**, allowing them to bring their own SQL Server licenses to Azure and significantly reduce SQL licensing costs (up to 55% savings on compute costs).
+- **Automatic Scaling**: The vCore model supports automatic scaling through the serverless compute tier, which automatically scales compute based on workload demand and can pause during periods of inactivity.
+- **Transparent Resource Control**: The vCore model offers transparent control over compute, memory, and I/O resources, making it ideal for deploying and managing a large number of databases efficiently.
+- **Cost Optimization**: Combining Azure Hybrid Benefit with reserved capacity can provide up to 80% savings compared to pay-as-you-go pricing.
+
+**Why Other Options Are Incorrect**:
+- **DTU (Database Transaction Unit) model**: Incorrect because the DTU model is a bundled compute model with less flexibility. It **does not support Azure Hybrid Benefit or License Mobility through Software Assurance**, and it lacks detailed visibility and control over resource consumption. This leads to higher licensing costs for customers eligible for bring-your-own-license (BYOL) models.
+- **Azure reserved virtual machine instances**: Incorrect because while reserved VM instances help reduce costs for SQL Server on Azure VMs, they apply to **IaaS-based deployments**, not PaaS-based Azure SQL Databases. Additionally, managing 50 databases on VMs would significantly increase operational overhead and not support automatic scaling as efficiently as the PaaS model under vCore.
+
+**Azure Hybrid Benefit Savings Example**:
+```
+Without Azure Hybrid Benefit (Pay-as-you-go):
+50 databases × 4 vCores × $720/month = $36,000/month
+
+With Azure Hybrid Benefit (BYOL):
+50 databases × 4 vCores × $324/month = $16,200/month
+
+Savings: $19,800/month (55%)
+
+With Azure Hybrid Benefit + 3-year Reserved Capacity:
+50 databases × 4 vCores × $145/month = $7,250/month
+
+Total Savings: $28,750/month (80%)
+```
+
+**Key Considerations**:
+- ✅ vCore model is required for Azure Hybrid Benefit
+- ✅ License Mobility allows using existing SQL Server licenses in Azure
+- ✅ Serverless tier provides automatic scaling within vCore model
+- ✅ Elastic pools can further optimize costs for 50 databases with varying usage
+- ❌ DTU model does not support Azure Hybrid Benefit
+- ❌ Azure VMs increase operational overhead compared to PaaS
+
+**Reference Links**:
+- [vCore-based Purchasing Model](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-sql-database-vcore?view=azuresql)
+- [Azure SQL Database Purchasing Models](https://learn.microsoft.com/en-us/azure/azure-sql/database/purchasing-models?view=azuresql)
+- [Azure Hybrid Benefit for Azure SQL](https://learn.microsoft.com/en-us/azure/azure-sql/azure-hybrid-benefit?view=azuresql)
+- [Azure SQL Database Reserved Capacity](https://learn.microsoft.com/en-us/azure/azure-sql/database/reserved-capacity-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Exam Practice Questions
 
 ### Question 1: Enterprise Database Migration with Resiliency Requirements (Litware Inc.)
@@ -1454,7 +1511,64 @@ With None Caching on Transaction Log Disk:
 
 ---
 
-### Question 6: Data Warehouse Selection for Reporting Solution
+### Question 6: Purchase Model for License Mobility Customer (Contoso, Ltd.)
+
+**Scenario**: You manage a database environment for a Microsoft Volume Licensing customer named Contoso, Ltd. Contoso uses License Mobility through Software Assurance.
+
+You need to deploy 50 databases. The solution must meet the following requirements:
+- Support automatic scaling
+- Minimize Microsoft SQL Server licensing costs
+
+**Question**: Which type of purchase model should you include in the recommendation?
+
+**Options**:
+- A) DTU
+- B) vCore
+- C) Azure reserved virtual machine instances
+
+**Correct Answer**: **B) vCore**
+
+**Explanation**:
+
+**vCore** is correct because the vCore (virtual core) purchase model in Azure SQL Database offers greater flexibility in terms of performance scaling and licensing options, including the ability to use **License Mobility through Software Assurance**. Since Contoso is a Microsoft Volume Licensing customer and participates in Software Assurance, they are eligible for the **Azure Hybrid Benefit**, allowing them to bring their own SQL Server licenses to reduce overall SQL licensing costs.
+
+Additionally, the vCore model supports **automatic scaling** (particularly with the serverless tier) and offers **transparent control** over compute, memory, and I/O — making it ideal for deploying and managing a large number of databases efficiently.
+
+**Key Benefits of vCore for This Scenario**:
+- ✅ Supports Azure Hybrid Benefit (BYOL)
+- ✅ License Mobility through Software Assurance compatible
+- ✅ Automatic scaling via serverless compute tier
+- ✅ Transparent resource control (CPU, memory, I/O)
+- ✅ Up to 55% savings with Azure Hybrid Benefit
+- ✅ Up to 80% savings with Hybrid Benefit + Reserved Capacity
+
+**Why Other Options Are Incorrect**:
+
+**DTU** is incorrect because the DTU (Database Transaction Unit) model is a bundled compute model with less flexibility. It **does not support Azure Hybrid Benefit or License Mobility through Software Assurance**, and it lacks detailed visibility and control over resource consumption. This leads to higher licensing costs for customers eligible for bring-your-own-license models. For a customer like Contoso with existing SQL Server licenses, the DTU model would result in paying for SQL licensing twice — once for their existing licenses and again through the bundled DTU pricing.
+
+**Azure reserved virtual machine instances** is incorrect because while they help reduce costs for SQL Server on Azure VMs, they apply to **IaaS-based deployments, not PaaS-based Azure SQL Databases**. Also, managing 50 databases on VMs would significantly increase operational overhead (patching, backups, high availability configuration, etc.) and not support automatic scaling as efficiently as the PaaS model under vCore. The requirement to minimize SQL Server licensing costs and support automatic scaling points clearly to a PaaS solution with vCore.
+
+**Purchase Model Comparison**:
+
+| Feature | vCore | DTU | Azure VMs |
+|---------|-------|-----|----------|
+| Azure Hybrid Benefit | ✅ Yes | ❌ No | ✅ Yes |
+| License Mobility | ✅ Yes | ❌ No | ✅ Yes |
+| Automatic Scaling | ✅ Serverless | ❌ Manual | ❌ Manual |
+| Resource Transparency | ✅ Full | ❌ Bundled | ✅ Full |
+| Operational Overhead | Low (PaaS) | Low (PaaS) | High (IaaS) |
+| Best for BYOL | ✅ Ideal | ❌ No | ⚠️ Complex |
+
+**Reference Links**:
+- [vCore-based Purchasing Model](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-sql-database-vcore?view=azuresql)
+- [Azure SQL Database Purchasing Models](https://learn.microsoft.com/en-us/azure/azure-sql/database/purchasing-models?view=azuresql)
+- [Azure SQL Database Reserved Capacity](https://learn.microsoft.com/en-us/azure/azure-sql/database/reserved-capacity-overview)
+
+**Domain**: Design data storage solutions
+
+---
+
+### Question 7: Data Warehouse Selection for Reporting Solution
 
 **Scenario**: You are designing a data storage solution to support reporting. The solution will ingest high volumes of data in JSON format by using Azure Event Hubs. As the data arrives, Event Hubs will write the data to storage.
 
@@ -1547,6 +1661,9 @@ The solution must meet the following requirements:
 13. **Hyperscale for Large-Scale Relational Data Warehouses**
    > When you need a data warehouse that stores 50+ TB of relational data with 200-300+ concurrent read operations, Azure SQL Database Hyperscale is ideal. It supports up to 100 TB, offers independent compute/storage scaling, and is better suited than Synapse dedicated SQL pools when relational consistency and high concurrent access are required.
 
+14. **vCore Model for License Mobility and Azure Hybrid Benefit**
+   > For Microsoft Volume Licensing customers with License Mobility through Software Assurance, the vCore purchasing model is required to leverage Azure Hybrid Benefit. DTU model does NOT support Azure Hybrid Benefit or License Mobility. vCore also supports automatic scaling via serverless tier and provides transparent resource control. Savings can reach up to 80% when combining Azure Hybrid Benefit with reserved capacity.
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -1580,6 +1697,9 @@ The solution must meet the following requirements:
 | "50+ TB relational data warehouse" | **Hyperscale** tier |
 | "200-300 concurrent read operations" | **Hyperscale** tier |
 | "Data warehouse + relational consistency" | **Hyperscale** (not Synapse dedicated pools) |
+| "License Mobility through Software Assurance" | **vCore** model (supports Azure Hybrid Benefit) |
+| "Minimize SQL licensing costs + BYOL" | **vCore** model with Azure Hybrid Benefit |
+| "Volume Licensing customer" | **vCore** model (DTU doesn't support Hybrid Benefit) |
 
 ## References
 
