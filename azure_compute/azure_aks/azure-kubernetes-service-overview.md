@@ -1,5 +1,32 @@
 # Azure Kubernetes Service (AKS) Overview
 
+## Table of Contents
+
+- [What is Azure Kubernetes Service?](#what-is-azure-kubernetes-service)
+- [Key Features](#key-features)
+- [AKS Architecture](#aks-architecture)
+- [Node Pools](#node-pools)
+- [Networking Models](#networking-models)
+- [Scaling Options](#scaling-options)
+- [Exam Scenario: Migrating Azure Functions to AKS](#exam-scenario-migrating-azure-functions-to-aks)
+- [Security Features](#security-features)
+- [Monitoring and Observability](#monitoring-and-observability)
+- [Upgrade and Maintenance](#upgrade-and-maintenance)
+- [Storage Options](#storage-options)
+- [Cost Optimization](#cost-optimization)
+- [Common Use Cases](#common-use-cases)
+- [Best Practices](#best-practices)
+- [AKS vs. Self-Managed Kubernetes](#aks-vs-self-managed-kubernetes)
+- [Pricing](#pricing)
+- [Getting Started](#getting-started)
+- [Troubleshooting](#troubleshooting)
+- [Practice Questions](#practice-questions)
+  - [Question 1: Recommending AKS Scaling Solution for Linux Containers](#question-1-recommending-aks-scaling-solution-for-linux-containers)
+- [References](#references)
+- [Related Topics](#related-topics)
+
+---
+
 ## What is Azure Kubernetes Service?
 
 Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies deploying, managing, and scaling containerized applications using Kubernetes on Azure. AKS reduces the complexity and operational overhead of managing Kubernetes by offloading much of that responsibility to Azure.
@@ -540,9 +567,61 @@ az aks nodepool add \
 
 ### 3. Virtual Nodes
 
-- Serverless compute with Azure Container Instances
-- Pay only for running time
-- Burst capacity without managing nodes
+Virtual nodes allow AKS clusters to **elastically burst to Azure Container Instances (ACI)**, dramatically reducing the time required to provision compute resources during scale-out operations.
+
+#### Key Benefits of Virtual Nodes:
+- **Rapid Provisioning**: Containers start in seconds (vs. minutes for VM-based nodes)
+- **Serverless Compute**: No need to manage underlying virtual machines
+- **Pay-Per-Use**: Only pay for the running time of containers
+- **Unlimited Scale**: Burst capacity without pre-provisioning nodes
+- **Linux Container Support**: Full support for autoscaling Linux containers
+
+#### How Virtual Nodes Work:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           AKS Cluster                                    │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                    Standard Node Pool                            │    │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                       │    │
+│  │  │  Node 1  │  │  Node 2  │  │  Node 3  │  (VM-based)           │    │
+│  │  └──────────┘  └──────────┘  └──────────┘                       │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │               Virtual Node (Powered by ACI)                      │    │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │    │
+│  │  │Container │  │Container │  │Container │  │Container │  ...    │    │
+│  │  │ (Burst)  │  │ (Burst)  │  │ (Burst)  │  │ (Burst)  │        │    │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │    │
+│  │                                                                  │    │
+│  │  ✓ Seconds to provision    ✓ No VM management                   │    │
+│  │  ✓ Unlimited burst         ✓ Pay only when running              │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Enable Virtual Nodes:
+
+```bash
+# Enable virtual nodes on an AKS cluster
+az aks enable-addons \
+  --resource-group myResourceGroup \
+  --name myAKSCluster \
+  --addons virtual-node \
+  --subnet-name myVirtualNodeSubnet
+```
+
+#### Virtual Nodes vs Virtual Kubelet:
+
+| Aspect | Virtual Nodes | Virtual Kubelet |
+|--------|---------------|------------------|
+| **Type** | Managed AKS add-on | Open-source project |
+| **Recommended** | ✅ Yes | ❌ Use virtual nodes instead |
+| **Management** | Azure-managed | Self-managed |
+| **Integration** | Native AKS integration | Manual configuration |
+
+> **Note**: Virtual Kubelet is the underlying open-source technology that powers virtual nodes in AKS. Microsoft recommends using the managed **virtual nodes add-on** instead of deploying Virtual Kubelet directly.
 
 ### 4. Cluster Autoscaler
 
@@ -817,6 +896,137 @@ kubectl exec -it <pod-name> -- /bin/bash
 
 ---
 
+## Practice Questions
+
+### Question 1: Recommending AKS Scaling Solution for Linux Containers
+
+#### Scenario
+
+You have an Azure subscription. You need to recommend an Azure Kubernetes Service (AKS) solution that will use **Linux nodes**.
+
+The solution must meet the following requirements:
+- **Minimize the time** it takes to provision compute resources during scale-out operations
+- **Support autoscaling** of Linux containers
+- **Minimize administrative effort**
+
+**Question:** Which scaling option should you recommend?
+
+---
+
+#### Options
+
+A. Horizontal Pod Autoscaler  
+B. Cluster Autoscaler  
+C. Virtual Nodes  
+D. Virtual Kubelet
+
+---
+
+**Correct Answer:** **C. Virtual Nodes**
+
+---
+
+### Detailed Explanation
+
+#### Why Virtual Nodes is Correct ✅
+
+Virtual nodes in Azure Kubernetes Service (AKS), powered by Virtual Kubelet, allow the AKS cluster to **elastically burst to Azure Container Instances (ACI)**. This dramatically reduces the time required to provision compute resources during scale-out operations because **containers can start in seconds**, unlike traditional AKS nodes which require VM provisioning.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Scaling Time Comparison                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Traditional Node Scaling (Cluster Autoscaler):                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Request → Provision VM → Boot OS → Pull Image → Start Container │   │
+│  │                                                                   │   │
+│  │  Time: Minutes (typically 3-10 minutes)                          │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  Virtual Nodes (Burst to ACI):                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Request → Start Container on ACI                                 │   │
+│  │                                                                   │   │
+│  │  Time: Seconds                                                    │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Benefits for This Scenario:
+
+| Requirement | How Virtual Nodes Meets It |
+|-------------|---------------------------|
+| **Minimize provisioning time** | Containers start in seconds (vs. minutes for VM-based nodes) |
+| **Support Linux autoscaling** | Full support for autoscaling Linux containers |
+| **Minimize admin effort** | No need to manage underlying VMs or node infrastructure |
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### ❌ A. Horizontal Pod Autoscaler (HPA)
+
+| Aspect | Details |
+|--------|--------|
+| **What it does** | Scales the number of pods within a node pool based on CPU or custom metrics |
+| **Why incorrect** | Does not provide or manage underlying compute resources |
+| **Limitation** | Assumes enough nodes already exist to schedule the pods |
+
+HPA is useful for scaling pods, but it **cannot provision new compute capacity** — it only adjusts pod replicas within existing nodes.
+
+---
+
+##### ❌ B. Cluster Autoscaler
+
+| Aspect | Details |
+|--------|--------|
+| **What it does** | Automatically increases/decreases the number of VM nodes in a node pool |
+| **Why incorrect** | Still involves provisioning VMs, which is **slower** than virtual nodes |
+| **Limitation** | Requires more management overhead; nodes take minutes to provision |
+
+While cluster autoscaler can add nodes automatically, each new node requires **VM provisioning** (typically 3-10 minutes), which doesn't meet the "minimize time" requirement.
+
+---
+
+##### ❌ D. Virtual Kubelet
+
+| Aspect | Details |
+|--------|--------|
+| **What it is** | The underlying open-source technology used by virtual nodes |
+| **Why incorrect** | Not a standalone option in AKS; requires manual deployment and configuration |
+| **Recommendation** | Use the managed **virtual nodes add-on** instead |
+
+Virtual Kubelet is the open-source project that enables virtual nodes, but you **shouldn't deploy it directly** in AKS. Instead, enable the virtual nodes add-on which abstracts the complexity and integrates natively with ACI.
+
+---
+
+### Scaling Options Comparison
+
+| Option | Scales | Provisioning Time | Admin Effort | Best For |
+|--------|--------|-------------------|--------------|----------|
+| **Virtual Nodes** | Containers to ACI | Seconds | ✅ Minimal | Burst workloads, rapid scaling |
+| **Cluster Autoscaler** | VM Nodes | Minutes | Medium | Steady growth, predictable loads |
+| **Horizontal Pod Autoscaler** | Pod replicas | N/A (uses existing nodes) | Low | Scaling within capacity |
+| **Virtual Kubelet** | Containers | Seconds | ❌ High (manual) | Not recommended directly |
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [AKS Virtual Nodes](https://learn.microsoft.com/en-us/azure/aks/virtual-nodes)
+- [Virtual Nodes CLI](https://learn.microsoft.com/en-us/azure/aks/virtual-nodes-cli)
+- [AKS Scaling Concepts - Virtual Nodes](https://learn.microsoft.com/en-us/azure/aks/concepts-scale#virtual-nodes)
+- [Cluster Autoscaler](https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler?tabs=azure-cli)
+- [Horizontal Pod Autoscaler Concepts](https://learn.microsoft.com/en-us/azure/aks/concepts-scale#horizontal-pod-autoscaler)
+- [Virtual Kubelet](https://virtual-kubelet.io)
+
+**Domain:** Design Infrastructure Solutions
+
+---
+
 ## References
 
 - [AKS Documentation](https://learn.microsoft.com/en-us/azure/aks/)
@@ -824,6 +1034,8 @@ kubectl exec -it <pod-name> -- /bin/bash
 - [AKS Best Practices](https://learn.microsoft.com/en-us/azure/aks/best-practices)
 - [AKS Networking](https://learn.microsoft.com/en-us/azure/aks/concepts-network)
 - [AKS Security](https://learn.microsoft.com/en-us/azure/aks/concepts-security)
+- [AKS Virtual Nodes](https://learn.microsoft.com/en-us/azure/aks/virtual-nodes)
+- [AKS Scaling Concepts](https://learn.microsoft.com/en-us/azure/aks/concepts-scale)
 
 ---
 
