@@ -1023,6 +1023,122 @@ Azure provides a built-in policy called **"Allowed locations"** that can be appl
 
 ---
 
+### Question 8: Organizing Resources for Compliance Reports by Department
+
+**Scenario:**
+You have an Azure subscription that contains 1,000 resources.
+
+You need to generate compliance reports for the subscription.
+
+The solution must ensure that the resources can be grouped by department.
+
+**Question:**
+What should you use to organize the resources?
+
+**Options:**
+
+1. **Application groups and quotas** ❌
+2. **Azure Policy and tags** ✅
+3. **Administrative units and Azure Lighthouse** ❌
+4. **Resource groups and role assignments** ❌
+
+**Answer:** Azure Policy and tags
+
+**Explanation:**
+
+**Why Azure Policy and Tags is Correct:**
+
+Tags allow you to assign metadata to Azure resources, such as the department responsible for each resource. This enables you to logically group resources by department without changing their physical organization (e.g., resource group or region).
+
+| Benefit | Description |
+|---------|-------------|
+| **Flexible Grouping** | Tag resources with department metadata (e.g., `Department: Finance`, `Department: IT`) |
+| **No Physical Reorganization** | Resources can remain in their current resource groups and regions |
+| **Compliance Reporting** | Tags can be used in Azure Resource Graph and Microsoft Defender for Cloud for compliance reports |
+| **Scalability** | Easily scales across large numbers of resources (1,000+) |
+| **Policy Enforcement** | Azure Policy can enforce tagging requirements and audit compliance |
+
+**Using Azure Policy to Enforce Tags:**
+
+Azure Policy can require that all resources have specific tags, such as a "Department" tag:
+
+```json
+{
+  "properties": {
+    "displayName": "Require Department tag on resources",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "field": "tags['Department']",
+        "exists": "false"
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
+```
+
+**Compliance Reporting with Tags:**
+
+Once resources are tagged, you can:
+- Use **Azure Resource Graph** to query and report on resources by department
+- Generate compliance reports in **Microsoft Defender for Cloud** filtered by tags
+- Create **Cost Management** reports grouped by department tags
+- Build **Azure Monitor** dashboards organized by department
+
+**Example Azure Resource Graph Query:**
+
+```kusto
+Resources
+| where tags['Department'] == 'Finance'
+| summarize count() by type
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Reason for Incorrect |
+|--------|---------------------|
+| **Application groups and quotas** | This concept applies to Azure Virtual Desktop, not general Azure resource organization or compliance reporting |
+| **Administrative units and Azure Lighthouse** | Administrative units apply to Microsoft Entra object management (not Azure resources), and Azure Lighthouse is used for cross-tenant management, not resource grouping by department within a tenant |
+| **Resource groups and role assignments** | Resource groups are intended for lifecycle and management grouping, not for dynamic or logical grouping by metadata such as department. Compliance reporting is not typically organized by resource group unless specifically structured that way — which limits flexibility compared to tagging |
+
+**Key Concepts:**
+
+1. **Tags vs Resource Groups:**
+
+| Aspect | Tags | Resource Groups |
+|--------|------|-----------------|
+| **Purpose** | Metadata and logical grouping | Lifecycle management |
+| **Flexibility** | Any resource can have any tags | Resources belong to one RG |
+| **Compliance Reporting** | Excellent for filtering and grouping | Limited to RG boundaries |
+| **Scale** | Unlimited tag combinations | Physical container limitation |
+
+2. **Azure Policy + Tags Workflow:**
+
+```
+Define Tag Policy → Assign to Scope → Enforce on New Resources → Remediate Existing → Generate Reports
+```
+
+3. **Built-in Tag Policies:**
+
+Azure provides built-in policies for tags:
+- Require a tag on resources
+- Require a tag on resource groups
+- Inherit a tag from the resource group
+- Add a tag to resources
+
+**Reference Links:**
+- [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [Tag Resources](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources)
+- [Azure Resource Graph Overview](https://learn.microsoft.com/en-us/azure/governance/resource-graph/overview)
+- [Azure Lighthouse Overview](https://learn.microsoft.com/en-us/azure/lighthouse/overview)
+- [Administrative Units](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/administrative-units)
+
+---
+
 ## Summary
 
 ### Key Takeaways
