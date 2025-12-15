@@ -11,6 +11,7 @@
 - [Practice Question](#practice-question)
   - [Question: Selecting the Appropriate Hosting Plan](#question-selecting-the-appropriate-hosting-plan)
   - [Practice Question: Resolving Function Timeout Issues](#practice-question-resolving-function-timeout-issues)
+  - [Practice Question: Event Hubs Processing with Long-Running Functions](#practice-question-event-hubs-processing-with-long-running-functions)
 - [Scaling Behavior: Event-Based vs Performance-Based](#scaling-behavior-event-based-vs-performance-based)
   - [Event-Based Scaling (Consumption & Premium)](#event-based-scaling-consumption-premium)
   - [Performance-Based Scaling (Dedicated & ASE)](#performance-based-scaling-dedicated-ase)
@@ -282,6 +283,67 @@ The timeout for Azure Functions is controlled by the `functionTimeout` setting i
 - **functionTimeout** in host.json controls execution duration
 - For functions requiring more than 10 minutes, use Premium or Dedicated plans
 - Consider breaking long-running operations into smaller chunks or using Durable Functions for very long processes
+
+---
+
+### Practice Question: Event Hubs Processing with Long-Running Functions
+
+**Scenario:**
+
+You are developing an app that will use Azure Functions to process Azure Event Hubs events. Request processing is estimated to take between five and 20 minutes.
+
+You need to recommend a hosting solution that meets the following requirements:
+- Supports estimated request processing runtimes (5–20 minutes)
+- Supports event-driven autoscaling for the app
+
+**Question:**
+Which hosting plan should you recommend?
+
+**Options:**
+
+1. ❌ Dedicated
+   - **Incorrect**: While the Dedicated plan supports longer execution times, it does **not natively autoscale based on event triggers** like Event Hubs. You would have to manually configure scaling with App Service plans using performance-based metrics (CPU, memory), which contradicts the requirement for event-driven autoscaling.
+
+2. ❌ Consumption
+   - **Incorrect**: Although the Consumption plan supports event-driven autoscaling, it is **not suited for long-running functions beyond 5 minutes** (default) or 10 minutes (with timeout extension). The processing time range of 5–20 minutes in the scenario would risk timeouts or inefficient executions in the Consumption plan.
+
+3. ❌ App Service
+   - **Incorrect**: App Service is designed for running web apps, APIs, and WebJobs, not Azure Functions with event-driven autoscaling or native trigger support like Event Hubs. It lacks direct, optimized support for Function scaling scenarios and uses performance-based scaling rather than event-based scaling.
+
+4. ✅ Premium
+   - **Correct**: The Premium plan for Azure Functions supports **event-driven autoscaling** and allows **long-running executions**, including functions that take up to 60 minutes to complete. This aligns perfectly with the requirement that request processing takes between 5 and 20 minutes.
+
+---
+
+**Why Premium is the Best Choice:**
+
+| Requirement | Premium Plan Support |
+|-------------|---------------------|
+| **5–20 minute execution time** | ✅ Supports unlimited execution (30 min default, configurable up to 60 min+) |
+| **Event-driven autoscaling** | ✅ Scales based on Event Hub triggers and partition count |
+| **Event Hubs integration** | ✅ Native trigger support with optimized scaling |
+
+**Additional Premium Plan Benefits:**
+
+- **VNET integration**: Secure connectivity to other Azure resources
+- **No cold starts**: Pre-warmed instances ensure consistent performance
+- **Dedicated compute instances**: With elastic scaling capabilities
+- **Higher memory and CPU**: EP1, EP2, EP3 SKUs available
+
+**Comparison of Execution Timeouts:**
+
+| Plan | Default Timeout | Maximum Timeout | Event-Based Scaling |
+|------|-----------------|-----------------|---------------------|
+| Consumption | 5 minutes | 10 minutes | ✅ Yes |
+| Premium | 30 minutes | Unlimited* | ✅ Yes |
+| Dedicated | 30 minutes | Unlimited | ❌ No (performance-based) |
+| ASE | 30 minutes | Unlimited | ❌ No (performance-based) |
+
+*Premium plan can be configured for functions running up to 60 minutes or more.
+
+**References:**
+- [Azure Functions Premium plan](https://learn.microsoft.com/en-us/azure/azure-functions/functions-premium-plan)
+- [Azure Functions scale and hosting](https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale)
 
 ---
 
