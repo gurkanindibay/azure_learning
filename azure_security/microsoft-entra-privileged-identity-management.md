@@ -576,7 +576,119 @@ This scenario requires **just-in-time** privilege escalation with approval, time
 
 ---
 
-### Scenario 3: When NOT to Use PIM
+### Scenario 3: Guest User Access Reviews (Identity Governance vs PIM)
+
+**Question:**
+
+Refer to the Contoso Ltd. case study:
+
+Contoso, Ltd. has a business partnership with Fabrikam, Inc. Fabrikam users access some Contoso applications over the internet by using Microsoft Entra ID guest accounts.
+
+**Identity Requirements:**
+> "Every month, an account manager at Fabrikam must review which Fabrikam users have access permissions to App1. Accounts that no longer need permissions must be removed as guests. The solution must minimize development efforts."
+
+Which service should you implement to meet the identity requirements?
+
+**Options:**
+
+A. Microsoft Entra ID Identity Governance  
+B. Microsoft Entra ID Identity Protection  
+C. Microsoft Entra Privileged Identity Management (PIM)  
+D. Azure Automation
+
+**Correct Answer: A - Microsoft Entra ID Identity Governance**
+
+**Explanation:**
+
+**Why A is correct:**
+
+**Microsoft Entra ID Identity Governance** is correct because the requirement describes a **recertification process** or **access review**, which is a core feature of Identity Governance. It enables organizations to:
+
+- ✅ **Regularly review and validate user access** — especially for guest users (Fabrikam)
+- ✅ **Ensure access is removed** if it's no longer needed
+- ✅ **Minimize development effort** — built-in and policy-driven solution
+- ✅ **Delegate reviews** to external managers (Fabrikam account manager)
+
+**Access Reviews Configuration for This Scenario:**
+
+```yaml
+Access Review Configuration:
+  Review Name: "Monthly Fabrikam Guest Access Review"
+  Scope: Guest users with access to App1
+  
+  Reviewers:
+    Type: External (Fabrikam Account Manager)
+    
+  Schedule:
+    Frequency: Monthly
+    Duration: 7 days to complete review
+    
+  Upon Completion:
+    Auto-apply results: Yes
+    If reviewer doesn't respond: Remove access
+    
+  Actions:
+    Approved: Maintain guest access
+    Denied: Remove guest account permissions
+```
+
+**Why other options are incorrect:**
+
+**Option B - Microsoft Entra ID Identity Protection:**
+- ❌ Identity Protection focuses on **risk-based conditional access**
+- ❌ Detects and responds to **compromised identities** or **sign-in risk events**
+- ❌ Does NOT perform access reviews or guest account lifecycle management
+- ❌ Wrong purpose: threat detection vs. access governance
+
+**Option C - Microsoft Entra Privileged Identity Management (PIM):**
+- ❌ PIM is used for managing **elevated (privileged) role assignments**
+- ❌ Provides **just-in-time** access for administrative tasks
+- ❌ Does NOT perform **monthly access reviews** of guest users
+- ❌ Wrong scope: privilege escalation vs. regular access review
+
+**Option D - Azure Automation:**
+- ❌ Would require **custom development and scripting**
+- ❌ Contradicts the requirement to **minimize development efforts**
+- ❌ No built-in reviewer workflows or approval processes
+- ❌ Wrong approach: manual scripting vs. built-in governance
+
+**Key Distinction - When to Use Each Service:**
+
+| Requirement | Correct Solution |
+|-------------|------------------|
+| "Monthly review of who has access" | **Access Reviews (Identity Governance)** |
+| "Remove access if no longer needed" | **Access Reviews (Identity Governance)** |
+| "Temporary admin access when needed" | **PIM** |
+| "Detect risky sign-ins" | **Identity Protection** |
+| "Minimize development effort" | **Built-in services (not Automation)** |
+
+**Visual Comparison:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              Identity Governance vs PIM                          │
+└─────────────────────────────────────────────────────────────────┘
+
+Access Reviews (Identity Governance):
+  Who has access? → Monthly Review → Keep or Remove
+  └─> Fabrikam guests → Account manager reviews → Remove if not needed
+
+PIM (Privileged Identity Management):
+  Need admin access? → Request Activation → Time-Limited Access
+  └─> Developer → Approves → 4 hours of Contributor role → Auto-revoke
+```
+
+**Reference(s):**
+- [Access Reviews Overview](https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-overview)
+- [Identity Governance Overview](https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview)
+- [PIM Configuration](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure)
+- [Azure Automation Introduction](https://learn.microsoft.com/en-us/azure/automation/automation-intro)
+
+**Domain**: Design Identity, Governance, and Monitoring Solutions
+
+---
+
+### Scenario 4: When NOT to Use PIM
 
 **Question:**
 
