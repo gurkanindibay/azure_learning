@@ -118,9 +118,9 @@ For moving resources across regions, use the dedicated Azure Resource Mover serv
 
 ---
 
-## Exam Scenario: Moving Azure VM Between Resource Groups
+## Exam Scenarios: Moving Virtual Machines
 
-### Scenario
+### Scenario Setup
 
 **Given:**
 | Name | Type | Resource Group |
@@ -132,7 +132,9 @@ You create a new resource group in Azure named **RG2**.
 
 You need to move the virtual machines to RG2.
 
-**Question:** What should you use to move **VM1**?
+---
+
+### Question 1: What should you use to move VM1?
 
 ### Answer: Azure Resource Mover
 
@@ -150,6 +152,36 @@ You need to move the virtual machines to RG2.
 | **Azure Lighthouse** | Allows service providers to manage customer tenants. Does NOT support moving resources within a subscription |
 | **Azure Migrate** | Designed for assessing and migrating **on-premises** workloads TO Azure, NOT for moving resources already in Azure |
 | **Data Migration Assistant (DMA)** | Used to analyze and migrate **database** workloads, not Azure VMs or infrastructure resources |
+
+---
+
+### Question 2: What should you use to move VM2?
+
+### Answer: Azure Migrate
+
+**Why this is correct:**
+- Azure Migrate is designed for assessing and migrating **on-premises workloads TO Azure**
+- VM2 is an **on-premises virtual machine** (not in Azure yet)
+- Azure Migrate provides discovery, assessment, and migration capabilities
+- After migration, VM2 will exist as an Azure VM in RG2
+
+**Why other options are incorrect:**
+
+| Option | Reason for Incorrectness |
+|--------|-------------------------|
+| **Azure Resource Mover** | Moves resources that are **already in Azure**. VM2 is on-premises, not in Azure yet |
+| **Azure Arc** | Manages on-premises resources **from Azure** without migrating them. Does not actually move VMs to Azure |
+| **Azure Lighthouse** | Cross-tenant management for service providers. Not for migrations |
+| **Data Migration Assistant (DMA)** | For database migration analysis, not VM migrations |
+
+---
+
+### Summary: Which Tool for Which VM?
+
+| VM | Current Location | Target | Tool to Use |
+|----|------------------|--------|-------------|
+| **VM1** | Azure (RG1) | Azure (RG2) | **Azure Resource Mover** |
+| **VM2** | On-premises | Azure (RG2) | **Azure Migrate** |
 
 ---
 
