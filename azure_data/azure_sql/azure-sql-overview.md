@@ -15,8 +15,11 @@
 - [Pricing Tiers Comparison](#pricing-tiers-comparison)
 - [Feature Comparison](#feature-comparison)
 - [Decision Guide](#decision-guide)
-- [Migration to Azure SQL](#migration-to-azure-sql)
 - [Best Practices](#best-practices)
+  - [Security Best Practices](#security-best-practices)
+    - [Always Encrypted](#always-encrypted-column-level-encryption)
+    - [Transparent Data Encryption (TDE)](#transparent-data-encryption-tde)
+- [Migration to Azure SQL](#migration-to-azure-sql)
 - [Common Scenarios and Recommendations](#common-scenarios-and-recommendations)
 - [Key Insights for Exams](#key-insights-for-exams)
 - [References](#references)
@@ -1008,6 +1011,103 @@ Given the following Azure resources:
 > **Exam Tip:** When a scenario mentions encrypting **specific columns** containing sensitive/PII data, **Always Encrypted** is the answer. It's available across **all Azure SQL Database service tiers**, making it the go-to solution regardless of whether you're using General Purpose, Business Critical, or even Basic tier.
 
 **Reference**: [Always Encrypted Documentation](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine)
+
+#### Transparent Data Encryption (TDE)
+
+**Transparent Data Encryption (TDE)** protects Azure SQL Database, Azure SQL Managed Instance, and Azure Synapse Analytics against the threat of malicious offline activity by encrypting data at rest. It performs real-time encryption and decryption of the database, associated backups, and transaction log files at rest without requiring changes to the application.
+
+**Key Characteristics**:
+
+| Feature | Description |
+|---------|-------------|
+| **Encryption Level** | Database-level - encrypts entire database at rest |
+| **Encryption Algorithm** | AES 256-bit for the Database Encryption Key (DEK) |
+| **Default State** | Enabled by default for all new Azure SQL databases |
+| **Performance Impact** | Minimal - transparent to applications |
+| **Key Management** | Service-managed or Customer-managed (BYOK) |
+
+**TDE Protector Options**:
+
+| Option | Description | Key Location |
+|--------|-------------|--------------|
+| **Service-Managed TDE** | Microsoft manages the encryption key | Azure-managed |
+| **Customer-Managed TDE (BYOK)** | You manage the encryption key | Azure Key Vault |
+
+**Customer-Managed TDE (Bring Your Own Key - BYOK)**:
+
+When implementing customer-managed TDE, you store your TDE protector (asymmetric key) in Azure Key Vault. This provides:
+- Full control over key lifecycle
+- Key rotation capabilities
+- Ability to revoke database access by removing key permissions
+- Centralized key management
+
+**Supported Key Types and Lengths for TDE Protector**:
+
+| Key Type | Key Length | Supported for TDE |
+|----------|------------|-------------------|
+| **RSA 2048** | 2048-bit | ✅ Yes |
+| **RSA 3072** | 3072-bit | ✅ Yes (Recommended for maximum supported strength) |
+| **RSA 4096** | 4096-bit | ❌ No - Not supported |
+| **AES 256** | 256-bit | ❌ No - Symmetric, cannot be used as TDE protector |
+
+> ⚠️ **Important**: The TDE protector must be an **asymmetric RSA key** stored in Azure Key Vault. AES is a symmetric algorithm and is used internally to encrypt the Database Encryption Key (DEK), but it **cannot** be used as the TDE protector itself.
+
+**Maximum Encryption Strength for TDE Protector**:
+- **RSA 3072** is the **strongest supported option** for customer-managed TDE
+- While RSA 4096 offers higher theoretical encryption strength, it is **not supported** by Azure SQL Database and Azure SQL Managed Instance for TDE protectors
+- RSA 2048 is supported but provides lower encryption strength than RSA 3072
+
+**How TDE Works**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Azure Key Vault                             │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  TDE Protector (RSA 2048/3072 asymmetric key)           │   │
+│  │  - Encrypts the Database Encryption Key (DEK)           │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ Encrypts
+┌─────────────────────────────────────────────────────────────────┐
+│                   Database Encryption Key (DEK)                 │
+│  - Symmetric AES 256-bit key                                    │
+│  - Stored encrypted in database boot record                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ Encrypts
+┌─────────────────────────────────────────────────────────────────┐
+│                      Database Content                           │
+│  - Data files (.mdf)                                            │
+│  - Log files (.ldf)                                             │
+│  - Backup files                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Migration Scenario - Enabling Customer-Managed TDE**:
+
+When migrating an on-premises SQL Server database to Azure SQL Managed Instance and you need to enable customer-managed TDE with maximum encryption strength:
+
+1. **Create Azure Key Vault** with soft-delete and purge protection enabled
+2. **Generate RSA 3072 key** in Azure Key Vault (maximum supported strength)
+3. **Grant permissions** to the SQL Managed Instance identity on the key
+4. **Set the TDE protector** to the customer-managed key
+5. **Enable TDE** on the database (if not already enabled)
+
+**Best Practices for Customer-Managed TDE**:
+- ✅ Use **RSA 3072** for maximum supported encryption strength
+- ✅ Enable **soft-delete** and **purge protection** on Key Vault
+- ✅ Implement **key rotation** policies
+- ✅ Use **Azure RBAC** for key access management
+- ✅ Configure **backup and disaster recovery** for keys
+- ❌ Never use RSA 4096 (not supported, will cause deployment errors)
+- ❌ Don't delete keys without understanding the impact on database accessibility
+
+> **Exam Tip:** When asked about enabling customer-managed TDE with **maximum encryption strength**, the answer is **RSA 3072**. RSA 4096 is theoretically stronger but is **not supported** for TDE protectors in Azure SQL Database and Azure SQL Managed Instance. AES 256 is incorrect because TDE protectors must be asymmetric (RSA) keys, not symmetric (AES) keys.
+
+**References**: 
+- [TDE with Customer-Managed Keys](https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-byok-overview)
+- [Azure Key Vault - Supported Key Types and Sizes](https://learn.microsoft.com/en-us/azure/key-vault/keys/about-keys#supported-key-types-and-sizes)
+- [TDE Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-tde-overview)
 
 ### Migration to Azure SQL
 
