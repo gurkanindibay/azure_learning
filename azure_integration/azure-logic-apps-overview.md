@@ -116,6 +116,135 @@ To enable LogicApp1 to write to SQL Server on Server1:
 
 ---
 
+## When to Choose Logic Apps Over Functions and WebJobs
+
+### Scenario: Minimal Development Effort for Integration
+
+When the primary requirement is to **minimize development effort** for integration scenarios, Azure Logic Apps is typically the best choice due to its low-code/no-code approach and extensive pre-built connectors.
+
+---
+
+### Practice Question: Sending Teams Messages from On-Premises App Events
+
+**Given:**
+- You have an on-premises app named App1 that supports REST calls and webhooks
+- You have an Azure subscription
+- You plan to develop a new app named App2 that will send a Microsoft Teams message when a new record is added to App1
+- You need to recommend a service to host App2
+- **The solution must minimize development effort**
+
+**Question:** What should you recommend?
+
+**Options:**
+- A) Azure Functions
+- B) Azure Logic Apps
+- C) Azure WebJobs
+
+---
+
+### Answer: B ✅
+
+**Correct Answer: B) Azure Logic Apps**
+
+---
+
+### Detailed Explanation
+
+**Option B - Azure Logic Apps** ✅
+- **Correct**: Logic Apps provides a low-code/no-code solution to integrate with services using webhooks and REST APIs
+- Has **built-in connectors** for HTTP/Webhook triggers and Microsoft Teams actions
+- Allows you to automate workflows such as posting a message when a new record is added — all with **minimal development effort**
+- Perfect for the requirement: App1 sends a webhook → Logic Apps receives it → Logic Apps sends Teams message
+- No custom code required for this integration scenario
+
+**Option A - Azure Functions**
+- **Incorrect**: While Azure Functions supports custom code execution in response to events like HTTP requests or webhooks, it requires:
+  - More coding and setup
+  - Custom authentication implementation
+  - Integration with Microsoft Teams APIs (Graph API)
+- It's a great choice for custom logic but **not the easiest path** when out-of-the-box connectors are available in Logic Apps
+
+**Option C - Azure WebJobs**
+- **Incorrect**: WebJobs are designed to run background processes in App Service environments and:
+  - Do NOT provide native support for webhook triggers
+  - Do NOT provide native Teams integration
+  - Require hosting within an App Service plan
+  - Require more development and management overhead
+
+### Comparison Summary: Development Effort
+
+| Service | Webhook Support | Teams Integration | Development Effort | Best For |
+|---------|----------------|-------------------|-------------------|----------|
+| **Logic Apps** | ✅ Built-in HTTP/Webhook trigger | ✅ Built-in Teams connector | **Minimal** (low-code) | Integration scenarios with connectors |
+| **Azure Functions** | ✅ HTTP trigger | ❌ Requires custom code (Graph API) | **Medium** (custom code) | Custom logic and complex processing |
+| **WebJobs** | ❌ No native support | ❌ No native support | **High** (custom code + infrastructure) | Background processing within App Service |
+
+### Key Takeaway
+
+> **📘 When minimizing development effort is the primary requirement** for integration scenarios involving webhooks, REST APIs, and connecting to services like Microsoft Teams, **Azure Logic Apps** should be the first choice due to its extensive connector library and visual designer.
+
+---
+
+### Practice Question: Choosing the Right Trigger Type
+
+**Given:** (Same scenario as above)
+- You have an on-premises app named App1 that supports REST calls and webhooks
+- You have an Azure subscription
+- App2 will send a Microsoft Teams message when a new record is added to App1
+- You need to recommend the type of **trigger** to use to call App2
+- **The solution must minimize development effort**
+
+**Question:** What should you recommend?
+
+**Options:**
+- A) Azure Event Grid
+- B) Azure Service Bus
+- C) HTTP
+
+---
+
+### Answer: C ✅
+
+**Correct Answer: C) HTTP**
+
+---
+
+### Detailed Explanation
+
+**Option C - HTTP** ✅
+- **Correct**: App1 **already supports REST calls and webhooks**, which makes an HTTP trigger the simplest and most direct way to invoke App2
+- When App1 adds a new record, it can issue a standard **HTTP POST request** (as a webhook) to trigger App2
+- Can be implemented using Azure Logic Apps or Azure Functions with an HTTP trigger
+- Requires **minimal development effort** and avoids the need for additional infrastructure or messaging layers
+- No additional Azure services need to be provisioned
+
+**Option A - Azure Event Grid**
+- **Incorrect**: Event Grid is designed for event-driven architectures involving Azure services
+- Requires publishers to be **registered within Event Grid**
+- While powerful, it adds **unnecessary complexity** for a simple webhook-style interaction between two custom apps
+- Overkill for this scenario where a direct HTTP call suffices
+
+**Option B - Azure Service Bus**
+- **Incorrect**: Service Bus is used for reliable messaging between distributed systems
+- Supports queues and topics with features like retries, ordering, and dead-lettering
+- Better suited for **complex message workflows** with guaranteed delivery requirements
+- Introduces **more development and operational overhead** than a straightforward HTTP webhook integration
+- Requires provisioning and managing additional Azure resources
+
+### Trigger Type Comparison: Development Effort
+
+| Trigger Type | Setup Complexity | Additional Infrastructure | Development Effort | Best For |
+|--------------|------------------|--------------------------|-------------------|----------|
+| **HTTP** | ✅ Simple endpoint URL | ❌ None required | **Minimal** | Direct webhook/REST integrations |
+| **Event Grid** | ⚠️ Publisher registration required | ✅ Event Grid topic/subscription | **Medium** | Azure-native event-driven architectures |
+| **Service Bus** | ⚠️ Queue/Topic setup required | ✅ Service Bus namespace | **Higher** | Reliable messaging with retries/ordering |
+
+### Key Takeaway
+
+> **📘 When an application already supports webhooks** and the requirement is to minimize development effort, use an **HTTP trigger**. It provides the most direct integration path without introducing additional messaging infrastructure like Event Grid or Service Bus.
+
+---
+
 ## Connectors for On-Premises Data
 
 Logic Apps provides specific connectors that work with the On-premises data gateway:
@@ -152,4 +281,10 @@ When creating a SQL Server connection in Logic Apps for on-premises:
 
 - [Connect to on-premises data sources from Logic Apps](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-gateway-connection)
 - [Azure Logic Apps Overview](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview)
+- [Azure Connectors Introduction](https://learn.microsoft.com/en-us/azure/connectors/introduction)
+- [Azure Functions Overview](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview)
+- [Azure Functions HTTP Webhook Trigger](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger)
+- [Azure Event Grid Overview](https://learn.microsoft.com/en-us/azure/event-grid/overview)
+- [Azure Service Bus Messaging Overview](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview)
+- [Run background tasks with WebJobs in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/webjobs-create)
 - [On-Premises Data Gateway](on-premises-data-gateway.md) - Detailed gateway documentation
