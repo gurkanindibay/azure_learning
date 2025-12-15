@@ -18,6 +18,7 @@
 - [Choosing the Right Hosting Plan](#choosing-the-right-hosting-plan)
   - [Decision Tree](#decision-tree)
   - [Use Case Scenarios](#use-case-scenarios)
+  - [Practice Question: Scheduled Maintenance Task - Cost-Effective Solution](#practice-question-scheduled-maintenance-task---cost-effective-solution)
 - [Configuration Examples](#configuration-examples)
   - [Create Function App with Consumption Plan](#create-function-app-with-consumption-plan)
   - [Create Function App with Premium Plan](#create-function-app-with-premium-plan)
@@ -378,6 +379,93 @@ Start
 **Scenario 4: Healthcare App with Compliance Requirements**
 - **Best Choice**: App Service Environment (ASE)
 - **Reason**: Complete network isolation meets regulatory requirements
+
+**Scenario 5: Scheduled Maintenance Tasks**
+- **Best Choice**: Consumption Plan with Timer Trigger
+- **Reason**: Pay-per-execution model is ideal for periodic tasks that run on a schedule (e.g., hourly file copy operations)
+
+---
+
+### Practice Question: Scheduled Maintenance Task - Cost-Effective Solution
+
+**Question:**
+
+You have an Azure App Service web app (App1) deployed across multiple instances in two regions. Every hour, you need to run a maintenance task by invoking a PowerShell script that copies files from all the App1 instances. The PowerShell script will run from a central location.
+
+You need to recommend a solution for the maintenance task. The solution must minimize costs.
+
+What should you include in the recommendation?
+
+**Options:**
+
+A) An Azure virtual machine
+
+B) An Azure function app ✅
+
+C) An Azure logic app
+
+D) An Azure App Service WebJob
+
+---
+
+**Correct Answer: B) An Azure function app**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) An Azure virtual machine** | ❌ Incorrect - A virtual machine requires continuous compute provisioning, even when idle, resulting in higher costs and more management overhead. For a task that runs only once per hour, you would be paying for 59+ minutes of idle time every hour, which contradicts the goal to minimize costs. |
+| **B) An Azure function app** | ✅ **Correct** - Azure Functions is a serverless compute service ideal for event-driven or scheduled tasks such as running PowerShell scripts on a timer. Using an Azure Function app with a Timer trigger offers a low-cost, serverless solution that scales automatically and incurs charges only when it runs — making it the most cost-efficient and lightweight option for hourly maintenance tasks. |
+| **C) An Azure logic app** | ❌ Incorrect - While Logic Apps support automation workflows and can run on schedules, they are typically used for declarative integration and business process automation. Logic Apps are not ideal for PowerShell execution that involves copying files from virtual machines. They also have per-action pricing that can add up for complex operations. |
+| **D) An Azure App Service WebJob** | ❌ Incorrect - WebJobs run within an App Service plan, which requires dedicated compute resources. Unless the app is already on the same App Service plan, this introduces unnecessary cost compared to a serverless function app. Additionally, WebJobs require the App Service plan to be always running for triggered jobs. |
+
+**Cost Comparison:**
+
+| Service | Pricing Model | Cost for Hourly Task |
+|---------|---------------|---------------------|
+| **Azure Functions (Consumption)** | Pay-per-execution | Only charges when running (~$0.000016/GB-s) |
+| **Azure VM** | Always-on pricing | Continuous cost 24/7 even when idle |
+| **Azure Logic Apps** | Per-action pricing | Cost per trigger + action execution |
+| **App Service WebJob** | Included in App Service plan | Requires dedicated App Service plan |
+
+**Azure Function Timer Trigger Configuration:**
+
+For an hourly maintenance task, you would configure a Timer trigger with a CRON expression:
+
+```json
+{
+  "bindings": [
+    {
+      "type": "timerTrigger",
+      "direction": "in",
+      "name": "myTimer",
+      "schedule": "0 0 * * * *"
+    }
+  ]
+}
+```
+
+The CRON expression `0 0 * * * *` runs the function at the start of every hour (second 0, minute 0, every hour).
+
+**Key Benefits of Azure Functions for Scheduled Tasks:**
+
+1. **Serverless pricing**: Only pay when the function executes
+2. **No infrastructure management**: No VMs to patch or maintain
+3. **Built-in Timer trigger**: Native support for CRON-based scheduling
+4. **PowerShell support**: Azure Functions supports PowerShell as a runtime
+5. **Auto-scaling**: Scales automatically if multiple executions overlap
+6. **Monitoring**: Built-in integration with Application Insights
+
+**References:**
+- [Azure Functions overview](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview)
+- [Timer trigger for Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer)
+- [Azure Logic Apps overview](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-overview)
+- [Run background tasks with WebJobs in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/webjobs-create)
+- [Azure Virtual Machines overview](https://learn.microsoft.com/en-us/azure/virtual-machines/overview)
+
+---
 
 ## Configuration Examples
 
