@@ -6,6 +6,8 @@
 - [2. Key Components](#2-key-components)
 - [3. Virtual WAN Hub Planning](#3-virtual-wan-hub-planning)
 - [4. ExpressRoute and Global Reach](#4-expressroute-and-global-reach)
+  - [4.1 What is ExpressRoute?](#41-what-is-expressroute)
+  - [4.2 ExpressRoute Global Reach](#42-expressroute-global-reach)
 - [5. Cost Optimization Considerations](#5-cost-optimization-considerations)
 
 ---
@@ -148,6 +150,58 @@ Azure Virtual WAN requires deploying at least one hub per region to support Expr
 ---
 
 ## 4. ExpressRoute and Global Reach
+
+### 4.1 What is ExpressRoute?
+
+**Azure ExpressRoute** is a service that provides a private, dedicated connection between your on-premises infrastructure and Azure datacenters. Unlike VPN connections that travel over the public internet, ExpressRoute connections do not go over the public internet, offering more reliability, faster speeds, consistent latencies, and higher security.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         EXPRESSROUTE CONNECTION                                  │
+│                                                                                  │
+│   On-Premises                                               Azure               │
+│   Data Center                                               Data Center         │
+│   ┌─────────────┐      ┌──────────────────┐      ┌─────────────────────────┐   │
+│   │             │      │  Connectivity    │      │                         │   │
+│   │  Corporate  │──────│  Provider        │──────│   Azure Virtual         │   │
+│   │  Network    │      │  (Partner Edge)  │      │   Network / Services    │   │
+│   │             │      │                  │      │                         │   │
+│   └─────────────┘      └──────────────────┘      └─────────────────────────┘   │
+│                                                                                  │
+│   ────────────────── Private Connection (Not over Internet) ──────────────────  │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key ExpressRoute Features:**
+
+| Feature | Description |
+|---------|-------------|
+| **Private Connectivity** | Traffic does not traverse the public internet |
+| **Bandwidth Options** | 50 Mbps to 100 Gbps |
+| **SLA-backed** | 99.95% availability SLA |
+| **Global Reach** | Connect on-premises sites through Azure backbone |
+| **Peering Types** | Azure Private, Microsoft, and Azure Public (deprecated) |
+
+**ExpressRoute Peering Types:**
+
+| Peering Type | Purpose | Services Accessed |
+|--------------|---------|-------------------|
+| **Azure Private Peering** | Connect to Azure IaaS (VMs, VNets) | Virtual Machines, Load Balancers, VNet resources |
+| **Microsoft Peering** | Connect to Azure PaaS and Microsoft 365 | Azure Storage, SQL Database, Microsoft 365, Dynamics 365 |
+
+**ExpressRoute vs VPN:**
+
+| Aspect | ExpressRoute | Site-to-Site VPN |
+|--------|--------------|------------------|
+| **Connection** | Private (dedicated) | Public internet (encrypted) |
+| **Bandwidth** | Up to 100 Gbps | Up to 10 Gbps |
+| **Latency** | Predictable, low | Variable |
+| **Cost** | Higher | Lower |
+| **Setup Time** | Days to weeks | Minutes to hours |
+| **Use Case** | Mission-critical, high-bandwidth | Dev/test, smaller workloads |
+
+### 4.2 ExpressRoute Global Reach
 
 **ExpressRoute Global Reach** can extend connectivity between ExpressRoute circuits without going through Virtual WAN hubs:
 
