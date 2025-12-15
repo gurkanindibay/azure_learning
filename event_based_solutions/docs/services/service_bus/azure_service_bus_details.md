@@ -36,6 +36,7 @@
 - [5. Tiers](#5-tiers)
 - [6. Exam Scenarios](#6-exam-scenarios)
   - [Exam Question 1: Selecting Technologies for Transactional, Duplicate-Free, Unlimited Storage Messaging](#exam-question-1-selecting-technologies-for-transactional-duplicate-free-unlimited-storage-messaging)
+  - [Exam Question 2: FIFO Message Processing for Component Communication](#exam-question-2-fifo-message-processing-for-component-communication)
 - [7. Best Practices](#7-best-practices)
 
 ## 1. Overview
@@ -453,6 +454,104 @@ az servicebus queue show \
 ### Message Sessions (FIFO)
 - **Function:** Guarantees ordered processing of unbounded sequences of related messages.
 - **Mechanism:** Messages with the same `SessionId` are locked by a single receiver.
+
+#### Why Sessions are Required for FIFO
+
+Azure Service Bus queues **do not guarantee FIFO ordering by default**. Standard message delivery follows a general order but can be affected by:
+- Multiple competing consumers processing messages concurrently
+- Message lock timeouts and redeliveries
+- Service Bus internal partitioning and load balancing
+
+**Sessions solve this** by:
+1. Grouping messages with the same `SessionId` together
+2. Ensuring only **one consumer** can lock and process a session at a time
+3. Processing messages within a session strictly in the order they were enqueued
+
+#### Enabling Sessions
+
+```bash
+# Create a session-enabled queue
+az servicebus queue create \
+  --namespace-name mynamespace \
+  --resource-group myResourceGroup \
+  --name myqueue \
+  --enable-session true
+```
+
+```csharp
+// Create queue with sessions enabled
+var queueOptions = new CreateQueueOptions("order-processing-queue")
+{
+    RequiresSession = true  // Enable FIFO via sessions
+};
+await adminClient.CreateQueueAsync(queueOptions);
+```
+
+#### Sending Session Messages
+
+```csharp
+var sender = client.CreateSender("order-processing-queue");
+
+// All messages for OrderId 12345 will be processed in order
+var message1 = new ServiceBusMessage("Order created")
+{
+    SessionId = "Order-12345"
+};
+var message2 = new ServiceBusMessage("Payment received")
+{
+    SessionId = "Order-12345"
+};
+var message3 = new ServiceBusMessage("Order shipped")
+{
+    SessionId = "Order-12345"
+};
+
+await sender.SendMessagesAsync(new[] { message1, message2, message3 });
+```
+
+#### Receiving Session Messages
+
+```csharp
+// Accept a session and process messages in FIFO order
+var sessionReceiver = await client.AcceptSessionAsync(
+    "order-processing-queue", 
+    "Order-12345");  // Specific session
+
+// Or accept the next available session
+var nextSessionReceiver = await client.AcceptNextSessionAsync(
+    "order-processing-queue");
+
+// Process messages - guaranteed FIFO within session
+while (true)
+{
+    var message = await sessionReceiver.ReceiveMessageAsync(TimeSpan.FromSeconds(5));
+    if (message == null) break;
+    
+    Console.WriteLine($"Processing: {message.Body}");
+    await sessionReceiver.CompleteMessageAsync(message);
+}
+```
+
+#### Key Characteristics
+
+| Feature | Description |
+|---------|-------------|
+| **Session Lock** | Only one receiver can process a session at a time |
+| **FIFO Guarantee** | Messages within a session are processed in order |
+| **Session State** | Arbitrary state (up to 256 KB) can be stored with a session |
+| **Multiple Sessions** | Different sessions can be processed concurrently by different consumers |
+| **Session Expiration** | Sessions expire when all messages are processed or lock times out |
+
+#### Sessions vs Partitioning
+
+| Feature | Sessions | Partitioning |
+|---------|----------|---------------|
+| **Purpose** | FIFO ordering | Throughput & availability |
+| **FIFO Guarantee** | ✅ Yes (within session) | ❌ No |
+| **Concurrent Consumers** | Per session | Across partitions |
+| **Use Case** | Ordered processing | High-throughput scenarios |
+
+> **Important:** Partitioning improves throughput and availability but **does not guarantee FIFO processing**. Partitioned queues distribute messages across multiple brokers, which may result in out-of-order delivery.
 
 ### Transactions
 Supports atomic operations. You can send a message, delete a message, and update state within a single transaction scope.
@@ -900,6 +999,108 @@ Service Bus follows a **hybrid push-pull** delivery model:
 | **FIFO Ordering** | ✅ Yes (sessions) | ⚠️ Per partition |
 | **Throughput** | Moderate (thousands/sec) | Very High (millions/sec) |
 | **Message TTL** | Unlimited (configurable) | Retention period (1-90 days) |
+
+---
+
+### Exam Question 2: FIFO Message Processing for Component Communication
+
+**Scenario:** You are designing an app that will include two components. The components will communicate by sending messages via a queue. You need to recommend a solution to process the messages by using a First In, First Out (FIFO) pattern.
+
+**Question:** What should you include in the recommendation?
+
+- A. Storage queues with a custom metadata setting
+- B. Azure Service Bus queues with partitioning enabled
+- C. Azure Service Bus queues with sessions enabled
+- D. Storage queues with a stored access policy
+
+### Answer Analysis
+
+#### ✅ Correct Answer: C. Azure Service Bus queues with sessions enabled
+
+**Why this is CORRECT:**
+
+Azure Service Bus supports First-In, First-Out (FIFO) message processing through the use of **message sessions**. When sessions are enabled:
+
+1. **Session Grouping:** Messages that share the same `SessionId` are grouped together
+2. **Ordered Processing:** Messages within a session are processed strictly in order of arrival
+3. **Single Consumer Lock:** Only one consumer can lock and process a session at a time, preventing out-of-order processing
+4. **Strict FIFO Behavior:** This is the recommended and most reliable method to enforce ordered message handling in Azure
+
+```csharp
+// Create session-enabled queue for FIFO processing
+var queueOptions = new CreateQueueOptions("fifo-queue")
+{
+    RequiresSession = true  // Enables FIFO guarantee
+};
+
+// Send messages with SessionId for FIFO ordering
+var message = new ServiceBusMessage("Process me in order")
+{
+    SessionId = "workflow-123"  // Messages with same SessionId processed in order
+};
+```
+
+---
+
+#### ❌ Incorrect Answer: A. Storage queues with a custom metadata setting
+
+**Why this is WRONG:**
+
+Azure Storage queues **do not natively support FIFO guarantees**:
+
+- Messages are generally retrieved in approximate order, but there is **no strict ordering guarantee**
+- Under high-throughput conditions, messages may be delivered out of order
+- **Custom metadata cannot enforce message ordering** - metadata is for storing additional information, not controlling delivery order
+- Storage queues use visibility timeout mechanism which can cause redelivery in different order
+
+---
+
+#### ❌ Incorrect Answer: B. Azure Service Bus queues with partitioning enabled
+
+**Why this is WRONG:**
+
+Partitioning **improves throughput and availability but does NOT guarantee FIFO processing**:
+
+- Partitioned queues distribute messages across **multiple message brokers**
+- Each partition operates independently, which may result in **out-of-order delivery**
+- Partitioning is designed for **scalability**, not ordering
+- Messages sent to different partitions have no ordering relationship
+
+> **Key Insight:** Partitioning is the opposite of FIFO in effect - it intentionally spreads messages to improve throughput at the cost of strict ordering.
+
+---
+
+#### ❌ Incorrect Answer: D. Storage queues with a stored access policy
+
+**Why this is WRONG:**
+
+Stored access policies are completely unrelated to message ordering:
+
+- **Purpose:** Managing Shared Access Signatures (SAS) for authentication and authorization
+- **Function:** Control permissions (read, write, delete) and token expiration
+- **No Impact on:** Message ordering, queue processing behavior, or delivery sequence
+
+Stored access policies provide security controls, not messaging guarantees.
+
+---
+
+#### Feature Comparison for FIFO Requirements
+
+| Solution | FIFO Support | How It Works |
+|----------|--------------|---------------|
+| **Service Bus + Sessions** | ✅ Yes | Messages with same SessionId processed in order |
+| **Service Bus + Partitioning** | ❌ No | Messages distributed across brokers |
+| **Storage Queue + Metadata** | ❌ No | Metadata doesn't control delivery order |
+| **Storage Queue + Access Policy** | ❌ No | Security feature, unrelated to ordering |
+
+---
+
+#### References
+
+- [Message Sessions - Azure Service Bus](https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-sessions)
+- [Azure Storage Queues Introduction](https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction)
+- [Service Bus Partitioning](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-partitioning)
+- [Storage SAS Overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
 
 ---
 
