@@ -1442,6 +1442,7 @@ Cosmos DB supports private endpoints for each API type:
 | **Private DNS Zone** | Automatic DNS resolution for private endpoints |
 | **Azure Relay** | Cloud rendezvous point enabling outbound-only connections; supports WCF Relays and Hybrid Connections |
 | **Hybrid Connections** | Connect App Service to on-premises via Azure Relay; no VPN needed; Windows HCM required |
+| **Virtual WAN** | Hub-based global transit network; supports ExpressRoute, S2S VPN, and VNet connections ([see dedicated doc](./azure-virtual-wan.md)) |
 
 ---
 
@@ -1455,3 +1456,4 @@ Cosmos DB supports private endpoints for each API type:
 - [Network Security Groups](https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview)
 - [VNet Peering](https://docs.microsoft.com/azure/virtual-network/virtual-network-peering-overview)
 - [Azure Network Watcher](./azure-network-watcher.md)
+- [Azure Virtual WAN](./azure-virtual-wan.md)
