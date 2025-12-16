@@ -893,6 +893,69 @@ Enabling the change feed on the storage account is the correct approach for proc
 
 **Domain:** Develop for Azure storage
 
+---
+
+### Question: Standardizing Retention Policies and Enabling Data Purge
+
+**Question:**
+You have an Azure subscription. You create a storage account that will store documents. You need to configure the storage account to meet the following requirements:
+- Ensure that retention policies are standardized across the subscription
+- Ensure that data can be purged if the data is copied to an unauthorized location
+
+Which two settings should you enable?
+
+**Options:**
+- A) Enable operational backup with Azure Backup ✅
+- B) Enable point-in-time restore for containers
+- C) Enable soft delete for blobs
+- D) Enable soft delete for containers
+- E) Enable permanent delete for soft deleted items ✅
+- F) Enable versioning for blobs
+
+**Correct Answers: A) Enable operational backup with Azure Backup and E) Enable permanent delete for soft deleted items**
+
+**Explanation:**
+
+**Enable operational backup with Azure Backup** is correct because this feature enables **centralized backup management** across multiple storage accounts using backup policies. This aligns with the requirement to **standardize retention policies across the subscription**. Azure Backup supports policy-based retention, meaning the same rules can be applied to multiple workloads for consistency. Through the Azure Backup Center, you can manage backup policies across your entire subscription, ensuring uniform retention settings.
+
+**Enable permanent delete for soft deleted items** is correct because it ensures **definitive purging of data** after soft deletion. If sensitive data is copied or leaked to an unauthorized location, enabling permanent deletion ensures it won't remain recoverable beyond the defined retention window — satisfying the requirement to **purge data** if it ends up in an unauthorized location. This feature allows you to immediately and permanently remove soft-deleted data without waiting for the retention period to expire.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Enable point-in-time restore for containers** | This is a **recovery feature**, not a governance or policy tool. It allows restoring to a known good state but doesn't align with enforcing purge or standard retention requirements across subscriptions. |
+| **Enable soft delete for blobs** | Soft delete only protects against accidental deletions by retaining data temporarily. However, it **does not guarantee data purge**, nor does it enforce a uniform retention policy across the subscription. It's more of a safety net than a governance tool. |
+| **Enable soft delete for containers** | Similar to blob soft delete - it helps protect container-level deletions, but it's **not suitable for standardizing retention or enforcing purge policies**. It's a recovery mechanism, not a governance mechanism. |
+| **Enable versioning for blobs** | While versioning allows restoring previous versions, it **doesn't offer centralized retention management or enforce purge rules**. It helps with auditing and recovery but not governance or security-driven deletions. |
+
+**Key Concepts:**
+
+| Requirement | Solution | Why |
+|-------------|----------|-----|
+| **Standardize retention policies across subscription** | Azure Backup with operational backup | Provides centralized policy management through Backup Center, allowing consistent retention rules across multiple storage accounts |
+| **Purge data copied to unauthorized location** | Permanent delete for soft deleted items | Enables immediate and permanent removal of sensitive data, ensuring it cannot be recovered after deletion |
+
+**Azure Backup for Blobs - Key Features for Governance:**
+- **Centralized management**: Manage backup policies across multiple storage accounts from a single location (Azure Backup Center)
+- **Policy-based retention**: Define retention policies that can be applied consistently across your subscription
+- **Compliance reporting**: Track backup and retention compliance across your organization
+- **RBAC integration**: Control who can manage backup policies at the subscription level
+
+**Permanent Delete for Soft Deleted Items - Key Features:**
+- **Immediate purge**: Remove soft-deleted data immediately without waiting for retention expiry
+- **Security response**: Quickly eliminate compromised or leaked data
+- **Compliance**: Meet data deletion requirements for regulatory compliance
+- **Controlled access**: Can be restricted using RBAC to authorized personnel only
+
+> 💡 **Exam Tip**: When a question asks about **standardizing policies across a subscription**, think about **Azure Backup** and its centralized management capabilities. When a question mentions **purging data** or **security-driven deletion**, think about **permanent delete** functionality.
+
+**References:**
+- [Data protection overview for Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/data-protection-overview)
+- [Operational backup for Azure Blobs](https://learn.microsoft.com/en-us/azure/backup/blob-backup-overview)
+
+**Domain:** Design data storage solutions
+
 ## Best Practices
 
 1. **Enable All Protection Features**: For maximum protection, enable versioning, soft delete, and point-in-time restore together
