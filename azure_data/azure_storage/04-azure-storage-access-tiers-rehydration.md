@@ -9,6 +9,7 @@
   - [Premium File Shares](#premium-file-shares)
   - [Premium Page Blobs](#premium-page-blobs)
 - [Storage Account Types Comparison](#storage-account-types-comparison)
+  - [Exam Scenario: Choosing the Right Storage Account Type](#exam-scenario-choosing-the-right-storage-account-type)
 - [Storage Redundancy Options](#storage-redundancy-options)
   - [Locally Redundant Storage (LRS)](#locally-redundant-storage-lrs)
   - [Zone-Redundant Storage (ZRS)](#zone-redundant-storage-zrs)
@@ -110,6 +111,57 @@ Azure Storage offers several types of storage accounts, each supporting differen
 | **Premium Page Blobs** | Page blobs | LRS, ZRS | Premium (SSD) | VM disks, databases |
 
 > **Important**: You cannot change a storage account to a different type after creation. To move data to a different account type, you must create a new account and copy the data.
+
+### Exam Scenario: Choosing the Right Storage Account Type
+
+#### Scenario: High-Performance Storage with Immutability Requirements
+
+**Question**: You need to design a storage solution for an app that will store large amounts of frequently used data. The solution must meet the following requirements:
+- Maximize data throughput
+- Prevent the modification of data for one year
+- Minimize latency for read and write operations
+
+Which Azure Storage account type should you recommend?
+
+| Option | Correct? |
+|--------|----------|
+| BlobStorage | ❌ |
+| **BlockBlobStorage** | ✅ **Correct Answer** |
+| FileStorage | ❌ |
+| StorageV2 with Premium performance | ❌ |
+| StorageV2 with Standard performance | ❌ |
+
+**Answer Explanation:**
+
+**BlockBlobStorage (Premium Block Blobs)** is the correct answer because:
+
+1. **Maximizes Data Throughput**: Premium Block Blob storage accounts use solid-state drives (SSDs), providing significantly higher throughput compared to standard storage accounts.
+
+2. **Prevents Modification for One Year**: Premium Block Blob storage accounts support **immutable storage policies** (WORM - Write Once, Read Many). You can configure a time-based retention policy to prevent data modification and deletion for one year.
+
+3. **Minimizes Latency**: SSD-backed Premium storage delivers **low latency** for both read and write operations, making it ideal for high-performance workloads.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why It's Wrong |
+|--------|----------------|
+| **BlobStorage** | Legacy account type (deprecated). Microsoft recommends using General-purpose v2 or Premium Block Blobs instead. Does not offer premium performance. |
+| **FileStorage** | Premium File Shares are designed for Azure Files (SMB/NFS file shares), not blob storage. Not suitable for blob workloads requiring immutability. |
+| **StorageV2 with Premium performance** | StorageV2 (General-purpose v2) does NOT offer a "Premium performance" tier for blobs. StorageV2 uses Standard HDD/SSD storage. Premium performance for blobs requires Premium Block Blobs account type. |
+| **StorageV2 with Standard performance** | While StorageV2 supports immutable storage, Standard performance uses HDDs which cannot maximize throughput or minimize latency like SSDs. |
+
+**Key Decision Factors:**
+
+| Requirement | Why BlockBlobStorage Wins |
+|-------------|---------------------------|
+| High throughput | SSD-backed storage provides maximum throughput |
+| Low latency | Premium storage with SSDs delivers millisecond latency |
+| Immutability | Supports time-based retention and legal hold policies |
+| Frequent access | Optimized for high transaction rates and frequent access patterns |
+
+> 💡 **Exam Tip**: When you see requirements for **high throughput**, **low latency**, AND **blob storage** together, think **Premium Block Blobs (BlockBlobStorage)**. Don't confuse "Premium" tier options—StorageV2 doesn't have a "Premium" option for blobs; you need a separate Premium Block Blob account type.
+
+> ⚠️ **Important**: Premium Block Blob accounts only support **LRS** and **ZRS** redundancy. If you need geo-redundancy (GRS/GZRS), you must use Standard GPv2.
 
 ## Storage Redundancy Options
 
