@@ -961,18 +961,39 @@ Private Endpoints provide a secure, private network path for inbound client conn
 
 ### External Virtual Network Mode
 
-External VNet mode deploys API Management into a VNet subnet while keeping the gateway endpoint publicly accessible.
+External VNet mode deploys API Management into a VNet subnet while keeping the gateway endpoint publicly accessible from the internet.
 
 **Key Characteristics**:
-- API Management gateway remains publicly accessible from the internet
+- API Management gateway remains **publicly accessible from the internet**
+- Developer portal and management endpoint are also public
 - Outbound connections can reach resources within the VNet and peered networks
 - Requires Standard or Premium tier
-- Gateway, developer portal, and management endpoint are public
+- Backend services (VMs, databases, etc.) within the VNet remain protected
+- APIM acts as a secure façade for internal backend services
+
+**Architecture**:
+```
+Internet (Partners/External Clients)
+        ↓
+┌─────────────────────────────────────────┐
+│  Azure API Management (External Mode)   │  ← Publicly accessible
+└─────────────────────────────────────────┘
+        ↓
+┌─────────────────────────────────────────┐
+│           Virtual Network               │
+│  ┌─────────────────────────────────┐    │
+│  │  Backend Services (VMs, etc.)  │    │  ← Protected within VNet
+│  └─────────────────────────────────┘    │
+└─────────────────────────────────────────┘
+```
 
 **When to Use**:
+- **Partner/External API access**: When external partners or clients need to access APIs over the internet
 - Need to access private backend services within a VNet
 - Public API access is acceptable or required
 - Hybrid scenarios with both public and private backends
+
+**Key Point**: The **External** configuration in APIM enables the accessibility of backend APIs from external networks (internet), making APIs available to partners and external consumers over the internet while backend services remain protected within the VNet.
 
 ### Internal Virtual Network Mode
 
@@ -1506,7 +1527,80 @@ OAuth Client Credential Grant is a flow in OAuth 2.0 that allows a client to aut
 - [Authentication policies in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-authentication-policies)
 - [API Management policy reference](https://learn.microsoft.com/en-us/azure/api-management/api-management-policies)
 
-### Question 14: API Caching Policies for OAuth-Authenticated APIs
+### Question 14: External API Access for Partners
+
+**Scenario**: Your company develops a web service that is deployed to an Azure virtual machine named VM1. The web service allows an API to access real-time data from VM1. Testing has shown that the API is accessible from VM1 and VM2 within the virtual network. Partners must be able to connect to the API over the Internet. Partners will use this data in applications that they develop.
+
+**Configuration Details**:
+- VM1 and VM2 are deployed in **Subnet1** within the VNet
+- Azure API Management (APIM) is deployed in **ProdSubnet** (a different subnet) within the same VNet
+- APIM is configured with **External** virtual network mode
+
+**Statement**: "The API is available to partners over the internet."
+
+**Question**: Is the statement true or false?
+
+**Options**:
+- Yes ✓
+- No
+
+**Answer**: Yes
+
+**Explanation**: 
+The statement is **correct** because of the **External** configuration in APIM, which enables the accessibility of backend APIs from external networks (the internet).
+
+**Why the different subnets don't matter**:
+- APIM is deployed in **ProdSubnet** while VMs are in **Subnet1**
+- Both subnets are within the **same Virtual Network**
+- **Subnets within the same VNet can communicate with each other by default** (no additional routing or peering required)
+- APIM in ProdSubnet can reach VM1 in Subnet1 because they share the same VNet
+- The subnet separation is actually a **best practice** - it allows different NSG rules and better network segmentation
+
+**Architecture**:
+```
+                    Internet (Partners)
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│                    Virtual Network                        │
+│                                                          │
+│  ┌─────────────────────┐    ┌─────────────────────────┐  │
+│  │     ProdSubnet      │    │        Subnet1          │  │
+│  │                     │    │                         │  │
+│  │  ┌───────────────┐  │    │  ┌─────┐    ┌─────┐    │  │
+│  │  │     APIM      │──┼────┼─►│ VM1 │    │ VM2 │    │  │
+│  │  │  (External)   │  │    │  └─────┘    └─────┘    │  │
+│  │  └───────────────┘  │    │                         │  │
+│  │    ▲ Public IP      │    │                         │  │
+│  └────┼────────────────┘    └─────────────────────────┘  │
+│       │                                                  │
+└───────┼──────────────────────────────────────────────────┘
+        │
+   Partners connect
+   via public endpoint
+```
+
+**Key Points**:
+1. **External mode** = APIM gateway is publicly accessible from the internet
+2. **Same VNet** = APIM can communicate with VMs regardless of subnet
+3. **Different subnets** = Best practice for network segmentation, doesn't block intra-VNet traffic
+4. Partners connect to APIM's public endpoint → APIM routes to VM1 within the VNet
+
+**External vs Internal VNet Mode**:
+
+| Mode | Gateway Access | Backend Access | Use Case |
+|------|---------------|----------------|----------|
+| **External** | Public internet + VNet | All subnets in VNet | Partner/external APIs that need internet access |
+| **Internal** | VNet only | All subnets in VNet | Private APIs that should not be exposed to internet |
+
+In this scenario, because APIM is configured in External mode, the API gateway is accessible from the public internet, allowing partners to connect and consume the API. The fact that APIM and VMs are in different subnets is irrelevant - they can communicate because they're in the same VNet.
+
+**Reference**: 
+- [Using Azure API Management with Virtual Networks](https://docs.microsoft.com/en-us/azure/api-management/api-management-using-with-vnet)
+
+---
+
+### Question 15: API Caching Policies for OAuth-Authenticated APIs
 
 **Scenario**: A web service provides customer summary information for e-commerce partners. The web service is implemented as an Azure Function app with an HTTP trigger. Access to the API is provided by an Azure API Management instance configured in consumption plan mode. All API calls are authenticated by using OAuth. API calls must be cached. Customers must not be able to view cached data for other customers.
 
