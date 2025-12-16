@@ -40,6 +40,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 9: Securing On-Premises Apps with Azure AD Application Proxy and MFA](#exam-question-9-securing-on-premises-apps-with-azure-ad-application-proxy-and-mfa)
     - [Question 10: Migrating LDAP Applications to Azure with Entra Domain Services](#exam-question-10-migrating-ldap-applications-to-azure-with-entra-domain-services)
     - [Question 11: Remote Access to On-Premises Apps with Application Proxy Connector](#exam-question-11-remote-access-to-on-premises-apps-with-application-proxy-connector)
+    - [Question 12: IT Support Notification for Directory Sync Issues (Microsoft Entra Connect Health)](#exam-question-12-it-support-notification-for-directory-sync-issues-microsoft-entra-connect-health)
 
 ---
 
@@ -6352,8 +6353,187 @@ Need user authentication?
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 26, 2025  
+## Microsoft Entra Connect Health - Directory Synchronization Monitoring
+
+### Overview
+
+**Microsoft Entra Connect Health** provides robust monitoring capabilities for your on-premises identity infrastructure. It helps you maintain a reliable connection to Microsoft Entra ID (formerly Azure AD) and Microsoft 365 by monitoring the health of directory synchronization services.
+
+### Key Capabilities
+
+| Feature | Description |
+|---------|-------------|
+| **Health Monitoring** | Monitors Microsoft Entra Connect sync, AD FS, and AD DS |
+| **Email Notifications** | Sends alerts to distribution groups when sync issues occur |
+| **Sync Insights** | Provides detailed sync operation analytics |
+| **Quick Links** | Direct access to usage reports and troubleshooting |
+
+### When to Use Microsoft Entra Connect Health
+
+✅ **Use for:**
+- Monitoring synchronization between on-premises AD and Microsoft Entra ID
+- Getting email notifications when directory sync fails
+- Tracking sync latency and performance
+- Monitoring AD FS and AD DS health
+
+❌ **Don't confuse with:**
+- **Azure Network Watcher** - Only monitors network traffic, not directory sync
+- **Action Groups** - Used with Azure Monitor alerts, but Azure Monitor cannot monitor AD sync
+- **SendGrid** - Email delivery service, cannot monitor sync health
+
+---
+
+### <a id="exam-question-12-it-support-notification-for-directory-sync-issues-microsoft-entra-connect-health"></a>Question 12: IT Support Notification for Directory Sync Issues (Fabrikam Case Study)
+
+#### Scenario
+
+Fabrikam, Inc. is planning to establish a hybrid identity model to facilitate a Microsoft 365 deployment. The company has:
+
+- Two Active Directory forests: **corp.fabrikam.com** (production) and **rd.fabrikam.com** (R&D)
+- Plans to migrate production workloads to Azure while keeping R&D operations on-premises
+- An email distribution group named **IT Support** that must be notified of any issues relating to directory synchronization services
+
+**Question:** You need to recommend a notification solution for the IT Support distribution group. What should you include in the recommendation?
+
+---
+
+#### Answer Options
+
+A. A SendGrid account with advanced reporting  
+B. An action group  
+C. Azure Network Watcher  
+D. Microsoft Entra Connect Health
+
+---
+
+**Correct Answer:** **D. Microsoft Entra Connect Health**
+
+---
+
+### Detailed Explanation
+
+#### Why Microsoft Entra Connect Health is Correct ✅
+
+**Microsoft Entra Connect Health** is specifically designed to monitor the health of synchronization between on-premises Active Directory and Microsoft Entra ID. Key features include:
+
+✅ **Built-in Monitoring** - Automatically monitors Microsoft Entra Connect sync operations  
+✅ **Email Notifications** - Can be configured to send alerts to distribution groups (IT Support)  
+✅ **Sync Failure Detection** - Detects and alerts on synchronization failures  
+✅ **No Additional Infrastructure** - Works with existing Microsoft Entra Connect deployment
+
+**Configuration for Email Notifications:**
+
+```plaintext
+Microsoft Entra Connect Health Portal
+        ↓
+    Notification Settings
+        ↓
+    Add Email Recipients (IT Support Distribution Group)
+        ↓
+    Configure Alert Types:
+        - Sync Errors
+        - Export Errors
+        - Password Sync Issues
+        - Connectivity Issues
+```
+
+---
+
+### Why Other Options Are Incorrect
+
+#### Option A: SendGrid Account with Advanced Reporting ❌
+
+**Why incorrect:**
+
+- SendGrid is an **email delivery service** that can send emails
+- It has **no capability to monitor** directory synchronization
+- You would still need another service to detect sync issues
+- SendGrid is for **sending emails**, not **monitoring infrastructure**
+
+---
+
+#### Option B: Action Group ❌
+
+**Why incorrect:**
+
+- Action groups are used with **Azure Monitor alerts**
+- Azure Monitor **cannot monitor** the synchronization between on-premises Active Directory and Microsoft Entra ID
+- Action groups define **who to notify** and **what actions to take**, but they need a monitoring source
+- The synchronization process happens between on-premises AD and cloud Entra ID, which is outside Azure Monitor's scope
+
+---
+
+#### Option C: Azure Network Watcher ❌
+
+**Why incorrect:**
+
+- Azure Network Watcher monitors **network traffic and connectivity**
+- It can diagnose VPN connections, packet captures, and network topology
+- It **cannot monitor directory synchronization** between Active Directory instances
+- Network connectivity ≠ Directory synchronization monitoring
+
+---
+
+### Architecture: Microsoft Entra Connect Health Monitoring
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────┐
+│                    On-Premises Environment                          │
+│  ┌──────────────────┐    ┌──────────────────────────────────────┐  │
+│  │ corp.fabrikam.com│    │ Microsoft Entra Connect Server       │  │
+│  │ Active Directory │◄───┤  + Connect Health Agent              │  │
+│  └──────────────────┘    └──────────────┬───────────────────────┘  │
+└────────────────────────────────────────│────────────────────────────┘
+                                         │
+                                         │ Sync + Health Data
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Microsoft Cloud                              │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │             Microsoft Entra ID                                │  │
+│  │  ┌─────────────────────────────────────────────────────────┐ │  │
+│  │  │        Microsoft Entra Connect Health Service           │ │  │
+│  │  │  ┌─────────────────┐  ┌─────────────────────────────┐  │ │  │
+│  │  │  │ Health Monitor  │  │ Notification Engine         │  │ │  │
+│  │  │  │ - Sync Status   │  │ - Email Alerts              │  │ │  │
+│  │  │  │ - Errors        │  │ - Distribution Groups       │  │ │  │
+│  │  │  │ - Latency       │  │   (IT Support)              │  │ │  │
+│  │  │  └─────────────────┘  └──────────────┬──────────────┘  │ │  │
+│  │  └──────────────────────────────────────│──────────────────┘ │  │
+│  └─────────────────────────────────────────│────────────────────┘  │
+└────────────────────────────────────────────│────────────────────────┘
+                                             │
+                                             ▼
+                                    ┌─────────────────┐
+                                    │   IT Support    │
+                                    │ Distribution    │
+                                    │    Group        │
+                                    │  (Email Alert)  │
+                                    └─────────────────┘
+```
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [Microsoft Entra Connect Health Operations](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-operations)
+- [Azure Network Watcher Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-overview)
+- [Azure Monitor Action Groups](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups)
+- [What is Microsoft Entra Connect Health?](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/whatis-azure-ad-connect)
+
+**Related Topics:**
+- Microsoft Entra Connect (directory synchronization)
+- Hybrid identity monitoring
+- AD FS health monitoring
+- Sync error troubleshooting
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+**Document Version:** 1.1  
+**Last Updated:** December 16, 2025  
 **Author:** Azure Learning Documentation
 
 ---
