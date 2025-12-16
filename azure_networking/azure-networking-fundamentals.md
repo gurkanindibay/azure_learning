@@ -130,6 +130,55 @@ Azure reserves 5 IP addresses in each subnet:
 - `x.x.x.2, x.x.x.3` - Azure DNS
 - `x.x.x.255` - Broadcast address
 
+**Intra-VNet Subnet Communication:**
+
+**Key Concept**: Subnets within the same Virtual Network can communicate with each other **by default** - no additional configuration, routing, or peering is required.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                  SUBNET COMMUNICATION WITHIN SAME VNET                       │
+│                                                                              │
+│  Virtual Network: 10.0.0.0/16                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                                                                       │   │
+│  │   Subnet A: 10.0.1.0/24          Subnet B: 10.0.2.0/24              │   │
+│  │   ┌─────────────────────┐        ┌─────────────────────┐            │   │
+│  │   │   ┌─────┐ ┌─────┐  │        │  ┌─────┐ ┌─────┐   │            │   │
+│  │   │   │ VM1 │ │ VM2 │  │◀──────▶│  │ VM3 │ │ VM4 │   │            │   │
+│  │   │   └─────┘ └─────┘  │  ✅    │  └─────┘ └─────┘   │            │   │
+│  │   │                     │ Direct │                     │            │   │
+│  │   │   APIM Instance     │ Comm.  │   SQL Server        │            │   │
+│  │   └─────────────────────┘        └─────────────────────┘            │   │
+│  │                                                                       │   │
+│  │   ✅ Default behavior: All subnets in same VNet can communicate      │   │
+│  │   ✅ No peering required (peering is for cross-VNet communication)   │   │
+│  │   ✅ No additional routing needed                                     │   │
+│  │   ✅ Traffic stays within the VNet (Azure backbone)                   │   │
+│  │                                                                       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Communication Type | Required Configuration | Example |
+|-------------------|------------------------|---------|
+| **Same Subnet** | None (automatic) | VM1 ↔ VM2 in Subnet A |
+| **Different Subnets (same VNet)** | None (automatic) | VM1 in Subnet A ↔ VM3 in Subnet B |
+| **Different VNets** | VNet Peering required | VM in VNet1 ↔ VM in VNet2 |
+| **VNet to On-premises** | VPN/ExpressRoute required | Azure VM ↔ On-prem server |
+
+**Why This Matters:**
+- **Azure API Management** in one subnet can access **VMs** in another subnet within the same VNet
+- **App Services** (VNet-integrated) can reach **databases** or **VMs** in different subnets
+- **Network segmentation** using different subnets is for **organization and NSG rules**, not for blocking communication
+- NSGs (Network Security Groups) can be used to **restrict** this default communication if needed
+
+**Common Misconception:**
+> "I need to configure something for resources in different subnets to communicate"
+
+**Reality:**
+> Subnets in the same VNet are just logical divisions. Azure automatically routes traffic between them. The only way to block this communication is by applying **NSG rules**.
+
 ### 2.4 Address Space
 
 VNets use **CIDR notation** for address space definition. Common private IP ranges:
