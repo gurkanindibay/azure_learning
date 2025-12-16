@@ -13,6 +13,7 @@
   - [Service Provider Scenarios](#service-provider-scenarios)
   - [Enterprise Scenarios](#enterprise-scenarios)
 - [Cross-Tenant Management Experiences](#cross-tenant-management-experiences)
+  - [Centralized Log Collection Across Multiple Tenants](#centralized-log-collection-across-multiple-tenants)
 - [Onboarding Customers](#onboarding-customers)
   - [ARM Template Onboarding](#arm-template-onboarding)
   - [Azure Marketplace Offers](#azure-marketplace-offers)
@@ -290,6 +291,84 @@ Managing Tenant
 ├── Remediate non-compliant resources
 └── Enforce governance standards
 ```
+
+### Centralized Log Collection Across Multiple Tenants
+
+One of the most powerful use cases for Azure Lighthouse is **collecting logs from virtual machines across multiple subscriptions and tenants** into a single Log Analytics workspace.
+
+**Scenario: Multi-Subscription Windows Security Event Collection**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CENTRALIZED LOG COLLECTION WITH LIGHTHOUSE               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Managing Tenant (Central Operations)                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                                                                       │   │
+│  │  ┌─────────────────────────────────────────────────────────────┐    │   │
+│  │  │          Central Log Analytics Workspace                     │    │   │
+│  │  │          (Receives logs from all VMs)                        │    │   │
+│  │  └─────────────────────────────────────────────────────────────┘    │   │
+│  │                              ▲                                        │   │
+│  │                              │                                        │   │
+│  │           ┌──────────────────┼──────────────────┐                   │   │
+│  │           │                  │                  │                    │   │
+│  └───────────┼──────────────────┼──────────────────┼────────────────────┘   │
+│              │                  │                  │                         │
+│  ┌───────────▼─────┐ ┌─────────▼────────┐ ┌──────▼────────────┐            │
+│  │ Tenant A        │ │ Tenant B         │ │ Tenant C          │            │
+│  │ Subscription 1  │ │ Subscription 2   │ │ Subscription 3    │            │
+│  │ Subscription 2  │ │                  │ │ Subscription 4    │            │
+│  │                 │ │                  │ │ Subscription 5    │            │
+│  │ ┌────┐ ┌────┐  │ │ ┌────┐ ┌────┐   │ │ ┌────┐ ┌────┐     │            │
+│  │ │ VM │ │ VM │  │ │ │ VM │ │ VM │   │ │ │ VM │ │ VM │     │            │
+│  │ └────┘ └────┘  │ │ └────┘ └────┘   │ │ └────┘ └────┘     │            │
+│  └─────────────────┘ └─────────────────┘ └───────────────────┘            │
+│                                                                              │
+│  Each tenant delegates subscriptions to managing tenant via Lighthouse      │
+│  Log Analytics agent installed from central workspace collects events       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why Azure Lighthouse is the Correct Solution:**
+
+| Requirement | How Lighthouse Addresses It |
+|-------------|----------------------------|
+| Collect from multiple subscriptions | Connect to different tenants from single pane |
+| Different Microsoft Entra tenants | Cross-tenant management without guest accounts |
+| Single Log Analytics workspace | Centralized workspace in managing tenant |
+| Install monitoring agents | Deploy agents from central location |
+| Windows security events | Full Azure Monitor integration |
+
+**Implementation Steps:**
+
+1. **Onboard each tenant's subscriptions** to Azure Lighthouse
+2. **Create a central Log Analytics workspace** in the managing tenant
+3. **Install Azure Monitor Agent** on VMs across all delegated subscriptions
+4. **Configure Data Collection Rules** to collect Windows security events
+5. **Query logs centrally** from the single workspace
+
+```bash
+# From managing tenant - list all delegated VMs across tenants
+az vm list --query "[].{Name:name, Sub:id}" --output table
+
+# Deploy Azure Monitor Agent to VMs in delegated subscription
+az vm extension set \
+  --resource-group "RG-VMs" \
+  --vm-name "VM-01" \
+  --name "AzureMonitorWindowsAgent" \
+  --publisher "Microsoft.Azure.Monitor" \
+  --subscription "Delegated-Subscription-ID"
+```
+
+**Why NOT These Alternatives:**
+
+| Alternative | Why It Doesn't Work |
+|-------------|---------------------|
+| **Azure Event Grid** | Event Grid is a messaging service for event-driven architectures. It triggers integrations based on events but cannot collect VM logs across tenants |
+| **Azure Purview (Microsoft Purview)** | Purview is for data governance, security, and management across your data estate. It does not configure or collect logs from VMs |
+| **Direct Log Analytics connection** | Without Lighthouse, you cannot manage VMs in different tenants from a single location |
 
 ## Onboarding Customers
 
@@ -575,7 +654,55 @@ az monitor activity-log list \
 
 ## Practice Questions
 
-### Question 1: Cross-Tenant Access
+### Question 1: Centralized Log Collection from Multiple Tenants
+
+**Scenario:**
+You have five Azure subscriptions. Each subscription is linked to a separate Microsoft Entra tenant and contains virtual machines that run Windows Server 2022.
+
+You plan to collect Windows security events from the virtual machines and send them to a single Log Analytics workspace.
+
+You need to recommend a solution that meets the following requirement:
+- Collects event logs from multiple subscriptions across different tenants
+
+**Question:**
+What should you recommend?
+
+**Options:**
+
+1. **Azure Event Grid** ❌
+   - Event Grid is a messaging service based on events
+   - Used to trigger integrations between systems based on certain events
+   - Cannot collect logs from VMs in different tenants
+
+2. **Azure Lighthouse** ✅
+   - Enables cross-tenant management from a single managing tenant
+   - Connect to all five subscriptions across different tenants
+   - Install Log Analytics agent from central workspace
+   - Collect logs easily to a single workspace
+   - No guest accounts needed in each tenant
+
+3. **Azure Purview (Microsoft Purview)** ❌
+   - Provides centralized control over data governance, security, and management
+   - Works across Azure, other cloud providers, or on-premises data
+   - Cannot configure log collection from VMs in different tenants
+
+4. **Azure Monitor directly** ❌
+   - Cannot manage resources across different tenants without Lighthouse
+   - Would require separate configuration in each tenant
+
+**Answer:** Azure Lighthouse
+
+**Explanation:**
+Azure Lighthouse enables you to connect to different tenants and manage resources from a single pane of glass. Using Lighthouse, you can delegate access from all five subscriptions (even though they're in different tenants), then install the Azure Monitor Agent from your central Log Analytics workspace and collect the Windows security events easily into a single location.
+
+**References:**
+- [Azure Event Grid Overview](https://learn.microsoft.com/en-us/azure/event-grid/overview)
+- [Azure Lighthouse Overview](https://learn.microsoft.com/en-us/azure/lighthouse/overview)
+- [Microsoft Purview Overview](https://learn.microsoft.com/en-us/purview/purview)
+
+---
+
+### Question 2: Cross-Tenant Access (Service Provider)
 
 **Scenario:**
 Contoso (a managed service provider) needs to manage Azure resources for three customers: Customer A, Customer B, and Customer C. They want to:
@@ -613,7 +740,7 @@ Which solution should Contoso use?
 
 ---
 
-### Question 2: Role Assignment
+### Question 3: Role Assignment
 
 **Scenario:**
 You are onboarding a customer to Azure Lighthouse. Your operations team needs to manage virtual machines, but should not have access to modify RBAC permissions or access data in storage accounts.
@@ -645,7 +772,7 @@ Which role should you assign?
 
 ---
 
-### Question 3: Enterprise Multi-Tenant
+### Question 4: Enterprise Multi-Tenant
 
 **Scenario:**
 Your enterprise has acquired two companies, each with their own Microsoft Entra tenant. You want your central IT team to manage all three tenants without:
@@ -682,7 +809,7 @@ What is the recommended approach?
 
 ---
 
-### Question 4: Security Best Practice
+### Question 5: Security Best Practice
 
 **Scenario:**
 Your managing tenant has 10 support engineers who need Reader access to customer resources. Occasionally, some engineers need Contributor access for incident response.
@@ -716,7 +843,7 @@ What is the most secure authorization configuration?
 
 ---
 
-### Question 5: Onboarding Scope
+### Question 6: Onboarding Scope
 
 **Scenario:**
 A customer wants to delegate management of their web application resources but keep their financial system resources private. They have:
