@@ -46,6 +46,7 @@
   - [Question 5: Tracking Azure Resource Manager (ARM) Resource Deployments](#question-5-tracking-azure-resource-manager-arm-resource-deployments)
   - [Question 6: Azure Log Analytics Data Retention for SQL Insights](#question-6-azure-log-analytics-data-retention-for-sql-insights)
   - [Question 7: Forwarding JSON Logs from VMs to Log Analytics](#question-7-forwarding-json-logs-from-vms-to-log-analytics)
+  - [Question 8: Collecting Windows Security Events with DCR Support](#question-8-collecting-windows-security-events-with-dcr-support)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -223,6 +224,19 @@ For more details, see: [Manage access to Log Analytics workspaces](https://docs.
 - Support for multiple destinations
 - Efficient data collection with filtering and transformation
 - Better security and performance than legacy agents
+
+> **Important**: The **Log Analytics agent** (also known as Microsoft Monitoring Agent/MMA) is **deprecated** and does NOT support Data Collection Rules (DCRs). For any new deployments or scenarios requiring DCRs, use the **Azure Monitor Agent**.
+
+**Agent Comparison:**
+
+| Feature | Azure Monitor Agent (AMA) | Log Analytics Agent (Deprecated) | Azure Connected Machine Agent |
+|---------|---------------------------|----------------------------------|-------------------------------|
+| **DCR Support** | ✅ Yes | ❌ No | N/A (Extension enabler) |
+| **Multiple Destinations** | ✅ Yes | ❌ No | N/A |
+| **Centralized Configuration** | ✅ DCRs | ❌ Workspace config | N/A |
+| **Status** | ✅ Active | ⚠️ Deprecated (Aug 2024) | ✅ Active (for Azure Arc) |
+| **Primary Use Case** | Azure & Arc VMs data collection | Legacy deployments only | Onboard non-Azure machines to Azure Arc |
+| **Filtering & Transformation** | ✅ Yes (via DCRs) | ❌ No | N/A |
 
 **Data Collection Rules (DCRs):**
 - Define **WHAT** data to collect from which sources
@@ -1817,6 +1831,164 @@ DCEs may not be required for basic Windows Event or Performance counter collecti
 - [Kusto Query Language (KQL) Overview](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/)
 - [About WQL (Windows Management Instrumentation Query Language)](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_wql?view=powershell-5.1)
 - [Introduction to XPath Queries](https://learn.microsoft.com/en-us/sql/relational-databases/sqlxml-annotated-xsd-schemas-xpath-queries/introduction-to-using-xpath-queries-sqlxml-4-0?view=sql-server-ver16)
+
+---
+
+### Question 8: Collecting Windows Security Events with DCR Support
+
+**Scenario:**
+
+You have five Azure subscriptions. Each subscription is linked to a separate Microsoft Entra tenant and contains virtual machines that run Windows Server 2022.
+
+You plan to collect Windows security events from the virtual machines and send them to a single Log Analytics workspace.
+
+**Question:**
+You need to recommend a solution that meets the following requirement:
+
+- Supports the use of **Data Collection Rules (DCRs)** to define which events to collect
+
+What should you recommend?
+
+**Options:**
+
+1. ❌ **The Log Analytics agent**
+   - **Incorrect**: The Log Analytics agent (also known as Microsoft Monitoring Agent or MMA) is **deprecated** and does **NOT** support Data Collection Rules (DCRs) for collecting logs. The agent was scheduled for deprecation in August 2024. While it can collect Windows security events, you cannot use DCRs to define which events to collect - configuration is done through workspace settings instead.
+
+2. ✅ **The Azure Monitor agent**
+   - **Correct**: The Azure Monitor Agent (AMA) is the recommended solution because it introduces a **simplified, flexible method of configuring data collection using Data Collection Rules (DCRs)**. With AMA and DCRs, you can:
+     - Define exactly which Windows security events to collect
+     - Filter events at the source to reduce data volume and costs
+     - Send data to multiple destinations (Log Analytics workspaces)
+     - Apply transformations to the collected data
+     - Centrally manage configuration across all VMs
+
+3. ❌ **The Azure Connected Machine agent**
+   - **Incorrect**: The Azure Connected Machine agent is used for connecting **non-Azure machines** (on-premises or multi-cloud VMs) to Azure Arc. It enables Azure management capabilities on these machines but is not itself a data collection agent. Once a machine is Arc-enabled, you would then install the Azure Monitor Agent to collect data. For Azure VMs (as in this scenario), the Azure Connected Machine agent is not required.
+
+---
+
+### Why Azure Monitor Agent is the Answer
+
+**Key Differentiators:**
+
+| Aspect | Azure Monitor Agent | Log Analytics Agent (Deprecated) | Azure Connected Machine Agent |
+|--------|---------------------|----------------------------------|-------------------------------|
+| **DCR Support** | ✅ **Yes - Full support** | ❌ No support | ❌ N/A (not a data collection agent) |
+| **Status** | ✅ Active & Recommended | ⚠️ Deprecated (Aug 2024) | ✅ Active (for Arc scenarios) |
+| **Event Filtering** | ✅ Filter at source via DCR | ❌ Collect all, filter in queries | ❌ N/A |
+| **Multiple Workspaces** | ✅ Yes | ❌ Limited | ❌ N/A |
+| **Cross-Subscription** | ✅ Yes | ⚠️ Complex setup | ❌ N/A |
+
+**Architecture for This Scenario:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    5 Azure Subscriptions                                 │
+│              (Each linked to separate Entra tenant)                      │
+├───────────────┬───────────────┬───────────────┬───────────────┬─────────┤
+│  Subscription │  Subscription │  Subscription │  Subscription │  Sub 5  │
+│      1        │      2        │      3        │      4        │         │
+│               │               │               │               │         │
+│  ┌─────────┐  │  ┌─────────┐  │  ┌─────────┐  │  ┌─────────┐  │  ┌────┐ │
+│  │Windows  │  │  │Windows  │  │  │Windows  │  │  │Windows  │  │  │VMs │ │
+│  │Server   │  │  │Server   │  │  │Server   │  │  │Server   │  │  │    │ │
+│  │2022 VMs │  │  │2022 VMs │  │  │2022 VMs │  │  │2022 VMs │  │  │    │ │
+│  │         │  │  │         │  │  │         │  │  │         │  │  │    │ │
+│  │  AMA    │  │  │  AMA    │  │  │  AMA    │  │  │  AMA    │  │  │AMA │ │
+│  │Installed│  │  │Installed│  │  │Installed│  │  │Installed│  │  │    │ │
+│  └────┬────┘  │  └────┬────┘  │  └────┬────┘  │  └────┬────┘  │  └─┬──┘ │
+│       │       │       │       │       │       │       │       │    │    │
+└───────┼───────┴───────┼───────┴───────┼───────┴───────┼───────┴────┼────┘
+        │               │               │               │            │
+        │               │               │               │            │
+        ▼               ▼               ▼               ▼            ▼
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │            Data Collection Rule (DCR)                               │
+    │                                                                      │
+    │   • Defines: Windows Security Events to collect                     │
+    │   • Filters: Event IDs, severity levels                             │
+    │   • Destination: Single Log Analytics workspace                     │
+    │   • Can be applied across subscriptions                             │
+    └─────────────────────────────────┬───────────────────────────────────┘
+                                      │
+                                      ▼
+                    ┌───────────────────────────────────┐
+                    │     Log Analytics Workspace       │
+                    │         (Centralized)             │
+                    │                                   │
+                    │   • SecurityEvent table           │
+                    │   • All security events from      │
+                    │     all 5 subscriptions           │
+                    │   • Query with KQL                │
+                    └───────────────────────────────────┘
+```
+
+**Data Collection Rules (DCRs) Benefits:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Granular Control** | Define exactly which event IDs to collect (e.g., 4624, 4625 for logon events) |
+| **Cost Optimization** | Filter events at source, reducing ingestion costs |
+| **Centralized Management** | Single DCR can apply to VMs across multiple subscriptions |
+| **Flexibility** | Easy to modify collection rules without touching VMs |
+| **Multiple Destinations** | Send same data to multiple workspaces if needed |
+| **Transformations** | Apply KQL transformations before data reaches workspace |
+
+**Example DCR Configuration for Windows Security Events:**
+
+```json
+{
+  "dataSources": {
+    "windowsEventLogs": [
+      {
+        "streams": ["Microsoft-SecurityEvent"],
+        "xPathQueries": [
+          "Security!*[System[(EventID=4624 or EventID=4625 or EventID=4648)]]",
+          "Security!*[System[(EventID=4672 or EventID=4673 or EventID=4674)]]"
+        ],
+        "name": "securityEvents"
+      }
+    ]
+  },
+  "destinations": {
+    "logAnalytics": [
+      {
+        "workspaceResourceId": "/subscriptions/.../workspaces/centralWorkspace",
+        "name": "centralLA"
+      }
+    ]
+  },
+  "dataFlows": [
+    {
+      "streams": ["Microsoft-SecurityEvent"],
+      "destinations": ["centralLA"]
+    }
+  ]
+}
+```
+
+**Why Not the Other Options:**
+
+| Option | Reason for Rejection |
+|--------|---------------------|
+| **Log Analytics Agent** | Deprecated; no DCR support; legacy configuration method via workspace settings |
+| **Azure Connected Machine Agent** | Not a data collection agent; used for Arc-enabling non-Azure machines |
+
+**Migration Guidance:**
+
+If you currently use the Log Analytics agent and need DCR support:
+1. Install Azure Monitor Agent on VMs (can coexist temporarily)
+2. Create DCRs with desired event collection configuration
+3. Associate DCRs with VMs
+4. Verify data collection is working
+5. Remove Log Analytics agent
+
+**References:**
+- [Azure Monitor Agent Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/agents-overview)
+- [Azure Monitor Agent Migration](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-migration)
+- [Data Collection Rules Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
+- [Azure Arc Connected Machine Agent](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+- [Collect Windows Security Events](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-security-events)
 
 ---
 
