@@ -11,6 +11,7 @@
   - [Compute Tiers](#compute-tiers)
   - [High Availability and Zone Redundancy](#high-availability-and-zone-redundancy)
   - [Multi-Region Write Support](#multi-region-write-support)
+  - [Geo-Replication and Failover Options](#geo-replication-and-failover-options)
 - [Azure SQL Managed Instance](#azure-sql-managed-instance)
 - [SQL Server on Azure VMs](#sql-server-on-azure-vms)
 - [Pricing Tiers Comparison](#pricing-tiers-comparison)
@@ -538,8 +539,90 @@ Unlike Azure Cosmos DB which offers native multi-region write capabilities, **Az
 
 **Key Exam Point**: When a question asks about "multi-region writes" or "active-active database writes", Azure SQL is **NOT** the correct answer. Choose **Azure Cosmos DB** for true multi-region write scenarios.
 
+#### Geo-Replication and Failover Options
+
+Azure SQL Database provides several mechanisms for disaster recovery and geographic distribution of data. Understanding the differences between these options is critical for selecting the right solution.
+
+##### Active Geo-Replication
+
+**Active Geo-Replication** provides asynchronous replication of data to **up to 4 readable secondary replicas** in different Azure regions.
+
+**Key Characteristics**:
+- ✅ Supports **multiple secondary read-only replicas** (up to 4)
+- ✅ **Automatic replication** between primary and secondary replicas (asynchronous)
+- ✅ **RTO (Recovery Time Objective)**: Less than 30 seconds
+- ✅ **RPO (Recovery Point Objective)**: Less than 5 seconds
+- ✅ Secondary replicas are **readable** and available for read workloads
+- ✅ Supports **manual or automatic failover**
+- ✅ Each secondary can be in a different region
+- ✅ Independent scale and pricing for each replica
+
+**Best Use Cases**:
+- Applications requiring **multiple read-only replicas** for read scale-out
+- Disaster recovery scenarios with **low RTO requirements** (< 30 seconds)
+- Geographic distribution of read workloads
+- Scenarios requiring **granular control** over failover decisions
+
+##### Auto-Failover Groups
+
+**Auto-Failover Groups** provide automatic failover capability with a DNS-based endpoint for transparent connection handling.
+
+**Key Characteristics**:
+- ✅ **Automatic failover** with DNS endpoint management
+- ✅ Supports **single secondary replica only** (not multiple)
+- ✅ **RTO**: 1 hour (typical, can be longer)
+- ✅ **RPO**: 1 hour (typical)
+- ✅ Transparent connection string (no application changes needed after failover)
+- ✅ Supports both Azure SQL Database and Azure SQL Managed Instance
+- ⚠️ Does **NOT support multiple secondary replicas**
+
+**Best Use Cases**:
+- Business continuity with **minimal application changes**
+- Scenarios where **automatic failover** is required without manual intervention
+- Organizations preferring **simplified failover management**
+
+##### Standard Geo-Replication (Not Recommended)
+
+**Standard Geo-Replication** is a legacy option with limited capabilities.
+
+**Key Characteristics**:
+- ⚠️ Supports **only one secondary replica**
+- ⚠️ Secondary replica is **offline** and not readable
+- ⚠️ Higher RTO and RPO compared to Active Geo-Replication
+- ❌ **Not recommended** for new deployments
+
+##### Comparison: Active Geo-Replication vs Auto-Failover Groups
+
+| Feature | Active Geo-Replication | Auto-Failover Groups | Standard Geo-Replication |
+|---------|----------------------|---------------------|-------------------------|
+| **Secondary Replicas** | Up to 4 | 1 only | 1 only |
+| **Secondary Readable** | ✅ Yes | ✅ Yes | ❌ No (offline) |
+| **Automatic Replication** | ✅ Yes (async) | ✅ Yes (async) | ✅ Yes |
+| **RTO** | < 30 seconds | ~1 hour | Higher |
+| **RPO** | < 5 seconds | ~1 hour | Higher |
+| **Automatic Failover** | ✅ Optional | ✅ Built-in | ❌ Manual only |
+| **DNS Endpoint** | ❌ No | ✅ Yes | ❌ No |
+| **Best For** | Multiple read replicas, low RTO | Automatic failover, simplicity | Legacy scenarios |
+
+##### Key Exam Point: Selecting the Right Replication Mechanism
+
+> 📝 **When to choose Active Geo-Replication**:
+> - Requirement for **multiple secondary read-only replicas**
+> - Strict **RTO requirement of 15 minutes or less** (Active Geo-Replication has RTO < 30 seconds)
+> - Need for **automatic replication** between replicas
+
+> 📝 **When to choose Auto-Failover Groups**:
+> - Need for **automatic failover** with minimal configuration
+> - Requirement for **transparent DNS failover** (no app changes)
+> - Only **one secondary replica** is needed
+
+> ⚠️ **Avoid Standard Geo-Replication** for new deployments as it doesn't support readable secondaries and has limited capabilities.
+
 #### References
 - [Azure SQL Database High Availability](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql&tabs=azure-powershell)
+- [Active Geo-Replication Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-overview?view=azuresql&tabs=tsql)
+- [Active Geo-Replication Configuration](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-configure-portal?view=azuresql&tabs=portal)
+- [Auto-Failover Groups Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-sql-db?view=azuresql)
 - [Azure SQL Database Service Tiers (DTU)](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu?view=azuresql)
 - [Azure SQL Database Hyperscale](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
 
@@ -2031,6 +2114,70 @@ Since Contoso uses License Mobility through Software Assurance, they can take ad
 - [Azure SQL Database Elastic Pool Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview)
 - [SQL Managed Instance Overview](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview?view=azuresql)
 - [SQL Server Always On Availability Groups on Azure VMs](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/availability-group-overview?view=azuresql)
+
+**Domain**: Design data storage solutions
+
+---
+
+### Question 9: SQL Server Migration - Replication Mechanism Selection
+
+**Scenario**: You have an on-premises Microsoft SQL Server database named SQL1.
+
+You plan to migrate SQL1 to Azure.
+
+You need to recommend a hosting solution for SQL1. The solution must meet the following requirements:
+- Support the deployment of **multiple secondary, read-only replicas**
+- Support **automatic replication** between primary and secondary replicas
+- Support failover between primary and secondary replicas within a **15-minute recovery time objective (RTO)**
+
+**Question**: Which replication mechanism should you include in the recommendation?
+
+**Options**:
+- A) Active geo-replication
+- B) Auto-failover groups
+- C) Standard geo-replication
+
+**Correct Answer**: **A) Active geo-replication**
+
+**Explanation**:
+
+**Active Geo-replication** is correct because it meets all three requirements specified in the scenario:
+
+1. **Multiple secondary replicas**: Active geo-replication supports up to 4 readable secondary replicas in different Azure regions
+2. **Automatic replication**: It provides automatic asynchronous replication between primary and secondary replicas
+3. **RTO within 15 minutes**: The recovery time objective (RTO) for active geo-replication is less than 30 seconds, which is well within the 15-minute requirement
+
+Additionally, all secondary replicas are readable, making them available for read scale-out scenarios.
+
+**Why Other Options Are Incorrect**:
+
+**Auto-failover groups** is incorrect because auto-failover groups do **not support multiple replicas**. Auto-failover groups only support a single secondary replica. While they provide automatic failover with DNS endpoint management, the requirement for multiple secondary read-only replicas cannot be met. Additionally, the RTO for auto-failover groups is typically around 1 hour, which exceeds the 15-minute requirement.
+
+**Standard geo-replication** is incorrect because:
+- It supports only **one secondary replica** (not multiple)
+- The secondary replica is kept **offline and not readable**
+- It has a higher RTO and RPO compared to active geo-replication
+- It is essentially a legacy option that should be avoided for new deployments
+
+**Replication Mechanism Comparison**:
+
+| Feature | Active Geo-Replication | Auto-Failover Groups | Standard Geo-Replication |
+|---------|----------------------|---------------------|-------------------------|
+| **Multiple Secondaries** | ✅ Up to 4 | ❌ Only 1 | ❌ Only 1 |
+| **Readable Secondaries** | ✅ Yes | ✅ Yes | ❌ No (offline) |
+| **Automatic Replication** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **RTO** | < 30 seconds | ~1 hour | Higher |
+| **Meets 15-min RTO** | ✅ Yes | ❌ No | ❌ No |
+
+**Key Takeaways**:
+- ✅ Choose **Active Geo-Replication** when you need multiple readable secondaries and low RTO
+- ⚠️ Choose **Auto-Failover Groups** when you need automatic DNS failover but only need one secondary
+- ❌ Avoid **Standard Geo-Replication** for new deployments
+
+**Reference Links**:
+- [Active Geo-Replication Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-overview?view=azuresql&tabs=tsql)
+- [Active Geo-Replication Configuration](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-configure-portal?view=azuresql&tabs=portal)
+- [Auto-Failover Groups Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-sql-db?view=azuresql)
 
 **Domain**: Design data storage solutions
 
