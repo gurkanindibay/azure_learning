@@ -1139,6 +1139,194 @@ Azure provides built-in policies for tags:
 
 ---
 
+### Question 9: Enabling TDE Using ARM Template in Policy
+
+**Scenario:**
+You have an Azure subscription that contains 50 Azure SQL databases.
+
+You create an Azure Resource Manager (ARM) template named Template1 that enables Transparent Data Encryption (TDE).
+
+You need to create an Azure Policy definition named Policy1 that will use Template1 to enable TDE for any noncompliant Azure SQL databases.
+
+**Question:**
+What should you set the available effect to?
+
+**Options:**
+
+1. **DeployIfNotExists** ✅
+2. **EnforceRegoPolicy** ❌
+3. **Modify** ❌
+
+**Answer:** DeployIfNotExists
+
+**Explanation:**
+
+**Why DeployIfNotExists is Correct:**
+
+The **DeployIfNotExists** effect allows you to use an ARM template for remediation of non-compliant resources. You can define the nested template in the policy definition and enable Transparent Data Encryption on all non-compliant SQL databases.
+
+| Aspect | DeployIfNotExists Capability |
+|--------|------------------------------|
+| **ARM Template Support** | ✅ Can embed ARM templates for deployment |
+| **Remediation** | ✅ Automatically deploys resources/features |
+| **TDE Enablement** | ✅ Can deploy TDE configuration to databases |
+| **Existing Resources** | ✅ Works with remediation tasks |
+
+**Policy Structure with ARM Template:**
+
+```json
+{
+  "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+      "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+      "existenceCondition": {
+        "field": "Microsoft.Sql/transparentDataEncryption.status",
+        "equals": "Enabled"
+      },
+      "roleDefinitionIds": [
+        "/providers/Microsoft.Authorization/roleDefinitions/..."
+      ],
+      "deployment": {
+        "properties": {
+          "mode": "incremental",
+          "template": {
+            // Your ARM template (Template1) content here
+            // to enable TDE on the database
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Reason for Incorrect |
+|--------|---------------------|
+| **Modify** | The Modify effect is used to edit/update properties of a resource, typically metadata like tags or public access levels. **It cannot use an ARM template for remediation**, which is required in this scenario. |
+| **EnforceRegoPolicy** | This is a **deprecated effect** of Azure Policy. It was used to configure the Open Policy Agent admissions controller with Gatekeeper v2 in Azure Kubernetes Service (AKS). It is not applicable for SQL database TDE configuration. |
+
+**Key Differences: DeployIfNotExists vs Modify**
+
+| Feature | DeployIfNotExists | Modify |
+|---------|-------------------|--------|
+| **ARM Template Support** | ✅ Yes | ❌ No |
+| **Use Case** | Deploy companion resources, enable features | Update properties, tags |
+| **TDE Enablement** | ✅ Appropriate | ❌ Not suitable |
+| **Remediation Mechanism** | ARM template deployment | Direct property operations |
+
+**When to Use DeployIfNotExists:**
+
+- Enabling features that require deployment (TDE, diagnostics, extensions)
+- Deploying companion resources
+- Using ARM templates for remediation
+- Complex configurations requiring multiple resource changes
+
+**Reference Links:**
+- [Policy Effects Overview](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effects)
+- [DeployIfNotExists Effect](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-deploy-if-not-exists)
+
+---
+
+### Question 10: Policy Definition Requirements for DeployIfNotExists
+
+**Scenario:**
+(Continuation of Question 9)
+
+You have an Azure subscription that contains 50 Azure SQL databases.
+
+You create an Azure Resource Manager (ARM) template named Template1 that enables Transparent Data Encryption (TDE).
+
+You need to create an Azure Policy definition named Policy1 that will use Template1 to enable TDE for any noncompliant Azure SQL databases.
+
+**Question:**
+What should you include in the policy definition?
+
+**Options:**
+
+1. **The identity required to perform the remediation task** ❌
+2. **The scopes of the policy assignments** ❌
+3. **The role-based access control (RBAC) roles required to perform the remediation task** ✅
+
+**Answer:** The role-based access control (RBAC) roles required to perform the remediation task
+
+**Explanation:**
+
+**Why RBAC Roles (roleDefinitionIds) is Correct:**
+
+When defining an Azure Policy with the **DeployIfNotExists** effect, the policy definition **must include the `roleDefinitionIds` property**. This property ensures that the required permissions are assigned to the policy's managed identity so it can remediate non-compliant resources.
+
+Without specifying the RBAC roles, the policy will not be able to perform the deployment actions defined in the ARM template.
+
+**Policy Definition Structure with roleDefinitionIds:**
+
+```json
+{
+  "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+      "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+      "roleDefinitionIds": [
+        "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+      ],
+      "existenceCondition": {
+        "field": "Microsoft.Sql/transparentDataEncryption.status",
+        "equals": "Enabled"
+      },
+      "deployment": {
+        "properties": {
+          "mode": "incremental",
+          "template": {
+            // ARM template content
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Reason for Incorrect |
+|--------|---------------------|
+| **The identity required to perform the remediation task** | While a managed identity is required for remediation, **it is not included in the policy definition itself**. The identity is assigned when the policy is applied (during assignment), not when it is defined. Azure automatically creates and assigns the managed identity during policy assignment. |
+| **The scopes of the policy assignments** | Policy scope is determined **at the time of assignment**, not during the policy definition. The definition only outlines the rules, effects, and remediation requirements. Scope is set when you assign the policy to a management group, subscription, or resource group. |
+
+**Key Concept: What Goes Where**
+
+| Component | Where It's Defined | When It's Set |
+|-----------|-------------------|---------------|
+| **RBAC Roles (roleDefinitionIds)** | Policy Definition | At definition creation |
+| **Managed Identity** | Policy Assignment | At assignment creation (auto-created) |
+| **Scope** | Policy Assignment | At assignment creation |
+| **ARM Template** | Policy Definition | At definition creation |
+| **Effect** | Policy Definition | At definition creation |
+
+**Purpose of roleDefinitionIds:**
+
+1. **Specifies required permissions** for the managed identity
+2. **Azure automatically assigns** these roles to the managed identity during assignment
+3. **Enables remediation** by granting necessary access to deploy resources
+4. **Required for DeployIfNotExists and Modify** effects
+
+**Common Role Definition IDs:**
+
+| Role | GUID | Use Case |
+|------|------|----------|
+| **Contributor** | `b24988ac-6180-42a0-ab88-20f7382dd24c` | General resource deployment |
+| **SQL Security Manager** | `056cd41c-7e88-42e1-933e-88ba6a50c9c3` | SQL-specific operations |
+| **Owner** | `8e3af657-a8ff-443c-a75c-2fe8c4bcb635` | Full control (use sparingly) |
+
+**Reference Links:**
+- [Remediate Resources](https://learn.microsoft.com/en-us/azure/governance/policy/how-to/remediate-resources?tabs=azure-portal)
+- [Policy Definition Structure](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure)
+- [DeployIfNotExists Effect Basics](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-basics#deployifnotexists)
+
+---
+
 ## Summary
 
 ### Key Takeaways
