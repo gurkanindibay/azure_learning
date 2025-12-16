@@ -792,6 +792,57 @@ Change feed is supported on **standard general-purpose v2**, **premium block blo
 
 ---
 
+### Question: Enabling Point-in-Time Restore for Blobs
+
+**Question:**
+You have an Azure subscription. You need to deploy a solution that will provide point-in-time restore for blobs in storage accounts that have blob versioning and blob soft delete enabled. What should you enable for the accounts?
+
+**Options:**
+- A) A stored access policy
+- B) Immutable blob storage
+- C) Object replication
+- D) The change feed ✅
+
+**Correct Answer: D) The change feed**
+
+**Explanation:**
+In order to enable point-in-time restore for the blobs in a storage account, you need to have **change feed enabled** too, so that the service can track all the changes that were made to the blobs before you can restore it. Point-in-time restore has three mandatory prerequisites:
+
+1. **Blob Versioning** - Must be enabled ✅ (already enabled per question)
+2. **Soft Delete for Blobs** - Must be enabled ✅ (already enabled per question)
+3. **Change Feed** - Must be enabled ❌ (this is what needs to be enabled)
+
+The change feed provides a persistent, ordered log of all changes (creates, updates, and deletes) to blobs and blob metadata. This historical record is essential for the point-in-time restore feature to know exactly what state each blob was in at any given point in time.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A stored access policy** | Stored access policies provide an additional level of control over service-level shared access signatures (SASs) on the server side. You can use a stored access policy to change the start time, expiry time, or permissions for a signature, or to revoke a signature after it has been issued. However, stored access policies have nothing to do with point-in-time restore functionality. |
+| **Immutable blob storage** | Immutable blob storage is used to prevent any changes to the blobs in your storage account for a defined period of time (WORM - Write Once, Read Many). It is designed to protect data from modification or deletion for compliance purposes, but it cannot help you in restoring blobs to a previous point in time. In fact, immutable storage **prevents** changes, while point-in-time restore **undoes** changes. |
+| **Object replication** | Object replication asynchronously copies blobs between a source storage account and a destination account. It ensures there are multiple copies of the blobs available in different regions for disaster recovery or compliance. However, object replication creates copies of the **current** state of blobs and cannot help you restore blobs to a previous point in time. |
+
+**Point-in-Time Restore Dependencies:**
+
+```
+Point-in-Time Restore
+├── Requires: Blob Versioning (tracks blob state changes)
+├── Requires: Soft Delete for Blobs (retains deleted data)
+└── Requires: Change Feed (provides ordered change log)
+```
+
+> 💡 **Exam Tip**: When asked about point-in-time restore prerequisites, always remember the three requirements: **Versioning**, **Soft Delete**, and **Change Feed**. If the question states that versioning and soft delete are already enabled, the answer is always **change feed**.
+
+**References:**
+- [Point-in-time restore for block blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview)
+- [Blob storage change feed](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-change-feed?tabs=azure-portal)
+- [Object replication for block blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/object-replication-overview)
+- [Define stored access policy](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
+
+**Domain:** Design data storage solutions
+
+---
+
 ### Question: Processing Blob Transaction Logs for Auditing
 
 **Question:**
