@@ -13,6 +13,13 @@
 - [Tool Selection Guide](#tool-selection-guide)
 - [Migration Workflow](#migration-workflow)
 - [Real-World Migration Scenarios](#real-world-migration-scenarios)
+  - [Scenario 1: Offline Migration with Minimal Administrative Effort](#scenario-1-offline-migration-with-minimal-administrative-effort)
+  - [Scenario 2: Online Migration with Minimal Downtime](#scenario-2-online-migration-with-minimal-downtime)
+  - [Scenario 3: Migrating SQL Server Data to Azure Cosmos DB](#scenario-3-migrating-sql-server-data-to-azure-cosmos-db)
+  - [Scenario 4: Migrating Multi-Database Applications with Cross-Database Queries](#scenario-4-migrating-multi-database-applications-with-cross-database-queries)
+  - [Scenario 5: SQL Server Migration with CLR Support and Minimal Database Changes](#scenario-5-sql-server-migration-with-clr-support-and-minimal-database-changes)
+  - [Scenario 6: Migrating Always On Availability Group to SQL Server on Linux VM](#scenario-6-migrating-always-on-availability-group-to-sql-server-on-linux-vm-with-minimal-downtime)
+- [Quick Decision Matrix](#quick-decision-matrix)
 - [References](#references)
 
 ## Introduction
@@ -544,6 +551,211 @@ What should you include in the recommendation?
 
 ---
 
+### Scenario 6: Migrating Always On Availability Group to SQL Server on Linux VM with Minimal Downtime
+
+**Question**: You have two on-premises Microsoft SQL Server 2017 instances that host an Always On availability group named AG1. AG1 contains a single database named DB1. You have an Azure subscription that contains a virtual machine named VM1. VM1 runs Linux and contains a SQL Server 2019 instance. You need to migrate DB1 to VM1. The solution must minimize downtime on DB1.
+
+How will you prepare for the migration?
+
+| Option | Correct? |
+|--------|----------|
+| **By adding a secondary replica to AG1** | ✅ **Correct Answer** |
+| By creating an Always On availability group on VM1 | ❌ |
+| By upgrading the on-premises SQL Server instances | ❌ |
+
+**Answer**: **By adding a secondary replica to AG1**
+
+**Explanation**:
+
+**Adding a secondary replica to AG1** is correct because:
+- SQL Server Always On availability groups allow you to add **asynchronous secondary replicas across environments**
+- You can extend from on-premises SQL Server 2017 to SQL Server 2019 running on Linux in Azure
+- By adding the Azure VM's SQL Server instance as a secondary replica to the existing AG1, you can replicate DB1 in **near real-time** with minimal impact on availability
+- Once synchronized, you can initiate a **manual failover** to the Azure VM at a planned time
+- This approach **minimizes downtime** and reduces the risk of data loss during migration
+- This method is a well-supported **hybrid architecture approach** often recommended when moving SQL workloads to Azure
+- Supports **cross-platform replication** between Windows and Linux SQL Server instances
+
+**Key Benefits of This Approach**:
+- **Near-zero downtime**: Data replication happens continuously until cutover
+- **Data consistency**: All transactions are replicated to the Azure replica before failover
+- **Rollback capability**: Original on-premises replica can be kept for rollback if needed
+- **Gradual migration**: Test the Azure replica before committing to full migration
+- **Business continuity**: Production workload continues until planned failover
+
+**Migration Process Overview**:
+1. **Prepare VM1**: Ensure SQL Server 2019 on Linux is properly configured with Always On support
+2. **Configure networking**: Establish connectivity between on-premises and Azure (VPN/ExpressRoute)
+3. **Add replica**: Join the Azure VM SQL Server instance to existing AG1 as an asynchronous secondary replica
+4. **Synchronize**: Allow data to synchronize between on-premises and Azure
+5. **Validate**: Test the Azure replica for data integrity and application compatibility
+6. **Planned failover**: Perform manual failover to the Azure VM during a maintenance window
+7. **Cutover**: Redirect applications to the new Azure-hosted database
+
+**Why Other Options Are Incorrect**:
+
+**By creating an Always On availability group on VM1**:
+- VM1 should **not host a new availability group**; instead, it should **participate in the existing one**
+- Creating a new AG would **isolate the environment** and not facilitate the migration of DB1
+- The goal is to **extend the current AG**, not build a separate configuration
+- A separate AG would require manual data movement and cause extended downtime
+- **Why incorrect**: Does not leverage the existing AG infrastructure for seamless migration
+
+**By upgrading the on-premises SQL Server instances**:
+- The question states on-premises is SQL Server 2017 and Azure VM is SQL Server 2019
+- SQL Server 2017 can replicate to SQL Server 2019 using Always On AG without upgrading
+- Upgrading on-premises instances adds unnecessary complexity and downtime
+- The version difference (2017 → 2019) is supported for AG replication
+- **Why incorrect**: Not required for the migration and does not directly facilitate moving data to Azure with minimal downtime
+
+**Cross-Platform Always On Availability Groups**:
+
+| Feature | Support |
+|---------|---------|
+| **Windows to Windows** | ✅ Full support |
+| **Linux to Linux** | ✅ Full support |
+| **Windows to Linux** | ✅ Supported (cross-platform AG) |
+| **SQL Server 2017 to 2019** | ✅ Supported |
+| **Asynchronous replication to Azure** | ✅ Supported |
+| **Manual failover across platforms** | ✅ Supported |
+
+**Architecture Diagram**:
+```
+On-Premises (SQL Server 2017 - Windows)          Azure (SQL Server 2019 - Linux VM)
+┌─────────────────────────────────────┐          ┌──────────────────────────────────┐
+│  SQL Server Instance 1              │          │  VM1 (Linux)                     │
+│  ┌─────────────────────────────┐    │          │  ┌─────────────────────────────┐ │
+│  │ AG1 - Primary Replica       │    │  ──────► │  │ AG1 - Secondary Replica     │ │
+│  │ DB1                         │    │  Async   │  │ DB1 (synchronized)          │ │
+│  └─────────────────────────────┘    │  Repl.   │  └─────────────────────────────┘ │
+└─────────────────────────────────────┘          └──────────────────────────────────┘
+                                                         │
+┌─────────────────────────────────────┐                  │
+│  SQL Server Instance 2              │                  │
+│  ┌─────────────────────────────┐    │                  │
+│  │ AG1 - Secondary Replica     │    │                  │
+│  │ DB1                         │    │   After failover │
+│  └─────────────────────────────┘    │          ────────┘
+└─────────────────────────────────────┘          VM1 becomes Primary
+```
+
+**Key Configuration Requirements**:
+- Enable Always On availability groups on the Linux SQL Server instance
+- Configure the Linux SQL Server instance for Pacemaker or manual failover
+- Establish network connectivity (ExpressRoute or VPN) between on-premises and Azure
+- Configure Windows Server Failover Clustering (WSFC) or distributed AG for cross-platform scenarios
+- Set up proper authentication (certificates for cross-platform communication)
+
+**Best Practices**:
+- Test the migration in a non-production environment first
+- Monitor replication lag during synchronization
+- Plan for DNS and connection string updates post-migration
+- Keep the original AG configuration for rollback capability
+- Document the failover procedure and test it before the migration window
+
+---
+
+#### Part 2: How Will You Perform the Migration?
+
+**Question**: Following the preparation (adding a secondary replica to AG1), how will you perform the migration?
+
+| Option | Correct? |
+|--------|----------|
+| **By using a distributed availability group** | ✅ **Correct Answer** |
+| By using Azure Migrate | ❌ |
+| By using Log shipping | ❌ |
+
+**Answer**: **By using a distributed availability group**
+
+**Explanation**:
+
+**Using a distributed availability group** is correct because:
+- A distributed availability group allows you to create an availability group that **spans multiple SQL Server instances**, including instances hosted on different platforms or in different locations
+- By adding the SQL Server instance on VM1 as a replica in the distributed availability group, you can **replicate data from the on-premises SQL Server instances to VM1**
+- You can perform a **controlled failover with minimal downtime**
+- Distributed AGs are specifically designed for scenarios where you need to migrate or extend availability groups across different environments (on-premises to Azure, different datacenters, etc.)
+- Provides **automatic data synchronization** between the source and target environments
+- Supports **planned manual failover** for controlled migration cutover
+
+**What is a Distributed Availability Group?**
+
+A distributed availability group is a special type of availability group that spans two separate availability groups:
+- The **primary availability group** (on-premises AG1 in this case)
+- The **secondary availability group** (configured on the Azure VM)
+
+```
+On-Premises Environment                    Azure Environment
+┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+│  AG1 (Primary AG)               │       │  AG2 (Secondary AG)             │
+│  ┌─────────────┐ ┌─────────────┐│       │  ┌─────────────────────────────┐│
+│  │ SQL 2017    │ │ SQL 2017    ││       │  │ SQL 2019 (Linux - VM1)      ││
+│  │ Primary     │ │ Secondary   ││       │  │ Primary of AG2              ││
+│  │ Replica     │ │ Replica     ││       │  │ (Forwarder)                 ││
+│  └─────────────┘ └─────────────┘│       │  └─────────────────────────────┘│
+└─────────────────────────────────┘       └─────────────────────────────────┘
+              │                                        ▲
+              │      Distributed Availability Group    │
+              └────────────────────────────────────────┘
+                    (Asynchronous Replication)
+```
+
+**Key Benefits of Distributed AG for Migration**:
+- **Cross-version support**: SQL Server 2017 to SQL Server 2019 migration is fully supported
+- **Cross-platform support**: Windows to Linux migration is supported
+- **Minimal downtime**: Data is continuously synchronized until the planned cutover
+- **No WSFC dependency across sites**: Each AG maintains its own cluster configuration
+- **Controlled failover**: Manual failover allows precise timing of the migration cutover
+- **Data integrity**: Transaction log shipping ensures all committed transactions are replicated
+
+**Why Other Options Are Incorrect**:
+
+**By using Azure Migrate**:
+- Azure Migrate is primarily designed for **discovery, assessment, and migration planning**
+- While it can facilitate migrations, it may **not minimize downtime** as effectively as distributed AGs
+- You may still need to plan for an appropriate **maintenance window** to complete the migration
+- Azure Migrate is better suited for assessment phases rather than execution of Always On AG migrations
+- **Why incorrect**: Does not provide the same level of minimal downtime that a distributed availability group offers for this specific scenario
+
+**By using Log Shipping**:
+- Log shipping involves backing up transaction logs and restoring them on a secondary server
+- Requires a **longer cutover window** to apply the final log backups and bring the secondary online
+- Does not provide automatic failover capabilities like distributed AGs
+- Manual intervention required to apply log backups and complete the migration
+- The migration using a distributed availability group will be **faster and involve less downtime**
+- **Why incorrect**: While functional, log shipping requires more downtime during cutover compared to distributed AGs which can perform near-instantaneous failover
+
+**Comparison: Distributed AG vs Log Shipping vs Azure Migrate**:
+
+| Feature | Distributed AG | Log Shipping | Azure Migrate |
+|---------|----------------|--------------|---------------|
+| **Downtime** | Minimal (seconds to minutes) | Higher (minutes to hours) | Variable |
+| **Automatic sync** | ✅ Yes | ❌ Manual backup/restore | ✅ Yes (with DMS) |
+| **Controlled failover** | ✅ Yes | ⚠️ Manual process | ⚠️ Depends on method |
+| **Cross-platform** | ✅ Windows ↔ Linux | ✅ Supported | ✅ Supported |
+| **Cross-version** | ✅ 2017 → 2019 | ✅ Supported | ✅ Supported |
+| **Real-time replication** | ✅ Near real-time | ❌ Scheduled intervals | ⚠️ Depends on method |
+| **Best for** | AG-to-AG migration | Simple migrations | Assessment + migration |
+
+**Migration Steps Using Distributed Availability Group**:
+
+1. **Create a secondary AG on VM1**: Set up a new availability group (AG2) on the Azure Linux VM
+2. **Configure distributed AG**: Create a distributed availability group linking AG1 and AG2
+3. **Initiate synchronization**: Allow data to replicate from on-premises to Azure
+4. **Monitor replication**: Verify data synchronization is complete and replication lag is minimal
+5. **Perform failover**: Execute a planned manual failover to make AG2 the primary
+6. **Update connections**: Redirect applications to the new Azure-hosted database
+7. **Decommission**: Remove the distributed AG configuration and on-premises replicas
+
+**References**:
+- [Migrate an Always On availability group to Azure using distributed availability groups](https://learn.microsoft.com/en-us/azure/azure-sql/migration-guides/virtual-machines/sql-server-distributed-availability-group-migrate-ag?view=azuresql)
+- [Configure a cross-platform Always On availability group between SQL Server on Linux and Windows](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-availability-group-cross-platform?view=sql-server-ver16)
+- [Distributed Availability Groups](https://learn.microsoft.com/en-us/sql/database-engine/availability-groups/windows/distributed-availability-groups)
+- [SQL Server Migration to Azure Virtual Machines Overview](https://learn.microsoft.com/en-us/data-migration/sql-server/virtual-machines/overview)
+- [Always On Availability Groups Overview](https://learn.microsoft.com/en-us/sql/database-engine/availability-groups/windows/overview-of-always-on-availability-groups-sql-server)
+- [SQL Server on Linux](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-overview)
+
+---
+
 ## Quick Decision Matrix
 
 Use this matrix to quickly identify the right tool for your migration scenario:
@@ -559,6 +771,7 @@ Use this matrix to quickly identify the right tool for your migration scenario:
 | **SQL Server to Azure Cosmos DB** | Azure Cosmos DB Data Migration Tool |
 | **Cross-database queries + Full control** | SQL Server on Azure VM |
 | **Cross-database queries + PaaS** | Azure SQL Managed Instance |
+| **Always On AG to Azure VM + Minimize downtime** | Distributed Availability Group |
 
 ---
 
