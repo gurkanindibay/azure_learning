@@ -685,3 +685,128 @@ C) NV
 - [SLA for Virtual Machines](https://azure.microsoft.com/en-us/support/legal/sla/virtual-machines/v1_9/)
 
 ---
+
+### Question 4: Multi-Tier App Infrastructure with Cross-Region Deployment
+
+**Scenario**: You are developing a multi-tier app named App1 that will be hosted on Azure virtual machines. The peak utilization periods for App1 will be from 8 AM to 9 AM and 4 PM to 5 PM on weekdays.
+
+**Requirements**:
+- Support virtual machines deployed to four availability zones across two Azure regions
+- Minimize costs by accumulating CPU credits during periods of low utilization
+
+**Question**: What is the minimum number of virtual networks you should deploy?
+
+**Options**:
+
+A) 1
+
+B) **2**
+
+C) 3
+
+D) 4
+
+---
+
+**Correct Answer**: **B) 2**
+
+---
+
+### Explanation
+
+**Why 2 Virtual Networks?**
+
+#### 1. **Virtual Networks are Region-Scoped** ✅
+
+- **Each Azure Virtual Network (VNet)** is scoped to a **single region**
+- A VNet **cannot span multiple regions**
+- To deploy resources in two regions, you need **at least one VNet per region**
+
+#### 2. **Architecture Pattern**
+
+```
+Region 1 (e.g., East US)
+│
+└─ Virtual Network 1
+   ├─ Availability Zone 1 → VMs
+   └─ Availability Zone 2 → VMs
+
+Region 2 (e.g., West US)
+│
+└─ Virtual Network 2
+   ├─ Availability Zone 1 → VMs
+   └─ Availability Zone 2 → VMs
+
+Total: 4 Availability Zones across 2 Regions
+       2 Virtual Networks (minimum)
+```
+
+#### 3. **Cross-Region Communication**
+
+- VNets in different regions can be connected using **VNet Peering (Global)**
+- This allows App1's tiers to communicate across regions
+- Global VNet peering provides low-latency, high-bandwidth connectivity
+
+#### 4. **Cost Optimization with B-Series VMs** ✅
+
+The requirement to "accumulate CPU credits during periods of low utilization" indicates the use of **B-series (Burstable) VMs**:
+
+| VM Series | CPU Behavior | Use Case |
+|-----------|-------------|----------|
+| **B-series** | Accumulates credits when idle, bursts when needed | Variable workloads with peak periods |
+| D-series | Consistent CPU performance | Steady workloads |
+
+**B-series Benefits for App1**:
+- **8 AM - 9 AM peak**: Use accumulated CPU credits for burst performance
+- **4 PM - 5 PM peak**: Use accumulated CPU credits for burst performance
+- **Off-peak hours**: Accumulate CPU credits at lower cost
+- **Result**: Cost savings compared to consistently provisioned VMs
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) 1 Virtual Network** ❌
+- **VNets cannot span multiple regions**
+- A single VNet can only exist in one Azure region
+- Impossible to cover two regions with one VNet
+
+**C) 3 Virtual Networks** ❌
+- **More than required**
+- Only 2 regions need VNets
+- 3 VNets would work but exceeds the **minimum** requirement
+
+**D) 4 Virtual Networks** ❌
+- **Availability zones do not require separate VNets**
+- VNets span all availability zones within a region
+- 4 VNets is unnecessary and increases management overhead
+
+---
+
+### Key Takeaways
+
+1. **VNet = Single Region Scope**
+   > Azure Virtual Networks are regional resources. Each region requires its own VNet for VM deployments.
+
+2. **Availability Zones Share VNet**
+   > All availability zones within a region can use the same VNet. You don't need separate VNets per zone.
+
+3. **Minimum VNets = Number of Regions**
+   > For multi-region deployments, the minimum number of VNets equals the number of regions being used.
+
+4. **B-Series for Variable Workloads**
+   > B-series (Burstable) VMs are ideal for workloads with predictable peak periods, allowing cost savings through CPU credit accumulation during idle times.
+
+5. **Global VNet Peering for Cross-Region**
+   > Connect VNets across regions using Global VNet Peering for low-latency communication between multi-tier app components.
+
+---
+
+### Reference Links
+
+- [Azure Virtual Network Overview](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
+- [Azure Availability Zones Overview](https://docs.microsoft.com/en-us/azure/availability-zones/az-overview)
+- [B-series Burstable Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes-b-series-burstable)
+- [Virtual Network Peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+
+---
