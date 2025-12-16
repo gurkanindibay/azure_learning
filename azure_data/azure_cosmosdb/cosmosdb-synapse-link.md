@@ -9,6 +9,7 @@
 - [When to Use Azure Synapse Link](#when-to-use-azure-synapse-link)
 - [Comparison with Alternative Solutions](#comparison-with-alternative-solutions)
 - [Exam Scenario: Analyzing Operational Data](#exam-scenario-analyzing-operational-data)
+- [Secure Network Connectivity: Managed Private Endpoints](#secure-network-connectivity-managed-private-endpoints)
 - [Configuration Steps](#configuration-steps)
 - [Best Practices](#best-practices)
 - [Limitations](#limitations)
@@ -317,6 +318,9 @@ FROM OPENROWSET(
 - [Azure Cosmos DB Change Feed](https://learn.microsoft.com/en-us/azure/cosmos-db/change-feed)
 - [Load data in Azure Synapse Analytics](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/load-data-overview)
 - [Analytical store pricing](https://azure.microsoft.com/en-us/pricing/details/cosmos-db/)
+- [Configure private endpoints for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-private-endpoints)
+- [Configure virtual network service endpoint for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-vnet-service-endpoint)
+- [Managed private endpoints in Azure Synapse Analytics](https://learn.microsoft.com/en-us/azure/synapse-analytics/security/synapse-workspace-managed-private-endpoints)
 
 ---
 
@@ -332,3 +336,89 @@ When you need to analyze operational data from Azure Cosmos DB using Azure Synap
 4. ✅ It's the only option that truly isolates analytical workloads from transactional workloads
 
 **Remember:** Change Feed requires additional processing, ADF impacts performance, and PolyBase doesn't support Cosmos DB directly.
+
+---
+
+## Secure Network Connectivity: Managed Private Endpoints
+
+### Exam Scenario: Secure Traffic Between Azure Synapse and Cosmos DB
+
+**Scenario:**
+> You need to integrate Azure Cosmos DB and Azure Synapse. The solution must meet the following requirements:
+> - Traffic from an Azure Synapse workspace to the Azure Cosmos DB account must be sent via the **Microsoft backbone network**
+> - Traffic from the Azure Synapse workspace to the Azure Cosmos DB account must **NOT be routed over the internet**
+> - Implementation effort must be **minimized**
+>
+> What should you enable when configuring the Azure Cosmos DB account?
+
+### Solution: Managed Private Endpoints ✅
+
+**Managed Private Endpoints** is the correct answer because:
+
+1. ✅ **Microsoft Backbone Network**: Traffic flows through Azure's private network infrastructure, never traversing the public internet
+2. ✅ **No Internet Routing**: Private endpoints are associated with a subnet within your Virtual Network (VNet), ensuring traffic stays within Azure's backbone
+3. ✅ **Minimal Implementation Effort**: Azure Synapse natively supports managed private endpoints, requiring minimal configuration
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Secure Network Architecture                          │
+│                                                                              │
+│  ┌────────────────────────┐         ┌────────────────────────┐             │
+│  │   Azure Synapse        │         │   Azure Cosmos DB      │             │
+│  │   Workspace            │         │   Account              │             │
+│  │                        │         │                        │             │
+│  │  ┌──────────────────┐  │         │  ┌──────────────────┐  │             │
+│  │  │ Managed Private  │──┼─────────┼─▶│ Private Endpoint │  │             │
+│  │  │ Endpoint         │  │   VNet  │  │                  │  │             │
+│  │  └──────────────────┘  │ Backbone│  └──────────────────┘  │             │
+│  └────────────────────────┘         └────────────────────────┘             │
+│                                                                              │
+│              Traffic stays on Microsoft backbone network                     │
+│                    ✗ NO public internet routing                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Server-level Firewall Rules** | Controls access based on IP addresses/ranges. Does not address routing traffic via Microsoft backbone network or preventing internet routing. Provides access control, not network path control. |
+| **Service Endpoint Policies** | Define routing preferences for Azure services accessing your Cosmos DB account. Designed for scenarios where Azure services need to access Cosmos DB, NOT for traffic originating from Azure Synapse workspace. |
+
+### Key Differences
+
+| Feature | Managed Private Endpoints | Service Endpoints | Firewall Rules |
+|---------|--------------------------|-------------------|----------------|
+| **Traffic Path** | Microsoft backbone only | Microsoft backbone (outbound) | Internet (filtered) |
+| **Internet Routing** | ❌ Never | ⚠️ Possible | ✅ Yes (filtered by IP) |
+| **VNet Integration** | ✅ Full private access | ✅ VNet to Azure service | ❌ IP-based only |
+| **Implementation** | Minimal (managed by Synapse) | Moderate | Low |
+| **Use Case** | Private connectivity from Synapse | VNet to Azure services | IP allowlisting |
+
+### How Managed Private Endpoints Work
+
+1. **Create Managed Private Endpoint**: From Azure Synapse workspace, create a managed private endpoint targeting the Cosmos DB account
+2. **Approval**: The Cosmos DB account owner approves the private endpoint connection
+3. **Private DNS**: Azure automatically configures DNS to route traffic through the private endpoint
+4. **Secure Access**: All traffic from Synapse to Cosmos DB flows through the VNet via Microsoft's backbone
+
+### Configuration in Azure Synapse
+
+```
+Azure Synapse Workspace
+    │
+    └── Manage
+         │
+         └── Managed private endpoints
+              │
+              └── + New → Azure Cosmos DB
+                        → Select subscription
+                        → Select Cosmos DB account
+                        → Create
+```
+
+### Resources
+
+- [Configure private endpoints for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-private-endpoints)
+- [Configure virtual network service endpoint for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-vnet-service-endpoint)
+- [Managed private endpoints in Azure Synapse Analytics](https://learn.microsoft.com/en-us/azure/synapse-analytics/security/synapse-workspace-managed-private-endpoints)
