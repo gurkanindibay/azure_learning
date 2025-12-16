@@ -30,6 +30,12 @@
   - [Common Azure Storage RBAC Actions Reference](#common-azure-storage-rbac-actions-reference)
   - [Assigning RBAC Roles](#assigning-rbac-roles)
   - [Using Managed Identity with User Delegation SAS](#using-managed-identity-with-user-delegation-sas)
+- [Attribute-Based Access Control (ABAC)](#attribute-based-access-control-abac)
+  - [What is ABAC?](#what-is-abac)
+  - [ABAC vs Other Access Control Methods](#abac-vs-other-access-control-methods)
+  - [Role Assignment Conditions](#role-assignment-conditions)
+  - [ABAC Use Cases for Storage](#abac-use-cases-for-storage)
+  - [Exam Question: ABAC for Tag-Based Access](#exam-question-abac-for-tag-based-access)
 - [Comparison: Authentication Methods](#comparison-authentication-methods)
 - [Additional Security Features](#additional-security-features)
   - [Storage Account Firewall](#1-storage-account-firewall)
@@ -1864,6 +1870,118 @@ var sasToken = sasBuilder.ToSasQueryParameters(
     blobServiceClient.AccountName
 ).ToString();
 ```
+
+## Attribute-Based Access Control (ABAC)
+
+### What is ABAC?
+
+**Attribute-Based Access Control (ABAC)** builds on Azure RBAC by adding role assignment conditions based on attributes (metadata) in the context of specific actions. ABAC allows you to grant access based on attributes associated with security principals, resources, requests, and the environment.
+
+**Key Concept**: ABAC conditions work with entities that already have an RBAC assignment to a resource. The conditions add additional criteria that must be met before access is granted.
+
+### ABAC vs Other Access Control Methods
+
+| Method | Description | Use Case | Works with RBAC? |
+|--------|-------------|----------|------------------|
+| **RBAC** | Role-based permissions assigned to identities | General access control | Base layer |
+| **ABAC** | Conditions added to RBAC assignments based on attributes | Fine-grained access based on tags or other metadata | ✅ Yes - extends RBAC |
+| **ACLs** | POSIX-like access control lists | Azure Data Lake Storage Gen2 hierarchical namespace | ❌ Separate mechanism |
+| **SAS** | Token-based delegated access | Temporary access to anyone with the token | ❌ Independent of RBAC |
+
+### Role Assignment Conditions
+
+ABAC role assignment conditions allow you to add "if-then" logic to your role assignments. For Azure Storage, you can create conditions based on:
+
+**Resource Attributes:**
+- **Blob index tags** - Tags assigned to individual blobs
+- **Container name** - Name of the blob container
+- **Blob path** - Path/name of the blob
+- **Encryption scope** - Encryption scope of the blob
+
+**Request Attributes:**
+- **Blob index tags to set** - Tags being added during write operations
+- **Version ID** - Blob version identifier
+
+**Principal Attributes:**
+- Custom security attributes assigned to users or service principals
+
+**Example Condition:**
+```
+(
+  (
+    !(ActionMatches{'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read'})
+  )
+  OR
+  (
+    @Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:Project<$key_case_sensitive$>] StringEquals 'ProjectA'
+  )
+)
+```
+
+This condition allows read access only to blobs tagged with `Project=ProjectA`.
+
+### ABAC Use Cases for Storage
+
+| Scenario | ABAC Condition | Example |
+|----------|----------------|----------|
+| **Department-based access** | Blob tag matches user's department | Users in "Finance" can only read blobs tagged `Department=Finance` |
+| **Project-based access** | Blob tag matches assigned project | Users can only access blobs for their assigned projects |
+| **Classification-based access** | Blob tag matches security clearance | Users can only access blobs matching their clearance level |
+| **Environment isolation** | Container name or path conditions | Dev team can only access `dev-*` containers |
+
+**Configuring ABAC Conditions via Azure CLI:**
+```bash
+# Create a role assignment with an ABAC condition
+az role assignment create \
+    --role "Storage Blob Data Reader" \
+    --assignee user@contoso.com \
+    --scope "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{storage-account}" \
+    --condition "@Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:Project<\$key_case_sensitive\$>] StringEquals 'ProjectA'" \
+    --condition-version "2.0"
+```
+
+**Configuring ABAC Conditions via Azure Portal:**
+1. Navigate to the storage account
+2. Go to **Access Control (IAM)**
+3. Click **Add role assignment**
+4. Select the role and assignee
+5. Go to the **Conditions** tab
+6. Click **Add condition** and use the visual editor or code editor
+
+### Exam Question: ABAC for Tag-Based Access
+
+**Question:**
+
+You have 100 Azure Storage accounts.
+
+Access to the accounts is restricted by using Azure role-based access control (Azure RBAC) assignments.
+
+You need to recommend a solution that uses role assignment conditions based on the tags assigned to individual resources within the storage account.
+
+What should you use to implement role assignment conditions?
+
+- A. Access control lists (ACLs)
+- B. Attribute-based access control (ABAC)
+- C. Shared access signatures (SAS)
+
+**Answer: B. Attribute-based access control (ABAC)**
+
+**Explanation:**
+
+| Option | Correct? | Reasoning |
+|--------|----------|------------|
+| **ABAC** | ✅ Yes | ABAC assignments work with the attributes (metadata) of an entity which already has an RBAC assignment. You can add an ABAC condition to an RBAC assignment and allow a certain user to access only those blobs which have a specific tag. This directly addresses the requirement for "role assignment conditions based on tags." |
+| **ACLs** | ❌ No | Access Control Lists are used in Azure Data Lake Storage with hierarchical namespace enabled, implementing POSIX-like permissions. ACLs cannot be used with standard Azure Storage accounts without Data Lake Storage Gen2. |
+| **SAS** | ❌ No | Shared Access Signatures provide delegated access to storage resources using tokens. SAS tokens work independently of RBAC assignments and grant access to anyone who possesses the token, regardless of their identity or RBAC role. |
+
+**Key Takeaway:**
+> When you need to add conditions to existing RBAC assignments based on resource attributes like tags, ABAC is the correct solution. It extends RBAC rather than replacing it.
+
+**References:**
+- [Azure RBAC Conditions Overview](https://learn.microsoft.com/en-us/azure/role-based-access-control/conditions-overview)
+- [Azure Storage ABAC Conditions](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-auth-abac)
+- [Azure Data Lake Storage Access Control](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-access-control)
+- [Azure Storage SAS Overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
 
 ## Comparison: Authentication Methods
 
