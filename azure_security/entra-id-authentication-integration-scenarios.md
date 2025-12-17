@@ -42,6 +42,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 11: Remote Access to On-Premises Apps with Application Proxy Connector](#exam-question-11-remote-access-to-on-premises-apps-with-application-proxy-connector)
     - [Question 12: IT Support Notification for Directory Sync Issues (Microsoft Entra Connect Health)](#exam-question-12-it-support-notification-for-directory-sync-issues-microsoft-entra-connect-health)
     - [Question 13: SSO Access to On-Premises Web App with Integrated Windows Authentication](#exam-question-13-sso-access-to-on-premises-web-app-with-integrated-windows-authentication)
+    - [Question 14: Pre-Authentication for ASP.NET Application on Azure VM](#exam-question-14-pre-authentication-for-aspnet-application-on-azure-vm)
 
 ---
 
@@ -6921,8 +6922,242 @@ On-Premises WebApp1
 
 ---
 
-**Document Version:** 1.2  
-**Last Updated:** December 17, 2025  
+### <a id="exam-question-14-pre-authentication-for-aspnet-application-on-azure-vm"></a>Question 14: Pre-Authentication for ASP.NET Application on Azure VM
+
+#### Scenario
+
+Your company intends to set up an Azure virtual machine to host an ASP.NET application. Company users will access the application over the Internet.
+
+However, before accessing the application, users must be **pre-authenticated** using their Entra ID accounts.
+
+**Question:** What solution would you recommend to meet this requirement?
+
+---
+
+#### Answer Options
+
+A. An Entra ID enterprise application  
+B. An Azure Traffic Manager profile  
+C. A public Azure Load Balancer  
+D. An Azure Application Gateway resource
+
+---
+
+**Correct Answer:** **A. An Entra ID enterprise application**
+
+---
+
+### Detailed Explanation
+
+#### Why Entra ID Enterprise Application is Correct ✅
+
+An **Entra ID enterprise application** is the most suitable solution for pre-authenticating users with their Entra ID accounts. This solution provides:
+
+| Capability | Description |
+|------------|-------------|
+| **Pre-authentication** | Users must authenticate with Entra ID *before* reaching your application |
+| **Single Sign-On (SSO)** | Seamless login experience using existing Entra ID credentials |
+| **Conditional Access** | Apply policies (MFA, device compliance, location-based access) |
+| **Centralized Identity Management** | Manage who can access the application from Entra ID |
+
+**How It Works:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AUTHENTICATION FLOW                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   User (Internet)                                                       │
+│        │                                                                │
+│        │ 1. Attempt to access ASP.NET application                      │
+│        ▼                                                                │
+│   Microsoft Entra ID                                                   │
+│        │                                                                │
+│        │ 2. User authenticates (username/password, MFA, etc.)          │
+│        ▼                                                                │
+│   Token Issued (OAuth 2.0 / OpenID Connect)                            │
+│        │                                                                │
+│        │ 3. Token validated by application                             │
+│        ▼                                                                │
+│   ASP.NET Application (on Azure VM)                                    │
+│        │                                                                │
+│        │ 4. Access granted                                             │
+│        ▼                                                                │
+│   Application Resources                                                │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits:**
+
+✅ **Native Integration** - ASP.NET has excellent support for Microsoft Entra ID authentication via MSAL (Microsoft Authentication Library)  
+✅ **Pre-authentication** - Users cannot reach the application without first authenticating with Entra ID  
+✅ **Security Policies** - Can enforce MFA, Conditional Access, and other security controls  
+✅ **Audit Trail** - All authentication events are logged in Entra ID sign-in logs  
+✅ **User Assignment** - Control which users or groups can access the application
+
+**Implementation Steps:**
+
+1. **Register an Enterprise Application** in Entra ID
+2. Configure the application's **redirect URIs** (pointing to your Azure VM's application URL)
+3. Set up **authentication** in your ASP.NET app using MSAL or Microsoft.Identity.Web
+4. Configure **user/group assignments** to control access
+5. Optionally apply **Conditional Access policies** for enhanced security
+
+---
+
+### Why Other Options Are Incorrect
+
+#### Option B: Azure Traffic Manager Profile ❌
+
+**Why incorrect:**
+
+- Azure Traffic Manager is a **DNS-based traffic load balancer**
+- It directs user traffic to specific endpoints based on routing rules:
+  - Geographic routing
+  - Performance routing
+  - Priority routing
+  - Weighted routing
+- **No authentication capabilities** - Traffic Manager operates at the DNS layer (Layer 7 DNS)
+- It simply resolves DNS queries to different endpoints; it cannot validate user identity
+- Think of it as: "Traffic Manager decides **WHERE** traffic goes, not **WHO** can send traffic"
+
+```plaintext
+Traffic Manager Function:
+┌──────────────────────────────────────────────────────────────┐
+│   User Request → DNS Resolution → Endpoint Selection        │
+│                                                              │
+│   ❌ No identity verification                               │
+│   ❌ No token validation                                    │
+│   ❌ No user authentication                                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Option C: Public Azure Load Balancer ❌
+
+**Why incorrect:**
+
+- Azure Load Balancer is a **Layer 4 (TCP/UDP) load balancer**
+- It distributes incoming network traffic across multiple backend servers
+- Features include:
+  - Inbound NAT rules
+  - Load balancing rules
+  - Health probes
+- **Operates at the network layer** - it sees only IP addresses, ports, and protocols
+- **Cannot inspect HTTP traffic** or understand authentication tokens
+- **No identity awareness** - simply forwards packets based on network rules
+
+```plaintext
+Load Balancer Function:
+┌──────────────────────────────────────────────────────────────┐
+│   TCP/UDP Packets → Distribution Rules → Backend VMs        │
+│                                                              │
+│   ❌ No HTTP awareness                                      │
+│   ❌ No user identity concept                               │
+│   ❌ No authentication mechanism                            │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Option D: Azure Application Gateway ❌
+
+**Why incorrect:**
+
+- Azure Application Gateway is a **Layer 7 (HTTP/HTTPS) load balancer**
+- It provides:
+  - Web Application Firewall (WAF)
+  - SSL termination
+  - URL-based routing
+  - Session affinity
+- **Important distinction:** Application Gateway **CAN integrate** with Entra ID authentication, BUT:
+  - It requires an **Enterprise Application** to be registered first
+  - The Enterprise Application is the **identity component** that handles actual authentication
+  - Application Gateway alone cannot authenticate users against Entra ID
+
+```plaintext
+Application Gateway vs Enterprise Application:
+┌──────────────────────────────────────────────────────────────┐
+│   Application Gateway:                                       │
+│   ├── Load balancing (Layer 7)           ✅                 │
+│   ├── WAF protection                     ✅                 │
+│   ├── SSL termination                    ✅                 │
+│   └── Pre-authentication with Entra ID   ❌ (needs EA)      │
+│                                                              │
+│   Enterprise Application:                                    │
+│   ├── User authentication                ✅                 │
+│   ├── Token issuance                     ✅                 │
+│   ├── SSO integration                    ✅                 │
+│   └── Pre-authentication                 ✅                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Key Point:** For **pre-authentication** specifically, the Enterprise Application is the **required component**. Application Gateway can work alongside it but is not sufficient on its own.
+
+---
+
+### Comparison Table
+
+| Solution | Layer | Authentication Capability | Suitable for This Scenario |
+|----------|-------|--------------------------|---------------------------|
+| **Entra ID Enterprise Application** | Identity Layer | ✅ Full Entra ID authentication | ✅ **Yes** |
+| **Azure Traffic Manager** | DNS Layer | ❌ None | ❌ No |
+| **Public Azure Load Balancer** | Layer 4 (TCP/UDP) | ❌ None | ❌ No |
+| **Azure Application Gateway** | Layer 7 (HTTP) | ⚠️ Requires Enterprise App | ❌ Not standalone |
+
+---
+
+### Key Concept: Identity Layer vs Network Layer
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AUTHENTICATION REQUIREMENTS                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Pre-authentication with Entra ID requires:                           │
+│                                                                         │
+│   ✅ IDENTITY LAYER SOLUTION                                           │
+│      └── Entra ID Enterprise Application                               │
+│          └── Handles: Authentication, Authorization, Token Issuance    │
+│                                                                         │
+│   ❌ NETWORK LAYER SOLUTIONS (Cannot provide pre-authentication)       │
+│      ├── Traffic Manager (DNS routing)                                 │
+│      ├── Load Balancer (TCP/UDP distribution)                          │
+│      └── Application Gateway (HTTP load balancing)                     │
+│                                                                         │
+│   Remember: Authentication is an IDENTITY problem, not a NETWORK       │
+│   problem. Network components move traffic; identity components        │
+│   verify WHO is sending the traffic.                                   │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [What is application management in Microsoft Entra ID?](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-application-management)
+- [Microsoft identity platform and OAuth 2.0 authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)
+- [ASP.NET Core and Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-web-app-dotnet-core-sign-in)
+- [What is Azure Traffic Manager?](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-overview)
+- [What is Azure Load Balancer?](https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-overview)
+- [What is Azure Application Gateway?](https://learn.microsoft.com/en-us/azure/application-gateway/overview)
+
+**Related Topics:**
+- OpenID Connect authentication flow
+- MSAL (Microsoft Authentication Library)
+- Conditional Access policies
+- Token-based authentication
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+**Document Version:** 1.3  
+**Last Updated:** December 18, 2025  
 **Author:** Azure Learning Documentation
 
 ---
