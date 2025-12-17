@@ -10,6 +10,7 @@
   - [Premium Page Blobs](#premium-page-blobs)
 - [Storage Account Types Comparison](#storage-account-types-comparison)
   - [Exam Scenario: Choosing the Right Storage Account Type](#exam-scenario-choosing-the-right-storage-account-type)
+  - [Exam Scenario: High-Performance Media Streaming Storage](#scenario-high-performance-media-streaming-storage)
 - [Storage Redundancy Options](#storage-redundancy-options)
   - [Locally Redundant Storage (LRS)](#locally-redundant-storage-lrs)
   - [Zone-Redundant Storage (ZRS)](#zone-redundant-storage-zrs)
@@ -162,6 +163,52 @@ Which Azure Storage account type should you recommend?
 > 💡 **Exam Tip**: When you see requirements for **high throughput**, **low latency**, AND **blob storage** together, think **Premium Block Blobs (BlockBlobStorage)**. Don't confuse "Premium" tier options—StorageV2 doesn't have a "Premium" option for blobs; you need a separate Premium Block Blob account type.
 
 > ⚠️ **Important**: Premium Block Blob accounts only support **LRS** and **ZRS** redundancy. If you need geo-redundancy (GRS/GZRS), you must use Standard GPv2.
+
+---
+
+#### Scenario: High-Performance Media Streaming Storage
+
+**Question**: You are planning a storage solution. The solution must meet the following requirements:
+- Support at least 500 requests per second
+- Support large image, video, and audio streams
+
+Which type of Azure storage account should you provision?
+
+| Option | Correct? |
+|--------|----------|
+| Premium file shares | ❌ |
+| Standard general-purpose v2 | ❌ |
+| **Premium block blobs** | ✅ **Correct Answer** |
+| Premium page blobs | ❌ |
+
+**Answer Explanation:**
+
+**Premium block blobs** is the correct answer because:
+
+1. **Optimized for Streaming Workloads**: Block blobs are optimized for large-scale data storage and streaming workloads, such as images, videos, and audio files.
+
+2. **High Transaction Rates**: The premium performance tier ensures high throughput and low latency, which is necessary to support at least 500 requests per second.
+
+3. **Media Streaming Design**: Premium block blob storage is specifically designed for workloads requiring high transaction rates and is ideal for media streaming scenarios.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why It's Wrong |
+|--------|----------------|
+| **Premium file shares** | Azure Premium File Shares are designed for SMB-based workloads and are not optimized for handling high-performance blob storage or streaming scenarios. They are more suitable for file-based applications rather than large media content storage and delivery. |
+| **Standard general-purpose v2** | While General-Purpose v2 (GPv2) accounts provide cost-effective blob storage, standard performance does not guarantee low latency or high transaction rates. It is not the best option for workloads requiring high throughput and real-time streaming. |
+| **Premium page blobs** | Page Blobs are used for virtual machine disks (VHDs) and workloads requiring random read/write access to large files. They are not optimized for sequential streaming of large images, videos, or audio files. |
+
+**Key Decision Factors:**
+
+| Requirement | Why Premium Block Blobs Wins |
+|-------------|------------------------------|
+| 500+ requests/second | Premium tier with SSD-backed storage handles high transaction rates |
+| Large media files | Block blobs are designed for storing large binary objects |
+| Streaming workloads | Optimized for sequential read patterns common in media streaming |
+| Images, videos, audio | Block blobs are the recommended blob type for media content |
+
+> 💡 **Exam Tip**: When you see requirements for **media streaming**, **large files (images/video/audio)**, AND **high request rates**, think **Premium Block Blobs**. Remember: Page blobs = VHDs/disks, File shares = SMB/NFS file access, Block blobs = general object/media storage.
 
 ## Storage Redundancy Options
 
