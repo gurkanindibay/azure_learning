@@ -28,6 +28,12 @@
   - [copy](#copy)
   - [Feature Comparison](#feature-comparison)
   - [Best Practice](#best-practice)
+- [ARM Templates vs Azure Blueprints](#arm-templates-vs-azure-blueprints)
+  - [Key Difference: Connection to Deployed Resources](#key-difference-connection-to-deployed-resources)
+  - [Why Blueprints Remain Connected](#why-blueprints-remain-connected)
+  - [Policy Definitions](#policy-definitions)
+  - [What Blueprints Can Include](#what-blueprints-can-include)
+  - [When to Use Each](#when-to-use-each)
 - [Related Technologies](#related-technologies)
 - [References](#references)
 
@@ -361,6 +367,67 @@ Yes, accessing the Resource Group blade allows you to view all the resources dep
 5. Select the specific deployment to view the ARM template details
 
 This is the correct and most straightforward approach to identify the Azure Resource Manager template that was used by Jon Ross for the deployment.
+
+---
+
+## ARM Templates vs Azure Blueprints
+
+### Key Difference: Connection to Deployed Resources
+
+| Aspect | ARM Templates | Azure Blueprints |
+|--------|---------------|------------------|
+| **Connection After Deployment** | No connection - once deployment completes, template is disconnected | Remains connected to deployed resources |
+| **Ongoing Updates** | Changes to template don't affect deployed resources | Allows ongoing updates and compliance tracking |
+| **Primary Purpose** | Deploy infrastructure as code | Define and assign configurations, policies, and role assignments across subscriptions |
+| **Scope** | Single deployment | Multi-subscription governance |
+
+### Why Blueprints Remain Connected
+
+Azure Blueprints maintain a connection to deployed resources because:
+- They provide **ongoing compliance tracking**
+- Resources remain in alignment with the defined blueprint
+- Updates to the blueprint can propagate to assigned subscriptions
+- Version control and audit trail of what was deployed
+
+### Policy Definitions
+
+**Both** ARM Templates and Azure Blueprints can contain policy definitions:
+- ARM templates can include Azure Policy assignments
+- Blueprints can reference existing policy definitions to enforce governance
+
+### What Blueprints Can Include
+
+- **Policy Assignments** - Enforce governance rules
+- **Role Assignments** - Define access control
+- **Resource Groups** - Organize resources
+- **ARM Templates** - Deploy infrastructure (artifacts)
+
+### When to Use Each
+
+```
+Need one-time infrastructure deployment?
+        |
+       Yes → Use ARM Templates
+        
+Need ongoing governance across subscriptions?
+        |
+       Yes → Use Azure Blueprints
+
+Need to enforce compliance after deployment?
+        |
+       Yes → Use Azure Blueprints
+
+Need version-controlled, repeatable governance?
+        |
+       Yes → Use Azure Blueprints
+```
+
+### References
+
+- [Azure Blueprints Overview](https://learn.microsoft.com/en-us/azure/governance/blueprints/overview)
+- [How Blueprints are Different from Azure Policy](https://learn.microsoft.com/en-us/azure/governance/blueprints/overview#how-its-different-from-azure-policy)
+- [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [ARM Templates Overview](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview)
 
 ---
 
