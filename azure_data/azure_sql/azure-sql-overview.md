@@ -603,7 +603,7 @@ Azure SQL Database provides several mechanisms for disaster recovery and geograp
 | **Automatic Replication** | ✅ Yes (async) | ✅ Yes (async) | ✅ Yes |
 | **RTO** | < 30 seconds | ~1 hour | Higher |
 | **RPO** | < 5 seconds | ~1 hour | Higher |
-| **Automatic Failover** | ✅ Optional | ✅ Built-in | ❌ Manual only |
+| **Automatic Failover** | ❌ No (manual/programmatic) | ✅ Built-in | ❌ Manual only |
 | **DNS Endpoint** | ❌ No | ✅ Yes | ❌ No |
 | **Best For** | Multiple read replicas, low RTO | Automatic failover, simplicity | Legacy scenarios |
 
@@ -612,14 +612,38 @@ Azure SQL Database provides several mechanisms for disaster recovery and geograp
 > 📝 **When to choose Active Geo-Replication**:
 > - Requirement for **multiple secondary read-only replicas**
 > - Strict **RTO requirement of 15 minutes or less** (Active Geo-Replication has RTO < 30 seconds)
-> - Need for **automatic replication** between replicas
+> - Need for **automatic replication** between replicas (data sync is automatic, failover is NOT)
+> - **Manual failover is acceptable** (increases administrative overhead)
 
 > 📝 **When to choose Auto-Failover Groups**:
 > - Need for **automatic failover** with minimal configuration
 > - Requirement for **transparent DNS failover** (no app changes)
 > - Only **one secondary replica** is needed
+> - **Cross-region business continuity** with minimal administrative effort
+> - Supports **user-initiated backups**
+> - Ideal for **minimizing administrative overhead** for disaster recovery
+
+> 📝 **When to choose Zone-Redundant Deployment**:
+> - High availability **within a single region** is sufficient
+> - Protection against **availability zone failures**
+> - **Cross-region replication is NOT required**
+> - Does NOT provide multi-region disaster recovery
 
 > ⚠️ **Avoid Standard Geo-Replication** for new deployments as it doesn't support readable secondaries and has limited capabilities.
+
+##### Resiliency Solutions Comparison: Cross-Region vs Single-Region
+
+| Feature | Auto-Failover Groups | Active Geo-Replication | Zone-Redundant Deployment |
+|---------|---------------------|----------------------|---------------------------|
+| **Scope** | Cross-region | Cross-region | Single region |
+| **Automatic Failover** | ✅ Yes (built-in) | ❌ No (manual/programmatic only) | ✅ Yes (within zone) |
+| **Supports User-Initiated Backups** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Multiple Replicas Across Regions** | ❌ 1 secondary only | ✅ Up to 4 | ❌ No cross-region |
+| **Administrative Effort** | ✅ Minimal | ⚠️ Higher (manual failover required) | ✅ Minimal |
+| **DNS Endpoint Management** | ✅ Automatic | ❌ Manual | N/A |
+| **Best For** | Cross-region DR with auto-failover | Read scale-out + granular control | HA within single region |
+
+> 💡 **Key Decision Point**: For cross-region business continuity with **automatic failover** and **minimal administrative effort**, choose **Auto-Failover Groups**. Active Geo-Replication requires **manual or programmatic failover initiation**, which increases administrative overhead. Per Microsoft docs: *"The geo-failover is initiated programmatically by the application or manually by the user."*
 
 #### References
 - [Azure SQL Database High Availability](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla-local-zone-redundancy?view=azuresql&tabs=azure-powershell)
@@ -2387,6 +2411,62 @@ Additionally, all secondary replicas are readable, making them available for rea
 16. **Long-Term Retention (LTR) for Compliance Backup Requirements**
    > When backup retention must exceed 35 days (e.g., 7 years for compliance), configure a **Long-Term Retention (LTR) policy**. Azure SQL Database automatic backups have a default retention of 7-35 days, which is insufficient for long-term compliance. LTR stores full database backups in Azure Blob storage for up to 10 years. **Do NOT confuse with**: Azure Site Recovery (for disaster recovery, not backup retention), Geo-replication (for high availability, not backup retention), or standard automatic backups (max 35 days).
 
+17. **Auto-Failover Groups for Cross-Region Business Continuity with Minimal Admin Effort**
+   > When requirements include: (1) user-initiated backups, (2) multiple automatically replicated instances across Azure regions, and (3) minimal administrative effort for business continuity, choose **Auto-Failover Groups**. 
+   > - **Active Geo-Replication** requires **manual failover**, increasing administrative overhead
+   > - **Zone-Redundant Deployment** only provides HA within a **single region** (no cross-region support)
+   > - Auto-Failover Groups provide **automatic failover** with **DNS endpoint management**, eliminating manual intervention
+
+---
+
+### Exam Scenario: Cross-Region Resiliency for SQL Server Migration
+
+**Scenario**: You plan to migrate on-premises Microsoft SQL Server databases to Azure. You need to determine a resiliency solution that meets the following requirements:
+- Supports user-initiated backups
+- Supports multiple automatically replicated instances across Azure regions
+- Minimizes administrative effort to implement and maintain business continuity
+
+**Question**: What should you recommend as the solution?
+
+**Options**:
+- A. Auto-failover group
+- B. Active geo-replication
+- C. Zone-redundant deployment
+
+**Answer**: **A. Auto-failover group**
+
+**Why Correct Answer**:
+Auto-failover group is correct because it:
+- ✅ Supports **user-initiated backups**
+- ✅ Provides **automatic replication across Azure regions**
+- ✅ **Minimizes administrative effort** with automatic failover capability
+- ✅ Integrates with both Azure SQL Database and Azure SQL Managed Instance
+- ✅ DNS endpoint management eliminates need for manual connection string updates
+- ✅ Reduces manual intervention, ensuring high availability and business continuity
+
+**Why Other Options Are Incorrect**:
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B. Active geo-replication** | While it supports multiple automatically replicated instances across Azure regions, it **requires manual failover**. This increases administrative overhead, making it less suitable for minimizing effort. |
+| **C. Zone-redundant deployment** | Provides high availability **within a single Azure region** by distributing replicas across availability zones. It does **NOT support replication across multiple regions**, failing the cross-region requirement. |
+
+**Key Comparison**:
+
+| Requirement | Auto-Failover Groups | Active Geo-Replication | Zone-Redundant |
+|-------------|---------------------|----------------------|----------------|
+| User-initiated backups | ✅ | ✅ | ✅ |
+| Cross-region replication | ✅ | ✅ | ❌ |
+| Minimal admin effort | ✅ (automatic failover) | ❌ (manual failover) | ✅ |
+
+**Reference Links**:
+- [Auto-Failover Group Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
+- [Failover Groups for Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/failover-group-sql-mi?view=azuresql&tabs=azure-powershell)
+- [Active Geo-Replication Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-overview)
+- [High Availability SLA](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
+
+**Domain**: Design Data Storage Solutions
+
 ---
 
 ### Exam Scenario: Database Backup Retention Requirements
@@ -2473,6 +2553,12 @@ Azure SQL Database offers **Long-Term Retention (LTR)** for automated backups. T
 | "Backup retention > 35 days" | **Long-Term Retention (LTR)** policy |
 | "Backup retention for compliance (7+ years)" | **Long-Term Retention (LTR)** policy |
 | "Archive database backups for years" | **Long-Term Retention (LTR)** policy (up to 10 years) |
+| "Cross-region replication + auto failover" | **Auto-Failover Groups** |
+| "Cross-region replication + minimal admin effort" | **Auto-Failover Groups** |
+| "Multiple replicas across regions + manual control" | **Active Geo-Replication** |
+| "HA within single region only" | **Zone-Redundant Deployment** |
+| "Automatic failover across regions" | **Auto-Failover Groups** (not Active Geo-Replication) |
+| "Business continuity + minimize admin overhead" | **Auto-Failover Groups** |
 
 ## References
 
