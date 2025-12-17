@@ -14,6 +14,9 @@
   - [Geo-Replication and Failover Options](#geo-replication-and-failover-options)
 - [Azure SQL Managed Instance](#azure-sql-managed-instance)
 - [SQL Server on Azure VMs](#sql-server-on-azure-vms)
+  - [High Availability Options for SQL Server on Azure VMs](#high-availability-options-for-sql-server-on-azure-vms)
+  - [Network Name Options: VNN vs DNN](#network-name-options-vnn-vs-dnn)
+  - [Disk Caching Best Practices](#disk-caching-best-practices-for-sql-server-on-azure-vms)
 - [Pricing Tiers Comparison](#pricing-tiers-comparison)
 - [Feature Comparison](#feature-comparison)
 - [Decision Guide](#decision-guide)
@@ -742,6 +745,146 @@ Azure SQL Database provides several mechanisms for disaster recovery and geograp
 - Don't need OS access
 - Want automated patching/backups
 - PaaS benefits desired
+
+### High Availability Options for SQL Server on Azure VMs
+
+When migrating on-premises SQL Server to Azure VMs, implementing high availability (HA) is critical for production workloads. Azure provides two main HA options for SQL Server on VMs: **Always On Availability Groups (AG)** and **Always On Failover Cluster Instances (FCI)**.
+
+#### Overview of High Availability Options
+
+| Feature | Always On Availability Group (AG) | Always On Failover Cluster Instance (FCI) |
+|---------|-----------------------------------|-------------------------------------------|
+| **Level** | Database-level protection | Instance-level protection |
+| **Storage** | Local storage on each node (independent) | Shared storage (Premium File Share or shared disks) |
+| **Failover Unit** | Individual databases | Entire SQL Server instance |
+| **Readable Secondary** | Yes (read replicas supported) | No |
+| **SQL Server Edition** | Enterprise (multi-database), Standard (single DB) | Enterprise or Standard |
+| **Cost** | Lower (no shared storage required) | Higher (shared storage costs) |
+
+#### Network Name Options: VNN vs DNN
+
+When configuring high availability for SQL Server on Azure VMs, you must choose between **Virtual Network Name (VNN)** and **Distributed Network Name (DNN)** for client connectivity.
+
+##### Virtual Network Name (VNN)
+
+**VNN** is the traditional approach requiring an Azure Load Balancer for traffic routing.
+
+**How VNN Works**:
+1. A single virtual IP is assigned to the availability group listener or FCI
+2. An Azure Load Balancer routes traffic to the primary node
+3. Health probes periodically check node availability
+4. On failover, the load balancer redirects traffic to the new primary
+
+**VNN Characteristics**:
+- Requires Azure Load Balancer configuration
+- Health probes introduce failover detection delays
+- Single IP address for client connections
+- Traditional connectivity model (compatible with older applications)
+- Additional complexity in provisioning
+
+##### Distributed Network Name (DNN)
+
+**DNN** is a newer approach that eliminates the Azure Load Balancer dependency.
+
+**How DNN Works**:
+1. When a DNN resource is created, the cluster binds the DNS name to the IP addresses of **all nodes** in the cluster
+2. Clients receive all node IP addresses when resolving the DNS name
+3. With `MultiSubnetFailover=True` in the connection string, the client tries all IP addresses **in parallel**
+4. The first responding (active) node establishes the connection
+
+**DNN Characteristics**:
+- No Azure Load Balancer required
+- Faster failover (parallel connection attempts)
+- Simplified provisioning
+- Requires connection string modification (`MultiSubnetFailover=True`)
+- Lower operational complexity
+
+#### Comparison: VNN vs DNN
+
+| Aspect | Virtual Network Name (VNN) | Distributed Network Name (DNN) |
+|--------|---------------------------|--------------------------------|
+| **Load Balancer** | Required | Not required |
+| **Failover Time** | Slower (health probe delays) | Faster (parallel IP attempts) |
+| **Provisioning Complexity** | Higher | Lower |
+| **Connection String** | Standard | Requires `MultiSubnetFailover=True` |
+| **Cost** | Higher (load balancer costs) | Lower |
+| **Legacy App Support** | Better | May require app modifications |
+
+#### Recommended HA Configuration for Minimal Cost and Failover Time
+
+**Scenario**: Migrating an on-premises LOB application with SQL Server backend to Azure VMs, requiring:
+- Minimize costs
+- Minimize failover time if a single server fails
+
+**Recommended Solution**: **Always On Availability Group with Premium Storage Disks and DNN**
+
+| Requirement | Why AG + DNN is Best |
+|-------------|---------------------|
+| **Minimize Cost** | AG uses local storage (no shared storage costs), DNN eliminates load balancer costs |
+| **Minimize Failover Time** | DNN enables parallel connection attempts, eliminating load balancer health probe delays |
+
+**Why Other Options Are Less Suitable**:
+
+| Option | Why Not Recommended |
+|--------|-------------------|
+| **FCI with VNN + Premium File Share** | VNN requires load balancer (adds failover delay), FCI requires shared storage (adds cost) |
+| **FCI with VNN + Standard File Share** | VNN adds failover delay, standard file share has lower performance |
+| **AG with VNN + Premium Storage** | VNN requires load balancer which introduces failover delays due to health probes |
+
+#### Configuration Best Practices
+
+##### For Always On Availability Groups with DNN
+
+1. **Storage**: Use Premium SSD or Ultra Disks for data and log files
+2. **Network**: Configure DNN listener for faster failover
+3. **Connection String**: Use `MultiSubnetFailover=True`
+4. **Synchronous Commit**: For zero data loss within same region
+5. **Quorum**: Use Cloud Witness for cost-effective cluster quorum
+
+**Example Connection String with DNN**:
+```
+Server=ag-dnn-listener.domain.com;Database=MyDB;MultiSubnetFailover=True;...
+```
+
+##### For Always On Failover Cluster Instances
+
+1. **Storage Options**:
+   - **Premium File Share**: Recommended for most FCI deployments
+   - **Azure Shared Disks**: For Ultra Disk or Premium SSD v2 requirements
+2. **Network**: Choose DNN when possible for faster failover
+3. **Placement**: Use Availability Sets or Availability Zones for hardware fault tolerance
+
+#### Storage Options for FCI
+
+| Storage Type | Description | Best For |
+|--------------|-------------|----------|
+| **Premium File Share** | Azure Files with premium tier | Most FCI deployments, cost-effective |
+| **Standard File Share** | Azure Files with standard tier | Dev/test only (not recommended for production) |
+| **Azure Shared Disks** | Managed disks shared across VMs | High I/O requirements |
+| **Storage Spaces Direct (S2D)** | Software-defined storage | High performance, complex setup |
+
+#### Exam Tips - SQL Server HA on Azure VMs
+
+| Scenario | Recommended Solution |
+|----------|---------------------|
+| Minimize failover time + minimize cost | **AG with DNN + Premium Storage** |
+| Database-level protection with read replicas | **Always On Availability Group** |
+| Instance-level protection (entire SQL Server) | **Always On Failover Cluster Instance** |
+| Legacy apps can't use MultiSubnetFailover | VNN with Azure Load Balancer |
+| Shared storage required | FCI with Premium File Share |
+
+**Key Points to Remember**:
+- **DNN > VNN** for faster failover (no load balancer health probe delays)
+- **AG > FCI** for cost optimization (no shared storage required)
+- DNN requires `MultiSubnetFailover=True` in connection strings
+- VNN requires Azure Load Balancer configuration
+- Premium storage recommended for production workloads
+
+**Reference Links**:
+- [Windows Server Failover Cluster Overview - VNN](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/hadr-windows-server-failover-cluster-overview?view=azuresql#virtual-network-name-vnn)
+- [Windows Server Failover Cluster Overview - DNN](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/hadr-windows-server-failover-cluster-overview?view=azuresql#distributed-network-name-dnn)
+- [Availability Group Overview](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/availability-group-overview?view=azuresql)
+- [Failover Cluster Instance Overview](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/failover-cluster-instance-overview?view=azuresql)
 
 ### Disk Caching Best Practices for SQL Server on Azure VMs
 
