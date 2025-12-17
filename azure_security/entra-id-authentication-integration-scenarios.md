@@ -1739,10 +1739,162 @@ Used for server-to-server authentication without user involvement:
 2. Entra ID → App: Access token
 ```
 
+**How Client Credentials Flow Works:**
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         Client Credentials Flow                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┐                                    ┌─────────────────────┐
+│   Application   │  1. Request access token           │   Microsoft         │
+│   (VM, Daemon,  │     POST /token                    │   Entra ID          │
+│   Backend       │     grant_type=client_credentials  │                     │
+│   Service)      │     &client_id={client_id}         │                     │
+│                 │     &client_secret={secret}        │                     │
+│                 │     OR certificate                 │                     │
+│                 │     OR managed identity            │                     │
+│                 │     &scope={resource}/.default     │                     │
+│                 ├───────────────────────────────────►│                     │
+│                 │                                    │                     │
+│                 │  2. Access token returned          │                     │
+│                 │     {                              │                     │
+│                 │       "access_token": "eyJ...",    │                     │
+│                 │       "token_type": "Bearer",      │                     │
+│                 │       "expires_in": 3600           │                     │
+│                 │     }                              │                     │
+│                 │◄───────────────────────────────────│                     │
+└────────┬────────┘                                    └─────────────────────┘
+         │
+         │  3. Use access token to call API
+         │     Authorization: Bearer {access_token}
+         ▼
+┌─────────────────────────────────────────┐
+│   Protected Resource                     │
+│   (Azure Key Vault, Microsoft Graph,     │
+│    Custom API, etc.)                     │
+└─────────────────────────────────────────┘
+```
+
+**Key Characteristics:**
+- **No user involvement**: Authentication happens entirely between services
+- **Application identity**: The app authenticates as itself, not on behalf of a user
+- **Uses application permissions**: Requires admin-consented application permissions (not delegated)
+- **Best for**: Daemons, background services, scheduled jobs, server-to-server communication
+
+**Authentication Methods for Client Credentials:**
+
+| Method | Description | Security Level |
+|--------|-------------|----------------|
+| **Managed Identity** | Azure-managed credentials, no secrets to manage | ✅ Highest (Recommended) |
+| **Certificate** | X.509 certificate for authentication | ✅ High |
+| **Client Secret** | Shared secret stored in app registration | ⚠️ Medium (requires rotation) |
+
 **⚠️ Not Suitable for SPAs:**
 - Requires a client secret that must be stored securely
 - SPAs cannot safely store client secrets as they run entirely in the browser
 - Designed for confidential clients (backend services, daemons) only
+
+### Client Credentials with Managed Identity (Recommended Approach)
+
+When using **system-assigned or user-assigned managed identities**, the client credentials flow is simplified because Azure handles credential management automatically.
+
+**Benefits of Managed Identity:**
+- ✅ No secrets to manage or rotate
+- ✅ Credentials are automatically provisioned and secured by Azure
+- ✅ Eliminates credential leakage risks
+- ✅ Simplifies development and operations
+- ✅ Works seamlessly with Azure services (Key Vault, Storage, SQL, etc.)
+
+**Architecture with Managed Identity:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Client Credentials with Managed Identity                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┐                                    ┌─────────────────────┐
+│   Azure VM      │                                    │   Azure Instance    │
+│   with App      │  1. Request token from IMDS        │   Metadata Service  │
+│                 │     GET http://169.254.169.254/    │   (IMDS)            │
+│   System-       │     metadata/identity/oauth2/token │                     │
+│   Assigned      │     ?resource=https://vault.azure  │                     │
+│   Managed       │     .net                           │                     │
+│   Identity      ├───────────────────────────────────►│                     │
+│   Enabled       │                                    │                     │
+│                 │  2. Access token returned          │                     │
+│                 │◄───────────────────────────────────┤                     │
+└────────┬────────┘                                    └─────────────────────┘
+         │
+         │  3. Use access token to access Key Vault
+         │     Authorization: Bearer {access_token}
+         ▼
+┌─────────────────────────────────────────┐
+│   Azure Key Vault (KV1)                  │
+│   - RBAC: "Key Vault Secrets User" role │
+│     assigned to VM's managed identity    │
+│   - Secrets accessible via SDK           │
+└─────────────────────────────────────────┘
+```
+
+#### Exam Question: VM Application Accessing Key Vault with Managed Identity
+
+**Question**: You have an Azure subscription that contains an Azure key vault named KV1 and a virtual machine named VM1. VM1 runs Windows Server 2022: Azure Edition. You plan to deploy an ASP.NET Core-based application named App1 to VM1. You need to configure App1 to use a system-assigned managed identity to retrieve secrets from KV1. The solution must minimize development effort. What should you do to configure App1 to use OAuth 2.0?
+
+- ✅ **Client credentials grant flows** - To configure App1 on VM1 to securely retrieve secrets from Azure Key Vault (KV1) using a system-assigned managed identity and minimize development effort, the appropriate choice is to utilize the Client Credentials Grant Flow using OAuth 2.0. By enabling a system-assigned managed identity on VM1, this managed identity will serve as authentication between the application and Azure. By granting the necessary permissions in Azure Key Vault (KV1) to the managed identity of VM1, it enables access to the stored secrets. Configuring App1 to use the managed identity for authentication enables access to Azure services and retrieving necessary secrets without explicit handling of OAuth 2.0 flows in the application code.
+
+- ❌ **Authorization code grant flows** - Authorization code grant flows are typically utilized in scenarios where a user is involved in the authentication process. In this flow, App1 redirects the user to an authorization server, where they log in and grant necessary permissions. However, in scenarios involving system-assigned managed identities on a VM, introducing user interaction is unnecessary, as the focus is on leveraging the system-assigned managed identity. Authorization code grant flows are better suited for interactive applications like web applications where user authentication is mandatory.
+
+- ❌ **Implicit grant flows** - Implicit grant flows are primarily used for applications that interact with APIs exclusively when the user is actively using the application. These flows are typically employed for client-side applications, especially those running in web browsers without the capability to securely store client secrets. For applications like App1 running on VM1, using implicit grant flows leads to security risks.
+
+**Implementation Example (ASP.NET Core with Managed Identity):**
+
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
+// Using DefaultAzureCredential which automatically uses managed identity on Azure VMs
+var credential = new DefaultAzureCredential();
+var client = new SecretClient(new Uri("https://kv1.vault.azure.net/"), credential);
+
+// Retrieve secret - no explicit OAuth handling needed!
+KeyVaultSecret secret = await client.GetSecretAsync("my-secret-name");
+string secretValue = secret.Value;
+```
+
+**Step-by-Step Configuration:**
+
+1. **Enable System-Assigned Managed Identity on VM1:**
+   ```plaintext
+   Azure Portal → VM1 → Identity → System assigned → Status: On → Save
+   ```
+
+2. **Grant Key Vault Access to the Managed Identity:**
+   ```plaintext
+   Azure Portal → KV1 → Access control (IAM) → Add role assignment
+   - Role: Key Vault Secrets User
+   - Assign access to: Managed identity
+   - Select: VM1
+   ```
+
+3. **Configure App1 to Use Managed Identity:**
+   ```bash
+   # Install required NuGet packages
+   dotnet add package Azure.Identity
+   dotnet add package Azure.Security.KeyVault.Secrets
+   ```
+
+4. **Use DefaultAzureCredential in Code:**
+   - Automatically detects and uses managed identity when running on Azure
+   - Falls back to other credentials (Azure CLI, VS Code) during local development
+
+**Why This Minimizes Development Effort:**
+- No secrets to store or manage in application configuration
+- No token acquisition code to write (SDK handles it)
+- No token refresh logic needed
+- DefaultAzureCredential provides seamless local development experience
+
+> **Key Point:** When an application runs on an Azure resource (VM, App Service, Function, etc.) with managed identity enabled, the **Client Credentials Flow** is used behind the scenes. The application authenticates as itself (not on behalf of a user) to access Azure resources like Key Vault.
 
 #### Resource Owner Password Credentials (ROPC) Flow
 
