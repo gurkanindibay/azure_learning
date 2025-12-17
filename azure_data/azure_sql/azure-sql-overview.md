@@ -2453,6 +2453,121 @@ Additionally, all secondary replicas are readable, making them available for rea
 
 ---
 
+### Question 10: Protecting Sensitive Employee Data in Azure SQL Managed Instance
+
+**Scenario**: You have an Azure subscription. The subscription contains an Azure SQL managed instance that stores employee details, including social security numbers and phone numbers.
+
+You need to configure the managed instance to meet the following requirements:
+- The helpdesk team must see only the **last four digits** of an employee's phone number
+- Cloud administrators must be **prevented from seeing** the employees' social security numbers
+
+**Question**: What should you enable for the Social security numbers column in the managed instance?
+
+**Options**:
+- A) Always Encrypted
+- B) Column encryption
+- C) Dynamic data masking
+- D) Transparent Data Encryption (TDE)
+
+**Correct Answer**: **A) Always Encrypted**
+
+**Explanation**:
+
+**Always Encrypted** is correct because:
+- Ensures that sensitive data like social security numbers **remain encrypted at rest, in transit, AND during query processing**
+- Even administrators with access to the underlying database **cannot view the plain text** social security numbers
+- Encryption and decryption are handled **transparently by the client application** using keys managed by the application
+- If a cloud administrator gains access to the database, they **won't be able to see** the actual social security numbers without the appropriate keys
+- Keys should be securely managed using a service like **Azure Key Vault**
+
+**Why Other Options Are Incorrect**:
+
+**Column encryption** is incorrect because:
+- While it can encrypt specific columns, the encryption process involves **key management at the database level**
+- Does NOT provide the same level of protection against privileged database users
+- Always Encrypted is preferred because the **application manages the keys**, preventing cloud administrators from accessing unencrypted data
+- Column Encryption may lack the necessary **granularity for access control** when preventing specific users from seeing data
+
+**Dynamic data masking** is incorrect because:
+- Designed to **mask data in query results**, not encrypt it
+- Does NOT provide encryption at rest or during query processing
+- Privileged users (including administrators) **can still see the unmasked data**
+- Main purpose is to **limit exposure** to non-privileged users, not prevent administrator access
+- **Important**: DDM is the correct answer for the **phone number requirement** (showing last 4 digits), but NOT for preventing admin access to SSN
+
+**Transparent Data Encryption (TDE)** is incorrect because:
+- Operates at the **page level**, encrypting the **entire database**, not specific columns
+- Does NOT allow selective encryption of specific columns like social security numbers
+- While it protects data at rest from physical theft, it **does NOT prevent** cloud administrators from viewing data when querying
+- Data is automatically decrypted when queried by any user with database access
+
+**Complete Solution for Both Requirements**:
+
+| Requirement | Solution | Why |
+|-------------|----------|-----|
+| **SSN - Prevent admin access** | **Always Encrypted** | Client-side encryption; keys not accessible to DBAs |
+| **Phone - Show last 4 digits** | **Dynamic Data Masking** | Masks data at query level; can use partial masking |
+
+**Implementation Example**:
+
+```sql
+-- For Social Security Numbers: Configure Always Encrypted
+-- This requires setting up column master key in Azure Key Vault
+-- and column encryption key in the database
+
+CREATE COLUMN MASTER KEY [CMK_Auto1]
+WITH (
+    KEY_STORE_PROVIDER_NAME = N'AZURE_KEY_VAULT',
+    KEY_PATH = N'https://mykeyvault.vault.azure.net/keys/CMK/abc123'
+);
+
+CREATE COLUMN ENCRYPTION KEY [CEK_Auto1]
+WITH VALUES (
+    COLUMN_MASTER_KEY = [CMK_Auto1],
+    ALGORITHM = 'RSA_OAEP',
+    ENCRYPTED_VALUE = 0x...
+);
+
+-- Alter table to encrypt SSN column
+ALTER TABLE Employees
+ALTER COLUMN SocialSecurityNumber NVARCHAR(11) 
+    ENCRYPTED WITH (
+        ENCRYPTION_TYPE = DETERMINISTIC,
+        ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256',
+        COLUMN_ENCRYPTION_KEY = [CEK_Auto1]
+    );
+
+-- For Phone Numbers: Configure Dynamic Data Masking (partial)
+ALTER TABLE Employees
+ALTER COLUMN PhoneNumber ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)');
+-- Result: XXX-XXX-1234 (only last 4 digits visible)
+```
+
+**Key Comparison - Data Protection Methods**:
+
+| Feature | Always Encrypted | Column Encryption | Dynamic Data Masking | TDE |
+|---------|-----------------|-------------------|---------------------|-----|
+| **Encryption Level** | Column | Column | None (masking only) | Database |
+| **Protects from DBAs** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Key Location** | Client/Key Vault | Database | N/A | Server-side |
+| **Data at Rest** | ✅ Encrypted | ✅ Encrypted | ❌ Unencrypted | ✅ Encrypted |
+| **During Query** | ✅ Encrypted | ❌ Decrypted | Masked (not encrypted) | ❌ Decrypted |
+| **Partial Visibility** | ❌ No | ❌ No | ✅ Yes | ❌ No |
+| **Best For** | Preventing admin access | General encryption | Limiting non-privileged access | At-rest protection |
+
+> **Exam Tip:** When a scenario mentions **preventing cloud administrators or DBAs from seeing sensitive data**, **Always Encrypted** is the correct answer because the encryption keys are managed by the application, not stored in the database. TDE and Column Encryption don't prevent privileged users from seeing data. Dynamic Data Masking only masks data for non-privileged users.
+
+**Reference Links**:
+- [Always Encrypted](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine)
+- [Encrypt a Column of Data](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/encrypt-a-column-of-data)
+- [Transparent Data Encryption](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/transparent-data-encryption)
+- [Dynamic Data Masking](https://learn.microsoft.com/en-us/sql/relational-databases/security/dynamic-data-masking)
+- [Configure Always Encrypted](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine#configure-always-encrypted)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -2519,6 +2634,20 @@ Additionally, all secondary replicas are readable, making them available for rea
    > - **Active Geo-Replication** requires **manual failover**, increasing administrative overhead
    > - **Zone-Redundant Deployment** only provides HA within a **single region** (no cross-region support)
    > - Auto-Failover Groups provide **automatic failover** with **DNS endpoint management**, eliminating manual intervention
+
+18. **Always Encrypted = Prevent DBA/Admin Access to Sensitive Data**
+   > When you need to **prevent cloud administrators from seeing sensitive data** (SSN, credit cards, etc.), use **Always Encrypted**. Keys are managed client-side (Azure Key Vault), so DBAs cannot decrypt data. TDE and Column Encryption do NOT prevent privileged user access.
+
+19. **Dynamic Data Masking = Partial Data Visibility for Non-Privileged Users**
+   > Use **Dynamic Data Masking** when you need to **show partial data** (e.g., last 4 digits of phone/SSN) to non-privileged users. Note: DDM does NOT encrypt data and does NOT prevent privileged users (admins) from seeing full data.
+
+20. **TDE vs Always Encrypted vs DDM**
+   > - **TDE**: Encrypts **entire database** at rest; does NOT prevent query-time access
+   > - **Always Encrypted**: Encrypts **specific columns**; prevents even DBAs from seeing data
+   > - **DDM**: **Masks** data in query results; no encryption; admins can still see full data
+
+21. **Column Encryption vs Always Encrypted**
+   > Both encrypt columns, but **Always Encrypted** stores keys **outside the database** (client-side), while Column Encryption stores keys in the database. For preventing admin access, always choose **Always Encrypted**.
 
 ---
 
@@ -2662,6 +2791,15 @@ Azure SQL Database offers **Long-Term Retention (LTR)** for automated backups. T
 | "HA within single region only" | **Zone-Redundant Deployment** |
 | "Automatic failover across regions" | **Auto-Failover Groups** (not Active Geo-Replication) |
 | "Business continuity + minimize admin overhead" | **Auto-Failover Groups** |
+| "Prevent DBAs from seeing sensitive columns" | **Always Encrypted** |
+| "Protect SSN/credit cards from cloud admins" | **Always Encrypted** |
+| "Show only last 4 digits to helpdesk" | **Dynamic Data Masking** (partial function) |
+| "Mask PII for non-privileged users" | **Dynamic Data Masking** |
+| "Encrypt specific columns, app manages keys" | **Always Encrypted** |
+| "Encrypt entire database at rest" | **Transparent Data Encryption (TDE)** |
+| "Encrypt columns but DBAs can still read" | **Column Encryption** (not Always Encrypted) |
+| "Client-side encryption with Key Vault" | **Always Encrypted** |
+| "Maximum protection for sensitive columns" | **Always Encrypted** |
 
 ## References
 
