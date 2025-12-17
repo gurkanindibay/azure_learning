@@ -808,6 +808,38 @@ g.V().has('name', 'John').repeat(out('knows')).until(has('name', 'Jane')).path()
 
 ---
 
+### Scenario 9: Selecting API for JSON Document Storage
+
+**Question:** Your organization operates several Azure Cosmos DB accounts, and you are tasked with suggesting an appropriate API for application operations. Which API would you select to accommodate a JSON document among the available options?
+
+**Options:**
+- A) SQL ✅
+- B) Table
+- C) Gremlin
+- D) Cassandra
+- E) MongoDB ✅
+
+**Correct Answers: A) SQL and E) MongoDB**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **SQL (Core API)** | ✅ Correct | The SQL API (Core API) in Azure Cosmos DB is the most appropriate choice for accommodating a JSON document. It allows you to store JSON data natively and query it using SQL syntax, making it a versatile option for handling JSON documents efficiently. |
+| **Table** | ❌ Incorrect | The Table API in Azure Cosmos DB is designed for storing key-value pairs and does not provide the flexibility and querying capabilities needed for handling JSON documents effectively. |
+| **Gremlin** | ❌ Incorrect | The Gremlin API in Azure Cosmos DB is designed for graph data and is not the most suitable option for accommodating a JSON document. It is optimized for graph traversal and querying, which may not be ideal for working with JSON data. |
+| **Cassandra** | ❌ Incorrect | The Cassandra API in Azure Cosmos DB is designed for column-family data models and is not the optimal choice for accommodating a JSON document. It is better suited for handling structured data with a fixed schema, rather than the flexible nature of JSON documents. |
+| **MongoDB** | ✅ Correct | The MongoDB API in Azure Cosmos DB is a great choice for accommodating a JSON document. It provides a document-based data model that is well-suited for storing and querying JSON documents efficiently. It offers rich querying capabilities and flexibility for working with JSON data in Azure Cosmos DB. |
+
+**Key Insight:** Both SQL (Core) API and MongoDB API are suitable for JSON documents:
+- **SQL API**: Uses native JSON format (text-based), ideal for new applications
+- **MongoDB API**: Uses BSON (binary JSON), ideal for MongoDB migrations or when MongoDB compatibility is required
+
+**References:**
+- [Choose an API in Azure Cosmos DB | Microsoft Learn](https://docs.microsoft.com/en-us/azure/cosmos-db/choose-api)
+- [Introduction/Overview - Azure Cosmos DB for MongoDB | Microsoft Learn](https://docs.microsoft.com/en-us/azure/cosmos-db/mongodb/mongodb-introduction)
+- [Modeling data in Azure Cosmos DB - Azure Cosmos DB | Microsoft Learn](https://docs.microsoft.com/en-us/azure/cosmos-db/modeling-data)
+
+---
+
 ## Summary
 
 ### Key Takeaways
