@@ -1124,6 +1124,129 @@ Azure Table storage is incorrect because:
 
 ---
 
+### Question 10: Content Aggregation Application - Database Recommendation
+
+**Scenario:** You are designing an application that will aggregate content for users.
+
+You need to recommend a database solution for the application.
+
+**The solution must meet the following requirements:**
+- Support SQL commands
+- Support multi-master writes
+- Guarantee low latency read operations
+
+**Question:** What should you include in the recommendation?
+
+**Options:**
+- A. Azure Cosmos DB for NoSQL
+- B. Azure SQL Database that uses active geo-replication
+- C. Azure SQL Database Hyperscale
+- D. Azure Cosmos DB for PostgreSQL
+
+**Answer:** A ✅
+
+**Explanation:**
+
+**Why A (Azure Cosmos DB for NoSQL) is Correct:**
+
+Azure Cosmos DB for NoSQL is the correct answer because it meets **all the specified requirements**:
+
+1. **Support SQL commands** ✅
+   - Cosmos DB for NoSQL (formerly SQL API) supports SQL-like query syntax
+   - Provides familiar SQL query patterns for querying JSON documents
+   - Example: `SELECT * FROM c WHERE c.category = 'news' ORDER BY c.timestamp DESC`
+
+2. **Support multi-master writes** ✅
+   - Cosmos DB enables **multi-region writes** (multi-master) across multiple regions
+   - Write operations can be performed in any configured write region
+   - Provides high availability and eliminates single points of failure for writes
+
+3. **Guarantee low latency read operations** ✅
+   - Single-digit millisecond read latency (<10ms for point reads)
+   - Data is replicated to all regions, enabling local reads
+   - Optimized for globally distributed applications
+
+**Cosmos DB for NoSQL Architecture:**
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│         Content Aggregation App with Cosmos DB for NoSQL                │
+│                                                                         │
+│   ┌──────────────────┐    ◄──── Automatic ────►   ┌──────────────────┐ │
+│   │   Region 1       │       Replication          │   Region 2       │ │
+│   │                  │                            │                  │ │
+│   │ ┌─────────────┐  │                            │ ┌─────────────┐  │ │
+│   │ │ Cosmos DB   │◄─┼────────────────────────────┼─►│ Cosmos DB   │  │ │
+│   │ │ NoSQL API   │  │    Bi-directional Sync     │ │ NoSQL API   │  │ │
+│   │ │             │  │                            │ │             │  │ │
+│   │ │ • SQL ✅    │  │                            │ │ • SQL ✅    │  │ │
+│   │ │ • Writes ✅ │  │                            │ │ • Writes ✅ │  │ │
+│   │ │ • <10ms ✅  │  │                            │ │ • <10ms ✅  │  │ │
+│   │ └─────────────┘  │                            │ └─────────────┘  │ │
+│   └──────────────────┘                            └──────────────────┘ │
+│                                                                         │
+│   ✅ SQL-like query syntax                                             │
+│   ✅ Multi-master writes in all regions                                │
+│   ✅ Single-digit millisecond latency                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why B (Azure SQL Database with Active Geo-Replication) is Incorrect:**
+
+Azure SQL Database with active geo-replication is incorrect because:
+- ❌ **Active geo-replication only provides read-only replicas**
+- ❌ **Does NOT support multi-master writes** - writes must be directed to the primary database
+- ❌ Unsuitable for distributed write-heavy workloads
+- Read replicas can only serve read requests, making it a single-write-region architecture
+
+**Active Geo-Replication Limitation:**
+```
+Primary Region:              Secondary Region(s):
+• Writes ✅                  • Writes ❌ (Read-only replicas)
+• Reads ✅                   • Reads ✅
+```
+
+**Why C (Azure SQL Database Hyperscale) is Incorrect:**
+
+Azure SQL Database Hyperscale is incorrect because:
+- ❌ **Does NOT provide multi-master writes**
+- ❌ **Does NOT provide global low-latency reads** across regions
+- ❌ Designed for large transactional workloads within a single region
+- ✅ Offers high scalability (up to 100 TB) and fast backups
+- ✅ Good for compute and storage scaling, but not global distribution
+- Does not match the distributed nature required for content aggregation
+
+**Why D (Azure Cosmos DB for PostgreSQL) is Incorrect:**
+
+Azure Cosmos DB for PostgreSQL is incorrect because:
+- ❌ **Optimized for PostgreSQL workloads**, not NoSQL-based applications
+- ❌ **Lacks the SQL API** that Cosmos DB for NoSQL provides
+- ❌ **Lacks JSON document store flexibility** that Cosmos DB for NoSQL offers
+- ✅ Supports multi-region writes (distributed PostgreSQL)
+- Less ideal for content aggregation which benefits from flexible JSON schema
+
+**Comparison Table:**
+
+| Feature | Cosmos DB for NoSQL | SQL DB (Geo-Replication) | SQL DB Hyperscale | Cosmos DB for PostgreSQL |
+|---------|--------------------|--------------------------|--------------------|--------------------------|
+| SQL commands | ✅ SQL-like syntax | ✅ Full T-SQL | ✅ Full T-SQL | ✅ PostgreSQL SQL |
+| Multi-master writes | ✅ Yes | ❌ No (read-only replicas) | ❌ No | ✅ Yes |
+| Low latency reads | ✅ <10ms globally | ⚠️ Local reads only | ⚠️ Single region | ✅ Yes |
+| JSON document flexibility | ✅ Native | ⚠️ Limited | ⚠️ Limited | ⚠️ Limited |
+| Best for content aggregation | ✅ **Yes** | ❌ No | ❌ No | ⚠️ Partial |
+
+**Key Takeaway:** For globally distributed applications that require SQL query capability, multi-master writes, and guaranteed low-latency reads, **Azure Cosmos DB for NoSQL** is the optimal choice. It combines the familiarity of SQL queries with the power of a globally distributed, multi-master database.
+
+**Reference(s):**
+- [Introduction to Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/introduction)
+- [Consistency levels in Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels)
+- [Active geo-replication overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-overview)
+- [Distribute data globally with Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/distribute-data-globally)
+- [Introduction to Azure Cosmos DB for PostgreSQL](https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/introduction)
+
+**Domain:** Design Data Storage Solutions
+
+---
+
 ## Summary
 
 | Scenario | Recommended Configuration |
