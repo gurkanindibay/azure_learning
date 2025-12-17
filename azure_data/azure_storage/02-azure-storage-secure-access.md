@@ -24,6 +24,7 @@
   - [Question 3: SAS with Microsoft Entra ID Credentials for Enhanced Security](#question-3-sas-with-microsoft-entra-id-credentials-for-enhanced-security)
   - [Question 4: RBAC Action Required for User Delegation Key](#question-4-rbac-action-required-for-user-delegation-key)
   - [Question 5: Identity-Based Connection Settings for User-Assigned Managed Identity](#question-5-identity-based-connection-settings-for-user-assigned-managed-identity)
+  - [Question 6: Time-Limited Blob Access for Finance Department](#question-6-time-limited-blob-access-for-finance-department)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -1644,6 +1645,132 @@ When using a **user-assigned managed identity** for blob storage access in Azure
 2. Set `clientID` to the client ID of the specific user-assigned managed identity to use
 
 **Domain:** Develop for Azure storage
+
+### Question 6: Time-Limited Blob Access for Finance Department
+
+**Scenario:**
+You have an Azure subscription. The subscription has a blob container that contains multiple blobs. Ten users in the finance department of your company plan to access the blobs during the month of April. You need to recommend a solution to enable access to the blobs during the month of April only.
+
+**Question:**
+Which security solution should you include in the recommendation?
+
+**Options:**
+1. Conditional Access policies
+2. Shared access signatures (SAS) ✅
+3. Access keys
+4. Certificates
+
+**Correct Answer: Shared access signatures (SAS)**
+
+**Detailed Analysis:**
+
+#### Why Shared Access Signatures (SAS) is CORRECT ✅
+
+**Key Points:**
+- ✅ **Time-Limited Access**: SAS allows you to grant limited access to Azure Blob Storage resources for a **specific time window**—in this case, during the month of April
+- ✅ **Configurable Permissions**: With SAS, you can configure permissions (e.g., read, write), scope (specific containers or blobs), and **start and expiry times**
+- ✅ **Secure and Flexible**: Provides a secure and flexible way to allow temporary access **without exposing storage account access keys**
+- ✅ **Granular Control**: Each user can receive their own SAS token with appropriate permissions
+
+**Implementation for April-Only Access:**
+```csharp
+// Create SAS for April 2025 only
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "finance-data",
+    Resource = "c", // Container level
+    StartsOn = new DateTimeOffset(2025, 4, 1, 0, 0, 0, TimeSpan.Zero),  // April 1st start
+    ExpiresOn = new DateTimeOffset(2025, 4, 30, 23, 59, 59, TimeSpan.Zero), // April 30th end
+    Protocol = SasProtocol.Https
+};
+
+// Set read and list permissions for finance users
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read | BlobContainerSasPermissions.List);
+
+// Generate SAS token
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+
+// Distribute this SAS URI to finance department users
+var sasUri = $"https://{accountName}.blob.core.windows.net/finance-data?{sasToken}";
+```
+
+**SAS Benefits for This Scenario:**
+
+| Requirement | SAS Capability |
+|-------------|----------------|
+| **Time Window (April only)** | ✅ Start and expiry times can be set precisely |
+| **Multiple Users (10 users)** | ✅ Same SAS can be shared or individual SAS can be created |
+| **Secure Access** | ✅ No need to share storage account keys |
+| **Automatic Expiration** | ✅ Access automatically revoked after April 30th |
+
+#### Why Conditional Access Policies is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Different Purpose**: Conditional Access policies apply to **user sign-in conditions in Microsoft Entra ID**
+- ❌ **Not for Storage Access Control**: They are not used for Azure Storage access control
+- ❌ **Cannot Restrict Blob Access**: They cannot restrict blob access based on time windows for shared data
+- ⚠️ **Scope**: Conditional Access controls authentication to Azure services, not authorization to storage data
+
+**What Conditional Access Does:**
+- Controls who can access Azure resources based on conditions (location, device, risk level)
+- Requires MFA based on conditions
+- Blocks or grants access to applications
+- Does NOT control access to blob storage data
+
+#### Why Access Keys is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Full Access**: Access keys grant **full access** to the entire storage account
+- ❌ **No Granular Control**: They do not provide granular or **time-limited access**
+- ❌ **Security Risk**: Sharing access keys is **less secure** and not recommended for temporary user access
+- ❌ **No Expiration**: Keys don't expire automatically—must be manually regenerated
+
+**Security Risks of Using Access Keys:**
+```csharp
+// ❌ BAD: Access keys grant full account access
+var accountKey = "abc123..."; // Anyone with this key has FULL access
+
+// Problems:
+// 1. No time limitation - key works indefinitely
+// 2. No permission scoping - full read/write/delete access
+// 3. Sharing risk - if leaked, entire account is compromised
+// 4. No audit trail for individual users
+```
+
+#### Why Certificates is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Different Use Case**: Certificates are typically used for **client authentication in application or API scenarios**
+- ❌ **Not for Temporary Access**: Not designed for temporary or granular access to Azure Storage resources
+- ❌ **Complex Management**: Certificate management adds unnecessary complexity for this simple time-limited access requirement
+- ❌ **No Built-in Time Limits**: Certificates don't inherently support time-window access control for blob storage
+
+**Comparison Table:**
+
+| Solution | Time-Limited Access | Granular Permissions | Blob Storage Support | Recommended |
+|----------|---------------------|---------------------|----------------------|-------------|
+| **SAS** | ✅ Yes (start/expiry) | ✅ Yes | ✅ Native | ✅ **Yes** |
+| **Conditional Access** | ⚠️ Sign-in only | ❌ No | ❌ No | ❌ No |
+| **Access Keys** | ❌ No | ❌ No (full access) | ✅ Yes | ❌ No |
+| **Certificates** | ❌ No | ❌ No | ⚠️ Limited | ❌ No |
+
+### Key Takeaways
+
+**Question Pattern:** "Need time-limited/temporary access to blob storage"
+
+**Answer:** Use **Shared Access Signatures (SAS)** because:
+1. 🕐 **Time Control**: Configure precise start and expiry times
+2. 🔐 **Security**: Don't expose storage account keys
+3. 📋 **Granular Permissions**: Specify exactly what operations are allowed
+4. 🎯 **Scoped Access**: Limit to specific containers or blobs
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Grant limited access to Azure Storage resources using shared access signatures (SAS)](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
+- [Authorize access to data in Azure Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/authorize-access-azure-storage)
+- [Delegate access with a shared access signature](https://learn.microsoft.com/en-us/rest/api/storageservices/delegate-access-with-shared-access-signature)
+- [Manage storage account access keys](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage?tabs=azure-portal)
 
 ## SAS Security Best Practices
 
