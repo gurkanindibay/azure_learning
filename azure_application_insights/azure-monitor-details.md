@@ -47,6 +47,7 @@
   - [Question 6: Azure Log Analytics Data Retention for SQL Insights](#question-6-azure-log-analytics-data-retention-for-sql-insights)
   - [Question 7: Forwarding JSON Logs from VMs to Log Analytics](#question-7-forwarding-json-logs-from-vms-to-log-analytics)
   - [Question 8: Collecting Windows Security Events with DCR Support](#question-8-collecting-windows-security-events-with-dcr-support)
+  - [Question 9: Correlating Azure Resource Usage with Application Performance](#question-9-correlating-azure-resource-usage-with-application-performance)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -1989,6 +1990,156 @@ If you currently use the Log Analytics agent and need DCR support:
 - [Data Collection Rules Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Azure Arc Connected Machine Agent](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 - [Collect Windows Security Events](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-security-events)
+
+---
+
+### Question 9: Correlating Azure Resource Usage with Application Performance
+
+**Scenario:**
+
+A company is planning to deploy an application on the Azure platform. The application will be developed using .NET Core programming language and hosted on Azure Web Apps. The application has several requirements, which include:
+
+1. Providing the ability to correlate Azure resource usage and performance data with the actual application configuration and performance data
+2. Giving the ability to visualize the relationships between application components
+3. Allowing the tracking of requests and exceptions to specific lines of code from within the application
+4. Providing the ability to analyze how users return to an application and see how often they select a particular drop-down value
+
+**Question:**
+Which Azure service would best fulfill the requirement: **Providing the ability to correlate Azure resource usage and performance data with the actual application configuration and performance data**?
+
+**Options:**
+
+1. ❌ **Azure Application Insights**
+   - **Incorrect**: Azure Application Insights is a service that helps monitor the performance and usage of applications. While it provides insights into application performance and usage, it is more focused on application-specific data rather than correlating Azure resource usage with application performance data. Application Insights excels at:
+     - Request/response monitoring
+     - Exception tracking
+     - User behavior analytics
+     - Application dependency mapping
+   
+   However, it primarily focuses on the application layer and doesn't natively provide deep correlation with Azure infrastructure resource metrics.
+
+2. ❌ **Azure Service Map**
+   - **Incorrect**: Azure Service Map is a service that automatically discovers application components and dependencies. It helps visualize the relationships between application components but does not specifically correlate Azure resource usage with application performance data. Service Map is useful for:
+     - Visualizing application topology
+     - Discovering dependencies between servers
+     - Understanding communication patterns
+   
+   It's more about discovery and visualization than data correlation.
+
+3. ✅ **Azure Log Analytics**
+   - **Correct**: Azure Log Analytics is a service that collects and analyzes data from various sources, including Azure resources and applications. It can be used to correlate Azure resource usage and performance data with the actual application configuration and performance data, making it the best choice for fulfilling this requirement. Key capabilities include:
+     - **Unified data collection**: Collects metrics, logs, and traces from both Azure infrastructure and applications
+     - **Cross-resource queries**: Query data from multiple sources (VMs, App Services, Application Insights) in a single KQL query
+     - **Correlation capabilities**: Join infrastructure metrics with application telemetry using timestamps, resource IDs, or custom properties
+     - **Centralized analysis**: Single pane of glass for all monitoring data
+
+4. ❌ **Azure Activity Log**
+   - **Incorrect**: Azure Activity Log provides insights into operations that were performed on resources in a subscription (administrative actions, service health, resource deployments). While it can track activities and events related to Azure resources, it does not directly correlate Azure resource usage with application performance data as required in this scenario. Activity Log is focused on:
+     - Control plane operations (who did what, when)
+     - Administrative actions
+     - Service health events
+   
+   It lacks the data plane metrics and application-level insights needed for correlation.
+
+---
+
+### Why Azure Log Analytics is the Answer
+
+**Key Differentiator - Data Correlation:**
+
+| Aspect | Log Analytics Capability |
+|--------|-------------------------|
+| **Infrastructure Data** | Collects performance counters, resource metrics from VMs, App Services, etc. |
+| **Application Data** | Ingests Application Insights data (when workspace-based) |
+| **Cross-Source Queries** | KQL can join data from multiple tables and resources |
+| **Correlation Analysis** | Relate CPU spikes to slow requests, memory usage to exceptions |
+| **Time-based Analysis** | Correlate events across different data sources by timestamp |
+
+**Example Correlation Query:**
+
+```kql
+// Correlate App Service performance metrics with application requests
+let appInsightsRequests = AppRequests
+| where TimeGenerated > ago(1h)
+| summarize AvgDuration = avg(DurationMs), RequestCount = count() by bin(TimeGenerated, 5m);
+
+let appServiceMetrics = AzureMetrics
+| where ResourceProvider == "MICROSOFT.WEB"
+| where MetricName == "CpuPercentage" or MetricName == "MemoryPercentage"
+| summarize AvgCpu = avgif(Average, MetricName == "CpuPercentage"),
+            AvgMemory = avgif(Average, MetricName == "MemoryPercentage") 
+  by bin(TimeGenerated, 5m);
+
+appInsightsRequests
+| join kind=inner appServiceMetrics on TimeGenerated
+| project TimeGenerated, RequestCount, AvgDuration, AvgCpu, AvgMemory
+| order by TimeGenerated desc
+```
+
+**Architecture for Correlation:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Azure Web App (.NET Core)                     │
+│                                                                  │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │              Application Insights SDK                     │  │
+│   │                                                           │  │
+│   │  • Requests/Responses    • User Sessions                 │  │
+│   │  • Exceptions            • Custom Events                 │  │
+│   │  • Dependencies          • Page Views                    │  │
+│   └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Log Analytics Workspace                       │
+│                   (Workspace-based App Insights)                 │
+│                                                                  │
+│   ┌────────────────────┐     ┌────────────────────┐            │
+│   │  Application Data   │     │  Infrastructure    │            │
+│   │                     │     │  Data              │            │
+│   │  • AppRequests      │◄───►│  • AzureMetrics    │            │
+│   │  • AppExceptions    │     │  • AzureDiagnostics│            │
+│   │  • AppDependencies  │     │  • Perf            │            │
+│   │  • AppTraces        │     │  • Heartbeat       │            │
+│   └────────────────────┘     └────────────────────┘            │
+│                                                                  │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                 KQL Query Engine                         │  │
+│   │                                                          │  │
+│   │   JOIN application telemetry WITH resource metrics       │  │
+│   │   CORRELATE performance issues WITH infrastructure load  │  │
+│   │   ANALYZE trends across all data sources                 │  │
+│   └─────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Comparison of Services for This Requirement:**
+
+| Service | Collects App Data | Collects Resource Data | Can Correlate Both | Best For |
+|---------|-------------------|----------------------|-------------------|----------|
+| **Application Insights** | ✅ Excellent | ⚠️ Limited | ⚠️ Limited | Application-focused monitoring |
+| **Azure Service Map** | ⚠️ Dependencies only | ✅ Server metrics | ⚠️ Visual only | Topology visualization |
+| **Azure Log Analytics** | ✅ Via App Insights | ✅ Via diagnostics | ✅ Full KQL support | **Data correlation** |
+| **Azure Activity Log** | ❌ No | ⚠️ Operations only | ❌ No | Audit trail |
+
+**What About the Other Requirements?**
+
+The scenario lists four requirements. Here's which service best addresses each:
+
+| Requirement | Best Service |
+|-------------|-------------|
+| Correlate Azure resource usage with application performance | **Azure Log Analytics** |
+| Visualize relationships between application components | **Azure Application Insights** (Application Map) |
+| Track requests and exceptions to specific lines of code | **Azure Application Insights** (Snapshot Debugger, Profiler) |
+| Analyze how users return to an application and UI interactions | **Azure Application Insights** (User Flows, Funnels) |
+
+**References:**
+- [Azure Log Analytics Overview](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview)
+- [Correlate data across multiple Application Insights resources](https://learn.microsoft.com/azure/azure-monitor/logs/cross-workspace-query)
+- [Workspace-based Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/convert-classic-resource)
+- [Azure Metrics Overview](https://learn.microsoft.com/azure/azure-monitor/essentials/data-platform-metrics)
 
 ---
 
