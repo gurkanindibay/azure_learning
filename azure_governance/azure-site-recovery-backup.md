@@ -7,6 +7,7 @@
 - [Service Comparison](#service-comparison)
 - [Practice Questions](#practice-questions)
   - [Question 1: Business Continuity and Disaster Recovery for Applications](#question-1-business-continuity-and-disaster-recovery-for-applications)
+  - [Question 4: SQL Server Disaster Recovery on Azure VM](#question-4-sql-server-disaster-recovery-on-azure-vm)
 - [References](#references)
 
 ---
@@ -1706,6 +1707,254 @@ If application requires:
    > Each service is specialized for its use case:
    > - **ASR:** Replication, failover, business continuity
    > - **Backup:** Point-in-time recovery, archival, compliance
+
+---
+
+### Question 4: SQL Server Disaster Recovery on Azure VM
+
+#### Scenario
+
+You have SQL Server on an Azure virtual machine. The databases are written to nightly as part of a batch process.
+
+You need to recommend a disaster recovery solution for the data.
+
+The solution must meet the following requirements:
+
+- Provide the ability to recover in the event of a regional outage
+- Support a recovery time objective (RTO) of 15 minutes
+- Support a recovery point objective (RPO) of 24 hours
+- Support automated recovery
+- Minimize costs
+
+---
+
+#### Question
+
+**What should you include in the recommendation?**
+
+A. Azure virtual machine availability sets  
+B. Azure Disk Backup  
+C. An Always On availability group  
+D. Azure Site Recovery
+
+---
+
+**Correct Answer:** **D. Azure Site Recovery**
+
+---
+
+### Detailed Explanation
+
+#### Requirements Analysis
+
+| Requirement | What It Means |
+|-------------|---------------|
+| **Regional outage recovery** | Solution must replicate data to a different Azure region |
+| **RTO of 15 minutes** | Application must be running within 15 minutes of failover |
+| **RPO of 24 hours** | Can tolerate losing up to 24 hours of data |
+| **Automated recovery** | Failover must happen automatically or with minimal manual intervention |
+| **Minimize costs** | Choose the most cost-effective solution that meets all requirements |
+
+---
+
+#### Why Azure Site Recovery is Correct ✅
+
+**Azure Site Recovery (ASR)** is the optimal solution for this scenario because:
+
+##### 1. **Regional Disaster Recovery** ✅
+
+```plaintext
+Primary Region                    Secondary Region
+┌─────────────────────┐          ┌─────────────────────┐
+│  Azure VM           │          │  Replicated VM      │
+│  (SQL Server)       │──────────▶│  (Ready for         │
+│                     │   ASR     │   Failover)         │
+│  - Active DB        │ Replication│                    │
+│  - Batch Process    │          │  - Standby          │
+└─────────────────────┘          └─────────────────────┘
+```
+
+ASR replicates Azure VMs to a secondary region, providing protection against regional outages.
+
+##### 2. **Meets RTO Requirement (15 minutes)** ✅
+
+- ASR provides **automated failover** that can complete within minutes
+- Recovery plans can be configured to orchestrate the failover process
+- Pre-staged resources in the secondary region enable rapid recovery
+- 15-minute RTO is achievable with properly configured ASR
+
+##### 3. **Meets RPO Requirement (24 hours)** ✅
+
+- ASR supports **configurable replication frequencies**
+- Since the databases are only written to nightly (batch process), 24-hour RPO is easily achievable
+- ASR can replicate more frequently if needed, but the relaxed RPO reduces costs
+
+##### 4. **Automated Recovery** ✅
+
+- ASR provides **automated failover** capabilities
+- Recovery plans can be executed automatically based on health monitoring
+- No manual intervention required for the failover process
+
+##### 5. **Cost-Effective** ✅
+
+- ASR is significantly **cheaper than Always On availability groups**
+- No SQL Server Enterprise edition required
+- Pay only for:
+  - ASR licensing per protected VM
+  - Storage for replicated data
+  - Secondary region compute (only when failed over)
+
+---
+
+#### Why Other Options are Incorrect
+
+##### Azure Virtual Machine Availability Sets ❌
+
+**Availability sets provide high availability within a SINGLE region:**
+
+```plaintext
+Single Azure Region
+┌─────────────────────────────────────────────────┐
+│  Availability Set                               │
+│  ┌─────────────┐    ┌─────────────┐             │
+│  │   VM 1      │    │   VM 2      │             │
+│  │ (Fault      │    │ (Fault      │             │
+│  │  Domain 0)  │    │  Domain 1)  │             │
+│  └─────────────┘    └─────────────┘             │
+│                                                 │
+│  Protects against: Hardware failures ✅         │
+│  Protects against: Regional outages ❌          │
+└─────────────────────────────────────────────────┘
+```
+
+**Why it doesn't meet requirements:**
+- ❌ Does NOT protect against regional outages
+- ❌ Only provides high availability within a single data center
+- ❌ Cannot replicate to a secondary region
+
+##### Azure Disk Backup ❌
+
+**Azure Disk Backup provides snapshot-based protection:**
+
+```plaintext
+Azure Disk Backup Process:
+
+1. Scheduled Snapshot ────▶ 2. Stored in Vault ────▶ 3. Manual Restore Required
+        📸                        🗄️                        ⏰ (Hours)
+```
+
+**Why it doesn't meet requirements:**
+- ❌ **Does NOT support automated recovery** - restore is a manual process
+- ❌ **Cannot meet 15-minute RTO** - restoring from disk backups takes significantly longer
+- ❌ Requires manual VM provisioning and disk attachment
+- ❌ Not designed for disaster recovery orchestration
+
+##### Always On Availability Group ❌
+
+**Always On provides excellent RTO/RPO but at high cost:**
+
+```plaintext
+Always On Availability Group:
+
+┌─────────────────┐     ┌─────────────────┐
+│  Primary Node   │     │  Secondary Node │
+│  (SQL Server    │◀───▶│  (SQL Server    │
+│   Enterprise)   │     │   Enterprise)   │
+└─────────────────┘     └─────────────────┘
+     $$$$$                    $$$$$
+```
+
+**Why it doesn't meet requirements:**
+- ❌ **Requires SQL Server Enterprise edition** - significantly higher licensing costs
+- ❌ **Higher infrastructure costs** - requires multiple SQL Server VMs running continuously
+- ❌ **Overkill for the scenario** - designed for near-zero RPO, but only 24-hour RPO is required
+- ❌ More suited for **high availability** rather than **disaster recovery** across regions
+
+**Cost Comparison:**
+
+| Solution | SQL License | Infrastructure | Total Cost |
+|----------|------------|----------------|------------|
+| **Azure Site Recovery** | Standard ✅ | Pay for secondary only during failover | **Low** ✅ |
+| **Always On AG** | Enterprise ❌ | Multiple VMs running 24/7 | **High** ❌ |
+
+---
+
+#### Solution Comparison Summary
+
+| Requirement | Availability Sets | Disk Backup | Always On AG | Site Recovery |
+|-------------|-------------------|-------------|--------------|---------------|
+| **Regional outage protection** | ❌ | ⚠️ Manual | ✅ | ✅ |
+| **RTO of 15 minutes** | ❌ | ❌ | ✅ | ✅ |
+| **RPO of 24 hours** | ❌ | ✅ | ✅ | ✅ |
+| **Automated recovery** | ❌ | ❌ | ✅ | ✅ |
+| **Minimize costs** | ✅ | ✅ | ❌ | ✅ |
+| **Overall** | ❌ | ❌ | ❌ | ✅ |
+
+---
+
+#### Visual Summary
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────┐
+│                    SQL Server on Azure VM DR                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Requirements:                                                      │
+│  ✓ Regional outage protection                                       │
+│  ✓ RTO: 15 minutes                                                  │
+│  ✓ RPO: 24 hours (batch process - nightly writes)                   │
+│  ✓ Automated recovery                                               │
+│  ✓ Minimize costs                                                   │
+│                                                                     │
+│  ═══════════════════════════════════════════════════════════════    │
+│                                                                     │
+│  ✅ SOLUTION: Azure Site Recovery                                   │
+│                                                                     │
+│  • Replicates VMs across regions                                    │
+│  • Automated failover in minutes                                    │
+│  • Scheduled replication meets 24-hour RPO                          │
+│  • Cost-effective (no Enterprise SQL license required)              │
+│                                                                     │
+│  ═══════════════════════════════════════════════════════════════    │
+│                                                                     │
+│  ❌ REJECTED:                                                       │
+│  • Availability Sets - No regional protection                       │
+│  • Disk Backup - Manual recovery, slow RTO                          │
+│  • Always On AG - Too expensive, overkill for requirements          │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Key Takeaways
+
+1. **Match the Solution to the RPO/RTO Requirements**
+   > With a relaxed RPO of 24 hours and RTO of 15 minutes, Azure Site Recovery is the sweet spot between cost and capability.
+
+2. **Availability Sets ≠ Disaster Recovery**
+   > Availability sets protect against hardware failures within a region, NOT regional outages.
+
+3. **Azure Disk Backup is Not Automated DR**
+   > Disk Backup is excellent for data protection but requires manual intervention for recovery.
+
+4. **Always On is Overkill When RPO is Relaxed**
+   > If you don't need near-zero RPO, Always On's higher cost isn't justified.
+
+5. **Consider the Workload Pattern**
+   > Since databases are written nightly (batch process), a 24-hour RPO aligns perfectly with the workload pattern.
+
+---
+
+#### Reference Links
+
+- [Azure Site Recovery Overview](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview)
+- [Azure to Azure Disaster Recovery Quickstart](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart)
+- [Azure VM Availability Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview)
+- [Azure Backup for VMs Introduction](https://learn.microsoft.com/en-us/azure/backup/backup-azure-vms-introduction)
+- [Always On Availability Groups Overview](https://learn.microsoft.com/en-us/sql/database-engine/availability-groups/windows/overview-of-always-on-availability-groups-sql-server)
+
+**Domain:** Design Business Continuity Solutions
 
 ---
 
