@@ -41,6 +41,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 10: Migrating LDAP Applications to Azure with Entra Domain Services](#exam-question-10-migrating-ldap-applications-to-azure-with-entra-domain-services)
     - [Question 11: Remote Access to On-Premises Apps with Application Proxy Connector](#exam-question-11-remote-access-to-on-premises-apps-with-application-proxy-connector)
     - [Question 12: IT Support Notification for Directory Sync Issues (Microsoft Entra Connect Health)](#exam-question-12-it-support-notification-for-directory-sync-issues-microsoft-entra-connect-health)
+    - [Question 13: SSO Access to On-Premises Web App with Integrated Windows Authentication](#exam-question-13-sso-access-to-on-premises-web-app-with-integrated-windows-authentication)
 
 ---
 
@@ -6532,8 +6533,244 @@ Microsoft Entra Connect Health Portal
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** December 16, 2025  
+### <a id="exam-question-13-sso-access-to-on-premises-web-app-with-integrated-windows-authentication"></a>Question 13: SSO Access to On-Premises Web App with Integrated Windows Authentication
+
+#### Scenario
+
+You have a Microsoft Entra tenant that syncs with an on-premises Active Directory domain. You have an internal web app named **WebApp1** that is hosted on-premises. WebApp1 uses **Integrated Windows authentication**.
+
+Some users work remotely and do **NOT have VPN access** to the on-premises network. You need to provide the remote users with **single sign-on (SSO) access** to WebApp1.
+
+**Question:** Which **two** features should you include in the solution?
+
+---
+
+#### Answer Options
+
+A. Microsoft Entra Identity Management (PIM)  
+B. Microsoft Entra enterprise applications  
+C. Conditional Access policies  
+D. Microsoft Entra Application Proxy  
+E. Azure Application Gateway  
+F. Azure Arc
+
+---
+
+**Correct Answers:** **B. Microsoft Entra enterprise applications** and **D. Microsoft Entra Application Proxy**
+
+---
+
+### Detailed Explanation
+
+#### Why Microsoft Entra Enterprise Applications is Correct ✅
+
+**Microsoft Entra enterprise applications** are used to configure and publish on-premises or cloud-based apps for single sign-on (SSO), user assignment, and conditional access. Publishing WebApp1 as an enterprise application enables its integration with Microsoft Entra ID and allows remote users to authenticate seamlessly using their cloud identity.
+
+**Key Benefits:**
+
+✅ **SSO Integration** - Enables single sign-on with Microsoft Entra ID credentials  
+✅ **User Assignment** - Control which users can access the application  
+✅ **Conditional Access Integration** - Apply security policies to the application  
+✅ **Centralized Management** - Manage all applications from the Microsoft Entra admin center
+
+**How Enterprise Applications Enable SSO:**
+
+```plaintext
+Remote User (Internet)
+        ↓
+        ↓ Authenticates with Microsoft Entra ID
+        ↓
+Microsoft Entra ID
+        ↓
+        ↓ SSO Token
+        ↓
+Enterprise Application (WebApp1)
+        ↓
+        ↓ Kerberos Constrained Delegation (for IWA)
+        ↓
+On-Premises WebApp1
+```
+
+---
+
+#### Why Microsoft Entra Application Proxy is Correct ✅
+
+**Microsoft Entra Application Proxy** allows secure remote access to on-premises applications **without requiring VPN**. It works by installing a lightweight connector on the on-premises network that communicates with Microsoft Entra ID, enabling remote users to access internal apps like WebApp1 using SSO while off-network.
+
+**Key Benefits:**
+
+✅ **No VPN Required** - Provides secure remote access without exposing the corporate network  
+✅ **Integrated Windows Authentication Support** - Supports Kerberos Constrained Delegation for IWA apps  
+✅ **SSO with Cloud Credentials** - Users authenticate once with Microsoft Entra ID  
+✅ **Outbound Connections Only** - No inbound firewall rules needed (uses port 443)  
+✅ **Minimal Infrastructure** - Lightweight connector installed on-premises
+
+**Architecture for IWA Applications:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    SOLUTION ARCHITECTURE                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Remote User (No VPN)                                                 │
+│        │                                                                │
+│        │ 1. Access external URL (https://webapp1-contoso.msappproxy.net)│
+│        ▼                                                                │
+│   Microsoft Entra ID                                                   │
+│        │                                                                │
+│        │ 2. Authenticate user (SSO)                                    │
+│        ▼                                                                │
+│   Microsoft Entra Application Proxy Service (Cloud)                    │
+│        │                                                                │
+│        │ 3. Forward request with Kerberos token                        │
+│        ▼                                                                │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │            On-Premises Network                                   │  │
+│   │  ┌──────────────────────────────────────────────────────────┐   │  │
+│   │  │  Application Proxy Connector                              │   │  │
+│   │  │  (Windows Server)                                         │   │  │
+│   │  │       │                                                   │   │  │
+│   │  │       │ 4. Kerberos Constrained Delegation               │   │  │
+│   │  │       ▼                                                   │   │  │
+│   │  │  Active Directory Domain Controller                       │   │  │
+│   │  │       │                                                   │   │  │
+│   │  │       │ 5. Kerberos Ticket                               │   │  │
+│   │  │       ▼                                                   │   │  │
+│   │  │  WebApp1 (Integrated Windows Authentication)             │   │  │
+│   │  └──────────────────────────────────────────────────────────┘   │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Why Other Options Are Incorrect
+
+#### Option A: Microsoft Entra Identity Management (PIM) ❌
+
+**Why incorrect:**
+
+- **Privileged Identity Management (PIM)** is used to manage, control, and monitor access to **important resources** by providing **just-in-time privileged access**
+- PIM is designed for:
+  - Time-bound access to Azure resources
+  - Approval workflows for role activation
+  - Audit and access reviews for privileged roles
+- **Not related** to enabling SSO or publishing on-premises applications to remote users
+- PIM controls **who has elevated access**, not **how users access applications**
+
+---
+
+#### Option C: Conditional Access Policies ❌
+
+**Why incorrect:**
+
+- Conditional Access can **enforce access controls** such as:
+  - Require MFA
+  - Require compliant devices
+  - Block access from certain locations
+- However, Conditional Access **does not enable**:
+  - Application publishing
+  - SSO functionality
+  - Remote access to on-premises apps
+- Conditional Access can **enhance security once access is possible** but doesn't solve the core problem of making WebApp1 available for remote users
+- Think of it as: "Conditional Access controls **IF** users can access, not **HOW** they access"
+
+---
+
+#### Option E: Azure Application Gateway ❌
+
+**Why incorrect:**
+
+- Azure Application Gateway is a **web traffic load balancer** for applications hosted in Azure
+- Features include:
+  - Layer 7 load balancing
+  - Web Application Firewall (WAF)
+  - SSL termination
+- **Cannot provide access** to on-premises applications
+- **No SSO integration** with Microsoft Entra ID for on-premises IWA apps
+- Application Gateway works with **Azure-hosted** applications, not on-premises
+
+---
+
+#### Option F: Azure Arc ❌
+
+**Why incorrect:**
+
+- Azure Arc extends Azure management to **hybrid and multi-cloud environments**
+- Azure Arc-enabled features include:
+  - Managing on-premises servers from Azure
+  - Running Azure services on any infrastructure
+  - Kubernetes management
+- **Does not provide SSO** for on-premises web applications
+- **Does not replace VPN** for application access
+- Azure Arc is about **resource management**, not **user authentication/access**
+
+---
+
+### Solution Components Working Together
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│          COMPLETE SOLUTION: APPLICATION PROXY + ENTERPRISE APP          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Component 1: Microsoft Entra Application Proxy                       │
+│   ├── Provides secure remote access without VPN                        │
+│   ├── Handles communication between cloud and on-premises              │
+│   ├── Supports Integrated Windows Authentication via KCD               │
+│   └── Installed as connector on on-premises Windows Server             │
+│                                                                         │
+│   Component 2: Microsoft Entra Enterprise Application                  │
+│   ├── Created automatically when configuring Application Proxy         │
+│   ├── Represents WebApp1 in Microsoft Entra ID                        │
+│   ├── Enables SSO with Microsoft Entra credentials                    │
+│   ├── Allows user/group assignment                                     │
+│   └── Can be enhanced with Conditional Access policies                 │
+│                                                                         │
+│   Result:                                                               │
+│   ✅ Remote users authenticate with Microsoft Entra ID (SSO)          │
+│   ✅ No VPN required for remote access                                 │
+│   ✅ Integrated Windows Authentication works seamlessly                │
+│   ✅ Centralized management and security policies                      │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Key Concepts Summary
+
+| Feature | Purpose | Role in This Scenario |
+|---------|---------|----------------------|
+| **Microsoft Entra Application Proxy** | Secure remote access to on-premises apps | Enables access without VPN, supports IWA |
+| **Microsoft Entra Enterprise Applications** | App registration and SSO configuration | Integrates WebApp1 with Microsoft Entra ID for SSO |
+| **Kerberos Constrained Delegation** | SSO method for IWA apps | Allows Application Proxy to authenticate on behalf of users |
+| **Application Proxy Connector** | On-premises component | Bridges cloud requests to on-premises WebApp1 |
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [What is Application Proxy?](https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy)
+- [Add an on-premises application for remote access through Application Proxy](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-add-on-premises-application)
+- [What is application management in Microsoft Entra ID?](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-application-management)
+- [What is Privileged Identity Management?](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure)
+- [What is Conditional Access?](https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview)
+
+**Related Topics:**
+- Kerberos Constrained Delegation (KCD)
+- Hybrid identity with Microsoft Entra Connect
+- Single Sign-On (SSO) methods
+- Application Proxy connector groups
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+**Document Version:** 1.2  
+**Last Updated:** December 17, 2025  
 **Author:** Azure Learning Documentation
 
 ---
