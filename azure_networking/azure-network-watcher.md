@@ -8,6 +8,35 @@ Azure Network Watcher provides tools to monitor, diagnose, view metrics, and ena
 - **Diagnostics**: Diagnose network traffic filtering problems to or from a VM.
 - **Logging**: Enable NSG flow logs to view information about ingress and egress IP traffic through a Network Security Group.
 
+## Network Watcher Tools Summary
+
+| Tool | Best Use Scenario | What It Does |
+|------|-------------------|--------------|
+| **IP Flow Verify** | Determine if a specific packet is allowed or denied to/from a VM | Checks effective NSG rules for a given VM; returns allow/deny decision and the rule name that caused it |
+| **NSG Diagnostics** | Troubleshoot NSG rules affecting traffic flow | Provides detailed diagnostics for NSG rules, showing which rules apply to specific traffic |
+| **Next Hop** | Diagnose VM routing issues | Shows the next hop type and IP address for traffic from a VM to a destination |
+| **Connection Troubleshoot** | Test connectivity between Azure resources or to external endpoints | Tests TCP/ICMP connectivity and provides latency, probe status, and failure reasons |
+| **Packet Capture** | Capture and analyze network packets for deep inspection | Records packets to/from a VM for detailed protocol-level analysis |
+| **VPN Troubleshoot** | Diagnose VPN gateway and connection issues | Provides diagnostics for VPN gateways and site-to-site VPN connections |
+| **NSG Flow Logs** | Log and audit all network traffic through NSGs | Records all traffic flowing through NSGs for compliance, auditing, and analysis |
+| **Traffic Analytics** | High-level analysis of network traffic patterns and trends | Aggregates NSG flow log data for visualization of traffic volume, top talkers, and security insights |
+| **Connection Monitor** | Continuous monitoring of network connectivity | Monitors connectivity between endpoints over time, alerting on failures or latency changes |
+| **Topology** | Visualize network architecture | Generates a visual diagram of resources in a virtual network and their relationships |
+| **Effective Security Rules** | View all security rules applied to a network interface | Shows the aggregated effective security rules from all NSGs applied to a NIC |
+
+### Tool Selection Guide
+
+| Troubleshooting Question | Recommended Tool |
+|--------------------------|------------------|
+| Is a specific packet being allowed or denied to my VM? | **IP Flow Verify** |
+| What route is my traffic taking? | **Next Hop** |
+| Can my VM reach a specific endpoint? | **Connection Troubleshoot** |
+| What does the actual network traffic look like? | **Packet Capture** |
+| Why is my VPN connection failing? | **VPN Troubleshoot** |
+| What are the traffic patterns across my network? | **Traffic Analytics** |
+| Is my connectivity stable over time? | **Connection Monitor** |
+| What security rules are effective on my VM's NIC? | **Effective Security Rules** / **NSG Diagnostics** |
+
 ## Troubleshooting Scenarios
 
 ### Scenario: Analyzing VM Connectivity Issues (Allow/Deny)
