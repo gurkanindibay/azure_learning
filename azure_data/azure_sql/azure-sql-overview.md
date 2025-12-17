@@ -24,6 +24,7 @@
   - [Security Best Practices](#security-best-practices)
     - [Always Encrypted](#always-encrypted-column-level-encryption)
     - [Transparent Data Encryption (TDE)](#transparent-data-encryption-tde)
+    - [Dynamic Data Masking](#dynamic-data-masking)
 - [Migration to Azure SQL](#migration-to-azure-sql)
 - [Common Scenarios and Recommendations](#common-scenarios-and-recommendations)
 - [Key Insights for Exams](#key-insights-for-exams)
@@ -1394,6 +1395,108 @@ When migrating an on-premises SQL Server database to Azure SQL Managed Instance 
 - [TDE with Customer-Managed Keys](https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-byok-overview)
 - [Azure Key Vault - Supported Key Types and Sizes](https://learn.microsoft.com/en-us/azure/key-vault/keys/about-keys#supported-key-types-and-sizes)
 - [TDE Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-tde-overview)
+
+#### Dynamic Data Masking
+
+**Dynamic Data Masking (DDM)** limits sensitive data exposure by masking it to non-privileged users at the query level. It is a policy-based security feature that hides sensitive data in the result set of a query over designated database fields, while the data in the database is not changed.
+
+**Key Characteristics**:
+
+| Feature | Description |
+|---------|-------------|
+| **Masking Level** | Query result level - masks data returned from queries |
+| **Data Storage** | Actual data remains unchanged in the database |
+| **Access Control** | Non-privileged users see masked values; privileged users see actual data |
+| **Configuration** | Define masking rules on specific columns |
+| **Performance Impact** | Minimal - masking applied at query time |
+
+**Built-in Masking Functions**:
+
+| Function | Description | Example |
+|----------|-------------|------|
+| **Default** | Full masking based on data type | `XXXX` for strings, `0` for numbers |
+| **Email** | Exposes first letter and domain suffix | `aXXX@XXXX.com` |
+| **Random** | Random number within specified range | Numeric value between min and max |
+| **Custom String** | Exposes prefix and suffix with custom padding | `[prefix][padding][suffix]` |
+
+**How Dynamic Data Masking Works**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Azure SQL Database                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Table: Customers                                        │   │
+│  │  ┌──────────┬─────────────────┬──────────────────────┐  │   │
+│  │  │ Name     │ Email           │ CreditCard           │  │   │
+│  │  ├──────────┼─────────────────┼──────────────────────┤  │   │
+│  │  │ John Doe │ john@email.com  │ 4532-1234-5678-9012  │  │   │
+│  │  └──────────┴─────────────────┴──────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┴───────────────────┐
+          ▼                                       ▼
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│  Privileged User Query      │     │  Non-Privileged User Query  │
+│  (UNMASK permission)        │     │  (No UNMASK permission)     │
+├─────────────────────────────┤     ├─────────────────────────────┤
+│  John Doe                   │     │  XXXX                       │
+│  john@email.com             │     │  jXXX@XXXX.com              │
+│  4532-1234-5678-9012        │     │  XXXX-XXXX-XXXX-9012        │
+└─────────────────────────────┘     └─────────────────────────────┘
+```
+
+**Granting UNMASK Permission**:
+
+```sql
+-- Grant UNMASK permission to a specific user
+GRANT UNMASK TO [DataAnalyst];
+
+-- Grant UNMASK on specific columns only (SQL Server 2022 / Azure SQL)
+GRANT UNMASK ON Schema.Table(Column) TO [LimitedAnalyst];
+
+-- Revoke UNMASK permission
+REVOKE UNMASK FROM [DataAnalyst];
+```
+
+**When to Use Dynamic Data Masking**:
+- ✅ Protecting PII (names, addresses, phone numbers) from non-privileged users
+- ✅ Call center applications where agents need partial data visibility
+- ✅ Development/test environments needing production-like data
+- ✅ Compliance scenarios requiring data minimization
+- ✅ Multi-tier applications with different user access levels
+
+**Limitations**:
+- ❌ Users with elevated permissions can still query underlying data
+- ❌ Not a replacement for encryption (data is stored unmasked)
+- ❌ Can be bypassed through inference attacks with sufficient queries
+- ❌ Does not protect data at rest or in transit
+
+**Comparison: Dynamic Data Masking vs. Other Data Protection Methods**:
+
+| Scenario | Best Solution | Why |
+|----------|---------------|-----|
+| **Restrict PII visibility to non-privileged users** | **Dynamic Data Masking** | Masks data at query level; privileged users can see actual values |
+| **Identify and label sensitive data** | Data Discovery and Classification | Governance tool for discovering and tagging sensitive data |
+| **Protect data at rest from physical theft** | Transparent Data Encryption (TDE) | Encrypts entire database but doesn't restrict query access |
+| **Control access to database objects** | Role-Based Access Control (RBAC) | Database-level access control, not fine-grained PII masking |
+| **Protect sensitive columns end-to-end** | Always Encrypted | Client-side encryption for maximum protection |
+
+**Important Distinctions**:
+
+| Method | Controls PII Visibility at Query Level? | Protects Data at Rest? | Fine-Grained Column Control? |
+|--------|----------------------------------------|------------------------|-----------------------------|
+| **Dynamic Data Masking** | ✅ Yes | ❌ No | ✅ Yes |
+| **Data Discovery & Classification** | ❌ No (discovery only) | ❌ No | N/A |
+| **Transparent Data Encryption (TDE)** | ❌ No | ✅ Yes | ❌ No (entire database) |
+| **Role-Based Access Control (RBAC)** | ❌ No (object-level only) | ❌ No | ❌ No |
+
+> **Exam Tip:** When a scenario asks how to ensure that **only privileged users can view PII** while allowing other users to query the data, **Dynamic Data Masking** is the correct answer. TDE protects data at rest but doesn't prevent users from seeing data when querying. RBAC controls access at the database/table level but doesn't mask individual column values. Data Discovery and Classification identifies sensitive data but doesn't restrict access to it.
+
+**References**: 
+- [Dynamic Data Masking Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/dynamic-data-masking-overview)
+- [TDE Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-tde-overview)
+- [Azure RBAC Overview](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
 
 ### Migration to Azure SQL
 
