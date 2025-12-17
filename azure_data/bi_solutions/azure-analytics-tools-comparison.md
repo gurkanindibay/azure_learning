@@ -1,6 +1,6 @@
 # Azure Analytics and BI Tools Comparison
 
-This document provides a comprehensive comparison of Azure's analytics and business intelligence tools: Azure Data Explorer, Azure Synapse Analytics, Log Analytics, and Microsoft Fabric.
+This document provides a comprehensive comparison of Azure's analytics and business intelligence tools: Azure Data Explorer, Azure Synapse Analytics, Azure Databricks, Log Analytics, and Microsoft Fabric.
 
 ## Quick Overview
 
@@ -8,6 +8,7 @@ This document provides a comprehensive comparison of Azure's analytics and busin
 |------|-----------------|--------|----------------|
 | **Azure Data Explorer** | Real-time interactive analytics | ✅ Active | KQL |
 | **Azure Synapse Analytics** | Enterprise data warehousing & unified analytics | ✅ Active | T-SQL, Spark, KQL |
+| **Azure Databricks** | Big data processing & ML/AI | ✅ Active | SQL, Python, Scala, R |
 | **Log Analytics** | Operational monitoring & diagnostics | ✅ Active | KQL |
 | **Microsoft Fabric** | Unified SaaS analytics platform | ✅ Active | T-SQL, KQL, Spark |
 | **Azure Data Lake Analytics** | Big data batch processing | ❌ Retired (Feb 2024) | U-SQL |
@@ -16,42 +17,42 @@ This document provides a comprehensive comparison of Azure's analytics and busin
 
 ### Data Types and Scale
 
-| Feature | Azure Data Explorer | Synapse Analytics | Log Analytics | Microsoft Fabric |
-|---------|---------------------|-------------------|---------------|------------------|
-| **Structured Data** | ✅ Excellent | ✅ Excellent | ✅ Good | ✅ Excellent |
-| **Semi-structured** | ✅ Excellent | ✅ Good | ✅ Excellent | ✅ Excellent |
-| **Unstructured** | ✅ Good | ✅ Good (via Spark) | ⚠️ Limited | ✅ Good |
-| **Time-series** | ✅ Optimized | ✅ Supported | ✅ Optimized | ✅ Optimized |
-| **Scale** | Petabytes | Petabytes | Terabytes | Petabytes |
+| Feature | Azure Data Explorer | Synapse Analytics | Azure Databricks | Log Analytics | Microsoft Fabric |
+|---------|---------------------|-------------------|------------------|---------------|------------------|
+| **Structured Data** | ✅ Excellent | ✅ Excellent | ✅ Excellent | ✅ Good | ✅ Excellent |
+| **Semi-structured** | ✅ Excellent | ✅ Good | ✅ Excellent | ✅ Excellent | ✅ Excellent |
+| **Unstructured** | ✅ Good | ✅ Good (via Spark) | ✅ Excellent | ⚠️ Limited | ✅ Good |
+| **Time-series** | ✅ Optimized | ✅ Supported | ✅ Good | ✅ Optimized | ✅ Optimized |
+| **Scale** | Petabytes | Petabytes | Petabytes | Terabytes | Petabytes |
 
 ### Query Performance and Latency
 
-| Feature | Azure Data Explorer | Synapse Analytics | Log Analytics | Microsoft Fabric |
-|---------|---------------------|-------------------|---------------|------------------|
-| **Query Latency** | Sub-second | Seconds to minutes | Seconds | Seconds |
-| **Interactive Queries** | ✅ Optimized | ✅ Good | ✅ Good | ✅ Good |
-| **Complex Aggregations** | ✅ Excellent | ✅ Excellent | ✅ Good | ✅ Excellent |
-| **Ad-hoc Analysis** | ✅ Excellent | ✅ Good | ✅ Good | ✅ Excellent |
-| **Batch Processing** | ⚠️ Not primary | ✅ Excellent | ❌ No | ✅ Excellent |
+| Feature | Azure Data Explorer | Synapse Analytics | Azure Databricks | Log Analytics | Microsoft Fabric |
+|---------|---------------------|-------------------|------------------|---------------|------------------|
+| **Query Latency** | Sub-second | Seconds to minutes | Seconds | Seconds | Seconds |
+| **Interactive Queries** | ✅ Optimized | ✅ Good | ✅ Excellent | ✅ Good | ✅ Good |
+| **Complex Aggregations** | ✅ Excellent | ✅ Excellent | ✅ Excellent | ✅ Good | ✅ Excellent |
+| **Ad-hoc Analysis** | ✅ Excellent | ✅ Good | ✅ Excellent | ✅ Good | ✅ Excellent |
+| **Batch Processing** | ⚠️ Not primary | ✅ Excellent | ✅ Excellent | ❌ No | ✅ Excellent |
 
 ### Scaling Options
 
-| Scaling Type | Azure Data Explorer | Synapse Analytics | Log Analytics | Microsoft Fabric |
-|--------------|---------------------|-------------------|---------------|------------------|
-| **Manual Scaling** | ✅ Yes | ✅ Yes | ✅ Yes (retention/cap) | ✅ Yes |
-| **Built-in Autoscaling** | ✅ Yes | ✅ Serverless pools | ✅ Automatic | ✅ Bursting |
-| **Custom Autoscaling** | ✅ Yes | ✅ Spark pools | ❌ No | ⚠️ Limited |
-| **Pause/Resume** | ✅ Yes | ✅ Dedicated pools | N/A | ✅ Yes |
+| Scaling Type | Azure Data Explorer | Synapse Analytics | Azure Databricks | Log Analytics | Microsoft Fabric |
+|--------------|---------------------|-------------------|------------------|---------------|------------------|
+| **Manual Scaling** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes (retention/cap) | ✅ Yes |
+| **Built-in Autoscaling** | ✅ Yes | ✅ Serverless pools | ✅ Yes | ✅ Automatic | ✅ Bursting |
+| **Custom Autoscaling** | ✅ Yes | ✅ Spark pools | ✅ Yes | ❌ No | ⚠️ Limited |
+| **Pause/Resume** | ✅ Yes | ✅ Dedicated pools | ✅ Auto-terminate | N/A | ✅ Yes |
 
 ### Pricing Model
 
-| Aspect | Azure Data Explorer | Synapse Analytics | Log Analytics | Microsoft Fabric |
-|--------|---------------------|-------------------|---------------|------------------|
-| **Model** | Cluster-based | Multiple options | Ingestion + retention | Capacity units |
-| **Compute** | Per cluster hour | Per DWU/vCore | Included | Shared capacity |
-| **Storage** | Per GB stored | Per TB stored | Per GB ingested | Included in capacity |
-| **Pay-as-you-go** | ✅ Yes | ✅ Serverless | ✅ Yes | ✅ Yes |
-| **Reserved Capacity** | ✅ Yes | ✅ Yes | ✅ Commitment tiers | ✅ Yes |
+| Aspect | Azure Data Explorer | Synapse Analytics | Azure Databricks | Log Analytics | Microsoft Fabric |
+|--------|---------------------|-------------------|------------------|---------------|------------------|
+| **Model** | Cluster-based | Multiple options | DBU (Databricks Units) | Ingestion + retention | Capacity units |
+| **Compute** | Per cluster hour | Per DWU/vCore | Per-second cluster | Included | Shared capacity |
+| **Storage** | Per GB stored | Per TB stored | Azure Storage (separate) | Per GB ingested | Included in capacity |
+| **Pay-as-you-go** | ✅ Yes | ✅ Serverless | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Reserved Capacity** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Commitment tiers | ✅ Yes |
 
 ## Architecture Comparison
 
@@ -120,6 +121,36 @@ This document provides a comprehensive comparison of Azure's analytics and busin
 └─────────────────────────────────────────────────────┘
 ```
 
+### Azure Databricks
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Azure Databricks                        │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────┐    │
+│  │            Unity Catalog                    │    │
+│  │     (Unified Governance & Security)         │    │
+│  └─────────────────────────────────────────────┘    │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐    │
+│  │        Optimized Apache Spark               │    │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────────┐    │    │
+│  │  │ Photon  │ │  MLflow │ │ Databricks  │    │    │
+│  │  │ Engine  │ │   (ML)  │ │    SQL      │    │    │
+│  │  └─────────┘ └─────────┘ └─────────────┘    │    │
+│  └─────────────────────────────────────────────┘    │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐    │
+│  │            Delta Lake Storage               │    │
+│  │    (ACID Transactions on Data Lake)         │    │
+│  └─────────────────────────────────────────────┘    │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐    │
+│  │     Azure Data Lake Storage Gen2            │    │
+│  └─────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+```
+
 ## Use Case Decision Matrix
 
 ### Choose Azure Data Explorer When:
@@ -174,17 +205,33 @@ This document provides a comprehensive comparison of Azure's analytics and busin
 | Fine-grained infrastructure control | ❌ Limited |
 | Non-Microsoft ecosystem integration | ⚠️ Limited |
 
+### Choose Azure Databricks When:
+
+| Requirement | Fit |
+|-------------|-----|
+| Machine learning & AI workloads | ✅ Excellent |
+| Heavy data engineering with Spark | ✅ Excellent |
+| Multi-cloud support (AWS, Azure, GCP) | ✅ Excellent |
+| Delta Lake-centric architecture | ✅ Excellent |
+| Complex ETL requiring custom code | ✅ Excellent |
+| Collaborative notebook environment | ✅ Excellent |
+| Per-user access to ADLS folders | ✅ Credential Passthrough |
+| Traditional SQL data warehousing | ⚠️ Not primary (use Databricks SQL) |
+| Real-time log analytics | ⚠️ Not ideal (use ADX) |
+| Fully managed SaaS | ❌ PaaS - requires cluster management |
+
 ## Integration Comparison
 
-| Integration | Azure Data Explorer | Synapse Analytics | Log Analytics | Microsoft Fabric |
-|-------------|---------------------|-------------------|---------------|------------------|
-| **Power BI** | ✅ Native connector | ✅ Deep integration | ✅ Native connector | ✅ Built-in |
-| **Azure Data Lake** | ✅ External tables | ✅ Native | ⚠️ Export only | ✅ OneLake |
-| **Event Hubs** | ✅ Native ingestion | ✅ Streaming | ✅ Via Functions | ✅ Eventstreams |
-| **Azure Functions** | ✅ SDK available | ✅ Triggers | ✅ Bindings | ✅ Supported |
-| **Azure ML** | ✅ Export/Import | ✅ Native integration | ⚠️ Limited | ✅ Data Science |
-| **Grafana** | ✅ Plugin | ✅ Plugin | ✅ Plugin | ⚠️ Via Power BI |
-| **REST API** | ✅ Full API | ✅ Full API | ✅ Full API | ✅ Full API |
+| Integration | Azure Data Explorer | Synapse Analytics | Azure Databricks | Log Analytics | Microsoft Fabric |
+|-------------|---------------------|-------------------|------------------|---------------|------------------|
+| **Power BI** | ✅ Native connector | ✅ Deep integration | ✅ Databricks SQL connector | ✅ Native connector | ✅ Built-in |
+| **Azure Data Lake** | ✅ External tables | ✅ Native | ✅ Native (Delta Lake) | ⚠️ Export only | ✅ OneLake |
+| **Event Hubs** | ✅ Native ingestion | ✅ Streaming | ✅ Structured Streaming | ✅ Via Functions | ✅ Eventstreams |
+| **Azure Functions** | ✅ SDK available | ✅ Triggers | ✅ SDK available | ✅ Bindings | ✅ Supported |
+| **Azure ML** | ✅ Export/Import | ✅ Native integration | ✅ MLflow native | ⚠️ Limited | ✅ Data Science |
+| **Grafana** | ✅ Plugin | ✅ Plugin | ✅ Plugin | ✅ Plugin | ⚠️ Via Power BI |
+| **REST API** | ✅ Full API | ✅ Full API | ✅ Full API | ✅ Full API | ✅ Full API |
+| **Delta Sharing** | ⚠️ Import | ✅ Supported | ✅ Native | ❌ No | ✅ Shortcuts |
 
 ## Query Language Comparison
 
@@ -215,7 +262,7 @@ ORDER BY Month;
 
 **Strengths**: Familiar to SQL developers, rich ecosystem, complex joins
 
-### Spark (Synapse Analytics, Fabric Data Engineering)
+### Spark (Synapse Analytics, Fabric Data Engineering, Azure Databricks)
 
 ```python
 # Example: Process large dataset
@@ -225,6 +272,22 @@ result.write.format("delta").save("/processed/regional_sales")
 ```
 
 **Strengths**: Complex transformations, ML integration, large-scale processing
+
+### Databricks SQL
+
+```sql
+-- Example: Query Delta Lake table with Databricks SQL
+SELECT 
+    region,
+    SUM(amount) AS total_sales,
+    COUNT(*) AS transaction_count
+FROM delta.`/sales/transactions`
+WHERE transaction_date >= '2024-01-01'
+GROUP BY region
+ORDER BY total_sales DESC;
+```
+
+**Strengths**: SQL interface for Delta Lake, optimized with Photon engine, familiar SQL syntax
 
 ## Migration Recommendations
 
@@ -245,6 +308,8 @@ result.write.format("delta").save("/processed/regional_sales")
 | Heavy Synapse investment | Continue with Synapse, evaluate Fabric for new projects |
 | Log Analytics + custom analytics | Keep Log Analytics for monitoring, add ADX for analytics |
 | Power BI Premium | Upgrade to Fabric capacity |
+| Heavy Databricks investment | Continue with Databricks, use Shortcuts from Fabric |
+| ML/AI-focused organization | Azure Databricks |
 
 ## Cost Optimization Tips
 
@@ -252,6 +317,7 @@ result.write.format("delta").save("/processed/regional_sales")
 |------|----------------------------|
 | **Azure Data Explorer** | Use autoscaling, optimize hot/cold cache, stop dev clusters |
 | **Synapse Analytics** | Use serverless for ad-hoc, pause dedicated pools, right-size |
+| **Azure Databricks** | Use auto-terminating clusters, spot instances, right-size clusters, use Photon for performance |
 | **Log Analytics** | Set retention policies, use Basic logs tier, commitment tiers |
 | **Microsoft Fabric** | Pause capacity, use appropriate SKU, leverage shared capacity |
 
@@ -269,21 +335,58 @@ What is your primary need?
 ├─► Enterprise data warehousing with SQL?
 │   └─► Azure Synapse Analytics
 │
+├─► Machine learning & AI workloads?
+│   └─► Azure Databricks
+│
+├─► Heavy data engineering with Spark?
+│   └─► Azure Databricks
+│
+├─► Multi-cloud analytics platform?
+│   └─► Azure Databricks (supports AWS, Azure, GCP)
+│
 ├─► Unified platform with simplified management?
 │   └─► Microsoft Fabric
 │
 ├─► Replacing Azure Data Lake Analytics?
-│   ├─► Batch processing → Synapse or Fabric
+│   ├─► Batch processing → Synapse, Databricks, or Fabric
+│   ├─► ML workloads → Azure Databricks
 │   └─► Interactive queries → ADX or Fabric Real-Time Analytics
 │
 └─► Not sure / Multiple needs?
     └─► Start with Microsoft Fabric (covers most scenarios)
+        OR Azure Databricks (if ML/AI focused)
 ```
+
+## Databricks-Specific Configuration Options
+
+### Cluster Configuration for Access Control
+
+| Configuration | Use Case | Per-User Access |
+|---------------|----------|----------------|
+| **Credential Passthrough** | Per-user ADLS folder access | ✅ Yes |
+| **Managed Identities** | Cluster-level storage access | ❌ No (shared identity) |
+| **Secret Scope** | Store credentials and API keys | ❌ No (shared secrets) |
+| **Unity Catalog** | Unified data governance | ✅ Yes (fine-grained) |
+
+### When to Use Credential Passthrough
+
+Use **Credential Passthrough** when:
+- Data engineers mount Azure Data Lake Storage to Databricks file system
+- Permissions are granted directly to individual users
+- Need to ensure users only access folders they have permission for
+- Want to minimize development effort (no custom access logic)
+- Using Databricks Premium SKU
+
+> **Exam Tip**: Credential passthrough enforces access control at the storage layer using Microsoft Entra ID permissions, ensuring per-user folder-level access without custom code.
 
 ## References
 
 - [Azure Data Explorer Overview](https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview)
 - [Azure Synapse Analytics Documentation](https://learn.microsoft.com/en-us/azure/synapse-analytics/)
+- [Azure Databricks Documentation](https://learn.microsoft.com/en-us/azure/databricks/)
+- [ADLS Credential Passthrough](https://learn.microsoft.com/en-us/azure/databricks/security/credential-passthrough/adls-passthrough)
+- [Unity Catalog](https://learn.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog/)
+- [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/)
 - [Log Analytics Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)
 - [Microsoft Fabric Documentation](https://learn.microsoft.com/en-us/fabric/)
 - [Azure Data Lake Analytics Retirement](https://azure.microsoft.com/updates/migrate-to-azure-synapse-analytics/)
