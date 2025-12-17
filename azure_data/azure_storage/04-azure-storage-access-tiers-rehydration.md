@@ -11,6 +11,7 @@
 - [Storage Account Types Comparison](#storage-account-types-comparison)
   - [Exam Scenario: Choosing the Right Storage Account Type](#exam-scenario-choosing-the-right-storage-account-type)
   - [Exam Scenario: High-Performance Media Streaming Storage](#scenario-high-performance-media-streaming-storage)
+  - [Exam Scenario: Business-Critical Data with Immutability and Resiliency](#scenario-business-critical-data-with-immutability-and-resiliency)
 - [Storage Redundancy Options](#storage-redundancy-options)
   - [Locally Redundant Storage (LRS)](#locally-redundant-storage-lrs)
   - [Zone-Redundant Storage (ZRS)](#zone-redundant-storage-zrs)
@@ -209,6 +210,60 @@ Which type of Azure storage account should you provision?
 | Images, videos, audio | Block blobs are the recommended blob type for media content |
 
 > 💡 **Exam Tip**: When you see requirements for **media streaming**, **large files (images/video/audio)**, AND **high request rates**, think **Premium Block Blobs**. Remember: Page blobs = VHDs/disks, File shares = SMB/NFS file access, Block blobs = general object/media storage.
+
+---
+
+#### Scenario: Business-Critical Data with Immutability and Resiliency
+
+**Question**: You plan to develop a new app that will store business-critical data. The app must meet the following requirements:
+- Prevent new data from being modified for one year
+- Maximize data resiliency
+- Minimize read latency
+
+Which storage solution should you recommend for the app?
+
+| Option | Correct? |
+|--------|----------|
+| Storage Account type: Standard general-purpose v1, Redundancy: Zone-redundant storage (ZRS) | ❌ |
+| Storage Account type: Standard general-purpose v1, Redundancy: Locally-redundant storage (LRS) | ❌ |
+| Storage Account type: Standard general-purpose v2, Redundancy: Zone-redundant storage (ZRS) | ❌ |
+| Storage Account type: Standard general-purpose v2, Redundancy: Locally-redundant storage (LRS) | ❌ |
+| **Storage Account type: Premium block blobs, Redundancy: Zone-redundant storage (ZRS)** | ✅ **Correct Answer** |
+| Storage Account type: Premium block blobs, Redundancy: Locally-redundant storage (LRS) | ❌ |
+
+**Answer Explanation:**
+
+**Premium block blobs with Zone-redundant storage (ZRS)** is the correct answer because:
+
+1. **Minimizes Read Latency**: Premium block blob storage provides the lowest read latency due to SSD-backed storage, making it the best choice for minimizing read latency.
+
+2. **Maximizes Data Resiliency**: Zone-redundant storage (ZRS) ensures data resiliency by replicating data synchronously across multiple availability zones (at least 3), protecting against data center failures.
+
+3. **Prevents Data Modification**: Azure immutable blob storage policies can be configured to prevent data modification for one year, ensuring compliance with the requirement to keep data unaltered.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why It's Wrong |
+|--------|----------------|
+| **Standard GPv1 (any redundancy)** | General-purpose v1 is a legacy account type that doesn't support immutable storage policies. It also uses standard HDD storage which doesn't minimize read latency. Microsoft recommends upgrading to GPv2 or Premium accounts. |
+| **Standard GPv2 with ZRS** | While GPv2 with ZRS provides good resiliency and supports immutability, standard performance uses HDD storage which cannot minimize read latency like premium SSD storage. |
+| **Standard GPv2 with LRS** | Same latency issue as above, plus LRS only provides single-datacenter redundancy which doesn't maximize data resiliency. |
+| **Premium block blobs with LRS** | While this provides low latency and supports immutability, LRS only replicates within a single datacenter. This doesn't maximize data resiliency—ZRS is needed to protect against datacenter-level failures. |
+
+**Key Decision Factors:**
+
+| Requirement | Solution Component | Why |
+|-------------|-------------------|-----|
+| Minimize read latency | Premium block blobs | SSD-backed storage provides lowest latency |
+| Maximize data resiliency | Zone-redundant storage (ZRS) | Replicates across 3+ availability zones |
+| Prevent modification for 1 year | Immutable storage policy | Time-based retention policy on Premium block blobs |
+
+> 💡 **Exam Tip**: When you see requirements combining **immutability**, **low latency**, AND **high resiliency**, you need **Premium Block Blobs with ZRS**. Remember:
+> - **Low latency** → Premium (SSD) storage
+> - **High resiliency** → ZRS (multi-zone) or GRS/GZRS (multi-region)
+> - **Immutability** → Supported by Premium Block Blobs and Standard GPv2, NOT by GPv1
+
+> ⚠️ **Important**: Premium Block Blob accounts only support **LRS** and **ZRS** redundancy (no GRS/GZRS). If you need geo-redundancy AND premium performance, you may need to implement cross-region replication manually or use Standard GPv2 with GRS.
 
 ## Storage Redundancy Options
 
