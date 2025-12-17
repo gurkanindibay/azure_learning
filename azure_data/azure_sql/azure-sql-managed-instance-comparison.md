@@ -18,6 +18,7 @@
 - [Decision Guide](#decision-guide)
 - [Real-World Scenarios](#real-world-scenarios)
 - [Best Practices](#best-practices)
+- [Configuring Azure SQL Managed Instance for Workload Demands](#configuring-azure-sql-managed-instance-for-workload-demands)
 - [References](#references)
 
 ---
@@ -1252,6 +1253,56 @@ Plus:
    - Use Azure Advisor recommendations
    - Identify underutilized databases
    - Consolidate where possible
+
+---
+
+## Configuring Azure SQL Managed Instance for Workload Demands
+
+When configuring Azure SQL Managed Instance to ensure it can handle workload demands, the following parameters are critical:
+
+### Key Parameters for Workload Capacity
+
+#### ✅ Maximum CPU Cores (vCores)
+Configuring the maximum number of CPU cores ensures that the Azure SQL Managed Instance can handle the workload demands by providing the necessary processing power to execute queries and operations efficiently.
+
+- **General Purpose tier**: 4-80 vCores
+- **Business Critical tier**: 8-80 vCores
+- **Impact**: Directly affects query performance, concurrent connections, and overall instance throughput
+
+#### ✅ Maximum Allocated Storage
+Defining the maximum allocated storage is essential to ensure that the Azure SQL Managed Instance has enough storage capacity to store the application data and handle the workload demands without running out of storage space.
+
+- **General Purpose tier**: Up to 8 TB
+- **Business Critical tier**: Up to 16 TB
+- **Impact**: Determines data capacity, backup storage, and growth potential
+
+### Parameters NOT Directly Related to Instance Workload Capacity
+
+#### ❌ Maximum Resources Per Database
+Defining the maximum number of resources per database is **not directly related** to ensuring that the Azure SQL Managed Instance can handle the workload demands. This parameter limits the resources available to individual databases within the instance, rather than the overall instance capacity.
+
+- This is a resource governance setting for database-level isolation
+- Does not increase the total instance capacity
+
+#### ❌ Maximum Resource Limit Per Group of Databases
+Defining the maximum resource limit per group of databases is **not specifically related** to ensuring that the Azure SQL Managed Instance can handle the workload demands. This parameter limits the resources available to a group of databases within the instance, rather than the overall instance capacity.
+
+- This applies to **Instance Pools** for sharing resources across multiple instances
+- Does not directly configure the primary instance's workload handling capability
+
+### Summary Table
+
+| Parameter | Affects Instance Workload Capacity? | Description |
+|-----------|-------------------------------------|-------------|
+| Maximum CPU cores (vCores) | ✅ Yes | Processing power for queries and operations |
+| Maximum allocated storage | ✅ Yes | Data storage capacity |
+| Max resources per database | ❌ No | Database-level resource governance |
+| Max resource limit per group | ❌ No | Instance pool resource sharing |
+
+### References for This Section
+- [Scale resources - Azure SQL Database & Azure SQL Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/database/scale-resources)
+- [What is Azure SQL Managed Instance?](https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/sql-managed-instance-paas-overview)
+- [vCore purchasing model - Azure SQL Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-sql-database-vcore)
 
 ---
 
