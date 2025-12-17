@@ -147,6 +147,136 @@ Azure Virtual WAN requires deploying at least one hub per region to support Expr
 - Would not meet the requirement of "supporting connection in three regions"
 - Would result in higher latency for offices further from hubs
 
+### 📝 Exam Scenario: ExpressRoute Association with Basic Virtual WAN
+
+**Scenario:**
+You have an Azure subscription that contains:
+- A **Basic** Azure Virtual WAN named VirtualWan1
+- Two virtual hubs:
+
+| Name | Location |
+|------|----------|
+| Hub1 | US East |
+| Hub2 | US West |
+
+- An ExpressRoute circuit in the US East Azure region
+
+**Question:** You need to create an ExpressRoute association to VirtualWan1. What should you do first?
+
+**Options:**
+- A) Upgrade VirtualWan1 to Standard
+- B) Create a gateway on Hub1
+- C) Create a hub virtual network in US East
+- D) Enable the ExpressRoute premium add-on
+
+**Answer: A) Upgrade VirtualWan1 to Standard**
+
+**Explanation:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                VIRTUAL WAN TIERS AND EXPRESSROUTE SUPPORT                        │
+│                                                                                  │
+│   ┌─────────────────────────────────┐    ┌─────────────────────────────────┐    │
+│   │        BASIC VIRTUAL WAN        │    │      STANDARD VIRTUAL WAN       │    │
+│   │                                 │    │                                 │    │
+│   │  ✓ Site-to-Site VPN only       │    │  ✓ Site-to-Site VPN            │    │
+│   │  ✗ ExpressRoute NOT supported  │    │  ✓ ExpressRoute SUPPORTED      │    │
+│   │  ✗ User VPN NOT supported      │    │  ✓ User VPN (Point-to-Site)    │    │
+│   │  ✗ Hub-to-hub transit          │    │  ✓ Hub-to-hub transit          │    │
+│   │  ✗ VNet-to-VNet through hub    │    │  ✓ VNet-to-VNet through hub    │    │
+│   │                                 │    │                                 │    │
+│   │  Use Case: Simple branch       │    │  Use Case: Enterprise global   │    │
+│   │  connectivity                   │    │  transit network               │    │
+│   └─────────────────────────────────┘    └─────────────────────────────────┘    │
+│                                                                                  │
+│   ⚠️ To use ExpressRoute with Virtual WAN, you MUST have Standard tier          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why each option is correct or incorrect:**
+
+| Option | Correct/Incorrect | Reason |
+|--------|-------------------|--------|
+| **A) Upgrade VirtualWan1 to Standard** | ✅ **Correct** | ExpressRoute is not supported in Basic Virtual WAN. To associate an ExpressRoute circuit, the Virtual WAN must first be upgraded to Standard. Standard tier supports ExpressRoute, VPN, and inter-hub connectivity across regions. |
+| **B) Create a gateway on Hub1** | ❌ Incorrect | Before creating an ExpressRoute gateway, Virtual WAN must be upgraded to Standard. Without this upgrade, you cannot create a gateway for ExpressRoute connectivity. |
+| **C) Create a hub virtual network in US East** | ❌ Incorrect | Hub1 already exists in US East. Creating a new hub is unnecessary. The focus should be on upgrading the Virtual WAN to Standard tier to enable ExpressRoute support. |
+| **D) Enable the ExpressRoute premium add-on** | ❌ Incorrect | The ExpressRoute premium add-on is only required for specific scenarios like connecting more than 10 VNet connections or enabling global reach between circuits. It does not enable ExpressRoute integration with a Basic Virtual WAN. |
+
+**Key Takeaway:**
+> **Basic Virtual WAN only supports Site-to-Site VPN.** For ExpressRoute, User VPN (P2S), or inter-hub transit, you must use **Standard Virtual WAN**.
+
+**Complete Configuration Steps:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│              EXPRESSROUTE ASSOCIATION - COMPLETE WORKFLOW                        │
+│                                                                                  │
+│   Step 1                Step 2                Step 3                Step 4      │
+│   ┌──────────┐         ┌──────────┐         ┌──────────┐         ┌──────────┐  │
+│   │ Upgrade  │         │ Create   │         │ Associate│         │ Verify   │  │
+│   │ Virtual  │────────►│ Express  │────────►│ Express  │────────►│ Connec-  │  │
+│   │ WAN to   │         │ Route    │         │ Route    │         │ tivity   │  │
+│   │ Standard │         │ Gateway  │         │ Circuit  │         │          │  │
+│   └──────────┘         └──────────┘         └──────────┘         └──────────┘  │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Step | Action | Details |
+|------|--------|---------|
+| **1. Upgrade Virtual WAN** | Change type from Basic to Standard | Navigate to VirtualWan1 → Configuration → Change Type to **Standard** → Save |
+| **2. Create ExpressRoute Gateway** | Add gateway to Hub1 (US East) | Navigate to Hub1 → ExpressRoute → Create gateway → Select scale units (e.g., 1 scale unit = 2 Gbps) |
+| **3. Associate ExpressRoute Circuit** | Connect circuit to gateway | In Hub1 → ExpressRoute → Add connection → Select your ExpressRoute circuit → Provide authorization key if circuit is in different subscription |
+| **4. Verify Connectivity** | Test the connection | Check effective routes, verify BGP peering status, test connectivity from on-premises |
+
+**Detailed Step-by-Step:**
+
+**Step 1: Upgrade VirtualWan1 to Standard**
+1. Go to Azure Portal → Virtual WANs → VirtualWan1
+2. Select **Configuration** from the left menu
+3. Change **Type** from `Basic` to `Standard`
+4. Click **Save**
+5. Wait for the upgrade to complete (may take a few minutes)
+
+**Step 2: Create ExpressRoute Gateway on Hub1**
+1. Navigate to VirtualWan1 → Hubs → Hub1
+2. Select **ExpressRoute** under Connectivity
+3. Click **Create gateway**
+4. Configure gateway settings:
+   - **Gateway scale units**: Select based on throughput needs (1 unit = 2 Gbps)
+   - Minimum: 1 scale unit, Maximum: 10 scale units
+5. Click **Create**
+6. Wait for gateway provisioning (can take 30+ minutes)
+
+**Step 3: Associate ExpressRoute Circuit**
+1. After gateway is provisioned, go to Hub1 → ExpressRoute
+2. Click **+ Add connection**
+3. Configure connection:
+   - **Connection name**: Provide a descriptive name
+   - **ExpressRoute circuit**: Select your circuit (if in same subscription)
+   - **Authorization key**: Required if circuit is in a different subscription
+   - **Routing weight**: Optional, for traffic engineering
+4. Click **Create**
+
+**Step 4: Verify Connectivity**
+1. Check connection status shows **Connected**
+2. Verify BGP routes are being exchanged:
+   - Hub1 → Effective Routes → Check learned routes from ExpressRoute
+3. Test connectivity from on-premises to Azure resources
+4. Monitor using Azure Monitor and Network Watcher
+
+**ExpressRoute Gateway Scale Units:**
+
+| Scale Units | Aggregate Throughput | Use Case |
+|-------------|---------------------|----------|
+| 1 | 2 Gbps | Small workloads, dev/test |
+| 2 | 4 Gbps | Medium workloads |
+| 5 | 10 Gbps | Large enterprise |
+| 10 | 20 Gbps | Maximum throughput needs |
+
+> ⚠️ **Note:** Gateway provisioning can take 30-45 minutes. Plan accordingly during maintenance windows.
+
 ---
 
 ## 4. ExpressRoute and Global Reach
