@@ -2241,6 +2241,53 @@ Additionally, all secondary replicas are readable, making them available for rea
 15. **Elastic Pool for Multiple Databases with License Mobility**
    > When deploying 50+ databases for a License Mobility customer requiring automatic scaling and cost minimization, Elastic Pool is the correct deployment option. It shares resources across databases with varying usage patterns, supports Azure Hybrid Benefit (vCore), and provides automatic scaling at pool level. Managed Instance is overkill for simple database hosting, and SQL Server Always On (VMs) has higher costs and manual scaling.
 
+16. **Long-Term Retention (LTR) for Compliance Backup Requirements**
+   > When backup retention must exceed 35 days (e.g., 7 years for compliance), configure a **Long-Term Retention (LTR) policy**. Azure SQL Database automatic backups have a default retention of 7-35 days, which is insufficient for long-term compliance. LTR stores full database backups in Azure Blob storage for up to 10 years. **Do NOT confuse with**: Azure Site Recovery (for disaster recovery, not backup retention), Geo-replication (for high availability, not backup retention), or standard automatic backups (max 35 days).
+
+---
+
+### Exam Scenario: Database Backup Retention Requirements
+
+**Scenario**: A company requires database backups to be retained for a minimum of seven years to meet compliance requirements.
+
+**Question**: What should you recommend to meet the database backup retention requirements?
+
+**Options**:
+- A. Use automatic Azure SQL Database backups
+- B. Configure Azure Site Recovery
+- C. Configure geo-replication of the database
+- D. Configure a long-term retention policy for the database
+
+**Answer**: **D. Configure a long-term retention policy for the database**
+
+**Why Correct Answer**:
+Azure SQL Database offers **Long-Term Retention (LTR)** for automated backups. This allows you to keep the backups in Azure Blob storage for up to **10 years**, which aligns with the requirement to retain database backups for a minimum of seven years.
+
+**Why Other Options Are Incorrect**:
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A. Automatic Azure SQL Database backups** | Default retention period is **7-35 days**, not seven years. You need LTR policy for extended retention. |
+| **B. Azure Site Recovery** | Designed for **disaster recovery** (replication, failover, recovery of workloads), NOT for long-term backup retention. |
+| **C. Geo-replication** | Used for **high availability and disaster recovery** by creating readable secondary replicas in different regions. Does NOT address backup retention requirements. |
+
+**Key Comparison**:
+
+| Feature | Purpose | Retention Period |
+|---------|---------|------------------|
+| **Automatic Backups** | Point-in-time restore | 7-35 days |
+| **Long-Term Retention (LTR)** | Compliance, archival | Up to 10 years |
+| **Geo-replication** | High availability, DR | N/A (real-time sync) |
+| **Azure Site Recovery** | Disaster recovery | N/A (workload recovery) |
+
+**Reference Links**:
+- [Azure SQL Database Long-Term Retention](https://learn.microsoft.com/en-us/azure/azure-sql/database/long-term-retention-overview)
+- [Directory Synchronization Overview](https://learn.microsoft.com/en-us/entra/architecture/sync-directory)
+
+**Domain**: Design Data Storage Solutions
+
+---
+
 ## Quick Reference Cheat Sheet
 
 ### When Requirements Say...
@@ -2280,6 +2327,9 @@ Additionally, all secondary replicas are readable, making them available for rea
 | "50+ databases + License Mobility + auto-scaling" | **Elastic Pool** (vCore) |
 | "Multiple databases + minimize licensing costs" | **Elastic Pool** with Azure Hybrid Benefit |
 | "Variable workload databases + cost optimization" | **Elastic Pool** (not Managed Instance or VMs) |
+| "Backup retention > 35 days" | **Long-Term Retention (LTR)** policy |
+| "Backup retention for compliance (7+ years)" | **Long-Term Retention (LTR)** policy |
+| "Archive database backups for years" | **Long-Term Retention (LTR)** policy (up to 10 years) |
 
 ## References
 
@@ -2298,6 +2348,7 @@ Additionally, all secondary replicas are readable, making them available for rea
 - [Hyperscale Service Tier](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tier-hyperscale?view=azuresql)
 - [Azure Hybrid Benefit](https://learn.microsoft.com/azure/azure-sql/azure-hybrid-benefit)
 - [Azure SQL Database Auditing](https://learn.microsoft.com/azure/azure-sql/database/auditing-overview)
+- [Long-Term Retention (LTR)](https://learn.microsoft.com/en-us/azure/azure-sql/database/long-term-retention-overview)
 
 ### Pricing Calculators
 
