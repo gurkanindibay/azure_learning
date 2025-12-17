@@ -25,10 +25,15 @@ Use the **Azure Traffic Analytics** in Azure Network Watcher to analyze the netw
 Does the solution meet the goal? **No**.
 
 **Explanation:**
-Azure Traffic Analytics, even when accessed through Azure Network Watcher, provides aggregated flow-level insights such as traffic volume, top talkers, protocol usage, and security alerts based on NSG flow logs. However, it does not show real-time allow/deny decisions for specific packets or connections. It is not suitable for troubleshooting individual VM connectivity issues where you need to determine whether a particular packet is allowed or blocked.
+Azure Traffic Analytics provides high-level insights based on NSG flow logs but does not offer packet-level visibility or detailed VM-level allow/deny decisions. It is designed for aggregated analysis at the virtual network level, not for troubleshooting individual VM connectivity issues. Since the scenario involves identifying whether packets are being specifically allowed or denied to individual virtual machines, Traffic Analytics is not the appropriate tool.
+
+Key limitations of Traffic Analytics for this scenario:
+- Provides aggregated flow-level insights such as traffic volume, top talkers, protocol usage, and security alerts
+- Does not show real-time allow/deny decisions for specific packets or connections
+- Not suitable for troubleshooting individual VM connectivity issues where you need to determine whether a particular packet is allowed or blocked
 
 **Correct Approach:**
-To determine if a packet is allowed or denied to a specific VM, you should use **IP Flow Verify**. IP Flow Verify checks if a packet is allowed or denied to or from a virtual machine. The information consists of direction, protocol, local IP, remote IP, local port, and remote port. If the packet is denied by a security group, the name of the rule that denied the packet is returned.
+To determine if a packet is allowed or denied to a specific VM, you should use **IP Flow Verify** in Azure Network Watcher. IP Flow Verify evaluates effective NSG rules for a given VM and can determine whether specific traffic is allowed or denied. The information consists of direction, protocol, local IP, remote IP, local port, and remote port. If the packet is denied by a security group, the name of the rule that denied the packet is returned.
 
 ---
 
