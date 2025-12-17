@@ -25,6 +25,7 @@
   - [Question 4: RBAC Action Required for User Delegation Key](#question-4-rbac-action-required-for-user-delegation-key)
   - [Question 5: Identity-Based Connection Settings for User-Assigned Managed Identity](#question-5-identity-based-connection-settings-for-user-assigned-managed-identity)
   - [Question 6: Time-Limited Blob Access for Finance Department](#question-6-time-limited-blob-access-for-finance-department)
+  - [Question 7: Maximum Security Access Authorization for Blob Storage](#question-7-maximum-security-access-authorization-for-blob-storage)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -1771,6 +1772,150 @@ var accountKey = "abc123..."; // Anyone with this key has FULL access
 - [Authorize access to data in Azure Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/authorize-access-azure-storage)
 - [Delegate access with a shared access signature](https://learn.microsoft.com/en-us/rest/api/storageservices/delegate-access-with-shared-access-signature)
 - [Manage storage account access keys](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage?tabs=azure-portal)
+
+### Question 7: Maximum Security Access Authorization for Blob Storage
+
+**Scenario:**
+You have an Azure subscription. You plan to deploy five storage accounts that will store block blobs and five storage accounts that will host file shares. The file shares will be accessed by using the SMB protocol.
+
+You need to recommend an access authorization solution for the storage accounts. The solution must meet the following requirements:
+- Maximize security
+- Prevent the use of shared keys
+- Whenever possible, support time-limited access
+
+**Question:**
+What should you include in the solution for the blobs?
+
+**Options:**
+1. A user delegation shared access signature (SAS) only ✅
+2. A shared access signature (SAS) and a stored access policy
+3. A user delegation shared access signature (SAS) and a stored access policy
+
+**Correct Answer: A user delegation shared access signature (SAS) only**
+
+**Detailed Analysis:**
+
+#### Why User Delegation SAS Only is CORRECT ✅
+
+**Key Points:**
+- ✅ **Maximizes Security**: User Delegation SAS is secured with Microsoft Entra ID credentials, not storage account keys
+- ✅ **Prevents Shared Keys**: User Delegation SAS doesn't use storage account keys—it uses a user delegation key obtained via Entra ID authentication
+- ✅ **Supports Time-Limited Access**: User Delegation SAS tokens have configurable start and expiry times (validity period can be defined)
+- ✅ **Identity-Based Access**: Combines access permissions with Microsoft Entra identities, reducing risk associated with shared keys
+- ✅ **Simple and Sufficient**: For the given requirements, User Delegation SAS alone provides everything needed
+
+**Why This is the Best Choice:**
+```
+Requirement                    │ User Delegation SAS
+───────────────────────────────┼─────────────────────
+Maximize Security              │ ✅ Entra ID-backed (most secure SAS type)
+Prevent Shared Keys            │ ✅ Uses user delegation key, NOT account keys
+Support Time-Limited Access    │ ✅ Configurable start/expiry times
+Blob Storage Support           │ ✅ Fully supported
+```
+
+**Implementation Example:**
+```csharp
+// Authenticate with Microsoft Entra ID (no storage keys needed)
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://myaccount.blob.core.windows.net"),
+    credential
+);
+
+// Get user delegation key (time-limited, from Entra ID)
+var userDelegationKey = await blobServiceClient.GetUserDelegationKeyAsync(
+    startsOn: DateTimeOffset.UtcNow,
+    expiresOn: DateTimeOffset.UtcNow.AddHours(4)  // Time-limited!
+);
+
+// Create User Delegation SAS with time limits
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    Resource = "c",
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(4)  // Time-limited access
+};
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
+
+// Generate SAS using user delegation key (NOT account key)
+var sasToken = sasBuilder.ToSasQueryParameters(
+    userDelegationKey.Value,
+    blobServiceClient.AccountName
+).ToString();
+```
+
+#### Why SAS and Stored Access Policy is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Uses Shared Keys**: A standard SAS (Account or Service SAS) with stored access policy is signed using storage account keys
+- ❌ **Doesn't Maximize Security**: Shared key-based SAS is less secure than User Delegation SAS
+- ❌ **Violates Requirements**: The requirement explicitly states "prevent the use of shared keys"
+- ⚠️ **Security Risk**: Combining SAS with stored access policy still relies on account keys for signing
+
+**Why This is Problematic:**
+```csharp
+// ❌ Service SAS with stored access policy uses account key
+var credential = new StorageSharedKeyCredential(accountName, accountKey); // Uses shared key!
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "mycontainer",
+    Identifier = "my-policy"  // References stored policy, but STILL uses account key
+};
+var sasToken = sasBuilder.ToSasQueryParameters(credential);  // Signed with account key
+```
+
+#### Why User Delegation SAS and Stored Access Policy is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Not Supported**: Stored access policies are **NOT supported for User Delegation SAS**
+- ❌ **Invalid Combination**: You cannot associate a stored access policy with a User Delegation SAS
+- ❌ **Unnecessary Complexity**: User Delegation SAS alone is simple and sufficient for the requirements
+- ✅ **User Delegation SAS Already Has Time Limits**: The SAS token itself supports start/expiry times
+
+**Technical Reason:**
+```
+┌─────────────────────────────┬───────────────────────────────┐
+│ SAS Type                    │ Stored Access Policy Support  │
+├─────────────────────────────┼───────────────────────────────┤
+│ Account SAS                 │ ❌ Not supported              │
+│ Service SAS                 │ ✅ Supported                  │
+│ User Delegation SAS         │ ❌ NOT SUPPORTED              │
+└─────────────────────────────┴───────────────────────────────┘
+```
+
+**Key Insight**: Stored access policies only work with **Service SAS**. Since User Delegation SAS inherently supports time-limited access through its token parameters, there's no need (and no capability) to use stored access policies with it.
+
+### Comparison Table
+
+| Solution | Maximize Security | Prevent Shared Keys | Time-Limited Access | Valid for Blobs |
+|----------|-------------------|---------------------|---------------------|------------------|
+| **User Delegation SAS only** | ✅ Most secure | ✅ Uses Entra ID | ✅ Built-in support | ✅ **Correct** |
+| **SAS + Stored Access Policy** | ⚠️ Less secure | ❌ Uses account key | ✅ Via policy | ❌ Incorrect |
+| **User Delegation SAS + Stored Access Policy** | ❌ Invalid | ✅ | ✅ | ❌ Not supported |
+
+### Key Takeaways
+
+**Question Pattern:** "Maximum security for blob storage + prevent shared keys + time-limited access"
+
+**Answer:** Use **User Delegation SAS only** because:
+1. 🔐 **Most Secure**: Backed by Microsoft Entra ID credentials
+2. 🚫 **No Shared Keys**: Doesn't use storage account keys
+3. 🕐 **Time-Limited**: Native support for start and expiry times
+4. ✅ **Simple**: No need for stored access policy (which isn't supported anyway)
+
+**Critical Points to Remember:**
+- User Delegation SAS is the **only** SAS type that doesn't use storage account keys
+- **Stored access policies do NOT work with User Delegation SAS**
+- For blob storage with maximum security requirements, User Delegation SAS is always the answer
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Create a user delegation SAS](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-user-delegation-sas-create-dotnet)
+- [Grant limited access to Azure Storage resources using SAS](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
+- [Create a stored access policy](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
 
 ## SAS Security Best Practices
 
