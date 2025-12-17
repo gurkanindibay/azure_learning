@@ -26,6 +26,7 @@
   - [Question 5: Identity-Based Connection Settings for User-Assigned Managed Identity](#question-5-identity-based-connection-settings-for-user-assigned-managed-identity)
   - [Question 6: Time-Limited Blob Access for Finance Department](#question-6-time-limited-blob-access-for-finance-department)
   - [Question 7: Maximum Security Access Authorization for Blob Storage](#question-7-maximum-security-access-authorization-for-blob-storage)
+  - [Question 8: Maximum Security Access Authorization for File Shares](#question-8-maximum-security-access-authorization-for-file-shares)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -1916,6 +1917,161 @@ var sasToken = sasBuilder.ToSasQueryParameters(credential);  // Signed with acco
 - [Create a user delegation SAS](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-user-delegation-sas-create-dotnet)
 - [Grant limited access to Azure Storage resources using SAS](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
 - [Create a stored access policy](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
+
+### Question 8: Maximum Security Access Authorization for File Shares
+
+**Scenario:**
+You have an Azure subscription. You plan to deploy five storage accounts that will store block blobs and five storage accounts that will host file shares. The file shares will be accessed by using the SMB protocol.
+
+You need to recommend an access authorization solution for the storage accounts. The solution must meet the following requirements:
+- Maximize security
+- Prevent the use of shared keys
+- Whenever possible, support time-limited access
+
+**Question:**
+What should you include in the solution for the file shares?
+
+**Options:**
+1. Microsoft Entra credentials ✅
+2. A user delegation shared access signature (SAS) only
+3. A user delegation shared access signature (SAS) and a stored access policy
+
+**Correct Answer: Microsoft Entra credentials**
+
+**Detailed Analysis:**
+
+#### Why Microsoft Entra Credentials is CORRECT ✅
+
+**Key Points:**
+- ✅ **Maximizes Security**: Microsoft Entra ID provides identity-based authentication with strong security features
+- ✅ **Prevents Shared Keys**: Entra ID credentials don't rely on storage account keys or shared keys
+- ✅ **Enhanced Security Features**: Supports Multi-Factor Authentication (MFA) and conditional access policies
+- ✅ **Identity-Centric Approach**: User-focused access management through Microsoft Entra identities
+- ✅ **SMB Protocol Support**: Azure Files supports Microsoft Entra ID authentication over SMB
+
+**Why This is the Best Choice for File Shares:**
+```
+Requirement                    │ Microsoft Entra Credentials
+───────────────────────────────┼─────────────────────────────────
+Maximize Security              │ ✅ Identity-based with MFA support
+Prevent Shared Keys            │ ✅ No storage account keys needed
+Support Time-Limited Access    │ ✅ Via conditional access policies
+File Shares (SMB) Support      │ ✅ Fully supported
+```
+
+**Authentication Options for Azure Files with Entra ID:**
+- **Azure AD Domain Services (Azure AD DS)**: For cloud-only scenarios
+- **On-premises AD DS**: For hybrid scenarios with Azure AD Connect
+- **Azure AD Kerberos**: For hybrid identities accessing Azure file shares
+
+**Implementation Approach:**
+```powershell
+# Enable Azure AD DS authentication for Azure Files
+az storage account update \
+    --name mystorageaccount \
+    --resource-group myResourceGroup \
+    --enable-files-aadds true
+
+# Or enable on-premises AD DS authentication
+az storage account update \
+    --name mystorageaccount \
+    --resource-group myResourceGroup \
+    --enable-files-adds true \
+    --domain-name "contoso.com" \
+    --net-bios-domain-name "CONTOSO" \
+    --forest-name "contoso.com" \
+    --domain-guid "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" \
+    --domain-sid "S-1-5-21-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx" \
+    --azure-storage-sid "S-1-5-21-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxx"
+```
+
+**Security Benefits:**
+- 🔐 **Strong Authentication**: Leverages Entra ID's robust authentication mechanisms
+- 🛡️ **Conditional Access**: Apply policies based on user, device, location, and risk
+- 📊 **Audit Logging**: Complete audit trail through Entra ID
+- 🔑 **No Key Management**: Eliminates the risk of exposed storage keys
+
+#### Why User Delegation SAS Only is INCORRECT ❌
+
+**Critical Limitation:**
+- ❌ **NOT SUPPORTED for File Storage**: User Delegation SAS is **ONLY supported for Blob Storage**
+- ❌ **Cannot Use for File Shares**: Azure Files does not support User Delegation SAS
+- ❌ **Wrong Service Type**: This option doesn't apply to file shares at all
+
+**User Delegation SAS Service Support:**
+```
+┌─────────────────────┬─────────────────────────────┐
+│ Storage Service     │ User Delegation SAS Support │
+├─────────────────────┼─────────────────────────────┤
+│ Blob Storage        │ ✅ Supported                │
+│ File Storage        │ ❌ NOT SUPPORTED            │
+│ Queue Storage       │ ❌ NOT SUPPORTED            │
+│ Table Storage       │ ❌ NOT SUPPORTED            │
+└─────────────────────┴─────────────────────────────┘
+```
+
+**Why This Matters:**
+- User Delegation SAS was designed specifically for Blob Storage with Entra ID integration
+- For File Shares, you must use either:
+  - Microsoft Entra credentials (recommended for maximum security)
+  - Service SAS with storage account key (less secure)
+  - Storage account key directly (least secure)
+
+#### Why User Delegation SAS and Stored Access Policy is INCORRECT ❌
+
+**Multiple Issues:**
+- ❌ **User Delegation SAS Not Supported for Files**: As explained above, User Delegation SAS only works with Blob Storage
+- ❌ **Stored Access Policies Not Supported for User Delegation SAS**: Even for blobs, stored access policies cannot be combined with User Delegation SAS
+- ❌ **Double Invalid Combination**: This option is invalid on two counts
+
+**Technical Reason:**
+```
+┌─────────────────────────────┬───────────────────────────────┐
+│ SAS Type                    │ Stored Access Policy Support  │
+├─────────────────────────────┼───────────────────────────────┤
+│ Account SAS                 │ ❌ Not supported              │
+│ Service SAS                 │ ✅ Supported                  │
+│ User Delegation SAS         │ ❌ NOT SUPPORTED              │
+└─────────────────────────────┴───────────────────────────────┘
+```
+
+### Comparison: Blob Storage vs File Shares Access Authorization
+
+This question and Question 7 together illustrate a critical distinction:
+
+| Requirement | Blob Storage Solution | File Shares Solution |
+|-------------|----------------------|---------------------|
+| **Maximize Security** | User Delegation SAS | Microsoft Entra credentials |
+| **Prevent Shared Keys** | ✅ User Delegation SAS | ✅ Entra ID |
+| **Time-Limited Access** | ✅ SAS expiry times | ✅ Conditional access policies |
+| **Why Different?** | User Delegation SAS supported | User Delegation SAS **NOT** supported |
+
+**Key Insight**: The same security requirements lead to **different solutions** depending on the storage service:
+- **Blobs** → User Delegation SAS (most secure SAS type, Entra ID-backed)
+- **File Shares** → Microsoft Entra credentials directly (User Delegation SAS not available)
+
+### Key Takeaways
+
+**Question Pattern:** "Maximum security for file shares + prevent shared keys + time-limited access"
+
+**Answer:** Use **Microsoft Entra credentials** because:
+1. 🔐 **Identity-Based Security**: Strong authentication through Entra ID
+2. 🚫 **No Shared Keys**: Eliminates storage account key exposure
+3. 🛡️ **Enhanced Features**: MFA, conditional access, and audit logging
+4. ⚠️ **User Delegation SAS Not Available**: Cannot use for File Storage
+
+**Critical Points to Remember:**
+- User Delegation SAS is **ONLY supported for Blob Storage**
+- For File Shares with maximum security, use Microsoft Entra credentials
+- Stored access policies do NOT work with User Delegation SAS (even for blobs)
+- Azure Files supports Entra ID authentication over SMB protocol
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Define stored access policy](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
+- [Create user delegation SAS](https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas)
+- [Overview of Azure Files identity-based authentication](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-active-directory-overview)
 
 ## SAS Security Best Practices
 
