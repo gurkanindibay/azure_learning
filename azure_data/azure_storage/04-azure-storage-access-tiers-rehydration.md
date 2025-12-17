@@ -9,6 +9,8 @@
   - [Premium File Shares](#premium-file-shares)
   - [Premium Page Blobs](#premium-page-blobs)
 - [Storage Account Types Comparison](#storage-account-types-comparison)
+  - [Lifecycle Management Policy Support](#lifecycle-management-policy-support)
+  - [Exam Scenario: Lifecycle Management Storage Account Selection](#exam-scenario-lifecycle-management-storage-account-selection)
   - [Exam Scenario: Choosing the Right Storage Account Type](#exam-scenario-choosing-the-right-storage-account-type)
   - [Exam Scenario: High-Performance Media Streaming Storage](#scenario-high-performance-media-streaming-storage)
   - [Exam Scenario: Business-Critical Data with Immutability and Resiliency](#scenario-business-critical-data-with-immutability-and-resiliency)
@@ -113,6 +115,74 @@ Azure Storage offers several types of storage accounts, each supporting differen
 | **Premium Page Blobs** | Page blobs | LRS, ZRS | Premium (SSD) | VM disks, databases |
 
 > **Important**: You cannot change a storage account to a different type after creation. To move data to a different account type, you must create a new account and copy the data.
+
+### Lifecycle Management Policy Support
+
+Lifecycle management policies allow you to automatically transition blobs between access tiers (Hot → Cool → Cold → Archive) or delete blobs based on rules. **Not all storage account types support lifecycle management**.
+
+| Storage Account Type | Performance | Lifecycle Management Support | Notes |
+|---------------------|-------------|------------------------------|-------|
+| **Standard general-purpose v2** | Standard | ✅ Yes | Full support for tier transitions and deletion rules |
+| **BlobStorage (legacy)** | Standard | ✅ Yes | Legacy account type, but supports lifecycle management |
+| **Premium block blobs** | Premium | ❌ No | No access tiers (Hot/Cool/Archive) to transition between |
+| **Premium file shares** | Premium | ❌ No | Azure Files only, not blob storage |
+| **Premium page blobs** | Premium | ❌ No | Page blobs don't support access tiers |
+
+**Key Lifecycle Management Restrictions:**
+- ⚠️ Lifecycle management is **ONLY supported** on **Standard performance** storage accounts
+- ✅ **Standard general-purpose v2** and **BlobStorage (legacy)** support lifecycle management
+- ❌ **Premium storage accounts** (block blobs, file shares, page blobs) do NOT support lifecycle management
+- ❌ Access tiers (Hot/Cool/Cold/Archive) are only available on **Standard** blob storage
+
+> 💡 **Exam Tip**: When a question mentions **lifecycle management** or **automatic tier transitions**, immediately filter for **Standard performance** accounts only. Premium accounts use SSDs with no tier hierarchy, so lifecycle policies don't apply.
+
+---
+
+#### Exam Scenario: Lifecycle Management Storage Account Selection
+
+**Question**: You plan to implement two new apps that have the requirements shown in the following table:
+
+| Name | Requirement |
+|------|-------------|
+| App1 | Use lifecycle management to migrate app data between storage tiers |
+| App2 | Store app data in an Azure file share |
+
+You have the following storage accounts:
+
+| Storage Account | Type | Performance |
+|----------------|------|-------------|
+| Storage1 | Standard general-purpose v2 | Standard |
+| Storage2 | Premium block blobs | Premium |
+| Storage3 | BlobStorage (legacy) | Standard |
+| Storage4 | Premium file shares | Premium |
+
+Which storage accounts should you recommend using for App1?
+
+| Option | Correct? |
+|--------|----------|
+| Storage1 and Storage2 only | ❌ |
+| **Storage1 and Storage3 only** | ✅ **Correct Answer** |
+| Storage1, Storage2, and Storage3 only | ❌ |
+| Storage1, Storage2, Storage3, and Storage4 | ❌ |
+
+**Answer Explanation:**
+
+**Storage1 and Storage3 only** is the correct answer because:
+
+1. **Storage1 (Standard general-purpose v2)**: Fully supports lifecycle management policies for automatically transitioning blobs between Hot, Cool, Cold, and Archive tiers.
+
+2. **Storage3 (BlobStorage, Standard)**: Also supports lifecycle management. BlobStorage is a legacy account type but still supports tier transitions.
+
+**Why Other Storage Accounts Are Excluded:**
+
+| Storage Account | Why It's Excluded |
+|----------------|-------------------|
+| **Storage2 (Premium block blobs)** | Premium storage accounts do NOT support lifecycle management. Premium block blobs use SSDs and don't have access tiers (Hot/Cool/Archive) to transition between. |
+| **Storage4 (Premium file shares)** | Premium file shares are for Azure Files (SMB/NFS file shares), not blob storage. Lifecycle management is a blob-specific feature and doesn't apply to file shares. |
+
+> 💡 **Exam Tip**: The key differentiator is **Standard vs Premium performance**. Only **Standard general-purpose v2** and **BlobStorage (legacy)** support lifecycle management because they have access tiers to transition between.
+
+---
 
 ### Exam Scenario: Choosing the Right Storage Account Type
 
