@@ -227,6 +227,137 @@
 
 ---
 
+## Comprehensive Pool Comparison
+
+### Feature Comparison Table
+
+| Feature | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|---------|-------------------|---------------------|-------------------|-------------------|
+| **Former Name** | SQL Data Warehouse | SQL On-Demand | Spark for Synapse | Kusto |
+| **Compute Model** | Provisioned (DWU) | Serverless (pay-per-query) | Serverless (auto-scale) | Provisioned |
+| **Query Language** | T-SQL | T-SQL | Python, Scala, SQL, R, .NET | KQL (Kusto) |
+| **Architecture** | MPP (Massively Parallel) | Distributed | Distributed Spark | Columnar Time-Series |
+
+### Storage & Data Capabilities
+
+| Capability | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|------------|-------------------|---------------------|-------------------|-------------------|
+| **Local Storage** | ✅ Yes | ❌ No | ✅ Yes (temporary) | ✅ Yes |
+| **Data Ingestion** | ✅ Yes (COPY, PolyBase) | ❌ No | ✅ Yes | ✅ Yes |
+| **Hash-Distributed Tables** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Round-Robin Tables** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Replicated Tables** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Materialized Views** | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
+| **Query External Data** | ✅ Yes (PolyBase) | ✅ Yes (OPENROWSET) | ✅ Yes | ✅ Yes |
+| **Create Permanent Tables** | ✅ Yes | ❌ No | ✅ Yes (Delta Lake) | ✅ Yes |
+
+### Performance & Scaling
+
+| Aspect | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|--------|-------------------|---------------------|-------------------|-------------------|
+| **Scaling** | Manual (DWU100c-DWU30000c) | Automatic | Auto-scale nodes | Manual |
+| **Concurrency** | High (up to 128 queries) | Medium | Medium | High |
+| **Best Data Size** | > 1 TB | Any (query-based) | Large datasets | Time-series data |
+| **Query Caching** | ✅ Result-set caching | ❌ No | ✅ Spark caching | ✅ Yes |
+| **Workload Management** | ✅ Resource classes | ❌ No | ✅ Node allocation | ✅ Yes |
+
+### Cost Model
+
+| Cost Aspect | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|-------------|-------------------|---------------------|-------------------|-------------------|
+| **Billing Model** | Per hour (DWU) | Per TB processed | Per hour (nodes) | Per hour |
+| **Minimum Cost** | DWU100c provisioned | $0 (pay-per-use) | $0 (pay-per-use) | Provisioned minimum |
+| **Pause/Resume** | ✅ Yes | N/A (serverless) | ✅ Yes (auto-pause) | ✅ Yes |
+| **Best for Cost** | Predictable workloads | Sporadic queries | Batch processing | Continuous analytics |
+
+### Use Case Suitability
+
+| Use Case | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|----------|-------------------|---------------------|-------------------|-------------------|
+| **Enterprise Data Warehouse** | ✅ **Best** | ❌ | ❌ | ❌ |
+| **Ad-hoc Data Exploration** | ⚠️ Expensive | ✅ **Best** | ✅ Good | ⚠️ |
+| **OLAP Analytics** | ✅ **Best** | ❌ | ❌ | ⚠️ |
+| **Machine Learning** | ❌ | ❌ | ✅ **Best** | ❌ |
+| **Big Data ETL** | ✅ Good | ❌ | ✅ **Best** | ❌ |
+| **Streaming Analytics** | ❌ | ❌ | ✅ Good | ✅ **Best** |
+| **Log/Telemetry Analytics** | ❌ | ⚠️ | ⚠️ | ✅ **Best** |
+| **Time-Series Analysis** | ❌ | ❌ | ⚠️ | ✅ **Best** |
+| **Logical Data Warehouse** | ⚠️ | ✅ **Best** | ⚠️ | ❌ |
+| **Data Lake Querying** | ✅ Good | ✅ **Best** | ✅ **Best** | ⚠️ |
+| **High-Concurrency Reporting** | ✅ **Best** | ⚠️ | ❌ | ✅ Good |
+
+### Data Source Support
+
+| Data Source | Dedicated SQL Pool | Serverless SQL Pool | Apache Spark Pool | Data Explorer Pool |
+|-------------|-------------------|---------------------|-------------------|-------------------|
+| **Azure Data Lake Gen2** | ✅ PolyBase/COPY | ✅ OPENROWSET | ✅ Native | ✅ Yes |
+| **Azure Blob Storage** | ✅ PolyBase/COPY | ✅ OPENROWSET | ✅ Native | ✅ Yes |
+| **Parquet Files** | ✅ Yes | ✅ Yes | ✅ **Best** | ✅ Yes |
+| **CSV Files** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **JSON Files** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Delta Lake** | ✅ Limited | ✅ Yes | ✅ **Best** | ❌ |
+| **Cosmos DB** | ✅ Via Synapse Link | ✅ Via Synapse Link | ✅ Via Synapse Link | ❌ |
+
+### Key Limitations Summary
+
+| Pool Type | Key Limitations |
+|-----------|-----------------|
+| **Dedicated SQL Pool** | • Cost when idle (must pause) • Not for OLTP • Requires provisioning |
+| **Serverless SQL Pool** | • **No local storage** • **No data ingestion** • No table distributions • Query-only |
+| **Apache Spark Pool** | • Not for structured DW • Startup latency • Not for high-concurrency SQL |
+| **Data Explorer Pool** | • KQL only (not T-SQL) • Specialized for time-series • Not general-purpose DW |
+
+### Decision Flow Chart
+
+```
+                    ┌─────────────────────────────────────┐
+                    │ What is your primary requirement?   │
+                    └──────────────────┬──────────────────┘
+                                       │
+           ┌───────────────────────────┼───────────────────────────┐
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌─────────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐
+│ Data Warehousing    │   │ Data Processing     │   │ Real-time Analytics │
+│ & OLAP Analytics    │   │ & ML Workloads      │   │ & Log Analysis      │
+└──────────┬──────────┘   └──────────┬──────────┘   └──────────┬──────────┘
+           │                         │                         │
+           ▼                         ▼                         ▼
+┌─────────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐
+│ Need to INGEST      │   │ Apache Spark Pool   │   │ Data Explorer Pool  │
+│ data into tables?   │   │ ✅ RECOMMENDED      │   │ ✅ RECOMMENDED      │
+└──────────┬──────────┘   └─────────────────────┘   └─────────────────────┘
+           │
+     ┌─────┴─────┐
+     │           │
+     ▼           ▼
+   ┌───┐       ┌───┐
+   │YES│       │ NO│
+   └─┬─┘       └─┬─┘
+     │           │
+     ▼           ▼
+┌─────────────┐ ┌─────────────────────┐
+│ Dedicated   │ │ Just query data     │
+│ SQL Pool    │ │ in data lake?       │
+│ ✅ REQUIRED │ └──────────┬──────────┘
+└─────────────┘            │
+                     ┌─────┴─────┐
+                     │           │
+                     ▼           ▼
+                   ┌───┐       ┌───┐
+                   │YES│       │ NO│
+                   └─┬─┘       └─┬─┘
+                     │           │
+                     ▼           ▼
+          ┌─────────────────┐ ┌─────────────────┐
+          │ Serverless SQL  │ │ Dedicated SQL   │
+          │ Pool            │ │ Pool            │
+          │ ✅ RECOMMENDED  │ │ ✅ RECOMMENDED  │
+          └─────────────────┘ └─────────────────┘
+```
+
+---
+
 ## Integration Capabilities
 
 ### Native Integrations
@@ -347,6 +478,104 @@ The pipeline will include the following actions:
 
 ---
 
+### Question 2: Ingesting Data into Hash-Distributed Tables
+
+**Scenario**: You are designing a data analytics solution that will use Azure Synapse Analytics and Azure Data Lake Storage Gen2.
+
+You need to recommend Azure Synapse pools to meet the following requirement:
+- Ingest data from Data Lake Storage into hash-distributed tables
+
+**Question**: What should you recommend for this requirement?
+
+**Options**:
+- A) A dedicated SQL pool
+- B) A serverless Apache Spark pool
+- C) A serverless SQL pool
+
+**Correct Answer**: **A) A dedicated SQL pool**
+
+**Explanation**:
+
+**A dedicated SQL pool** is correct because:
+- Dedicated SQL pools (formerly SQL Data Warehouse) are **built for substantial data warehousing and analytical tasks**
+- **Hash-distributed tables** distribute data across multiple compute nodes using a hash function on a chosen distribution column
+- This distribution method **boosts query performance** for operations such as joins and aggregations
+- Dedicated SQL pools are **well-suited for efficiently handling large-scale data analytics workloads**
+- Supports **direct ingestion** from Azure Data Lake Storage Gen2 using PolyBase or COPY statement
+
+**Why Other Options Are Incorrect**:
+
+**A serverless Apache Spark pool** is incorrect because:
+- Designed for **on-demand data processing and analytics** using the Apache Spark engine
+- While it allows interaction with data in Azure Data Lake Storage Gen2, it is **NOT specifically designed for direct ingestion into hash-distributed tables**
+- The concept of hash-distributed tables is **more closely associated with dedicated SQL pools**
+- Better suited for **ad-hoc querying, exploration, and processing** of data using the Spark engine
+- Does not support the same table distribution concepts as dedicated SQL pools
+
+**A serverless SQL pool** is incorrect because:
+- Every Azure Synapse workspace comes with serverless SQL pool endpoints for **querying data in Azure Data Lake**
+- Designed for **large-scale data and computational tasks** with built-in fault-tolerance
+- **Key Limitation**: Serverless SQL pool **doesn't support local storage or ingestion capabilities**
+- You are **only billed for data processed** by queries (no reserved resources)
+- Enables seamless **querying of files** in Azure Storage accounts
+- **Does NOT support data ingestion functionalities** - cannot create and populate hash-distributed tables
+
+**Understanding Hash-Distributed Tables**:
+
+```sql
+-- Creating a hash-distributed table in dedicated SQL pool
+CREATE TABLE FactSales
+(
+    SalesID INT NOT NULL,
+    ProductID INT NOT NULL,
+    CustomerID INT NOT NULL,
+    SalesAmount DECIMAL(18,2),
+    SalesDate DATE
+)
+WITH
+(
+    DISTRIBUTION = HASH(CustomerID),  -- Hash distribution on CustomerID
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+-- Loading data from Data Lake Storage Gen2
+COPY INTO FactSales
+FROM 'https://mydatalake.dfs.core.windows.net/sales/*.parquet'
+WITH (
+    FILE_TYPE = 'PARQUET',
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+);
+```
+
+**Hash Distribution Benefits**:
+
+| Benefit | Description |
+|---------|-------------|
+| **Even Data Distribution** | Data rows are distributed across nodes based on hash value |
+| **Optimized Joins** | Co-located data reduces data movement during join operations |
+| **Parallel Query Execution** | Queries execute in parallel across all distributions |
+| **Scalable Performance** | Performance scales with the number of compute nodes |
+
+**Comparison of Table Distribution Types in Dedicated SQL Pool**:
+
+| Distribution Type | Use Case | Best For |
+|------------------|----------|----------|
+| **Hash** | Large fact tables (>60M rows) | Joins and aggregations on distribution key |
+| **Round-Robin** | Staging tables, no clear distribution key | Even load distribution, temporary data |
+| **Replicated** | Small dimension tables (<2GB) | Fast joins with fact tables |
+
+**Key Insight**: Only **dedicated SQL pools** support the concept of table distributions (hash, round-robin, replicated). Serverless SQL pools and Spark pools do not have this architectural feature.
+
+**Reference Links**:
+- [What is dedicated SQL pool?](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql-data-warehouse/sql-data-warehouse-overview-what-is)
+- [Serverless SQL pool overview](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/on-demand-workspace-overview)
+- [Serverless SQL pool best practices](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/best-practices-serverless-sql-pool)
+- [Dedicated SQL pool best practices](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/best-practices-dedicated-sql-pool)
+
+**Domain**: Design Data Storage Solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
@@ -372,6 +601,15 @@ The pipeline will include the following actions:
 7. **Materialized Views for OLAP**
    > Dedicated SQL pools support materialized views which pre-compute aggregations for faster OLAP queries
 
+8. **Hash-Distributed Tables = Dedicated SQL Pool Only**
+   > Hash-distributed tables are a feature of dedicated SQL pools. Serverless SQL and Spark pools do NOT support this concept
+
+9. **Serverless SQL Pool = No Local Storage/Ingestion**
+   > Serverless SQL pools can only QUERY data in place - they cannot ingest data into tables or support table distributions
+
+10. **Data Ingestion from ADLS Gen2**
+    > When ingesting data from Azure Data Lake Storage Gen2 into structured tables, use dedicated SQL pools with COPY or PolyBase
+
 ---
 
 ## Quick Reference Cheat Sheet
@@ -394,6 +632,12 @@ The pipeline will include the following actions:
 | "U-SQL analytics" | **Not available** (Data Lake Analytics retired) |
 | "Managed OLAP serving layer" | **Azure Analysis Services** |
 | "Refresh OLAP models from warehouse" | **Dedicated SQL Pool** → Analysis Services |
+| "Hash-distributed tables" | **Dedicated SQL Pool** |
+| "Ingest data into tables" | **Dedicated SQL Pool** |
+| "Load data from ADLS Gen2" | **Dedicated SQL Pool** (COPY/PolyBase) |
+| "Table distribution (hash/round-robin)" | **Dedicated SQL Pool** |
+| "Query data without ingestion" | **Serverless SQL Pool** |
+| "No local storage needed" | **Serverless SQL Pool** |
 
 ### Component Selection Matrix
 
@@ -406,6 +650,9 @@ The pipeline will include the following actions:
 | Ad-hoc Queries | ❌ | ❌ | ✅ Best | ❌ |
 | High Concurrency | ✅ Best | ❌ | ❌ | ✅ Best |
 | Cost (Variable) | ❌ | ❌ | ✅ Best | ❌ |
+| **Hash-Distributed Tables** | ✅ Best | ❌ | ❌ | ❌ |
+| **Data Ingestion** | ✅ Best | ✅ Good | ❌ | ❌ |
+| **Table Distributions** | ✅ Best | ❌ | ❌ | ❌ |
 
 ---
 
