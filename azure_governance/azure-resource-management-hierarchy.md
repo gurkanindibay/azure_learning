@@ -1480,6 +1480,138 @@ Result:
 
 ---
 
+### Question 6: Setting Up Azure Environment with Management Group Hierarchy
+
+**Scenario:**
+You need to set up an Azure environment for your company which should consist of the following components:
+
+- A root management group
+- Five child management groups
+- Each child management group should include five Azure subscriptions
+- Each subscription should contain approximately ten resource groups
+- Role assignments must be in place for the subscriptions and resource groups
+
+You also need to ensure that administrative effort is minimized during the implementation.
+
+**Question:**
+What solution would you recommend for meeting these requirements?
+
+**Options:**
+
+1. **Azure Policies** ❌
+   - Azure Policies are used to enforce organizational standards and assess compliance at scale
+   - While they help with governance and compliance, they are not designed for creating the hierarchical structure
+   - Policies cannot create management groups, subscriptions, or resource groups
+   - Not suitable for setting up the initial Azure environment structure
+
+2. **Azure Bicep** ✅
+   - Azure Bicep is a domain-specific language (DSL) for deploying Azure resources declaratively
+   - Allows you to define and deploy all required components:
+     - Management groups (root and children)
+     - Subscriptions (can be placed under management groups)
+     - Resource groups
+     - Role assignments at any scope
+   - Infrastructure as Code (IaC) approach ensures:
+     - Structured and repeatable deployments
+     - Version control for your infrastructure
+     - Minimal administrative effort through automation
+     - Consistent configuration across all environments
+   - Can deploy the entire hierarchy in a single deployment or organized modules
+
+3. **Microsoft Defender for Cloud** ❌
+   - Microsoft Defender for Cloud is a cloud-native security solution
+   - Focuses on protecting Azure resources and threat detection
+   - Does not create or manage the hierarchical structure of management groups, subscriptions, or resource groups
+   - Used after infrastructure is in place, not for initial setup
+
+4. **Azure Privileged Identity Management (PIM)** ❌
+   - Azure PIM helps manage, control, and monitor privileged access
+   - Focuses on just-in-time access and role activation
+   - Does not create management groups, subscriptions, or resource groups
+   - Would be used after the infrastructure is set up to manage elevated access
+
+**Answer:** Azure Bicep
+
+**Explanation:**
+
+Azure Bicep is the correct choice because it provides a declarative Infrastructure as Code approach to deploy and manage Azure resources. Here's why it's the optimal solution:
+
+**1. Declarative Resource Deployment:**
+```bicep
+// Example: Creating management group hierarchy
+targetScope = 'tenant'
+
+resource rootMG 'Microsoft.Management/managementGroups@2021-04-01' = {
+  name: 'root-mg'
+  properties: {
+    displayName: 'Root Management Group'
+  }
+}
+
+resource childMG 'Microsoft.Management/managementGroups@2021-04-01' = [for i in range(1, 5): {
+  name: 'child-mg-${i}'
+  properties: {
+    displayName: 'Child Management Group ${i}'
+    details: {
+      parent: {
+        id: rootMG.id
+      }
+    }
+  }
+}]
+```
+
+**2. Benefits for This Scenario:**
+
+| Requirement | How Bicep Addresses It |
+|-------------|------------------------|
+| Root management group | Define at tenant scope |
+| 5 child management groups | Use loops for repeatable definitions |
+| 25 subscriptions (5 per child MG) | Associate subscriptions with management groups |
+| ~250 resource groups (10 per subscription) | Deploy using subscription-scoped modules |
+| Role assignments | Define at any scope (MG, subscription, RG) |
+| Minimize admin effort | Single deployment, version controlled, repeatable |
+
+**3. Deployment Strategy:**
+```
+Tenant Scope Deployment
+├─ Root Management Group
+│  ├─ Child Management Group 1
+│  │  ├─ Subscription 1-1 → 10 Resource Groups → Role Assignments
+│  │  ├─ Subscription 1-2 → 10 Resource Groups → Role Assignments
+│  │  └─ ... (5 subscriptions)
+│  ├─ Child Management Group 2
+│  │  └─ ... (5 subscriptions)
+│  └─ ... (5 child management groups)
+
+Total:
+- Management Groups: 6 (1 root + 5 children)
+- Subscriptions: 25
+- Resource Groups: ~250
+- Role Assignments: As needed at each scope
+- Bicep Files: Modular templates for reusability
+```
+
+**4. Why Not the Other Options:**
+
+| Option | Limitation |
+|--------|------------|
+| Azure Policies | Enforcement tool, not a deployment tool; cannot create resources |
+| Defender for Cloud | Security solution; no resource provisioning capabilities |
+| Azure PIM | Access management tool; doesn't provision infrastructure |
+
+**Key Principle:**
+> When setting up a complete Azure environment hierarchy with multiple management groups, subscriptions, resource groups, and role assignments, use Azure Bicep (or ARM templates) for Infrastructure as Code. This ensures a repeatable, version-controlled, and automated deployment with minimal administrative effort.
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions (25–30%)
+
+**References:**
+- [Azure Bicep Overview](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview)
+- [Management Groups with Bicep](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-to-management-group)
+- [Tenant Scope Deployments](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-to-tenant)
+
+---
+
 ## Summary
 
 ### Key Hierarchy Levels
