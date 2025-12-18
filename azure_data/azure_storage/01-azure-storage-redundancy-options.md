@@ -15,6 +15,7 @@
 - [Disaster Recovery and Failover](#disaster-recovery-and-failover)
   - [Failover Procedure for General-Purpose v2 Accounts](#failover-procedure-for-general-purpose-v2-accounts)
   - [Q&A: Disaster Recovery Scenarios](#qa-disaster-recovery-scenarios)
+  - [Practice Question: Converting Storage Account Redundancy to GRS](#practice-question-converting-storage-account-redundancy-to-grs)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -482,6 +483,138 @@ What should you recommend?
 - [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
 - [Azure Table storage overview](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview)
 - [Azure SQL Database REST API](https://learn.microsoft.com/en-us/rest/api/sql/)
+
+**Domain:** Design data storage solutions
+
+---
+
+### Practice Question: Converting Storage Account Redundancy to GRS
+
+**Scenario:**
+
+You have multiple storage accounts defined under your subscription:
+
+| Storage Account | Account Kind | Replication | Access Tier |
+|-----------------|--------------|-------------|-------------|
+| Store1 | BlobStorage | LRS | Hot |
+| Store2 | StorageV2 | ZRS | Cool |
+| Store3 | StorageV2 | LRS | Hot |
+| Store4 | Storage (v1) | GRS | N/A |
+
+**Question:**
+Can you convert Store3 to a GRS account?
+
+**Options:**
+1. ✅ **Yes**
+2. ❌ No
+
+**Answer: Yes**
+
+---
+
+### Explanation
+
+**Yes, you can convert Store3 to a GRS (Geo-Redundant Storage) account.**
+
+Store3 is a **StorageV2 (general-purpose v2)** account with **LRS** replication. General-purpose v2 accounts support changing the replication type after creation, including conversion to GRS.
+
+**Why the conversion is possible:**
+
+| Factor | Store3 Status | GRS Compatibility |
+|--------|---------------|-------------------|
+| Account Kind | StorageV2 ✅ | Supported |
+| Current Replication | LRS | Can upgrade to GRS |
+| Access Tier | Hot | Supported |
+
+**GRS Benefits:**
+- **Data replication to a secondary region**: Ensures data durability and high availability in case of a regional outage
+- **Disaster recovery capabilities**: Provides protection against regional disasters
+- **16 nines durability**: 99.99999999999999% durability over a year
+
+---
+
+### Storage Account Redundancy Conversion Rules
+
+```plaintext
+Redundancy Conversion Matrix:
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  Allowed Conversions:                                          │
+│                                                                 │
+│  LRS ──────────────────► GRS    ✅ (Store3 scenario)           │
+│  LRS ──────────────────► ZRS    ✅ (live migration available)  │
+│  LRS ──────────────────► GZRS   ✅                              │
+│                                                                 │
+│  ZRS ──────────────────► GZRS   ✅                              │
+│  ZRS ──────────────────► GRS    ❌ (must go through LRS first) │
+│                                                                 │
+│  GRS ──────────────────► LRS    ✅                              │
+│  GRS ──────────────────► GZRS   ✅ (in supported regions)      │
+│                                                                 │
+│  GZRS ─────────────────► GRS    ✅                              │
+│  GZRS ─────────────────► ZRS    ✅                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### How to Convert Store3 to GRS
+
+**Azure Portal:**
+1. Navigate to the storage account (Store3)
+2. Under **Settings**, select **Configuration**
+3. Change **Replication** from LRS to GRS
+4. Click **Save**
+
+**Azure CLI:**
+
+```bash
+# Convert Store3 from LRS to GRS
+az storage account update \
+  --name Store3 \
+  --resource-group myResourceGroup \
+  --sku Standard_GRS
+```
+
+**PowerShell:**
+
+```powershell
+# Convert Store3 from LRS to GRS
+Set-AzStorageAccount `
+  -ResourceGroupName "myResourceGroup" `
+  -Name "Store3" `
+  -SkuName "Standard_GRS"
+```
+
+### Account Kind Compatibility
+
+| Account Kind | Supports GRS | Notes |
+|--------------|--------------|-------|
+| **StorageV2** (general-purpose v2) | ✅ Yes | Full support, recommended |
+| **Storage** (general-purpose v1) | ✅ Yes | Legacy, consider upgrading |
+| **BlobStorage** | ✅ Yes | Blob-only accounts |
+| **BlockBlobStorage** | ❌ No | Premium only, LRS/ZRS only |
+| **FileStorage** | ❌ No | Premium only, LRS/ZRS only |
+
+### Why Other Storage Accounts May Have Limitations
+
+| Storage Account | Can Convert to GRS? | Reason |
+|-----------------|---------------------|--------|
+| Store1 (BlobStorage, LRS) | ✅ Yes | BlobStorage supports GRS |
+| Store2 (StorageV2, ZRS) | ⚠️ Indirect | Must change to LRS first, then to GRS |
+| Store3 (StorageV2, LRS) | ✅ Yes | Direct conversion supported |
+| Store4 (Storage v1, GRS) | Already GRS | No conversion needed |
+
+### Key Takeaways
+
+1. **StorageV2 accounts support redundancy changes**: Including conversion from LRS to GRS
+2. **GRS provides geo-redundancy**: Data is replicated to a secondary region
+3. **Conversion is non-disruptive**: No downtime required for the change
+4. **Premium storage accounts have limitations**: BlockBlobStorage and FileStorage don't support GRS
+5. **ZRS to GRS requires intermediate step**: Must convert to LRS first
+
+**Reference(s):**
+- [Change how a storage account is replicated](https://learn.microsoft.com/en-us/azure/storage/common/redundancy-migration)
+- [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
 
 **Domain:** Design data storage solutions
 
