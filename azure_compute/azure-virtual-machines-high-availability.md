@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [Availability Zones](#availability-zones)
+- [Availability Sets](#availability-sets)
 - [Azure Dedicated Hosts](#azure-dedicated-hosts)
 - [Virtual Machine Scale Sets (VMSS)](#virtual-machine-scale-sets-vmss)
 - [High Availability Architecture](#high-availability-architecture)
@@ -43,6 +44,91 @@ To maintain availability even if **multiple availability zones fail**, distribut
 - **1 zone deployment**: No zone-level redundancy
 - **2 zone deployment**: Survives 1 zone failure
 - **3 zone deployment**: Survives up to 2 zone failures ✅
+
+---
+
+## Availability Sets
+
+**Availability Sets** are logical groupings of VMs within a datacenter that allow Azure to understand how your application is built. This ensures that during planned or unplanned maintenance events, at least one VM remains available.
+
+### Key Characteristics
+
+- **Fault Domains (FD)**: Separate physical hardware racks with independent power and network
+- **Update Domains (UD)**: Logical groups for rolling updates during planned maintenance
+- **Single Datacenter**: Availability Sets exist within a single datacenter (unlike Availability Zones)
+- **99.95% SLA**: When 2+ VMs are deployed in an Availability Set
+- **Free to Configure**: No additional cost for the Availability Set itself
+
+### Update Domains (UD)
+
+**Update Domains** control how VMs are updated during **planned maintenance** events:
+
+- **Default**: 5 Update Domains (can be configured from 1 to 20)
+- **Behavior**: Only **one Update Domain is updated at a time** during planned maintenance
+- **Purpose**: Ensures some VMs remain running while others are being updated
+- **Rolling Updates**: Azure reboots VMs in one UD, waits 30 minutes, then moves to the next UD
+
+### Fault Domains (FD)
+
+**Fault Domains** protect against **hardware failures**:
+
+- **Default**: 2 or 3 Fault Domains depending on the region (max 3)
+- **Physical Separation**: Each FD has separate power, cooling, and network switch
+- **Purpose**: Hardware failure in one rack doesn't affect VMs in other FDs
+- **Single Point of Failure**: Prevents all VMs from being on the same physical rack
+
+### Calculating Minimum Available VMs During Planned Maintenance
+
+During planned maintenance, Azure updates **one Update Domain at a time**. The formula to calculate minimum available VMs:
+
+```
+Minimum Available VMs = Total VMs - VMs in largest Update Domain
+```
+
+**Distribution Formula**:
+- VMs are distributed evenly across Update Domains
+- If not evenly divisible, some UDs will have one more VM than others
+
+**Example Calculation**:
+
+| Total VMs | Update Domains | VMs per UD | Max VMs in Single UD | Minimum Available |
+|-----------|----------------|------------|---------------------|-------------------|
+| 10 | 3 | 10 ÷ 3 = 3.33 | 4 (ceiling) | **10 - 4 = 6** |
+| 10 | 5 | 10 ÷ 5 = 2 | 2 | **10 - 2 = 8** |
+| 12 | 3 | 12 ÷ 3 = 4 | 4 | **12 - 4 = 8** |
+| 15 | 5 | 15 ÷ 5 = 3 | 3 | **15 - 3 = 12** |
+
+**Detailed Example (10 VMs, 3 Update Domains)**:
+```
+Update Domain 0: VM1, VM2, VM3, VM4  (4 VMs)
+Update Domain 1: VM5, VM6, VM7       (3 VMs)
+Update Domain 2: VM8, VM9, VM10      (3 VMs)
+
+During planned maintenance of UD0:
+  - VMs in UD0 (4 VMs) are being updated/rebooted
+  - VMs in UD1 and UD2 remain running (6 VMs available)
+  
+Minimum available = 10 - 4 = 6 VMs
+```
+
+### Availability Sets vs. Availability Zones
+
+| Feature | Availability Sets | Availability Zones |
+|---------|------------------|-------------------|
+| **Scope** | Single datacenter | Multiple datacenters |
+| **Protection Level** | Rack-level failures | Datacenter-level failures |
+| **SLA** | 99.95% | 99.99% |
+| **Fault Domains** | 2-3 (same datacenter) | Each zone is a separate FD |
+| **Update Domains** | Up to 20 | Not applicable |
+| **Use Case** | Legacy, when zones unavailable | Modern HA architecture |
+
+### When to Use Availability Sets
+
+✅ Region doesn't support Availability Zones  
+✅ Application requires rack-level fault tolerance only  
+✅ Cost optimization (zones may require more resources)  
+✅ Legacy applications being migrated to Azure  
+✅ Compliance requirements for specific datacenter  
 
 ---
 
@@ -802,11 +888,154 @@ The requirement to "accumulate CPU credits during periods of low utilization" in
 
 ---
 
+### Question 5: Availability Set - Minimum VMs During Planned Maintenance
+
+**Scenario**: You create an Availability Set with the following configuration:
+
+- **Fault Domains**: 2
+- **Update Domains**: 3
+
+A total of **10 virtual machines** will be deployed to the Availability Set.
+
+**Question**: During planned maintenance, what is the **least number of virtual machines available**?
+
+**Options**:
+
+A) 4
+
+B) 5
+
+C) **6**
+
+D) 8
+
+---
+
+**Correct Answer**: **C) 6**
+
+---
+
+### Explanation
+
+**Understanding Update Domains and Planned Maintenance**
+
+During **planned maintenance**, Azure updates VMs **one Update Domain at a time**. This ensures that not all VMs are rebooted simultaneously, maintaining application availability.
+
+#### 1. **How VMs are Distributed Across Update Domains**
+
+With 10 VMs and 3 Update Domains, the VMs are distributed as evenly as possible:
+
+```
+10 VMs ÷ 3 Update Domains = 3.33 VMs per UD
+
+Distribution:
+  Update Domain 0: 4 VMs  (gets the extra VM due to rounding)
+  Update Domain 1: 3 VMs
+  Update Domain 2: 3 VMs
+  
+Total: 4 + 3 + 3 = 10 VMs
+```
+
+#### 2. **Worst-Case Scenario During Maintenance**
+
+The **least number of available VMs** occurs when the Update Domain with the **most VMs** is being updated:
+
+```
+Scenario: UD0 is being updated (4 VMs offline)
+
+  Update Domain 0: [VM1] [VM2] [VM3] [VM4] ← Being updated (OFFLINE)
+  Update Domain 1: [VM5] [VM6] [VM7]       ← Running (AVAILABLE)
+  Update Domain 2: [VM8] [VM9] [VM10]      ← Running (AVAILABLE)
+
+Available VMs = 3 + 3 = 6 VMs
+```
+
+#### 3. **Calculation Formula**
+
+```
+Minimum Available VMs = Total VMs - Max VMs in any single UD
+                      = 10 - 4
+                      = 6 VMs
+```
+
+#### 4. **Visual Representation**
+
+```
+                    PLANNED MAINTENANCE ON UD0
+                    ===========================
+                    
+┌─────────────────────────────────────────────────────────┐
+│                    Availability Set                      │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│   Update Domain 0          Update Domain 1              │
+│   ┌───┬───┬───┬───┐       ┌───┬───┬───┐                │
+│   │VM1│VM2│VM3│VM4│       │VM5│VM6│VM7│                │
+│   └───┴───┴───┴───┘       └───┴───┴───┘                │
+│        🔄 UPDATING              ✅ RUNNING              │
+│        (4 VMs offline)         (3 VMs available)       │
+│                                                          │
+│                    Update Domain 2                      │
+│                    ┌───┬───┬────┐                       │
+│                    │VM8│VM9│VM10│                       │
+│                    └───┴───┴────┘                       │
+│                         ✅ RUNNING                      │
+│                        (3 VMs available)                │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
+│  MINIMUM AVAILABLE: 6 VMs (when UD0 is being updated)   │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) 4 VMs** ❌
+- This would mean 6 VMs are offline during maintenance
+- Only 1 Update Domain is updated at a time
+- The largest UD only has 4 VMs, so maximum 4 can be offline
+
+**B) 5 VMs** ❌
+- Incorrect calculation
+- Does not account for proper VM distribution across UDs
+
+**D) 8 VMs** ❌
+- This assumes only 2 VMs are offline
+- Would require 5 Update Domains (10 ÷ 5 = 2 VMs per UD)
+- With only 3 UDs, at least 4 VMs will be in one UD
+
+---
+
+### Key Takeaways
+
+1. **Update Domains Control Planned Maintenance**
+   > During planned maintenance, Azure updates one Update Domain at a time, ensuring other UDs remain available.
+
+2. **VM Distribution is Approximately Even**
+   > VMs are distributed as evenly as possible across Update Domains. If not perfectly divisible, some UDs get one extra VM.
+
+3. **Minimum Availability = Total - Largest UD**
+   > The least available VMs during maintenance equals total VMs minus the VMs in the largest Update Domain.
+
+4. **More Update Domains = Higher Minimum Availability**
+   > Increasing Update Domains spreads VMs thinner, reducing the maximum VMs in any single UD:
+   - 10 VMs, 3 UDs → Minimum 6 available
+   - 10 VMs, 5 UDs → Minimum 8 available
+   - 10 VMs, 10 UDs → Minimum 9 available
+
+5. **Fault Domains Don't Affect Planned Maintenance**
+   > Fault Domains protect against hardware failures, not planned updates. Update Domains are what matter for maintenance windows.
+
+---
+
 ### Reference Links
 
 - [Azure Virtual Network Overview](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 - [Azure Availability Zones Overview](https://docs.microsoft.com/en-us/azure/availability-zones/az-overview)
 - [B-series Burstable Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes-b-series-burstable)
 - [Virtual Network Peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+- [Availability Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview)
+- [Manage Availability of VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/availability)
 
 ---
