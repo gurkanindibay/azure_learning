@@ -9,6 +9,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
 ## Table of Contents
 
 1. [Authentication Methods Overview](#authentication-methods-overview)
+   - [Hybrid Identity Synchronization Options](#hybrid-identity-synchronization-options)
    - [Certificate-Based Authentication (CBA)](#certificate-based-authentication-cba)
    - [FIDO2 Passwordless Authentication](#fido2-passwordless-authentication)
    - [Conditional Access Authentication Context](#conditional-access-authentication-context)
@@ -69,6 +70,106 @@ Microsoft Entra ID supports industry-standard authentication protocols:
 | **OpenID Connect** | Authentication layer on OAuth 2.0 | User authentication and SSO |
 | **SAML 2.0** | XML-based authentication | Enterprise SSO, legacy apps |
 | **WS-Federation** | Legacy Microsoft protocol | Older .NET applications |
+
+### Hybrid Identity Synchronization Options
+
+Active Directory (AD) can be synchronized with Microsoft Entra ID using the following authentication options:
+
+| Method | Full Name | Description |
+|--------|-----------|-------------|
+| **PHS** | Password Hash Synchronization | Synchronizes a hash of the password hash from on-premises AD to Microsoft Entra ID |
+| **PTA** | Pass-Through Authentication | Passes authentication requests to on-premises AD for validation |
+| **AD FS** | Active Directory Federation Services | Uses federation for authentication with on-premises AD FS infrastructure |
+
+#### Pass-Through Authentication (PTA)
+
+**Pass-Through Authentication (PTA)** allows users to sign in to both on-premises and cloud-based applications using the same passwords. When users sign in using Microsoft Entra ID, PTA validates the users' passwords directly against on-premises Active Directory.
+
+##### How PTA Works
+
+```
+User Sign-in Request
+        ↓
+Microsoft Entra ID
+        ↓
+PTA Agent (on-premises)
+        ↓
+Active Directory (on-premises)
+        ↓
+Authentication Result
+        ↓
+Microsoft Entra ID
+        ↓
+User Access Granted/Denied
+```
+
+##### PTA Key Characteristics
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Authentication Direction** | Authentication requests are passed through to on-premises AD for validation |
+| **Credential Storage** | User credentials are stored **only in on-premises Active Directory**, NOT in Microsoft Entra ID |
+| **Synchronization** | Does **NOT** involve synchronization of credentials between AD and Microsoft Entra ID in both directions |
+| **Policy Enforcement** | AD security and password policies **can be enforced** |
+| **Leaked Credential Report** | Does **NOT** provide leaked credential reports |
+| **On-Premises Dependency** | Requires on-premises PTA agents and connectivity to AD |
+
+##### PTA Exam Question
+
+**Question:** AD can be synchronized with Microsoft Entra ID using authentication options including PHS, PTA, and AD FS. For PTA, select the correct statement.
+
+**Options:**
+
+1. **Synchronization happens both ways: AD to Microsoft Entra ID and Microsoft Entra ID to AD** ❌ *Incorrect*
+   - PTA does not involve synchronization of credentials between AD and Microsoft Entra ID in both directions. It only passes authentication requests to on-premises AD for validation.
+
+2. **You can receive a leaked credential report** ❌ *Incorrect*
+   - PTA does not provide a leaked credential report. This feature is available with Password Hash Synchronization (PHS), not PTA.
+
+3. **AD security and password policies can be enforced** ✅ *Correct*
+   - With PTA, AD security and password policies can be enforced, ensuring that authentication requests comply with the organization's security standards and policies.
+
+4. **User credentials are stored only in Microsoft Entra ID** ❌ *Incorrect*
+   - User credentials are **NOT** stored in Microsoft Entra ID with PTA. Authentication requests are forwarded to the on-premises Active Directory for validation, maintaining the security and control of user credentials within the organization's AD environment.
+
+##### PTA vs PHS Comparison
+
+| Feature | PTA (Pass-Through Authentication) | PHS (Password Hash Synchronization) |
+|---------|-----------------------------------|-------------------------------------|
+| **Where credentials validated** | On-premises AD | Microsoft Entra ID |
+| **Credential storage in cloud** | ❌ No | ✅ Yes (hash of hash) |
+| **Leaked credential reports** | ❌ No | ✅ Yes |
+| **AD password policies enforced** | ✅ Yes (directly) | ⚠️ Partial (expiry only with sync) |
+| **On-premises dependency** | ✅ Required (PTA agents) | ❌ Not required for auth |
+| **Works during AD outage** | ❌ No | ✅ Yes |
+| **Account lockout policies** | ✅ Yes | ❌ No (cloud-based protection) |
+| **Smart Lockout** | ✅ Yes | ✅ Yes |
+
+##### When to Choose PTA
+
+✅ **Use PTA when:**
+- Organization requires credentials to never leave on-premises
+- Must enforce on-premises AD password policies immediately
+- Need to apply on-premises account lockout policies
+- Compliance requirements prohibit cloud storage of password hashes
+- Want to maintain full control over authentication in on-premises AD
+
+❌ **Do NOT use PTA when:**
+- Need authentication to work during on-premises AD outages
+- Want to use Microsoft Entra ID leaked credential reports
+- Cannot deploy and maintain on-premises PTA agents
+- Require high availability without complex infrastructure
+
+##### PTA Agent Requirements
+
+- Minimum of one PTA agent installed on-premises (recommended: 3 for high availability)
+- Agent must be able to communicate with Microsoft Entra ID (HTTPS outbound)
+- Agent must be able to communicate with on-premises AD Domain Controllers
+- Windows Server 2012 R2 or later
+
+> **Exam Tip:** When a question mentions enforcing on-premises AD security and password policies while using Microsoft Entra ID authentication, **PTA** is typically the correct answer. Remember that PTA does **not** store credentials in the cloud and does **not** provide leaked credential reports.
+
+---
 
 ### Certificate-Based Authentication (CBA)
 
