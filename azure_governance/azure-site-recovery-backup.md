@@ -11,6 +11,7 @@
   - [Question 4: SQL Server Disaster Recovery on Azure VM](#question-4-sql-server-disaster-recovery-on-azure-vm)
   - [Question 5: Recovery Services Vault Region Requirement](#question-5-recovery-services-vault-region-requirement)
   - [Question 6: Recovery Services Vault for Cross-Region VM Protection](#question-6-recovery-services-vault-for-cross-region-vm-protection)
+  - [Question 7: Azure Backup Agent for Windows File Server Protection](#question-7-azure-backup-agent-for-windows-file-server-protection)
 - [References](#references)
 
 ---
@@ -2580,6 +2581,153 @@ Current Setup:
 - Business continuity planning
 - Disaster recovery strategies
 - Compliance and data retention requirements
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
+### Question 7: Azure Backup Agent for Windows File Server Protection
+
+#### Scenario
+
+A company has a file server named 'myserver' running on Windows Server 2019, managed by the Windows Admin Center. The company owns an Azure subscription and needs to ensure that data loss is prevented in case the file server fails.
+
+To meet this requirement, an Azure Recovery Services vault is created, and the Azure Backup agent is installed to schedule the backup.
+
+#### Question
+
+Would this solution suffice?
+
+#### Answer
+
+✅ **Yes**
+
+**Explanation:** The solution suffices because creating an Azure Recovery Services vault and installing the Azure Backup agent to schedule backups ensures that data loss is prevented in case the file server fails. The Azure Backup agent will regularly back up the data from the file server to the Recovery Services vault, providing a reliable backup and recovery solution.
+
+---
+
+#### Why This Solution Works
+
+##### The MARS Agent (Microsoft Azure Recovery Services Agent)
+
+The **Azure Backup agent**, also known as the **MARS agent (Microsoft Azure Recovery Services agent)**, is specifically designed for backing up on-premises Windows machines to Azure.
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Azure Backup with MARS Agent                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   On-Premises Environment                   Azure Cloud                 │
+│   ┌───────────────────────┐                ┌──────────────────────────┐│
+│   │  Windows Server 2019  │                │  Recovery Services Vault ││
+│   │  File Server          │   Scheduled    │                          ││
+│   │  'myserver'           │   Backup       │  ┌────────────────────┐  ││
+│   │  ┌─────────────────┐  │ ──────────────►│  │  Backup Data       │  ││
+│   │  │  MARS Agent     │  │                │  │  Recovery Points   │  ││
+│   │  │  (Azure Backup  │  │                │  │  Long-term Storage │  ││
+│   │  │   Agent)        │  │                │  └────────────────────┘  ││
+│   │  └─────────────────┘  │                │                          ││
+│   └───────────────────────┘                └──────────────────────────┘│
+│                                                                         │
+│   ✅ Files and folders backed up to Azure                             │
+│   ✅ Scheduled backups (up to 3x per day)                             │
+│   ✅ Data encrypted in transit and at rest                            │
+│   ✅ Point-in-time recovery available                                  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Components of This Solution
+
+| Component | Purpose | Role in Data Protection |
+|-----------|---------|-------------------------|
+| **Recovery Services Vault** | Central storage for backup data | Stores recovery points securely in Azure |
+| **MARS Agent** | Backup software on Windows Server | Performs scheduled backups of files/folders |
+| **Backup Policy** | Defines backup schedule and retention | Controls when backups run and how long data is kept |
+
+##### MARS Agent Capabilities
+
+| Feature | Description |
+|---------|-------------|
+| **Backup Frequency** | Up to 3 times per day |
+| **Data Types** | Files, folders, system state |
+| **Supported OS** | Windows Server 2008 R2 SP1 and later, Windows 10/11 |
+| **Encryption** | AES-256 bit encryption |
+| **Compression** | Built-in data compression |
+| **Bandwidth Throttling** | Control network usage during backups |
+| **Retention** | Up to 99 years |
+
+---
+
+#### Implementation Steps
+
+1. **Create a Recovery Services vault** in the Azure portal
+   ```bash
+   az backup vault create \
+     --resource-group myResourceGroup \
+     --name myRecoveryServicesVault \
+     --location eastus
+   ```
+
+2. **Download the MARS agent** from the vault
+   - Navigate to the vault → Backup → Files and folders
+   - Download the agent installer
+
+3. **Install the MARS agent** on the Windows Server
+   - Run the installer on 'myserver'
+   - Register the server with the vault using the vault credentials
+
+4. **Configure backup schedule**
+   - Select files/folders to back up
+   - Set backup schedule (up to 3x per day)
+   - Configure retention policy
+
+5. **Run initial backup**
+   - Perform first backup to seed data in Azure
+
+---
+
+#### Alternative Solutions Comparison
+
+| Solution | Suitable for This Scenario | Notes |
+|----------|---------------------------|-------|
+| **MARS Agent + Recovery Services Vault** | ✅ Yes | Ideal for file server backup |
+| **Azure Site Recovery** | ⚠️ Overkill | Better for disaster recovery with failover |
+| **Azure File Sync** | ⚠️ Different purpose | Syncs files to Azure Files, not traditional backup |
+| **System Center DPM** | ⚠️ More complex | Better for enterprise with multiple servers |
+| **Azure Backup Server (MABS)** | ⚠️ More complex | Better for VM-level backups |
+
+---
+
+#### Key Takeaways
+
+1. **MARS Agent is the right choice for file server backup**
+   > For backing up files and folders from on-premises Windows servers to Azure, the MARS agent with a Recovery Services vault is the recommended solution.
+
+2. **Recovery Services vault is the central management point**
+   > All backup data, recovery points, and policies are managed through the vault.
+
+3. **Simple setup with robust protection**
+   > The combination provides enterprise-grade backup with minimal infrastructure requirements.
+
+4. **Cost-effective solution**
+   > Pay only for the storage consumed by backup data, with no infrastructure costs.
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Azure Backup Architecture Overview](https://learn.microsoft.com/en-us/azure/backup/backup-architecture)
+- [Back up Windows machines by using the MARS agent](https://learn.microsoft.com/en-us/azure/backup/backup-windows-with-mars-agent)
+- [Overview of Recovery Services vaults](https://learn.microsoft.com/en-us/azure/backup/backup-azure-recovery-services-vault-overview)
+- [Install and upgrade the MARS agent](https://learn.microsoft.com/en-us/azure/backup/install-mars-agent)
+
+**Related Topics:**
+- Azure Backup pricing
+- Recovery Services vault security
+- Backup and retention policies
+- Data encryption in Azure Backup
 
 **Domain:** Design Business Continuity Solutions
 
