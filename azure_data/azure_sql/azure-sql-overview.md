@@ -2568,6 +2568,72 @@ ALTER COLUMN PhoneNumber ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)');
 
 ---
 
+### Question 11: Azure SQL Failover Group Configuration Requirements
+
+**Scenario**: Your application uses multiple SQL databases running on the primary server. You plan to create a failover group.
+
+**Question**: Select all the correct statements about the failover group.
+
+**Options**:
+- A) The secondary server should not be in the same region as the primary server.
+- B) The primary server can also serve as a secondary server for the failover group.
+- C) The primary and secondary servers must be in the same resource group.
+- D) You can use the secondary server for the read-and-write data.
+- E) Auto failover groups can have a potential data loss of 5 seconds.
+
+**Correct Answers**: **A, C, E**
+
+**Explanation**:
+
+**A) The secondary server should not be in the same region as the primary server** ✅ **CORRECT**
+- It is recommended to have the secondary server in a **different region** than the primary server to ensure high availability and disaster recovery
+- Placing the secondary server in a different region reduces the risk of a **region-wide outage** affecting both servers simultaneously
+- This is a fundamental principle of geo-disaster recovery
+
+**B) The primary server can also serve as a secondary server for the failover group** ❌ **INCORRECT**
+- The primary server **cannot serve as a secondary server** for the failover group
+- Each server in the failover group must have a **distinct role** to ensure proper failover and failback processes
+- A server can only be either primary OR secondary, not both
+
+**C) The primary and secondary servers must be in the same resource group** ✅ **CORRECT**
+- The primary and secondary servers **must be in the same resource group** to ensure proper management and resource allocation
+- Placing them in the same resource group simplifies the management of the failover group configuration
+
+**D) You can use the secondary server for the read-and-write data** ❌ **INCORRECT**
+- The secondary server in a failover group is typically used for **read-only operations** to offload read workloads from the primary server
+- It is **not recommended** to use the secondary server for read-and-write data to avoid conflicts and ensure data consistency
+- Write operations should only go to the primary server
+
+**E) Auto failover groups can have a potential data loss of 5 seconds** ✅ **CORRECT**
+- Auto failover groups can have a potential data loss of up to **5 seconds** during failover (RPO ≤ 5 seconds)
+- This means that any transactions that occurred within the last 5 seconds before the failover may not be replicated to the secondary server, leading to potential data loss
+- This is because auto-failover groups use **asynchronous replication**
+
+**Key Failover Group Characteristics Summary**:
+
+| Characteristic | Requirement/Behavior |
+|----------------|---------------------|
+| **Secondary Server Region** | Different region (recommended for DR) |
+| **Server Roles** | Distinct - cannot be both primary and secondary |
+| **Resource Group** | Same resource group required |
+| **Secondary Server Purpose** | Read-only operations |
+| **Potential Data Loss (RPO)** | Up to 5 seconds |
+
+> **Exam Tip:** Remember the key constraints of failover groups:
+> - ✅ Different regions for primary and secondary (geo-redundancy)
+> - ✅ Same resource group for both servers
+> - ✅ Distinct server roles (primary OR secondary, not both)
+> - ✅ Secondary is read-only by default
+> - ✅ RPO of ~5 seconds due to async replication
+
+**Reference Links**:
+- [Cloud business continuity - disaster recovery - Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/business-continuity-high-availability-disaster-recover-hadr-overview)
+- [Auto-Failover Groups Overview](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-sql-db)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
