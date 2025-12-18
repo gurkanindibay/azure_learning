@@ -184,8 +184,90 @@ Deploy an Azure App Service web app with multiple instances across multiple Azur
 ### Key Takeaway
 For multi-region web applications requiring high availability, security (WAF), and advanced Layer 7 features (session affinity, URL routing), **Azure Front Door** is the only service that meets all requirements.
 
+## Securing Backend VMs to Accept Only Front Door Traffic
+
+### Scenario
+When you have Azure virtual machines with public IP addresses across different regions that are load balanced using Azure Front Door, you must ensure that the VMs only accept traffic that has been routed through Azure Front Door. This prevents attackers from bypassing Front Door's security features (WAF, rate limiting, etc.) by directly accessing the VM's public IP address.
+
+### Solution: Network Security Groups (NSGs) with Service Tags
+
+**Network Security Groups (NSGs) with service tags** is the recommended approach to restrict backend traffic to only come from Azure Front Door.
+
+#### Why Service Tags?
+
+Azure provides predefined **service tags** that represent groups of IP address prefixes from specific Azure services. The `AzureFrontDoor.Backend` service tag includes all IP addresses used by Azure Front Door to communicate with backend origins.
+
+#### Implementation Steps
+
+1. **Create or modify the NSG** associated with your VM's network interface or subnet
+
+2. **Add an inbound security rule** with the following configuration:
+   - **Source**: Service Tag
+   - **Source service tag**: `AzureFrontDoor.Backend`
+   - **Source port ranges**: `*`
+   - **Destination**: Any (or specific VM IPs)
+   - **Destination port ranges**: `80, 443` (or your application ports)
+   - **Protocol**: TCP
+   - **Action**: Allow
+   - **Priority**: Lower number (higher priority) than the deny rule
+
+3. **Add a deny rule** to block all other inbound traffic:
+   - **Source**: Any
+   - **Destination port ranges**: `80, 443`
+   - **Action**: Deny
+   - **Priority**: Higher number (lower priority) than the allow rule
+
+#### Example NSG Rules
+
+| Priority | Name | Source | Destination | Port | Action |
+|----------|------|--------|-------------|------|--------|
+| 100 | AllowFrontDoor | Service Tag: AzureFrontDoor.Backend | Any | 80, 443 | Allow |
+| 200 | DenyAllOtherHTTP | Any | Any | 80, 443 | Deny |
+
+#### Additional Security: X-Azure-FDID Header Validation
+
+For enhanced security, you can also validate the `X-Azure-FDID` header in your application code:
+
+1. Each Front Door profile has a unique **Front Door ID**
+2. Front Door adds the `X-Azure-FDID` header to every request forwarded to the backend
+3. Your application can validate that this header matches your Front Door profile's ID
+4. This provides application-layer verification in addition to network-layer NSG rules
+
+```
+# Example header validation logic (pseudo-code)
+if request.headers['X-Azure-FDID'] != 'your-front-door-id':
+    return 403 Forbidden
+```
+
+### Why Other Options Don't Fit
+
+**Azure Private Link** ❌
+- Used to securely connect Azure PaaS services to virtual networks via private endpoints
+- Not directly related to implementing load balancing across VMs using Azure Front Door
+- Useful for securing connections to Azure services, not for filtering incoming Front Door traffic
+
+**Service Endpoints** ❌
+- Allow you to secure Azure service resources (like Storage, SQL) to your virtual network
+- Used for **outbound** connectivity from VMs to Azure PaaS services
+- Not suitable for filtering **inbound** traffic from Azure Front Door to VMs
+
+**NSGs with Application Security Groups** ❌
+- Application Security Groups (ASGs) group VMs for easier security rule management
+- Useful for defining rules based on application-specific criteria within your VNet
+- Cannot identify traffic originating from Azure Front Door
+- Service tags are specifically designed for identifying Azure service traffic
+
+### Key Takeaway
+
+When using Azure Front Door to load balance traffic to VMs with public IP addresses:
+1. Use **NSGs with the `AzureFrontDoor.Backend` service tag** to allow only Front Door traffic
+2. Optionally validate the **`X-Azure-FDID` header** at the application layer for defense in depth
+3. This ensures attackers cannot bypass Front Door's security features by directly accessing VM public IPs
+
 ## References
 
 - [Azure Front Door pricing](https://azure.microsoft.com/en-us/pricing/details/frontdoor/)
 - [Azure Front Door documentation](https://learn.microsoft.com/en-us/azure/frontdoor/)
 - [Azure load balancing overview](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
+- [Lock down access to Azure Front Door origins](https://learn.microsoft.com/en-us/azure/frontdoor/origin-security)
+- [Azure service tags overview](https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview)
