@@ -44,6 +44,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 12: IT Support Notification for Directory Sync Issues (Microsoft Entra Connect Health)](#exam-question-12-it-support-notification-for-directory-sync-issues-microsoft-entra-connect-health)
     - [Question 13: SSO Access to On-Premises Web App with Integrated Windows Authentication](#exam-question-13-sso-access-to-on-premises-web-app-with-integrated-windows-authentication)
     - [Question 14: Pre-Authentication for ASP.NET Application on Azure VM](#exam-question-14-pre-authentication-for-aspnet-application-on-azure-vm)
+    - [Question 15: AD and Entra ID Synchronization for Seamless Machine Access](#exam-question-15-ad-and-entra-id-synchronization-for-seamless-machine-access)
 
 ---
 
@@ -7257,7 +7258,181 @@ Application Gateway vs Enterprise Application:
 
 ---
 
-**Document Version:** 1.3  
+## Exam Question 15: AD and Entra ID Synchronization for Seamless Machine Access
+
+### Scenario
+
+You have been assigned the task of synchronizing Active Directory (AD) and Entra ID. This synchronization will ensure that users can access corporate machines within their corporate network without the need to enter a password.
+
+### Question
+
+Which synchronization method(s) would you select to fulfill this requirement? **(Select all that apply)**
+
+### Options
+
+1. ✅ **PHS (Password Hash Synchronization)**
+   - **Correct**: PHS (Password Hash Synchronization) is the correct choice for synchronizing Active Directory (AD) and Entra ID to fulfill the requirement of allowing users to access corporate machines without entering a password. PHS synchronizes password hashes from on-premises AD to Azure AD, allowing for seamless authentication without the need for users to re-enter their passwords.
+
+2. ✅ **PTA (Pass-Through Authentication)**
+   - **Correct**: PTA (Pass-Through Authentication) is another correct choice for synchronizing AD and Entra ID to enable users to access corporate machines without entering a password. PTA allows for authentication requests to be passed through to on-premises AD, providing a seamless login experience for users without the need to store passwords in the cloud.
+
+3. ❌ **AD FS (Federation Services)**
+   - **Incorrect**: AD FS (Federation Services) is not the appropriate choice for this scenario. AD FS is used for enabling single sign-on (SSO) across different applications and services, but it is not specifically designed for synchronizing passwords between on-premises AD and Azure AD for seamless machine access without passwords.
+
+4. ❌ **OpenID Connect**
+   - **Incorrect**: OpenID Connect is also not the correct choice for this requirement. OpenID Connect is an authentication protocol that allows for secure authentication between different systems, but it is not specifically tailored for synchronizing passwords between on-premises AD and Azure AD for seamless machine access without passwords.
+
+---
+
+### Why PHS and PTA Are Correct
+
+**Key Concept: Seamless Single Sign-On (SSO) for Corporate Machine Access**
+
+The requirement is for users to access corporate machines **without entering a password**. This requires a hybrid identity solution that provides seamless authentication between on-premises AD and Microsoft Entra ID.
+
+#### Comparison of Synchronization Methods
+
+| Feature | PHS | PTA | AD FS | OpenID Connect |
+|---------|-----|-----|-------|----------------|
+| **Purpose** | Sync password hashes to cloud | Pass auth to on-prem AD | Federation/SSO for apps | App authentication protocol |
+| **Seamless SSO Support** | ✅ Yes | ✅ Yes | ⚠️ SSO for apps, not machine access | ❌ Not for AD sync |
+| **Password Stored in Cloud** | ✅ Hash of hash | ❌ No | ❌ No | N/A |
+| **On-Prem Infrastructure Required** | Minimal (Entra Connect) | PTA Agents | AD FS Farm | N/A |
+| **Works When On-Prem AD Down** | ✅ Yes | ❌ No | ❌ No | N/A |
+| **Seamless Machine Access** | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+
+---
+
+### How Each Method Works
+
+#### PHS (Password Hash Synchronization)
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  PHS - Password Hash Synchronization                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   On-Premises AD            Microsoft Entra ID                         │
+│   ┌─────────────┐           ┌─────────────────────┐                    │
+│   │ User        │  Sync     │ User                │                    │
+│   │ Password    │ ───────►  │ Password Hash       │                    │
+│   │ Hash        │  (Hash    │ (Hash of Hash)      │                    │
+│   └─────────────┘  of Hash) └─────────────────────┘                    │
+│                                                                         │
+│   ✅ Seamless SSO: User logs into domain-joined machine               │
+│   ✅ Same credentials work for cloud resources                        │
+│   ✅ Works even if on-prem AD is unavailable                          │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### PTA (Pass-Through Authentication)
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  PTA - Pass-Through Authentication                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   User Sign-in                                                         │
+│        │                                                                │
+│        ▼                                                                │
+│   Microsoft Entra ID                                                   │
+│        │                                                                │
+│        │ Authentication Request                                        │
+│        ▼                                                                │
+│   PTA Agent (on-premises)                                              │
+│        │                                                                │
+│        ▼                                                                │
+│   Active Directory (validates password)                                │
+│        │                                                                │
+│        ▼                                                                │
+│   Result returned to Entra ID                                          │
+│                                                                         │
+│   ✅ Seamless SSO: User logs into domain-joined machine               │
+│   ✅ Password never leaves on-premises (security benefit)              │
+│   ⚠️  Requires on-prem AD to be available                             │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Why AD FS and OpenID Connect Are Incorrect
+
+#### AD FS (Active Directory Federation Services)
+
+- **Primary Purpose**: Provides federated identity and SSO for **applications and services**, not for synchronizing credentials for machine access
+- **Architecture**: Requires a dedicated AD FS infrastructure (federation servers, WAP proxies)
+- **Use Case**: Best suited for:
+  - SSO across multiple organizations
+  - Integration with third-party identity providers
+  - Claims-based authentication for applications
+- **Not Designed For**: Seamless password-less machine access within corporate network
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│   AD FS Use Cases:                                                      │
+│   ├── Cross-organization SSO              ✅                           │
+│   ├── Third-party app integration         ✅                           │
+│   ├── Claims-based authentication         ✅                           │
+│   └── Seamless machine access sync        ❌ (Not its purpose)        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### OpenID Connect
+
+- **Primary Purpose**: An **authentication protocol** built on OAuth 2.0
+- **Use Case**: Application-level authentication and authorization
+- **Not a Synchronization Method**: OpenID Connect is a protocol for authenticating users to applications, not for synchronizing identities between AD and Entra ID
+- **Scope**: Used after identity synchronization is already in place
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│   OpenID Connect:                                                       │
+│   ├── Protocol for app authentication     ✅                           │
+│   ├── OAuth 2.0 extension                 ✅                           │
+│   ├── ID Token issuance                   ✅                           │
+│   └── AD to Entra ID synchronization      ❌ (Not a sync method)      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Key Takeaways
+
+| Requirement | Best Solution(s) |
+|-------------|------------------|
+| Seamless SSO for domain-joined machines | PHS + Seamless SSO or PTA + Seamless SSO |
+| Password never in cloud | PTA |
+| Works when on-prem AD is down | PHS |
+| Federation with external organizations | AD FS |
+| Application authentication protocol | OpenID Connect |
+
+**Remember:**
+- **PHS and PTA** = Identity synchronization methods that enable seamless machine access
+- **AD FS** = Federation service for app-level SSO (not password sync)
+- **OpenID Connect** = Authentication protocol (not a synchronization method)
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [What is password hash synchronization?](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/whatis-phs)
+- [What is pass-through authentication?](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-pta)
+- [What is federation with Microsoft Entra ID?](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/whatis-fed)
+- [Microsoft Entra seamless single sign-on](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sso)
+
+**Related Topics:**
+- Microsoft Entra Connect
+- Hybrid Identity
+- Seamless Single Sign-On
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+**Document Version:** 1.4  
 **Last Updated:** December 18, 2025  
 **Author:** Azure Learning Documentation
 
