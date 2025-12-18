@@ -576,6 +576,110 @@ WITH (
 
 ---
 
+### Question 3: Data Engineering Solution with Data Warehouse
+
+**Scenario**: Your organization already possesses an Azure subscription and houses its application data in a Microsoft SQL Server located in its on-premises data center. They wish to fulfill the following criteria:
+
+- Migrate transactional data from the on-site SQL server to an Azure data warehouse
+- The data transfer should be automated to occur nightly as a scheduled task
+- A managed Spark cluster should be established for data engineers to examine the data housed in the SQL data warehouse. In this environment, the data engineers should have the capability to create notebooks in Scala, R, and Python
+- They require a data lake store to ingest data from a variety of sources
+
+**Question**: Which Azure service would you utilize to host the data warehouse?
+
+**Options**:
+- A) Azure Data Factory
+- B) Azure Databricks
+- C) Azure Data Lake Gen2 Storage accounts
+- D) Azure Synapse Analytics
+
+**Correct Answer**: **D) Azure Synapse Analytics**
+
+**Explanation**:
+
+**Azure Synapse Analytics** (formerly known as Azure SQL Data Warehouse) is correct because:
+- It is a **cloud-based data warehousing service** that combines big data and data warehousing capabilities
+- Designed for **running complex queries on large datasets**
+- Can handle both **relational and non-relational data**
+- Provides **unified analytics platform** with:
+  - Dedicated SQL pools (data warehouse)
+  - Serverless SQL pools (on-demand queries)
+  - Apache Spark pools (for Scala, R, Python notebooks)
+  - Native integration with Azure Data Lake Gen2
+  - Built-in pipeline orchestration for scheduled data transfers
+
+**Why Other Options Are Incorrect**:
+
+**Azure Data Factory** is incorrect because:
+- It is a **cloud-based data integration service** for creating, scheduling, and managing data pipelines
+- Used to **orchestrate data movement** from on-premises SQL Server to Azure
+- **Not designed to host a data warehouse** for analytical processing
+- It moves and transforms data, but doesn't store it for analytics
+
+**Azure Databricks** is incorrect because:
+- It is an **Apache Spark-based analytics platform** optimized for Azure
+- Provides capabilities for **data engineering and analytics**
+- **Not a data warehouse solution** - it's focused on data processing, machine learning, and collaborative data science workflows
+- Compute engine, not storage for data warehouse
+
+**Azure Data Lake Gen2 Storage accounts** is incorrect because:
+- Provides a **scalable and secure data lake storage solution** for big data analytics
+- Can store and manage large volumes of data from various sources
+- **Not a data warehouse service** - more suitable for storing raw data in its native format
+- Lacks the query engine and MPP architecture needed for data warehousing
+
+**Complete Architecture for This Scenario**:
+
+```
+┌─────────────────────┐
+│  On-Premises SQL    │
+│      Server         │
+└──────────┬──────────┘
+           │ (Nightly scheduled transfer)
+           ▼
+┌─────────────────────┐
+│  Azure Data Factory │ ◄─── Orchestration
+│  or Synapse Pipelines│
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────────────────────────┐
+│         Azure Synapse Analytics             │
+│  ┌─────────────────┐  ┌─────────────────┐  │
+│  │ Dedicated SQL   │  │   Spark Pools   │  │
+│  │ Pool (DW)       │  │ (Scala/R/Python)│  │
+│  └────────┬────────┘  └────────┬────────┘  │
+│           │                    │            │
+│           └────────┬───────────┘            │
+│                    ▼                        │
+│         ┌─────────────────────┐            │
+│         │ Azure Data Lake     │            │
+│         │ Gen2 (integrated)   │            │
+│         └─────────────────────┘            │
+└─────────────────────────────────────────────┘
+```
+
+**Service Mapping for Requirements**:
+
+| Requirement | Azure Service |
+|------------|---------------|
+| **Host the data warehouse** | Azure Synapse Analytics (Dedicated SQL Pool) |
+| **Automate nightly data transfer** | Azure Data Factory or Synapse Pipelines |
+| **Managed Spark cluster with notebooks** | Azure Synapse Analytics (Spark Pools) |
+| **Data Lake for multi-source ingestion** | Azure Data Lake Gen2 (integrated with Synapse) |
+
+**Key Insight**: When you see "data warehouse" in Azure scenarios, **Azure Synapse Analytics** is typically the answer. It's Microsoft's flagship service for enterprise data warehousing and analytics, providing a unified experience for data ingestion, preparation, management, and serving for BI and machine learning needs.
+
+**Reference Links**:
+- [What is Azure Synapse Analytics?](https://learn.microsoft.com/en-us/azure/synapse-analytics/overview-what-is)
+- [Azure Data Factory Overview](https://learn.microsoft.com/en-us/azure/data-factory/introduction)
+- [Azure Databricks Overview](https://learn.microsoft.com/en-us/azure/databricks/introduction/)
+- [Azure Data Lake Storage Gen2](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction)
+
+**Domain**: Design Data Storage Solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
