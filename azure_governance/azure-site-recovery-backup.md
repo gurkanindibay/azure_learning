@@ -5,9 +5,12 @@
 - [Azure Site Recovery](#azure-site-recovery)
 - [Azure Backup](#azure-backup)
 - [Service Comparison](#service-comparison)
+- [Azure Recovery Services Vault](#azure-recovery-services-vault)
 - [Practice Questions](#practice-questions)
   - [Question 1: Business Continuity and Disaster Recovery for Applications](#question-1-business-continuity-and-disaster-recovery-for-applications)
   - [Question 4: SQL Server Disaster Recovery on Azure VM](#question-4-sql-server-disaster-recovery-on-azure-vm)
+  - [Question 5: Recovery Services Vault Region Requirement](#question-5-recovery-services-vault-region-requirement)
+  - [Question 6: Recovery Services Vault for Cross-Region VM Protection](#question-6-recovery-services-vault-for-cross-region-vm-protection)
 - [References](#references)
 
 ---
@@ -86,6 +89,260 @@
 | **Point-in-Time Recovery** | ❌ No | ✅ Yes |
 | **Long-Term Retention** | ❌ No | ✅ Yes (up to 99 years) |
 | **Cost** | Higher (continuous replication) | Lower (periodic backups) |
+
+---
+
+## Azure Recovery Services Vault
+
+### Overview
+
+A **Recovery Services vault** is a storage entity in Azure that houses data and recovery points for various Azure services. It serves as the central management point for both **Azure Backup** and **Azure Site Recovery**.
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Recovery Services Vault                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────────────────────┐    ┌─────────────────────────┐       │
+│   │     Azure Backup        │    │   Azure Site Recovery   │       │
+│   │                         │    │                         │       │
+│   │  • VM Backups           │    │  • VM Replication       │       │
+│   │  • SQL/SAP HANA Backups │    │  • Failover Plans       │       │
+│   │  • File Share Backups   │    │  • Recovery Plans       │       │
+│   │  • On-premises Backups  │    │  • Replication Policies │       │
+│   └─────────────────────────┘    └─────────────────────────┘       │
+│                                                                     │
+│   Storage: Backup data, Recovery points, Replication metadata      │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Characteristics
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Regional Resource** | Must be in the same region as the resources it protects |
+| **Storage Entity** | Stores backup data, recovery points, and configuration |
+| **Unified Management** | Single interface for backup and disaster recovery |
+| **Security** | Supports soft delete, encryption, and RBAC |
+| **Monitoring** | Integrated with Azure Monitor for alerts and diagnostics |
+
+### Region Requirement (Critical)
+
+> **⚠️ Important:** A Recovery Services vault can **only protect resources in the same Azure region** as the vault.
+
+| Vault Location | Can Protect | Cannot Protect |
+|----------------|-------------|----------------|
+| East US | Resources in East US ✅ | Resources in West US ❌ |
+| West Europe | Resources in West Europe ✅ | Resources in East US ❌ |
+| Central US | Resources in Central US ✅ | Resources in other regions ❌ |
+
+**Multi-Region Deployment Pattern:**
+
+```plaintext
+┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
+│      East US        │    │     Central US      │    │      West US        │
+├─────────────────────┤    ├─────────────────────┤    ├─────────────────────┤
+│                     │    │                     │    │                     │
+│  Recovery Vault 1   │    │  Recovery Vault 2   │    │  Recovery Vault 3   │
+│        ↓            │    │        ↓            │    │        ↓            │
+│  ┌─────┐ ┌─────┐   │    │  ┌─────┐ ┌─────┐   │    │  ┌─────┐ ┌─────┐   │
+│  │ VM1 │ │ VM2 │   │    │  │ VM3 │ │ VM4 │   │    │  │ VM5 │ │ VM6 │   │
+│  └─────┘ └─────┘   │    │  └─────┘ └─────┘   │    │  └─────┘ └─────┘   │
+│                     │    │                     │    │                     │
+└─────────────────────┘    └─────────────────────┘    └─────────────────────┘
+```
+
+### Creating a Recovery Services Vault
+
+**Azure Portal:**
+1. Search for "Recovery Services vaults"
+2. Click **+ Create**
+3. Select subscription, resource group, and **region** (must match resources)
+4. Provide vault name
+5. Review and create
+
+**Azure CLI:**
+
+```bash
+# Create a Recovery Services vault
+az backup vault create \
+  --resource-group myResourceGroup \
+  --name myRecoveryVault \
+  --location eastus
+
+# List vaults in a resource group
+az backup vault list \
+  --resource-group myResourceGroup \
+  --output table
+```
+
+**PowerShell:**
+
+```powershell
+# Create a Recovery Services vault
+New-AzRecoveryServicesVault `
+  -ResourceGroupName "myResourceGroup" `
+  -Name "myRecoveryVault" `
+  -Location "eastus"
+
+# Set vault context for subsequent operations
+$vault = Get-AzRecoveryServicesVault -Name "myRecoveryVault"
+Set-AzRecoveryServicesVaultContext -Vault $vault
+```
+
+**Bicep:**
+
+```bicep
+resource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-06-01' = {
+  name: 'myRecoveryVault'
+  location: location
+  sku: {
+    name: 'RS0'
+    tier: 'Standard'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+```
+
+### Storage Redundancy Options
+
+Recovery Services vaults support different storage redundancy options:
+
+| Redundancy Type | Description | Use Case |
+|-----------------|-------------|----------|
+| **Locally Redundant (LRS)** | 3 copies in single datacenter | Cost-effective, non-critical workloads |
+| **Geo-Redundant (GRS)** | 6 copies across two regions | Default, recommended for most scenarios |
+| **Zone-Redundant (ZRS)** | 3 copies across availability zones | High availability within a region |
+
+```bash
+# Set storage redundancy (must be done before first backup)
+az backup vault backup-properties set \
+  --resource-group myResourceGroup \
+  --name myRecoveryVault \
+  --backup-storage-redundancy GeoRedundant
+```
+
+> **Note:** Storage redundancy can only be changed **before** the first backup item is registered to the vault.
+
+### Cross Region Restore (CRR)
+
+Cross Region Restore allows you to restore data in a **secondary (paired) region**, even if the primary region is unavailable.
+
+```bash
+# Enable Cross Region Restore
+az backup vault backup-properties set \
+  --resource-group myResourceGroup \
+  --name myRecoveryVault \
+  --cross-region-restore-flag true
+```
+
+| Feature | Without CRR | With CRR |
+|---------|-------------|----------|
+| **Restore Location** | Primary region only | Primary + Secondary region |
+| **DR Capability** | Limited | Enhanced |
+| **Cost** | Standard | Additional cost |
+| **Requirement** | N/A | GRS storage redundancy |
+
+### Soft Delete
+
+Soft delete protects backup data from accidental or malicious deletion.
+
+| Feature | Description |
+|---------|-------------|
+| **Retention Period** | Deleted data retained for 14 additional days |
+| **Recovery** | Can undelete and restore within retention period |
+| **Default State** | Enabled by default for new vaults |
+| **Enhanced Soft Delete** | Extended protection with configurable retention (14-180 days) |
+
+```bash
+# Configure soft delete settings
+az backup vault backup-properties set \
+  --resource-group myResourceGroup \
+  --name myRecoveryVault \
+  --soft-delete-feature-state Enable \
+  --soft-delete-duration 30
+```
+
+### Security Features
+
+| Feature | Description |
+|---------|-------------|
+| **Soft Delete** | Protection against accidental deletion |
+| **Encryption** | Data encrypted at rest with Microsoft-managed or customer-managed keys |
+| **RBAC** | Fine-grained access control |
+| **Private Endpoints** | Network isolation using Azure Private Link |
+| **Multi-User Authorization** | Require multiple approvals for critical operations |
+| **Immutability** | Prevent modification of backup data |
+
+### Backup Policies
+
+Backup policies define **when** backups occur and **how long** they're retained.
+
+```plaintext
+Backup Policy Structure:
+┌─────────────────────────────────────────────────────────────┐
+│                      Backup Policy                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Schedule:                                                  │
+│  ├── Frequency: Daily / Weekly                              │
+│  ├── Time: 2:00 AM UTC                                      │
+│  └── Days: (for weekly) Mon, Wed, Fri                       │
+│                                                             │
+│  Retention:                                                 │
+│  ├── Daily: 7 days                                          │
+│  ├── Weekly: 4 weeks                                        │
+│  ├── Monthly: 12 months                                     │
+│  └── Yearly: 10 years                                       │
+│                                                             │
+│  Instant Restore:                                           │
+│  └── Snapshot retention: 2 days (for fast restore)          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### What Can Be Protected
+
+| Workload | Backup | Site Recovery |
+|----------|--------|---------------|
+| Azure VMs | ✅ | ✅ |
+| SQL Server in Azure VM | ✅ | ✅ |
+| SAP HANA in Azure VM | ✅ | ✅ |
+| Azure Files | ✅ | ❌ |
+| Azure Blobs | ✅ | ❌ |
+| Azure Managed Disks | ✅ | ❌ |
+| On-premises VMs (Hyper-V/VMware) | ✅ | ✅ |
+| On-premises Files (MARS agent) | ✅ | ❌ |
+| Azure Database for PostgreSQL | ✅ | ❌ |
+
+### Monitoring and Alerts
+
+```bash
+# View backup jobs
+az backup job list \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryVault \
+  --output table
+
+# Configure alerts (via Azure Monitor)
+az monitor metrics alert create \
+  --name "BackupFailureAlert" \
+  --resource-group myResourceGroup \
+  --scopes "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.RecoveryServices/vaults/{vault-name}" \
+  --condition "count BackupHealthEvent > 0" \
+  --description "Alert when backup fails"
+```
+
+### Key Takeaways
+
+1. **Region Constraint**: Recovery Services vault must be in the **same region** as the resources it protects
+2. **Unified Management**: Single vault manages both backup and site recovery
+3. **Set Redundancy Early**: Storage redundancy must be configured before first backup
+4. **Enable CRR for DR**: Cross Region Restore provides disaster recovery capability
+5. **Security by Default**: Soft delete is enabled by default on new vaults
 
 ---
 
@@ -1953,6 +2210,337 @@ Always On Availability Group:
 - [Azure VM Availability Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview)
 - [Azure Backup for VMs Introduction](https://learn.microsoft.com/en-us/azure/backup/backup-azure-vms-introduction)
 - [Always On Availability Groups Overview](https://learn.microsoft.com/en-us/sql/database-engine/availability-groups/windows/overview-of-always-on-availability-groups-sql-server)
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
+### Question 5: Recovery Services Vault Region Requirement
+
+#### Scenario
+
+Your organization has provisioned the following virtual machines within their Azure subscription:
+
+| VM Name | Region |
+|---------|--------|
+| VM1 | East US |
+| VM2 | East US |
+| VM3 | West US |
+| VM4 | West US |
+
+A Recovery Services vault has been established in the **East US** zone to safeguard VM1 and VM2. Additionally, you must ensure that Azure Recovery Services protect VM3 and VM4.
+
+---
+
+#### Question
+
+**What step do you need to take to accomplish this?**
+
+A. Create a new recovery services policy  
+B. Create a new backup policy  
+C. Create a new subscription  
+D. Create a new Recovery Services vault
+
+---
+
+**Correct Answer:** **D. Create a new Recovery Services vault**
+
+---
+
+### Detailed Explanation
+
+#### Why Create a New Recovery Services Vault is Correct ✅
+
+A Recovery Services vault **must be in the same region as the data source** (virtual machines) it protects. This is a fundamental requirement of Azure Recovery Services.
+
+```plaintext
+Current Setup:
+┌─────────────────────────────────────────────────────────────────────┐
+│                           East US Region                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐    ┌─────────────────────────┐       │
+│   │   VM1   │    │   VM2   │    │  Recovery Services Vault │       │
+│   │         │────│         │────│  (East US)               │       │
+│   └─────────┘    └─────────┘    └─────────────────────────┘       │
+│        ✅ Protected              ✅ Protecting VMs in same region   │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                           West US Region                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐                                        │
+│   │   VM3   │    │   VM4   │    ❌ No Recovery Services Vault       │
+│   │         │    │         │                                        │
+│   └─────────┘    └─────────┘                                        │
+│        ❌ Not Protected (vault in different region)                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Solution:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────┐
+│                           West US Region                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐    ┌─────────────────────────┐       │
+│   │   VM3   │    │   VM4   │    │  Recovery Services Vault │       │
+│   │         │────│         │────│  (West US) - NEW         │       │
+│   └─────────┘    └─────────┘    └─────────────────────────┘       │
+│        ✅ Now Protected          ✅ Vault in same region            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Requirement: Same-Region Constraint
+
+| Vault Region | Can Protect VMs In | Cannot Protect VMs In |
+|--------------|-------------------|----------------------|
+| East US | East US ✅ | West US ❌ |
+| West US | West US ✅ | East US ❌ |
+
+---
+
+#### Why Other Options are Incorrect ❌
+
+##### A. Create a new recovery services policy ❌
+
+**Why incorrect:**
+- A recovery services policy **defines backup settings** (schedule, retention, etc.)
+- Policies work **within** an existing vault
+- Creating a policy does NOT solve the **region constraint**
+- The existing East US vault still cannot protect West US VMs regardless of policies
+
+```plaintext
+Policy alone doesn't help:
+
+East US Vault + New Policy → Still can only protect East US VMs ❌
+                          → Cannot reach West US VMs
+```
+
+##### B. Create a new backup policy ❌
+
+**Why incorrect:**
+- A backup policy defines **when** and **how long** to retain backups
+- Similar to recovery services policy, it operates **within a vault**
+- Does NOT address the **geographic limitation**
+- You need infrastructure (vault) before you can apply policies
+
+```plaintext
+Backup Policy: "Back up daily, retain for 30 days"
+                    ↓
+        Needs a vault in the same region first!
+```
+
+##### C. Create a new subscription ❌
+
+**Why incorrect:**
+- Subscriptions are for **billing and access control**
+- A new subscription does NOT create any Recovery Services infrastructure
+- VMs in different subscriptions still need vaults in their respective regions
+- Subscriptions have no impact on the region requirement
+
+```plaintext
+New Subscription:
+├── Still need to create resources
+├── Still bound by region constraints
+└── Doesn't provide any backup capability by itself
+```
+
+---
+
+#### Important Concept: Recovery Services Vault Region Requirement
+
+> **⚠️ Critical Rule:** A Recovery Services vault can only protect resources that are in the **same Azure region** as the vault.
+
+**Why this constraint exists:**
+
+1. **Data Locality**: Backup data stays within the same region by default (for compliance)
+2. **Performance**: Minimizes latency for backup and restore operations
+3. **Cost**: Avoids cross-region data transfer charges
+4. **Reliability**: Reduces network dependencies during backup/restore
+
+---
+
+#### Best Practice: Multi-Region Backup Architecture
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Enterprise Multi-Region Setup                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Region: East US                    Region: West US                     │
+│  ┌─────────────────────┐           ┌─────────────────────┐              │
+│  │ Recovery Services   │           │ Recovery Services   │              │
+│  │ Vault: RSV-EastUS   │           │ Vault: RSV-WestUS   │              │
+│  │                     │           │                     │              │
+│  │ Protects:           │           │ Protects:           │              │
+│  │ • VM1 (East US)     │           │ • VM3 (West US)     │              │
+│  │ • VM2 (East US)     │           │ • VM4 (West US)     │              │
+│  └─────────────────────┘           └─────────────────────┘              │
+│                                                                         │
+│  Optional: Cross-Region Restore (CRR) for disaster recovery             │
+│  RSV-EastUS ─────── Geo-Replicated ──────► Secondary in West US         │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Key Takeaways
+
+1. **Recovery Services vault must be in the same region as the protected VMs**
+   > This is a hard constraint - you cannot backup VMs in a different region than the vault.
+
+2. **Policies operate within vaults, not across regions**
+   > Creating new policies doesn't help if the vault is in the wrong region.
+
+3. **One vault per region for multi-region deployments**
+   > Plan your vault architecture based on where your resources are deployed.
+
+4. **Consider Cross-Region Restore (CRR) for DR**
+   > If you need to restore in a different region (disaster recovery), enable CRR on the vault.
+
+---
+
+#### Reference Links
+
+- [Recovery Services Vault Overview](https://learn.microsoft.com/en-us/azure/backup/backup-azure-recovery-services-vault-overview)
+- [Create a Recovery Services Vault](https://learn.microsoft.com/en-us/azure/backup/backup-create-recovery-services-vault)
+- [Azure Backup Architecture](https://learn.microsoft.com/en-us/azure/backup/backup-architecture)
+- [Cross Region Restore](https://learn.microsoft.com/en-us/azure/backup/backup-create-rs-vault#set-cross-region-restore)
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
+### Question 6: Recovery Services Vault for Cross-Region VM Protection
+
+#### Scenario
+
+Your organization has provisioned the following virtual machines within their Azure subscription:
+
+| VM Name | Region |
+|---------|--------|
+| VM1 | East US |
+| VM2 | East US |
+| VM3 | Central US |
+| VM4 | Central US |
+
+A Recovery Services vault has been established in the **East US** zone to safeguard VM1 and VM2. Additionally, you must ensure that Azure Recovery Services protect VM3 and VM4.
+
+---
+
+#### Question
+
+**What step do you need to take to accomplish this?**
+
+A. Create a new recovery services policy  
+B. Create a new backup policy  
+C. Create a new subscription  
+D. Create a new Recovery Services vault
+
+---
+
+**Correct Answer:** **D. Create a new Recovery Services vault**
+
+---
+
+### Detailed Explanation
+
+#### Why Create a New Recovery Services Vault is Correct ✅
+
+A Recovery Services vault **must be in the same region as the data source** (virtual machines) it protects. This is a fundamental requirement of Azure Recovery Services.
+
+```plaintext
+Current Setup:
+┌─────────────────────────────────────────────────────────────────────┐
+│                           East US Region                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐    ┌─────────────────────────┐       │
+│   │   VM1   │    │   VM2   │    │  Recovery Services Vault │       │
+│   │         │────│         │────│  (East US) - EXISTING    │       │
+│   └─────────┘    └─────────┘    └─────────────────────────┘       │
+│        ✅ Protected              ✅ Protecting VMs in same region   │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Central US Region                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐                                        │
+│   │   VM3   │    │   VM4   │    ❌ No Recovery Services Vault       │
+│   │         │    │         │                                        │
+│   └─────────┘    └─────────┘                                        │
+│        ❌ Not Protected (vault in different region)                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Solution:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Central US Region                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────┐    ┌─────────┐    ┌─────────────────────────┐       │
+│   │   VM3   │    │   VM4   │    │  Recovery Services Vault │       │
+│   │         │────│         │────│  (Central US) - NEW      │       │
+│   └─────────┘    └─────────┘    └─────────────────────────┘       │
+│        ✅ Now Protected          ✅ Vault in same region            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Requirement: Same-Region Constraint
+
+| Vault Region | Can Protect VMs In | Cannot Protect VMs In |
+|--------------|-------------------|----------------------|
+| East US | East US ✅ | Central US ❌, West US ❌ |
+| Central US | Central US ✅ | East US ❌, West US ❌ |
+| West US | West US ✅ | East US ❌, Central US ❌ |
+
+---
+
+#### Why Other Options are Incorrect ❌
+
+##### A. Create a new recovery services policy ❌
+
+**Why incorrect:**
+- A recovery services policy **defines backup settings** (schedule, retention, etc.)
+- Policies work **within** an existing vault
+- Creating a policy does NOT solve the **region constraint**
+- The existing East US vault still cannot protect Central US VMs regardless of policies
+
+##### B. Create a new backup policy ❌
+
+**Why incorrect:**
+- A backup policy defines **when** and **how long** to retain backups
+- Similar to recovery services policy, it operates **within a vault**
+- Does NOT address the **geographic limitation**
+- You need infrastructure (vault) in the correct region first before you can apply policies
+
+##### C. Create a new subscription ❌
+
+**Why incorrect:**
+- Subscriptions are for **billing and access control**
+- A new subscription does NOT create any Recovery Services infrastructure
+- VMs in different subscriptions still need vaults in their respective regions
+- Subscriptions have no impact on the region requirement
+
+---
+
+#### Key Takeaways
+
+1. **Recovery Services vault must be in the same region as the protected VMs**
+   > This is a hard constraint - you cannot backup VMs in a different region than the vault.
+
+2. **Multi-region deployments require multiple vaults**
+   > Each region with VMs needs its own Recovery Services vault.
+
+3. **Policies and subscriptions don't solve region constraints**
+   > The initial step is always to create the vault in the correct region first.
 
 **Domain:** Design Business Continuity Solutions
 
