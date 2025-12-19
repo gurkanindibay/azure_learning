@@ -22,6 +22,7 @@
 - [Troubleshooting](#troubleshooting)
 - [Practice Questions](#practice-questions)
   - [Question 1: Recommending AKS Scaling Solution for Linux Containers](#question-1-recommending-aks-scaling-solution-for-linux-containers)
+  - [Question 2: Deploying a New Containerized Application to Specific Nodes](#question-2-deploying-a-new-containerized-application-to-specific-nodes)
 - [References](#references)
 - [Related Topics](#related-topics)
 
@@ -1022,6 +1023,165 @@ Virtual Kubelet is the open-source project that enables virtual nodes, but you *
 - [Cluster Autoscaler](https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler?tabs=azure-cli)
 - [Horizontal Pod Autoscaler Concepts](https://learn.microsoft.com/en-us/azure/aks/concepts-scale#horizontal-pod-autoscaler)
 - [Virtual Kubelet](https://virtual-kubelet.io)
+
+**Domain:** Design Infrastructure Solutions
+
+---
+
+### Question 2: Deploying a New Containerized Application to Specific Nodes
+
+#### Scenario
+
+You have created an Azure Kubernetes Service (AKS) cluster with the following settings:
+
+| Setting | Value |
+|---------|-------|
+| **Cluster Name** | getcloudskillscluster |
+| **Node Pool** | agentpool (System) |
+| **Node Count** | 2 |
+| **Node Size** | Standard_DS2_v2 |
+
+An application has been deployed to the node pool in a containerized format.
+
+You need to deploy another containerized application called "getcloudskillsapp2" that should run on **four nodes**, each of size **"DS3 v2"**.
+
+**Question:** What is the **first step** you need to take to meet this requirement?
+
+---
+
+#### Options
+
+A. Modify the autoscale settings for the Kubernetes cluster  
+B. Upgrade the cluster  
+C. Enable virtual nodes for the cluster  
+D. Create a new node pool
+
+---
+
+**Correct Answer:** **D. Create a new node pool**
+
+---
+
+### Detailed Explanation
+
+#### Why Create a New Node Pool is Correct ✅
+
+Creating a new node pool is the correct first step because:
+
+1. **Different VM Size Required**: The existing node pool uses `Standard_DS2_v2`, but the new application requires `Standard_DS3_v2` nodes
+2. **Specific Node Count**: The new application needs exactly 4 nodes dedicated to it
+3. **Workload Isolation**: Node pools allow you to run different workloads with different resource requirements on separate sets of nodes
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AKS Cluster: getcloudskillscluster                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Existing System Node Pool (agentpool):                                  │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  VM Size: Standard_DS2_v2    |    Node Count: 2                  │   │
+│  │  ┌─────────────┐  ┌─────────────┐                                │   │
+│  │  │   Node 1    │  │   Node 2    │                                │   │
+│  │  │ (Existing   │  │ (Existing   │                                │   │
+│  │  │  App Pods)  │  │  App Pods)  │                                │   │
+│  │  └─────────────┘  └─────────────┘                                │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  New User Node Pool (to be created):                                     │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  VM Size: Standard_DS3_v2    |    Node Count: 4                  │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │   │
+│  │  │  Node 1  │ │  Node 2  │ │  Node 3  │ │  Node 4  │            │   │
+│  │  │ (app2)   │ │ (app2)   │ │ (app2)   │ │ (app2)   │            │   │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+##### How to Create a New Node Pool:
+
+```bash
+# Azure CLI command to create a new node pool
+az aks nodepool add \
+    --resource-group <resource-group> \
+    --cluster-name getcloudskillscluster \
+    --name app2pool \
+    --node-count 4 \
+    --node-vm-size Standard_DS3_v2 \
+    --mode User
+```
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### ❌ A. Modify the autoscale settings for the Kubernetes cluster
+
+| Aspect | Details |
+|--------|---------|
+| **What it does** | Adjusts the number of nodes in a cluster based on workload demand |
+| **Why incorrect** | Autoscaling settings are for dynamic scaling, not for specifying node sizes or creating dedicated nodes for a new application |
+| **Limitation** | Cannot change VM sizes or guarantee specific number of nodes for a particular application |
+
+Autoscaling helps manage resource allocation dynamically but doesn't help deploy a new application to specific nodes with specific VM sizes.
+
+---
+
+##### ❌ B. Upgrade the cluster
+
+| Aspect | Details |
+|--------|---------|
+| **What it does** | Updates the Kubernetes version or underlying infrastructure |
+| **Why incorrect** | Upgrading doesn't change node configurations or add nodes with different sizes |
+| **Limitation** | This is a maintenance operation, not a deployment or scaling operation |
+
+Cluster upgrades are for keeping the Kubernetes version current, not for adding new compute resources.
+
+---
+
+##### ❌ C. Enable virtual nodes for the cluster
+
+| Aspect | Details |
+|--------|---------|
+| **What it does** | Provides serverless compute by bursting to Azure Container Instances |
+| **Why incorrect** | Virtual nodes don't provide dedicated VMs with specific sizes |
+| **Limitation** | Virtual nodes run on ACI, not on dedicated DS3 v2 VMs as required |
+
+Virtual nodes are excellent for rapid scaling and burst workloads but don't meet the requirement of running on four dedicated nodes of a specific VM size.
+
+---
+
+### Key Concepts: Node Pool Management
+
+| Concept | Description |
+|---------|-------------|
+| **System Node Pool** | Runs critical system pods (CoreDNS, metrics-server); at least one required per cluster |
+| **User Node Pool** | Runs application workloads; can have different VM sizes and configurations |
+| **Multiple Node Pools** | Allows different workloads to run on appropriate hardware |
+| **Node Selectors/Taints** | Used to schedule specific pods to specific node pools |
+
+---
+
+### When to Create a New Node Pool
+
+| Scenario | Solution |
+|----------|----------|
+| Application needs different VM size | Create new node pool with required VM size |
+| Need dedicated nodes for specific workload | Create user node pool with taints/labels |
+| Running Windows containers alongside Linux | Create Windows node pool |
+| Cost optimization with Spot VMs | Create node pool with Spot instances |
+| Different availability zone requirements | Create node pool in specific zones |
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [AKS Node Pools Overview](https://learn.microsoft.com/en-us/azure/aks/create-node-pools)
+- [Add Node Pools to AKS](https://learn.microsoft.com/en-us/azure/aks/create-node-pools#add-a-node-pool)
+- [Manage Node Pools](https://learn.microsoft.com/en-us/azure/aks/manage-node-pools)
+- [Multiple Node Pools](https://learn.microsoft.com/en-us/azure/aks/use-multiple-node-pools)
 
 **Domain:** Design Infrastructure Solutions
 
