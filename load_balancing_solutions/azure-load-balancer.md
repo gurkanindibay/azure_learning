@@ -1,5 +1,39 @@
 # Azure Load Balancer
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Typical Topology](#typical-topology)
+- [Why Use It as a Proxy](#why-use-it-as-a-proxy)
+- [Pricing Tiers](#pricing-tiers)
+  - [Basic Load Balancer](#basic-load-balancer)
+  - [Standard Load Balancer](#standard-load-balancer)
+- [SKU Comparison](#sku-comparison)
+- [Load Balancing Algorithms](#load-balancing-algorithms)
+  - [Distribution Modes](#distribution-modes)
+- [Health Probes](#health-probes)
+  - [Probe Types](#probe-types)
+  - [Probe Configuration](#probe-configuration)
+  - [Best Practices](#best-practices)
+- [Common Use Cases](#common-use-cases)
+- [Architecture Patterns](#architecture-patterns)
+- [Outbound Connectivity (Standard SKU)](#outbound-connectivity-standard-sku)
+  - [Outbound Rules](#outbound-rules)
+  - [SNAT Port Allocation](#snat-port-allocation)
+- [High Availability Configuration](#high-availability-configuration)
+  - [Zone-Redundant Frontend](#zone-redundant-frontend)
+  - [Zonal Backend Pools](#zonal-backend-pools)
+  - [Cross-Region Load Balancer](#cross-region-load-balancer)
+- [Best Practices](#best-practices-1)
+- [Cost Optimization Strategies](#cost-optimization-strategies)
+- [When to Choose Load Balancer](#when-to-choose-load-balancer)
+- [Integration with Other Azure Services](#integration-with-other-azure-services)
+- [Monitoring and Diagnostics](#monitoring-and-diagnostics)
+- [Security Considerations](#security-considerations)
+- [Exam Scenario: Multi-Tier Application Load Balancing](#exam-scenario-multi-tier-application-load-balancing)
+- [References](#references)
+
 ## Overview
 
 **Layer/scope:** Regional Layer 4 (TCP/UDP) load balancer.
@@ -299,6 +333,90 @@ Don't choose Load Balancer when:
 4. **Service endpoints**: Secure backend communication to Azure services
 5. **No public IP on VMs**: Use Load Balancer for inbound, NAT Gateway for outbound
 6. **Regular security reviews**: Audit NSG rules and access patterns
+
+## Exam Scenario: Multi-Tier Application Load Balancing
+
+### Scenario
+
+A company needs to deploy an application to Azure containing a **web front end** and an **application tier** with the following requirements:
+
+**Internet to Web Front End Requirements:**
+- URL-based routing
+- Connection draining
+- Prevention of SQL injection attacks
+
+**Web Front End to Application Tier Requirements:**
+- Port forwarding
+- HTTPS health probes
+- Availability set as the backend pool
+
+### Solution
+
+| Tier | Recommended Solution | Reason |
+|------|---------------------|--------|
+| **Internet → Web Front End** | Azure Application Gateway with WAF | Supports URL-based routing, connection draining, and WAF prevents SQL injection attacks |
+| **Web Front End → Application Tier** | **Internal Azure Standard Load Balancer** | Supports port forwarding, HTTPS health probes, and availability set as backend pool |
+
+### Why Internal Standard Load Balancer for Application Tier?
+
+✅ **Port Forwarding**: Standard Load Balancer supports inbound NAT rules for port forwarding  
+✅ **HTTPS Health Probes**: Standard SKU supports HTTP, HTTPS, and TCP health probes  
+✅ **Availability Set Backend**: Supports availability sets as backend pool members  
+✅ **Internal Traffic**: Designed for internal service-to-service communication within Azure  
+
+### Why NOT Other Options?
+
+| Option | Why Not Suitable |
+|--------|-----------------|
+| **Application Gateway with WAF** | Does not support port forwarding; designed for Layer 7 HTTP/HTTPS traffic, not general Layer 4 port forwarding; backend pools don't support availability sets directly |
+| **Internal Basic Load Balancer** | Does not support HTTPS health probes (only HTTP and TCP); limited backend pool options |
+| **Public Standard Load Balancer** | For internal application tier traffic, an internal load balancer is more appropriate; public LB exposes endpoints to internet |
+
+### Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                           INTERNET                                  │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              Azure Application Gateway + WAF                        │
+│  • URL-based routing                                                │
+│  • Connection draining                                              │
+│  • SQL injection prevention                                         │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Web Front End VMs                               │
+│                   (in Availability Set)                             │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│           Internal Azure Standard Load Balancer                     │
+│  • Port forwarding (Inbound NAT rules)                              │
+│  • HTTPS health probes                                              │
+│  • Availability set backend pool                                    │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                   Application Tier VMs                              │
+│                   (in Availability Set)                             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Takeaways
+
+1. **Layer 7 vs Layer 4**: Use Application Gateway for HTTP/HTTPS traffic requiring URL routing, WAF, SSL termination. Use Load Balancer for Layer 4 TCP/UDP distribution.
+
+2. **Internal vs Public**: For traffic between internal tiers (web to app), use **Internal** Load Balancer.
+
+3. **Standard vs Basic**: Always use **Standard SKU** for production - it supports HTTPS health probes, has SLA, and offers more features.
+
+4. **Port Forwarding**: Only Load Balancer supports port forwarding via inbound NAT rules - Application Gateway does not.
 
 ## References
 
