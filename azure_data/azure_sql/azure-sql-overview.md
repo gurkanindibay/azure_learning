@@ -2149,7 +2149,115 @@ Additionally, SQL auditing is supported for databases in the Standard tier, and 
 
 ---
 
-### Question 5: SQL Server on Azure VM Disk Caching Configuration
+### Question 5: DTU-Based Database Scaling Parameters (GetCloudSkillsInsurance)
+
+**Scenario (Case Study: GetCloudSkillsInsurance)**: 
+
+An insurance company, GetCloudSkillsInsurance, operates in three states and provides home, auto, and boat insurance. The company operates two Active Directory forests and is planning to migrate its workloads to Azure.
+
+**Current Environment**:
+- Primary internal system: Insurance Processing System (IPS) - ASP.Net/C# application running on IIS/Windows Servers
+- IPS is structured into three tiers: web, business logic API, and backend datastore
+- Backend uses Microsoft SQL Server (Customer data) and MongoDB (Insurance forms and documents)
+
+**Requirements**:
+- GetCloudSkillsInsurance is looking to transition its existing IPSCustomers SQL database to a new, fully managed SQL database in Azure
+- The database should be **cost-effective** while offering **scalable compute and storage** capabilities
+- The management team anticipates that the Azure database service will **dynamically scale** the database resources with **minimal downtime**
+- The technical team suggests adopting a **DTU-based purchasing model** for this new database
+
+**Question**: Which **two** parameters would you recommend configuring to ensure that the new IPSCustomers database scales effectively to meet workload demands?
+
+**Options**:
+- A) Define the maximum of CPU cores
+- B) Define the maximum resource limit per group of databases
+- C) Define the maximum of Database Transaction Units (DTUs)
+- D) Define the maximum of the allocated storage
+- E) Define the maximum size for a database
+
+**Correct Answers**: **C) Define the maximum of Database Transaction Units (DTUs)** and **E) Define the maximum size for a database**
+
+---
+
+**Explanation**:
+
+**Option C - Define the maximum of Database Transaction Units (DTUs)** ✅
+- **Correct**: DTUs are a blended measure of the **performance and resources** allocated to the database (CPU, memory, and I/O combined)
+- Setting a maximum DTU limit allows the database to **dynamically scale compute resources** based on workload requirements
+- For elastic pools, this defines the maximum eDTUs a single database can consume from the pool
+- This directly impacts the database's ability to handle varying workloads during peak demand
+
+**Option E - Define the maximum size for a database** ✅
+- **Correct**: Defining the maximum size for a database is a key parameter for **storage scaling**
+- By setting a maximum size limit, the database can dynamically scale its **compute and storage resources** based on workload requirements
+- This ensures efficient performance and scalability as data grows
+- Prevents unexpected storage issues while allowing room for growth
+
+**Why Other Options Are Incorrect**:
+
+**Option A - Define the maximum of CPU cores**
+- **Incorrect**: CPU cores are a configuration parameter in the **vCore-based model**, not the DTU-based model
+- DTU model uses a bundled approach where CPU, memory, and I/O are combined into DTUs
+- You cannot independently configure CPU cores in a DTU-based database
+
+**Option B - Define the maximum resource limit per group of databases**
+- **Incorrect**: While this is important for **resource management** in elastic pools, it focuses on resource allocation at the pool level rather than individual database scalability
+- This parameter controls how resources are distributed but does not directly contribute to a single database's ability to scale dynamically
+
+**Option D - Define the maximum of the allocated storage**
+- **Incorrect**: This option refers to storage allocation but does not directly impact the **scalability** of the database to meet workload demands
+- Storage capacity is essential but the question focuses on parameters for **dynamic scaling** to meet varying workloads
+- "Maximum size for a database" (Option E) is the more appropriate parameter for storage scaling
+
+---
+
+### DTU-Based Scaling Parameters Summary
+
+| Parameter | Affects Scaling? | Purpose |
+|-----------|------------------|---------|
+| **Maximum DTUs** | ✅ Yes | Controls compute performance (CPU, memory, I/O) |
+| **Maximum database size** | ✅ Yes | Controls storage scaling capacity |
+| **CPU cores** | ❌ No (vCore model) | Not applicable to DTU-based model |
+| **Resource limit per group** | ⚠️ Pool-level | Resource distribution, not individual DB scaling |
+| **Allocated storage** | ⚠️ Partial | Allocation vs. capacity limit distinction |
+
+### Key Differences: DTU vs vCore Model Scaling
+
+| Scaling Aspect | DTU Model | vCore Model |
+|----------------|-----------|-------------|
+| **Compute scaling** | Set maximum DTUs | Set number of vCores |
+| **Memory control** | Bundled in DTUs | Tied to vCore count |
+| **Storage scaling** | Maximum database size | Independent storage selection |
+| **I/O scaling** | Bundled in DTUs | Based on tier and storage |
+| **Flexibility** | Less flexible (bundled) | More granular control |
+
+### DTU Scaling Tiers Reference
+
+| Tier | DTU Range | Max Database Size |
+|------|-----------|-------------------|
+| **Basic** | 5 DTUs | 2 GB |
+| **Standard** | 10 - 3,000 DTUs | Up to 1 TB |
+| **Premium** | 125 - 4,000 DTUs | Up to 4 TB |
+
+### Key Takeaway
+
+> **📘 When using the DTU-based purchasing model**, the two primary parameters for ensuring effective database scaling are:
+> 1. **Maximum DTUs** - Controls compute performance (CPU, memory, I/O bundled)
+> 2. **Maximum database size** - Controls storage capacity for data growth
+>
+> These settings allow the database to dynamically adjust resources based on workload demands while maintaining cost efficiency.
+
+**Reference Links**:
+- [Scale Resources - Azure SQL Database & Azure SQL Managed Instance](https://learn.microsoft.com/en-us/azure/azure-sql/database/scale-resources)
+- [What is Azure SQL Database Service?](https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview)
+- [What is a Single Database in Azure SQL Database?](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-overview)
+- [Service Tiers - DTU Model](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu)
+
+**Domain**: Design data storage solutions (20-25%)
+
+---
+
+### Question 6: SQL Server on Azure VM Disk Caching Configuration
 
 **Scenario**: You are designing a virtual machine that will run Microsoft SQL Server and will contain two data disks. The first data disk will store log files, and the second data disk will store data. Both disks are P40 managed disks.
 
@@ -2233,7 +2341,7 @@ With None Caching on Transaction Log Disk:
 
 ---
 
-### Question 6: Purchase Model for License Mobility Customer (Contoso, Ltd.)
+### Question 7: Purchase Model for License Mobility Customer (Contoso, Ltd.)
 
 **Scenario**: You manage a database environment for a Microsoft Volume Licensing customer named Contoso, Ltd. Contoso uses License Mobility through Software Assurance.
 
@@ -2290,7 +2398,7 @@ Additionally, the vCore model supports **automatic scaling** (particularly with 
 
 ---
 
-### Question 7: Data Warehouse Selection for Reporting Solution
+### Question 8: Data Warehouse Selection for Reporting Solution
 
 **Scenario**: You are designing a data storage solution to support reporting. The solution will ingest high volumes of data in JSON format by using Azure Event Hubs. As the data arrives, Event Hubs will write the data to storage.
 
@@ -2331,7 +2439,7 @@ The solution must meet the following requirements:
 
 ---
 
-### Question 8: Deployment Option for License Mobility Customer (Contoso, Ltd.)
+### Question 9: Deployment Option for License Mobility Customer (Contoso, Ltd.)
 
 **Scenario**: You manage a database environment for a Microsoft Volume Licensing customer named Contoso, Ltd. Contoso uses License Mobility through Software Assurance.
 
@@ -2389,7 +2497,7 @@ Since Contoso uses License Mobility through Software Assurance, they can take ad
 
 ---
 
-### Question 9: SQL Server Migration - Replication Mechanism Selection
+### Question 10: SQL Server Migration - Replication Mechanism Selection
 
 **Scenario**: You have an on-premises Microsoft SQL Server database named SQL1.
 
@@ -2453,7 +2561,7 @@ Additionally, all secondary replicas are readable, making them available for rea
 
 ---
 
-### Question 10: Protecting Sensitive Employee Data in Azure SQL Managed Instance
+### Question 11: Protecting Sensitive Employee Data in Azure SQL Managed Instance
 
 **Scenario**: You have an Azure subscription. The subscription contains an Azure SQL managed instance that stores employee details, including social security numbers and phone numbers.
 
@@ -2568,7 +2676,7 @@ ALTER COLUMN PhoneNumber ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)');
 
 ---
 
-### Question 11: Azure SQL Failover Group Configuration Requirements
+### Question 12: Azure SQL Failover Group Configuration Requirements
 
 **Scenario**: Your application uses multiple SQL databases running on the primary server. You plan to create a failover group.
 
