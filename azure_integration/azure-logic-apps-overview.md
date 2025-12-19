@@ -277,6 +277,117 @@ When creating a SQL Server connection in Logic Apps for on-premises:
 
 ---
 
+## High Throughput Mode and Scaling Logic Apps
+
+When a Logic App needs to handle a high volume of requests during peak loads, you need to configure **Workflow settings** to enable **High Throughput Mode**.
+
+### Throughput Limits for Consumption Logic Apps
+
+| Setting | Default Limit | High Throughput Mode |
+|---------|---------------|----------------------|
+| Actions per 5-minute rolling interval | **100,000** executions | **300,000** executions |
+
+### How to Enable High Throughput Mode
+
+1. In the **Azure portal**, navigate to your Logic App
+2. Under **Settings**, select **Workflow settings**
+3. Under **Runtime options** → **High throughput**, set to **On**
+
+### Enable via ARM Template
+
+To enable high throughput in an ARM template, add the `runtimeConfiguration` object with `operationOptions` set to `OptimizedForHighThroughput`:
+
+```json
+{
+  "properties": {
+    "runtimeConfiguration": {
+      "operationOptions": "OptimizedForHighThroughput"
+    }
+  }
+}
+```
+
+---
+
+### Practice Question: Handling High Volume Requests
+
+**Given:**
+- A company has developed a Logic App named 'getcloudskills-logicapp'
+- The app is designed to respond to HTTP POST or HTTP GET requests
+- It should be able to handle up to **200,000 requests in a 5-minute period** during peak loads
+
+**Question:** To ensure the application can handle the expected number of requests, which of the following should be configured?
+
+**Options:**
+- A) Workflow settings
+- B) API connections
+- C) Access control (IAM)
+- D) Access keys
+
+---
+
+### Answer: A ✅
+
+**Correct Answer: A) Workflow settings**
+
+---
+
+### Detailed Explanation
+
+**Option A - Workflow settings** ✅
+- **Correct**: Multitenant Azure Logic Apps has a default limit on the number of actions that run every 5 minutes (100,000)
+- To raise the default value to the maximum (300,000), you can enable **high throughput mode** in Workflow settings
+- This setting is found under **Settings** → **Workflow settings** → **Runtime options** → **High throughput**
+- Alternatively, you can distribute the workload across multiple logic apps and workflows
+
+**Option B - API connections**
+- **Incorrect**: API connections in a Logic App are used to connect to external services or systems
+- While important for integrating with external resources, API connections do not directly impact the Logic App's ability to handle a high volume of requests during peak loads
+
+**Option C - Access control (IAM)**
+- **Incorrect**: Access control (IAM) in Azure is used to manage user access to Azure resources
+- While access control is important for securing the Logic App, it does not directly impact the app's ability to handle a high volume of requests during peak loads
+
+**Option D - Access keys**
+- **Incorrect**: Access keys in Azure are used for authentication and authorization purposes
+- While access keys are important for securing access to the Logic App, they do not directly impact the app's ability to handle a high volume of requests during peak loads
+
+### Logic Apps Configuration Options Comparison
+
+| Configuration | Purpose | Affects Throughput? |
+|---------------|---------|---------------------|
+| **Workflow settings** | Runtime options including high throughput mode | ✅ Yes |
+| **API connections** | Connect to external services/systems | ❌ No |
+| **Access control (IAM)** | Manage user/role permissions (RBAC) | ❌ No |
+| **Access keys** | Authentication/authorization tokens | ❌ No |
+
+---
+
+### Additional Strategies for High Load Scenarios
+
+If 300,000 actions per 5 minutes still isn't enough, consider these strategies:
+
+1. **Distribute workload across multiple Logic Apps** - Split your workflow into parent/child workflows
+2. **Limit trigger concurrency** - Control how many workflow instances run simultaneously
+3. **Disable array debatching (Split On)** - Process arrays in bulk instead of per-item
+4. **Use Standard Logic Apps** - Standard tier has **no limit** on actions per interval
+
+### Standard Logic Apps Scaling
+
+For extremely high-throughput scenarios, Standard Logic Apps offer:
+
+- **No action execution limits** per interval
+- Support for **multiple storage accounts** (up to 32)
+- Target ~100,000 action executions per minute per storage account
+- Dynamic scaling based on trigger load and job execution delays
+- Prewarmed instances for faster ramp-up during peak loads
+
+### Key Takeaway
+
+> **📘 When you need to handle high volumes of requests in a Consumption Logic App**, enable **High Throughput Mode** in **Workflow settings** to increase the action execution limit from 100,000 to 300,000 per 5-minute interval. For even higher demands, consider using Standard Logic Apps or distributing workload across multiple logic apps.
+
+---
+
 ## References
 
 - [Connect to on-premises data sources from Logic Apps](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-gateway-connection)
