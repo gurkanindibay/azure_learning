@@ -1612,6 +1612,137 @@ Total:
 
 ---
 
+### Question 7: Preventing Accidental Deletion of Critical Azure Resources
+
+**Scenario:**
+A sports entertainment company has deployed critical workloads in different resource groups, comprising important components such as Key Vault, Application Gateway, Private DNS Zones, App Services, Cosmos Databases, and AKS. Unfortunately, one of the DevOps team members accidentally deleted an Application Gateway, leading to an outage that impacted the company's reputation and resulted in a significant financial loss.
+
+As a cloud consultant, you need to suggest a solution that can prevent human errors like this in the future and improve the company's processes.
+
+**Question:**
+Which Azure feature can help prevent such errors in any of the Azure components deployed in different resource groups?
+
+**Options:**
+
+1. **Restrict Azure access using IAM roles with fewer privileges** ❌
+   - While reducing privileges follows the principle of least privilege
+   - Team members who legitimately need to manage resources would still require delete permissions
+   - This approach would hinder day-to-day operations
+   - Doesn't specifically protect against accidental deletion by authorized users
+   - Not targeted at preventing accidental deletions
+
+2. **A Conditional Access policy that has the cloud apps assignment set to Microsoft Azure Management** ❌
+   - Conditional Access policies control authentication and authorization conditions
+   - Can enforce requirements like trusted locations, device compliance, or session controls
+   - Does not prevent specific resource operations like deletion
+   - Focuses on how users authenticate, not what they can do after authentication
+   - Would not prevent an authenticated user from deleting resources
+
+3. **Azure Lock at Resource Group Level** ✅
+   - Azure Resource Locks are specifically designed to prevent accidental deletion or modification
+   - **CanNotDelete** lock: Prevents deletion of resources while still allowing modifications
+   - **ReadOnly** lock: Prevents both deletion and modification of resources
+   - Locks can be applied at subscription, resource group, or individual resource level
+   - Applying locks at the resource group level protects all resources within that group
+   - Even users with Owner role cannot delete locked resources without first removing the lock
+   - Provides a safety barrier that requires deliberate action to remove
+   - Perfect solution for protecting critical infrastructure from accidental deletion
+
+4. **A Conditional Access policy that forces the use of Multi-Factor Authentication (MFA) for all DevOps team members** ❌
+   - MFA enhances security by requiring additional authentication factors
+   - Protects against unauthorized access and identity compromise
+   - Does not prevent authorized users from performing destructive actions
+   - The DevOps team member who deleted the Application Gateway was already authenticated
+   - MFA would not have prevented this accidental deletion
+
+**Answer:** Azure Lock at Resource Group Level
+
+**Explanation:**
+
+Azure Resource Locks are the correct solution for preventing accidental deletion or modification of critical Azure resources. Here's why:
+
+**1. Lock Types and Their Purpose:**
+
+| Lock Type | Authorized Users Can | Use Case |
+|-----------|---------------------|----------|
+| **CanNotDelete** | Read and Modify | Protect from accidental deletion while allowing updates |
+| **ReadOnly** | Read only | Protect from all changes (deletion and modification) |
+
+**2. Lock Scope and Inheritance:**
+
+```
+Subscription Level Lock
+├─ Applies to all resource groups in subscription
+│  ├─ Resource Group 1 (locked)
+│  │  ├─ Application Gateway (locked)
+│  │  ├─ Key Vault (locked)
+│  │  └─ App Service (locked)
+│  └─ Resource Group 2 (locked)
+│     ├─ Cosmos DB (locked)
+│     └─ AKS (locked)
+
+Resource Group Level Lock
+├─ Resource Group with Critical Resources (locked)
+│  ├─ Application Gateway (protected)
+│  ├─ Private DNS Zone (protected)
+│  ├─ Key Vault (protected)
+│  └─ App Service (protected)
+```
+
+**3. How Locks Prevent Accidental Deletion:**
+
+- Locks require explicit removal before protected resources can be deleted
+- This two-step process (remove lock, then delete) creates a deliberate barrier
+- Forces users to consciously acknowledge they are deleting a protected resource
+- Provides an opportunity to reconsider the action
+
+**4. Implementing Resource Locks:**
+
+```bash
+# Apply CanNotDelete lock to a resource group
+az lock create \
+  --name CriticalResourcesLock \
+  --lock-type CanNotDelete \
+  --resource-group RG-CriticalWorkloads \
+  --notes "Protects critical production resources from accidental deletion"
+
+# Apply ReadOnly lock for maximum protection
+az lock create \
+  --name CriticalResourcesReadOnly \
+  --lock-type ReadOnly \
+  --resource-group RG-CriticalWorkloads \
+  --notes "Prevents all modifications to critical resources"
+```
+
+**5. Why Other Options Don't Solve the Problem:**
+
+| Option | Limitation |
+|--------|------------|
+| Reduced IAM Privileges | Hinders legitimate operations; doesn't protect against authorized users |
+| Conditional Access (Azure Management) | Controls authentication conditions, not specific actions |
+| MFA Enforcement | Prevents unauthorized access, not authorized mistakes |
+
+**6. Best Practices for Resource Locks:**
+
+- ✅ Apply **CanNotDelete** locks to all production resource groups
+- ✅ Use **ReadOnly** locks for extremely critical resources that should never change
+- ✅ Document which resources are locked and why
+- ✅ Implement a change management process for removing locks
+- ✅ Use Azure Policy to audit or enforce lock presence on critical resources
+- ✅ Require approval workflow for lock removal
+
+**Key Principle:**
+> Azure Resource Locks provide a safety mechanism that prevents accidental deletion or modification of critical resources. Even users with Owner permissions must explicitly remove the lock before performing destructive operations, creating a deliberate barrier that prevents costly mistakes.
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions (25–30%)
+
+**References:**
+- [Lock Resources to Prevent Unexpected Changes](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources)
+- [Azure Resource Manager Overview](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview)
+- [Protect Azure Resources with Locks](https://learn.microsoft.com/en-us/training/modules/configure-azure-resources-with-tools/)
+
+---
+
 ## Summary
 
 ### Key Hierarchy Levels
