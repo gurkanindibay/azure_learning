@@ -408,6 +408,57 @@ Hierarchical namespace (HNS) enables Azure Data Lake Storage Gen2 capabilities, 
 
 ---
 
+### Question 4: Enabling HNS for Existing Storage Accounts
+
+**Scenario**: An Oil and Gas company has a core application that offers Business Intelligence (BI) and Analytics features for several clients. However, to implement new features and improve performance, the application needs to utilize hierarchical namespace (HNS) capabilities such as file and directory-level security and faster operations. These capabilities are essential for big data analytics workloads.
+
+The client's data currently resides in fewer than 10 storage accounts, with large amounts of data.
+
+**Question**: What recommendations do you have to unblock new planned features for the application?
+
+**Options**:
+- A) Enable the HNS toggle on Storage Accounts configuration in Portal
+- B) Enable the HNS through the "az storage account" CLI command
+- C) Create an HNS enabled Storage Account and migrate the data
+- D) Upgrade current Storage accounts to Data Lake Gen2
+
+<details>
+<summary>Click to reveal answer</summary>
+
+**Correct Answer**: D) Upgrade current Storage accounts to Data Lake Gen2
+
+**Explanation**:
+
+✅ **Upgrading current Storage accounts to Data Lake Gen2** is the correct recommendation because:
+- **Data Lake Gen2** provides hierarchical namespace capabilities such as file and directory-level security, faster operations, and scalability
+- It is well-suited for **big data analytics workloads**
+- Azure supports **in-place upgrade** of existing storage accounts to enable hierarchical namespace (Data Lake Gen2)
+- This approach allows you to **retain existing data** without requiring a full migration to new storage accounts
+- Upgrading enables the application to leverage HNS capabilities and improve performance
+
+❌ **Enable the HNS toggle on Storage Accounts configuration in Portal** is incorrect because:
+- There is no simple HNS toggle that can be enabled on existing standard storage accounts through the portal
+- Enabling HNS requires a formal upgrade process to Data Lake Storage Gen2
+
+❌ **Enable the HNS through the "az storage account" CLI command** is incorrect because:
+- You cannot simply enable HNS on an existing storage account using a CLI toggle
+- The upgrade process involves more than just a single CLI command setting
+
+❌ **Create an HNS enabled Storage Account and migrate the data** is incorrect because:
+- While this would work, it is not the optimal solution when you can upgrade existing accounts in-place
+- Migration involves additional complexity, downtime, and potential data transfer costs
+- Azure now supports upgrading existing storage accounts to Data Lake Gen2, making full migration unnecessary
+
+**Key Takeaway**: When existing storage accounts need hierarchical namespace capabilities for big data analytics, **upgrade the storage accounts to Data Lake Storage Gen2** rather than migrating data to new accounts. This preserves existing data and simplifies the transition.
+
+**References**:
+- [Upgrade Azure Blob Storage with Azure Data Lake Storage Gen2 capabilities](https://learn.microsoft.com/en-us/azure/storage/blobs/upgrade-to-data-lake-storage-gen2)
+- [Azure Data Lake Storage Gen2 Introduction](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction)
+
+</details>
+
+---
+
 ## Related Learning Resources
 
 ### Microsoft Learn Documentation
