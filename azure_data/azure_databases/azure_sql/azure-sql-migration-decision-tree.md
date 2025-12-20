@@ -539,6 +539,43 @@ Savings: Up to 80% vs provisioned
 
 ---
 
+### Scenario 7: Full SQL Server Solution Migration (SSIS + SSAS + SSRS + Database Engine)
+
+**Characteristics:**
+- On-premises SQL Server with multiple services running together
+- SQL Server Database Engine
+- SQL Server Integration Services (SSIS) for ETL processes
+- SQL Server Analysis Services (SSAS) for OLAP/analytics
+- SQL Server Reporting Services (SSRS) for reporting
+- Minimize migration cost and time
+
+**Recommendation:** ✅ **SQL Server on Azure Virtual Machines**
+
+```
+Reason: Only IaaS option supports all SQL Server services (SSIS, SSAS, SSRS) 
+        running together on the same instance
+        
+Why NOT other options:
+  - Azure SQL Database: PaaS only - no support for SSIS, SSAS, SSRS
+  - Azure SQL Managed Instance: PaaS only - no support for SSIS, SSAS, SSRS
+  - Azure Synapse Analytics: Analytics focused - doesn't support SSRS/SSIS as traditional services
+
+Migration Benefits with SQL VM:
+  - Fastest migration path (lift-and-shift)
+  - Minimal application changes required
+  - All services remain co-located
+  - 100% feature compatibility
+  - Existing skills and knowledge apply
+  
+VM Series: E-series for memory-intensive workloads (SSAS cubes)
+HA Option: Always On Availability Groups for database HA
+Storage: Premium SSD or Ultra Disk for production workloads
+```
+
+> **Note:** While Azure offers alternative PaaS services for some components (Azure Data Factory for ETL, Azure Analysis Services, Power BI for reporting), using SQL Server on Azure VMs is the fastest and most cost-effective migration path when you need to maintain all traditional SQL Server services together with minimal changes.
+
+---
+
 ## Cost Considerations
 
 ### Cost Optimization Decision Tree
