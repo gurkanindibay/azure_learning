@@ -17,6 +17,7 @@
   - [Question 1: On-Premises Oracle to Azure Databricks Data Pipeline](#question-1-on-premises-oracle-to-azure-databricks-data-pipeline)
   - [Question 2: Copying On-Premises File Server Data to Azure Storage](#question-2-copying-on-premises-file-server-data-to-azure-storage)
   - [Question 3: Migrating SSIS Packages to Azure](#question-3-migrating-ssis-packages-to-azure)
+  - [Question 4: SSIS Packages Migration Options](#question-4-ssis-packages-migration-options)
 - [References](#references)
 
 ---
@@ -1274,6 +1275,128 @@ SQL Server Migration Assistant is designed to migrate data from **non-SQL Server
 - [Data Migration Assistant Overview](https://learn.microsoft.com/en-us/sql/dma/dma-overview?view=sql-server-ver16)
 - [Azure Data Catalog](https://learn.microsoft.com/en-us/shows/azure/introducing-azure-data-catalog)
 - [SQL Server Migration Assistant](https://learn.microsoft.com/en-us/sql/ssma/sql-server-migration-assistant?view=sql-server-ver15)
+
+**Domain:** Design data storage solutions
+
+---
+
+### Question 4: SSIS Packages Migration Options
+
+#### Scenario
+
+Your organization has many **Microsoft SQL Server Integration Services (SSIS) packages** that run on an **on-premises SQL Server**.
+
+You are **migrating the SQL Server resources to Azure**.
+
+You need to migrate the SSIS packages to Azure.
+
+**Question:** Which **two options** can you use? Each correct answer presents a complete solution.
+
+---
+
+#### Options
+
+A. Azure Data Factory  
+B. Azure SQL Database  
+C. Azure SQL Managed Instance  
+D. SQL Server on Azure Virtual Machines
+
+---
+
+**Correct Answers:** **A. Azure Data Factory** and **D. SQL Server on Azure Virtual Machines**
+
+---
+
+### Detailed Explanation
+
+#### Why Azure Data Factory is Correct ✅
+
+Azure Data Factory provides the **Azure-SSIS Integration Runtime (IR)**, which allows you to deploy and execute SSIS packages in the cloud. This provides a fully managed environment to **lift and shift** existing SSIS packages to Azure.
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                     Azure Data Factory                              │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │           Azure-SSIS Integration Runtime (IR)                 │  │
+│  │                                                               │  │
+│  │  ┌─────────────┐  ┌─────────────┐       ┌─────────────┐      │  │
+│  │  │ Package 1   │  │ Package 2   │  ...  │ Package N   │      │  │
+│  │  │ (Migrated)  │  │ (Migrated)  │       │ (Migrated)  │      │  │
+│  │  └─────────────┘  └─────────────┘       └─────────────┘      │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits:**
+- Deploy an Azure-SSIS IR to execute SSIS packages natively
+- Store packages in SSISDB catalog hosted in Azure SQL Database or Managed Instance
+- Fully managed environment without infrastructure management
+- Integrates with ADF pipelines for orchestration
+
+---
+
+#### Why SQL Server on Azure Virtual Machines is Correct ✅
+
+When you deploy **SQL Server to an Azure Virtual Machine**, you can install SSIS natively and **run the packages exactly as you would on-premises**. This provides a full IaaS approach with complete control over the SQL Server instance.
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                   Azure Virtual Machine                             │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │                  SQL Server Instance                          │  │
+│  │  ┌──────────────────────────────────────────────────────┐    │  │
+│  │  │     SQL Server Integration Services (SSIS)            │    │  │
+│  │  │                                                        │    │  │
+│  │  │  ┌─────────┐  ┌─────────┐       ┌─────────┐           │    │  │
+│  │  │  │ Pkg 1   │  │ Pkg 2   │  ...  │ Pkg N   │           │    │  │
+│  │  │  └─────────┘  └─────────┘       └─────────┘           │    │  │
+│  │  └──────────────────────────────────────────────────────┘    │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits:**
+- Full SQL Server installation including SSIS
+- Run packages natively without modification
+- Complete control over configuration and scheduling
+- Familiar environment for SQL Server administrators
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### ❌ B. Azure SQL Database
+
+| Aspect | Details |
+|--------|--------|
+| **Service Type** | Fully managed PaaS database service |
+| **SSIS Support** | ❌ **Does NOT support SSIS** |
+| **Why Not** | Azure SQL Database is a managed database service that does not include SQL Server components like SSIS. You cannot install or run SSIS packages directly on Azure SQL Database. |
+
+---
+
+##### ❌ C. Azure SQL Managed Instance
+
+| Aspect | Details |
+|--------|--------|
+| **Service Type** | Managed SQL Server instance (PaaS) |
+| **SSIS Support** | ❌ **Does NOT support native SSIS execution** |
+| **Why Not** | While Azure SQL Managed Instance provides near-complete SQL Server compatibility, it does **not include SSIS**. SSIS is not part of the Managed Instance service. You can use it to **host SSISDB** (the SSIS catalog database), but you still need Azure Data Factory's Azure-SSIS IR or SQL Server on a VM to actually execute the packages. |
+
+> ⚠️ **Important Distinction**: Azure SQL Managed Instance can **host SSISDB** (catalog storage), but it **cannot execute SSIS packages**. Execution requires either Azure-SSIS IR in Data Factory or SQL Server on an Azure VM.
+
+---
+
+### Summary: SSIS Migration Options
+
+| Option | Can Execute SSIS Packages? | Notes |
+|--------|---------------------------|-------|
+| **Azure Data Factory** | ✅ Yes | Via Azure-SSIS Integration Runtime |
+| **SQL Server on Azure VMs** | ✅ Yes | Native SSIS installation |
+| **Azure SQL Database** | ❌ No | PaaS database only, no SSIS components |
+| **Azure SQL Managed Instance** | ❌ No | Can host SSISDB but cannot execute packages |
+
+> 💡 **Exam Tip**: Remember that SSIS is a **component** that needs to be installed and executed. Only Azure Data Factory (via Azure-SSIS IR) and SQL Server on Azure VMs support SSIS package execution. Azure SQL Database and Azure SQL Managed Instance are database services that don't include SSIS execution capabilities.
 
 **Domain:** Design data storage solutions
 
