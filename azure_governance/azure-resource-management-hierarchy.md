@@ -1743,6 +1743,146 @@ az lock create \
 
 ---
 
+### Question 8: Organizing Solution Components for Team Management
+
+**Scenario:**
+You are designing an Azure solution that contains the following resources:
+- A virtual network with an Azure Firewall
+- A virtual machine scale set running an application
+- Two virtual machines that run Microsoft SQL Server
+
+You need to provide management rights to different teams for the virtual network, scale set, and database servers. The solution must minimize administrative effort.
+
+**Question:**
+How should you organize the solution components?
+
+**Options:**
+
+1. **Create a different management group for each solution component** ❌
+   - Management groups contain subscriptions, not individual resources
+   - Using different management groups for each component would require:
+     - Different subscriptions for each set of components
+     - A virtual network in each subscription
+     - VNet peering between subscriptions for connectivity
+   - Creates unnecessary complexity and administrative overhead
+   - Not aligned with the purpose of management groups
+
+2. **Create a different resource group for each solution component** ✅
+   - Resource groups are the ideal scope for organizing resources by team responsibility
+   - Allows you to provide RBAC access at the resource group level
+   - Does not require any extra Azure components
+   - Example structure:
+     - `RG-Networking` → Virtual Network + Azure Firewall → Network Team
+     - `RG-Application` → Virtual Machine Scale Set → Application Team
+     - `RG-Database` → SQL Server VMs → Database Team
+   - Clean separation of responsibilities with minimal administrative effort
+   - Each team gets Contributor (or appropriate role) on their resource group only
+
+3. **Create a different subscription for each solution component** ❌
+   - Overkill for this scenario
+   - Would require:
+     - Three separate subscriptions
+     - A virtual network in each subscription (or complex peering)
+     - VNet peering for connectivity between components
+   - Increases billing complexity unnecessarily
+   - Far more administrative overhead than needed
+   - Subscriptions are meant for billing boundaries, not team access separation
+
+4. **Create a different value on a tag for each resource in each solution component** ❌
+   - Tags are metadata and cannot be used directly for RBAC assignments
+   - Azure RBAC does not support role assignments based on resource tags
+   - Would require additional administrative effort through:
+     - Azure Policy with ABAC (Attribute-Based Access Control)
+     - Custom solutions to enforce tag-based access
+   - Not a native or straightforward solution
+   - Adds complexity rather than minimizing administrative effort
+
+**Answer:** Create a different resource group for each solution component
+
+**Explanation:**
+
+Using **different resource groups for each solution component** is the correct approach because it:
+
+**1. Enables Clean RBAC Separation:**
+```
+┌────────────────────────────────────────────────────────────┐
+│                    Subscription                             │
+│                                                             │
+│  ┌─────────────────────┐  ┌─────────────────────┐          │
+│  │   RG-Networking     │  │   RG-Application    │          │
+│  │                     │  │                     │          │
+│  │ • Virtual Network   │  │ • VM Scale Set      │          │
+│  │ • Azure Firewall    │  │ • Load Balancer     │          │
+│  │                     │  │                     │          │
+│  │ RBAC: Network Team  │  │ RBAC: App Team      │          │
+│  │ (Network Contributor)│  │ (Contributor)       │          │
+│  └─────────────────────┘  └─────────────────────┘          │
+│                                                             │
+│  ┌─────────────────────┐                                   │
+│  │   RG-Database       │                                   │
+│  │                     │                                   │
+│  │ • SQL Server VM 1   │                                   │
+│  │ • SQL Server VM 2   │                                   │
+│  │                     │                                   │
+│  │ RBAC: DBA Team      │                                   │
+│  │ (VM Contributor)    │                                   │
+│  └─────────────────────┘                                   │
+│                                                             │
+└────────────────────────────────────────────────────────────┘
+```
+
+**2. Benefits of Resource Group-Based Organization:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Native RBAC Support** | RBAC assignments directly at resource group scope |
+| **No Extra Components** | Works within single subscription, single VNet |
+| **Minimal Admin Effort** | Simple to set up and maintain |
+| **Principle of Least Privilege** | Each team only accesses their resources |
+| **Simple Networking** | All resources can share the same VNet (across RGs) |
+| **Clear Ownership** | Easy to identify which team owns what |
+
+**3. Why This Minimizes Administrative Effort:**
+
+- Single subscription = unified billing
+- Single virtual network = no peering needed (VNet can span resource groups)
+- Direct RBAC = no custom policies or workarounds
+- Standard Azure pattern = well-documented and supported
+
+**4. RBAC Assignment Example:**
+
+```bash
+# Network Team - manage networking components
+az role assignment create \
+  --role "Network Contributor" \
+  --assignee-object-id <network-team-group-id> \
+  --scope /subscriptions/<sub-id>/resourceGroups/RG-Networking
+
+# Application Team - manage application resources
+az role assignment create \
+  --role "Contributor" \
+  --assignee-object-id <app-team-group-id> \
+  --scope /subscriptions/<sub-id>/resourceGroups/RG-Application
+
+# Database Team - manage SQL Server VMs
+az role assignment create \
+  --role "Virtual Machine Contributor" \
+  --assignee-object-id <dba-team-group-id> \
+  --scope /subscriptions/<sub-id>/resourceGroups/RG-Database
+```
+
+**Key Principle:**
+> When you need to provide different teams with management access to different sets of Azure resources within the same solution, organize resources into separate resource groups based on team responsibility. This allows you to assign RBAC roles at the resource group scope without requiring additional Azure components, subscriptions, or complex configurations.
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions (25–30%)
+
+**References:**
+- [Organize your Azure resources effectively - Cloud Adoption Framework](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-setup-guide/organize-resources)
+- [Design for resource groups - Training](https://learn.microsoft.com/en-us/training/modules/design-for-resource-groups/)
+- [Azure RBAC Overview](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
+
+---
+
 ## Summary
 
 ### Key Hierarchy Levels
