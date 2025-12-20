@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [Availability Zones](#availability-zones)
+- [Availability Sets](#availability-sets)
 - [Azure Dedicated Hosts](#azure-dedicated-hosts)
 - [Virtual Machine Scale Sets (VMSS)](#virtual-machine-scale-sets-vmss)
 - [High Availability Architecture](#high-availability-architecture)
@@ -43,6 +44,223 @@ To maintain availability even if **multiple availability zones fail**, distribut
 - **1 zone deployment**: No zone-level redundancy
 - **2 zone deployment**: Survives 1 zone failure
 - **3 zone deployment**: Survives up to 2 zone failures ✅
+
+---
+
+## Availability Sets
+
+**Availability Sets** are a logical grouping of VMs within a datacenter that allows Azure to understand how your application is built to provide redundancy and availability. VMs are distributed across **Fault Domains** and **Update Domains** to protect against hardware failures and planned maintenance.
+
+### Key Characteristics
+
+- **Single Datacenter Scope**: Availability sets exist within a single datacenter (unlike Availability Zones)
+- **Fault Domains (FD)**: VMs are spread across different physical hardware racks (power, network, storage)
+- **Update Domains (UD)**: VMs are spread across logical groups for planned maintenance
+- **Free to Use**: No additional cost for creating an availability set
+- **99.95% SLA**: When 2+ VMs are deployed in an availability set
+
+### Fault Domains (FD)
+
+**Fault Domains** represent a group of VMs that share a common power source and network switch:
+
+- **Maximum FDs**: Up to **3 fault domains** per availability set
+- **Physical Isolation**: Each FD is a separate rack in the datacenter
+- **Automatic Distribution**: Azure automatically distributes VMs across FDs
+- **Hardware Failure Protection**: If one rack fails, VMs in other FDs remain operational
+
+```
+Availability Set
+│
+├─ Fault Domain 0 (Rack 1)
+│  ├─ VM1
+│  └─ VM4
+│
+├─ Fault Domain 1 (Rack 2)
+│  ├─ VM2
+│  └─ VM5
+│
+└─ Fault Domain 2 (Rack 3)
+   ├─ VM3
+   └─ VM6
+```
+
+### Update Domains (UD)
+
+**Update Domains** represent logical groups of VMs that can be rebooted together during planned maintenance:
+
+- **Maximum UDs**: Up to **20 update domains** per availability set (default is 5)
+- **Sequential Updates**: Only one UD is updated at a time during planned maintenance
+- **30-Minute Wait**: Azure waits at least 30 minutes between updating different UDs
+- **Maintenance Protection**: Ensures at least some VMs remain available during updates
+
+```
+Availability Set (5 Update Domains)
+│
+├─ Update Domain 0: [VM1, VM6]  ← Updated first, then wait 30+ min
+├─ Update Domain 1: [VM2, VM7]  ← Updated second
+├─ Update Domain 2: [VM3, VM8]  ← Updated third
+├─ Update Domain 3: [VM4, VM9]  ← Updated fourth
+└─ Update Domain 4: [VM5, VM10] ← Updated last
+```
+
+### Combined FD and UD Distribution
+
+VMs are distributed across **both** fault domains and update domains simultaneously:
+
+```
+                    Fault Domain 0    Fault Domain 1    Fault Domain 2
+                    (Rack 1)          (Rack 2)          (Rack 3)
+                    ─────────────────────────────────────────────────
+Update Domain 0     VM1               VM2               
+Update Domain 1     VM3               VM4               
+Update Domain 2                       VM5               VM6
+Update Domain 3     VM7                                 VM8
+Update Domain 4                       VM9               VM10
+```
+
+### Benefits
+
+✅ **Hardware failure protection** - VMs spread across physical racks  
+✅ **Planned maintenance resilience** - Sequential updates with wait periods  
+✅ **99.95% SLA** - When 2+ VMs are in an availability set  
+✅ **No additional cost** - Only pay for the VMs themselves  
+✅ **Simple configuration** - Easy to set up during VM creation  
+
+### Limitations
+
+❌ **Single datacenter** - Does not protect against datacenter-wide failures  
+❌ **Must be configured at VM creation** - Cannot add existing VMs to an availability set  
+❌ **Same region required** - All VMs must be in the same region  
+❌ **No auto-scaling** - Does not provide automatic scaling (use VMSS instead)  
+
+### Availability Sets vs. Availability Zones
+
+| Feature | Availability Sets | Availability Zones |
+|---------|------------------|-------------------|
+| **Scope** | Single datacenter | Multiple datacenters |
+| **Fault Isolation** | Rack-level | Datacenter-level |
+| **SLA** | 99.95% | 99.99% |
+| **Fault Domains** | Up to 3 | N/A (each zone is a fault domain) |
+| **Update Domains** | Up to 20 | N/A |
+| **Protection Level** | Hardware rack failure | Datacenter failure |
+| **Cost** | No extra cost | No extra cost |
+| **Use Case** | Legacy/basic HA | Higher availability requirements |
+
+### Can Availability Sets and Availability Zones Be Used Together?
+
+**No** - Availability Sets and Availability Zones are **mutually exclusive** for a single VM. A VM can be deployed to:
+- An Availability Set, **OR**
+- An Availability Zone
+
+**But NOT both simultaneously.**
+
+#### Why They Are Mutually Exclusive
+
+```
+Availability Set Deployment:
+  └─ VM is placed in a specific datacenter
+     └─ Distributed across Fault Domains (racks) within THAT datacenter
+     └─ No zone assignment
+
+Availability Zone Deployment:
+  └─ VM is placed in a specific zone (datacenter)
+     └─ The zone itself IS the fault domain
+     └─ No availability set assignment
+```
+
+#### Key Points
+
+1. **Different Placement Strategies**
+   - Availability Sets distribute VMs across racks **within one datacenter**
+   - Availability Zones distribute VMs across **different datacenters**
+
+2. **Zone Already Provides Isolation**
+   - When you deploy to a zone, that zone is already physically isolated
+   - Adding an availability set would be redundant and conflicting
+
+3. **Configuration at VM Creation**
+   - You must choose one option when creating the VM
+   - Azure Portal, CLI, and ARM templates enforce this mutual exclusivity
+
+#### What You CAN Do
+
+While a single VM cannot use both, you can design solutions that leverage both concepts:
+
+```
+Solution Architecture Example:
+│
+├─ Availability Zone 1
+│  └─ VM1, VM2 (zone-deployed, no availability set)
+│
+├─ Availability Zone 2
+│  └─ VM3, VM4 (zone-deployed, no availability set)
+│
+└─ Region without Zone Support
+   └─ Availability Set
+      ├─ Fault Domain 0: VM5, VM6
+      └─ Fault Domain 1: VM7, VM8
+```
+
+#### Migration Consideration
+
+If you have VMs in Availability Sets and want to move to Availability Zones:
+- You **cannot** simply add zone assignment to existing VMs
+- You must **recreate** the VMs with zone deployment
+- Consider using Azure Site Recovery or VM redeploy for migration
+
+#### Decision Guide
+
+```
+Do you need datacenter-level protection?
+│
+├─ YES → Use Availability Zones (if region supports them)
+│        └─ Higher SLA (99.99%)
+│        └─ Survives datacenter failures
+│
+└─ NO → Use Availability Sets
+        └─ Lower SLA (99.95%)
+        └─ Survives rack/hardware failures
+        └─ Works in all regions
+```
+
+### When to Use Availability Sets
+
+✅ Applications requiring basic high availability within a datacenter  
+✅ Regions that don't support availability zones  
+✅ Cost-sensitive deployments needing HA without zone redundancy  
+✅ Workloads that don't need to survive datacenter-level failures  
+✅ Legacy applications being migrated to Azure  
+
+### When to Use Availability Zones Instead
+
+✅ Mission-critical applications requiring higher SLA (99.99%)  
+✅ Applications that must survive datacenter failures  
+✅ Compliance requirements mandating geographic separation  
+✅ Disaster recovery scenarios within a region  
+
+### Creating an Availability Set
+
+**Azure CLI**:
+```bash
+az vm availability-set create \
+  --name MyAvailabilitySet \
+  --resource-group MyResourceGroup \
+  --platform-fault-domain-count 3 \
+  --platform-update-domain-count 5
+```
+
+**Azure PowerShell**:
+```powershell
+New-AzAvailabilitySet `
+  -Name "MyAvailabilitySet" `
+  -ResourceGroupName "MyResourceGroup" `
+  -Location "eastus" `
+  -PlatformFaultDomainCount 3 `
+  -PlatformUpdateDomainCount 5 `
+  -Sku Aligned
+```
+
+> **Note**: Use `-Sku Aligned` for managed disks (recommended) or `-Sku Classic` for unmanaged disks.
 
 ---
 
