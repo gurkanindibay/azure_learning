@@ -1883,6 +1883,167 @@ az role assignment create \
 
 ---
 
+### Question 9: Automatic Policy Assignment for New Subscriptions
+
+**Scenario:**
+You are designing a set of Azure policies for production and development environments in Azure. You need to ensure that new subscriptions have the policies assigned automatically at creation.
+
+**Question:**
+What should you do?
+
+**Options:**
+
+1. **Create different blueprints for production and development. In the blueprints add Azure policy assignments.** ❌
+   - Azure Blueprints are declarative packages that include policy assignments
+   - However, blueprints must be explicitly assigned to subscriptions
+   - Blueprints are NOT applied automatically to new subscriptions
+   - New subscriptions would require manual blueprint assignment
+   - Does not meet the requirement for automatic policy assignment at creation
+
+2. **Create different management groups for production and development. Assign the policies to the management groups.** ✅
+   - Management groups provide hierarchical governance over subscriptions
+   - Policies assigned at management group level automatically apply to all subscriptions within that group
+   - When a new subscription is created or moved into a management group, it immediately inherits all policies
+   - This approach ensures consistent policy enforcement without manual intervention
+   - Perfect solution for automatic policy assignment at subscription creation
+
+3. **Create different resource groups for production and development. Assign the policies to the resource groups.** ❌
+   - Resource groups are containers for resources, not subscriptions
+   - Policy assignments at resource group level only affect resources within that specific resource group
+   - New subscriptions are not affected by policies assigned to resource groups
+   - Does not address the requirement of policies for new subscriptions
+   - Wrong level of hierarchy for this requirement
+
+4. **Create different subscriptions for production and development. Assign the policies to the subscriptions.** ❌
+   - Assigning policies directly to subscriptions only affects those specific subscriptions
+   - New subscriptions created later would NOT inherit these policies
+   - Each new subscription would require manual policy assignment
+   - Not scalable and does not meet the automatic assignment requirement
+   - Administrative overhead increases with each new subscription
+
+**Answer:** Create different management groups for production and development. Assign the policies to the management groups.
+
+**Explanation:**
+
+Management groups are the correct solution for automatic policy assignment to new subscriptions because:
+
+**1. Policy Inheritance Mechanism:**
+
+```
+Root Management Group
+│
+├── Production Management Group
+│   ├── Policy: Require encryption on all storage
+│   ├── Policy: Require specific tags
+│   ├── Policy: Allowed locations (production regions only)
+│   │
+│   ├── Subscription: Prod-001 ← Policies inherited automatically
+│   ├── Subscription: Prod-002 ← Policies inherited automatically
+│   └── Subscription: Prod-NEW ← NEW subscription inherits policies immediately!
+│
+└── Development Management Group
+    ├── Policy: Allow all locations
+    ├── Policy: Audit untagged resources
+    │
+    ├── Subscription: Dev-001 ← Policies inherited automatically
+    └── Subscription: Dev-NEW ← NEW subscription inherits policies immediately!
+```
+
+**2. How It Works:**
+
+| Action | Result |
+|--------|--------|
+| Create new subscription | Subscription appears at root management group (or default location) |
+| Move subscription to Production MG | Subscription immediately inherits all Production policies |
+| Move subscription to Development MG | Subscription immediately inherits all Development policies |
+| Add new policy to Production MG | All subscriptions in Production MG are automatically affected |
+
+**3. Implementation Steps:**
+
+```bash
+# Step 1: Create management groups
+az account management-group create \
+  --name Production \
+  --display-name "Production Environment"
+
+az account management-group create \
+  --name Development \
+  --display-name "Development Environment"
+
+# Step 2: Assign policies to management groups
+# Production policies (more restrictive)
+az policy assignment create \
+  --name "prod-require-encryption" \
+  --policy "require-storage-encryption" \
+  --scope "/providers/Microsoft.Management/managementGroups/Production"
+
+az policy assignment create \
+  --name "prod-allowed-locations" \
+  --policy "allowed-locations" \
+  --scope "/providers/Microsoft.Management/managementGroups/Production" \
+  --params '{"listOfAllowedLocations": {"value": ["eastus", "westus"]}}'
+
+# Development policies (less restrictive)
+az policy assignment create \
+  --name "dev-audit-tags" \
+  --policy "audit-resource-tags" \
+  --scope "/providers/Microsoft.Management/managementGroups/Development"
+
+# Step 3: Move subscriptions to appropriate management groups
+az account management-group subscription add \
+  --name Production \
+  --subscription "New-Prod-Subscription"
+```
+
+**4. Why Management Groups Provide Automatic Assignment:**
+
+- **Inheritance**: Policy assignments at management group scope cascade to all children (subscriptions, resource groups, resources)
+- **Immediate Effect**: When a subscription joins a management group, policies apply instantly
+- **No Manual Intervention**: New subscriptions automatically receive governance rules
+- **Scalability**: One policy assignment can govern hundreds of subscriptions
+- **Consistency**: All subscriptions in a management group have identical policy coverage
+
+**5. Comparison of Approaches:**
+
+| Approach | Automatic for New Subscriptions? | Administrative Effort |
+|----------|----------------------------------|----------------------|
+| Management Groups | ✅ Yes | Low (assign once at MG level) |
+| Blueprints | ❌ No (requires manual assignment) | Medium (assign to each subscription) |
+| Subscription-level Policies | ❌ No (requires manual assignment) | High (assign to each subscription) |
+| Resource Group Policies | ❌ No (doesn't affect subscriptions) | N/A (wrong scope) |
+
+**6. Best Practice Pattern:**
+
+```
+Production Management Group
+├── Policies:
+│   ├── Deny: Non-approved regions
+│   ├── Deny: Non-compliant storage encryption
+│   ├── Audit: Resources without required tags
+│   └── DeployIfNotExists: Diagnostic settings
+│
+└── All Production Subscriptions → Automatically compliant
+
+Development Management Group
+├── Policies:
+│   ├── Audit: Resources in non-preferred regions
+│   ├── Audit: Untagged resources
+│   └── Audit: Resources without diagnostic settings
+│
+└── All Development Subscriptions → Automatically governed
+```
+
+**Key Principle:**
+> When you need policies to automatically apply to new subscriptions, use management groups. Management groups provide hierarchical governance where policies cascade to all child subscriptions automatically. This eliminates manual policy assignment and ensures consistent governance across your Azure environment as it grows.
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions (25–30%)
+
+**References:**
+- [Organize your resources with management groups - Azure Governance](https://learn.microsoft.com/en-us/azure/governance/management-groups/overview)
+- [Design for management groups - Training](https://learn.microsoft.com/en-us/training/modules/enterprise-governance/6-design-for-management-groups)
+
+---
+
 ## Summary
 
 ### Key Hierarchy Levels
