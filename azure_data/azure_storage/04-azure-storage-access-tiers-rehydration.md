@@ -98,6 +98,50 @@ Azure Storage offers several types of storage accounts, each supporting differen
 - **Use Case**: Enterprise or high-performance scale applications
 - **Features**: Supports both SMB and NFS file shares
 
+#### Exam Scenario: Lowest Latency for File Share Access
+
+**Question**: You are planning the deployment of an Azure Storage account that will host a file share. You need to recommend the storage tier for the account. The solution must provide the lowest possible latency for file access.
+
+Which storage tier should you recommend?
+
+| Option | Correct? |
+|--------|----------|
+| Cool | ❌ |
+| Hot | ❌ |
+| **Premium** | ✅ **Correct Answer** |
+| Transaction optimized | ❌ |
+
+**Answer Explanation:**
+
+**Premium** is the correct answer because:
+
+1. **SSD-Backed Storage**: Premium file shares use solid-state drives (SSDs) which provide significantly lower latency compared to HDD-backed storage tiers.
+
+2. **Designed for Low Latency**: Premium tier is specifically designed for workloads requiring single-digit millisecond latency for file operations.
+
+3. **High Performance**: Premium file shares deliver consistent, high-performance I/O operations essential for latency-sensitive applications.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why It's Wrong |
+|--------|----------------|
+| **Cool** | Cool tier is designed for infrequently accessed data with lower storage costs but higher access costs. It uses HDD storage which has higher latency than SSD. Not suitable for scenarios requiring lowest latency. |
+| **Hot** | Hot tier is optimized for frequently accessed data but still uses HDD-based storage. While it has lower access costs than Cool tier, it does not provide the lowest possible latency. |
+| **Transaction optimized** | Transaction optimized is a tier within Standard file shares (HDD-based) that is optimized for transaction-heavy workloads. While it reduces transaction costs, it does not minimize latency like Premium SSD storage. |
+
+**Azure Files Storage Tiers Comparison:**
+
+| Tier | Storage Type | Latency | Best For |
+|------|-------------|---------|----------|
+| **Premium** | SSD | Lowest (single-digit ms) | Latency-sensitive workloads, databases, high-performance apps |
+| **Transaction optimized** | HDD | Higher | General file shares with heavy transactions |
+| **Hot** | HDD | Higher | Frequently accessed file shares |
+| **Cool** | HDD | Highest | Infrequently accessed data, archival |
+
+> 💡 **Exam Tip**: When the question specifically asks for **lowest latency** for file shares, always choose **Premium**. Premium is the only file share tier backed by SSDs. The other tiers (Transaction optimized, Hot, Cool) are all Standard tiers backed by HDDs and cannot provide the same low latency.
+
+---
+
 ### Premium Page Blobs
 
 - **Supported Services**: Page blobs only
