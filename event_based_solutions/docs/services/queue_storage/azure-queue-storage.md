@@ -32,6 +32,7 @@
   - [Exam Answer Issues](#exam-answer-issues)
   - [Correct Technical Facts](#correct-technical-facts)
   - [Question: Configuring Retry Attempts for Failed Queue Messages](#question-configuring-retry-attempts-for-failed-queue-messages)
+  - [Question: Choosing Messaging Service for High-Volume Large Messages](#question-choosing-messaging-service-for-high-volume-large-messages)
 - [Best Practices](#best-practices)
   - [1. Message Processing](#1-message-processing)
   - [2. Performance](#2-performance)
@@ -593,6 +594,59 @@ public async Task ProcessMessagesWithRetryAsync(QueueClient queueClient, QueueCl
 - **Poison Queue Naming**: Azure Functions creates poison queues with the naming convention `<originalqueuename>-poison`.
 
 **Domain**: Connect to and consume Azure services and third-party services
+
+---
+
+### Question: Choosing Messaging Service for High-Volume Large Messages
+
+**Scenario**: You are designing a large-scale microservices-based application. A message queue will be used to hold unprocessed messages. Each message will be processed once, and then deleted from the queue. Each message will be approximately 32 KB in size. At peak periods, up to 10 million messages might be unprocessed.
+
+Which messaging service should you recommend for the application?
+
+**Options:**
+
+1. **Azure Event Hubs** ❌
+   - **Wrong**: Event Hubs is optimized for high-throughput event streaming and telemetry ingestion, not traditional message queue patterns. It uses a partition-based streaming model where consumers read from offsets, not a queue-based "process once and delete" pattern. Event Hubs is better suited for scenarios where you need event replay, analytics pipelines, or high-volume telemetry ingestion.
+
+2. **Azure IoT Hub** ❌
+   - **Wrong**: IoT Hub is specifically designed for bidirectional communication with IoT devices. While it includes messaging capabilities, it's optimized for device-to-cloud and cloud-to-device communication scenarios, not general-purpose application message queuing.
+
+3. **Azure Queue Storage** ✅
+   - **Correct**: Queue Storage can handle millions of messages up to the total capacity limit of a storage account (which can be up to 5 PB). With 10 million messages at 32 KB each, the total storage needed is approximately **320 GB** (10,000,000 × 32 KB = 320,000,000 KB ≈ 320 GB). This exceeds Azure Service Bus's maximum queue size of 80 GB, but is well within Queue Storage's capacity limits.
+
+4. **Azure Service Bus** ❌
+   - **Wrong**: Service Bus Premium tier has a maximum queue/topic size of **80 GB**. Ten million 32-KB messages equals approximately **320 GB**, which exceeds this limit. While Service Bus offers advanced enterprise features like transactions, sessions, and dead-lettering, it cannot accommodate this volume of data in a single queue.
+
+**Key Capacity Comparison:**
+
+| Service | Max Queue/Entity Size | Suitable for 320 GB? |
+|---------|----------------------|---------------------|
+| Azure Queue Storage | Up to storage account limit (5 PB) | ✅ Yes |
+| Azure Service Bus (Premium) | 80 GB per queue/topic | ❌ No |
+| Azure Service Bus (Standard) | 1-5 GB per queue/topic | ❌ No |
+| Azure Event Hubs | Different model (streaming) | ❌ Not a queue pattern |
+
+**Calculation:**
+- Message size: 32 KB
+- Peak unprocessed messages: 10,000,000
+- Total storage needed: 10,000,000 × 32 KB = 320,000,000 KB = **~320 GB**
+- Service Bus Premium limit: **80 GB** → Exceeded by 4x
+- Queue Storage limit: Storage account limit → **Sufficient**
+
+**When to Choose Each Service:**
+
+| Use Case | Best Choice |
+|----------|-------------|
+| High-volume simple queuing (>80 GB) | **Queue Storage** |
+| Enterprise messaging with transactions | **Service Bus** |
+| High-throughput event streaming | **Event Hubs** |
+| IoT device communication | **IoT Hub** |
+
+**Domain**: Design and implement Azure-native applications
+
+**Reference**: [Design a messaging solution - Training | Microsoft Learn](https://learn.microsoft.com/training/modules/design-solution-messaging/)
+
+---
 
 ## Best Practices
 
