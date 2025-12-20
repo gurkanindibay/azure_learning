@@ -10,11 +10,15 @@
   - [2.4 Address Space](#24-address-space)
     - [2.4.1 Subnet Planning for Hybrid Connectivity](#241-subnet-planning-for-hybrid-connectivity)
   - [2.5 VNet Peering](#25-vnet-peering)
+    - [2.5.1 Connecting Virtual Networks Across Subscriptions](#251-connecting-virtual-networks-across-subscriptions)
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
 - [3. Private Endpoints](#3-private-endpoints)
   - [3.1 What is a Private Endpoint?](#31-what-is-a-private-endpoint)
   - [3.2 How Private Endpoints Work](#32-how-private-endpoints-work)
   - [3.3 Private Link Service](#33-private-link-service)
+    - [3.3.1 When to Use Private Link Service](#331-when-to-use-private-link-service)
+    - [3.3.2 Private Link Service vs Alternative Solutions](#332-private-link-service-vs-alternative-solutions)
+    - [3.3.3 Private Link Service Requirements](#333-private-link-service-requirements)
   - [3.4 DNS Configuration](#34-dns-configuration)
     - [3.4.1 DNS Resolution for Hybrid/On-Premises Connectivity](#341-dns-resolution-for-hybridon-premises-connectivity)
   - [3.5 Supported Services](#35-supported-services)
@@ -298,6 +302,61 @@ Consider the following requirements:
 - Non-transitive by default (A↔B and B↔C doesn't mean A↔C)
 - Can peer across subscriptions and tenants
 
+#### 2.5.1 Connecting Virtual Networks Across Subscriptions
+
+**Important**: Virtual networks cannot span subscriptions. Each VNet belongs to a single subscription. To connect VNets in different subscriptions (e.g., Sub1 and Sub2), you have two options:
+
+| Solution | Description | Use Case |
+|----------|-------------|----------|
+| **Virtual Network Peering** | Direct connection between two VNets across subscriptions | Preferred for most scenarios; low latency, high bandwidth |
+| **VPN Gateways (VNet-to-VNet)** | Encrypted VPN tunnel between two VNets | When encryption is required or peering is not feasible |
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│            CONNECTING VNETS ACROSS SUBSCRIPTIONS                             │
+│                                                                              │
+│   Subscription: Sub1                      Subscription: Sub2                 │
+│   ┌─────────────────────────┐            ┌─────────────────────────┐        │
+│   │  VNet1: 10.1.0.0/16     │            │  VNet2: 10.2.0.0/16     │        │
+│   │  ┌─────────────────┐    │            │    ┌─────────────────┐  │        │
+│   │  │     VM-A        │    │            │    │     VM-B        │  │        │
+│   │  │   10.1.1.4      │    │            │    │   10.2.1.4      │  │        │
+│   │  └─────────────────┘    │            │    └─────────────────┘  │        │
+│   └───────────┬─────────────┘            └───────────┬─────────────┘        │
+│               │                                       │                      │
+│               │     Option 1: VNet Peering           │                      │
+│               └──────────── ◀─────────────────────────┘                      │
+│                         (Direct Connection)                                  │
+│                                                                              │
+│               │     Option 2: VPN Gateway            │                      │
+│               └──────────── ◀════════════════════════┘                      │
+│                         (Encrypted Tunnel)                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Option 1: Virtual Network Peering (Recommended)**
+- Creates a direct, low-latency connection between VNets
+- Traffic stays on Azure backbone network (private)
+- No encryption overhead (traffic is already within Azure)
+- Requires appropriate RBAC permissions in both subscriptions
+- Can also peer across different Azure AD tenants
+
+**Option 2: VPN Gateways (VNet-to-VNet)**
+- Creates an IPsec/IKE encrypted tunnel between VNets
+- Useful when additional encryption is required
+- Requires a VPN Gateway in each VNet (GatewaySubnet)
+- Higher latency and cost compared to peering
+- Can be combined with other S2S VPN connections
+
+**Why Not Azure Private Link?**
+Azure Private Link is designed for accessing PaaS services privately, not for connecting entire virtual networks. It creates private endpoints to specific services, not network-to-network connectivity.
+
+> **Exam Tip**: When asked about connecting VNets across subscriptions, the correct answers are **Virtual Network Peering** and **VPN Gateways**. Azure Private Link and ExpressRoute are not solutions for VNet-to-VNet connectivity across subscriptions.
+
+**References:**
+- [Design for subscriptions - Microsoft Learn](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-subscriptions)
+- [Configure a VNet-to-VNet VPN gateway connection - Azure Portal](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-vnet-vnet-resource-manager-portal)
+
 ### 2.6 Network Security Groups (NSG)
 
 **Network Security Groups** contain security rules that filter network traffic to and from Azure resources.
@@ -389,6 +448,88 @@ Consumer VNet                              Provider VNet
                                           │  Backend VMs        │
                                           └─────────────────────┘
 ```
+
+#### 3.3.1 When to Use Private Link Service
+
+**Azure Private Link Service** is the recommended solution when you need to expose your own application (hosted on load-balanced Azure VMs) to consumers while meeting the following requirements:
+
+| Requirement | How Private Link Service Addresses It |
+|-------------|--------------------------------------|
+| **Accessible from other Azure tenants** | Consumers in different Azure AD tenants can create private endpoints to connect to your Private Link Service |
+| **Isolated from the public internet** | All traffic flows over the Microsoft backbone network, never traversing the public internet |
+| **Private access from customer VNets** | Consumers connect via private endpoints in their own VNets with private IP addresses |
+
+**Key Architecture Concept - Provider vs Consumer:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                     CROSS-TENANT PRIVATE LINK SERVICE ARCHITECTURE                   │
+│                                                                                      │
+│   TENANT A (Service Provider)                    TENANT B (Consumer)                │
+│   ┌────────────────────────────────┐            ┌────────────────────────────────┐  │
+│   │  Provider VNet (10.0.0.0/16)   │            │  Consumer VNet (172.16.0.0/16) │  │
+│   │                                │            │                                │  │
+│   │  ┌──────────────────────────┐  │            │  ┌──────────────────────────┐  │  │
+│   │  │  Standard Load Balancer  │  │            │  │     Consumer App         │  │  │
+│   │  │  (Frontend IP: 10.0.1.4) │  │            │  │     (VM or Service)      │  │  │
+│   │  └────────────┬─────────────┘  │            │  └────────────┬─────────────┘  │  │
+│   │               │                │            │               │                │  │
+│   │               ▼                │            │               ▼                │  │
+│   │  ┌──────────────────────────┐  │            │  ┌──────────────────────────┐  │  │
+│   │  │  Backend Pool            │  │            │  │     Private Endpoint     │  │  │
+│   │  │  ┌────┐ ┌────┐ ┌────┐   │  │◀───────────┼──│     (172.16.1.5)         │  │  │
+│   │  │  │VM1 │ │VM2 │ │VM3 │   │  │  Private   │  │                          │  │  │
+│   │  │  └────┘ └────┘ └────┘   │  │  Link      │  └──────────────────────────┘  │  │
+│   │  └──────────────────────────┘  │  Connection│                                │  │
+│   │               ▲                │            │  Traffic flows over Microsoft  │  │
+│   │               │                │            │  backbone - NO public internet │  │
+│   │  ┌──────────────────────────┐  │            │                                │  │
+│   │  │  Private Link Service    │  │            └────────────────────────────────┘  │
+│   │  │  (NAT IP: 10.0.2.x)      │  │                                                │
+│   │  │  - Exposes the LB        │  │            TENANT C (Another Consumer)         │
+│   │  │  - Controls access       │  │            ┌────────────────────────────────┐  │
+│   │  └──────────────────────────┘  │            │  Consumer VNet (192.168.0.0/16)│  │
+│   │                                │            │                                │  │
+│   └────────────────────────────────┘            │  ┌──────────────────────────┐  │  │
+│                                                 │  │     Private Endpoint     │  │  │
+│                                                 │  │     (192.168.1.10)       │──┼──┘
+│                                                 │  └──────────────────────────┘  │
+│                                                 └────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 3.3.2 Private Link Service vs Alternative Solutions
+
+When designing networking for cross-tenant or multi-customer access to your application, consider:
+
+| Solution | Cross-Tenant Access | Internet Isolation | Per-Customer Config | Recommended For |
+|----------|--------------------|--------------------|---------------------|-----------------|
+| **Private Link Service** ✅ | Yes - natively supported | Yes - Microsoft backbone only | No - single service, multiple consumers | Multi-tenant SaaS, cross-org services |
+| **Private Endpoints** | Consumer-side only | Yes | N/A - consumer creates these | Consuming services, not exposing them |
+| **VNet Peering** | Limited - complex setup | Yes | Yes - each tenant requires peering | Same-org, known networks |
+| **VPN Gateway** | Possible but complex | Yes | Yes - each tenant requires VPN config | On-premises connectivity |
+
+**Why Private Link Service is the Correct Choice:**
+
+1. **Service Provider Model**: You expose a **Private Link Service** that can be consumed by **any tenant** creating a private endpoint
+2. **Consumer Creates Private Endpoint**: Consumers in other tenants deploy private endpoints in their own VNets to connect to your service
+3. **No Configuration per Customer**: Unlike VNet peering or VPNs, you don't need to configure anything for each new consumer
+4. **Automatic Isolation**: Each consumer's traffic is isolated; consumers cannot see each other
+5. **Approval Workflow**: You can auto-approve connections or require manual approval for each consumer
+
+#### 3.3.3 Private Link Service Requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **Load Balancer SKU** | Standard Load Balancer (Basic SKU not supported) |
+| **Frontend IP** | Can be IPv4 only |
+| **NAT IP Configuration** | Required - used for source NAT to hide consumer IPs |
+| **Visibility** | Control which subscriptions can discover and connect |
+| **TCP/UDP Support** | Supports any TCP or UDP protocol on the load balancer |
+
+**References:**
+- [What is Azure Private Link Service? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/private-link/private-link-service-overview)
+- [Recommend a network architecture solution based on workload requirements | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/design-network-solutions/)
 
 ### 3.4 DNS Configuration
 
