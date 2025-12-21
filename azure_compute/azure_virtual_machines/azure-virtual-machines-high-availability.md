@@ -5,6 +5,7 @@
 - [Overview](#overview)
 - [Availability Zones](#availability-zones)
 - [Availability Sets](#availability-sets)
+- [Proximity Placement Groups](#proximity-placement-groups)
 - [Azure Dedicated Hosts](#azure-dedicated-hosts)
 - [Virtual Machine Scale Sets (VMSS)](#virtual-machine-scale-sets-vmss)
 - [High Availability Architecture](#high-availability-architecture)
@@ -261,6 +262,189 @@ New-AzAvailabilitySet `
 ```
 
 > **Note**: Use `-Sku Aligned` for managed disks (recommended) or `-Sku Classic` for unmanaged disks.
+
+---
+
+## Proximity Placement Groups
+
+**Proximity Placement Groups** are a logical grouping used to ensure that Azure compute resources are physically located close to each other. They are designed for workloads that require **low latency** communication between VMs.
+
+### Key Characteristics
+
+- **Physical Proximity**: VMs in the same proximity placement group are deployed close together in the same datacenter
+- **Low Latency**: Minimizes network latency between VMs (typically sub-millisecond)
+- **Single Datacenter**: Resources are co-located within the same datacenter
+- **Logical Grouping**: A constraint that tells Azure to place resources near each other
+- **Free to Use**: No additional cost for creating a proximity placement group
+
+### Benefits
+
+✅ **Lowest possible latency** - VMs are physically close together  
+✅ **Optimized for inter-VM communication** - Ideal for tightly coupled workloads  
+✅ **Works with multiple resource types** - VMs, VMSS, Availability Sets  
+✅ **No additional cost** - Only pay for the resources themselves  
+
+### Limitations
+
+❌ **Reduced availability** - Co-location means shared failure domain risk  
+❌ **Capacity constraints** - May face capacity issues in a single datacenter  
+❌ **Single region** - All resources must be in the same Azure region  
+❌ **Not for high availability** - Prioritizes latency over fault tolerance  
+
+### Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     Proximity Placement Group                           │
+│                     (Single Datacenter - Co-located)                    │
+│                                                                         │
+│   ┌──────────────────┐    LOW LATENCY    ┌──────────────────┐          │
+│   │   Frontend VMSS  │◄─────────────────►│   Backend VMSS   │          │
+│   │                  │    Sub-ms         │                  │          │
+│   │  ┌────┐ ┌────┐  │                   │  ┌────┐ ┌────┐  │          │
+│   │  │VM1 │ │VM2 │  │                   │  │VM3 │ │VM4 │  │          │
+│   │  └────┘ └────┘  │                   │  └────┘ └────┘  │          │
+│   └──────────────────┘                   └──────────────────┘          │
+│                                                                         │
+│   All VMs deployed in close physical proximity for lowest latency      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Proximity Placement Groups vs. Other Placement Options
+
+| Feature | Proximity Placement Groups | Availability Sets | Availability Zones |
+|---------|---------------------------|-------------------|-------------------|
+| **Primary Goal** | Low latency | Hardware fault tolerance | Datacenter fault tolerance |
+| **Physical Placement** | Close together (same datacenter) | Separate racks (same datacenter) | Separate datacenters |
+| **Latency** | **Lowest** ✅ | Low | Higher (cross-zone) |
+| **Fault Tolerance** | Lower (shared failure domain) | Medium (rack-level) | Highest (zone-level) |
+| **SLA** | Standard VM SLA | 99.95% | 99.99% |
+| **Use Case** | Latency-sensitive apps | HA within datacenter | HA across datacenters |
+| **Network Security** | N/A | N/A | N/A |
+
+### When to Use Proximity Placement Groups
+
+✅ **High-Performance Computing (HPC)** workloads requiring fast inter-node communication  
+✅ **Tightly coupled applications** with frequent VM-to-VM communication  
+✅ **SAP HANA** deployments requiring low-latency database replication  
+✅ **Gaming servers** with real-time player interactions  
+✅ **Financial trading applications** where microseconds matter  
+✅ **Frontend-to-backend communication** in multi-tier applications  
+
+### When NOT to Use Proximity Placement Groups
+
+❌ **High availability is primary concern** - Use Availability Zones instead  
+❌ **Geographically distributed users** - Use multi-region deployment  
+❌ **Stateless web applications** - Availability Zones provide better resilience  
+❌ **Workloads tolerant of higher latency** - Not worth the availability trade-off  
+
+### Creating a Proximity Placement Group
+
+**Azure CLI**:
+```bash
+# Create a proximity placement group
+az ppg create \
+  --name MyProximityPlacementGroup \
+  --resource-group MyResourceGroup \
+  --location eastus
+
+# Create a VM in the proximity placement group
+az vm create \
+  --name MyVM \
+  --resource-group MyResourceGroup \
+  --image Ubuntu2204 \
+  --ppg MyProximityPlacementGroup \
+  --generate-ssh-keys
+```
+
+**Azure PowerShell**:
+```powershell
+# Create a proximity placement group
+New-AzProximityPlacementGroup `
+  -Name "MyProximityPlacementGroup" `
+  -ResourceGroupName "MyResourceGroup" `
+  -Location "eastus"
+
+# Reference when creating VMs
+$ppg = Get-AzProximityPlacementGroup -Name "MyProximityPlacementGroup" -ResourceGroupName "MyResourceGroup"
+```
+
+### Combining Proximity Placement Groups with Other Features
+
+Proximity Placement Groups can be combined with:
+
+1. **Availability Sets** - All VMs in the availability set are placed close together
+2. **Virtual Machine Scale Sets** - All instances co-located for low latency
+3. **Azure Dedicated Hosts** - Dedicated hardware with proximity placement
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                Proximity Placement Group + Availability Set             │
+│                                                                         │
+│   ┌───────────────────────────────────────────────────────────────┐    │
+│   │   Availability Set (within Proximity Placement Group)         │    │
+│   │                                                               │    │
+│   │   Fault Domain 0        Fault Domain 1        Fault Domain 2 │    │
+│   │   ┌──────────┐          ┌──────────┐          ┌──────────┐   │    │
+│   │   │   VM1    │          │   VM2    │          │   VM3    │   │    │
+│   │   └──────────┘          └──────────┘          └──────────┘   │    │
+│   │                                                               │    │
+│   │   All VMs on separate racks BUT still physically close       │    │
+│   │   → Combines fault tolerance with low latency                │    │
+│   └───────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Important Considerations
+
+1. **First VM Anchors the Group**: The first VM deployed to a proximity placement group determines the datacenter location
+2. **Capacity Planning**: Ensure the datacenter has capacity for all planned VMs
+3. **Deallocate Caution**: If all VMs are deallocated, the anchor is lost; next deployment may be in a different datacenter
+4. **Cross-Zone Limitation**: Cannot span multiple availability zones (defeats the purpose)
+
+---
+
+### Practice Question: Frontend-Backend Low Latency Communication
+
+**Scenario**: You are designing an Azure virtual machines solution that has a frontend and a backend, each hosted in its own virtual machine scale set. You need to ensure that the virtual machines from the frontend and backend communicate by using the lowest latency possible.
+
+**Question**: What should you include in the design?
+
+**Options**:
+- A. Application security groups
+- B. Availability sets
+- C. Availability zones
+- D. Proximity placement groups
+
+---
+
+**Correct Answer**: **D. Proximity placement groups** ✅
+
+---
+
+### Explanation
+
+**Why D (Proximity Placement Groups) is Correct:**
+
+By placing virtual machines in the same **proximity placement group**, they are deployed close together in the same datacenter, resulting in the **lowest possible network latency** between them. This is the ideal solution when low-latency inter-VM communication is the primary requirement.
+
+- ✅ **Physical proximity**: VMs are placed near each other
+- ✅ **Sub-millisecond latency**: Minimizes network hops
+- ✅ **Works with VMSS**: Both frontend and backend scale sets can use the same proximity placement group
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A. Application Security Groups** | Used for **network security group (NSG) rules** to group VMs for security policies. Does NOT affect physical placement or latency. |
+| **B. Availability Sets** | **Separates resources on different physical racks** for fault tolerance. This actually **increases** physical distance between VMs, potentially **increasing** latency. |
+| **C. Availability Zones** | **Separates VMs in different Azure datacenters** within a region for high availability. This significantly **increases** latency due to cross-datacenter communication. |
+
+**Key Insight**: When the requirement is **lowest latency**, proximity placement groups are the answer. When the requirement is **high availability**, choose availability sets or zones.
+
+**References**:
+- [Proximity placement groups - Azure Virtual Machines | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-machines/co-location)
+- [Design for Azure Virtual Machines solutions - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/design-solution-for-compute-services/)
 
 ---
 
