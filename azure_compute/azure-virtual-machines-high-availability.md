@@ -1134,3 +1134,193 @@ Minimum Available VMs = Total VMs - Max VMs in any single UD
 - [Manage Availability of VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/availability)
 
 ---
+
+### Question 6: Web App with Geo-Replicated Azure SQL Database
+
+**Scenario**: You are designing a web app named App1 that will be deployed to Azure. App1 will depend on an Azure SQL database named DB1. Resources will be deployed to two Azure regions.
+
+DB1 will have data geo-replicated between both regions.
+
+**Requirements**:
+- Recommend a high availability design for App1
+- Minimize downtime
+
+**Question**: Which approach should you recommend?
+
+**Options**:
+
+A) active/active
+
+B) active/passive with cold standby
+
+C) **active/passive with hot standby**
+
+D) backup/restore
+
+---
+
+**Correct Answer**: **C) active/passive with hot standby**
+
+---
+
+### Explanation
+
+**Why Active/Passive with Hot Standby?**
+
+#### 1. **Understanding the Scenario**
+
+- **Two Azure regions** with resources deployed in each
+- **Azure SQL Database** with geo-replication between regions
+- **Goal**: Minimize downtime while maintaining high availability
+
+#### 2. **Azure SQL Database Geo-Replication Behavior**
+
+Azure SQL Database geo-replication creates a **readable secondary** in another region:
+
+| Primary Region | Secondary Region |
+|---------------|------------------|
+| Read/Write access | **Read-only** access |
+| Handles all writes | Receives replicated data |
+| Active for App1 | Standby for App1 |
+
+**Key Constraint**: Only the **primary database** accepts write operations. The secondary is read-only until a failover occurs.
+
+#### 3. **Why Active/Passive with Hot Standby?** ✅
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  ACTIVE/PASSIVE WITH HOT STANDBY            │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Primary Region (Active)        Secondary Region (Passive)  │
+│  ┌─────────────────────┐       ┌─────────────────────────┐  │
+│  │      App1           │       │      App1               │  │
+│  │   (Serving Users)   │       │   (Running & Ready)     │  │
+│  └──────────┬──────────┘       └───────────┬─────────────┘  │
+│             │                               │ (Not serving) │
+│             ▼                               ▼               │
+│  ┌─────────────────────┐       ┌─────────────────────────┐  │
+│  │       DB1           │ ───▶  │       DB1               │  │
+│  │   (Read/Write)      │ Geo-  │   (Read-Only Replica)   │  │
+│  │                     │ Repl  │   (Hot Standby)         │  │
+│  └─────────────────────┘       └─────────────────────────┘  │
+│                                                              │
+│  ✅ Hot Standby = App is running and database is synced    │
+│  ✅ Minimal downtime during failover (seconds to minutes)  │
+│  ✅ Matches geo-replication's active/passive nature        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Benefits**:
+- ✅ **App1 in secondary region is running and ready** (hot standby)
+- ✅ **DB1 secondary is synchronized** via geo-replication
+- ✅ **Minimal failover time** - just need to redirect traffic
+- ✅ **Matches database architecture** - SQL geo-replication is inherently active/passive
+
+#### 4. **Failover Behavior**
+
+```
+Normal Operation:
+  Users → Traffic Manager → App1 (Primary) → DB1 (Primary)
+
+During Failover:
+  1. Detect primary region failure
+  2. Promote DB1 secondary to primary (automatic or manual)
+  3. Redirect traffic to App1 in secondary region
+  4. App1 (now active) connects to DB1 (now primary)
+  
+Failover Time: Seconds to minutes (minimal downtime)
+```
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) Active/Active** ❌
+
+- **Database limitation**: Azure SQL geo-replication does NOT support active/active (multi-master)
+- The secondary database is **read-only** until failover
+- Both App1 instances cannot write to their local database simultaneously
+- Would cause data conflicts and synchronization issues
+
+```
+❌ Active/Active NOT possible with SQL geo-replication:
+
+  Region 1                    Region 2
+  App1 (Active) ───┐    ┌─── App1 (Active)
+                   ▼    ▼
+              ┌────────────┐
+              │ Data Sync? │ ← Cannot have two writable copies
+              └────────────┘
+```
+
+**B) Active/Passive with Cold Standby** ❌
+
+- **Cold standby** means the secondary App1 is **not running**
+- Requires starting the application during failover
+- **Longer downtime** for application startup and initialization
+- Does NOT minimize downtime as required
+
+```
+Cold Standby Issues:
+  - App1 not running in secondary region
+  - Failover requires: Start App1 → Initialize → Connect to DB → Ready
+  - Additional minutes of downtime for application startup
+```
+
+**D) Backup/Restore** ❌
+
+- **Longest recovery time** of all options
+- Requires: Detect failure → Restore from backup → Deploy App1 → Configure
+- Recovery Time Objective (RTO): Hours, not minutes
+- Does NOT minimize downtime - completely unacceptable for HA requirements
+
+```
+Backup/Restore Timeline:
+  ├─ Detect Failure (minutes)
+  ├─ Initiate Restore (minutes)
+  ├─ Database Restore (30 min - hours depending on size)
+  ├─ App Deployment (minutes)
+  └─ Total: Potentially hours of downtime
+```
+
+---
+
+### High Availability Approaches Comparison
+
+| Approach | Secondary App | Secondary DB | Failover Time | Cost | Use Case |
+|----------|--------------|--------------|---------------|------|----------|
+| **Active/Passive Hot Standby** | Running | Synced (geo-repl) | Seconds-Minutes | Higher | ✅ **Minimize downtime** |
+| Active/Passive Cold Standby | Stopped | Synced (geo-repl) | Minutes-Hours | Medium | Cost optimization |
+| Backup/Restore | Not deployed | Backup only | Hours | Lowest | Disaster recovery |
+| Active/Active | Running (both) | Multi-master | None | Highest | Not supported by SQL geo-repl |
+
+---
+
+### Key Takeaways
+
+1. **Azure SQL Geo-Replication = Active/Passive**
+   > Geo-replication creates a read-only secondary. Write operations only go to the primary, making active/active impossible.
+
+2. **Hot Standby Minimizes Downtime**
+   > With App1 running in the secondary region and DB1 continuously synchronized, failover is quick - just redirect traffic.
+
+3. **Cold Standby Increases Downtime**
+   > If the application must be started during failover, add application startup time to recovery time.
+
+4. **Backup/Restore is for Disaster Recovery, Not HA**
+   > Backup/restore has the longest recovery time and is unsuitable when minimizing downtime is the priority.
+
+5. **Match Application Architecture to Database Capabilities**
+   > Design the application's HA pattern to align with the database's replication capabilities. SQL geo-replication supports active/passive, so design App1 accordingly.
+
+---
+
+### Reference Links
+
+- [Azure SQL Database Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/active-geo-replication-overview)
+- [High Availability for Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/high-availability-sla)
+- [Designing Highly Available Applications](https://learn.microsoft.com/en-us/azure/architecture/guide/design-principles/design-for-resiliency)
+- [Azure Traffic Manager](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-overview)
+
+---
