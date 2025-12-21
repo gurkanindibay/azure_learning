@@ -895,39 +895,129 @@ Note: Would require rewriting CLR code, removing SQL Agent jobs,
 ```
 START: Choose Azure SQL deployment option
 │
-├─ Do you need SQL Server-specific features?
-│  (CLR, SQL Agent, Service Broker, cross-DB queries)
+├─ Q1: Do you need SQL Server-specific features?
+│       (CLR, SQL Agent, Service Broker, cross-DB queries, Linked Servers)
 │  │
 │  ├─ YES → Azure SQL Managed Instance
-│  │         • Lift-and-shift migrations
-│  │         • Minimal code changes
-│  │         • VNet integration
+│  │         │
+│  │         └─ Q1a: What are your HA/Performance requirements?
+│  │                 │
+│  │                 ├─ RPO=0, High IOPS, Read replicas needed
+│  │                 │   → Business Critical tier
+│  │                 │     • Local SSD, 99.99% SLA
+│  │                 │     • Built-in read replica
+│  │                 │
+│  │                 └─ Standard workloads, Cost-sensitive
+│  │                     → General Purpose tier
+│  │                       • Remote storage, 99.99% SLA
+│  │                       • Lower cost
 │  │
-│  └─ NO → Continue
+│  └─ NO → Continue to Q2
 │           │
-│           ├─ Do you have multiple databases?
+│           ├─ Q2: Do you have multiple databases?
 │           │  │
-│           │  ├─ YES → Do they have variable usage?
+│           │  ├─ YES → Q2a: Do they have variable/unpredictable usage patterns?
 │           │  │        │
 │           │  │        ├─ YES → Elastic Pool
-│           │  │        │         • Cost-effective resource sharing
-│           │  │        │         • Multi-tenant SaaS
+│           │  │        │         │
+│           │  │        │         └─ Q2a-i: HA requirements?
+│           │  │        │                   ├─ High → Business Critical Pool
+│           │  │        │                   └─ Standard → General Purpose Pool
 │           │  │        │
-│           │  │        └─ NO → Individual Single Databases
-│           │  │                  • Independent scaling
-│           │  │                  • Microservices
+│           │  │        └─ NO → Q2b: Need independent scaling per database?
+│           │  │                 │
+│           │  │                 ├─ YES → Individual Single Databases
+│           │  │                 │         (continue to Q3 for each)
+│           │  │                 │
+│           │  │                 └─ NO → Elastic Pool (still cost-effective)
 │           │  │
-│           │  └─ NO → Single Database
-│           │            │
-│           │            ├─ Is usage intermittent?
-│           │            │  │
-│           │            │  ├─ YES → Serverless
-│           │            │  │         • Auto-scaling
-│           │            │  │         • Auto-pause
-│           │            │  │
-│           │            │  └─ NO → Provisioned
-│           │            │            • 24/7 workloads
-│           │            │            • Predictable performance
+│           │  └─ NO → Single Database (continue to Q3)
+│           │
+│           └─ Q3: What is your usage pattern?
+│                  │
+│                  ├─ Intermittent/Dev-Test (idle periods)
+│                  │   → Serverless Single Database
+│                  │     • Auto-pause saves costs
+│                  │     • Per-second billing
+│                  │     • 0.5-80 vCores auto-scale
+│                  │
+│                  └─ 24/7 Production → Q4: What is your database size?
+│                                       │
+│                                       ├─ > 4 TB (up to 100 TB)
+│                                       │   → Hyperscale tier
+│                                       │     • Fast scaling (seconds)
+│                                       │     • Instant backups
+│                                       │     • Up to 4 read replicas
+│                                       │
+│                                       └─ ≤ 4 TB → Q5: Performance/HA requirements?
+│                                                   │
+│                                                   ├─ RPO=0, High IOPS (>50K), 99.995% SLA
+│                                                   │   → Business Critical tier
+│                                                   │     • Local SSD storage
+│                                                   │     • Built-in read replica
+│                                                   │     • Zone redundancy available
+│                                                   │
+│                                                   └─ Standard performance, Cost-effective
+│                                                       → General Purpose tier
+│                                                         • Remote premium storage
+│                                                         • 99.99% SLA
+│                                                         • Zone redundancy available
+```
+
+### Extended Decision Tree: Additional Considerations
+
+```
+ADDITIONAL DECISION POINTS
+│
+├─ Q6: Do you need disaster recovery across regions?
+│  │
+│  ├─ YES → Which deployment?
+│  │        │
+│  │        ├─ Single Database / Elastic Pool
+│  │        │   → Active Geo-Replication OR Failover Groups
+│  │        │     • Up to 4 readable secondaries
+│  │        │     • Automatic/manual failover
+│  │        │
+│  │        └─ Managed Instance
+│  │            → Failover Groups only
+│  │              • Paired region failover
+│  │              • Automatic failover supported
+│  │
+│  └─ NO → Zone redundancy sufficient for local HA
+│
+├─ Q7: Do you have existing SQL Server licenses?
+│  │
+│  ├─ YES → Enable Azure Hybrid Benefit
+│  │        • Up to 55% cost savings
+│  │        • Available on all deployment options
+│  │
+│  └─ NO → Consider Reserved Capacity
+│          • 1-3 year commitment
+│          • Up to 80% savings (not for Serverless)
+│
+├─ Q8: Do you need VNet isolation?
+│  │
+│  ├─ YES, Native VNet deployment required
+│  │   → Azure SQL Managed Instance
+│  │     • Deployed inside your VNet
+│  │     • Private IP address
+│  │
+│  └─ Private endpoint is sufficient
+│      → Single Database / Elastic Pool
+│        • Private Link connectivity
+│        • Service endpoints
+│
+└─ Q9: Migration complexity tolerance?
+   │
+   ├─ Minimal changes (lift-and-shift)
+   │   → Managed Instance
+   │     • Near 100% compatibility
+   │     • DMS for migration
+   │
+   └─ Willing to refactor
+       → Single Database
+         • Modern cloud-native
+         • May need code changes
 ```
 
 ### Quick Decision Matrix
@@ -945,6 +1035,183 @@ START: Choose Azure SQL deployment option
 | **Cross-database queries required** | Managed Instance |
 | **Cost optimization priority** | Serverless or Elastic Pool |
 | **Hybrid connectivity required** | Managed Instance |
+
+### Visual Decision Tree (Mermaid Diagram)
+
+```mermaid
+flowchart TD
+    START([🚀 Choose Azure SQL Option]) --> Q1{Need SQL Server<br/>specific features?<br/>CLR/SQL Agent/<br/>Service Broker}
+    
+    Q1 -->|Yes| MI[✅ Azure SQL<br/>Managed Instance]
+    Q1 -->|No| Q2{Multiple<br/>databases?}
+    
+    Q2 -->|Yes| Q3{Variable usage<br/>patterns across<br/>databases?}
+    Q2 -->|No| Q4{Usage pattern?}
+    
+    Q3 -->|Yes| EP[✅ Elastic Pool]
+    Q3 -->|No| Q5{Need independent<br/>scaling?}
+    
+    Q5 -->|Yes| SDB1[✅ Individual<br/>Single Databases]
+    Q5 -->|No| EP
+    
+    Q4 -->|Intermittent<br/>Dev/Test| SL[✅ Serverless<br/>Single Database]
+    Q4 -->|24/7 Production| Q6{Performance<br/>requirements?}
+    
+    Q6 -->|High IOPS<br/>Zero data loss| BC[✅ Business Critical<br/>Single Database]
+    Q6 -->|Standard<br/>Cost-effective| GP[✅ General Purpose<br/>Single Database]
+    Q6 -->|Large DB >4TB<br/>Fast scaling| HS[✅ Hyperscale<br/>Single Database]
+    
+    MI --> Q7{Service Tier?}
+    Q7 -->|High availability<br/>Read replicas| MIBC[Business Critical]
+    Q7 -->|Cost-effective<br/>Standard workloads| MIGP[General Purpose]
+    
+    style START fill:#4CAF50,color:#fff
+    style MI fill:#2196F3,color:#fff
+    style EP fill:#FF9800,color:#fff
+    style SL fill:#9C27B0,color:#fff
+    style BC fill:#F44336,color:#fff
+    style GP fill:#00BCD4,color:#fff
+    style HS fill:#E91E63,color:#fff
+    style SDB1 fill:#3F51B5,color:#fff
+```
+
+### Comprehensive Decision Flowchart
+
+```mermaid
+flowchart TD
+    subgraph Migration["🔄 Migration Scenario"]
+        M1{Migrating from<br/>on-premises<br/>SQL Server?}
+        M1 -->|Yes| M2{Need minimal<br/>code changes?}
+        M2 -->|Yes| REC_MI[✅ Managed Instance<br/>Near 100% compatibility]
+        M2 -->|No| M3{Willing to<br/>refactor?}
+        M3 -->|Yes| REC_SDB[✅ Single Database<br/>Modern architecture]
+        M3 -->|No| REC_MI
+    end
+    
+    subgraph NewApp["🆕 New Application"]
+        N1{Application<br/>architecture?}
+        N1 -->|Microservices| REC_SDB2[✅ Single Database<br/>per service]
+        N1 -->|Multi-tenant SaaS| N2{Tenant isolation<br/>model?}
+        N2 -->|DB per tenant| REC_EP[✅ Elastic Pool]
+        N2 -->|Shared DB| REC_SDB3[✅ Single Database]
+        N1 -->|Monolithic| N3{Database size?}
+        N3 -->|< 4 TB| REC_SDB4[✅ Single Database]
+        N3 -->|> 4 TB| REC_HS[✅ Hyperscale]
+    end
+    
+    subgraph Cost["💰 Cost Optimization"]
+        C1{Primary<br/>concern?}
+        C1 -->|Minimize idle costs| REC_SL[✅ Serverless<br/>Auto-pause]
+        C1 -->|Share resources| REC_EP2[✅ Elastic Pool]
+        C1 -->|Predictable billing| C2{Commit term?}
+        C2 -->|1-3 years| REC_RC[✅ Reserved Capacity<br/>Up to 80% savings]
+        C2 -->|Pay-as-you-go| REC_PAYG[✅ Provisioned<br/>Standard billing]
+    end
+    
+    subgraph HA["🛡️ High Availability"]
+        H1{RPO/RTO<br/>requirements?}
+        H1 -->|RPO=0<br/>Zero data loss| REC_BC[✅ Business Critical<br/>Synchronous replicas]
+        H1 -->|RPO<5min<br/>Standard HA| REC_GP2[✅ General Purpose<br/>Async replication]
+        H1 -->|Regional DR| H2{Failover type?}
+        H2 -->|Automatic| REC_FG[✅ Failover Groups]
+        H2 -->|Manual| REC_GR[✅ Geo-Replication]
+    end
+```
+
+### Decision by Workload Type
+
+| Workload Type | Primary Choice | Alternative | Key Considerations |
+|---------------|----------------|-------------|-------------------|
+| **OLTP (Transactional)** | Single DB (GP/BC) | Managed Instance | Consider BC for high IOPS |
+| **OLAP (Analytical)** | Hyperscale | Managed Instance | Read scale-out beneficial |
+| **Mixed Workload** | Business Critical | Managed Instance | Read replica for reporting |
+| **Batch Processing** | Managed Instance | Single Database | SQL Agent for scheduling |
+| **Real-time Analytics** | Business Critical | Hyperscale | Low latency requirements |
+| **Data Warehousing** | Hyperscale | Synapse Analytics | Consider Synapse for large scale |
+
+### Decision by Team Experience
+
+| Team Background | Recommended Starting Point | Rationale |
+|-----------------|---------------------------|-----------|
+| **SQL Server DBAs** | Managed Instance | Familiar management model |
+| **Cloud-native developers** | Single Database + Serverless | Modern, simple deployment |
+| **Full-stack developers** | Single Database (GP) | Balance of features and simplicity |
+| **Enterprise architects** | Managed Instance | Governance and compliance features |
+| **Startup/Small team** | Serverless | Cost-effective, auto-managed |
+
+### Decision by Compliance Requirements
+
+```mermaid
+flowchart LR
+    subgraph Compliance["🔒 Compliance & Security"]
+        COMP{Compliance<br/>requirement?}
+        COMP -->|VNet isolation<br/>required| MI_COMP[✅ Managed Instance<br/>Native VNet integration]
+        COMP -->|Private endpoint<br/>sufficient| SDB_COMP[✅ Single Database<br/>Private Link]
+        COMP -->|Data residency| GEO[Configure geo-restrictions]
+        COMP -->|Audit logging| ALL[All options support<br/>Azure SQL Auditing]
+    end
+    
+    subgraph DataProtection["🛡️ Data Protection"]
+        DP{Data protection<br/>level?}
+        DP -->|Always Encrypted| AE[All options<br/>support AE]
+        DP -->|TDE + CMK| CMK[All options<br/>support CMK]
+        DP -->|Dynamic masking| DM[All options<br/>support DDM]
+    end
+```
+
+### Quick Reference: Feature-Based Selection
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AZURE SQL QUICK SELECTION GUIDE                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  🔷 MANAGED INSTANCE - Choose when you need:                           │
+│     ├── CLR (Common Language Runtime)                                  │
+│     ├── SQL Server Agent jobs                                          │
+│     ├── Cross-database queries                                         │
+│     ├── Service Broker / Database Mail                                 │
+│     ├── Linked Servers                                                 │
+│     ├── Native VNet integration                                        │
+│     └── Lift-and-shift with minimal changes                           │
+│                                                                         │
+│  🔶 ELASTIC POOL - Choose when you need:                               │
+│     ├── Multiple databases (10+)                                       │
+│     ├── Variable usage patterns                                        │
+│     ├── Multi-tenant SaaS architecture                                 │
+│     ├── Cost optimization through resource sharing                     │
+│     └── Database-per-tenant isolation                                  │
+│                                                                         │
+│  🔵 SINGLE DATABASE (Provisioned) - Choose when you need:              │
+│     ├── Simple, independent database                                   │
+│     ├── Predictable 24/7 workload                                      │
+│     ├── Microservices architecture                                     │
+│     ├── Reserved capacity pricing                                      │
+│     └── Cloud-native application                                       │
+│                                                                         │
+│  🟣 SERVERLESS - Choose when you need:                                 │
+│     ├── Development/test environments                                  │
+│     ├── Intermittent, unpredictable usage                             │
+│     ├── Auto-pause capability                                          │
+│     ├── Per-second billing                                             │
+│     └── Cost optimization for sporadic workloads                       │
+│                                                                         │
+│  🔴 BUSINESS CRITICAL - Choose when you need:                          │
+│     ├── RPO = 0 (zero data loss)                                       │
+│     ├── High IOPS (local SSD)                                          │
+│     ├── Built-in read replica                                          │
+│     ├── 99.995% SLA                                                    │
+│     └── Mission-critical workloads                                     │
+│                                                                         │
+│  🟢 HYPERSCALE - Choose when you need:                                 │
+│     ├── Database size > 4 TB (up to 100 TB)                           │
+│     ├── Fast scaling (seconds)                                         │
+│     ├── Instant backup/restore                                         │
+│     ├── Multiple read replicas (up to 4)                              │
+│     └── Rapidly growing databases                                      │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
