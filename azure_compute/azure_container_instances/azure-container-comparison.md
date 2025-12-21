@@ -24,6 +24,7 @@
 - [Migration/Hybrid patterns](#migrationhybrid-patterns)
 - [Pros & Cons (short)](#pros-cons-short)
 - [Frequently asked questions (short)](#frequently-asked-questions-short)
+- [Choosing a Container Service for Web Applications with Built-in Load Balancing and Managed TLS](#choosing-a-container-service-for-web-applications-with-built-in-load-balancing-and-managed-tls)
 - [References](#references)
 
 ---
@@ -287,6 +288,87 @@ az containerapp update --name my-container-app --resource-group myContainerApps 
 - Can ACA access Kubernetes API? No — ACA abstracts K8s; use AKS if you need K8s control plane.
 - Is ACI autoscaling? Not natively — you can script or use Virtual Kubelet with AKS for bursting.
 - Which is cheaper? ACA can be cheaper for microservices that scale-to-zero. ACI may be cheaper for single short-running tasks depending on usage.
+
+---
+
+## Choosing a Container Service for Web Applications with Built-in Load Balancing and Managed TLS
+
+When selecting an Azure container service for web applications that require **high availability**, **scalability**, **built-in load balancing**, **custom domain support**, and **managed TLS** for both Azure FQDNs and custom domains, it's important to understand the differences between available options.
+
+### Scenario
+
+Your organization plans to deploy a new web application that requires:
+- High availability and scalability
+- Handling HTTP and HTTPS traffic
+- Built-in load balancing
+- Custom domain support
+- Managed TLS for Azure FQDNs and custom domains
+
+### Recommended Solution: Azure Web App for Containers
+
+**Azure Web App for Containers** (part of Azure App Service) is the most suitable choice for this scenario.
+
+#### Why Azure Web App for Containers?
+
+| Feature | Azure Web App for Containers |
+|---------|------------------------------|
+| **Built-in Load Balancing** | ✅ Automatic, no additional configuration required |
+| **Custom Domain Support** | ✅ Full support with easy configuration |
+| **Managed TLS for Azure FQDNs** | ✅ Free App Service Managed Certificates |
+| **Managed TLS for Custom Domains** | ✅ Supports free managed certificates and custom certificates |
+| **High Availability** | ✅ Built-in with multiple instances in App Service Plan |
+| **Scalability** | ✅ Auto-scale based on rules or manual scaling |
+
+### Comparison: Container Services for Web Applications
+
+| Service | Built-in Load Balancing | Custom Domains | Managed TLS (Azure FQDN) | Managed TLS (Custom Domain) | Best For |
+|---------|------------------------|----------------|-------------------------|----------------------------|----------|
+| **Azure Web App for Containers** | ✅ Yes | ✅ Yes | ✅ Yes (Free) | ✅ Yes (Free managed or custom) | Production web apps with minimal config |
+| **Azure Kubernetes Service (AKS)** | ⚠️ Requires configuration | ✅ With Ingress setup | ⚠️ Manual setup required | ⚠️ Manual setup (cert-manager, etc.) | Complex microservices, custom control |
+| **Azure Container Apps** | ⚠️ Limited | ✅ Yes | ✅ Yes | ⚠️ Limited managed TLS support | Event-driven microservices |
+| **Azure Container Instances** | ❌ No | ⚠️ Limited (via DNS label) | ❌ No | ❌ No | Simple, short-lived containers |
+
+### Why NOT the Other Options?
+
+#### Azure Kubernetes Service (AKS)
+- **Not recommended** for this scenario because:
+  - Requires **additional configuration** for TLS management (e.g., cert-manager, NGINX Ingress Controller)
+  - More complex setup for load balancing (requires Ingress or Service resources)
+  - Higher operational overhead for simple web application hosting
+  - Overkill when managed TLS and built-in load balancing are primary requirements
+
+#### Azure Container Apps
+- **Not recommended** for this scenario because:
+  - **Lacks built-in load balancing** in the traditional sense (uses HTTP-based ingress)
+  - **Limited managed TLS support** compared to App Service
+  - Better suited for event-driven and microservices workloads rather than traditional web applications
+
+#### Azure Container Instances
+- **Not recommended** for this scenario because:
+  - **No built-in load balancing** — you would need to add Azure Load Balancer or Application Gateway
+  - **No managed TLS** — requires manual certificate management
+  - Designed for simple, ephemeral container workloads, not production web applications
+
+### Key Takeaway for Exams
+
+> **Question:** Your organization plans to deploy a new web application that requires high availability and scalability, handling HTTP and HTTPS traffic. You need to select an Azure container service with built-in load balancing, custom domain support, and managed TLS for Azure FQDNs and custom domains. What should you recommend?
+> 
+> **Answer:** **Azure Web App for Containers**
+> 
+> **Explanation:** Azure Web App for Containers provides:
+> - ✅ Built-in load balancing (automatic, no configuration needed)
+> - ✅ Custom domain support (easy to configure)
+> - ✅ Managed TLS for both Azure FQDNs and custom domains (free managed certificates)
+> - ✅ High availability and scalability built into the platform
+> 
+> Other options fall short:
+> - **AKS** requires additional configuration for TLS management
+> - **Azure Container Apps** lacks built-in load balancing and comprehensive managed TLS
+> - **Azure Container Instances** lacks built-in load balancing and managed TLS entirely
+
+### References
+- [Design an Azure compute solution - Training | Microsoft Learn](https://learn.microsoft.com/training/modules/design-compute-solution/)
+- [General considerations for choosing an Azure container service - Azure Architecture Center](https://learn.microsoft.com/azure/architecture/guide/container-service-general-considerations)
 
 ---
 
