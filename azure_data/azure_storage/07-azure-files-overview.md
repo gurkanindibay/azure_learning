@@ -20,6 +20,7 @@
   - [macOS](#macos)
 - [Use Cases](#use-cases)
 - [Azure Files vs Azure Blob Storage](#azure-files-vs-azure-blob-storage)
+- [Azure Files vs Azure NetApp Files](#azure-files-vs-azure-netapp-files)
 - [Key Takeaways](#key-takeaways)
 - [References](#references)
 
@@ -403,6 +404,102 @@ mount_smbfs //Azure@<storage-account>.file.core.windows.net/<share-name> /Volume
 | **Use Case** | File shares, lift-and-shift | Large-scale unstructured data |
 | **POSIX Support** | ✅ Yes (NFS) | ❌ No |
 | **Maximum File Size** | 4 TiB (SMB), 4 TiB (NFS) | 190.7 TiB (block blob) |
+
+---
+
+## Azure Files vs Azure NetApp Files
+
+When migrating file servers to Azure, choosing between Azure Files and Azure NetApp Files depends on your protocol interoperability requirements.
+
+### Protocol Support Comparison
+
+| Feature | Azure Files | Azure NetApp Files | Azure Blob Storage |
+|---------|-------------|-------------------|-------------------|
+| **SMB Support** | ✅ Yes | ✅ Yes | ❌ No |
+| **NFS Support** | ✅ Yes (Premium only) | ✅ Yes | ❌ No |
+| **Concurrent SMB + NFS** | ❌ No interoperability | ✅ Yes (Dual-protocol) | ❌ No |
+| **Windows Clients** | ✅ SMB | ✅ SMB | ❌ REST API only |
+| **Unix/Linux Clients** | ✅ NFS/SMB | ✅ NFS/SMB | ❌ REST API only |
+
+### Key Differences
+
+**Azure Files:**
+- Supports both SMB and NFS protocols
+- **No interoperability** between protocols - a file share can be either SMB OR NFS, not both
+- SMB shares and NFS shares are separate and cannot access the same data simultaneously
+- NFS support requires Premium tier only
+
+**Azure NetApp Files:**
+- Enterprise-grade file storage service
+- **Dual-protocol support** with full interoperability between SMB and NFS
+- Same data can be accessed concurrently by both Windows (SMB) and Unix (NFS) clients
+- Ideal for mixed environments requiring cross-platform file sharing
+- Higher performance and more advanced features (snapshots, replication)
+
+### When to Choose Which
+
+| Scenario | Recommended Solution |
+|----------|---------------------|
+| Windows-only environment | Azure Files (SMB) |
+| Linux-only environment | Azure Files (NFS Premium) or Azure NetApp Files |
+| Mixed Windows + Unix with interoperability needed | **Azure NetApp Files** |
+| Cost-sensitive general file shares | Azure Files |
+| High-performance enterprise workloads | Azure NetApp Files |
+
+---
+
+### Practice Question: File Server Migration with Protocol Interoperability
+
+**Scenario:**
+You have an on-premises file server that you plan to migrate to Azure.
+
+The existing file server has **Unix clients** that connect by using the **NFS protocol**, and **Windows clients** that connect by using the **SMB protocol**.
+
+**Interoperability between the clients is required.**
+
+**Question:**
+To what should you migrate the file server data?
+
+**Options:**
+1. ❌ Azure Blob storage
+2. ❌ Azure Files
+3. ✅ Azure NetApp Files
+4. ❌ Azure Table storage
+
+**Answer: Azure NetApp Files**
+
+**Explanation:**
+
+✅ **Azure NetApp Files is correct** because:
+- It offers **concurrent support and interoperability** between both SMB-based and NFS-based clients
+- **Dual-protocol** capability allows the same file share to be accessed via both SMB (Windows) and NFS (Unix) simultaneously
+- This is the only Azure service that provides true protocol interoperability for file storage
+
+❌ **Azure Blob storage is incorrect** because:
+- Blob storage does **not offer SMB support**
+- It uses REST API for access, not file system protocols
+- Not suitable for traditional file server migration scenarios requiring SMB/NFS
+
+❌ **Azure Files is incorrect** because:
+- While Azure Files supports both SMB and NFS protocols, **no interoperability between protocols is offered**
+- A file share can be configured for either SMB or NFS, but not both at the same time
+- Cannot serve the same data to both Windows (SMB) and Unix (NFS) clients concurrently
+
+❌ **Azure Table storage is incorrect** because:
+- Table storage is a NoSQL key-value store
+- It does **not provide file storage** capabilities
+- Does not support SMB or NFS protocols
+- Does not meet any of the interoperability requirements
+
+**Key Takeaway:**
+When you need **interoperability** between Windows clients (SMB) and Unix clients (NFS) accessing the **same data**, **Azure NetApp Files** is the only Azure solution that supports this requirement.
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Design for Azure Files - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/design-data-storage-solution-for-non-relational-data/4-design-for-azure-files)
+- [What is Azure NetApp Files](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction)
+- [Dual-protocol access for Azure NetApp Files](https://learn.microsoft.com/en-us/azure/azure-netapp-files/dual-protocol-volumes)
 
 ## Key Takeaways
 
