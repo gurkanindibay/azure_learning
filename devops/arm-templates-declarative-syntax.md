@@ -370,6 +370,71 @@ This is the correct and most straightforward approach to identify the Azure Reso
 
 ---
 
+### Question 2: Azure Blueprints Persistent Link
+
+**Scenario:**
+Your organization plans to utilize Azure Blueprints to make sure that sets of Azure resources meet company standards, patterns, and requirements. The blueprints in development consist of:
+- Role Assignments
+- Policy Assignments
+- ARM Templates
+- Resource Groups
+
+You need to determine the features and capabilities of Azure Blueprints.
+
+**Statement:** Does deploying a resource using a blueprint create a persistent link between the blueprint and the resource?
+
+**Answer: Yes** ✅
+
+**Explanation:**
+
+When you use a blueprint to deploy a resource, it keeps a **persistent link** between the blueprint and the resource. This is different from just using an ARM template alone.
+
+**Key Points:**
+- **ARM Templates**: Once deployment completes, the template is disconnected from the deployed resources
+- **Azure Blueprints**: Maintains an ongoing connection to deployed resources
+
+**Benefits of the Persistent Link:**
+1. **Better Tracking**: You can track which resources were deployed by which blueprint
+2. **Compliance Auditing**: Easily verify that resources remain aligned with the blueprint definition
+3. **Version Control**: Track which version of the blueprint was used for deployment
+4. **Update Propagation**: Updates to the blueprint can be propagated to assigned subscriptions
+
+**Understanding the Persistent Connection:**
+
+The persistent connection (also called "blueprint assignment relationship") is a core differentiator:
+
+| Aspect | ARM Template | Azure Blueprint |
+|--------|--------------|-----------------|
+| **After Deployment** | Template becomes "orphaned" - no link exists | Blueprint assignment record is maintained |
+| **Tracking Origin** | Must manually track which template deployed what | Azure automatically knows which blueprint deployed which resources |
+| **Compliance Drift** | No way to detect if resources changed from original state | Can detect and report when resources drift from blueprint definition |
+| **Updates** | Must redeploy entire template manually | Can update blueprint and reassign to propagate changes |
+| **Audit Trail** | Limited to deployment logs | Full lifecycle tracking with version history |
+
+**How the Persistent Connection Works:**
+
+1. **Blueprint Definition**: You create a blueprint with artifacts (ARM templates, policies, role assignments)
+2. **Blueprint Assignment**: When you assign the blueprint to a subscription/management group, Azure creates an **assignment object**
+3. **Resource Deployment**: Resources are deployed with metadata linking them to the blueprint assignment
+4. **Ongoing Relationship**: The assignment object maintains references to:
+   - The blueprint version used
+   - All resources deployed
+   - Parameter values used during assignment
+   - Lock state of resources (if resource locking is enabled)
+
+**Resource Locking with Blueprints:**
+
+Blueprints can apply **resource locks** that even subscription owners cannot remove:
+- **Don't Lock**: No locks applied
+- **Do Not Delete**: Prevents deletion of blueprint-deployed resources
+- **Read Only**: Prevents any modifications to blueprint-deployed resources
+
+This is unique to Blueprints - the lock is enforced by the blueprint assignment, not by standard Azure RBAC.
+
+This persistent connection is one of the fundamental differences between Azure Blueprints and ARM Templates, making Blueprints more suitable for ongoing governance and compliance scenarios.
+
+---
+
 ## ARM Templates vs Azure Blueprints
 
 ### Key Difference: Connection to Deployed Resources
