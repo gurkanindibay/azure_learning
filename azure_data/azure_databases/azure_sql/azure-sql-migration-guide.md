@@ -19,6 +19,7 @@
   - [Scenario 4: Migrating Multi-Database Applications with Cross-Database Queries](#scenario-4-migrating-multi-database-applications-with-cross-database-queries)
   - [Scenario 5: SQL Server Migration with CLR Support and Minimal Database Changes](#scenario-5-sql-server-migration-with-clr-support-and-minimal-database-changes)
   - [Scenario 6: Migrating Always On Availability Group to SQL Server on Linux VM](#scenario-6-migrating-always-on-availability-group-to-sql-server-on-linux-vm-with-minimal-downtime)
+  - [Scenario 7: Automating Amazon RDS Migration to Azure SQL Managed Instance with PowerShell](#scenario-7-automating-amazon-rds-migration-to-azure-sql-managed-instance-with-powershell)
 - [Quick Decision Matrix](#quick-decision-matrix)
 - [References](#references)
 
@@ -756,6 +757,119 @@ On-Premises Environment                    Azure Environment
 
 ---
 
+### Scenario 7: Automating Amazon RDS Migration to Azure SQL Managed Instance with PowerShell
+
+**Question**: You are designing the migration plan for an Amazon RDS database named DB1. You plan to migrate DB1 to an Azure SQL Managed Instance. You need to recommend a solution to automate the migration by using PowerShell. The solution must meet the following requirements:
+
+- Minimize the number of tools to be installed
+- Minimize downtime
+
+Which migration tool should you recommend?
+
+**Answer**: **Azure Database Migration Service**
+
+**Explanation**:
+
+**Azure Database Migration Service** is correct because:
+- It can be fully **automated using PowerShell** through Azure PowerShell cmdlets and Azure CLI
+- Supports **online migrations** that minimize downtime by continuously replicating changes until cutover
+- **Minimizes tools to install**: Only requires Azure PowerShell module, no additional software installation needed on the source or target
+- Provides a **fully managed migration service** accessible through Azure portal, PowerShell, and Azure CLI
+- Supports migration from **Amazon RDS SQL Server** to Azure SQL Managed Instance
+- Offers both **online (minimal downtime)** and **offline migration** options
+- Handles schema migration, data migration, and continuous data synchronization
+- Provides **built-in monitoring and error handling** during migration
+
+**PowerShell Automation Capabilities**:
+```powershell
+# Example: Creating a DMS migration project using PowerShell
+New-AzDataMigrationProject -ResourceGroupName "myRG" `
+    -ServiceName "myDMS" `
+    -ProjectName "myMigrationProject" `
+    -Location "eastus" `
+    -SourceType "SQL" `
+    -TargetType "SQLMI"
+
+# Start migration task
+New-AzDataMigrationTask -ResourceGroupName "myRG" `
+    -ServiceName "myDMS" `
+    -ProjectName "myMigrationProject" `
+    -TaskName "myMigrationTask" `
+    -TaskType "MigrateSqlServerSqlMiSync" `
+    -SourceConnection $sourceConnInfo `
+    -TargetConnection $targetConnInfo `
+    -SelectedDatabase $selectedDbs
+```
+
+**Why Other Options Are Not Suitable**:
+
+**Azure SQL migration extension for Azure Data Studio**:
+- Provides a **graphical user interface** for migrations, not designed for PowerShell automation
+- **Requires installing additional software** (Azure Data Studio and the extension)
+- While it uses Azure Database Migration Service backend, the extension itself cannot be automated with PowerShell
+- Better suited for **interactive, GUI-based migrations** rather than scripted automation
+- **Why incorrect**: Violates both requirements - requires additional tool installation and cannot be automated with PowerShell
+
+**Bulk Copy (BCP)**:
+- Command-line utility for importing/exporting data in bulk
+- **Requires downtime**: Must stop writes to source during export/import process
+- Does not support online migration with continuous replication
+- No built-in support for schema migration
+- Requires manual coordination of export and import operations
+- **Why incorrect**: Does not minimize downtime; requires stopping the source database during migration
+
+**Import/Export Wizard**:
+- GUI-based tool in SQL Server Management Studio (SSMS)
+- **Requires downtime**: Performs point-in-time export/import
+- Cannot be automated with PowerShell
+- Does not support continuous data synchronization
+- Requires SSMS installation
+- **Why incorrect**: Requires downtime and additional tool installation; cannot be automated with PowerShell
+
+**Comparison: Migration Tools for PowerShell Automation**:
+
+| Tool | PowerShell Automation | Minimal Downtime | Minimal Tools |
+|------|----------------------|------------------|---------------|
+| **Azure Database Migration Service** | ✅ Full support | ✅ Online migration | ✅ Only Azure PowerShell |
+| Azure SQL migration extension (Azure Data Studio) | ❌ GUI only | ✅ Online migration | ❌ Requires ADS + extension |
+| Bulk Copy (BCP) | ⚠️ CLI, not PS cmdlets | ❌ Requires downtime | ✅ Built into SQL Server |
+| Import/Export Wizard | ❌ GUI only | ❌ Requires downtime | ❌ Requires SSMS |
+
+**Key Benefits of Azure DMS for Amazon RDS Migration**:
+- **Cross-cloud support**: Specifically designed to migrate from AWS RDS to Azure
+- **Network flexibility**: Supports various network configurations (VPN, ExpressRoute, public internet)
+- **Comprehensive migration**: Handles schema, data, stored procedures, and other database objects
+- **Monitoring**: Built-in progress tracking and alerting through Azure portal and PowerShell
+- **Rollback support**: Source database remains untouched until cutover confirmation
+
+**Migration Architecture for Amazon RDS to Azure SQL MI**:
+
+```
+Amazon Web Services                    Azure
+┌─────────────────────┐               ┌─────────────────────────────────┐
+│  Amazon RDS         │               │  Azure Database Migration       │
+│  SQL Server         │               │  Service (DMS)                  │
+│  ┌───────────────┐  │               │  ┌─────────────────────────────┐│
+│  │ DB1           │  │  ──────────►  │  │ Migration Project           ││
+│  │               │  │  Online       │  │ (PowerShell automated)      ││
+│  └───────────────┘  │  Replication  │  └─────────────────────────────┘│
+└─────────────────────┘               │              │                  │
+                                      │              ▼                  │
+                                      │  ┌─────────────────────────────┐│
+                                      │  │ Azure SQL Managed Instance  ││
+                                      │  │ DB1 (target)                ││
+                                      │  └─────────────────────────────┘│
+                                      └─────────────────────────────────┘
+```
+
+**References**:
+- [SQL Server to SQL Managed Instance: Migration Overview](https://learn.microsoft.com/en-us/azure/azure-sql/migration-guides/managed-instance/sql-server-to-managed-instance-overview)
+- [Azure Database Migration Service Overview](https://learn.microsoft.com/en-us/azure/dms/dms-overview)
+- [Migrate SQL Server to Azure SQL Managed Instance using PowerShell](https://learn.microsoft.com/en-us/azure/dms/howto-sql-server-to-azure-sql-managed-instance-powershell-online)
+- [Azure PowerShell - Data Migration Cmdlets](https://learn.microsoft.com/en-us/powershell/module/az.datamigration)
+
+---
+
 ## Quick Decision Matrix
 
 Use this matrix to quickly identify the right tool for your migration scenario:
@@ -763,6 +877,7 @@ Use this matrix to quickly identify the right tool for your migration scenario:
 | Your Requirement | Use This Tool |
 |------------------|---------------|
 | **Offline migration + Minimize admin effort** | Azure Database Migration Service |
+| **PowerShell automation + Minimize downtime** | Azure Database Migration Service |
 | **Online migration + Minimize downtime** | Azure Data Studio (with Azure SQL Migration extension) |
 | **Assessment before migration** | Azure Migrate or Data Migration Assistant |
 | **Migrating from Oracle/MySQL** | SQL Server Migration Assistant (SSMA) |
