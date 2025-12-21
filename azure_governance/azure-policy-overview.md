@@ -1327,6 +1327,116 @@ Without specifying the RBAC roles, the policy will not be able to perform the de
 
 ---
 
+### Question 11: Multi-Subscription Governance Strategy
+
+**Scenario:**
+Your organization has multiple Microsoft Azure subscriptions and needs to ensure compliance with specific security policies.
+
+You need to design a governance strategy that enforces these security policies automatically across all subscriptions.
+
+**Question:**
+Each correct answer presents part of the solution. Which two actions should you perform? (Choose 2)
+
+**Options:**
+
+1. **Apply security policies to each subscription individually** ❌
+2. **Create a management group and apply security policies at this level** ✅
+3. **Use Azure Blueprints to define and apply security policies across all subscriptions** ❌
+4. **Use Azure Policy to define and assign security policies to the management group** ✅
+
+**Answer:** Options 2 and 4
+
+**Explanation:**
+
+**Why Management Group + Azure Policy is Correct:**
+
+| Correct Action | Benefit |
+|----------------|---------|
+| **Create a management group and apply security policies at this level** | Ensures consistent compliance across all resources under the group. Leverages Azure's hierarchical structure for efficient policy enforcement. |
+| **Use Azure Policy to define and assign security policies to the management group** | Allows for automated compliance enforcement. All subscriptions automatically inherit these policies, providing a scalable governance strategy. |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Reason for Incorrect |
+|--------|---------------------|
+| **Apply security policies to each subscription individually** | Inefficient and error-prone. Involves manual application and does not offer a scalable solution. |
+| **Use Azure Blueprints to define and apply security policies across all subscriptions** | While Azure Blueprints is a more automated approach, it may not fully utilize the hierarchical benefits of management groups. Blueprints are better suited for environment standardization (templates, role assignments) rather than ongoing policy enforcement. |
+
+**Key Concepts:**
+
+1. **Management Group Benefits:**
+   - Organize subscriptions into a hierarchy
+   - Apply governance conditions at scale
+   - Policies, RBAC, and compliance inherit down to child scopes
+   - Efficient management across multiple subscriptions
+
+2. **Azure Policy at Management Group Level:**
+   - Single assignment affects all child subscriptions
+   - Automated compliance evaluation
+   - Consistent enforcement across the organization
+   - Simplified compliance reporting
+
+3. **Azure Blueprints vs Azure Policy:**
+
+| Feature | Azure Blueprints | Azure Policy |
+|---------|------------------|--------------|
+| **Purpose** | Environment templates and standardization | Ongoing compliance enforcement |
+| **Scope** | Deploy resources, roles, and policies together | Define and enforce resource rules |
+| **Use Case** | Initial environment setup | Continuous governance |
+| **Hierarchical Benefits** | Limited | Full inheritance support |
+
+**Architecture: Management Group with Azure Policy**
+
+```
+┌─────────────────────────────────────────────────┐
+│            Root Management Group                 │
+│       (Azure Policy assigned here)               │
+│                                                  │
+│  Policies:                                       │
+│  • Require HTTPS on storage                      │
+│  • Allowed locations: East US, West US           │
+│  • Require tags on resources                     │
+└─────────────────────────────────────────────────┘
+                    ↓ (inherited)
+    ┌───────────────┴───────────────┐
+    ↓                               ↓
+┌─────────────┐           ┌─────────────┐
+│ Production  │           │ Development │
+│ Mgmt Group  │           │ Mgmt Group  │
+└─────────────┘           └─────────────┘
+    ↓                           ↓
+┌─────────────┐           ┌─────────────┐
+│ Sub-001     │           │ Sub-003     │
+│ Sub-002     │           │ Sub-004     │
+└─────────────┘           └─────────────┘
+```
+
+**Implementation Steps:**
+
+1. **Create Management Group Hierarchy**
+   - Design hierarchy based on organizational structure
+   - Group subscriptions logically (by environment, department, etc.)
+
+2. **Define Azure Policies**
+   - Create custom policies or use built-in definitions
+   - Group related policies into initiatives
+
+3. **Assign Policies at Management Group Level**
+   - Single assignment propagates to all child scopes
+   - Configure parameters and exclusions as needed
+
+4. **Monitor Compliance**
+   - Use Azure Policy compliance dashboard
+   - Set up alerts for non-compliance
+   - Run remediation tasks for existing resources
+
+**Reference Links:**
+- [Describe Azure management infrastructure - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/describe-azure-management-infrastructure/)
+- [Design for management groups - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/enterprise-scale-organization/)
+- [Organize your Azure resources effectively - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-setup-guide/organize-resources)
+
+---
+
 ## Summary
 
 ### Key Takeaways
