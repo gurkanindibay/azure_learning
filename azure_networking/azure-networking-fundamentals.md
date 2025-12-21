@@ -12,6 +12,7 @@
   - [2.5 VNet Peering](#25-vnet-peering)
     - [2.5.1 Connecting Virtual Networks Across Subscriptions](#251-connecting-virtual-networks-across-subscriptions)
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
+  - [2.7 Application Security Groups (ASG)](#27-application-security-groups-asg)
 - [3. Private Endpoints](#3-private-endpoints)
   - [3.1 What is a Private Endpoint?](#31-what-is-a-private-endpoint)
   - [3.2 How Private Endpoints Work](#32-how-private-endpoints-work)
@@ -382,6 +383,133 @@ Azure Private Link is designed for accessing PaaS services privately, not for co
 - **Protocol**: TCP, UDP, ICMP, or Any
 - **Port Range**: Single port or range
 - **Action**: Allow or Deny
+
+### 2.7 Application Security Groups (ASG)
+
+**Application Security Groups (ASGs)** enable you to group virtual machines based on their application roles or functions, and define network security rules based on those groups instead of explicit IP addresses.
+
+**Why Use ASGs?**
+
+| Challenge | ASG Solution |
+|-----------|-------------|
+| **IP addresses change frequently** | Group VMs by role, not IP |
+| **Managing rules for many VMs** | Single rule applies to entire group |
+| **Application-centric security** | Define rules by workload type |
+| **Scalability** | Add/remove VMs from group without rule changes |
+
+**How ASGs Work:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Virtual Network (VNET1)                        │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                        Subnet1                                 │ │
+│  │                                                                │ │
+│  │   ASG: Web-Servers                 ASG: Management-Servers     │ │
+│  │   ┌─────────────────────┐         ┌─────────────────────┐     │ │
+│  │   │ ┌────┐ ┌────┐ ┌────┐│         │ ┌────┐ ┌────┐ ┌────┐│     │ │
+│  │   │ │ VM │ │ VM │ │ VM ││         │ │ VM │ │ VM │ │ VM ││     │ │
+│  │   │ └────┘ └────┘ └────┘│         │ └────┘ └────┘ └────┘│     │ │
+│  │   └─────────────────────┘         └─────────────────────┘     │ │
+│  │            │                                │                  │ │
+│  │            ▼                                ▼                  │ │
+│  │    Allow HTTPS (443)                Allow RDP (3389)          │ │
+│  │    from Internet                    from Internet              │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits:**
+- ✅ **Application-centric grouping**: Organize VMs by role (Web, App, DB, Management)
+- ✅ **Dynamic membership**: VMs can be added/removed without modifying NSG rules
+- ✅ **IP address independence**: Rules work regardless of IP changes
+- ✅ **Simplified rule management**: One rule for entire application tier
+- ✅ **Same subnet support**: VMs in the same subnet can be in different ASGs
+
+**NSG Rules with ASGs:**
+
+```plaintext
+Network Security Group: NSG-Subnet1
+
+┌──────────┬───────────────────┬────────────────┬──────────────────┬────────┐
+│ Priority │ Name              │ Source         │ Destination      │ Action │
+├──────────┼───────────────────┼────────────────┼──────────────────┼────────┤
+│ 100      │ Allow-HTTPS-Web   │ Internet       │ ASG:Web-Servers  │ Allow  │
+│ 110      │ Allow-RDP-Mgmt    │ Internet       │ ASG:Mgmt-Servers │ Allow  │
+│ 200      │ Deny-RDP-Web      │ Any            │ ASG:Web-Servers  │ Deny   │
+│ 65500    │ DenyAllInbound    │ Any            │ Any              │ Deny   │
+└──────────┴───────────────────┴────────────────┴──────────────────┴────────┘
+```
+
+**ASG vs Other Options:**
+
+| Method | Use Case | Limitation |
+|--------|----------|------------|
+| **ASG** | Group VMs by application role | Works within same VNet only |
+| **NSG with IPs** | Static VM IPs | Hard to manage when IPs change |
+| **Network Rules (Firewall)** | Cross-VNet, advanced filtering | More complex, higher cost |
+| **Azure Firewall** | Enterprise-grade, centralized | Higher cost, more setup |
+
+**Exam Scenario: Grouping VMs by Application Role**
+
+**Question:**
+
+You have a virtual network named VNET1 with a subnet named Subnet1. The organization has two groups of servers:
+- **Web Servers**: Should display IIS web page when accessed from the internet
+- **Management Servers**: Should allow RDP access from the internet
+
+Requirements:
+- ✅ RDP into Management Servers, but NOT Web Servers
+- ✅ Web Servers accessible via HTTPS from the internet
+- ⚠️ Private IP addresses of VMs change frequently
+
+How would you group virtual machines into Web Servers and Management Servers?
+
+**Options:**
+- A) Network Rule
+- B) Network Security Groups (NSGs)
+- C) Application Security Groups (ASGs) ✅
+- D) Azure Firewall
+
+**Answer: C) Application Security Groups (ASGs)**
+
+**Why ASGs are Correct:**
+
+| Requirement | How ASGs Address It |
+|-------------|--------------------|
+| **Group VMs by role** | Create ASG-WebServers and ASG-ManagementServers |
+| **Different access rules per group** | NSG rules reference ASGs as destination |
+| **IP addresses change frequently** | ASGs are independent of IP addresses |
+| **Allow HTTPS to Web only** | Rule: Allow 443 to ASG-WebServers |
+| **Allow RDP to Management only** | Rule: Allow 3389 to ASG-ManagementServers |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Network Rule** | Not a standalone Azure feature for VM grouping |
+| **NSG alone** | Would require IP-based rules; doesn't solve IP change problem |
+| **Azure Firewall** | Overkill for this scenario; higher cost and complexity |
+
+**Implementation Steps:**
+
+```plaintext
+1. Create Application Security Groups:
+   → Azure Portal → Application security groups → Create
+   → Create "ASG-WebServers" and "ASG-ManagementServers"
+
+2. Associate VMs to ASGs:
+   → VM → Networking → Application security groups
+   → Add to appropriate ASG based on role
+
+3. Create NSG Rules using ASGs:
+   → NSG → Inbound security rules → Add
+   → Use ASG as destination instead of IP addresses
+```
+
+**References:**
+- [Application Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
+- [Filter network traffic with NSGs](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic)
 
 ---
 
