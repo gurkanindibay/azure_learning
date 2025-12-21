@@ -2742,6 +2742,91 @@ ALTER COLUMN PhoneNumber ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)');
 
 ---
 
+### Question 13: Configuring Always Encrypted for Web App with Azure SQL Database
+
+**Scenario**: You have an Azure App Service web app that writes data to an Azure SQL database. You plan to configure the database to use the Always Encrypted feature.
+
+**Question**: You need to recommend a solution to ensure that the web app can write encrypted data. Which two actions should you include in the recommendations? (Each correct answer presents part of the solution.)
+
+**Options**:
+- A) Change the connection string used by the application.
+- B) Change the SSL settings for the web app.
+- C) Enable Transparent Data Encryption (TDE).
+- D) Store keys in Azure Key Vault.
+- E) Store keys in the certificate store.
+
+**Correct Answers**: **A, D**
+
+**Explanation**:
+
+**A) Change the connection string used by the application** ✅ **CORRECT**
+- The connection string must include `Column Encryption Setting=Enabled` to enable Always Encrypted functionality
+- This setting tells the client driver (ADO.NET, JDBC, ODBC) to automatically encrypt/decrypt data for columns configured with Always Encrypted
+- Without this connection string modification, the application cannot interact with encrypted columns properly
+
+**B) Change the SSL settings for the web app** ❌ **INCORRECT**
+- SSL/TLS settings configure **in-transit encryption** for data traveling between the web app and the database
+- SSL does **not** enable Always Encrypted functionality
+- Always Encrypted is a **separate feature** that encrypts data at rest and during query processing, independent of SSL/TLS
+
+**C) Enable Transparent Data Encryption (TDE)** ❌ **INCORRECT**
+- TDE encrypts the **entire database at rest** (data files, log files, backups)
+- TDE is a **different encryption feature** from Always Encrypted
+- TDE is **enabled by default** on Azure SQL Database and operates at the database/page level, not column level
+- TDE does NOT provide column-level encryption or client-side encryption capabilities
+
+**D) Store keys in Azure Key Vault** ✅ **CORRECT**
+- Always Encrypted requires a **Column Master Key (CMK)** to protect the Column Encryption Keys (CEKs)
+- Azure Key Vault is the **recommended secure key store** for production environments
+- The web app's managed identity can be granted access to Key Vault to retrieve the CMK
+- Key Vault provides centralized key management, access policies, and audit logging
+
+**E) Store keys in the certificate store** ⚠️ **PARTIALLY CORRECT but NOT RECOMMENDED**
+- While keys CAN be stored in the Windows Certificate Store, this is **not recommended for Azure App Service**
+- App Service runs in a sandboxed environment where access to the local certificate store is limited
+- Azure Key Vault is the preferred solution for cloud-based applications
+
+**Implementation Steps for Always Encrypted with App Service**:
+
+```
+1. Create Column Master Key (CMK) in Azure Key Vault
+2. Create Column Encryption Key (CEK) protected by the CMK
+3. Encrypt the target columns using Always Encrypted
+4. Grant the App Service Managed Identity access to Key Vault (Get, Unwrap Key permissions)
+5. Update connection string with "Column Encryption Setting=Enabled"
+6. Use a supported client driver (Microsoft.Data.SqlClient recommended)
+```
+
+**Connection String Example**:
+```
+Server=yourserver.database.windows.net;Database=yourdb;Authentication=Active Directory Managed Identity;Column Encryption Setting=Enabled;
+```
+
+**Key Comparison - In-Transit vs At-Rest vs Always Encrypted**:
+
+| Feature | SSL/TLS | TDE | Always Encrypted |
+|---------|---------|-----|------------------|
+| **Protection Scope** | In-transit | At-rest (database files) | At-rest + In-transit + During queries |
+| **Encryption Level** | Connection | Database/Page | Column |
+| **Key Location** | Server certificate | Azure Key Vault (optional) | Client-side (Key Vault/Cert Store) |
+| **Prevents DBA Access** | ❌ No | ❌ No | ✅ Yes |
+| **Application Changes** | Connection string | None | Connection string + driver |
+
+> **Exam Tip:** When configuring Always Encrypted for an application:
+> 1. **Connection string change is mandatory** - Add `Column Encryption Setting=Enabled`
+> 2. **Key storage is mandatory** - Use Azure Key Vault for cloud apps (not certificate store)
+> 3. **SSL and TDE are different features** - They don't enable Always Encrypted
+> 4. Always Encrypted requires a **supported client driver** (e.g., Microsoft.Data.SqlClient)
+
+**Reference Links**:
+- [Getting Started with Always Encrypted](https://learn.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine)
+- [Configure Always Encrypted using Azure Key Vault](https://learn.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-azure-key-vault-configure)
+- [Design Security for Data at Rest, in Motion, and in Use](https://learn.microsoft.com/en-us/training/modules/design-data-encryption/)
+
+**Domain**: Design data storage solutions
+
+---
+
 ## Key Insights for Exams
 
 ### Critical Points
