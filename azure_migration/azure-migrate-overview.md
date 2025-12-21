@@ -9,13 +9,17 @@
   - [Azure Migrate Hub](#azure-migrate-hub)
   - [Azure Migrate Project](#azure-migrate-project)
   - [Azure Migrate Appliance](#azure-migrate-appliance)
+- [Cloud Adoption Framework Methodologies](#cloud-adoption-framework-methodologies)
+  - [The Cloud Adoption Lifecycle](#the-cloud-adoption-lifecycle)
+- [Cloud Adoption Framework Migration Phases](#cloud-adoption-framework-migration-phases)
 - [Migration Workflow](#migration-workflow)
 - [Supported Sources](#supported-sources)
 - [Target Azure Services](#target-azure-services)
 - [Key Features](#key-features)
 - [Comparison: Azure Migrate vs Azure VMware Solution](#comparison-azure-migrate-vs-azure-vmware-solution)
 - [Practice Questions](#practice-questions)
-  - [Question 1: VMware VM Migration to Azure](#question-1-vmware-vm-migration-to-azure)
+  - [Question 1: Cloud Adoption Framework Migration Phases](#question-1-cloud-adoption-framework-migration-phases)
+  - [Question 2: VMware VM Migration to Azure](#question-2-vmware-vm-migration-to-azure)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -111,6 +115,126 @@ The **Azure Migrate Appliance** is a lightweight collector that:
 - **Not Required for All Scenarios**: The appliance is used for discovery and assessment, but is not the primary resource needed to run VMs in Azure
 - **Component vs Solution**: It's a component within the migration process, not the complete solution
 - **Role**: Collects data to feed into the Azure Migrate project for assessment and planning
+
+## Cloud Adoption Framework Methodologies
+
+The **Microsoft Cloud Adoption Framework (CAF)** provides a comprehensive set of methodologies that guide organizations through the entire cloud adoption lifecycle. Understanding these methodologies is essential for planning and executing a successful cloud adoption journey.
+
+### The Cloud Adoption Lifecycle
+
+The CAF defines **nine methodologies** organized across the cloud adoption lifecycle:
+
+```
+                        CLOUD ADOPTION FRAMEWORK METHODOLOGIES
+                        
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│    ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐              │
+│    │ STRATEGY │──▶│   PLAN   │──▶│  READY   │──▶│  ADOPT   │              │
+│    │          │   │          │   │          │   │          │              │
+│    │• Define  │   │• Digital │   │• Azure   │   │┌────────┐│              │
+│    │  motiv-  │   │  estate  │   │  landing │   ││MIGRATE ││              │
+│    │  ations  │   │• Skills  │   │  zones   │   │└────────┘│              │
+│    │• Business│   │  readiness│  │• First   │   │┌────────┐│              │
+│    │  outcomes│   │• Adoption │   │  project │   ││INNOVATE││              │
+│    │• Business│   │  plan    │   │          │   │└────────┘│              │
+│    │  justif. │   │          │   │          │   │          │              │
+│    └──────────┘   └──────────┘   └──────────┘   └──────────┘              │
+│                                                                             │
+│    ════════════════════════════════════════════════════════════════════    │
+│                           GOVERNANCE CONTROLS                               │
+│    ┌──────────┐                                           ┌──────────┐    │
+│    │  SECURE  │                                           │  GOVERN  │    │
+│    └──────────┘                                           └──────────┘    │
+│    ════════════════════════════════════════════════════════════════════    │
+│                         MANAGEMENT OPERATIONS                               │
+│    ┌──────────┐                                           ┌──────────┐    │
+│    │  MANAGE  │                                           │ ORGANIZE │    │
+│    └──────────┘                                           └──────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Methodology Descriptions
+
+| Methodology | Purpose | Key Activities |
+|-------------|---------|----------------|
+| **Strategy** | Define business justification and expected outcomes | Document motivations, business outcomes, and build business case |
+| **Plan** | Convert aspirational goals into actionable plans | Rationalize digital estate, skills readiness, create adoption plan |
+| **Ready** | Prepare the cloud environment for adoption | Set up Azure landing zones, establish foundational infrastructure |
+| **Migrate** | Migrate existing workloads to the cloud | Assess, deploy, and release workloads (the three migration phases) |
+| **Innovate** | Develop new cloud-native or hybrid solutions | Build new applications, modernize existing apps, democratize data |
+| **Secure** | Improve security posture across the environment | Implement security controls, threat protection, and compliance |
+| **Govern** | Establish and improve cloud governance | Define policies, cost management, security baselines, resource consistency |
+| **Manage** | Establish operations management practices | Define business commitments, platform operations, workload operations |
+| **Organize** | Align teams and roles for cloud operations | Define RACI, establish cloud center of excellence, align responsibilities |
+
+### Methodology Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        SEQUENTIAL METHODOLOGIES                          │
+│                                                                          │
+│   Strategy ──▶ Plan ──▶ Ready ──▶ Adopt (Migrate/Innovate)             │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        PARALLEL METHODOLOGIES                            │
+│                 (Run continuously throughout the lifecycle)              │
+│                                                                          │
+│   • Secure   - Security improvements at every stage                     │
+│   • Govern   - Governance controls and policies                         │
+│   • Manage   - Operations management and monitoring                     │
+│   • Organize - Team alignment and skills development                    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Distinctions
+
+| Category | Methodologies | Focus |
+|----------|---------------|-------|
+| **Planning** | Strategy, Plan | Define why and what to adopt |
+| **Preparation** | Ready | Set up the cloud foundation |
+| **Execution** | Migrate, Innovate | Move or build workloads |
+| **Cross-cutting** | Secure, Govern, Manage, Organize | Ongoing activities throughout lifecycle |
+
+> **Important**: The **Migrate** methodology contains the three migration phases (Assess, Deploy, Release), while **Govern** and **Manage** are separate methodologies that run in parallel throughout the cloud adoption journey - not phases within migration.
+
+**Reference:** [Microsoft Cloud Adoption Framework for Azure](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
+
+---
+
+## Cloud Adoption Framework Migration Phases
+
+The **Microsoft Cloud Adoption Framework for Azure** defines a structured approach to migration. When planning a migration effort for each workload, you should design your migration plan around these **three core phases**:
+
+### The Three Migration Phases
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│    1. ASSESS    │────▶│    2. DEPLOY    │────▶│   3. RELEASE    │
+│                 │     │                 │     │                 │
+│ • Evaluate      │     │ • Replicate     │     │ • Finalize      │
+│   workloads     │     │   workloads     │     │   migration     │
+│ • Readiness     │     │ • Execute       │     │ • Hand off to   │
+│   assessment    │     │   migration     │     │   operations    │
+│ • Dependencies  │     │ • Test          │     │ • Validate      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+| Phase | Description |
+|-------|-------------|
+| **Assess** | Evaluate workloads for migration readiness, identify dependencies, and plan the migration approach |
+| **Deploy** | Execute the migration by replicating and deploying workloads to Azure |
+| **Release** | Finalize the migration, validate functionality, and hand off the workloads to cloud operations |
+
+> **Note**: The Cloud Adoption Framework migration phases focus on **assess**, **deploy**, and **release** - not "govern" or "test" as standalone phases. Testing is part of the deploy phase, while governance is a separate methodology within the framework.
+
+**Reference:** [Evaluate migration with the Cloud Adoption Framework](https://learn.microsoft.com/en-us/training/modules/cloud-adoption-framework-migrate/)
+
+---
 
 ## Migration Workflow
 
@@ -217,7 +341,40 @@ Azure Migrate can migrate to various Azure services:
 
 ## Practice Questions
 
-### Question 1: VMware VM Migration to Azure
+### Question 1: Cloud Adoption Framework Migration Phases
+
+**Scenario:**
+You are planning to migrate your organization to Azure. You are considering the migration effort for each workload based on the Microsoft Cloud Adoption Framework for Azure.
+
+**Question:**
+Which three phases should you design as part of the migration plan? Each correct answer presents part of the solution.
+
+**Options:**
+
+1. ✅ **Assess**
+   - **Correct**: The assess phase is one of the three core migration phases. During this phase, you evaluate workloads for migration readiness, identify dependencies, and plan the migration approach.
+
+2. ✅ **Deploy**
+   - **Correct**: The deploy phase is one of the three core migration phases. During this phase, you execute the migration by replicating and deploying workloads to Azure.
+
+3. ❌ **Govern**
+   - **Incorrect**: Governance is a separate methodology within the Cloud Adoption Framework, not a migration phase. It focuses on establishing policies and controls for cloud resources but is not part of the migration process itself.
+
+4. ✅ **Release**
+   - **Correct**: The release phase is one of the three core migration phases. During this phase, you finalize the migration, validate functionality, and hand off the workloads to cloud operations.
+
+5. ❌ **Test**
+   - **Incorrect**: Testing is not a standalone migration phase. Testing activities are performed as part of the deploy phase when validating the migrated workloads.
+
+**Key Insight:**
+
+> The three migration phases for Microsoft Cloud Adoption Framework for Azure are **assess**, **deploy**, and **release**. These phases provide a structured approach to evaluating, executing, and completing workload migrations to Azure.
+
+**Reference:** [Evaluate migration with the Cloud Adoption Framework](https://learn.microsoft.com/en-us/training/modules/cloud-adoption-framework-migrate/)
+
+---
+
+### Question 2: VMware VM Migration to Azure
 
 **Scenario:**
 You have an on-premises datacenter named Site1. Site1 contains a VMware vSphere cluster named Cluster1 that hosts 100 virtual machines. Cluster1 is managed by using VMware vCenter.
