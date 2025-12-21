@@ -13,6 +13,8 @@
   - [Azure Database for PostgreSQL](#azure-database-for-postgresql)
   - [Azure Blob Storage](#azure-blob-storage)
   - [Azure Files](#azure-files)
+    - [Backup Storage Location](#backup-storage-location)
+    - [Key Differences: Recovery Services Vault vs Backup Vault](#key-differences-recovery-services-vault-vs-backup-vault)
   - [Azure Cache for Redis](#azure-cache-for-redis)
   - [Azure Data Explorer](#azure-data-explorer)
   - [Azure Data Lake Storage Gen2](#azure-data-lake-storage-gen2)
@@ -377,6 +379,30 @@ az storage account blob-service-properties update \
 | **Self-Service Restore** | ✅ Yes |
 | **Item-Level Recovery** | ✅ Yes (files/folders) |
 | **Cross-Region Restore** | ✅ Yes (with GRS) |
+
+#### Backup Storage Location
+
+To automatically back up Azure file shares, you must use a **Recovery Services vault**.
+
+| Storage Option | Suitable for Azure Files Backup? | Notes |
+|---------------|----------------------------------|-------|
+| **Recovery Services vault** | ✅ **Yes (Recommended)** | Required for Azure Files backup; stores backup data and manages backup policies |
+| **Backup Vault** | ❌ No | Used for newer workloads like Azure Disks, Azure Blobs, Azure Database for PostgreSQL |
+| **Azure Files in a second region** | ❌ No | This is replication, not backup; doesn't provide point-in-time recovery |
+| **Azure Key Vault** | ❌ No | Used for secrets, keys, and certificates; not for data backup |
+
+> **💡 Exam Tip**: When asked about backing up Azure file shares, always choose **Recovery Services vault**. While Backup Vault is a newer vault type, Azure Files backup specifically requires Recovery Services vault. Don't confuse replication (geo-redundant storage) with backup—they serve different purposes.
+
+#### Key Differences: Recovery Services Vault vs Backup Vault
+
+| Aspect | Recovery Services Vault | Backup Vault |
+|--------|------------------------|--------------|
+| **Azure Files** | ✅ Supported | ❌ Not supported |
+| **Azure VMs** | ✅ Supported | ❌ Not supported |
+| **SQL Server in VMs** | ✅ Supported | ❌ Not supported |
+| **Azure Disks** | ❌ Not supported | ✅ Supported |
+| **Azure Blobs** | ❌ Not supported | ✅ Supported |
+| **Azure Database for PostgreSQL** | ❌ Not supported | ✅ Supported |
 
 #### Configuration
 
