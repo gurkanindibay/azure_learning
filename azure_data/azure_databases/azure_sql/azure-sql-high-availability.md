@@ -369,10 +369,13 @@ Azure SQL provides comprehensive high availability options across its product fa
 |--------|-------|
 | **Max Secondaries** | 1 |
 | **Replication** | Asynchronous |
-| **RPO** | ~1 hour (configurable) |
-| **RTO** | ~1 hour (configurable) |
+| **RPO** | < 5 seconds (typical), configurable grace period 0-24 hours |
+| **RTO** | Seconds to minutes (automatic failover) |
 | **Failover** | Automatic |
 | **DNS Management** | ✅ Automatic |
+| **Cross-Subscription** | ✅ Supported |
+
+> **Note:** The grace period (GracePeriodWithDataLossHours) determines how long the system waits before initiating automatic failover. Setting it to 0 allows immediate failover but may result in data loss. The actual RPO depends on replication lag, which is typically < 5 seconds under normal conditions.
 
 **Use Cases:**
 - Minimal administration DR solution
@@ -384,12 +387,13 @@ Azure SQL provides comprehensive high availability options across its product fa
 | Feature | Active Geo-Replication | Auto-Failover Groups |
 |---------|----------------------|---------------------|
 | **Secondaries** | Up to 4 | 1 only |
-| **RTO** | < 30 seconds | ~1 hour |
-| **RPO** | < 5 seconds | ~1 hour |
+| **RTO** | < 30 seconds | Seconds to minutes |
+| **RPO** | < 5 seconds | < 5 seconds (typical) |
 | **Failover Type** | Manual/Programmatic | Automatic |
 | **DNS Management** | Manual | Automatic |
+| **Cross-Subscription** | ✅ Yes | ✅ Yes |
 | **Admin Overhead** | Higher | Lower |
-| **Best For** | Read scale-out, low RTO | Simple DR, auto-failover |
+| **Best For** | Read scale-out, low RTO, granular control | Simple DR, auto-failover, transparent failover |
 
 ---
 
@@ -522,7 +526,9 @@ Azure SQL provides comprehensive high availability options across its product fa
 | **Hyperscale** | < 30 sec | < 30 sec | ❌ |
 | **Premium DTU** | 0 | < 30 sec | ✅ |
 | **Active Geo-Replication** | < 5 sec | < 30 sec | ❌ |
-| **Auto-Failover Groups** | ~1 hour | ~1 hour | ❌ |
+| **Auto-Failover Groups** | < 5 sec (typical) | Seconds to minutes | ❌ |
+| **Geo-Restore** | Up to 1 hour | 12+ hours | ❌ |
+| **Point-in-Time Restore** | 5-10 min | Hours | ❌ |
 
 ---
 
@@ -757,6 +763,41 @@ D. Always On Availability Groups
 **B. Auto-Failover Groups**
 
 Auto-Failover Groups provide automatic failover with DNS endpoint management, requiring no application changes. Active Geo-Replication requires manual or programmatic failover initiation.
+
+</details>
+
+### Question 5
+**You are developing a business continuity plan for three Azure SQL databases that are critical to a high-transaction application. Each database is in a separate subscription. The application must meet the following availability requirements:**
+
+- **Maximum downtime (RTO): 45 minutes**
+- **Data must be no older than 10 seconds (RPO)**
+
+**Considering that your estimated costs for geo-replication are lower than the potential financial liability, which recovery method should you recommend?**
+
+A. Point-in-time database restoration  
+B. Geo-restore from geo-replicated backups  
+C. Manual database failover  
+D. Auto-failover groups
+
+<details>
+<summary>Answer</summary>
+
+**D. Auto-failover groups**
+
+Auto-failover groups provide automatic failover capabilities for Azure SQL databases, ensuring high availability and minimal downtime in case of a disaster. This method meets the specified RPO and RTO requirements by:
+
+- **Automatic failover**: Fails over to a secondary replica within seconds, ensuring the 45-minute RTO requirement is met
+- **Asynchronous replication with low lag**: Typically achieves RPO of less than 5-10 seconds under normal conditions, meeting the 10-second data freshness requirement
+- **Cross-subscription support**: Failover groups can work across different subscriptions, making them ideal for this scenario
+- **Transparent DNS failover**: Applications can continue using the same connection endpoint after failover
+
+**Why other options are incorrect:**
+
+- **Point-in-time restoration**: RTO is typically hours (time to restore), not suitable for 45-minute requirement
+- **Geo-restore**: RTO can be 12+ hours, and RPO is up to 1 hour (based on backup frequency)
+- **Manual database failover**: Does not provide automatic failover; requires human intervention which increases RTO
+
+Reference: [Azure SQL Database Failover Groups](https://learn.microsoft.com/en-us/azure/azure-sql/database/failover-group-sql-db?view=azuresql)
 
 </details>
 
