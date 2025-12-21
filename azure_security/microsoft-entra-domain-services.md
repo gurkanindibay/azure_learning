@@ -1308,6 +1308,103 @@ Microsoft Entra Domain Services (for Azure apps)
 - ✅ Single identity source (on-premises AD)
 - ✅ Managed domain services in Azure
 
+### 14.4 Scenario: Extending On-Premises AD DS to Azure (Self-Managed DCs)
+
+**Question:**
+
+Your company operates an Active Directory Domain Services (AD DS) forest with a single domain named **company.com** and has several geographic locations. The forest functional level is Windows Server 2016. The company has legacy on-premises applications that depend on AD DS and Kerberos authentication, and there are no plans to rewrite or replace these applications.
+
+The company is exploring options to migrate its applications to the cloud and has acquired an Azure subscription, but Microsoft Entra ID has not been configured.
+
+**Requirements for the test environment:**
+- Supports Kerberos authentication from the cloud without needing access to the on-premises network
+- Minimizes changes to the applications
+- Reduces additional AD management tasks
+- Requires minimal effort to configure
+
+**Current Setup:**
+- Single virtual network (VNet) in Azure
+- Site-to-site (S2S) VPN Gateway connection between the VNet and the on-premises network
+
+**Question:** To complete the setup and test the applications, what steps should you take?
+
+**Options:**
+- A) Create a new VNet and create a new AD DS forest root domain on the new VNet
+- B) Configure a Microsoft Entra domain named company.com
+- C) Deploy one or more domain controllers for company.com on the existing VNet ✅
+- D) Create a child domain of company.com on the existing VNet
+
+**Answer: C) Deploy one or more domain controllers for company.com on the existing VNet** ✅
+
+**Why Option C is Correct:**
+
+By deploying domain controllers for the **existing domain (company.com)** on the Azure VNet:
+
+| Requirement | How It's Met |
+|-------------|--------------|
+| **Kerberos without on-premises access** | Once the Azure DC replicates with on-premises, it has all AD data locally. Kerberos authentication works entirely within Azure |
+| **Minimize application changes** | Applications continue using the same domain name, same credentials, same authentication flow - zero changes needed |
+| **Reduce AD management tasks** | Single domain means single set of policies, single schema, no trust relationships to manage |
+| **Minimal configuration effort** | S2S VPN already exists; just deploy VM, promote to DC, let replication happen automatically |
+
+**How AD Replication Enables "Offline" Kerberos:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────┐
+│                    Initial Setup (VPN Active)                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   On-Premises                        Azure VNet                  │
+│   ┌─────────────┐    S2S VPN    ┌─────────────┐                │
+│   │   DC1       │◄─────────────►│   DC2       │                │
+│   │ company.com │  Replication  │ company.com │                │
+│   └─────────────┘               └─────────────┘                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│              After Replication (VPN Optional)                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Azure VNet                                                     │
+│   ┌─────────────┐      ┌─────────────────────┐                 │
+│   │   DC2       │◄────►│  Legacy App VMs     │                 │
+│   │ company.com │      │  (Kerberos Auth)    │                 │
+│   │             │      │                     │                 │
+│   │ Has full    │      │ Authenticates       │                 │
+│   │ AD replica  │      │ against local DC2   │                 │
+│   └─────────────┘      └─────────────────────┘                 │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Problem |
+|--------|--------|
+| **A) New VNet + new forest** | New forest = new domain, requires trusts, more management, app changes needed |
+| **B) Microsoft Entra domain** | Entra ID ≠ AD DS; doesn't provide traditional Kerberos authentication for legacy apps |
+| **D) Child domain** | Creates child.company.com - requires app reconfiguration, additional domain to manage |
+
+> **Important:** This scenario requires **self-managed AD DS** (DCs on VMs), NOT Microsoft Entra Domain Services. Why?
+> - Entra Domain Services cannot use the same domain name as an existing on-premises domain
+> - Full AD DS replication provides complete offline capability
+> - Self-managed DCs are part of the same forest/domain
+
+**Key Concepts: AD DS Extension Strategies in Azure**
+
+| Strategy | Use Case | Complexity | Kerberos Support |
+|----------|----------|------------|------------------|
+| **Extend existing domain (DCs in Azure)** | Lift-and-shift legacy apps with existing domain | Low | ✅ Full native |
+| **New child domain** | Organizational separation needed | Medium | ✅ Full native |
+| **New forest** | Complete isolation required | High | ✅ Full native (with trusts) |
+| **Microsoft Entra Domain Services** | Managed AD DS for cloud workloads (new domain) | Low | ✅ Full native |
+| **Microsoft Entra ID only** | Modern cloud-native apps | Low | ❌ Not traditional |
+
+**References:**
+- [Deploy AD DS in an Azure Virtual Network](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/identity/adds-extend-domain)
+- [Identity Options for Azure](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/identity/)
+
 ---
 
 ## 15. Best Practices
