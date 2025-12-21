@@ -175,9 +175,18 @@ Azure SQL Database offers three service tiers with different performance and pri
 - Premium availability: 99.99% SLA (99.995% zone-redundant)
 - Local SSD storage
 - Storage: 1 GB - 4 TB
-- Latency: <2ms
-- Built-in read replicas (1 free)
+- Latency: <2ms (low I/O latency)
+- Built-in read replicas (1 free) - **Secondary read-only replica for analytics queries**
 - Zone redundancy available
+- **Independent scaling of compute and storage** (vCore-based model)
+
+> 💡 **vCore-based Business Critical vs DTU-based Premium**: While both tiers offer high performance and low latency, the **vCore-based Business Critical** tier provides significant advantages:
+> - **Independent scaling**: Scale compute (vCores) and storage separately, unlike DTU-based tiers where resources are bundled
+> - **Built-in read replica**: One free read-only secondary replica included for offloading analytics/reporting queries
+> - **Azure Hybrid Benefit**: Use existing SQL Server licenses to reduce costs (not available with DTU)
+> - **More granular control**: Choose exact vCore count and storage size for optimal cost-performance ratio
+>
+> For business-critical applications requiring low I/O latency, independent component scaling, and read-only replicas for analytics, **vCore-based Business Critical** is the recommended choice.
 
 **Pricing (vCore)**:
 - 2 vCores: ~$900/month
@@ -186,9 +195,10 @@ Azure SQL Database offers three service tiers with different performance and pri
 
 **Use Cases**:
 - Mission-critical applications
-- Low-latency requirements
+- Low-latency requirements (<2ms I/O latency)
 - High transaction rate
-- Read scale-out scenarios
+- Read scale-out scenarios (analytics queries on read replica)
+- Applications requiring independent scaling of compute and storage
 
 #### Hyperscale (Massive databases)
 
@@ -2851,6 +2861,13 @@ Server=yourserver.database.windows.net;Database=yourdb;Authentication=Active Dir
 
 4. **Business Critical = Local SSD + Read Replica**
    > Business Critical uses local SSD for low latency and includes one free read replica
+
+4a. **vCore Business Critical vs DTU Premium for Business-Critical Apps**
+   > When application requires: (1) **low I/O latency**, (2) **independent scaling of compute and storage**, and (3) **read-only replica for analytics**, choose **vCore-based Business Critical**, NOT DTU-based Premium. 
+   > - **DTU-based tiers** bundle compute, memory, and I/O together - you CANNOT scale them independently
+   > - **vCore-based Business Critical** allows independent scaling of vCores and storage
+   > - **vCore Business Critical** includes a **free secondary read-only replica** for offloading analytics/reporting queries
+   > - **DTU Premium** does NOT provide the same flexibility for independent component scaling
 
 5. **Hyperscale = Large databases + Fast scaling**
    > Use Hyperscale for databases >4 TB or when rapid scaling is required
