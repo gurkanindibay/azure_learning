@@ -18,6 +18,7 @@
   - [Question 2: Copying On-Premises File Server Data to Azure Storage](#question-2-copying-on-premises-file-server-data-to-azure-storage)
   - [Question 3: Migrating SSIS Packages to Azure](#question-3-migrating-ssis-packages-to-azure)
   - [Question 4: SSIS Packages Migration Options](#question-4-ssis-packages-migration-options)
+  - [Question 5: Sharing Self-Hosted Integration Runtime Across Workspaces](#question-5-sharing-self-hosted-integration-runtime-across-workspaces)
 - [References](#references)
 
 ---
@@ -1399,6 +1400,144 @@ When you deploy **SQL Server to an Azure Virtual Machine**, you can install SSIS
 > 💡 **Exam Tip**: Remember that SSIS is a **component** that needs to be installed and executed. Only Azure Data Factory (via Azure-SSIS IR) and SQL Server on Azure VMs support SSIS package execution. Azure SQL Database and Azure SQL Managed Instance are database services that don't include SSIS execution capabilities.
 
 **Domain:** Design data storage solutions
+
+---
+
+### Question 5: Sharing Self-Hosted Integration Runtime Across Workspaces
+
+#### Scenario
+
+You have several **on-premises Microsoft SQL servers** installed on servers in your organization's factory.
+
+You have an **Azure Synapse Analytics pipeline** that uses a **self-hosted integration runtime** to access the servers.
+
+There is **only a single on-premises virtual machine** that can host the self-hosted integration runtime.
+
+You need to create a **new Azure Synapse Analytics workspace** that has access to the data from the on-premises SQL servers. The workspace will be used by a **different team** and will have **different administrators**.
+
+**Question:** What should you do?
+
+---
+
+#### Options
+
+A. Add a SQL Server Integration Services (SSIS) integration runtime to Azure Data Factory  
+B. Create all the required pipelines in the single Azure Synapse Analytics workspace  
+C. Install a second self-hosted integration runtime on the on-premises server  
+D. Migrate the pipelines to Azure Data Factory
+
+---
+
+**Correct Answer:** **D. Migrate the pipelines to Azure Data Factory**
+
+---
+
+### Detailed Explanation
+
+#### Why Migrate to Azure Data Factory is Correct ✅
+
+**Azure Data Factory supports sharing self-hosted integration runtimes** across multiple Data Factory instances. This is a key capability that Azure Synapse Analytics **does not support**.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Azure Data Factory Solution                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────────┐      ┌─────────────────────────┐               │
+│  │  Data Factory 1         │      │  Data Factory 2         │               │
+│  │  (Team A)               │      │  (Team B)               │               │
+│  │  ┌─────────────────┐    │      │  ┌─────────────────┐    │               │
+│  │  │ Pipeline 1      │    │      │  │ Pipeline 3      │    │               │
+│  │  │ Pipeline 2      │    │      │  │ Pipeline 4      │    │               │
+│  │  └────────┬────────┘    │      │  └────────┬────────┘    │               │
+│  └───────────┼─────────────┘      └───────────┼─────────────┘               │
+│              │                                │                              │
+│              └────────────┬───────────────────┘                              │
+│                           │                                                  │
+│                           ▼ (Shared)                                         │
+│              ┌────────────────────────────┐                                  │
+│              │  Self-Hosted Integration   │                                  │
+│              │  Runtime (Shared)          │                                  │
+│              └────────────┬───────────────┘                                  │
+│                           │                                                  │
+└───────────────────────────┼──────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                     On-Premises Environment                                    │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │              Single On-Premises Virtual Machine                          │  │
+│  │              (Hosts Self-Hosted Integration Runtime)                     │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+│                                    │                                           │
+│         ┌──────────────────────────┼──────────────────────────┐               │
+│         ▼                          ▼                          ▼               │
+│  ┌─────────────┐           ┌─────────────┐           ┌─────────────┐          │
+│  │ SQL Server  │           │ SQL Server  │           │ SQL Server  │          │
+│  │ (Factory 1) │           │ (Factory 2) │           │ (Factory 3) │          │
+│  └─────────────┘           └─────────────┘           └─────────────┘          │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits of Data Factory for this Scenario:**
+
+| Benefit | Description |
+|---------|-------------|
+| **Shared Self-Hosted IR** | Single IR installation can be shared across multiple Data Factory instances |
+| **Team Separation** | Different teams can have their own Data Factory with separate administrators |
+| **Single VM Requirement** | Only one on-premises VM is needed to host the shared IR |
+| **Pipeline Support** | Full support for existing data integration pipelines |
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### ❌ A. Add a SQL Server Integration Services (SSIS) integration runtime to Azure Data Factory
+
+| Aspect | Details |
+|--------|--------|
+| **Why Wrong** | SSIS integration runtime is for executing SSIS packages, not for connecting to on-premises data sources |
+| **Purpose** | Azure-SSIS IR is designed for lift-and-shift migration of SSIS packages |
+| **Relevance** | Does not address the self-hosted IR sharing requirement |
+
+---
+
+##### ❌ B. Create all the required pipelines in the single Azure Synapse Analytics workspace
+
+| Aspect | Details |
+|--------|--------|
+| **Why Wrong** | Violates the requirement for separate teams with different administrators |
+| **Issue** | Cannot provide proper team isolation and access control |
+| **Governance** | Would require complex permission management within a single workspace |
+
+---
+
+##### ❌ C. Install a second self-hosted integration runtime on the on-premises server
+
+| Aspect | Details |
+|--------|--------|
+| **Why Wrong** | Azure Synapse Analytics does **not support sharing** self-hosted integration runtimes between workspaces |
+| **Limitation** | Even with a second IR installed, it cannot be shared with another Synapse workspace |
+| **Constraint** | Only one VM is available, and Synapse IR cannot be shared |
+
+---
+
+### Key Difference: Data Factory vs Synapse Analytics IR Sharing
+
+| Feature | Azure Data Factory | Azure Synapse Analytics |
+|---------|-------------------|------------------------|
+| **Self-Hosted IR Sharing** | ✅ **Supported** | ❌ **Not Supported** |
+| **Multiple Workspaces/Instances** | Can share single IR across multiple ADF instances | Each workspace requires its own IR |
+| **Team Separation** | Easy with shared IR | Difficult without separate IR per workspace |
+| **Single VM Deployment** | Works with shared IR | Requires separate VMs per workspace |
+
+> 💡 **Exam Tip**: When you see scenarios requiring **shared self-hosted integration runtime** across multiple workspaces or teams, **Azure Data Factory is the answer**. Azure Synapse Analytics **does not support sharing self-hosted integration runtimes** between workspaces.
+
+> ⚠️ **Important**: This is a key architectural difference between Azure Data Factory and Azure Synapse Analytics. While Synapse provides similar pipeline capabilities, the inability to share self-hosted IRs can be a deciding factor for hybrid data integration scenarios.
+
+**Domain:** Design a data integration and analytic solution with Azure Synapse Analytics
+
+**Reference:** [Design a data integration and analytic solution with Azure Synapse Analytics - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/design-azure-synapse-analytics/)
 
 ---
 
