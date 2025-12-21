@@ -113,6 +113,13 @@
   - [Standard Test Kusto Query Examples](#standard-test-kusto-query-examples)
   - [Key Takeaway](#key-takeaway-14)
   - [Related Learning Resources](#related-learning-resources-14)
+- [Question 16: Synthetic Transaction Monitoring for Multi-Container Applications](#question-16-synthetic-transaction-monitoring-for-multi-container-applications)
+  - [Explanation](#explanation-15)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect-14)
+  - [Azure Monitor Solutions Comparison for Container Monitoring](#azure-monitor-solutions-comparison-for-container-monitoring)
+  - [Synthetic Monitoring Capabilities](#synthetic-monitoring-capabilities)
+  - [Key Takeaway](#key-takeaway-15)
+  - [Related Learning Resources](#related-learning-resources-15)
 
 ## Overview
 
@@ -2313,3 +2320,137 @@ For monitoring Azure App Services with requirements for regular health checks, r
 - [Availability tests overview in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-overview)
 - [Multi-step web tests in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-multistep)
 - [Create and run custom availability tests](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-azure-functions)
+
+## Question 16: Synthetic Transaction Monitoring for Multi-Container Applications
+
+**Scenario**: You have an Azure subscription. The subscription contains a tiered app named App1 that is distributed across multiple containers hosted in Azure Container Instances.
+
+You need to deploy an Azure Monitor monitoring solution for App1. The solution must meet the following requirements:
+
+- Support using synthetic transaction monitoring to monitor traffic between the App1 components
+- Minimize development effort
+
+**What should you include in the solution?**
+
+1. **Network Insights** ❌
+2. **Application Insights** ✅ (Correct Answer)
+3. **Container Insights** ❌
+4. **Log Analytics Workspace Insights** ❌
+
+### Explanation
+
+**Correct Answer: Application Insights**
+
+Application Insights is the correct choice because it provides **synthetic transaction monitoring** capabilities that can monitor traffic between application components with minimal development effort.
+
+**Key reasons why Application Insights is the correct solution:**
+
+| Capability | Description |
+|------------|-------------|
+| **Synthetic Monitoring** | Application Insights provides built-in synthetic monitoring through availability tests, including URL ping tests, multi-step web tests, and custom TrackAvailability tests |
+| **Inter-Component Traffic Monitoring** | Application Map and distributed tracing automatically track dependencies and traffic between application components |
+| **SLA Reporting** | Generally available synthetic monitoring SLA report templates for tracking uptime and performance |
+| **Minimal Development Effort** | Standard tests can be configured through the Azure portal without any code changes |
+| **Container Support** | Works with containerized applications including Azure Container Instances |
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Wrong |
+|--------|----------------|
+| **Network Insights** | Network Insights focuses on network topology, connectivity, and traffic analytics at the infrastructure level. It does **not** provide synthetic transaction monitoring for application-level traffic between components. It monitors network resources like VNets, NSGs, and load balancers, not application transactions. |
+| **Container Insights** | Container Insights is designed for monitoring container infrastructure performance (CPU, memory, disk I/O) and collecting container logs. While it provides visibility into container health and resource utilization, it does **not** offer synthetic transaction monitoring capabilities to simulate and monitor traffic between application components. |
+| **Log Analytics Workspace Insights** | Log Analytics Workspace Insights provides operational insights about Log Analytics workspaces themselves (query performance, data ingestion rates, workspace health). It is **not** a solution for monitoring application traffic or implementing synthetic transactions. |
+
+### Azure Monitor Solutions Comparison for Container Monitoring
+
+| Solution | Primary Purpose | Synthetic Monitoring | Inter-Component Traffic | Development Effort |
+|----------|-----------------|---------------------|------------------------|-------------------|
+| **Application Insights** | APM, performance monitoring, user analytics | ✅ Yes (Availability Tests) | ✅ Yes (Application Map, Distributed Tracing) | Low (Portal configuration) |
+| **Container Insights** | Container infrastructure monitoring | ❌ No | ❌ No (Infrastructure-level only) | Low (Enable monitoring) |
+| **Network Insights** | Network topology and connectivity | ❌ No | ❌ No (Network-level only) | Low (Enable monitoring) |
+| **Log Analytics Workspace Insights** | Workspace operational health | ❌ No | ❌ No | N/A |
+
+### Synthetic Monitoring Capabilities
+
+Application Insights synthetic monitoring features include:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Application Insights                         │
+│                   Synthetic Monitoring                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │  Standard Test  │  │ Multi-Step Test │  │ Custom Track    │ │
+│  │   (URL Ping)    │  │  (Web Test)     │  │  Availability   │ │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘ │
+│           │                    │                    │          │
+│           ▼                    ▼                    ▼          │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              Synthetic Transaction Results                  ││
+│  │  • Response time tracking                                   ││
+│  │  • Success/failure monitoring                               ││
+│  │  • Multi-location testing                                   ││
+│  │  • SLA reporting                                            ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              Inter-Component Monitoring                     ││
+│  │  • Application Map (visual topology)                        ││
+│  │  • Distributed Tracing (end-to-end requests)               ││
+│  │  • Dependency tracking (external calls)                     ││
+│  │  • Transaction correlation (operation IDs)                  ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Application Insights with Azure Container Instances:**
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                     Azure Container Instances                   │
+│                        (Multi-Container App1)                   │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌──────────────┐     ┌──────────────┐     ┌──────────────┐   │
+│   │  Container 1 │────▶│  Container 2 │────▶│  Container 3 │   │
+│   │   (Web API)  │     │   (Service)  │     │   (Backend)  │   │
+│   └──────┬───────┘     └──────┬───────┘     └──────┬───────┘   │
+│          │                    │                    │           │
+│          └────────────────────┼────────────────────┘           │
+│                               │                                 │
+│                               ▼                                 │
+│              ┌────────────────────────────────┐                │
+│              │     Application Insights SDK    │                │
+│              │  (Distributed Tracing Enabled)  │                │
+│              └───────────────┬────────────────┘                │
+│                              │                                  │
+└──────────────────────────────┼──────────────────────────────────┘
+                               │
+                               ▼
+              ┌────────────────────────────────┐
+              │      Application Insights       │
+              │   • Synthetic Monitoring        │
+              │   • Application Map             │
+              │   • Distributed Tracing         │
+              │   • SLA Reports                 │
+              └────────────────────────────────┘
+```
+
+### Key Takeaway
+
+For monitoring multi-container applications in Azure Container Instances with requirements for **synthetic transaction monitoring** between application components and **minimal development effort**, **Application Insights** is the correct solution. It provides:
+
+1. **Synthetic monitoring** through availability tests (Standard, Multi-Step, and Custom)
+2. **Traffic monitoring** between components via Application Map and distributed tracing
+3. **SLA report templates** for synthetic monitoring (generally available)
+4. **Low development effort** with portal-based configuration and SDK auto-instrumentation
+
+Container Insights and Network Insights are complementary tools for infrastructure monitoring but do not provide synthetic transaction monitoring capabilities.
+
+### Related Learning Resources
+- [Application Insights synthetic monitoring SLA report template (GA announcement)](https://azure.microsoft.com/en-us/updates/generally-available-application-insights-synthetic-monitoring-sla-report-template/)
+- [Application Insights availability tests overview](https://learn.microsoft.com/en-us/azure/azure-monitor/app/availability-overview)
+- [Monitor Azure Container Instances](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-monitor)
+- [Application Insights for containerized applications](https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-vm-vmss-apps)
+- [Distributed tracing in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/distributed-tracing)
