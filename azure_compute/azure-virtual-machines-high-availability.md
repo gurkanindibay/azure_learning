@@ -357,6 +357,101 @@ The VMSS doesn't "contain" the Host Group. Instead, the VMSS is **configured** t
 
 ---
 
+## Composite SLA Calculation
+
+When designing applications with multiple dependencies, understanding how to calculate the **composite SLA** is critical for determining the maximum availability you can guarantee.
+
+### How Composite SLA Works
+
+When an application depends on multiple services, the **composite SLA** is calculated by **multiplying** the individual SLAs together. This is because your application can only be available when ALL of its dependencies are available simultaneously.
+
+### Formula
+
+$$\text{Composite SLA} = \text{SLA}_1 \times \text{SLA}_2 \times \text{SLA}_3 \times \ldots \times \text{SLA}_n$$
+
+### Example Calculation
+
+**Scenario**: You are designing the application architecture for an application named App1 that will be deployed to Azure. App1 will depend on the following components:
+
+| Component | SLA |
+|-----------|-----|
+| DB1 (Database) | 99.9% (0.999) |
+| Service1 | 99.999% (0.99999) |
+| Service2 | 99.99% (0.9999) |
+
+**What is the maximum possible SLA that you can provide for App1?**
+
+**Calculation**:
+$$\text{Composite SLA} = 0.999 \times 0.99999 \times 0.9999 = 0.99889... \approx 99.889\%$$
+
+**Answer**: The maximum SLA for App1 is **99.889%**
+
+### Key Concepts
+
+1. **The Weakest Link Matters**
+   > Your application can only be as reliable as its dependencies combined. Even though Service1 has a very high SLA (99.999%), the overall SLA is dragged down by the lower SLAs of DB1 and Service2.
+
+2. **Multiplication Reduces Availability**
+   > Each additional dependency reduces your composite SLA because you're multiplying by numbers less than 1.
+
+3. **SLA Impact Visualization**
+
+   | Scenario | Calculation | Result |
+   |----------|-------------|--------|
+   | Single service (99.9%) | 0.999 | 99.9% |
+   | Two services (99.9% × 99.99%) | 0.999 × 0.9999 | 99.89% |
+   | Three services (99.9% × 99.999% × 99.99%) | 0.999 × 0.99999 × 0.9999 | 99.889% |
+
+### Strategies to Improve Composite SLA
+
+To achieve a higher composite SLA, consider these strategies:
+
+| Strategy | Description | Impact |
+|----------|-------------|--------|
+| **Add Redundancy** | Deploy multiple instances (e.g., database replicas across regions) | Increases individual component SLA |
+| **Use Availability Zones** | Deploy resources across zones | Can improve SLA from 99.9% to 99.99% |
+| **Implement Failover** | Circuit breakers and automatic failover mechanisms | Reduces dependency on single components |
+| **Graceful Degradation** | Design for partial functionality when services are unavailable | Maintains core availability |
+| **Reduce Dependencies** | Consolidate or eliminate unnecessary service dependencies | Fewer multiplications = higher SLA |
+
+### Common Azure Service SLAs
+
+| Service | Typical SLA |
+|---------|-------------|
+| Azure VMs (Availability Zones) | 99.99% |
+| Azure VMs (Availability Sets) | 99.95% |
+| Azure SQL Database (Premium) | 99.99% |
+| Azure Cosmos DB | 99.999% (with multi-region writes) |
+| Azure App Service | 99.95% |
+| Azure Functions (Premium) | 99.95% |
+| Azure Storage (RA-GRS) | 99.99% (read) / 99.9% (write) |
+
+> **Important**: Always verify current SLAs in the official [Azure SLA documentation](https://azure.microsoft.com/en-us/support/legal/sla/) as they may be updated.
+
+### Practice Question: Composite SLA
+
+**Question**: An application named App1 depends on:
+- DB1 with SLA of 99.9%
+- Service1 with SLA of 99.999%
+- Service2 with SLA of 99.99%
+
+What is the maximum possible SLA for App1?
+
+**Options**:
+- A) 99.88%
+- B) 99.889% ✅
+- C) 99.99%
+- D) 99.999%
+
+**Correct Answer**: **B) 99.889%**
+
+**Explanation**: The maximum SLA is calculated by multiplying all dependency SLAs:
+- 0.999 × 0.99999 × 0.9999 = 0.99889 (99.889%)
+
+The composite SLA can never be higher than any individual component's SLA, and adding more dependencies always reduces the overall SLA.
+
+---
+
 ## Practice Questions
 
 ### Question 1: High-Availability Solution with Dedicated Hosts (Litware Inc.)
