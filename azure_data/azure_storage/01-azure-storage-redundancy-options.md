@@ -620,6 +620,84 @@ Set-AzStorageAccount `
 
 ---
 
+### Practice Question: Highest Durability with Zone and Region Failure Protection
+
+**Scenario:**
+
+You need to design a file storage solution in Azure. The solution must meet the following requirements:
+
+- Provide the highest possible durability
+- Remain available during a zone or Azure region failure
+
+**Question:**
+Which type of redundancy should you use?
+
+**Options:**
+1. ❌ geo-redundant storage (GRS)
+2. ✅ **geo-zone-redundant storage (GZRS)**
+3. ❌ locally-redundant storage (LRS)
+4. ❌ zone-redundant storage (ZRS)
+
+**Answer: geo-zone-redundant storage (GZRS)**
+
+---
+
+### Explanation
+
+**GZRS is the correct answer** because it combines the benefits of both zone redundancy and geo-redundancy, providing the highest level of availability and durability.
+
+**Why GZRS meets both requirements:**
+
+| Requirement | How GZRS Addresses It |
+|-------------|----------------------|
+| **Highest possible durability** | 99.99999999999999% (16 nines) - same as GRS |
+| **Available during zone failure** | Data is replicated across 3 availability zones in the primary region (ZRS) |
+| **Available during region failure** | Data is asynchronously replicated to a secondary region |
+
+**GZRS Architecture:**
+
+```plaintext
+Primary Region                          Secondary Region
+┌─────────────────────────────────┐    ┌─────────────────────┐
+│  Zone 1    Zone 2    Zone 3    │    │   Single Location   │
+│  ┌────┐   ┌────┐   ┌────┐     │    │   ┌────────────┐   │
+│  │Copy│   │Copy│   │Copy│     │───►│   │  3 Copies  │   │
+│  │ 1  │   │ 2  │   │ 3  │     │    │   │   (LRS)    │   │
+│  └────┘   └────┘   └────┘     │    │   └────────────┘   │
+│      (ZRS - synchronous)       │    │   (asynchronous)   │
+└─────────────────────────────────┘    └─────────────────────┘
+        Total: 6 copies across 2 regions
+```
+
+**Why other options are incorrect:**
+
+| Option | Durability | Zone Failure | Region Failure | Why Incorrect |
+|--------|------------|--------------|----------------|---------------|
+| **GRS** | 16 nines ✅ | ❌ No (uses LRS in primary) | ✅ Yes | Does NOT protect against zone failures in the primary region |
+| **LRS** | 11 nines | ❌ No | ❌ No | Lowest durability, no protection against zone or region failures |
+| **ZRS** | 12 nines | ✅ Yes | ❌ No | Does NOT protect against region failures |
+
+**Key Distinction: GRS vs. GZRS**
+
+- **GRS**: Uses LRS (single data center) in the primary region → vulnerable to zone failures
+- **GZRS**: Uses ZRS (3 availability zones) in the primary region → protected against zone failures
+
+Both GRS and GZRS have the same 16-nines durability, but GZRS provides higher **availability** because it survives zone failures in the primary region.
+
+**When to choose GZRS:**
+- Mission-critical applications requiring maximum availability
+- Applications that must remain operational during both zone and regional outages
+- Compliance requirements mandating the highest level of data protection
+- Disaster recovery scenarios where RPO and RTO are critical
+
+**Reference(s):**
+- [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
+- [Geo-zone-redundant storage](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy#geo-zone-redundant-storage)
+
+**Domain:** Design data storage solutions
+
+---
+
 ## Best Practices
 
 1. **Choose ZRS for high availability**: When applications need to continue operating during zone outages
