@@ -7,6 +7,8 @@
 - [When to Use Azure App Service](#when-to-use-azure-app-service)
 - [Use Cases and Scenarios](#use-cases-and-scenarios)
 - [Azure App Service vs Other Hosting Options](#azure-app-service-vs-other-hosting-options)
+- [Azure App Configuration for Web Applications](#azure-app-configuration-for-web-applications)
+- [Quick Reference Cheat Sheet](#quick-reference-cheat-sheet)
 - [References](#references)
 
 ## What is Azure App Service?
@@ -118,9 +120,98 @@ Azure App Service is the recommended solution because it:
 | .NET Web Services | ✅ Ideal | ⚠️ Not suitable | ✅ Works but expensive | ✅ Works but complex |
 | Best For | Standard web apps | Event-driven functions | Isolated/regulated apps | Custom VM workloads |
 
+## Azure App Configuration for Web Applications
+
+### Overview
+
+Azure App Configuration provides a centralized service to manage application settings and feature flags for web applications hosted in App Service. It enables dynamic configuration updates without requiring application restarts.
+
+### Key Benefits
+
+- **Centralized Management**: Single point of management for settings across multiple applications
+- **Dynamic Refresh**: Update configurations in real-time without restarting apps
+- **Feature Flags**: Enable/disable features without code deployments
+- **Key Vault Integration**: Securely reference secrets stored in Azure Key Vault
+- **Versioning and Labels**: Manage different configurations for different environments
+
+### Azure App Configuration vs Azure Key Vault
+
+| Feature | Azure App Configuration | Azure Key Vault |
+|---------|------------------------|----------------|
+| **Primary Purpose** | Application settings management | Secrets & key management |
+| **Dynamic Refresh** | ✅ Yes (without restart) | ❌ No |
+| **Centralized Config** | ✅ Native capability | ❌ Not designed for this |
+| **Feature Flags** | ✅ Supported | ❌ Not supported |
+| **Connection Strings** | ✅ Optimized for this | ⚠️ Possible but not ideal |
+| **Integration** | References Key Vault secrets | Standalone secret store |
+
+> 💡 **Best Practice**: Use **Azure App Configuration** for application settings and connection strings, with **Key Vault references** for sensitive secrets. This provides centralized configuration management while maintaining security for secrets.
+
+---
+
+### Exam Scenario: Centralized Configuration for Migrated Web Applications
+
+**Scenario**: You are planning to move 10 web applications with SQL databases to Azure. You should be able to change the connection strings, passwords, and rotated secrets on all your applications and SQL databases. Users must stay connected to web applications.
+
+You need to recommend a solution for this requirement. Administrative and development effort must be minimized.
+
+**Question**: What should you recommend?
+
+**Options**:
+- A. Use Azure Key Vault
+- B. Use Azure App Configuration
+- C. Update Web.config for each application
+- D. Use Azure Automation
+
+**Answer**: **B. Use Azure App Configuration**
+
+**Why Correct Answer**:
+Azure App Configuration is correct because it:
+- ✅ Provides a **centralized service to manage application settings**
+- ✅ Allows **dynamic configuration updates** without restarting applications
+- ✅ Supports **real-time configuration refresh** keeping users connected
+- ✅ **Minimizes administrative effort** with a single point of management for all 10 apps
+- ✅ Integrates with Azure Key Vault for secure secret references
+- ✅ Reduces development effort with built-in SDKs and configuration providers
+
+**Why Other Options Are Incorrect**:
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A. Azure Key Vault** | Designed primarily for **secrets management and cryptographic key operations**, not for centralized application configuration management. While it securely stores secrets, it doesn't provide the configuration management and dynamic refresh capabilities needed. |
+| **C. Update Web.config** | Requires **manual updates to each application** individually, significantly increasing administrative effort. Also requires application restarts, disconnecting users. |
+| **D. Azure Automation** | Used for **process automation and runbooks**, not for centralized application configuration management. Would add complexity rather than minimize effort. |
+
+**Reference Links**:
+- [Azure App Configuration Overview](https://learn.microsoft.com/en-us/azure/azure-app-configuration/overview)
+- [Use Key Vault references in App Configuration](https://learn.microsoft.com/en-us/azure/azure-app-configuration/use-key-vault-references-dotnet-core)
+- [Dynamic configuration in .NET](https://learn.microsoft.com/en-us/azure/azure-app-configuration/enable-dynamic-configuration-dotnet-core)
+
+---
+
+## Quick Reference Cheat Sheet
+
+### When Requirements Say...
+
+| Requirement | Answer |
+|-------------|--------|
+| "Minimize maintenance overhead for web apps" | **Azure App Service** |
+| "Centrally manage connection strings across apps" | **Azure App Configuration** |
+| "Change settings without restarting apps" | **Azure App Configuration** |
+| "Dynamic configuration + users stay connected" | **Azure App Configuration** |
+| "Minimize admin effort for config management" | **Azure App Configuration** (not Key Vault) |
+| "Rotate secrets across multiple web apps" | **Azure App Configuration** with Key Vault references |
+| "Feature flags for applications" | **Azure App Configuration** |
+| "Store cryptographic keys securely" | **Azure Key Vault** |
+| "Manage certificates and secrets" | **Azure Key Vault** |
+| "Network isolation for web apps" | **App Service Environment (ASE)** |
+| "Serverless event-driven workloads" | **Azure Functions** (not App Service) |
+| "Full OS control needed" | **VM Scale Sets** (not App Service) |
+
 ## References
 
 - [Azure App Service Documentation](https://learn.microsoft.com/en-us/azure/app-service/overview)
+- [Azure App Configuration Overview](https://learn.microsoft.com/en-us/azure/azure-app-configuration/overview)
 - [Azure Virtual Machine Scale Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
 - [App Service Environment Introduction](https://learn.microsoft.com/en-us/azure/app-service/environment/intro)
 - [Azure Functions Overview](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview)
