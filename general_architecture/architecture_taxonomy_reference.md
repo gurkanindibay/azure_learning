@@ -228,7 +228,92 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 ---
 
-## 10. Architectural Qualities (Non-Functional)
+## 10. Practicality Taxonomy (Abstraction Levels)
+
+This taxonomy classifies architectures by their **level of abstraction** and **proximity to implementation**. It helps distinguish between conceptual frameworks and deployment-ready patterns.
+
+### 10.1 Conceptual Architecture (Strategic / Abstract)
+High-level, technology-agnostic representations that focus on **business intent, capabilities, and relationships**. Used for stakeholder communication, governance, and strategic planning.
+
+**Characteristics:**
+- Technology-agnostic
+- Business-aligned vocabulary
+- Focus on "what" not "how"
+- Long-term vision (3–5+ years)
+
+**Examples:**
+- Enterprise Architecture
+- Business Architecture
+- Capability Architecture
+- Value Stream Architecture
+- Information Architecture
+- Governance Architecture
+
+### 10.2 Logical Architecture (Design / Structural)
+Technology-aware but vendor-neutral representations that define **components, boundaries, and interactions**. Bridges conceptual intent with implementation constraints.
+
+**Characteristics:**
+- Defines logical components and responsibilities
+- Establishes integration patterns
+- Technology-aware but not vendor-specific
+- Medium-term horizon (1–3 years)
+
+**Examples:**
+- Application Architecture Styles (Layered, Hexagonal, Clean)
+- Event-Driven Architecture
+- API Architecture
+- Data Architecture (OLTP/OLAP)
+- Security Architecture (Zero Trust)
+- Microservices Architecture
+
+### 10.3 Physical / Implementation Architecture (Tactical / Concrete)
+Vendor-specific, deployment-ready representations that define **actual technologies, configurations, and infrastructure**. Directly translatable to code and infrastructure.
+
+**Characteristics:**
+- Vendor/product-specific
+- Includes concrete configurations
+- Deployable and testable
+- Short-term horizon (weeks–12 months)
+
+**Examples:**
+- Kubernetes Architecture
+- Serverless Architecture (AWS Lambda, Azure Functions)
+- CI/CD Architecture (GitHub Actions, Azure DevOps)
+- Container Architecture (Docker, Podman)
+- Cloud Architecture (Azure, AWS, GCP-specific)
+- Infrastructure as Code (Terraform, Bicep)
+
+### 10.4 Runtime / Operational Architecture (Execution / Live)
+Represents the **actual running state** of systems, including real-time topology, traffic flows, and operational metrics.
+
+**Characteristics:**
+- Reflects live system state
+- Dynamic and observable
+- Includes operational concerns (scaling, failover)
+- Continuous (real-time)
+
+**Examples:**
+- Blue-Green Deployment
+- Canary Deployment
+- Observability Architecture
+- Chaos Engineering Architecture
+- Load Balancing Architecture
+- Disaster Recovery (Active-Active, Active-Passive)
+
+---
+
+### Practicality Spectrum Summary
+
+| Level | Focus | Horizon | Audience |
+|-------|-------|---------|----------|
+| **Conceptual** | Business intent & capabilities | 3–5+ years | Executives, Business Stakeholders |
+| **Logical** | Components & patterns | 1–3 years | Architects, Tech Leads |
+| **Physical** | Technologies & configurations | Weeks–12 months | Engineers, DevOps |
+| **Runtime** | Live state & operations | Real-time | SRE, Operations |
+
+---
+
+## 11. Architectural Qualities (Non-Functional)
 
 These apply **across all architecture types**:
 
