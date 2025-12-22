@@ -5,6 +5,19 @@
   - [Use Cases by Consistency Level](#use-cases-by-consistency-level)
 - [Configure the Default Consistency Level](#configure-the-default-consistency-level)
   - [Default Consistency Level: Session](#default-consistency-level-session)
+  - [Override Consistency Level at Request Level](#override-consistency-level-at-request-level)
+    - [How Writes and Reads Work Differently](#how-writes-and-reads-work-differently)
+    - [Why Request-Level Override Has Limited Effect on Strong Consistency](#why-request-level-override-has-limited-effect-on-strong-consistency)
+    - [When Request-Level Override IS Effective](#when-request-level-override-is-effective)
+    - [Summary: When Request-Level Override Is/Isn't Effective](#summary-when-request-level-override-isisnt-effective)
+    - [The Correct Mental Model](#the-correct-mental-model)
+    - [When to Use Account-Level Strong vs Request-Level Strong](#when-to-use-account-level-strong-vs-request-level-strong)
+    - [Key Rules for Request-Level Override](#key-rules-for-request-level-override)
+    - [Code Examples: Request-Level Consistency Override](#code-examples-request-level-consistency-override)
+    - [Real-World Scenarios: When to Override Consistency](#real-world-scenarios-when-to-override-consistency)
+    - [Performance and Cost Implications](#performance-and-cost-implications)
+    - [Best Practices for Request-Level Consistency Override](#best-practices-for-request-level-consistency-override)
+    - [Summary: Request-Level Override Decision Matrix](#summary-request-level-override-decision-matrix)
 - [Guarantees Associated with Consistency Levels](#guarantees-associated-with-consistency-levels)
 - [Strong Consistency](#strong-consistency)
 - [Bounded Staleness Consistency](#bounded-staleness-consistency)
@@ -172,6 +185,583 @@ Update-AzCosmosDBAccount -ResourceGroupName $rg -Name $accountName -DefaultConsi
 ```
 
 > **Note:** You can also override the default consistency level at the request level using `QueryRequestOptions.ConsistencyLevel` in your SDK code. You can request a **stronger** consistency level than the account default, but you cannot request a **weaker** level.
+
+### Override Consistency Level at Request Level
+
+Azure Cosmos DB allows you to override the default consistency level on a **per-request basis**. This provides fine-grained control over consistency for different operations within the same application.
+
+> ⚠️ **Critical Understanding: Consistency Levels Primarily Affect READS**
+> 
+> This is a common source of confusion. Request-level consistency override **only affects read behavior**, not write behavior. Write behavior is determined by the **account-level** consistency setting.
+
+#### How Writes and Reads Work Differently
+
+**Write Behavior (Determined by Account Setting, NOT Request Override):**
+
+| Account Consistency | Write Behavior |
+|---------------------|----------------|
+| **Strong** | Writes synchronously replicate to ALL regions before returning success |
+| **Bounded Staleness** | Writes to local region, with staleness bounds enforced |
+| **Session/Consistent Prefix/Eventual** | Writes commit to local region quorum, then async replicate |
+
+**Read Behavior (CAN be overridden at request level):**
+
+| Consistency Level | Read Behavior |
+|-------------------|---------------|
+| **Strong** | Read from quorum (2 replicas), guaranteed most recent committed |
+| **Bounded Staleness** | Read from quorum, bounded by staleness configuration |
+| **Session** | Read from single replica, honors session token |
+| **Consistent Prefix** | Read from single replica, preserves write order |
+| **Eventual** | Read from any single replica (fastest, may be stale) |
+
+---
+
+#### Why Request-Level Override Has Limited Effect on Strong Consistency
+
+**The Limitation:**
+```
+Account Default: Session (writes async replicate to other regions)
+
+Timeline:
+1. Client A writes Order X in East US → Returns success (committed locally)
+2. Order X is asynchronously replicating to West Europe...
+3. Client B in West Europe reads Order X with Strong consistency override
+4. Result: Client B may NOT see Order X yet!
+
+Why? Because:
+- The WRITE was not synchronously replicated (account is Session, not Strong)
+- Strong read only guarantees reading the latest COMMITTED data in that region
+- The data hasn't arrived in West Europe yet
+```
+
+**What Request-Level Strong Actually Guarantees:**
+- Reads the most recent data that has been **committed in the region being read from**
+- Uses quorum read (2 replicas) to ensure consistency
+- Does NOT retroactively make previous writes synchronous
+
+---
+
+#### When Request-Level Override IS Effective
+
+##### ✅ Scenario 1: Reading Data Written by Another Client in the SAME Region
+
+```csharp
+// Account: Session consistency
+// Both clients in the same region (East US)
+
+// Client A writes
+await container.CreateItemAsync(order, new PartitionKey(order.Id));
+
+// Client B needs to read immediately (different session)
+var options = new ItemRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong  // ✅ Effective!
+};
+
+// Strong read ensures Client B sees Client A's write
+// Because both are in the same region, the write is already committed locally
+var response = await container.ReadItemAsync<Order>(orderId, new PartitionKey(orderId), options);
+```
+
+##### ✅ Scenario 2: Consistent Read Across Multiple Partitions
+
+```csharp
+// Account: Session consistency
+// Need to read related data consistently across partitions
+
+var options = new QueryRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong  // ✅ Effective!
+};
+
+// This query touches multiple partitions
+// Strong ensures a consistent point-in-time snapshot
+var query = new QueryDefinition(
+    "SELECT * FROM c WHERE c.customerId = @customerId"
+).WithParameter("@customerId", customerId);
+
+var iterator = container.GetItemQueryIterator<Order>(query, requestOptions: options);
+```
+
+##### ✅ Scenario 3: Verifying a Write Completed Successfully
+
+```csharp
+// Account: Session consistency
+
+// Write an order
+var writeResponse = await container.CreateItemAsync(order, new PartitionKey(order.Id));
+
+// Verify the write with Strong read (in same region, this is effective)
+var readOptions = new ItemRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong
+};
+
+var readResponse = await container.ReadItemAsync<Order>(
+    order.Id, 
+    new PartitionKey(order.Id), 
+    readOptions
+);
+
+// If we can read it with Strong, it's definitely committed
+```
+
+##### ❌ Scenario 4: Cross-Region Read-After-Write (LIMITED Effectiveness)
+
+```csharp
+// Account: Session consistency
+// Writer in East US, Reader in West Europe
+
+// Writer (East US)
+await container.CreateItemAsync(order, new PartitionKey(order.Id));
+// Returns success - committed in East US, async replicating to West Europe
+
+// Reader (West Europe) - even with Strong override
+var options = new ItemRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong  // ⚠️ May not help!
+};
+
+// If replication hasn't completed, the order isn't in West Europe yet
+// Strong read can only return what's been committed in West Europe
+var response = await container.ReadItemAsync<Order>(orderId, ...);
+// Result: May return 404 or stale data
+```
+
+**Solution for Cross-Region Consistency:**
+```csharp
+// Option 1: Change account to Strong consistency (impacts all operations)
+// This makes writes sync to ALL regions before returning
+
+// Option 2: Use Session consistency with session token passed across regions
+var writeResponse = await container.CreateItemAsync(order, ...);
+string sessionToken = writeResponse.Headers.Session;
+
+// Pass sessionToken to the reader in West Europe
+var readOptions = new ItemRequestOptions
+{
+    SessionToken = sessionToken  // Forces read to wait for this version
+};
+```
+
+---
+
+#### Summary: When Request-Level Override Is/Isn't Effective
+
+| Scenario | Request-Level Override Effective? | Explanation |
+|----------|-----------------------------------|-------------|
+| Same region, different clients | ✅ YES | Data is committed locally |
+| Same client/session | ✅ YES (but Session is usually enough) | Session already provides read-your-writes |
+| Cross-partition queries | ✅ YES | Ensures consistent snapshot |
+| Cross-region read-after-write | ⚠️ LIMITED | Write must have replicated first |
+| Making previous writes synchronous | ❌ NO | Can't change past write behavior |
+| Improving write durability | ❌ NO | Writes always go to local quorum |
+
+---
+
+#### The Correct Mental Model
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Consistency Level Effects                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ACCOUNT-LEVEL SETTING                                            │
+│   ├── Controls WRITE behavior                                      │
+│   │   • Strong: Sync to ALL regions                                │
+│   │   • Others: Async replication                                  │
+│   │                                                                │
+│   └── Sets DEFAULT read behavior                                   │
+│                                                                     │
+│   REQUEST-LEVEL OVERRIDE                                           │
+│   └── Can strengthen READ behavior only                            │
+│       • How many replicas to read from                             │
+│       • Which version to return                                    │
+│       • Does NOT affect how writes propagate                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### When to Use Account-Level Strong vs Request-Level Strong
+
+| Requirement | Solution |
+|-------------|----------|
+| All writes must be globally consistent | **Account-level Strong** |
+| Only some reads need strong guarantees | **Request-level Strong** (with understanding of limitations) |
+| Cross-region read-after-write guarantee | **Account-level Strong** or **Session with token passing** |
+| Consistent multi-partition reads | **Request-level Strong** works well |
+| Maximum performance with occasional strong reads | **Account: Eventual/Session + Request: Strong for critical reads** |
+
+---
+
+#### Key Rules for Request-Level Override
+
+| Rule | Description |
+|------|-------------|
+| **Can Strengthen** | You can request a **stronger** consistency than the account default |
+| **Cannot Weaken** | You **cannot** request a weaker consistency than the account default |
+| **Request Scope** | Override applies only to that specific request |
+| **No Account Change** | Does not modify the account's default consistency setting |
+
+**Consistency Levels from Weakest to Strongest:**
+```
+Eventual → Consistent Prefix → Session → Bounded Staleness → Strong
+(Weakest)                                                    (Strongest)
+```
+
+#### Override Examples by Account Default
+
+| Account Default | Can Request | Cannot Request |
+|-----------------|-------------|----------------|
+| **Eventual** | Consistent Prefix, Session, Bounded Staleness, Strong | - |
+| **Session** | Bounded Staleness, Strong | Eventual, Consistent Prefix |
+| **Strong** | - (already strongest) | All weaker levels |
+
+---
+
+#### Code Examples: Request-Level Consistency Override
+
+**.NET SDK - Read Operations:**
+```csharp
+// Account default is Session, but we need Strong for this critical read
+var requestOptions = new ItemRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong
+};
+
+var response = await container.ReadItemAsync<Account>(
+    accountId,
+    new PartitionKey(accountId),
+    requestOptions
+);
+```
+
+**.NET SDK - Query Operations:**
+```csharp
+// Override consistency for a query
+var queryOptions = new QueryRequestOptions
+{
+    ConsistencyLevel = ConsistencyLevel.Strong
+};
+
+var query = new QueryDefinition("SELECT * FROM c WHERE c.accountId = @id")
+    .WithParameter("@id", accountId);
+
+var iterator = container.GetItemQueryIterator<Account>(query, requestOptions: queryOptions);
+```
+
+**Java SDK:**
+```java
+// Override consistency at request level
+CosmosItemRequestOptions options = new CosmosItemRequestOptions();
+options.setConsistencyLevel(ConsistencyLevel.STRONG);
+
+CosmosItemResponse<Account> response = container.readItem(
+    accountId,
+    new PartitionKey(accountId),
+    options,
+    Account.class
+);
+```
+
+**Python SDK:**
+```python
+# Override consistency for a specific read
+response = container.read_item(
+    item=account_id,
+    partition_key=account_id,
+    consistency_level=ConsistencyLevel.Strong
+)
+```
+
+**JavaScript/TypeScript SDK:**
+```typescript
+// Override consistency at request level
+const { resource } = await container.item(accountId, accountId).read({
+    consistencyLevel: ConsistencyLevel.Strong
+});
+```
+
+---
+
+#### Real-World Scenarios: When to Override Consistency
+
+##### Scenario 1: Financial Operations in a Session-Based Application
+
+**Context:** Your e-commerce application uses **Session** consistency (default) for general operations but needs **Strong** consistency for financial transactions.
+
+```csharp
+public class OrderService
+{
+    private readonly Container _container;
+    
+    // Regular product browsing - use account default (Session)
+    public async Task<Product> GetProductAsync(string productId)
+    {
+        // No override needed - Session is fine for product catalog
+        var response = await _container.ReadItemAsync<Product>(
+            productId,
+            new PartitionKey(productId)
+        );
+        return response.Resource;
+    }
+    
+    // Payment processing - MUST use Strong consistency
+    public async Task<PaymentResult> ProcessPaymentAsync(string orderId, decimal amount)
+    {
+        // Override to Strong for financial accuracy
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Strong
+        };
+        
+        // Read the latest order state
+        var order = await _container.ReadItemAsync<Order>(
+            orderId,
+            new PartitionKey(orderId),
+            options
+        );
+        
+        // Verify payment hasn't already been processed
+        if (order.Resource.PaymentStatus == "Completed")
+        {
+            throw new InvalidOperationException("Payment already processed");
+        }
+        
+        // Process payment with guaranteed consistency
+        order.Resource.PaymentStatus = "Completed";
+        order.Resource.PaymentTimestamp = DateTime.UtcNow;
+        
+        await _container.ReplaceItemAsync(
+            order.Resource,
+            orderId,
+            new PartitionKey(orderId),
+            options
+        );
+        
+        return new PaymentResult { Success = true };
+    }
+}
+```
+
+**Why This Works:**
+- Product browsing: Session consistency provides good performance with read-your-writes guarantee
+- Payment processing: Strong consistency ensures no duplicate payments or stale data reads
+
+---
+
+##### Scenario 2: Inventory Check Before Order Confirmation
+
+**Context:** Application uses **Eventual** consistency for maximum performance, but inventory checks need stronger guarantees.
+
+```csharp
+public class InventoryService
+{
+    // Default: Eventual consistency for high-throughput reads
+    
+    // Critical operation: Check inventory before confirming order
+    public async Task<bool> ReserveInventoryAsync(string productId, int quantity)
+    {
+        // Strengthen to Bounded Staleness for near-real-time inventory
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.BoundedStaleness
+        };
+        
+        var inventory = await _container.ReadItemAsync<Inventory>(
+            productId,
+            new PartitionKey(productId),
+            options
+        );
+        
+        if (inventory.Resource.AvailableQuantity >= quantity)
+        {
+            // Use optimistic concurrency with ETag
+            inventory.Resource.AvailableQuantity -= quantity;
+            inventory.Resource.ReservedQuantity += quantity;
+            
+            try
+            {
+                await _container.ReplaceItemAsync(
+                    inventory.Resource,
+                    productId,
+                    new PartitionKey(productId),
+                    new ItemRequestOptions { IfMatchEtag = inventory.ETag }
+                );
+                return true;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.PreconditionFailed)
+            {
+                // Retry - someone else modified the inventory
+                return await ReserveInventoryAsync(productId, quantity);
+            }
+        }
+        
+        return false; // Insufficient inventory
+    }
+}
+```
+
+---
+
+##### Scenario 3: Multi-Tier Application with Different Consistency Needs
+
+**Context:** A single application serves different types of requests with varying consistency requirements.
+
+```csharp
+public class MultiTierService
+{
+    private readonly Container _container;
+    
+    // Tier 1: Analytics Dashboard - Eventual is fine
+    public async Task<DashboardStats> GetDashboardStatsAsync()
+    {
+        // Account default (Eventual) - slight staleness acceptable for dashboards
+        var query = new QueryDefinition(
+            "SELECT COUNT(1) as TotalOrders, SUM(c.amount) as TotalRevenue FROM c"
+        );
+        
+        var iterator = _container.GetItemQueryIterator<DashboardStats>(query);
+        var results = await iterator.ReadNextAsync();
+        return results.FirstOrDefault();
+    }
+    
+    // Tier 2: User Profile - Session consistency
+    public async Task<UserProfile> GetUserProfileAsync(string userId, string sessionToken)
+    {
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Session,
+            SessionToken = sessionToken  // Ensure read-your-writes
+        };
+        
+        var response = await _container.ReadItemAsync<UserProfile>(
+            userId,
+            new PartitionKey(userId),
+            options
+        );
+        return response.Resource;
+    }
+    
+    // Tier 3: Account Balance - Strong consistency required
+    public async Task<decimal> GetAccountBalanceAsync(string accountId)
+    {
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Strong
+        };
+        
+        var response = await _container.ReadItemAsync<Account>(
+            accountId,
+            new PartitionKey(accountId),
+            options
+        );
+        return response.Resource.Balance;
+    }
+}
+```
+
+---
+
+##### Scenario 4: Read-After-Write Guarantee Across Services
+
+**Context:** Microservices architecture where Service A writes data and Service B needs to read it immediately.
+
+```csharp
+// Service A: Writes order data
+public class OrderWriterService
+{
+    public async Task<string> CreateOrderAsync(Order order)
+    {
+        var response = await _container.CreateItemAsync(order, new PartitionKey(order.Id));
+        
+        // Return the session token for downstream services
+        return response.Headers.Session;
+    }
+}
+
+// Service B: Needs to read the order immediately after creation
+public class OrderReaderService
+{
+    public async Task<Order> GetOrderAsync(string orderId, string sessionToken)
+    {
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Session,
+            SessionToken = sessionToken  // Use token from writer service
+        };
+        
+        var response = await _container.ReadItemAsync<Order>(
+            orderId,
+            new PartitionKey(orderId),
+            options
+        );
+        
+        return response.Resource;
+    }
+    
+    // Alternative: Use Strong consistency if session token not available
+    public async Task<Order> GetOrderStrongAsync(string orderId)
+    {
+        var options = new ItemRequestOptions
+        {
+            ConsistencyLevel = ConsistencyLevel.Strong
+        };
+        
+        var response = await _container.ReadItemAsync<Order>(
+            orderId,
+            new PartitionKey(orderId),
+            options
+        );
+        
+        return response.Resource;
+    }
+}
+```
+
+---
+
+#### Performance and Cost Implications
+
+| Override Direction | Effect on Performance | Effect on Cost (RU) |
+|--------------------|----------------------|---------------------|
+| **Eventual → Strong** | ⬇️ Lower throughput (50% for reads) | ⬆️ Higher RU consumption |
+| **Eventual → Session** | ➡️ Same throughput | ➡️ Same RU consumption |
+| **Session → Strong** | ⬇️ Lower throughput (50% for reads) | ⬆️ Higher RU consumption |
+| **Session → Bounded Staleness** | ⬇️ Lower throughput (50% for reads) | ⬆️ Higher RU consumption |
+
+**RU Impact by Consistency Level:**
+```
+Eventual, Consistent Prefix, Session → 1x RU (single replica read)
+Bounded Staleness, Strong → 2x RU (quorum read from 2 replicas)
+```
+
+---
+
+#### Best Practices for Request-Level Consistency Override
+
+| ✅ Do | ❌ Don't |
+|-------|---------|
+| Use stronger consistency only when necessary | Override every request to Strong |
+| Consider the business impact of stale data | Ignore the performance/cost tradeoffs |
+| Pass session tokens between services | Assume Strong consistency for all microservices |
+| Document which operations need stronger consistency | Mix consistency levels without clear reasoning |
+| Test your application with the chosen consistency levels | Assume consistency works the same across SDKs |
+
+---
+
+#### Summary: Request-Level Override Decision Matrix
+
+| Scenario | Account Default | Override To | Reason |
+|----------|-----------------|-------------|--------|
+| Financial transactions | Session/Eventual | Strong | Cannot afford stale reads |
+| Inventory reservation | Eventual | Bounded Staleness | Near-real-time accuracy needed |
+| User profile (own data) | Eventual | Session | Read-your-writes guarantee |
+| Analytics/reporting | Session | No override | Slight staleness acceptable |
+| Audit trail verification | Session | Strong | Compliance requirement |
+| Cross-service read-after-write | Eventual | Session (with token) | Guarantee visibility of recent write |
 
 ## Guarantees Associated with Consistency Levels
 
