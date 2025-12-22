@@ -588,7 +588,7 @@ Start
 
 - [Azure SQL Documentation](https://docs.microsoft.com/azure/azure-sql/)
 - [Pricing Calculator](https://azure.microsoft.com/pricing/calculator/)
-- [DTU Calculator](https://dtucalculator.azurewebsites.net/)
+- [DTU Calculator](https://dtucalc.azurewebsites.net/)
 - [Azure SQL Migration Guide](https://docs.microsoft.com/azure/azure-sql/migration-guides/)
 
 ---
