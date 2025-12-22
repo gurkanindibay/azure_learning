@@ -12,6 +12,7 @@ Azure Cosmos DB provides built-in backup capabilities to protect your data. Ther
 | **Retention period** | 7 days or 30 days (configurable) | Configurable (hours/days) |
 | **Restore method** | Self-service via Azure Portal/CLI/PowerShell | Support ticket required |
 | **Recovery Point Objective (RPO)** | Seconds | Hours (depends on interval) |
+| **Recovery Time Objective (RTO)** | Minutes (self-service restore) | Hours to days (support ticket required) |
 | **Cost** | Additional storage cost for change history | Included (limited retention) |
 | **Serverless support** | ❌ No | ✅ Yes |
 | **Provisioned throughput support** | ✅ Yes | ✅ Yes |
