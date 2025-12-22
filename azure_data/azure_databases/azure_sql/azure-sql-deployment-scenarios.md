@@ -545,6 +545,14 @@ Recommended pool: 100 eDTU Standard Pool
 | Zone Redundancy | ✅ | ✅ | ✅ | Via Availability Zones |
 | Read Replicas | ✅ (BC) | ✅ (BC) | ✅ (BC) | ✅ (Always On) |
 | OS Access | ❌ | ❌ | ❌ | ✅ |
+| **SSIS** | ❌ (Use ADF SSIS-IR) | ❌ (Use ADF SSIS-IR) | ❌ (Use ADF SSIS-IR) | ✅ |
+| **SSRS** | ❌ (Use Power BI) | ❌ (Use Power BI) | ❌ (Use Power BI) | ✅ |
+| **SSAS** | ❌ (Use Azure AS) | ❌ (Use Azure AS) | ❌ (Use Azure AS) | ✅ |
+
+**Notes on SSIS/SSRS/SSAS:**
+- **SSIS**: For PaaS options, use Azure Data Factory with SSIS Integration Runtime (SSIS-IR) to lift-and-shift existing SSIS packages
+- **SSRS**: For PaaS options, use Power BI Service with Paginated Reports or host SSRS on a separate Azure VM
+- **SSAS**: For PaaS options, use Azure Analysis Services as a fully managed alternative
 
 ---
 
