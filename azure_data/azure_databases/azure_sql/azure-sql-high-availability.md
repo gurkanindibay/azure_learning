@@ -16,6 +16,7 @@
 - [Azure SQL Managed Instance HA](#azure-sql-managed-instance-ha)
 - [SQL Server on Azure VMs HA](#sql-server-on-azure-vms-ha)
 - [SLA Comparison](#sla-comparison)
+- [Compute and Storage Scaling](#compute-and-storage-scaling)
 - [RPO and RTO](#rpo-and-rto)
 - [Decision Guide](#decision-guide)
 - [Configuration Examples](#configuration-examples)
@@ -46,6 +47,7 @@ Azure SQL provides comprehensive high availability options across its product fa
 | Feature | SQL Database | SQL Managed Instance | SQL Server on VMs |
 |---------|--------------|---------------------|-------------------|
 | **Built-in HA** | ✅ Yes | ✅ Yes | ❌ Self-managed |
+| **Always On Availability Groups** | ✅ Built-in (BC/Premium) | ✅ Built-in (BC) | ✅ Manual setup |
 | **Zone Redundancy** | ✅ Available | ✅ Available | ✅ Manual setup |
 | **Auto-Failover Groups** | ✅ Yes | ✅ Yes | ❌ Use Always On |
 | **Active Geo-Replication** | ✅ Yes | ❌ No | ❌ Use Always On |
@@ -512,6 +514,61 @@ Azure SQL provides comprehensive high availability options across its product fa
 | **Hyperscale (zone-redundant)** | 99.995% | 26.28 min |
 | **Premium DTU (zone-redundant)** | 99.995% | 26.28 min |
 | **SQL Managed Instance** | 99.99% | 52.56 min |
+
+---
+
+## Compute and Storage Scaling
+
+### Independent Scaling by Tier/Model
+
+Understanding whether compute and storage scale independently is critical for capacity planning and cost optimization.
+
+| Model/Tier | Compute & Storage Scaling | Details |
+|------------|---------------------------|---------|
+| **DTU Model** | ❌ **Bundled** | Cannot scale independently. DTU increase = storage increase |
+| **vCore (General Purpose)** | ✅ **Partially independent** | Storage provisioned separately (32GB - 4TB), storage type fixed (remote Azure Premium Storage) |
+| **vCore (Business Critical)** | ✅ **Partially independent** | Storage tied to local SSD, configurable size within limits |
+| **Hyperscale** | ✅ **Fully independent** | True decoupled architecture. Compute and storage scale completely independently. Storage auto-grows to 100TB |
+| **Serverless** | ✅ **Independent** | Compute auto-scales (vCore min/max), storage provisioned separately |
+
+### Hyperscale Architecture (True Separation)
+
+Hyperscale is the only tier with a **truly decoupled architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              Hyperscale Decoupled Architecture                   │
+│                                                                  │
+│   Compute Tier (Scale independently)                             │
+│   ┌────────────┐  ┌────────────┐  ┌────────────┐                │
+│   │  Primary   │  │ HA Replica │  │   Named    │                │
+│   │  Compute   │  │            │  │  Replicas  │                │
+│   └─────┬──────┘  └─────┬──────┘  └─────┬──────┘                │
+│         │               │               │                        │
+│         └───────────────┼───────────────┘                        │
+│                         │                                        │
+│                         ▼                                        │
+│   ┌─────────────────────────────────────────────────────────────┐│
+│   │         Page Servers (Storage - Scale independently)        ││
+│   │         Distributed, Auto-grows to 100TB                    ││
+│   └─────────────────────────────────────────────────────────────┘│
+│                                                                  │
+│   ✅ Add/remove read replicas in seconds (no data copy)          │
+│   ✅ Scale compute up/down without data movement                 │
+│   ✅ Storage grows automatically (pay for what you use)          │
+│   ✅ Near-instant backups regardless of database size            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Scaling Recommendations
+
+| Requirement | Recommended Tier |
+|-------------|------------------|
+| **Independent compute/storage scaling** | Hyperscale |
+| **Large databases with unpredictable growth** | Hyperscale |
+| **Variable compute with fixed storage** | Serverless (General Purpose) |
+| **Standard workloads with manual storage provisioning** | vCore (General Purpose) |
+| **Simplified bundled pricing** | DTU Model |
 
 ---
 
