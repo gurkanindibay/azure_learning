@@ -4,6 +4,100 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 ---
 
+## Table of Contents
+
+<details>
+<summary><a href="#1-enterprise--strategic-architecture">1. Enterprise & Strategic Architecture</a></summary>
+
+  - [1.1 Enterprise Architecture](#11-enterprise-architecture)
+  - [1.2 Information Architecture](#12-information-architecture)
+  - [1.3 Governance Architecture](#13-governance-architecture)
+</details>
+
+<details>
+<summary><a href="#2-application--software-architecture">2. Application & Software Architecture</a></summary>
+
+  - [2.1 Application Architecture Styles](#21-application-architecture-styles)
+  - [2.2 Backend Architecture](#22-backend-architecture)
+  - [2.3 Frontend Architecture](#23-frontend-architecture)
+  - [2.4 Mobile Architecture](#24-mobile-architecture)
+</details>
+
+<details>
+<summary><a href="#3-integration--communication-architecture">3. Integration & Communication Architecture</a></summary>
+
+  - [3.1 Integration Architecture](#31-integration-architecture)
+  - [3.2 API Architecture](#32-api-architecture)
+  - [3.3 Event-Driven & Messaging Architecture](#33-event-driven--messaging-architecture)
+</details>
+
+<details>
+<summary><a href="#4-data-analytics--ai-architecture">4. Data, Analytics & AI Architecture</a></summary>
+
+  - [4.1 Data Architecture](#41-data-architecture)
+  - [4.2 Analytics Architecture](#42-analytics-architecture)
+  - [4.3 Streaming & Real-Time Architecture](#43-streaming--real-time-architecture)
+  - [4.4 AI / ML Architecture](#44-ai--ml-architecture)
+</details>
+
+<details>
+<summary><a href="#5-cloud-infrastructure--platform-architecture">5. Cloud, Infrastructure & Platform Architecture</a></summary>
+
+  - [5.1 Cloud Architecture](#51-cloud-architecture)
+  - [5.2 Infrastructure Architecture](#52-infrastructure-architecture)
+  - [5.3 Platform Architecture](#53-platform-architecture)
+</details>
+
+<details>
+<summary><a href="#6-security-architecture-cross-cutting">6. Security Architecture (Cross-Cutting)</a></summary>
+
+  - [6.1 Security Architecture](#61-security-architecture)
+  - [6.2 Identity Architecture](#62-identity-architecture)
+  - [6.3 Network Security Architecture](#63-network-security-architecture)
+  - [6.4 Data Security Architecture](#64-data-security-architecture)
+</details>
+
+<details>
+<summary><a href="#7-reliability-performance--operations">7. Reliability, Performance & Operations</a></summary>
+
+  - [7.1 Reliability Architecture](#71-reliability-architecture)
+  - [7.2 Performance Architecture](#72-performance-architecture)
+  - [7.3 Observability Architecture](#73-observability-architecture)
+</details>
+
+<details>
+<summary><a href="#8-devops-delivery--runtime-architecture">8. DevOps, Delivery & Runtime Architecture</a></summary>
+
+  - [8.1 DevOps Architecture](#81-devops-architecture)
+  - [8.2 Runtime & Deployment Architecture](#82-runtime--deployment-architecture)
+</details>
+
+<details>
+<summary><a href="#9-industry--specialized-architectures">9. Industry & Specialized Architectures</a></summary>
+
+  - [9.1 Industry Architectures](#91-industry-architectures)
+  - [9.2 Specialized Architectures](#92-specialized-architectures)
+</details>
+
+<details>
+<summary><a href="#10-practicality-taxonomy-abstraction-levels">10. Practicality Taxonomy (Abstraction Levels)</a></summary>
+
+  - [10.1 Conceptual Architecture](#101-conceptual-architecture-strategic--abstract)
+  - [10.2 Logical Architecture](#102-logical-architecture-design--structural)
+  - [10.3 Physical / Implementation Architecture](#103-physical--implementation-architecture-tactical--concrete)
+  - [10.4 Runtime / Operational Architecture](#104-runtime--operational-architecture-execution--live)
+</details>
+
+<details>
+<summary><a href="#11-architectural-qualities-non-functional">11. Architectural Qualities (Non-Functional)</a></summary>
+</details>
+
+<details>
+<summary><a href="#recommended-naming-convention">Recommended Naming Convention</a></summary>
+</details>
+
+---
+
 ## 1. Enterprise & Strategic Architecture
 
 ### 1.1 Enterprise Architecture
