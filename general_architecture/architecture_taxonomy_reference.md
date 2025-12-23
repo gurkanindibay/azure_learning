@@ -77,17 +77,29 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - OpenAPI-driven Architecture
 - API Gateway Architecture
 
-### 3.3 Event-Driven Architecture
-- Event Streaming Architecture
+### 3.3 Event-Driven & Messaging Architecture
+
+#### Architectural Paradigms
+- Event-Driven Architecture (EDA)
 - Event Sourcing
 - CQRS (Command Query Responsibility Segregation)
-- Pub/Sub Architecture
 - Reactive Architecture
+- Saga / Choreography Architecture
 
-### 3.4 Messaging Architecture
-- Message Queue Architecture
+#### Messaging Delivery Patterns
+- Message Queue Architecture (Point-to-Point)
+- Topic-based Pub/Sub Architecture (One-to-Many)
+- Event Streaming Architecture
 - Broker-based Architecture
-- Stream Processing Architecture
+- Request-Reply Messaging Architecture
+
+#### Operational Patterns
+- Dead Letter Queue Architecture
+- Competing Consumers Architecture
+- Message Routing Architecture
+- Poison Message Handling
+- Message Deduplication Architecture
+- Ordered Delivery Architecture
 
 ---
 
