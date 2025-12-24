@@ -1567,6 +1567,122 @@ Which of the following is NOT a valid mode for an Azure Policy definition?
 
 ---
 
+### Question 14: Azure Resource Tags Behavior
+
+**Question:**
+Which of the following statements are true regarding Azure resource tags? (Select all that apply)
+
+**Options:**
+
+1. **Not all resource types support tags** ✅
+2. **Tag values are case-sensitive** ✅
+3. **Tags support cost-accruing services** ✅
+4. **Tags applied to a resource group are automatically inherited by the resources in that group** ❌
+5. **All resource types support tags** ❌
+6. **Tag values are case-insensitive** ❌
+
+**Answer:** Options 1, 2, and 3
+
+**Explanation:**
+
+**Correct Statements:**
+
+| Statement | Explanation |
+|-----------|-------------|
+| **Not all resource types support tags** | While many resource types in Azure support tagging, there are some exceptions where tags cannot be applied. It is important to check the documentation for each specific resource type to determine if tagging is supported. |
+| **Tag values are case-sensitive** | Tag values in Azure are case-sensitive. This means that `Tag1` and `tag1` would be considered as two different tag values when applied to a resource. Be consistent with capitalization when applying tags. |
+| **Tags support cost-accruing services** | Tags in Azure can be used to support cost-accruing services by providing a way to categorize and track resources for billing and cost management purposes. You can filter cost reports by tags in Azure Cost Management. |
+
+**Incorrect Statements:**
+
+| Statement | Explanation |
+|-----------|-------------|
+| **Tags applied to a resource group are automatically inherited by the resources in that group** | Tags applied to a resource group in Azure are **NOT** automatically inherited by the resources within that group. Each resource must have its own tags applied individually. However, you can use **Azure Policy** to enforce tag inheritance from resource groups. |
+| **All resource types support tags** | This is false. While many resource types in Azure support tags, not all resource types do. Always check the documentation for specific resource types. |
+| **Tag values are case-insensitive** | This is false. Tag values are **case-sensitive**, meaning the capitalization must be consistent when applying tags to resources. |
+
+**Key Tag Behavior Summary:**
+
+| Aspect | Behavior |
+|--------|----------|
+| **Tag Names** | Case-insensitive (stored as provided, compared case-insensitively) |
+| **Tag Values** | Case-sensitive |
+| **Inheritance** | Not automatic; requires Azure Policy |
+| **Resource Support** | Not all resource types support tags |
+| **Cost Management** | Tags can be used for cost allocation and billing |
+| **Maximum Tags** | 50 tags per resource, resource group, or subscription |
+| **Tag Name Length** | Maximum 512 characters (128 for storage accounts) |
+| **Tag Value Length** | Maximum 256 characters |
+
+**Using Azure Policy for Tag Inheritance:**
+
+To automatically inherit tags from resource groups, use the built-in policy **"Inherit a tag from the resource group"**:
+
+```json
+{
+  "properties": {
+    "displayName": "Inherit a tag from the resource group",
+    "policyType": "BuiltIn",
+    "mode": "Indexed",
+    "parameters": {
+      "tagName": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Tag Name",
+          "description": "Name of the tag to inherit"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "[concat('tags[', parameters('tagName'), ']')]",
+            "exists": "false"
+          },
+          {
+            "value": "[resourceGroup().tags[parameters('tagName')]]",
+            "notEquals": ""
+          }
+        ]
+      },
+      "then": {
+        "effect": "modify",
+        "details": {
+          "roleDefinitionIds": [
+            "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+          ],
+          "operations": [
+            {
+              "operation": "add",
+              "field": "[concat('tags[', parameters('tagName'), ']')]",
+              "value": "[resourceGroup().tags[parameters('tagName')]]"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+**Best Practices for Tags:**
+
+1. **Establish a tagging strategy** - Define required tags organization-wide
+2. **Use Azure Policy to enforce** - Require tags and inherit from resource groups
+3. **Be consistent with case** - Since values are case-sensitive, establish naming conventions
+4. **Document tag taxonomy** - Create a reference for tag names and allowed values
+5. **Use tags for cost management** - Enable cost allocation by department, project, or environment
+
+**Reference Links:**
+- [Tag Resources - Azure Resource Manager](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources)
+- [Tag Support for Azure Resources](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-support)
+- [Use Tags to Organize Azure Resources](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources-portal)
+
+**Domain:** Design Azure governance solutions
+
+---
+
 ## Summary
 
 ### Key Takeaways
