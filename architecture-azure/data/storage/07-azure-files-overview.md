@@ -17,6 +17,10 @@
   - [Hot Tier](#hot-tier)
   - [Cool Tier](#cool-tier)
   - [Storage Tier Comparison](#storage-tier-comparison)
+- [Data Protection and Recovery](#data-protection-and-recovery)
+  - [Azure File Share Snapshots](#azure-file-share-snapshots)
+  - [Soft Delete for File Shares](#soft-delete-for-file-shares)
+  - [Data Protection Features NOT Applicable to Azure Files](#data-protection-features-not-applicable-to-azure-files)
 - [Supported Operating Systems](#supported-operating-systems)
 - [Mounting Azure File Shares](#mounting-azure-file-shares)
   - [Windows](#windows)
@@ -406,6 +410,126 @@ What should you include in the recommendation?
 - https://learn.microsoft.com/en-us/azure/backup/backup-azure-recovery-services-vault-overview
 
 **Domain:** Design Business Continuity Solutions
+
+---
+
+## Data Protection and Recovery
+
+Azure Files provides several mechanisms for protecting your data and enabling recovery from accidental deletions or modifications. Understanding the differences between these features is crucial for implementing the right data protection strategy.
+
+### Azure File Share Snapshots
+
+**Azure File Share snapshots** are the primary mechanism for **retaining file changes and restoring deleted or modified files** within a share.
+
+**Key Characteristics:**
+- **Point-in-time copies**: Snapshots capture the state of your entire file share at a specific moment
+- **Read-only**: Snapshots are immutable and cannot be modified
+- **Incremental**: Only changes since the last snapshot are stored, optimizing storage costs
+- **Share-level**: Snapshots are taken at the file share level, not individual files
+- **Retention**: You can configure retention policies to automatically delete old snapshots
+
+**Use Cases:**
+- ✅ **File-level recovery**: Restore individual files that were accidentally deleted or modified
+- ✅ **Ransomware protection**: Recover files to a state before infection
+- ✅ **Compliance**: Meet regulatory requirements for data retention
+- ✅ **Development/Testing**: Create consistent test environments from production data
+- ✅ **Change tracking**: Review file changes over time
+
+**How to Access Snapshots:**
+- **Windows**: Use the "Previous Versions" tab in File Explorer
+- **Azure Portal**: Browse snapshots and download files directly
+- **REST API/PowerShell/CLI**: Programmatic access for automation
+
+**Snapshot Limits:**
+- Maximum 200 snapshots per file share
+- Snapshots count against share capacity
+- Minimum interval between snapshots: None (can be taken immediately)
+
+### Soft Delete for File Shares
+
+**Soft Delete** protects against **accidental deletion of entire file shares**, not individual files.
+
+**Key Characteristics:**
+- **Share-level protection only**: Recovers deleted file shares, not individual files within a share
+- **Retention period**: 1-365 days (configurable)
+- **Cost**: Deleted shares continue to incur storage costs during retention period
+
+**Important Limitation:**
+> ⚠️ **Soft Delete does NOT protect individual files.** If someone deletes a file inside a share, Soft Delete will not help you recover it. For file-level recovery, use **Azure File Share snapshots**.
+
+### Data Protection Features NOT Applicable to Azure Files
+
+Several Azure Blob Storage features are often confused with Azure Files capabilities. Understanding these distinctions is important:
+
+| Feature | Applicable to Azure Files? | Notes |
+|---------|---------------------------|-------|
+| **Blob Versioning** | ❌ No | Blob-specific feature for keeping multiple versions of objects in Blob containers |
+| **Blob Lifecycle Management** | ❌ No | Automates blob deletion/tiering based on rules; not applicable to file shares |
+| **Blob Soft Delete** | ❌ No | Different from File Share Soft Delete; applies only to blob containers |
+| **Point-in-time Restore (Blobs)** | ❌ No | Blob-specific feature for restoring block blobs to a previous state |
+
+### Data Protection Comparison
+
+| Feature | Protects | Recovery Scope | Retention |
+|---------|----------|----------------|------------|
+| **File Share Snapshots** | Files and folders within a share | Individual files or entire share | Up to 200 snapshots |
+| **Soft Delete (File Shares)** | Entire file shares | Whole share only | 1-365 days |
+| **Azure Backup (Files)** | Files within a share | Individual files or entire share | Based on backup policy |
+
+---
+
+### Practice Question: Retaining File Changes and Restoring Deleted Files
+
+**Scenario:**
+You have been asked to set up an Azure file share for a department in your organization. They require the ability to retain file changes and ensure deleted files can be restored for 14 days.
+
+**Question:**
+What should you enable on the Azure file share?
+
+**Options:**
+1. ❌ Blob versioning
+2. ❌ Soft Delete
+3. ❌ Blob lifecycle management
+4. ✅ Azure File Share snapshots
+
+**Answer: Azure File Share snapshots**
+
+**Explanation:**
+
+✅ **Azure File Share snapshots is correct** because:
+- Snapshots allow you to take **point-in-time copies** of your Azure file share
+- You can **restore individual files** to a previous state
+- By scheduling regular snapshots, you can retain file changes and ensure deleted files can be restored for a specified period (e.g., 14 days)
+- This is the only option that provides the ability to **recover individual files** within a share
+
+❌ **Blob versioning is incorrect** because:
+- Blob versioning is a feature for **Azure Blob Storage**, not Azure Files
+- It allows you to keep multiple versions of objects in a **Blob storage container**
+- This feature is **not applicable to file shares**
+
+❌ **Soft Delete is incorrect** because:
+- Soft Delete for Azure Files only protects **entire file shares** from accidental deletion
+- It does **NOT** protect individual files within a share
+- If someone deletes a file inside a share, Soft Delete **will not help you recover it**
+- Use Soft Delete to protect against accidental share deletion, not file deletion
+
+❌ **Blob lifecycle management is incorrect** because:
+- This is a feature in **Azure Blob storage** that automates deletion or tiering of older blob versions
+- It is **not applicable to Azure file shares**
+- It does not provide the ability to retain file changes or restore deleted files
+
+**Key Takeaway:**
+For **file-level recovery** in Azure Files:
+- ✅ Use **Azure File Share snapshots** - protects individual files
+- ❌ Soft Delete only protects the **entire share**, not files within it
+- ❌ Blob versioning and lifecycle management are for **Blob Storage only**
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Share snapshots overview](https://learn.microsoft.com/en-us/azure/storage/files/storage-snapshots-files)
+- [Enable soft delete on Azure file shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-enable-soft-delete)
+- [Back up Azure file shares](https://learn.microsoft.com/en-us/azure/backup/azure-file-share-backup-overview)
 
 ---
 
