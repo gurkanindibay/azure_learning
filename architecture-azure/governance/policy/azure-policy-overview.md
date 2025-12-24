@@ -74,7 +74,59 @@ A **policy definition** describes the compliance conditions and the effect to ta
 }
 ```
 
-### 2. Policy Assignment
+### 2. Policy Definition Modes
+
+The **mode** property in a policy definition determines which resource types are evaluated. Understanding modes is crucial for creating effective policies.
+
+**Valid Modes:**
+
+| Mode | Description | Evaluates |
+|------|-------------|-----------|
+| **All** | Evaluates all resource types and locations within the scope | Resource groups, subscriptions, and all resource types |
+| **Indexed** | Evaluates only resource types that support tags and location | Resources that support tags and location properties |
+
+> ⚠️ **Important**: `DoNotAllow` is **NOT** a valid mode for Azure Policy definitions. It is often confused with the `Deny` effect, but mode and effect are different properties.
+
+**When to Use Each Mode:**
+
+| Mode | Use Case | Example |
+|------|----------|---------|
+| **All** | Policies that need to evaluate all resources including resource groups | Require tags on resource groups |
+| **Indexed** | Policies that evaluate specific resource properties like tags or location | Require specific tags on resources |
+
+**Mode in Policy Definition:**
+
+```json
+{
+  "properties": {
+    "displayName": "Require a tag on resources",
+    "description": "Enforces a required tag on resources",
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "field": "tags['Environment']",
+        "exists": "false"
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
+```
+
+**Key Differences:**
+
+| Aspect | All Mode | Indexed Mode |
+|--------|----------|--------------|
+| **Resource Groups** | ✅ Evaluated | ❌ Not evaluated |
+| **Subscriptions** | ✅ Evaluated | ❌ Not evaluated |
+| **Tag-based policies** | ✅ Works | ✅ Works (recommended) |
+| **Location-based policies** | ✅ Works | ✅ Works (recommended) |
+
+> 💡 **Best Practice**: Use `Indexed` mode for tag and location policies to avoid evaluating resources that don't support these properties. Use `All` mode when you need to evaluate resource groups or apply policies to all resource types.
+
+### 3. Policy Assignment
 
 A **policy assignment** applies a policy definition to a specific scope:
 
@@ -83,7 +135,7 @@ A **policy assignment** applies a policy definition to a specific scope:
 - Resource group
 - Individual resource
 
-### 3. Initiative Definition (Policy Set)
+### 4. Initiative Definition (Policy Set)
 
 An **initiative** is a collection of policy definitions grouped together. It simplifies management of multiple related policies.
 
@@ -1434,6 +1486,84 @@ Each correct answer presents part of the solution. Which two actions should you 
 - [Describe Azure management infrastructure - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/describe-azure-management-infrastructure/)
 - [Design for management groups - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/enterprise-scale-organization/)
 - [Organize your Azure resources effectively - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-setup-guide/organize-resources)
+
+---
+
+### Question 12: Valid Modes for Azure Policy Definitions
+
+**Question:**
+Which of the following is NOT a valid mode for an Azure Policy definition?
+
+**Options:**
+
+1. **Indexed** ❌
+2. **All** ❌
+3. **DoNotAllow** ✅
+
+**Answer:** DoNotAllow
+
+**Explanation:**
+
+**Why DoNotAllow is NOT a Valid Mode:**
+
+`DoNotAllow` is **not a valid mode** for an Azure Policy definition. This mode is not recognized in Azure Policy and is not used for defining policy enforcement actions. It is often confused with the `Deny` **effect**, but mode and effect are completely different properties in a policy definition.
+
+**Valid Azure Policy Modes:**
+
+| Mode | Description | When to Use |
+|------|-------------|-------------|
+| **All** | Evaluates all resource types and locations within the scope, including resource groups and subscriptions | When you need to apply policies to resource groups or all resource types |
+| **Indexed** | Evaluates only resource types that support tags and location properties | When creating tag or location-based policies (recommended for these scenarios) |
+
+**Mode vs Effect - Important Distinction:**
+
+| Property | Purpose | Valid Values |
+|----------|---------|--------------|
+| **Mode** | Determines which resource types are evaluated | `All`, `Indexed` |
+| **Effect** | Determines action when policy conditions are met | `Deny`, `Audit`, `Append`, `Modify`, `DeployIfNotExists`, `AuditIfNotExists`, `Disabled` |
+
+> ⚠️ **Common Confusion**: `DoNotAllow` might be confused with the `Deny` effect. Remember:
+> - **Mode** = What resources to evaluate
+> - **Effect** = What action to take
+
+**Why Other Options Are Correct (Valid Modes):**
+
+| Option | Explanation |
+|--------|-------------|
+| **Indexed** | Valid mode that allows policies to be evaluated against specific resource types that support tags and locations within the scope of the policy assignment |
+| **All** | Valid mode that enables policies to be evaluated against all resource types and locations within the scope of the policy assignment, including resource groups and subscriptions |
+
+**Example Policy Definition with Mode:**
+
+```json
+{
+  "properties": {
+    "displayName": "Require tag on resources",
+    "description": "Enforces a required tag",
+    "mode": "Indexed",  // Valid mode
+    "policyRule": {
+      "if": {
+        "field": "tags['Environment']",
+        "exists": "false"
+      },
+      "then": {
+        "effect": "deny"  // This is an EFFECT, not a mode
+      }
+    }
+  }
+}
+```
+
+**Key Takeaway:**
+- **Mode** is about **scope of evaluation** (which resources)
+- **Effect** is about **action** (what happens when conditions are met)
+- `DoNotAllow` is not a valid value for either property
+
+**Reference Links:**
+- [Azure Policy definition structure - mode](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure#mode)
+- [Understanding Azure Policy effects](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effects)
+
+**Domain:** Design Azure governance solutions
 
 ---
 
