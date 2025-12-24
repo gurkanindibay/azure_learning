@@ -21,6 +21,12 @@
   - [Change Feed vs Event Grid](#change-feed-vs-event-grid)
   - [How to Enable](#how-to-enable-1)
 - [Azure Backup for Blobs](#azure-backup-for-blobs)
+- [Object Replication](#object-replication)
+  - [What is Object Replication?](#what-is-object-replication)
+  - [Key Characteristics](#key-characteristics-2)
+  - [Requirements and Limitations](#requirements-and-limitations)
+  - [Object Replication vs Other Features](#object-replication-vs-other-features)
+  - [How to Configure](#how-to-configure)
 - [Immutable Storage for Blob Data](#immutable-storage-for-blob-data)
   - [Time-Based Retention Policy](#time-based-retention-policy)
   - [Legal Hold](#legal-hold)
@@ -384,6 +390,177 @@ Azure Backup provides operational backup for blob data, offering a more comprehe
 - Managed through Azure Backup Center
 - Supports cross-region restore (with GRS accounts)
 - Different from storage account's built-in features
+
+## Object Replication
+
+### What is Object Replication?
+
+**Object replication** asynchronously copies block blobs between a source storage account and a destination account. This feature is designed for scenarios requiring data redundancy across regions, compliance with data residency requirements, or minimizing latency for geographically distributed users.
+
+> 💡 **Key Concept**: Object replication copies the **current state** of blobs to another storage account. It is NOT a point-in-time restore feature—it creates copies for redundancy and availability, not for recovering historical versions.
+
+### Key Characteristics
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Asynchronous Replication** | Blobs are copied asynchronously; no SLA for replication completion time |
+| **Block Blobs Only** | Only supports block blobs (not append or page blobs) |
+| **Cross-Region Support** | Can replicate between storage accounts in different regions |
+| **Cross-Subscription Support** | Can replicate between storage accounts in different subscriptions or tenants |
+| **Versioning Required** | Both source and destination accounts must have blob versioning enabled |
+| **One-to-Many Replication** | A source container can replicate to up to two destination accounts |
+| **Bidirectional Replication** | Two storage accounts can serve as both source and destination for each other |
+
+**What Gets Replicated:**
+
+| Item | Replicated? |
+|------|-------------|
+| **Blob content** | ✅ Yes |
+| **Blob metadata** | ✅ Yes |
+| **Blob versions** | ✅ Yes (current and previous versions) |
+| **Blob snapshots** | ❌ No |
+| **Blob index tags** | ❌ No |
+| **Blob tier** | ❌ No (destination uses default tier) |
+| **Deleted blobs** | ❌ No |
+
+### Requirements and Limitations
+
+**Prerequisites:**
+
+1. **Blob Versioning** - Must be enabled on **both** source and destination accounts
+2. **Change Feed** - Must be enabled on the **source** account
+3. **Account Types** - Both accounts must be general-purpose v2 or premium block blob accounts
+4. **No Hierarchical Namespace** - Accounts with HNS enabled (Data Lake Storage Gen2) are NOT supported
+
+**Limitations:**
+
+| Limitation | Details |
+|------------|----------|
+| **Blob Types** | Only block blobs; append and page blobs not supported |
+| **Archive Tier** | Blobs in archive tier on source are not replicated |
+| **Immutable Storage** | Destination container cannot have immutability policies |
+| **Snapshots** | Blob snapshots are not replicated |
+| **Index Tags** | Blob index tags are not replicated |
+| **Replication Latency** | No SLA; depends on blob size and change rate |
+| **Maximum Policies** | Up to 1000 replication rules per storage account |
+| **Maximum Destinations** | A source container can replicate to maximum 2 destinations |
+
+### Object Replication vs Other Features
+
+| Feature | Purpose | Scope | Recovery Capability |
+|---------|---------|-------|--------------------|
+| **Object Replication** | Cross-region/account redundancy | Container-to-container | No (creates copies, not restore points) |
+| **Point-in-Time Restore** | Restore to earlier state | Block blobs in account | Yes (restore to any point in retention) |
+| **Geo-Redundant Storage (GRS)** | Storage-level redundancy | Entire storage account | Yes (failover to secondary region) |
+| **Blob Versioning** | Track blob changes | Individual blobs | Yes (restore previous versions) |
+| **Azure Backup** | Enterprise backup | Storage account | Yes (restore to any recovery point) |
+
+**When to Use Object Replication:**
+
+| Scenario | Recommended? | Notes |
+|----------|--------------|-------|
+| **Disaster recovery** | ✅ Yes | Maintain copies in different regions |
+| **Minimize read latency** | ✅ Yes | Replicate data closer to users |
+| **Compliance/data residency** | ✅ Yes | Keep copies in specific regions |
+| **Data analytics** | ✅ Yes | Replicate to separate account for analytics workloads |
+| **Point-in-time recovery** | ❌ No | Use Point-in-Time Restore instead |
+| **Recover deleted blobs** | ❌ No | Use Soft Delete instead |
+
+### How to Configure
+
+**Azure Portal:**
+1. Navigate to the **source** storage account
+2. Go to **Object replication** under **Data management**
+3. Click **Set up replication rules**
+4. Select or create a destination storage account
+5. Configure source and destination containers
+6. Add filters (optional) to replicate specific blobs
+7. Click **Save**
+
+**Azure CLI:**
+```bash
+# Enable prerequisites on source account
+az storage account blob-service-properties update \
+    --account-name <source-account-name> \
+    --resource-group <resource-group-name> \
+    --enable-versioning true \
+    --enable-change-feed true
+
+# Enable versioning on destination account
+az storage account blob-service-properties update \
+    --account-name <destination-account-name> \
+    --resource-group <resource-group-name> \
+    --enable-versioning true
+
+# Create replication policy
+az storage account or-policy create \
+    --account-name <destination-account-name> \
+    --resource-group <resource-group-name> \
+    --source-account <source-account-name> \
+    --destination-account <destination-account-name> \
+    --source-container <source-container> \
+    --destination-container <destination-container>
+```
+
+**PowerShell:**
+```powershell
+# Create replication rule
+$rule = New-AzStorageObjectReplicationPolicyRule `
+    -SourceContainer "source-container" `
+    -DestinationContainer "destination-container"
+
+# Create replication policy on destination
+Set-AzStorageObjectReplicationPolicy `
+    -ResourceGroupName <resource-group-name> `
+    -StorageAccountName <destination-account-name> `
+    -PolicyId default `
+    -SourceAccount <source-account-name> `
+    -Rule $rule
+```
+
+**Filtering Blobs for Replication:**
+
+You can use prefix filters to replicate only specific blobs:
+
+```bash
+# Replicate only blobs with specific prefix
+az storage account or-policy rule add \
+    --account-name <destination-account-name> \
+    --resource-group <resource-group-name> \
+    --policy-id <policy-id> \
+    --source-container <source-container> \
+    --destination-container <destination-container> \
+    --prefix-match "logs/" "reports/2025/"
+```
+
+**Checking Replication Status:**
+
+```bash
+# Check replication status for a blob
+az storage blob show \
+    --account-name <source-account-name> \
+    --container-name <container-name> \
+    --name <blob-name> \
+    --query "objectReplicationSourceProperties"
+```
+
+```csharp
+// .NET SDK - Check replication status
+BlobClient blobClient = containerClient.GetBlobClient("myblob.txt");
+BlobProperties properties = await blobClient.GetPropertiesAsync();
+
+foreach (var policy in properties.ObjectReplicationSourceProperties)
+{
+    Console.WriteLine($"Policy ID: {policy.PolicyId}");
+    foreach (var rule in policy.Rules)
+    {
+        Console.WriteLine($"  Rule ID: {rule.RuleId}");
+        Console.WriteLine($"  Replication Status: {rule.ReplicationStatus}");
+    }
+}
+```
+
+> ⚠️ **Important**: Object replication is designed for **data availability and distribution**, not for **data recovery**. If you need to restore data to a previous state, use Point-in-Time Restore, Soft Delete, or Blob Versioning instead.
 
 ## Immutable Storage for Blob Data
 
