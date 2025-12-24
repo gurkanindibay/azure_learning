@@ -7,6 +7,10 @@
 - [Protocols](#protocols)
   - [SMB Protocol](#smb-protocol)
   - [NFS Protocol](#nfs-protocol)
+- [Authentication Mechanisms](#authentication-mechanisms)
+  - [Supported Authentication Methods](#supported-authentication-methods)
+  - [Authentication Method Details](#authentication-method-details)
+  - [Authentication Methods NOT Supported](#authentication-methods-not-supported)
 - [Storage Tiers](#storage-tiers)
   - [Premium Tier](#premium-tier)
   - [Transaction Optimized Tier](#transaction-optimized-tier)
@@ -72,6 +76,136 @@ Azure Files supports two industry-standard file sharing protocols:
 |----------|---------|-------|-------|------------------|
 | **SMB** | ✅ | ✅ | ✅ | No |
 | **NFS** | ❌ | ✅ | ❌ | Yes |
+
+## Authentication Mechanisms
+
+Azure Files supports multiple authentication mechanisms for secure access to your file shares. Understanding which methods are supported is crucial for designing secure storage solutions.
+
+### Supported Authentication Methods
+
+| Authentication Method | Supported | Description |
+|-----------------------|-----------|-------------|
+| **Microsoft Entra Domain Services** | ✅ Yes | Allows Azure VMs to join a domain and use domain credentials to access Azure Files |
+| **On-premises AD DS** | ✅ Yes | Extends on-premises Active Directory to Azure for seamless authentication |
+| **Storage Account Keys** | ✅ Yes | Full access authentication using storage account keys |
+| **Azure RBAC** | ✅ Yes | Role-based access control for granular permissions on Azure Files |
+| **Shared Access Signature (SAS)** | ❌ No | Not supported for Azure Files authentication |
+| **Shared Key Authorization** | ❌ No | Not supported by Azure Files |
+
+### Authentication Method Details
+
+#### Microsoft Entra Domain Services
+
+**Microsoft Entra Domain Services** (formerly Azure AD Domain Services) provides managed domain services for Azure, enabling you to:
+- Join Azure virtual machines to a domain without deploying domain controllers
+- Use domain credentials (username/password) to access Azure file shares
+- Apply Group Policy and LDAP support for enterprise scenarios
+
+**Use Case:** Ideal for organizations that want cloud-native domain services without maintaining on-premises AD infrastructure.
+
+#### On-premises Active Directory Domain Services (AD DS)
+
+**On-premises AD DS** integration allows you to:
+- Extend your existing on-premises Active Directory environment to Azure
+- Use the same domain credentials for both on-premises and Azure file access
+- Maintain consistent identity management across hybrid environments
+- Leverage existing Group Policies and access controls
+
+**Use Case:** Perfect for hybrid scenarios where organizations already have on-premises AD and want seamless integration with Azure Files.
+
+#### Storage Account Keys
+
+**Storage account keys** provide:
+- Full access to the storage account and all its contents
+- Two keys are provided for key rotation without downtime
+- Should be treated as highly sensitive credentials (like root passwords)
+
+**Best Practices:**
+- ⚠️ Safeguard keys to prevent unauthorized access
+- ⚠️ Rotate keys regularly
+- ⚠️ Use Azure Key Vault to store and manage keys
+- ⚠️ Prefer identity-based authentication when possible
+
+#### Azure Role-Based Access Control (Azure RBAC)
+
+**Azure RBAC** enables:
+- Fine-grained access control based on roles
+- Assignment of specific permissions to users, groups, or service principals
+- Built-in roles like "Storage File Data SMB Share Reader" and "Storage File Data SMB Share Contributor"
+- Custom role definitions for specific requirements
+
+**Common Roles for Azure Files:**
+
+| Role | Description |
+|------|-------------|
+| **Storage File Data SMB Share Reader** | Read access to files and directories |
+| **Storage File Data SMB Share Contributor** | Read, write, delete access to files and directories |
+| **Storage File Data SMB Share Elevated Contributor** | Read, write, delete, modify NTFS permissions |
+
+### Authentication Methods NOT Supported
+
+#### Shared Access Signature (SAS)
+
+**SAS tokens are NOT supported for Azure Files authentication.**
+
+- SAS is designed for granting limited, time-bound access to Azure Blob Storage
+- Azure Files requires identity-based or key-based authentication
+- For granular access control, use Azure RBAC instead
+
+#### Shared Key Authorization
+
+**Shared Key authorization is NOT supported by Azure Files.**
+
+- This is different from storage account keys
+- Shared Key authorization refers to a specific API-level authentication scheme
+- Azure Files uses different authentication mechanisms as described above
+
+---
+
+### Practice Question: Azure Files Authentication Mechanisms
+
+**Scenario:**
+You are setting up authentication mechanisms for your Azure Storage.
+
+**Question:**
+Which of the following can be used to provide secure access to your data in Azure Files? (Choose four)
+
+**Options:**
+
+1. ✅ **Microsoft Entra Domain Services**
+2. ❌ **Shared Access Signature**
+3. ✅ **Storage account keys**
+4. ✅ **On-premises Active Directory Domain Services (AD DS)**
+5. ✅ **Azure role-based access control (Azure RBAC)**
+6. ❌ **Shared Key authorization**
+
+**Answer:** Options 1, 3, 4, and 5
+
+**Explanation:**
+
+✅ **Microsoft Entra Domain Services** - Correct because it allows you to join Azure virtual machines to a domain and use domain credentials to access files stored in Azure Files.
+
+❌ **Shared Access Signature** - Incorrect because SAS tokens are used for granting limited access to resources in your storage account (primarily Blob Storage), but they are **not considered a secure authentication mechanism for Azure Files**.
+
+✅ **Storage account keys** - Correct because storage account keys can be used for authentication to Azure Files. It is essential to safeguard these keys to prevent unauthorized access.
+
+✅ **On-premises Active Directory Domain Services (AD DS)** - Correct because it allows you to extend your on-premises Active Directory environment to Azure, enabling seamless authentication and access control for files stored in Azure Files.
+
+✅ **Azure role-based access control (Azure RBAC)** - Correct because Azure RBAC allows you to assign specific roles to users or groups, granting them permissions to perform actions on Azure resources, including Azure Files.
+
+❌ **Shared Key authorization** - Incorrect because Shared Key authorization isn't supported by Azure Files.
+
+**Key Takeaway:**
+When securing Azure Files, use identity-based authentication methods (Microsoft Entra Domain Services, on-premises AD DS, Azure RBAC) or storage account keys. SAS tokens and Shared Key authorization are **not supported** for Azure Files.
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Overview of Azure Files identity-based authentication](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-active-directory-overview)
+- [Enable Microsoft Entra Domain Services authentication on Azure Files](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-domain-services-enable)
+- [Enable on-premises AD DS authentication to Azure file shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-ad-ds-enable)
+
+---
 
 ## Storage Tiers
 
