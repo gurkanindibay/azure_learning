@@ -36,6 +36,12 @@ Metrics are the foundation of observability—they provide quantitative measurem
 |---|----------|-------------|
 | 07 | [Apdex Score](07-apdex-score.md) | Application Performance Index - standardized user satisfaction scoring |
 
+### Metrics Catalog
+
+| # | Document | Description |
+|---|----------|-------------|
+| 09 | [Well-Known Metrics Catalog](09-well-known-metrics-catalog.md) | Comprehensive catalog of metrics by category, usage field, and business area |
+
 ## Recommended Reading Order
 
 ```mermaid
