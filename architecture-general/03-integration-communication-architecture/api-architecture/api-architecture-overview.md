@@ -334,6 +334,8 @@ GET /users?api-version=2025-01-01
 
 ### OAuth 2.0 Flows
 
+#### Authorization Code Flow (Server-side Apps)
+
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -346,11 +348,186 @@ sequenceDiagram
     AS->>U: Login Prompt
     U->>AS: Credentials
     AS->>C: Authorization Code
-    C->>AS: Exchange Code for Token
+    C->>AS: Exchange Code for Token (+ Client Secret)
     AS->>C: Access Token
     C->>RS: API Request + Token
     RS->>C: Protected Resource
 ```
+
+#### OAuth 2.0 Grant Types
+
+| Grant Type | Use Case | Client Type |
+|------------|----------|-------------|
+| **Authorization Code** | Server-side web apps | Confidential |
+| **Authorization Code + PKCE** | SPAs, Mobile, Desktop apps | Public |
+| **Client Credentials** | Service-to-service | Confidential |
+| **Device Code** | Smart TVs, CLI tools | Public |
+| **Refresh Token** | Token renewal | Both |
+
+### OAuth 2.0 with PKCE
+
+**PKCE** (Proof Key for Code Exchange, pronounced "pixy") is a security extension to OAuth 2.0 designed for public clients that cannot securely store a client secret.
+
+#### Why PKCE?
+
+| Problem | Solution |
+|---------|----------|
+| Public clients can't store secrets | PKCE uses dynamically generated secrets |
+| Authorization code interception | Code verifier proves code ownership |
+| Mobile app redirect vulnerabilities | One-time use cryptographic proof |
+
+#### PKCE Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client (SPA/Mobile)
+    participant AS as Authorization Server
+    participant RS as Resource Server
+    
+    Note over C: Generate code_verifier (random string)
+    Note over C: Create code_challenge = SHA256(code_verifier)
+    
+    U->>C: Click Login
+    C->>AS: Authorization Request + code_challenge + method
+    AS->>U: Login Page
+    U->>AS: Enter Credentials
+    AS->>C: Authorization Code (via redirect)
+    
+    Note over C: Send original code_verifier
+    C->>AS: Token Request + code + code_verifier
+    Note over AS: Verify: SHA256(code_verifier) == code_challenge
+    AS->>C: Access Token + Refresh Token
+    
+    C->>RS: API Request + Access Token
+    RS->>C: Protected Resource
+```
+
+#### PKCE Parameters
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `code_verifier` | Random string (43-128 chars) | `dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk` |
+| `code_challenge` | Base64URL(SHA256(code_verifier)) | `E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM` |
+| `code_challenge_method` | Transform method | `S256` (recommended) or `plain` |
+
+#### Implementation Example
+
+**Step 1: Generate Code Verifier and Challenge**
+
+```javascript
+// Generate cryptographically random code_verifier
+function generateCodeVerifier() {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return base64URLEncode(array);
+}
+
+// Create code_challenge from code_verifier
+async function generateCodeChallenge(verifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return base64URLEncode(new Uint8Array(hash));
+}
+
+function base64URLEncode(buffer) {
+    return btoa(String.fromCharCode(...buffer))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+```
+
+**Step 2: Authorization Request**
+
+```http
+GET /authorize?
+    response_type=code
+    &client_id=your-client-id
+    &redirect_uri=https://app.example.com/callback
+    &scope=openid profile email
+    &state=abc123
+    &code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
+    &code_challenge_method=S256
+```
+
+**Step 3: Token Exchange**
+
+```http
+POST /token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&client_id=your-client-id
+&code=received-authorization-code
+&redirect_uri=https://app.example.com/callback
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+```
+
+**Step 4: Token Response**
+
+```json
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "refresh_token": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...",
+    "scope": "openid profile email"
+}
+```
+
+#### PKCE Security Benefits
+
+```mermaid
+graph TB
+    subgraph "Without PKCE (Vulnerable)"
+        A1[App] -->|1. Auth Request| AS1[Auth Server]
+        AS1 -->|2. Auth Code| A1
+        M[Malicious App] -->|3. Intercepts Code| AS1
+        M -->|4. Exchanges Code| AS1
+        AS1 -->|5. Token| M
+    end
+    
+    subgraph "With PKCE (Secure)"
+        A2[App] -->|1. Auth Request + Challenge| AS2[Auth Server]
+        AS2 -->|2. Auth Code| A2
+        M2[Malicious App] -->|3. Intercepts Code| AS2
+        M2 -->|4. Exchange without Verifier| AS2
+        AS2 -->|5. REJECTED| M2
+        A2 -->|6. Exchange + Verifier| AS2
+        AS2 -->|7. Token| A2
+    end
+```
+
+#### When to Use PKCE
+
+| Scenario | Use PKCE? | Reason |
+|----------|-----------|--------|
+| Single Page Application (SPA) | ✅ Yes | Cannot store client secret |
+| Mobile Native App | ✅ Yes | Cannot store client secret |
+| Desktop Application | ✅ Yes | Cannot store client secret |
+| Server-side Web App | ✅ Recommended | Additional security layer |
+| Service-to-Service (M2M) | ❌ No | Use Client Credentials |
+
+#### PKCE Best Practices
+
+1. **Always use S256** - Never use `plain` method in production
+2. **Generate fresh verifier** - Create new code_verifier for each authorization request
+3. **Secure storage** - Store code_verifier in memory only during auth flow
+4. **Validate state parameter** - Prevent CSRF attacks
+5. **Use short-lived tokens** - Minimize exposure if token is compromised
+6. **Implement refresh tokens** - Avoid frequent re-authentication
+
+### OAuth 2.0 Flow Comparison
+
+| Flow | PKCE | Client Secret | Use Case |
+|------|------|---------------|----------|
+| Authorization Code | Optional | Required | Server-side apps |
+| Authorization Code + PKCE | Required | Not needed | SPAs, Mobile, Desktop |
+| Client Credentials | N/A | Required | Service-to-service |
+| Device Code | Optional | Optional | Smart TVs, CLI |
+| Implicit (Deprecated) | N/A | N/A | ⚠️ Don't use |
 
 ### Security Best Practices
 
