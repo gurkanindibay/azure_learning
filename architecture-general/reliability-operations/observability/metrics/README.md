@@ -41,6 +41,7 @@ Metrics are the foundation of observability—they provide quantitative measurem
 | # | Document | Description |
 |---|----------|-------------|
 | 09 | [Well-Known Metrics Catalog](09-well-known-metrics-catalog.md) | Comprehensive catalog of metrics by category, usage field, and business area |
+| 10 | [DORA Metrics](10-dora-metrics.md) | DevOps Research and Assessment metrics for software delivery performance |
 
 ## Recommended Reading Order
 
