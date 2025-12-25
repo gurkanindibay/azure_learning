@@ -543,7 +543,102 @@ Trace ID: abc-123
 | **Rate-Based** | Sample percentage of traces | Control volume |
 | **Priority-Based** | Sample based on attributes | Focus on important flows |
 
+#### Tracing Instrumentation APIs
+
+Unlike logs and metrics which can often be collected passively, **distributed tracing requires specialized APIs/SDKs** because traces must be explicitly managed throughout their lifecycle.
+
+| Requirement | Why API is Needed |
+|-------------|-------------------|
+| **Trace/Span Lifecycle** | Create, start, and end spans programmatically |
+| **Context Propagation** | Inject/extract trace context across service boundaries |
+| **Span Attributes** | Add metadata (tags, events, status codes) |
+| **Sampling Decisions** | Control which traces are recorded |
+| **Export Configuration** | Send trace data to backends |
+
+**Instrumentation Approaches:**
+
+| Approach | Description | Effort |
+|----------|-------------|--------|
+| **Auto-Instrumentation** | Agent/library automatically instruments common frameworks | Low |
+| **Manual Instrumentation** | Developer explicitly creates spans via SDK | High |
+| **Hybrid** | Auto for frameworks, manual for business logic | Medium |
+
+**Example Flow (Conceptual):**
+
+```
+// Service A - Start trace at entry point
+tracer = TracerProvider.GetTracer("order-service")
+span = tracer.StartSpan("process-order")
+span.SetAttribute("orderId", orderId)
+
+// Inject context into outgoing HTTP headers
+propagator.Inject(currentContext, httpRequest.Headers)
+
+// ... call Service B ...
+
+span.End()
+
+// -------------------------------------------
+
+// Service B - Extract context and continue trace
+parentContext = propagator.Extract(httpRequest.Headers)
+childSpan = tracer.StartSpan("validate-payment", parentContext)
+
+// Child span automatically linked to parent trace
+childSpan.SetAttribute("paymentMethod", method)
+childSpan.End()
+```
+
+**Key APIs/SDKs:**
+- **OpenTelemetry SDK** - Modern standard (recommended)
+- **Application Insights SDK** - Azure APM
+- **Jaeger/Zipkin Clients** - Backend-specific libraries
+
 **Standards:** OpenTelemetry, W3C Trace Context, Jaeger, Zipkin
+
+#### Tracing Performance Considerations
+
+Tracing introduces overhead that must be carefully managed in production systems.
+
+| Impact Area | Description |
+|-------------|-------------|
+| **CPU Overhead** | Creating spans, serializing context, and exporting data consume CPU cycles |
+| **Memory Overhead** | Spans and attributes are held in memory until exported |
+| **Latency** | Context injection/extraction adds microseconds to each request |
+| **Network Overhead** | Exporting traces to backends consumes bandwidth |
+| **Storage Costs** | High-volume traces require significant backend storage |
+
+**Typical Overhead:**
+
+| Scenario | Latency Impact |
+|----------|----------------|
+| **Auto-instrumentation** | ~1-5% increase |
+| **Manual instrumentation** | Depends on span count |
+| **Synchronous export** | Significant (avoid!) |
+| **Async batch export** | Minimal |
+| **High-cardinality attributes** | Increased memory/storage |
+
+**Mitigation Strategies:**
+
+| Strategy | Benefit |
+|----------|---------|
+| **Use sampling** | Reduces volume; don't trace 100% in high-traffic production |
+| **Async export** | Never block requests waiting for trace export |
+| **Batch exports** | Reduce network calls by batching spans |
+| **Limit span attributes** | Avoid high-cardinality data (e.g., user IDs as attributes) |
+| **Head-based sampling** | Decide early to avoid wasted instrumentation work |
+| **Tail-based sampling** | Keep only interesting traces (errors, slow requests) |
+
+**Sampling Trade-offs:**
+
+| Sample Rate | Overhead | Visibility |
+|-------------|----------|------------|
+| **100%** | High | Complete - see every request |
+| **10%** | Low | Statistical - representative sample |
+| **1%** | Minimal | High-traffic systems only |
+| **Adaptive** | Variable | Adjusts based on traffic/errors |
+
+> **Best Practice:** Start with a low sample rate in production and increase only for specific debugging sessions or error conditions. Use tail-based sampling to automatically capture problematic traces.
 
 ---
 
