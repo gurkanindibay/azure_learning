@@ -263,11 +263,13 @@ Count   │
 
         │◄────────────┤
         50% of users  │
-        are here      │◄──────────────────────┤
-                      90% of users are here  │
-                                             │◄────────────┤
-                                             95% here      │
-                                                          5% worst
+        are here      │◄──────────┤
+                      90% of users│
+                      are here    │◄───────────┤
+                                  95% of users │
+                                  are here     │◄──────────┤
+                                               99% here    │
+                                                          1% worst
                                                           experience
 ```
 
