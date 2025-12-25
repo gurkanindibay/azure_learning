@@ -471,6 +471,146 @@ graph LR
 | **At-least-once** | May duplicate | Ack after process |
 | **Exactly-once** | No loss or duplicates | Idempotency + transactions |
 
+### Idempotency
+
+Ensuring that processing the same event multiple times produces the same result. Critical for at-least-once delivery systems.
+
+#### Idempotency Strategies
+
+| Strategy | Description | Use Case |
+|----------|-------------|----------|
+| **Idempotency Key** | Store and check event IDs | General purpose |
+| **Optimistic Locking** | Version-based updates | State changes |
+| **Natural Idempotency** | Design idempotent operations | Simple updates |
+| **Deduplication Window** | Time-based duplicate detection | High-throughput |
+
+#### Idempotency Key Pattern
+
+Store processed event IDs and check before processing.
+
+```mermaid
+graph TD
+    E[Receive Event] --> C{Already Processed?}
+    C -->|Yes| S[Skip - Return Success]
+    C -->|No| P[Process Event]
+    P --> M[Mark as Processed]
+    M --> A[Acknowledge]
+```
+
+```python
+def process_event(event):
+    # Check if already processed
+    if event_store.exists(event.event_id):
+        logger.info(f"Duplicate event {event.event_id}, skipping")
+        return
+    
+    # Process in transaction
+    with transaction():
+        do_business_logic(event)
+        event_store.mark_processed(event.event_id)
+```
+
+#### Deduplication Table
+
+```sql
+CREATE TABLE processed_events (
+    event_id VARCHAR(255) PRIMARY KEY,
+    event_type VARCHAR(100),
+    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_processed_at (processed_at)
+);
+
+-- Check and insert atomically
+INSERT INTO processed_events (event_id, event_type)
+VALUES ('evt-123', 'OrderPlaced')
+ON CONFLICT (event_id) DO NOTHING;
+-- Returns 0 rows affected if duplicate
+```
+
+#### Optimistic Locking
+
+Use version numbers to detect concurrent or duplicate updates.
+
+```sql
+-- Only succeeds if version matches expected
+UPDATE orders 
+SET status = 'shipped', 
+    version = version + 1,
+    updated_at = NOW()
+WHERE order_id = 'ORD-123' 
+  AND version = 5;
+
+-- Check rows affected - 0 means conflict/duplicate
+```
+
+#### Natural Idempotency
+
+Design operations to be inherently idempotent.
+
+| Operation | Idempotent? | Alternative |
+|-----------|-------------|-------------|
+| `SET status = 'shipped'` | ✅ Yes | - |
+| `INCREMENT counter` | ❌ No | `SET counter = X` |
+| `INSERT record` | ❌ No | `UPSERT` / `INSERT IGNORE` |
+| `DELETE WHERE id = X` | ✅ Yes | - |
+| `APPEND to list` | ❌ No | `SET list = [...]` |
+
+#### Deduplication Window
+
+For high-throughput systems, maintain a time-limited deduplication cache.
+
+```mermaid
+graph LR
+    E[Event] --> C[Check Cache]
+    C -->|Hit| D[Discard Duplicate]
+    C -->|Miss| P[Process]
+    P --> A[Add to Cache]
+    A --> T[TTL Expiry]
+```
+
+```python
+class DeduplicationCache:
+    def __init__(self, ttl_seconds=3600):
+        self.cache = {}  # In production: Redis with TTL
+        self.ttl = ttl_seconds
+    
+    def is_duplicate(self, event_id):
+        if event_id in self.cache:
+            return True
+        self.cache[event_id] = time.time()
+        return False
+    
+    def cleanup_expired(self):
+        cutoff = time.time() - self.ttl
+        self.cache = {k: v for k, v in self.cache.items() if v > cutoff}
+```
+
+#### Combining with Exactly-Once Semantics
+
+```mermaid
+graph TD
+    subgraph "Producer"
+        P[Produce Event] --> TXN[Transactional Outbox]
+    end
+    
+    subgraph "Broker"
+        TXN --> B[Event Broker]
+        B --> D[Deduplication]
+    end
+    
+    subgraph "Consumer"
+        D --> I[Idempotency Check]
+        I --> PROC[Process]
+        PROC --> ACK[Acknowledge]
+    end
+```
+
+| Layer | Mechanism |
+|-------|-----------|
+| **Producer** | Transactional outbox pattern |
+| **Broker** | Message deduplication (e.g., Kafka exactly-once) |
+| **Consumer** | Idempotency key + transactional processing |
+
 ## Best Practices
 
 ### Event Design
