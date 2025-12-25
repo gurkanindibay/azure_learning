@@ -529,6 +529,265 @@ graph TB
 | Device Code | Optional | Optional | Smart TVs, CLI |
 | Implicit (Deprecated) | N/A | N/A | ⚠️ Don't use |
 
+### Mutual TLS (mTLS)
+
+**Mutual TLS** (mTLS), also known as two-way TLS or client certificate authentication, extends standard TLS by requiring both client and server to authenticate each other using X.509 certificates.
+
+#### TLS vs mTLS Comparison
+
+| Aspect | Standard TLS | Mutual TLS (mTLS) |
+|--------|--------------|-------------------|
+| **Server Authentication** | ✅ Yes | ✅ Yes |
+| **Client Authentication** | ❌ No | ✅ Yes (Certificate) |
+| **Use Case** | Public websites | Service-to-service, B2B |
+| **Trust Model** | Client trusts server | Mutual trust |
+
+#### How mTLS Works
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    
+    Note over C,S: TCP Handshake
+    C->>S: ClientHello (supported cipher suites)
+    S->>C: ServerHello (selected cipher suite)
+    S->>C: Server Certificate
+    S->>C: Certificate Request (for client cert)
+    S->>C: ServerHelloDone
+    
+    Note over C: Verify Server Certificate
+    C->>S: Client Certificate
+    C->>S: ClientKeyExchange
+    C->>S: CertificateVerify (signed with client private key)
+    C->>S: ChangeCipherSpec
+    C->>S: Finished
+    
+    Note over S: Verify Client Certificate
+    S->>C: ChangeCipherSpec
+    S->>C: Finished
+    
+    Note over C,S: Encrypted Communication
+    C->>S: Application Data (Encrypted)
+    S->>C: Application Data (Encrypted)
+```
+
+#### mTLS Certificate Chain
+
+```mermaid
+graph TB
+    subgraph "Certificate Authority (CA)"
+        RCA[Root CA]
+        ICA[Intermediate CA]
+        RCA -->|Signs| ICA
+    end
+    
+    subgraph "Server Side"
+        ICA -->|Signs| SC[Server Certificate]
+        SC --> SK[Server Private Key]
+    end
+    
+    subgraph "Client Side"
+        ICA -->|Signs| CC[Client Certificate]
+        CC --> CK[Client Private Key]
+    end
+    
+    subgraph "Trust Store"
+        RCA --> TS[Trusted Root CAs]
+    end
+```
+
+#### Certificate Components
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| **Subject** | Identity of certificate holder | `CN=api-client.example.com` |
+| **Issuer** | CA that signed the certificate | `CN=Example Intermediate CA` |
+| **Serial Number** | Unique identifier | `0x1234ABCD` |
+| **Validity Period** | Not Before / Not After dates | Valid for 1 year |
+| **Public Key** | Client's public key | RSA 2048-bit or ECDSA |
+| **Extensions** | Additional attributes | Key Usage, SAN |
+
+#### mTLS Implementation
+
+**Server Configuration (nginx)**
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.example.com;
+    
+    # Server certificate and key
+    ssl_certificate /etc/nginx/certs/server.crt;
+    ssl_certificate_key /etc/nginx/certs/server.key;
+    
+    # Client certificate verification
+    ssl_client_certificate /etc/nginx/certs/ca-chain.crt;
+    ssl_verify_client on;
+    ssl_verify_depth 2;
+    
+    # Optional: Pass client cert info to backend
+    location /api {
+        proxy_set_header X-Client-Cert-DN $ssl_client_s_dn;
+        proxy_set_header X-Client-Cert-Serial $ssl_client_serial;
+        proxy_pass http://backend;
+    }
+}
+```
+
+**Client Request (curl)**
+
+```bash
+curl --cert client.crt \
+     --key client.key \
+     --cacert ca-chain.crt \
+     https://api.example.com/resource
+```
+
+**Client Request (Python)**
+
+```python
+import requests
+
+response = requests.get(
+    'https://api.example.com/resource',
+    cert=('/path/to/client.crt', '/path/to/client.key'),
+    verify='/path/to/ca-chain.crt'
+)
+```
+
+**Client Request (.NET)**
+
+```csharp
+var handler = new HttpClientHandler();
+handler.ClientCertificates.Add(
+    new X509Certificate2("client.pfx", "password")
+);
+handler.ServerCertificateCustomValidationCallback = 
+    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator; // Only for dev!
+
+var client = new HttpClient(handler);
+var response = await client.GetAsync("https://api.example.com/resource");
+```
+
+#### mTLS Architecture Patterns
+
+**Pattern 1: Direct mTLS**
+
+```mermaid
+graph LR
+    C[Client] -->|mTLS| S[Server]
+    
+    subgraph "Client"
+        CC[Client Cert]
+        CK[Private Key]
+    end
+    
+    subgraph "Server"
+        SC[Server Cert]
+        SK[Private Key]
+        TS[Trust Store]
+    end
+```
+
+**Pattern 2: mTLS with API Gateway**
+
+```mermaid
+graph LR
+    C[Client] -->|mTLS| GW[API Gateway]
+    GW -->|Internal TLS| S1[Service 1]
+    GW -->|Internal TLS| S2[Service 2]
+    
+    subgraph "Gateway Responsibilities"
+        CV[Certificate Validation]
+        EI[Extract Identity]
+        RL[Rate Limiting]
+        RT[Routing]
+    end
+```
+
+**Pattern 3: Service Mesh mTLS (Zero Trust)**
+
+```mermaid
+graph TB
+    subgraph "Service Mesh"
+        subgraph "Pod A"
+            SA[Service A]
+            PA[Sidecar Proxy]
+            SA <--> PA
+        end
+        
+        subgraph "Pod B"
+            SB[Service B]
+            PB[Sidecar Proxy]
+            SB <--> PB
+        end
+        
+        PA <-->|Auto mTLS| PB
+        
+        CP[Control Plane]
+        CP -->|Cert Distribution| PA
+        CP -->|Cert Distribution| PB
+    end
+```
+
+#### Certificate Lifecycle Management
+
+```mermaid
+stateDiagram-v2
+    [*] --> Generated: Create CSR
+    Generated --> Issued: CA Signs
+    Issued --> Active: Deploy
+    Active --> Renewing: Near Expiry
+    Renewing --> Active: New Cert Deployed
+    Active --> Revoked: Compromise Detected
+    Revoked --> [*]
+    Active --> Expired: TTL Exceeded
+    Expired --> [*]
+```
+
+| Phase | Action | Automation |
+|-------|--------|------------|
+| **Generation** | Create key pair and CSR | cert-manager, Vault |
+| **Issuance** | CA signs the certificate | PKI, ACME, Cloud CA |
+| **Distribution** | Deploy to services | Kubernetes secrets, Vault |
+| **Rotation** | Replace before expiry | Auto-renewal policies |
+| **Revocation** | Invalidate compromised certs | CRL, OCSP |
+
+#### When to Use mTLS
+
+| Scenario | mTLS Recommended | Alternative |
+|----------|------------------|-------------|
+| Service-to-service (internal) | ✅ Yes | Service mesh auto-mTLS |
+| B2B partner integrations | ✅ Yes | OAuth 2.0 + API keys |
+| Zero Trust architecture | ✅ Yes | - |
+| Public APIs | ❌ No | OAuth 2.0, API keys |
+| Mobile/Browser clients | ❌ No | OAuth 2.0 + PKCE |
+| IoT device authentication | ✅ Yes | Device certificates |
+
+#### mTLS Best Practices
+
+1. **Use strong key algorithms** - RSA 2048+ or ECDSA P-256+
+2. **Short certificate validity** - 90 days or less for automated rotation
+3. **Automate certificate management** - Use tools like cert-manager, Vault, or cloud PKI
+4. **Implement certificate revocation** - Use CRL or OCSP for quick revocation
+5. **Separate CAs per environment** - Don't share CAs between prod/dev
+6. **Monitor certificate expiry** - Alert before certificates expire
+7. **Use certificate pinning carefully** - Can cause outages during rotation
+8. **Log certificate details** - Track which clients are connecting
+
+#### mTLS vs Other Authentication Methods
+
+| Aspect | mTLS | OAuth 2.0 | API Key |
+|--------|------|-----------|---------|
+| **Authentication** | Certificate | Token | Static key |
+| **Encryption** | Built-in (TLS) | Requires HTTPS | Requires HTTPS |
+| **Identity** | X.509 Subject | Token claims | Key mapping |
+| **Revocation** | CRL/OCSP | Token expiry | Manual |
+| **Rotation** | Certificate renewal | Token refresh | Key rotation |
+| **Complexity** | High (PKI required) | Medium | Low |
+| **Best For** | Service-to-service | User delegation | Simple integrations |
+
 ### Security Best Practices
 
 1. **Always use HTTPS**
