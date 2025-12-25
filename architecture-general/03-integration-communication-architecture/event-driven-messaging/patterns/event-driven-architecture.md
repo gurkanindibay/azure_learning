@@ -99,6 +99,7 @@ Infrastructure that routes events between producers and consumers.
 |-------------|-----------------|----------|
 | **Message Queue** | Point-to-point | RabbitMQ, Azure Service Bus |
 | **Pub/Sub** | One-to-many | Kafka, Azure Event Hubs |
+| **Event Routing** | Reactive event distribution | Apache EventMesh, Knative Eventing, Azure Event Grid |
 | **Event Mesh** | Distributed routing | Solace, NATS |
 
 ## EDA Patterns
@@ -208,7 +209,8 @@ graph LR
     end
     AE --> IE[Integration Event]
     IE --> B[Event Broker]
-    B --> subgraph "Service B"
+    B --> ACL
+    subgraph "Service B"
         ACL[Anti-Corruption Layer] --> DE2[Domain Event]
     end
 ```
