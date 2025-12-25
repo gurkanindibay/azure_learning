@@ -455,6 +455,40 @@ graph LR
 | **Versioning** | Support multiple versions |
 | **Weak Schema** | Tolerant reader pattern |
 
+#### Schema Registry Technologies
+
+Schema registries provide centralized schema management, validation, and evolution tracking.
+
+| Technology | Type | Schema Formats | Key Features |
+|------------|------|----------------|--------------|
+| **Confluent Schema Registry** | Open Source / Commercial | Avro, JSON Schema, Protobuf | Kafka-native, compatibility checks, schema evolution |
+| **AWS Glue Schema Registry** | Cloud (AWS) | Avro, JSON Schema, Protobuf | AWS integration, serverless, IAM security |
+| **Azure Schema Registry** | Cloud (Azure) | Avro, JSON Schema | Event Hubs integration, RBAC, Azure AD |
+| **Apicurio Registry** | Open Source | Avro, JSON Schema, Protobuf, OpenAPI, GraphQL | Multi-format, Kafka/HTTP support, CNCF project |
+| **Red Hat Service Registry** | Commercial | Avro, JSON Schema, Protobuf, OpenAPI | Based on Apicurio, enterprise support |
+| **Karapace** | Open Source | Avro, JSON Schema, Protobuf | Confluent-compatible API, lightweight |
+| **buf** | Open Source / Commercial | Protobuf | Protobuf-focused, linting, breaking change detection |
+
+```mermaid
+graph LR
+    subgraph "Schema Registry Flow"
+        P[Producer] -->|1. Register Schema| SR[(Schema Registry)]
+        SR -->|2. Return Schema ID| P
+        P -->|3. Send Event + Schema ID| B[Event Broker]
+        B -->|4. Receive Event| C[Consumer]
+        C -->|5. Fetch Schema| SR
+        SR -->|6. Return Schema| C
+        C -->|7. Deserialize| D[Process Event]
+    end
+```
+
+| Feature | Description |
+|---------|-------------|
+| **Schema Validation** | Ensure events conform to registered schema |
+| **Compatibility Checking** | Backward, forward, or full compatibility |
+| **Version Management** | Track schema versions per subject |
+| **Schema Evolution** | Safe schema changes without breaking consumers |
+
 ### Event Ordering
 
 | Guarantee | Description | Example |
