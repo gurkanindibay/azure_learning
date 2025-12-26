@@ -10,6 +10,7 @@
 - [5. Clean Architecture](#5-clean-architecture)
 - [6. Hexagonal Architecture (Ports & Adapters)](#6-hexagonal-architecture-ports--adapters)
 - [7. Onion Architecture](#7-onion-architecture)
+- [8. Microservices Architecture](#8-microservices-architecture)
 - [Architecture Comparison](#architecture-comparison)
 - [Decision Guide](#decision-guide)
 
@@ -637,19 +638,238 @@ src/
 
 ---
 
+## 8. Microservices Architecture
+
+### Definition
+
+**Microservices Architecture** is an approach where an application is built as a collection of small, autonomous services, each running in its own process and communicating via lightweight protocols (typically HTTP/REST or messaging).
+
+### Structure
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Microservices Architecture                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────────┐
+                              │ API Gateway │
+                              └──────┬──────┘
+                                     │
+         ┌───────────────┬───────────┼───────────┬───────────────┐
+         │               │           │           │               │
+         ▼               ▼           ▼           ▼               ▼
+   ┌───────────┐   ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+   │   User    │   │   Order   │ │  Product  │ │  Payment  │ │ Shipping  │
+   │  Service  │   │  Service  │ │  Service  │ │  Service  │ │  Service  │
+   └─────┬─────┘   └─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └─────┬─────┘
+         │               │           │           │               │
+         ▼               ▼           ▼           ▼               ▼
+   ┌───────────┐   ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+   │  User DB  │   │ Order DB  │ │Product DB │ │Payment DB │ │Shipping DB│
+   │ (Postgres)│   │  (MySQL)  │ │ (MongoDB) │ │ (Postgres)│ │  (Redis)  │
+   └───────────┘   └───────────┘ └───────────┘ └───────────┘ └───────────┘
+```
+
+### Key Characteristics
+
+| Aspect | Description |
+|--------|-------------|
+| Deployment | Each service deployed independently |
+| Database | Each service owns its data (Database per Service) |
+| Communication | HTTP/REST, gRPC, or async messaging |
+| Scaling | Each service scales independently |
+| Technology | Polyglot - different tech stacks per service |
+| Team Structure | Small teams own entire services |
+
+### Communication Patterns
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     COMMUNICATION PATTERNS                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  SYNCHRONOUS                          ASYNCHRONOUS                          │
+│  ┌─────────────────────────┐          ┌─────────────────────────┐          │
+│  │ Service A ──HTTP──► B   │          │ Service A ──► Message   │          │
+│  │           ◄─Response─   │          │               Queue     │          │
+│  └─────────────────────────┘          │                  │      │          │
+│                                       │          ┌───────┴────┐ │          │
+│  • REST APIs                          │          ▼            ▼ │          │
+│  • gRPC                               │     Service B    Service C          │
+│  • GraphQL                            └─────────────────────────┘          │
+│                                       • Message Queues (RabbitMQ, Kafka)   │
+│                                       • Event-driven                        │
+│                                       • Pub/Sub                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Supporting Infrastructure
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    MICROSERVICES INFRASTRUCTURE                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │  Service        │  │    API          │  │   Service       │             │
+│  │  Discovery      │  │   Gateway       │  │   Mesh          │             │
+│  │  (Consul,       │  │  (Kong, NGINX,  │  │  (Istio,        │             │
+│  │   Eureka)       │  │   Azure APIM)   │  │   Linkerd)      │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │  Config         │  │  Distributed    │  │  Container      │             │
+│  │  Management     │  │  Tracing        │  │  Orchestration  │             │
+│  │  (Consul,       │  │  (Jaeger,       │  │  (Kubernetes,   │             │
+│  │   Azure App     │  │   Zipkin)       │  │   Docker Swarm) │             │
+│  │   Config)       │  │                 │  │                 │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │  Centralized    │  │  Circuit        │  │  Message        │             │
+│  │  Logging        │  │  Breaker        │  │  Broker         │             │
+│  │  (ELK, Azure    │  │  (Polly,        │  │  (Kafka,        │             │
+│  │   Monitor)      │  │   Hystrix)      │  │   RabbitMQ)     │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Design Patterns for Microservices
+
+| Pattern | Purpose |
+|---------|---------|
+| **API Gateway** | Single entry point, routing, authentication |
+| **Service Discovery** | Dynamic service location |
+| **Circuit Breaker** | Fault tolerance, prevent cascade failures |
+| **Saga Pattern** | Distributed transactions across services |
+| **CQRS** | Separate read and write operations |
+| **Event Sourcing** | Store state changes as events |
+| **Sidecar** | Auxiliary processes alongside services |
+| **Strangler Fig** | Gradual migration from monolith |
+
+### Data Management Strategies
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    DATA MANAGEMENT IN MICROSERVICES                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. DATABASE PER SERVICE                                                    │
+│     Each service owns its database schema                                   │
+│     ✅ Loose coupling  ❌ Data consistency challenges                       │
+│                                                                             │
+│  2. SAGA PATTERN                                                            │
+│     Sequence of local transactions with compensating actions                │
+│     ✅ No distributed locks  ❌ Complex implementation                      │
+│                                                                             │
+│  3. EVENT SOURCING                                                          │
+│     Store all changes as immutable events                                   │
+│     ✅ Complete audit trail  ❌ Eventual consistency                        │
+│                                                                             │
+│  4. CQRS (Command Query Responsibility Segregation)                         │
+│     Separate models for reads and writes                                    │
+│     ✅ Optimized queries  ❌ Added complexity                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Advantages
+
+- ✅ Independent deployment and scaling
+- ✅ Technology diversity (polyglot)
+- ✅ Fault isolation (failure in one service doesn't crash all)
+- ✅ Organizational alignment (team per service)
+- ✅ Easier to understand individual services
+- ✅ Continuous delivery friendly
+- ✅ Resilience through redundancy
+
+### Disadvantages
+
+- ❌ Distributed system complexity
+- ❌ Network latency and failures
+- ❌ Data consistency challenges
+- ❌ Operational overhead (monitoring, logging, tracing)
+- ❌ Testing complexity (integration tests)
+- ❌ Service coordination overhead
+- ❌ Requires DevOps maturity
+
+### Microservices vs Monolith
+
+| Aspect | Monolith | Microservices |
+|--------|----------|---------------|
+| Deployment | Single unit | Multiple independent units |
+| Scaling | Scale entire app | Scale individual services |
+| Database | Single shared database | Database per service |
+| Technology | Single stack | Polyglot |
+| Team Size | Large team | Small, focused teams |
+| Complexity | Simple infrastructure | Complex distributed system |
+| Development | Slower over time | Faster for individual services |
+| Testing | Simpler E2E testing | Complex integration testing |
+
+### When to Use
+
+- Large, complex applications with multiple domains
+- Applications requiring high scalability
+- Organizations with multiple development teams
+- Applications needing continuous deployment
+- When different parts need different scaling strategies
+- When technology diversity is beneficial
+
+### When NOT to Use
+
+- Small applications or startups (start with monolith)
+- Teams without DevOps expertise
+- When you can't define clear service boundaries
+- Tight budget for infrastructure
+- When low latency is critical (network overhead)
+
+### Migration Path: Monolith to Microservices
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    STRANGLER FIG PATTERN                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Step 1: Identify Bounded Contexts                                          │
+│          └──► Analyze domain, find natural boundaries                       │
+│                                                                             │
+│  Step 2: Create API Gateway/Facade                                          │
+│          └──► Route traffic to monolith initially                           │
+│                                                                             │
+│  Step 3: Extract Services Incrementally                                     │
+│          └──► Start with least coupled, most valuable                       │
+│                                                                             │
+│  Step 4: Redirect Traffic                                                   │
+│          └──► Route specific endpoints to new services                      │
+│                                                                             │
+│  Step 5: Repeat Until Complete                                              │
+│          └──► Eventually retire the monolith                                │
+│                                                                             │
+│  ┌─────────┐      ┌─────────┐      ┌─────────┐      ┌─────────┐            │
+│  │Monolith │  ──► │Monolith │  ──► │Monolith │  ──► │ Retired │            │
+│  │  100%   │      │  + Svc  │      │  + Svcs │      │         │            │
+│  └─────────┘      └─────────┘      └─────────┘      └─────────┘            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Architecture Comparison
 
 ### Feature Comparison Matrix
 
-| Feature | Monolithic | Modular Monolith | Layered | N-Tier | Clean | Hexagonal | Onion |
-|---------|------------|------------------|---------|--------|-------|-----------|-------|
-| **Complexity** | Low | Medium | Low | Medium | High | High | High |
-| **Testability** | Low | Medium | Medium | Medium | High | High | High |
-| **Maintainability** | Low | Medium | Medium | Medium | High | High | High |
-| **Scalability** | Low | Low | Low | High | Medium | Medium | Medium |
-| **Coupling** | High | Medium | Medium | Low | Low | Low | Low |
-| **Learning Curve** | Low | Low | Low | Medium | High | High | High |
-| **Domain Focus** | Low | Medium | Low | Low | High | High | High |
+| Feature | Monolithic | Modular Monolith | Layered | N-Tier | Clean | Hexagonal | Onion | Microservices |
+|---------|------------|------------------|---------|--------|-------|-----------|-------|---------------|
+| **Complexity** | Low | Medium | Low | Medium | High | High | High | Very High |
+| **Testability** | Low | Medium | Medium | Medium | High | High | High | High |
+| **Maintainability** | Low | Medium | Medium | Medium | High | High | High | High |
+| **Scalability** | Low | Low | Low | High | Medium | Medium | Medium | Very High |
+| **Coupling** | High | Medium | Medium | Low | Low | Low | Low | Very Low |
+| **Learning Curve** | Low | Low | Low | Medium | High | High | High | Very High |
+| **Domain Focus** | Low | Medium | Low | Low | High | High | High | High |
+| **DevOps Need** | Low | Low | Low | Medium | Medium | Medium | Medium | Very High |
 
 ### Deployment Comparison
 
@@ -662,6 +882,7 @@ src/
 | Clean | Single or multiple | Depends on implementation |
 | Hexagonal | Single or multiple | Depends on implementation |
 | Onion | Single or multiple | Depends on implementation |
+| Microservices | Many independent units | Horizontal per service |
 
 ### Dependency Direction
 
@@ -743,21 +964,40 @@ Default ──────────────────────► La
 | MVP / Prototype | Monolithic |
 | Simple CRUD App | Layered |
 | Complex Business Logic | Clean / Hexagonal / Onion |
-| Enterprise with Scaling Needs | N-Tier |
+| Enterprise with Scaling Needs | N-Tier or Microservices |
 | Potential Microservices Migration | Modular Monolith |
 | Multiple Input Channels | Hexagonal |
 | Domain-Driven Design | Onion or Clean |
 | Team New to Architecture | Layered → Modular Monolith |
+| Large Organization, Multiple Teams | Microservices |
+| High Scalability & Availability | Microservices |
+| Continuous Deployment Required | Microservices |
 
 ### Evolution Path
 
 ```
-Monolithic ──► Modular Monolith ──► Microservices
+                                    ┌──────────────────┐
+                                    │   Microservices  │
+                                    └────────▲─────────┘
+                                             │
+Monolithic ──► Modular Monolith ─────────────┘
      │                │
      │                └──► Clean / Hexagonal / Onion
      │                     (Better internal architecture)
      ▼
   Layered (if simple CRUD focus)
+
+
+Typical Enterprise Evolution:
+
+┌──────────┐    ┌─────────────┐    ┌──────────────┐    ┌──────────────┐
+│Monolithic│───►│   Modular   │───►│  Distributed │───►│ Microservices│
+│          │    │  Monolith   │    │   Monolith   │    │              │
+└──────────┘    └─────────────┘    └──────────────┘    └──────────────┘
+                                          │
+                                          ▼
+                              Clean/Hexagonal/Onion
+                              (Internal structure)
 ```
 
 ---
