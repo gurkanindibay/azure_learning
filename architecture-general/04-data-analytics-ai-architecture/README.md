@@ -4,6 +4,11 @@ This section covers data management, analytics platforms, and AI/ML architecture
 
 ## Subsections
 
+### 4.0 Data Architecture Fundamentals
+- [ACID Properties](data-architecture-fundamentals/acid-properties.md) - Transaction guarantees
+- [BASE Properties](data-architecture-fundamentals/base-properties.md) - Distributed availability approach
+- [CAP Theorem](data-architecture-fundamentals/cap-theorem.md) - Distributed systems trade-offs
+
 ### 4.1 Data Architecture
 - OLTP Architecture
 - OLAP Architecture
