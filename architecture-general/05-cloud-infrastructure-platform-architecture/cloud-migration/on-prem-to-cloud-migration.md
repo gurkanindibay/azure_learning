@@ -4,51 +4,85 @@
 
 Cloud migration is the process of moving applications, data, and infrastructure from on-premises data centers to cloud platforms. While the promise of flexibility, scalability, and cost optimization makes cloud migration attractive, the approach taken can determine success or failure of the entire digital transformation initiative.
 
-## Migration Strategies (The 6 R's)
+## Migration Strategies (The 8 R's)
 
-### 1. Rehost (Lift & Shift)
-- Move applications to cloud with minimal or no changes
-- Fastest migration approach
-- **Risk**: Transfers architectural problems without solving them
+The Azure Cloud Adoption Framework defines eight migration strategies. Each workload should be evaluated to determine the appropriate approach.
 
-### 2. Replatform (Lift, Tinker & Shift)
-- Make some optimizations during migration
-- Example: Switching to managed databases
-- Moderate effort with some cloud benefits
+| Strategy | Business Driver | Key Indicators |
+|----------|-----------------|----------------|
+| **Retire** | Decommission redundant/low-value workloads | Limited business value; migration cost outweighs benefits |
+| **Retain** | Stability and no change needed | Workload is stable, compliant; low ROI from migration |
+| **Rehost** | Minimal disruption, no near-term modernization | Compatible with Azure; low-risk; short-term goals |
+| **Replatform** | PaaS benefits with minimal code changes | Reduce OS/licensing overhead; simplify disaster recovery |
+| **Refactor** | Reduce technical debt, optimize for cloud | High maintenance costs; significant technical debt |
+| **Rearchitect** | Unlock cloud-native capabilities | Requires modularization; varying scaling needs by component |
+| **Rebuild** | New cloud-native solution required | Legacy system too outdated; need modern frameworks |
+| **Replace** | SaaS/AI solution to simplify operations | Mature SaaS alternative exists; little customization needed |
 
-### 3. Repurchase (Drop & Shop)
-- Replace existing applications with SaaS solutions
-- Example: Moving from on-prem CRM to Salesforce
-
-### 4. Refactor / Re-architect
-- Redesign applications to be cloud-native
-- Highest effort but maximum cloud benefits
-- Enables microservices, serverless, containers
-
-### 5. Retire
-- Identify and decommission unnecessary applications
+### 1. Retire (Decommission)
+- Decommission workloads with no current or future business value
+- Validate that workload has no critical dependencies
 - Reduces migration scope and costs
 
-### 6. Retain
-- Keep certain applications on-premises
-- Valid for compliance, latency, or cost reasons
+### 2. Retain (Keep As-Is)
+- Keep workloads that can't be migrated due to regulatory, technical, or business continuity constraints
+- Use **Azure Arc** to manage retained on-premises workloads from Azure
+- Consider **Azure Local** for modern on-premises solutions connected to Azure
+
+### 3. Rehost (Lift & Shift)
+- Move workloads to Azure with minimal changes (like-for-like migration)
+- Fastest migration approach
+- **Warning**: Don't rehost problematic workloads—this transfers technical debt
+- Only suitable if no modernization needed within 2 years
+- Good for building foundational cloud operations experience
+
+### 4. Replatform (Modernize Hosting)
+- Move to modern hosting environment (PaaS) with minimal code changes
+- Examples: VMs → Azure App Service, SQL Server → Azure SQL Database
+- Reduces infrastructure management, improves scalability
+
+### 5. Refactor (Modernize Code)
+- Improve internal code structure without adding features
+- Reduce technical debt, optimize for cloud
+- Use Azure SDKs to improve performance or observability
+- Apply cloud design patterns
+
+### 6. Rearchitect (Modernize Architecture)
+- Redesign workload architecture for cloud-native capabilities
+- Break down monolithic applications, adopt microservices
+- Enable targeted scaling per component
+- See: [Modern Web App Pattern](https://learn.microsoft.com/azure/architecture/web-apps/guides/enterprise-app-patterns/modern-web-app/dotnet/guidance)
+
+### 7. Rebuild (Build Cloud-Native)
+- Full redevelopment using cloud-native solutions
+- Appropriate when legacy systems are obsolete
+- Leverage Azure PaaS, automation, and AI capabilities
+
+### 8. Replace (Use SaaS Alternative)
+- Replace custom applications with commercial SaaS solutions
+- Eliminates custom development and ongoing maintenance
+- Common for CRM, HR platforms, collaboration tools
 
 ```mermaid
-graph LR
-    A[On-Premises] --> B{Migration Strategy}
-    B --> C[Rehost]
-    B --> D[Replatform]
-    B --> E[Repurchase]
-    B --> F[Refactor]
-    B --> G[Retire]
-    B --> H[Retain]
+graph TD
+    A[On-Premises Workload] --> B{Determine Business Driver}
+    B --> C[Retire]
+    B --> D[Retain]
+    B --> E[Rehost]
+    B --> F[Replatform]
+    B --> G[Refactor]
+    B --> H[Rearchitect]
+    B --> I[Rebuild]
+    B --> J[Replace]
     
-    C --> I[Cloud - Minimal Changes]
-    D --> J[Cloud - Some Optimization]
-    E --> K[SaaS Solution]
-    F --> L[Cloud-Native Architecture]
-    G --> M[Decommission]
-    H --> N[Keep On-Prem]
+    C --> C1[Decommission]
+    D --> D1[Keep On-Prem + Azure Arc]
+    E --> E1[Azure IaaS - VMs]
+    F --> F1[Azure PaaS - App Service/SQL]
+    G --> G1[Optimized Code on Azure]
+    H --> H1[Cloud-Native Architecture]
+    I --> I1[New Azure-Native Solution]
+    J --> J1[SaaS Solution]
 ```
 
 ## Why Lift & Shift Often Fails
@@ -121,21 +155,40 @@ Cloud reality requires:
 
 ### Phase 1: Assessment & Discovery
 
+#### Azure Migrate for Discovery
+
+**Azure Migrate** provides a hub of tools for discovery, assessment, and migration:
+
+| Assessment Type | Description |
+|----------------|-------------|
+| **Azure VM** | Assess on-premises servers for migration to Azure VMs (VMware, Hyper-V, physical) |
+| **Azure SQL** | Assess SQL servers for migration to Azure SQL Database or Managed Instance |
+| **Azure App Service** | Assess ASP.NET web apps for migration to Azure App Service |
+| **Azure VMware Solution** | Assess VMware VMs for migration to AVS |
+
+**Best Practices for Azure Migrate Assessments**:
+1. Deploy the lightweight Azure Migrate appliance for agentless discovery
+2. Create as-is assessments immediately after servers appear in the portal
+3. Wait at least one day before running performance-based assessments
+4. Profile environment for the full assessment duration
+5. Recalculate assessments to reflect latest data
+
 ```mermaid
 flowchart TD
-    A[Start Assessment] --> B[Application Portfolio Analysis]
-    B --> C[Dependency Mapping]
-    C --> D[Data Classification]
-    D --> E[Risk Assessment]
-    E --> F[Migration Strategy Selection]
+    A[Start Assessment] --> B[Deploy Azure Migrate Appliance]
+    B --> C[Application Portfolio Analysis]
+    C --> D[Dependency Mapping]
+    D --> E[Data Classification]
+    E --> F[Risk Assessment]
+    F --> G[Migration Strategy Selection]
     
-    B --> B1[Business Criticality]
-    B --> B2[Technical Complexity]
-    B --> B3[Compliance Requirements]
+    C --> C1[Business Criticality]
+    C --> C2[Technical Complexity]
+    C --> C3[Compliance Requirements]
     
-    C --> C1[Inter-application Dependencies]
-    C --> C2[External Integrations]
-    C --> C3[Shared Resources]
+    D --> D1[Inter-application Dependencies]
+    D --> D2[External Integrations]
+    D --> D3[Shared Resources]
 ```
 
 #### Key Questions to Answer
@@ -227,6 +280,29 @@ The impact of lift & shift typically becomes clear during a crisis:
 | Ownership Vacuum | High availability theoretically exists but no one fully owns services |
 | Wrong Questions | "Is the system up?" instead of "Who can shut the system down?" |
 
+## Success Metrics by Strategy
+
+Define success metrics that validate business outcomes, not just technical completion:
+
+| Strategy | Example Success Metrics |
+|----------|------------------------|
+| **Retire** | Retire 100% of obsolete workloads before migration |
+| **Rehost** | Migrate Tier 1 workloads with no SLA degradation; decommission 30% of on-prem infrastructure |
+| **Replatform** | Reduce deployment lead times by 30%; reduce infrastructure costs by 25% within 12 months |
+| **Refactor** | Improve response time by 40%; achieve 95% observability coverage |
+| **Rearchitect** | Support 2x user load with no performance degradation |
+| **Replace** | Transition to SaaS with 99.9% uptime and no custom code |
+| **Rebuild** | Launch cloud-native app in 3 months vs 6 months on-prem; cut operational costs by 40% |
+| **Retain** | Maintain current SLA and compliance; manage on-prem workloads from Azure using Azure Arc |
+
+## When to Modernize During Migration
+
+Modernization during migration introduces complexity but can deliver long-term benefits:
+
+1. **Modernize when team has required skills and time** - Defer if expertise is lacking
+2. **Modernize workloads requiring compatibility updates** - Legacy tech, unsupported SDKs
+3. **Modernize when migration enables funding and alignment** - Use stakeholder support opportunity
+
 ## Best Practices Summary
 
 ### ✅ Do
@@ -236,6 +312,9 @@ The impact of lift & shift typically becomes clear during a crisis:
 - Establish clear ownership for every service
 - Design monitoring to understand behavior, not just health
 - Accept that digital transformation is a change in reality, not just technology
+- Define success metrics based on business outcomes
+- Communicate decisions to all stakeholders
+- Coordinate migration plans with cloud strategy team
 
 ### ❌ Don't
 - Assume existing systems work correctly
@@ -244,6 +323,8 @@ The impact of lift & shift typically becomes clear during a crisis:
 - Measure success by "being in the cloud"
 - Ignore data consistency requirements
 - Leave ownership undefined
+- Rehost problematic workloads without addressing root causes
+- Attempt modernization without adequate expertise or time
 
 ## The Key Insight
 
@@ -259,7 +340,24 @@ Lift & shift, instead of turning this visibility into an advantage, often turns 
 
 ## References
 
-- Akbulut, U. (2024). "Why Digital Transformation That Starts with Lift & Shift Always Hits a Wall"
+### Primary Sources
+- Akbulut, U. (2024). [Why Digital Transformation That Starts with Lift & Shift Always Hits a Wall](https://medium.com/@umutt.akbulut/why-digital-transformation-that-starts-with-lift-shift-always-hits-a-wall-e3557be4fe64)
+
+### Microsoft Learn Documentation
+- [Microsoft Cloud Adoption Framework Overview](https://learn.microsoft.com/azure/cloud-adoption-framework/overview)
+- [Select Your Cloud Migration Strategies](https://learn.microsoft.com/azure/cloud-adoption-framework/plan/select-cloud-migration-strategy)
+- [Plan the Migration Strategy](https://learn.microsoft.com/azure/storage/common/storage-migration-plan-strategy)
+- [Plan Your Migration](https://learn.microsoft.com/azure/cloud-adoption-framework/migrate/plan-migration)
+- [Azure Migrate: Best Practices for Creating Assessments](https://learn.microsoft.com/azure/migrate/best-practices-assessment)
+- [Build Migration Plan with Azure Migrate](https://learn.microsoft.com/azure/migrate/concepts-migration-planning)
+- [Database Migration Guides](https://learn.microsoft.com/data-migration/)
+
+### Architecture Guidance
+- [Azure Well-Architected Framework](https://learn.microsoft.com/azure/well-architected/)
+- [Azure Architecture Center](https://learn.microsoft.com/azure/architecture/)
+- [Reliable Web App Pattern](https://learn.microsoft.com/azure/architecture/web-apps/guides/enterprise-app-patterns/reliable-web-app/dotnet/guidance)
+- [Modern Web App Pattern](https://learn.microsoft.com/azure/architecture/web-apps/guides/enterprise-app-patterns/modern-web-app/dotnet/guidance)
+
+### Other Cloud Providers
 - AWS Well-Architected Framework - Migration Lens
-- Azure Cloud Adoption Framework
 - Google Cloud Migration Path
