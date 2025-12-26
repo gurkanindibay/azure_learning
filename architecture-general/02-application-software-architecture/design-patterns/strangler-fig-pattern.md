@@ -8,6 +8,7 @@
 - [Implementation Strategies](#implementation-strategies)
 - [Step-by-Step Migration](#step-by-step-migration)
 - [Routing Mechanisms](#routing-mechanisms)
+- [Anti-Corruption Layer (ACL)](#anti-corruption-layer-acl)
 - [Code Examples](#code-examples)
 - [Challenges and Solutions](#challenges-and-solutions)
 - [Best Practices](#best-practices)
@@ -75,6 +76,8 @@ The pattern is named after the strangler fig tree found in tropical rainforests.
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+![alt text](images/strangler-fig-pattern.png)
 
 ---
 
@@ -528,6 +531,117 @@ server {
         </choose>
     </inbound>
 </policies>
+```
+
+---
+
+## Anti-Corruption Layer (ACL)
+
+### Definition
+
+The **Anti-Corruption Layer (ACL)** is a design pattern that acts as a protective boundary between different systems or bounded contexts, translating and adapting communication to prevent one system's domain model from "corrupting" another.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ANTI-CORRUPTION LAYER DEFINITION                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  "A layer that isolates a client's model from another system's model       │
+│   by translating between them."                                            │
+│                                                           - Eric Evans, DDD │
+│                                                                             │
+│  Purpose: Prevent legacy concepts, data structures, and terminology        │
+│           from leaking into and polluting new, clean domain models         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Why It's Essential in Strangler Fig
+
+When migrating from legacy to new systems, the ACL ensures:
+
+1. **Clean Domain Model**: New services use modern, well-designed domain concepts
+2. **Legacy Isolation**: Old data structures and naming conventions stay contained
+3. **Independent Evolution**: New services can evolve without legacy constraints
+4. **Reduced Technical Debt**: Prevents carrying legacy baggage into new code
+
+### ACL Components
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ACL ARCHITECTURE                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    Anti-Corruption Layer                            │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │   │
+│  │  │  Facade     │  │ Adapter     │  │ Translator  │                 │   │
+│  │  │             │  │             │  │             │                 │   │
+│  │  │ Simplified  │  │ Interface   │  │ Data/Model  │                 │   │
+│  │  │ Interface   │  │ Conversion  │  │ Mapping     │                 │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘                 │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Components:                                                                │
+│                                                                             │
+│  • FACADE: Provides a simplified, clean interface to the legacy system     │
+│  • ADAPTER: Converts between incompatible interfaces                       │
+│  • TRANSLATOR: Maps data and domain objects between models                 │
+│  • GATEWAY: Handles communication protocols and error handling             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### ACL in Practice
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    TRANSLATION EXAMPLE                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Legacy System (Corrupted Model)      New Service (Clean Model)            │
+│  ─────────────────────────────        ─────────────────────────            │
+│                                                                             │
+│  Table: ORDER_TBL                     Entity: Order                         │
+│  • ORDER_ID (VARCHAR)          ──►    • Id (Guid)                          │
+│  • CUST_NUM (VARCHAR)          ──►    • CustomerId (Guid)                  │
+│  • ORDER_STAT (CHAR)           ──►    • Status (OrderStatus enum)          │
+│  • TOTAL_AMT_CENTS (INT)       ──►    • TotalAmount (Money value object)   │
+│  • CREATE_DT (VARCHAR)         ──►    • CreatedAt (DateTimeOffset)         │
+│  • SHIP_ADDR1, SHIP_CITY...    ──►    • ShippingAddress (Address object)   │
+│                                                                             │
+│  Legacy Status Codes:                 Clean Status Enum:                   │
+│  'N' = New                     ──►    OrderStatus.New                      │
+│  'P' = Processing              ──►    OrderStatus.Processing               │
+│  'S' = Shipped                 ──►    OrderStatus.Shipped                  │
+│  'C', 'X' = Cancelled          ──►    OrderStatus.Cancelled                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### When to Use ACL
+
+| Scenario | Use ACL? | Reason |
+|----------|----------|--------|
+| Integrating with legacy system | ✅ Yes | Protect new code from legacy concepts |
+| Calling external third-party API | ✅ Yes | Isolate from external model changes |
+| Communicating between bounded contexts | ✅ Yes | Maintain context autonomy |
+| Internal service-to-service (same context) | ❌ No | Unnecessary overhead |
+| Simple data format conversion | ❌ Maybe | Consider if simple mapping suffices |
+
+### ACL vs Other Patterns
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Pattern              │ Purpose                                            │
+├───────────────────────┼────────────────────────────────────────────────────┤
+│  Anti-Corruption Layer│ Protects domain from external/legacy corruption   │
+│  Adapter Pattern      │ Makes incompatible interfaces work together       │
+│  Facade Pattern       │ Simplifies complex subsystem interface            │
+│  Gateway Pattern      │ Encapsulates external system communication        │
+├───────────────────────┼────────────────────────────────────────────────────┤
+│  Note: ACL often COMBINES adapter, facade, and gateway patterns            │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
