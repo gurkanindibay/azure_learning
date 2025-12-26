@@ -30,6 +30,7 @@ This section covers security principles, identity management, and data protectio
 
 ## Contents
 
+- [6.1-security-architecture.md](./6.1-security-architecture.md) - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
 - [authentication-methods-overview.md](./authentication-methods-overview.md) - Authentication methods and patterns
 
 ## Related
