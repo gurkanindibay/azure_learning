@@ -20,12 +20,12 @@ graph TB
 
 | Category | Description | Patterns |
 |----------|-------------|----------|
-| [Messaging System Patterns](./messaging-system-patterns.md) | Core messaging infrastructure | Message Channel, Message, Pipes and Filters, Router, Translator, Endpoint |
-| [Message Construction Patterns](./message-construction-patterns.md) | Building messages | Command, Document, Event, Request-Reply, Correlation |
-| [Message Routing Patterns](./message-routing-patterns.md) | Directing message flow | Content-Based Router, Splitter, Aggregator, Scatter-Gather |
-| [Message Transformation Patterns](./message-transformation-patterns.md) | Modifying messages | Envelope Wrapper, Content Enricher, Claim Check, Normalizer |
-| [Messaging Endpoint Patterns](./messaging-endpoint-patterns.md) | Application connections | Gateway, Mapper, Polling Consumer, Competing Consumers |
-| [System Management Patterns](./system-management-patterns.md) | Operations and monitoring | Control Bus, Wire Tap, Message History, Test Message |
+| [Messaging System Patterns](./01-messaging-system-patterns.md) | Core messaging infrastructure | Message Channel, Message, Pipes and Filters, Router, Translator, Endpoint |
+| [Message Construction Patterns](./02-message-construction-patterns.md) | Building messages | Command, Document, Event, Request-Reply, Correlation |
+| [Message Routing Patterns](./03-message-routing-patterns.md) | Directing message flow | Content-Based Router, Splitter, Aggregator, Scatter-Gather |
+| [Message Transformation Patterns](./04-message-transformation-patterns.md) | Modifying messages | Envelope Wrapper, Content Enricher, Claim Check, Normalizer |
+| [Messaging Endpoint Patterns](./05-messaging-endpoint-patterns.md) | Application connections | Gateway, Mapper, Polling Consumer, Competing Consumers |
+| [System Management Patterns](./06-system-management-patterns.md) | Operations and monitoring | Control Bus, Wire Tap, Message History, Test Message |
 
 ## Quick Pattern Reference
 

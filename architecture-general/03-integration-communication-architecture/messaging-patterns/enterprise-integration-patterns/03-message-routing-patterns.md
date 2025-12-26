@@ -261,6 +261,6 @@ An order fulfillment saga tracks state across: Order Created → Payment Authori
 
 ## Related Topics
 
-- [Message Construction Patterns](./message-construction-patterns.md)
-- [Message Transformation Patterns](./message-transformation-patterns.md)
+- [Message Construction Patterns](./02-message-construction-patterns.md)
+- [Message Transformation Patterns](./04-message-transformation-patterns.md)
 - [EIP Overview](./README.md)

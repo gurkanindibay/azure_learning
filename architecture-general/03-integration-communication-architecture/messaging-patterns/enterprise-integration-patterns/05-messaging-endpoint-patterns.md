@@ -236,6 +236,6 @@ A payment processor tracks processed transaction IDs—if a network retry causes
 
 ## Related Topics
 
-- [Message Transformation Patterns](./message-transformation-patterns.md)
-- [System Management Patterns](./system-management-patterns.md)
+- [Message Transformation Patterns](./04-message-transformation-patterns.md)
+- [System Management Patterns](./06-system-management-patterns.md)
 - [EIP Overview](./README.md)

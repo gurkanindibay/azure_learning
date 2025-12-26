@@ -146,6 +146,6 @@ A microservices application uses a standardized endpoint library that handles co
 
 ## Related Topics
 
-- [Message Construction Patterns](./message-construction-patterns.md)
-- [Message Routing Patterns](./message-routing-patterns.md)
+- [Message Construction Patterns](./02-message-construction-patterns.md)
+- [Message Routing Patterns](./03-message-routing-patterns.md)
 - [EIP Overview](./README.md)

@@ -184,6 +184,6 @@ A flash sale system sets 5-minute TTL on discount offers—if the inventory serv
 
 ## Related Topics
 
-- [Messaging System Patterns](./messaging-system-patterns.md)
-- [Message Routing Patterns](./message-routing-patterns.md)
+- [Messaging System Patterns](./01-messaging-system-patterns.md)
+- [Message Routing Patterns](./03-message-routing-patterns.md)
 - [EIP Overview](./README.md)

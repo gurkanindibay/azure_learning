@@ -201,6 +201,6 @@ A payment processing system sends synthetic test transactions every minute throu
 
 ## Related Topics
 
-- [Messaging Endpoint Patterns](./messaging-endpoint-patterns.md)
-- [Messaging System Patterns](./messaging-system-patterns.md)
+- [Messaging Endpoint Patterns](./05-messaging-endpoint-patterns.md)
+- [Messaging System Patterns](./01-messaging-system-patterns.md)
 - [EIP Overview](./README.md)

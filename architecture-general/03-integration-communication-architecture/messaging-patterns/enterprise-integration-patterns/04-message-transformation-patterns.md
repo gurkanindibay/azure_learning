@@ -148,6 +148,6 @@ A healthcare network defines a canonical patient record format—each hospital s
 
 ## Related Topics
 
-- [Message Routing Patterns](./message-routing-patterns.md)
-- [Messaging Endpoint Patterns](./messaging-endpoint-patterns.md)
+- [Message Routing Patterns](./03-message-routing-patterns.md)
+- [Messaging Endpoint Patterns](./05-messaging-endpoint-patterns.md)
 - [EIP Overview](./README.md)
