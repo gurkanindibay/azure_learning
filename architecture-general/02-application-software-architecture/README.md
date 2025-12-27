@@ -21,14 +21,14 @@ This section covers application design patterns, architectural styles, and softw
 - Serverless Backend Architecture → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#5-serverless-backend-architecture)
 
 ### 2.3 Frontend Architecture
-- Single Page Application (SPA)
-- Server-Side Rendering (SSR / ISR)
-- Micro-Frontend Architecture
+- Single Page Application (SPA) → [frontend-architecture-styles.md](./03-frontend-architecture/frontend-architecture-styles.md#1-single-page-application-spa)
+- Server-Side Rendering (SSR / ISR) → [frontend-architecture-styles.md](./03-frontend-architecture/frontend-architecture-styles.md#2-server-side-rendering-ssr--isr)
+- Micro-Frontend Architecture → [frontend-architecture-styles.md](./03-frontend-architecture/frontend-architecture-styles.md#3-micro-frontend-architecture)
 
 ### 2.4 Mobile Architecture
-- Native Mobile Architecture
-- Cross-Platform Architecture
-- Offline-First Architecture
+- Native Mobile Architecture → [mobile-architecture-styles.md](./04-mobile-architecture/mobile-architecture-styles.md#1-native-mobile-architecture)
+- Cross-Platform Architecture → [mobile-architecture-styles.md](./04-mobile-architecture/mobile-architecture-styles.md#2-cross-platform-architecture)
+- Offline-First Architecture → [mobile-architecture-styles.md](./04-mobile-architecture/mobile-architecture-styles.md#3-offline-first-architecture)
 
 ### 2.5 Domain-Driven Design (DDD)
 - Strategic DDD (Bounded Contexts, Context Mapping) → [01-strategic-ddd.md](./05-domain-driven-design/01-strategic-ddd.md)
@@ -46,6 +46,8 @@ This section covers application design patterns, architectural styles, and softw
 
 - [01-architectural-styles/](./01-architectural-styles/) - Architecture style patterns
 - [02-backend-architecture/](./02-backend-architecture/) - Backend architecture (REST, GraphQL, gRPC, BFF, Serverless)
+- [03-frontend-architecture/](./03-frontend-architecture/) - Frontend architecture (SPA, SSR, Micro-Frontends)
+- [04-mobile-architecture/](./04-mobile-architecture/) - Mobile architecture (Native, Cross-Platform, Offline-First)
 - [05-domain-driven-design/](./05-domain-driven-design/) - DDD concepts and event storming
 - [06-design-patterns/](./06-design-patterns/) - Design patterns (Event Sourcing, CQRS, etc.)
 
