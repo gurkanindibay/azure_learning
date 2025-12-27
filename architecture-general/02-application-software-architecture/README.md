@@ -14,11 +14,11 @@ This section covers application design patterns, architectural styles, and softw
 - N-Tier Architecture
 
 ### 2.2 Backend Architecture
-- REST-based Architecture
-- GraphQL Architecture
-- gRPC Architecture
-- Backend-for-Frontend (BFF)
-- Serverless Backend Architecture
+- REST-based Architecture → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#1-rest-based-architecture)
+- GraphQL Architecture → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#2-graphql-architecture)
+- gRPC Architecture → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#3-grpc-architecture)
+- Backend-for-Frontend (BFF) → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#4-backend-for-frontend-bff)
+- Serverless Backend Architecture → [backend-architecture-styles.md](./02-backend-architecture/backend-architecture-styles.md#5-serverless-backend-architecture)
 
 ### 2.3 Frontend Architecture
 - Single Page Application (SPA)
@@ -45,6 +45,7 @@ This section covers application design patterns, architectural styles, and softw
 ## Contents
 
 - [01-architectural-styles/](./01-architectural-styles/) - Architecture style patterns
+- [02-backend-architecture/](./02-backend-architecture/) - Backend architecture (REST, GraphQL, gRPC, BFF, Serverless)
 - [05-domain-driven-design/](./05-domain-driven-design/) - DDD concepts and event storming
 - [06-design-patterns/](./06-design-patterns/) - Design patterns (Event Sourcing, CQRS, etc.)
 
