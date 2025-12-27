@@ -30,6 +30,12 @@ This section covers application design patterns, architectural styles, and softw
 - Cross-Platform Architecture
 - Offline-First Architecture
 
+### 2.5 Domain-Driven Design (DDD)
+- Strategic DDD (Bounded Contexts, Context Mapping)
+- Tactical DDD (Entities, Value Objects, Aggregates)
+- Ubiquitous Language
+- Event Storming
+
 ## Contents
 
 - [architectural-styles/](./architectural-styles/) - Architecture style patterns
