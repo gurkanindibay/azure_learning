@@ -31,16 +31,22 @@ This section covers application design patterns, architectural styles, and softw
 - Offline-First Architecture
 
 ### 2.5 Domain-Driven Design (DDD)
-- Strategic DDD (Bounded Contexts, Context Mapping)
-- Tactical DDD (Entities, Value Objects, Aggregates)
-- Ubiquitous Language
-- Event Storming
+- Strategic DDD (Bounded Contexts, Context Mapping) → [01-strategic-ddd.md](./05-domain-driven-design/01-strategic-ddd.md)
+- Tactical DDD (Entities, Value Objects, Aggregates) → [02-tactical-ddd.md](./05-domain-driven-design/02-tactical-ddd.md)
+- Ubiquitous Language → [03-ubiquitous-language.md](./05-domain-driven-design/03-ubiquitous-language.md)
+- Event Storming → [04-event-storming.md](./05-domain-driven-design/04-event-storming.md)
+
+### 2.6 Design Patterns
+- Event Sourcing → [event-sourcing-pattern.md](./06-design-patterns/event-sourcing-pattern.md)
+- CQRS → [cqrs-pattern.md](./06-design-patterns/cqrs-pattern.md)
+- Saga Pattern → [saga-pattern.md](./06-design-patterns/saga-pattern.md)
+- Strangler Fig Pattern → [strangler-fig-pattern.md](./06-design-patterns/strangler-fig-pattern.md)
 
 ## Contents
 
-- [architectural-styles/](./architectural-styles/) - Architecture style patterns
-- [design-patterns/](./design-patterns/) - Design patterns (Event Sourcing, CQRS, etc.)
-- [domain-driven-design/](./domain-driven-design/) - DDD concepts and event storming
+- [01-architectural-styles/](./01-architectural-styles/) - Architecture style patterns
+- [05-domain-driven-design/](./05-domain-driven-design/) - DDD concepts and event storming
+- [06-design-patterns/](./06-design-patterns/) - Design patterns (Event Sourcing, CQRS, etc.)
 
 ## Related
 
