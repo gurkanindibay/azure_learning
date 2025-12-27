@@ -26,7 +26,7 @@ This section covers reliability patterns, performance optimization, and observab
 ## Contents
 
 - [reliability-performance-operations-patterns.md](./reliability-performance-operations-patterns.md) - Comprehensive patterns reference
-- [observability/](./observability/) - Observability concepts and metrics
+- [7.3-observability-architecture/](./7.3-observability-architecture/) - Observability concepts and practices
 
 ## Related
 
