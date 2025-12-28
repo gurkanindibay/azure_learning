@@ -16,6 +16,8 @@ This section covers reliability patterns, performance optimization, and observab
 - Caching Architecture
 - Load Balancing Architecture
 - Edge Optimization
+- **Tail Latency and Distributed Systems** (Case Study)
+- **Language Transition Anti-Patterns** (Case Study)
 
 ### 7.3 Observability Architecture
 - Logging Architecture
@@ -28,6 +30,8 @@ This section covers reliability patterns, performance optimization, and observab
 - [reliability-performance-operations-patterns.md](./reliability-performance-operations-patterns.md) - Comprehensive patterns reference
 - [7.1-reliability-architecture/](./7.1-reliability-architecture/) - Reliability architecture patterns and practices
 - [7.2-performance-architecture/](./7.2-performance-architecture/) - Performance architecture patterns and practices
+  - [tail-latency-distributed-systems.md](./7.2-performance-architecture/tail-latency-distributed-systems.md) - **Case study: Why variance matters more than speed (Aurora DSQL)**
+  - [language-transition-anti-patterns.md](./7.2-performance-architecture/language-transition-anti-patterns.md) - **Case study: When language rewrites don't help (Java to Go)**
 - [7.3-observability-architecture/](./7.3-observability-architecture/) - Observability concepts and practices
 
 ## Related
