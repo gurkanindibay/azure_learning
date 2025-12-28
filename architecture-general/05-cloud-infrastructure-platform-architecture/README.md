@@ -26,6 +26,7 @@ This section covers cloud deployment models, infrastructure patterns, and platfo
 ## Contents
 
 - [networking/](./networking/) - Hub-spoke, network topology patterns
+- [scaling/](./scaling/) - System design evolution and scaling patterns
 
 ## Related
 
