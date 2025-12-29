@@ -418,6 +418,224 @@ A company needs to deploy an application to Azure containing a **web front end**
 
 4. **Port Forwarding**: Only Load Balancer supports port forwarding via inbound NAT rules - Application Gateway does not.
 
+## Exam Scenario: VPN-Connected Application Load Balancing
+
+### Scenario
+
+You have an Azure subscription where:
+- **Home users** access Azure resources via **point-to-site VPN**
+- **Customer sites** access Azure resources via **site-to-site VPN**
+- **App1** is a line-of-business application running on multiple Windows Server 2016 VMs
+- You need to distribute connections to App1 evenly across all VMs
+
+**Question**: What Azure services can you use to load balance traffic to App1?
+
+### Solution Options
+
+#### ✅ Option 1: Internal Load Balancer (Recommended)
+
+**Why This Works:**
+- All traffic comes through **VPN connections** (both point-to-site and site-to-site)
+- VPN traffic enters the Azure virtual network as **internal network traffic**
+- No public internet exposure needed
+- Internal Load Balancer provides Layer 4 (TCP/UDP) distribution
+- Lower cost than Application Gateway for simple load balancing
+
+**Configuration:**
+```bash
+# Create internal load balancer
+az network lb create \
+  --resource-group myResourceGroup \
+  --name myInternalLB \
+  --sku Standard \
+  --vnet-name myVNet \
+  --subnet mySubnet \
+  --frontend-ip-name myFrontEnd \
+  --backend-pool-name myBackEndPool
+
+# Add VMs to backend pool
+az network nic ip-config address-pool add \
+  --address-pool myBackEndPool \
+  --lb-name myInternalLB \
+  --resource-group myResourceGroup \
+  --nic-name myVM1NIC \
+  --ip-config-name ipconfig1
+
+# Create health probe
+az network lb probe create \
+  --resource-group myResourceGroup \
+  --lb-name myInternalLB \
+  --name myHealthProbe \
+  --protocol tcp \
+  --port 80
+
+# Create load balancing rule
+az network lb rule create \
+  --resource-group myResourceGroup \
+  --lb-name myInternalLB \
+  --name myHTTPRule \
+  --protocol tcp \
+  --frontend-port 80 \
+  --backend-port 80 \
+  --frontend-ip-name myFrontEnd \
+  --backend-pool-name myBackEndPool \
+  --probe-name myHealthProbe
+```
+
+**Architecture:**
+```
+┌──────────────────┐         ┌──────────────────┐
+│   Home Users     │         │  Customer Sites  │
+│ (Remote workers) │         │  (Branch offices)│
+└────────┬─────────┘         └────────┬─────────┘
+         │                            │
+         │ Point-to-Site VPN          │ Site-to-Site VPN
+         │                            │
+         ▼                            ▼
+┌────────────────────────────────────────────────┐
+│          Azure VPN Gateway                     │
+│  • Terminates VPN connections                  │
+│  • Routes traffic to virtual network           │
+└────────────────┬───────────────────────────────┘
+                 │
+                 │ Internal Traffic
+                 │
+                 ▼
+┌────────────────────────────────────────────────┐
+│     Internal Azure Load Balancer (Standard)    │
+│  • Layer 4 TCP/UDP distribution                │
+│  • Private IP address in VNet                  │
+│  • Health probes to VMs                        │
+└────────────────┬───────────────────────────────┘
+                 │
+         ┌───────┼───────┐
+         ▼       ▼       ▼
+      ┌────┐  ┌────┐  ┌────┐
+      │VM1 │  │VM2 │  │VM3 │
+      │App1│  │App1│  │App1│
+      └────┘  └────┘  └────┘
+   Windows Server 2016
+```
+
+#### ✅ Option 2: Azure Application Gateway
+
+**Why This Works:**
+- Application Gateway can have an **internal (private) frontend**
+- Provides Layer 7 load balancing with additional features:
+  - URL-based routing
+  - Session affinity (cookie-based)
+  - Web Application Firewall (WAF) capabilities
+  - SSL termination
+  - Connection draining
+- Traffic from VPN connections can route to internal Application Gateway
+
+**When to Choose Application Gateway Over Load Balancer:**
+- You need **HTTP/HTTPS-specific features** (URL routing, WAF, SSL offload)
+- Application requires **Layer 7 processing**
+- You want **session affinity** based on cookies
+- Budget allows for higher cost (~$179-323/month vs Load Balancer's ~$18/month)
+
+**Configuration:**
+```bash
+# Create internal Application Gateway
+az network application-gateway create \
+  --name myAppGateway \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --vnet-name myVNet \
+  --subnet myAppGwSubnet \
+  --capacity 2 \
+  --sku Standard_v2 \
+  --http-settings-cookie-based-affinity Enabled \
+  --frontend-port 80 \
+  --http-settings-port 80 \
+  --http-settings-protocol Http \
+  --public-ip-address "" \
+  --private-ip-address 10.0.1.10 \
+  --servers 10.0.2.4 10.0.2.5 10.0.2.6
+```
+
+**Note:** Application Gateway requires a dedicated subnet (/24 recommended).
+
+#### ❌ Option 3: Public Load Balancer (Not Suitable)
+
+**Why This Doesn't Work:**
+- Creates a **public IP address** exposed to the internet
+- **Unnecessary** since all traffic already comes through VPN
+- Increases security risk by exposing backend to internet
+- VPN connections don't need public load balancer
+- Higher cost with no benefit
+
+**Why Wrong:**
+> "The customer sites are connected through VPNs, so there's no need for a public load balancer; an internal load balancer is sufficient."
+
+#### ❌ Option 4: Azure CDN (Not Applicable)
+
+**Why This Doesn't Work:**
+- Azure CDN is designed for **content caching and delivery**
+- Does **NOT** provide application load balancing
+- Cannot distribute traffic across backend VMs
+- CDN is for static content, not line-of-business applications
+
+#### ❌ Option 5: Traffic Manager (Not Suitable)
+
+**Why This Doesn't Work:**
+- Traffic Manager is a **DNS-based** global traffic distribution service
+- Works at the **DNS level**, not as a load balancer
+- Routes users to different **Azure regions or endpoints**
+- Does NOT distribute traffic across VMs **within** a region
+- Cannot provide load balancing for a single application tier
+
+**What Traffic Manager Does:**
+- Returns different IP addresses based on routing policy
+- Used for multi-region failover or geo-routing
+- No awareness of individual VM health within a backend pool
+
+### Comparison Table
+
+| Solution | Layer | Cost | VPN Compatible | Use Case |
+|----------|-------|------|----------------|----------|
+| **Internal Load Balancer** ✅ | Layer 4 (TCP/UDP) | ~$18/month | ✅ Yes | Simple traffic distribution for VPN-connected users |
+| **Application Gateway** ✅ | Layer 7 (HTTP/HTTPS) | ~$179-430/month | ✅ Yes (internal mode) | Advanced HTTP features, WAF, SSL termination |
+| **Public Load Balancer** ❌ | Layer 4 | ~$18/month | ⚠️ Unnecessary | Exposes public endpoint (not needed for VPN traffic) |
+| **Azure CDN** ❌ | N/A | Varies | ❌ No | Content caching only, not load balancing |
+| **Traffic Manager** ❌ | DNS | ~$0.54/million queries | ⚠️ Wrong scope | Multi-region DNS routing, not intra-region load balancing |
+
+### Key Takeaways
+
+1. **VPN Traffic is Internal Traffic**
+   - Point-to-site and site-to-site VPNs bring external users into the Azure virtual network
+   - Once in the VNet, traffic is treated as internal
+   - Use **internal** load balancing solutions
+
+2. **Layer 4 vs Layer 7**
+   - **Internal Load Balancer**: Simple, cost-effective Layer 4 distribution
+   - **Application Gateway**: Feature-rich Layer 7 with HTTP awareness
+
+3. **Public vs Private**
+   - **Never** use public-facing load balancers for VPN-only scenarios
+   - Increases security risk unnecessarily
+
+4. **Wrong Tool Categories**
+   - **CDN**: Content delivery, not load balancing
+   - **Traffic Manager**: DNS routing between regions, not VM-level load balancing
+
+### Decision Flow
+
+```
+Do users connect via VPN?
+         │
+         ▼ Yes
+    Internal solution needed
+         │
+         ▼
+Need Layer 7 features? (URL routing, WAF, SSL offload)
+         │
+         ├─ No ──→ Internal Load Balancer (Recommended)
+         │
+         └─ Yes ──→ Application Gateway (Internal mode)
+```
+
 ## References
 
 - [Azure Load Balancer documentation](https://learn.microsoft.com/en-us/azure/load-balancer/)

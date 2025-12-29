@@ -263,6 +263,7 @@ Application Gateway v2 uses capacity units for scaling:
 3. **Secure API Gateway**: WAF protection for regional APIs
 4. **Multi-tenant Applications**: Host multiple sites with different SSL certificates
 5. **Internal Load Balancing**: Private Application Gateway for internal services
+6. **VPN-Connected Applications**: Distribute traffic from point-to-site and site-to-site VPN connections to backend VMs (alternative to Internal Load Balancer when Layer 7 features needed - see [Azure Load Balancer VPN scenario](azure-load-balancer.md#exam-scenario-vpn-connected-application-load-balancing))
 
 ## Architecture Patterns
 
