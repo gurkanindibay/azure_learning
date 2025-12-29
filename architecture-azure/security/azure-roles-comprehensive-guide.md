@@ -327,6 +327,414 @@ graph LR
 
 ---
 
+## Global Administrator Access Elevation
+
+### The Critical Separation
+
+**Most Important Rule:** Global Administrator in Microsoft Entra ID has **NO** default permissions to manage Azure subscriptions or resources.
+
+```
+Global Administrator (Entra ID role)
+├── CAN: Manage users, groups, applications, licenses
+├── CAN: Reset passwords, assign Entra ID roles
+├── CANNOT: View Azure subscriptions (without RBAC)
+├── CANNOT: Create resource groups (without RBAC)
+└── CANNOT: Manage Azure resources (without RBAC)
+```
+
+### Access Elevation Feature
+
+Global Administrators have a special capability to **temporarily elevate** their access to Azure resources.
+
+#### How Elevation Works
+
+```mermaid
+graph LR
+    A[Global Admin] -->|1. Enable toggle| B[Access management for<br/>Azure resources: YES]
+    B -->|2. Grants| C[User Access Administrator<br/>at root scope /]
+    C -->|3. Can now| D[Assign RBAC roles<br/>to all subscriptions]
+    D -->|4. After assignment| E[Disable toggle<br/>Remove elevation]
+    
+    style A fill:#ff6b6b
+    style C fill:#4ecdc4
+    style E fill:#90EE90
+```
+
+**Steps:**
+1. Navigate to: Azure Portal → Microsoft Entra ID → Properties
+2. Toggle: "Access management for Azure resources" to **Yes**
+3. Result: Global Admin receives **User Access Administrator** role at **root scope** (/)
+4. **Important**: Disable the toggle after use!
+
+#### Permissions Granted by Elevation
+
+```
+User Access Administrator at root scope (/)
+├── All Management Groups (can assign roles)
+├── All Subscriptions (can assign roles)
+│   ├── All Resource Groups (can assign roles)
+│   └── All Resources (can assign roles)
+├── ✅ CAN: Assign any RBAC role at any scope
+├── ✅ CAN: View all subscriptions and resources
+└── ⚠️ CANNOT: Create/modify resources (needs Owner/Contributor for that)
+```
+
+### Real-World Exam Scenario
+
+**Setup:**
+- Three Global Administrators: Admin1, Admin2, Admin3
+- Admin3 has **Owner** role on subscription (Azure RBAC)
+- Admin1 has **enabled** "Access management for Azure resources"
+- Admin2 has **only** Global Administrator (no Azure RBAC role)
+
+**Question 1: Can Admin1 add Admin2 as owner of the subscription?**
+
+✅ **YES**
+
+**Explanation:**
+- Admin1 is a Global Administrator
+- Admin1 enabled "Access management for Azure resources"
+- This grants Admin1 **User Access Administrator at root scope**
+- User Access Administrator can assign ANY RBAC role to ANY subscription
+- Therefore, Admin1 can assign Admin2 as Owner
+
+```
+Admin1 permissions:
+├── Global Administrator (Entra ID)
+├── Access elevation enabled
+├── → User Access Administrator at root (/)
+└── → Can assign Owner role to Admin2 on subscription ✅
+```
+
+**Question 2: Can Admin3 add Admin2 as owner of the subscription?**
+
+✅ **YES**
+
+**Explanation:**
+- Admin3 has the **Owner** role on the subscription
+- Owner includes `Microsoft.Authorization/roleAssignments/*` permission
+- This allows assigning any RBAC role within the subscription scope
+- Therefore, Admin3 can assign Admin2 as Owner
+
+```
+Admin3 permissions:
+├── Global Administrator (Entra ID) - not relevant for this action
+├── Owner (Azure RBAC on subscription)
+├── → Has Microsoft.Authorization/roleAssignments/* permission
+└── → Can assign Owner role to Admin2 on subscription ✅
+```
+
+**Question 3: Can Admin2 create a resource group in the subscription?**
+
+❌ **NO**
+
+**Explanation:**
+- Admin2 is a Global Administrator (Entra ID role)
+- Admin2 has **NO Azure RBAC role** on the subscription
+- Creating resource groups requires Azure RBAC permissions (Contributor or Owner)
+- Global Administrator **does not** grant Azure resource permissions
+- Admin2 cannot create resource groups
+
+```
+Admin2 permissions:
+├── Global Administrator (Entra ID)
+│   ✅ CAN: Create users, reset passwords, manage Entra ID
+│   ❌ CANNOT: Access subscriptions, create resources
+├── NO Azure RBAC role on subscription
+└── → Cannot create resource groups ❌
+```
+
+### Permission Comparison Matrix
+
+| Action | Global Admin<br/>(No RBAC) | Global Admin<br/>(Elevated) | Subscription<br/>Owner | Contributor |
+|--------|----------------------------|----------------------------|----------------------|-------------|
+| Manage Entra ID users | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+| Reset user passwords | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+| View subscription resources | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| Create resource groups | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| Create VMs | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| Assign RBAC roles | ❌ No | ✅ Yes (all scopes) | ✅ Yes (sub & below) | ❌ No |
+| Manage subscriptions | ❌ No | ✅ Yes | ✅ Yes (assigned sub) | ❌ No |
+| Modify access elevation | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
+
+### Common Real-World Scenarios
+
+#### Scenario 1: New Company Setup
+```
+1. Create Entra ID tenant
+   └─> User becomes default Global Administrator
+
+2. Create Azure subscription
+   └─> Global Admin has NO access to subscription yet ⚠️
+
+3. Global Admin enables "Access management for Azure resources"
+   └─> Gets User Access Administrator at root scope
+
+4. Global Admin assigns themselves Owner on subscription
+   └─> Now has full resource management access
+
+5. Global Admin disables "Access management" toggle
+   └─> Removes elevation (security best practice)
+
+6. Global Admin now manages resources with Owner role
+   └─> Uses RBAC permissions, not Entra ID permissions
+```
+
+#### Scenario 2: Subscription Owner Left Company
+```
+Problem:
+├── Former employee had Owner role on production subscription
+├── Current admins are Global Admins but NOT subscription Owners
+└── Cannot access subscription to remove departed owner
+
+Solution:
+1. Global Admin enables "Access management for Azure resources"
+2. Assigns new team member as Owner to subscription
+3. New Owner removes departed employee's access
+4. Global Admin disables "Access management" toggle
+```
+
+#### Scenario 3: Multi-Subscription Audit
+```
+Organization:
+├── 10 subscriptions with different Owners per team
+├── Security team needs to audit all role assignments
+└── Security team members are Global Admins but not Owners
+
+Process:
+1. Global Admin enables "Access management for Azure resources"
+2. Gets Reader access to all subscriptions at root scope
+3. Runs compliance audit scripts across all subscriptions
+4. Documents findings
+5. Disables "Access management" toggle after audit
+```
+
+### Security Implications
+
+#### ⚠️ Risk: Permanent Elevation
+
+**Never leave "Access management for Azure resources" permanently enabled!**
+
+```
+With Elevation DISABLED (Secure):
+Global Admin account compromised
+├── Attacker gets: Entra ID access only
+├── Can: Create users, modify groups
+└── Cannot: Access subscriptions, view/modify resources
+
+With Elevation ENABLED (Insecure):
+Global Admin account compromised
+├── Attacker gets: Entra ID + User Access Admin at root
+├── Can: Everything above PLUS
+├── Can: Access ALL subscriptions
+├── Can: Assign themselves Owner on all subscriptions
+└── Can: View, modify, delete ALL Azure resources 💥
+```
+
+**Impact Comparison:**
+
+| Aspect | Elevation Disabled | Elevation Enabled |
+|--------|-------------------|-------------------|
+| **Blast Radius** | Entra ID only | Entra ID + ALL Azure resources |
+| **Resource Access** | None | Full (after self-assignment) |
+| **Data Exposure** | Entra ID data | ALL Azure data |
+| **Recovery Time** | Minutes | Hours to days |
+| **Compliance Impact** | Low | Critical |
+
+#### ✅ Best Practices
+
+1. **Just-in-Time Access**
+   ```
+   ❌ Don't: Leave elevation permanently enabled
+   ✅ Do: Enable only when needed, disable immediately after
+   ```
+
+2. **Use Privileged Identity Management (PIM)**
+   ```
+   ✅ Make Global Admin role eligible (not permanent)
+   ✅ Require justification for activation
+   ✅ Time-limit activations (e.g., 8 hours)
+   ✅ Require approval for high-privilege roles
+   ```
+
+3. **Separation of Duties**
+   ```
+   Role Model:
+   ├── Entra ID Admins → Manage identities only
+   │   └── No permanent Azure resource access
+   ├── Subscription Owners → Manage resources only
+   │   └── No Entra ID administrative rights
+   ├── Security Team → Monitor both planes
+   │   └── Emergency access via PIM
+   └── Break-glass Account → Emergency only
+       └── Stored offline, reviewed quarterly
+   ```
+
+4. **Audit and Monitor**
+   ```yaml
+   Monitor for:
+     - Access elevation events
+     - Global Admin role assignments
+     - Role assignments at root scope
+     - Unusual subscription access patterns
+   
+   Alert on:
+     - Elevation enabled for > 1 hour
+     - New Global Admin assignments
+     - Owner assignments at management group level
+     - Access from unusual locations/devices
+   ```
+
+5. **Documentation**
+   ```
+   Maintain:
+   ├── List of Global Administrators (max 5 recommended)
+   ├── Break-glass account procedures
+   ├── Access elevation approval workflow
+   └── Incident response plan for compromised Global Admin
+   ```
+
+### Common Misconceptions
+
+#### ❌ Misconception 1: "Global Admin can do anything in Azure"
+
+**Reality:** Global Admin is an **Entra ID role** and has **NO** default Azure resource permissions.
+
+```
+Global Admin without RBAC:
+├── ✅ Can manage users, groups, apps
+├── ❌ Cannot see subscriptions
+├── ❌ Cannot create VMs
+└── ❌ Cannot access any Azure resources
+```
+
+#### ❌ Misconception 2: "I'm Global Admin, I should see all subscriptions"
+
+**Reality:** You need Azure RBAC roles (Reader, Contributor, Owner) to view or manage subscriptions and resources.
+
+```
+To see subscriptions, you need:
+├── Option 1: Azure RBAC role (Reader or higher)
+├── Option 2: Elevate access temporarily
+└── Option 3: Have someone with Owner assign you a role
+```
+
+#### ❌ Misconception 3: "Giving someone Global Admin gives them subscription access"
+
+**Reality:** Global Admin and subscription access are completely separate permission systems.
+
+```
+New Global Admin assignment:
+├── Gets: Full Entra ID permissions
+├── Gets: Ability to elevate to User Access Admin
+├── Does NOT get: Automatic subscription access
+└── Does NOT get: Ability to view/manage resources
+```
+
+### Troubleshooting Guide
+
+#### Problem: "I'm Global Admin but can't see my subscription"
+
+**Diagnosis:**
+```
+Check:
+1. Do you have ANY Azure RBAC role on the subscription? → Probably NO
+2. Are you looking at the correct tenant? → Verify tenant
+3. Is the subscription disabled? → Check subscription state
+```
+
+**Solution:**
+```
+Option A: Request RBAC assignment
+├── Ask existing subscription Owner to assign you a role
+└── Recommended: Owner or Contributor
+
+Option B: Self-assign via elevation
+├── 1. Enable "Access management for Azure resources"
+├── 2. Assign yourself Owner on subscription
+└── 3. Disable "Access management for Azure resources"
+```
+
+#### Problem: "I can't enable access elevation"
+
+**Possible Causes:**
+
+1. **You're not a Global Administrator**
+   ```
+   Check: Azure Portal → Entra ID → Roles and administrators
+   Look for: Global Administrator assignment
+   ```
+
+2. **Conditional Access policy blocking**
+   ```
+   Check: Entra ID → Security → Conditional Access
+   Look for: Policies targeting Global Admins or privileged operations
+   ```
+
+3. **Feature disabled at tenant level**
+   ```
+   Contact: Another Global Administrator
+   Verify: No Azure Policy blocking this action
+   ```
+
+#### Problem: "I elevated access but still can't create resources"
+
+**Explanation:**
+```
+Access elevation gives:
+├── User Access Administrator at root scope
+├── Permission to: ASSIGN roles to others
+└── Does NOT give: Permission to CREATE/MODIFY resources
+
+To create resources, you need:
+├── Owner role (full access + role assignment)
+└── OR Contributor role (full access, no role assignment)
+```
+
+**Solution:**
+```
+After elevating:
+1. Assign yourself Owner or Contributor on subscription
+2. Wait 5-10 minutes for replication
+3. Refresh Azure Portal
+4. You can now create resources
+5. Disable elevation after setup complete
+```
+
+### Integration with PIM
+
+**Recommended Setup for Enterprise:**
+
+```yaml
+Global Administrator Role (Entra ID):
+  Assignment Type: Eligible (not permanent)
+  Activation:
+    Maximum Duration: 8 hours
+    Require Justification: Yes
+    Require Approval: Yes
+    Approvers:
+      - Security Team
+      - Another Global Admin
+  
+  After Activation (if resource access needed):
+    1. Activate Global Admin role in PIM (8 hours)
+    2. Enable "Access management for Azure resources"
+    3. Assign specific RBAC role to subscription
+    4. Disable "Access management for Azure resources"
+    5. Work with assigned RBAC role
+    6. Global Admin auto-deactivates after 8 hours
+    7. RBAC role remains (can be made eligible via PIM too)
+```
+
+**Benefits:**
+- ✅ No standing Global Admin privileges
+- ✅ All activations logged and justified
+- ✅ Automatic expiration prevents forgotten access
+- ✅ Approval workflow adds oversight
+- ✅ Separation between Entra ID and Azure resource access
+
+---
+
 ## Non-RBAC Access Control Methods
 
 While Azure RBAC is the recommended approach for access control, many Azure services also support **alternative authentication and authorization methods** that do not use RBAC or even Entra ID. Understanding these methods is critical for:
