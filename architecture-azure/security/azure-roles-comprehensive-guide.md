@@ -1750,6 +1750,47 @@ To enable others:
 Now User2 can create users
 ```
 
+#### Common Exam Scenario
+
+**Question:** You have an Azure subscription with the following users in tenant `contoso.onmicrosoft.com`:
+
+| Name | Role | Scope |
+|------|------|-------|
+| User1 | Global administrator | Azure Active Directory |
+| User2 | Global administrator | Azure Active Directory |
+| User3 | User administrator | Azure Active Directory |
+| User4 | Owner | Azure Subscription |
+
+User1 creates a new Azure AD tenant named `external.contoso.onmicrosoft.com`.
+
+You need to create new user accounts in `external.contoso.onmicrosoft.com`.
+
+**Question:** Can User4 create the user accounts?
+
+**Answer:** ❌ **NO**
+
+**Explanation:**
+- When a new tenant is created, **only the creator becomes the Global Administrator** of that new tenant
+- User4 has Owner role on the Azure Subscription, which is an **Azure RBAC role**, not a Microsoft Entra ID role
+- Azure RBAC roles (Owner, Contributor, Reader) **do NOT grant permissions to manage users** in Microsoft Entra ID
+- User4 would need to be:
+  1. Invited to the new tenant by User1, AND
+  2. Assigned a Microsoft Entra ID role (like User Administrator or Global Administrator) by User1
+
+**Key Concept:**
+```
+Azure Subscription Roles (RBAC)     ≠     Microsoft Entra ID Roles
+        ↓                                           ↓
+   Manage Azure Resources              Manage Users, Groups, Apps
+   (VMs, Storage, Networks)            (Identity & Directory)
+```
+
+**Who CAN create users in the new tenant?**
+- ✅ User1 (creator, automatic Global Admin of new tenant)
+- ❌ User2 (Global Admin in original tenant, not in new tenant)
+- ❌ User3 (User Admin in original tenant, not in new tenant)
+- ❌ User4 (Owner role is Azure RBAC, not Entra ID role)
+
 ### Scenario 7: Multi-Subscription Governance
 
 **Solution:** Use **Management Groups**
