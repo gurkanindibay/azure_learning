@@ -12,6 +12,7 @@
   - [Question 5: Recovery Services Vault Region Requirement](#question-5-recovery-services-vault-region-requirement)
   - [Question 6: Recovery Services Vault for Cross-Region VM Protection](#question-6-recovery-services-vault-for-cross-region-vm-protection)
   - [Question 7: Azure Backup Agent for Windows File Server Protection](#question-7-azure-backup-agent-for-windows-file-server-protection)
+  - [Question 8: Deleting Resource Groups with Recovery Services Vaults](#question-8-deleting-resource-groups-with-recovery-services-vaults)
 - [References](#references)
 
 ---
@@ -335,6 +336,207 @@ az monitor metrics alert create \
   --scopes "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.RecoveryServices/vaults/{vault-name}" \
   --condition "count BackupHealthEvent > 0" \
   --description "Alert when backup fails"
+```
+
+### Vault Deletion Constraints
+
+> **⚠️ Critical:** You cannot delete a Recovery Services vault or its containing resource group if the vault has active dependencies.
+
+#### Deletion Blockers
+
+A Recovery Services vault **cannot be deleted** if it has any of the following dependencies:
+
+| Blocker | Description | Resolution |
+|---------|-------------|------------|
+| **Protected Data Sources** | Vault contains protected IaaS VMs, SQL databases, SAP HANA databases, or Azure file shares | Stop protection and delete backup data for all protected items |
+| **Active Backup Data** | Vault contains backup data (recovery points) | Delete all backup items and wait for retention period |
+| **Soft-Deleted Backup Data** | Vault contains backup data in soft-deleted state | Permanently delete soft-deleted items or wait for soft-delete retention to expire (14-180 days) |
+| **Registered Storage Accounts** | Storage accounts are registered with the vault | Unregister all storage accounts from the vault |
+| **Registered Servers** | On-premises servers registered via MARS/DPM/MABS agents | Unregister all servers from the vault |
+| **Replication Items** | Azure Site Recovery has active replicated items | Stop replication for all protected VMs |
+
+#### Deletion Process
+
+**Step 1: Stop Protection and Delete Backup Data**
+
+```bash
+# List all backup items in the vault
+az backup item list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --output table
+
+# Stop protection and delete backup data for a VM
+az backup protection disable \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <container-name> \
+  --item-name <backup-item-name> \
+  --delete-backup-data true \
+  --yes
+
+# Stop protection and delete backup data for SQL database
+az backup protection disable \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <container-name> \
+  --item-name SQLDB01 \
+  --workload-type MSSQL \
+  --delete-backup-data true \
+  --yes
+```
+
+**Step 2: Handle Soft-Deleted Items**
+
+```bash
+# List soft-deleted backup items
+az backup item list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --backup-management-type AzureIaasVM \
+  --query "[?properties.isScheduledForDeferredDelete==\`true\`]" \
+  --output table
+
+# Permanently delete soft-deleted items
+az backup protection undelete \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <container-name> \
+  --item-name <item-name> \
+  --delete-backup-data true \
+  --yes
+```
+
+**Step 3: Unregister Storage Accounts and Servers**
+
+```bash
+# List registered storage accounts
+az backup container list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --backup-management-type AzureStorage \
+  --output table
+
+# Unregister storage account
+az backup container unregister \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <storage-account-container>
+```
+
+**Step 4: Delete the Vault**
+
+```bash
+# Delete the Recovery Services vault
+az backup vault delete \
+  --resource-group RG26 \
+  --name RGV1 \
+  --yes
+
+# Or delete the entire resource group (after vault is successfully deleted)
+az group delete \
+  --name RG26 \
+  --yes
+```
+
+#### Common Scenarios
+
+**Scenario 1: SQL Database Backed Up to Recovery Vault**
+
+```plaintext
+Resource Group: RG26
+├── Recovery Services Vault: RGV1
+│   └── Protected Items:
+│       └── SQLDB01 (SQL Database Backup) ❌ BLOCKS DELETION
+├── Storage Account: sa001
+└── Virtual Machine: VM1
+
+Deletion Blocked ❌
+└─→ Must stop backup of SQLDB01 first
+```
+
+**Scenario 2: Soft-Deleted Backup Data**
+
+```plaintext
+Recovery Services Vault: RGV1
+├── Active Backup Items: 0
+├── Soft-Deleted Items: 3 ❌ BLOCKS DELETION
+│   ├── VM-Backup-1 (14 days remaining)
+│   ├── SQL-Backup-1 (10 days remaining)
+│   └── Files-Backup-1 (7 days remaining)
+
+Deletion Blocked ❌
+└─→ Options:
+    1. Wait for soft-delete retention to expire
+    2. Permanently delete soft-deleted items
+```
+
+#### Portal Deletion Steps
+
+1. **Navigate to Recovery Services Vault** → Select RGV1
+2. **Stop All Backups**:
+   - Go to **Backup items**
+   - For each item → **Stop backup** → **Delete backup data**
+3. **Handle Soft Delete**:
+   - Go to **Backup items** → Filter by "Soft deleted"
+   - Permanently delete all soft-deleted items
+4. **Unregister Dependencies**:
+   - Check **Backup Infrastructure** → **Registered Servers**
+   - Unregister all servers
+   - Check **Backup Infrastructure** → **Protected Servers**
+   - Remove all protected servers
+5. **Delete Vault**:
+   - Return to vault overview
+   - Click **Delete**
+6. **Delete Resource Group** (if needed):
+   - Navigate to resource group
+   - Click **Delete resource group**
+
+#### Error Messages and Solutions
+
+| Error Message | Cause | Solution |
+|---------------|-------|----------|
+| "Cannot delete vault RGV1 because there are existing resources within the vault" | Protected items or backup data exists | Stop protection and delete backup data for all items |
+| "Vault contains soft deleted backup items" | Backup data in soft-deleted state | Permanently delete soft-deleted items or disable soft delete |
+| "Cannot delete resource group containing recovery services vault" | Vault deletion blocked | Follow vault deletion process first, then delete resource group |
+| "Storage account is registered to vault" | Storage account dependency | Unregister storage account from vault |
+
+#### Best Practices for Vault Deletion
+
+1. **Document Dependencies**: Before deletion, list all protected items and dependencies
+2. **Export Configurations**: Export backup policies and configurations if needed for future reference
+3. **Verify Business Approval**: Ensure stakeholders approve permanent data deletion
+4. **Disable Soft Delete** (if immediate deletion needed):
+   ```bash
+   az backup vault backup-properties set \
+     --resource-group RG26 \
+     --name RGV1 \
+     --soft-delete-feature-state Disable
+   ```
+5. **Delete in Order**:
+   - Stop backups → Delete backup data → Handle soft-deleted items → Unregister dependencies → Delete vault → Delete resource group
+
+#### PowerShell Alternative
+
+```powershell
+# Set vault context
+$vault = Get-AzRecoveryServicesVault -ResourceGroupName "RG26" -Name "RGV1"
+Set-AzRecoveryServicesVaultContext -Vault $vault
+
+# Disable soft delete (optional, for immediate deletion)
+Set-AzRecoveryServicesVaultProperty -Vault $vault -SoftDeleteFeatureState Disable
+
+# List and delete backup items
+$backupItems = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $vault.ID
+foreach ($item in $backupItems) {
+    Disable-AzRecoveryServicesBackupProtection -Item $item -RemoveRecoveryPoints -Force
+}
+
+# Delete vault
+Remove-AzRecoveryServicesVault -Vault $vault -Force
+
+# Delete resource group
+Remove-AzResourceGroup -Name "RG26" -Force
 ```
 
 ### Key Takeaways
@@ -2728,6 +2930,452 @@ The **Azure Backup agent**, also known as the **MARS agent (Microsoft Azure Reco
 - Recovery Services vault security
 - Backup and retention policies
 - Data encryption in Azure Backup
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
+### Question 8: Deleting Resource Groups with Recovery Services Vaults
+
+#### Scenario
+
+You have an Azure subscription that contains a resource group named **RG26**.
+
+**RG26** is set to the **West Europe** location and is used to create temporary resources for a project.
+
+**RG26** contains the following resources:
+
+| Resource Name | Resource Type | Details |
+|---------------|---------------|----------|
+| **RGV1** | Recovery Services vault | Contains backup data |
+| **sa001** | Storage account | General purpose v2 |
+| **VM1** | Virtual machine | Windows Server 2019 |
+| **SQLDB01** | SQL Database | Backed up to RGV1 ✅ |
+
+**SQLDB01** is backed up to **RGV1**.
+
+When the project is complete, you attempt to delete **RG26** from the Azure portal. **The deletion fails.** ❌
+
+You need to delete RG26.
+
+---
+
+#### Question
+
+**What should you do first?**
+
+A. Delete sa001  
+B. Stop VM1  
+C. Stop the backup of SQLDB01  
+D. Delete VM1
+
+---
+
+**Correct Answer:** **C. Stop the backup of SQLDB01**
+
+---
+
+### Detailed Explanation
+
+#### Why the Resource Group Deletion Failed
+
+The deletion of **RG26** fails because it contains a **Recovery Services vault (RGV1)** that has **active dependencies**:
+
+```plaintext
+RG26 (Resource Group)
+├── RGV1 (Recovery Services Vault) ❌ HAS DEPENDENCIES
+│   └── Protected Items:
+│       └── SQLDB01 (SQL Database Backup) ← ACTIVE BACKUP
+├── sa001 (Storage Account)
+├── VM1 (Virtual Machine)
+└── SQLDB01 (SQL Database)
+
+Deletion Flow:
+1. Attempt to delete RG26
+2. Azure tries to delete all resources in RG26
+3. Azure tries to delete RGV1
+4. RGV1 deletion FAILS ❌ → Has protected items (SQLDB01)
+5. Resource group deletion FAILS ❌ → Cannot delete vault
+```
+
+---
+
+#### Recovery Services Vault Deletion Constraints
+
+You **cannot delete** a Recovery Services vault with any of the following dependencies:
+
+| Dependency Type | Description | Impact |
+|-----------------|-------------|--------|
+| **1. Protected Data Sources** | Vault contains protected IaaS VMs, SQL databases, SAP HANA databases, or Azure file shares | ❌ Blocks deletion |
+| **2. Active Backup Data** | Vault contains backup data (recovery points) | ❌ Blocks deletion |
+| **3. Soft-Deleted Backup Data** | Vault contains backup data in soft-deleted state | ❌ Blocks deletion |
+| **4. Registered Storage Accounts** | Storage accounts are registered with the vault | ❌ Blocks deletion |
+
+**In this scenario:**
+- ✅ RGV1 has **SQLDB01** as a protected data source
+- ✅ RGV1 contains **backup data** for SQLDB01
+- ❌ **Cannot delete RGV1** until backup is stopped and data is deleted
+- ❌ **Cannot delete RG26** until RGV1 is deleted
+
+---
+
+#### Why C is Correct ✅
+
+**Stop the backup of SQLDB01** is the first and necessary step because:
+
+##### 1. **Removes the Primary Blocker**
+
+Stopping the backup and deleting backup data removes the protected item dependency:
+
+```bash
+# Stop backup and delete backup data for SQLDB01
+az backup protection disable \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <container-name> \
+  --item-name SQLDB01 \
+  --workload-type MSSQL \
+  --delete-backup-data true \
+  --yes
+```
+
+**Result:**
+```plaintext
+Before:
+RGV1 → Protected Items: SQLDB01 ❌
+     → Backup Data: 14 recovery points ❌
+     → Status: Cannot delete ❌
+
+After:
+RGV1 → Protected Items: None ✅
+     → Backup Data: Soft-deleted (or none if soft-delete disabled) ⚠️
+     → Status: Can delete (after handling soft-delete) ✅
+```
+
+##### 2. **Portal Steps to Stop Backup**
+
+1. Navigate to **Recovery Services vault** → **RGV1**
+2. Go to **Backup items** → **Azure Workload (SQL in Azure VM)**
+3. Select **SQLDB01**
+4. Click **Stop backup**
+5. Select **Delete Backup Data**
+6. Enter the backup item name to confirm
+7. Click **Stop backup**
+
+##### 3. **Additional Steps May Be Required**
+
+After stopping the backup, you may need to:
+
+**If soft delete is enabled (default):**
+
+```bash
+# Permanently delete soft-deleted items
+az backup protection undelete \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <container-name> \
+  --item-name SQLDB01 \
+  --delete-backup-data true \
+  --yes
+```
+
+**Or disable soft delete for the vault:**
+
+```bash
+# Disable soft delete to skip retention period
+az backup vault backup-properties set \
+  --resource-group RG26 \
+  --name RGV1 \
+  --soft-delete-feature-state Disable
+```
+
+##### 4. **Complete Deletion Sequence**
+
+```plaintext
+Step-by-Step Deletion Process:
+
+1. Stop backup of SQLDB01 ✅ (Answer C)
+   └─→ Removes protected item dependency
+
+2. Delete backup data (including soft-deleted)
+   └─→ Removes backup data dependency
+
+3. Delete Recovery Services vault RGV1
+   └─→ Vault can now be deleted
+
+4. Delete resource group RG26
+   └─→ All resources deleted successfully ✅
+```
+
+---
+
+#### Why Other Options Are Incorrect ❌
+
+##### A. Delete sa001 ❌
+
+**Why it's incorrect:**
+- Deleting the storage account **sa001** does **not** address the vault dependency
+- The issue is not with the storage account, but with the **Recovery Services vault** having protected backup items
+- Even if sa001 is deleted, the vault still contains SQLDB01 backup data
+- Resource group deletion will still fail
+
+**Impact:**
+```plaintext
+After deleting sa001:
+RG26
+├── RGV1 ❌ Still has SQLDB01 backup
+├── VM1
+└── SQLDB01
+
+Result: RG26 deletion still FAILS ❌
+```
+
+##### B. Stop VM1 ❌
+
+**Why it's incorrect:**
+- Stopping (deallocating) VM1 does **not** address the vault dependency
+- VM1 is not being backed up (no mention in the scenario)
+- The vault dependency is **SQLDB01**, not VM1
+- Stopping a VM does not delete it or resolve vault dependencies
+
+**Impact:**
+```plaintext
+After stopping VM1:
+RG26
+├── RGV1 ❌ Still has SQLDB01 backup
+├── sa001
+├── VM1 (Stopped) ← Does not help
+└── SQLDB01
+
+Result: RG26 deletion still FAILS ❌
+```
+
+##### D. Delete VM1 ❌
+
+**Why it's incorrect:**
+- Deleting VM1 does **not** address the vault dependency
+- VM1 is not mentioned as having any backup configured
+- The protected item causing the issue is **SQLDB01**, not VM1
+- Even with VM1 deleted, the vault still protects SQLDB01
+
+**Impact:**
+```plaintext
+After deleting VM1:
+RG26
+├── RGV1 ❌ Still has SQLDB01 backup
+├── sa001
+└── SQLDB01
+
+Result: RG26 deletion still FAILS ❌
+```
+
+---
+
+#### Complete Solution Walkthrough
+
+**Step 1: Stop Backup of SQLDB01** ✅
+
+```bash
+# List backup items to confirm SQLDB01 is protected
+az backup item list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --output table
+
+# Stop protection and delete backup data
+az backup protection disable \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <sql-container> \
+  --item-name SQLDB01 \
+  --workload-type MSSQL \
+  --delete-backup-data true \
+  --yes
+```
+
+**Step 2: Handle Soft-Deleted Items** (if soft delete is enabled)
+
+```bash
+# Check for soft-deleted items
+az backup item list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --query "[?properties.isScheduledForDeferredDelete==\`true\`]" \
+  --output table
+
+# Option A: Wait 14 days for soft-delete retention to expire
+# Option B: Permanently delete immediately
+az backup protection undelete \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --container-name <sql-container> \
+  --item-name SQLDB01 \
+  --delete-backup-data true \
+  --yes
+
+# Option C: Disable soft delete for vault
+az backup vault backup-properties set \
+  --resource-group RG26 \
+  --name RGV1 \
+  --soft-delete-feature-state Disable
+```
+
+**Step 3: Delete Recovery Services Vault**
+
+```bash
+# Verify vault has no dependencies
+az backup item list \
+  --resource-group RG26 \
+  --vault-name RGV1 \
+  --output table
+
+# Expected output: No items
+
+# Delete vault
+az backup vault delete \
+  --resource-group RG26 \
+  --name RGV1 \
+  --yes
+```
+
+**Step 4: Delete Resource Group**
+
+```bash
+# Delete resource group with all remaining resources
+az group delete \
+  --name RG26 \
+  --yes \
+  --no-wait
+```
+
+---
+
+#### PowerShell Alternative
+
+```powershell
+# Set vault context
+$vault = Get-AzRecoveryServicesVault -ResourceGroupName "RG26" -Name "RGV1"
+Set-AzRecoveryServicesVaultContext -Vault $vault
+
+# List backup items
+Get-AzRecoveryServicesBackupItem `
+  -BackupManagementType AzureWorkload `
+  -WorkloadType MSSQL `
+  -VaultId $vault.ID
+
+# Stop backup and delete data for SQL database
+$item = Get-AzRecoveryServicesBackupItem `
+  -BackupManagementType AzureWorkload `
+  -WorkloadType MSSQL `
+  -Name "SQLDB01" `
+  -VaultId $vault.ID
+
+Disable-AzRecoveryServicesBackupProtection `
+  -Item $item `
+  -RemoveRecoveryPoints `
+  -Force
+
+# Disable soft delete (optional)
+Set-AzRecoveryServicesVaultProperty `
+  -Vault $vault `
+  -SoftDeleteFeatureState Disable
+
+# Delete vault
+Remove-AzRecoveryServicesVault -Vault $vault -Force
+
+# Delete resource group
+Remove-AzResourceGroup -Name "RG26" -Force
+```
+
+---
+
+#### Azure Portal Steps
+
+**Visual Flow:**
+
+```plaintext
+┌────────────────────────────────────────────────────────────────┐
+│                     Azure Portal                                │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  1. Navigate to Recovery Services vaults                       │
+│     └─→ Select "RGV1"                                          │
+│                                                                │
+│  2. Go to "Backup items"                                       │
+│     └─→ Click "Azure Workload (SQL in Azure VM)"               │
+│         └─→ Select "SQLDB01"                                   │
+│             └─→ Click "Stop backup"                            │
+│                 └─→ Select "Delete Backup Data"                │
+│                     └─→ Enter backup item name: SQLDB01        │
+│                         └─→ Click "Stop backup"                │
+│                                                                │
+│  3. Handle soft-deleted items (if applicable)                  │
+│     └─→ Go to "Backup items"                                   │
+│         └─→ Filter by "Soft deleted"                           │
+│             └─→ Permanently delete all items                   │
+│                                                                │
+│  4. Delete the vault                                           │
+│     └─→ Go to RGV1 overview                                    │
+│         └─→ Click "Delete"                                     │
+│             └─→ Confirm deletion                               │
+│                                                                │
+│  5. Delete resource group                                      │
+│     └─→ Navigate to "RG26"                                     │
+│         └─→ Click "Delete resource group"                      │
+│             └─→ Type "RG26" to confirm                         │
+│                 └─→ Click "Delete" ✅                          │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Key Takeaways
+
+1. **Recovery Services vaults with protected items cannot be deleted**
+   > Before deleting a vault or its resource group, you must first stop protection and delete backup data for all protected items.
+
+2. **Stopping backup is the first step**
+   > The correct sequence is: Stop backup → Delete backup data → Handle soft-deleted items → Delete vault → Delete resource group.
+
+3. **Soft delete can delay deletion**
+   > By default, deleted backup data is soft-deleted for 14 days. Either wait for the retention period or permanently delete the data.
+
+4. **Resource group deletion fails if vault cannot be deleted**
+   > Azure cannot delete a resource group if any resource within it (like a Recovery Services vault) has dependencies preventing its deletion.
+
+5. **Check all vault dependencies**
+   > Before attempting vault deletion, verify there are no protected items, backup data, soft-deleted items, or registered storage accounts.
+
+---
+
+#### Common Errors and Solutions
+
+| Error Scenario | Error Message | Solution |
+|----------------|---------------|----------|
+| **Protected items exist** | "Cannot delete vault because there are existing resources within the vault" | Stop backup and delete backup data for all protected items |
+| **Soft-deleted data** | "Vault contains soft deleted backup items" | Permanently delete soft-deleted items or wait for retention period |
+| **Resource group deletion** | "Cannot delete resource group containing recovery services vault" | Delete vault dependencies first, then vault, then resource group |
+| **Registered storage** | "Storage account is registered to vault" | Unregister storage account from vault before deletion |
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Delete a Recovery Services vault](https://learn.microsoft.com/en-us/azure/backup/backup-azure-delete-vault)
+- [Soft delete for Azure Backup](https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature-cloud)
+- [Troubleshoot Recovery Services vault deletion errors](https://learn.microsoft.com/en-us/azure/backup/backup-azure-troubleshoot-vm-backup-fails-snapshot-timeout)
+- [Stop protection for SQL Server backup](https://learn.microsoft.com/en-us/azure/backup/manage-monitor-sql-database-backup#stop-protection)
+
+**Related Concepts:**
+- Recovery Services vault management
+- Azure Backup data protection
+- Soft delete and data retention
+- Resource group deletion constraints
+
+**Exam Tip:**
+> When you see deletion failures for resource groups containing Recovery Services vaults, always check for protected items, backup data, and soft-deleted data. The solution almost always involves stopping backups and deleting backup data first.
 
 **Domain:** Design Business Continuity Solutions
 
