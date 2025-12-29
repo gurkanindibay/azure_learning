@@ -49,6 +49,7 @@
   - [Question 8: Collecting Windows Security Events with DCR Support](#question-8-collecting-windows-security-events-with-dcr-support)
   - [Question 9: Correlating Azure Resource Usage with Application Performance](#question-9-correlating-azure-resource-usage-with-application-performance)
   - [Question 10: Monthly Report of Deployed Azure Resources](#question-10-monthly-report-of-deployed-azure-resources)
+  - [Question 11: KQL Query Syntax for Error Events](#question-11-kql-query-syntax-for-error-events)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -2220,6 +2221,167 @@ Which of the following would help achieve this requirement?
 - [Azure Activity Log](https://learn.microsoft.com/azure/azure-monitor/essentials/activity-log)
 - [Azure Monitor data sources and data collection methods](https://learn.microsoft.com/azure/azure-monitor/data-sources)
 - [Web application monitoring on Azure - Azure Architecture Center](https://learn.microsoft.com/azure/architecture/web-apps/guides/monitoring/web-application-monitoring)
+
+---
+
+## Related Learning Resources
+- [Azure Monitor Documentation](https://learn.microsoft.com/azure/azure-monitor/)
+- [Application Insights Overview](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)
+- [Log Analytics Tutorial](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial)
+- [Azure Monitor Best Practices](https://learn.microsoft.com/azure/azure-monitor/best-practices)
+- [KQL Quick Reference](https://learn.microsoft.com/azure/data-explorer/kql-quick-reference)
+
+---
+
+### Question 11: KQL Query Syntax for Error Events
+
+**Scenario:**
+You have an Azure subscription named Subscription1 that contains an Azure Log Analytics workspace named Workspace1.
+
+You need to view the error events from a table named Event.
+
+**Question:**
+Which query should you run in Workspace1?
+
+**Options:**
+
+**A.** `search in (Event) "error"`  
+**B.** `search in (Event) * | where EventType -eq "error"`  
+**C.** `select * from Event where EventType == "error"`  
+**D.** `Get-Event Event | where {$_.EventType == "error"}`
+
+**Answer: A** ✅
+
+---
+
+**Explanation:**
+
+Azure Log Analytics uses **Kusto Query Language (KQL)**, not SQL or PowerShell syntax. Only Option A uses valid KQL syntax.
+
+| Option | Syntax Type | Validity | Explanation |
+|--------|-------------|----------|-------------|
+| **A** | KQL | ✅ **Valid** | Correct KQL syntax using `search` operator |
+| **B** | Mixed | ❌ **Invalid** | Incorrect syntax mixing `*` with `-eq` (PowerShell operator, not KQL) |
+| **C** | SQL | ❌ **Invalid** | SQL syntax not supported in Log Analytics |
+| **D** | PowerShell | ❌ **Invalid** | PowerShell cmdlet syntax not supported in Log Analytics |
+
+---
+
+**Why Option A Works:**
+
+The `search in (Event) "error"` query:
+- Uses valid KQL syntax
+- Searches for the term "error" across **all columns** in the Event table
+- Returns any row where "error" appears in any column value
+
+**Example Results:**
+```kql
+search in (Event) "error"
+// Returns rows where "error" appears in ANY column:
+// - EventType: "error"
+// - Message: "Application error occurred"
+// - Description: "Failed with error code 500"
+```
+
+---
+
+**Better Alternative (More Precise):**
+
+While Option A is correct and answers the question, a more precise query would filter specifically on the EventType column:
+
+```kql
+Event 
+| where EventType == "error"
+```
+
+**Differences:**
+
+| Query | Search Scope | Performance | Use Case |
+|-------|--------------|-------------|----------|
+| `search in (Event) "error"` | All columns | Slower (scans all columns) | When you're not sure which column contains "error" |
+| `Event \| where EventType == "error"` | Specific column | Faster (filters one column) | When you know the exact column to filter |
+
+---
+
+**Common KQL Query Patterns:**
+
+```kql
+// 1. Simple table query with column filter
+Event 
+| where EventType == "error"
+
+// 2. Search across all columns in a table
+search in (Event) "error"
+
+// 3. Filter with multiple conditions
+Event 
+| where EventType == "error" and TimeGenerated > ago(1h)
+
+// 4. Case-insensitive search
+Event 
+| where EventType =~ "error"  // =~ is case-insensitive
+
+// 5. Contains operator
+Event 
+| where Message contains "error"
+
+// 6. Multiple error types
+Event 
+| where EventType in ("error", "critical", "warning")
+
+// 7. Count errors by type
+Event 
+| where EventType == "error"
+| summarize ErrorCount = count() by Computer
+| order by ErrorCount desc
+```
+
+---
+
+**Why Other Options Are Incorrect:**
+
+**Option B:** `search in (Event) * | where EventType -eq "error"`
+- ❌ Invalid syntax: `*` wildcard after table name is not valid in KQL `search` operator
+- ❌ Uses `-eq` which is a PowerShell comparison operator, not KQL
+- ✅ In KQL, use `==` for equality comparison, not `-eq`
+
+**Option C:** `select * from Event where EventType == "error"`
+- ❌ This is SQL syntax
+- ❌ Log Analytics does not support SQL queries
+- ✅ KQL uses `| where` instead of `where` clause after `FROM`
+
+**Option D:** `Get-Event Event | where {$_.EventType == "error"}`
+- ❌ This is PowerShell cmdlet syntax
+- ❌ Log Analytics query editor does not execute PowerShell commands
+- ✅ PowerShell cmdlets like `Get-Event` are for Windows Event Logs on local machines, not Azure Log Analytics
+
+---
+
+**KQL vs SQL vs PowerShell Comparison:**
+
+| Task | KQL (Correct) | SQL (Wrong) | PowerShell (Wrong) |
+|------|---------------|-------------|-------------------|
+| **Select all** | `Event` | `SELECT * FROM Event` | `Get-AzOperationalInsightsSearchResults` |
+| **Filter** | `Event \| where EventType == "error"` | `SELECT * FROM Event WHERE EventType = 'error'` | `\| Where-Object {$_.EventType -eq "error"}` |
+| **Count** | `Event \| summarize count()` | `SELECT COUNT(*) FROM Event` | `\| Measure-Object` |
+| **Group by** | `Event \| summarize count() by EventType` | `SELECT EventType, COUNT(*) FROM Event GROUP BY EventType` | `\| Group-Object -Property EventType` |
+| **Sort** | `Event \| order by TimeGenerated desc` | `SELECT * FROM Event ORDER BY TimeGenerated DESC` | `\| Sort-Object -Property TimeGenerated -Descending` |
+
+---
+
+**Key Takeaways:**
+
+1. ✅ Azure Log Analytics uses **KQL (Kusto Query Language)**, not SQL or PowerShell
+2. ✅ The `search` operator searches across all columns: `search in (Table) "term"`
+3. ✅ The `where` operator filters specific columns: `Table | where Column == "value"`
+4. ✅ Use `==` for equality in KQL, not `-eq` (PowerShell) or `=` (SQL)
+5. ✅ For better performance, filter specific columns with `where` instead of using `search`
+
+**References:**
+- [KQL Overview](https://learn.microsoft.com/azure/data-explorer/kusto/query/)
+- [Search Operator](https://learn.microsoft.com/azure/data-explorer/kusto/query/searchoperator)
+- [Where Operator](https://learn.microsoft.com/azure/data-explorer/kusto/query/whereoperator)
+- [Log Analytics Tutorial](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial)
 
 ---
 
