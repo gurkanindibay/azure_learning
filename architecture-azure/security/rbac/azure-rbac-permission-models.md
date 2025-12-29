@@ -26,6 +26,7 @@
 - [Practice Question: Subscription Tenant Migration and Access Elevation](#practice-question-subscription-tenant-migration-and-access-elevation)
 - [Practice Question: Azure AD Tenant Creation and User Management Permissions](#practice-question-azure-ad-tenant-creation-and-user-management-permissions)
 - [Practice Question: Azure AD Device and Group Management Permissions](#practice-question-azure-ad-device-and-group-management-permissions)
+- [Practice Question: User Access Administrator Role for Role Assignment](#practice-question-user-access-administrator-role-for-role-assignment)
 
 ## Overview
 
@@ -902,4 +903,259 @@ Can add device to dynamic group:
 - [Manage group ownership in Azure AD](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-manage-groups)
 - [Azure AD registered devices](https://learn.microsoft.com/en-us/entra/identity/devices/concept-device-registration)
 - [Azure AD joined devices](https://learn.microsoft.com/en-us/entra/identity/devices/concept-directory-join)
+
+---
+
+## Practice Question: User Access Administrator Role for Role Assignment
+
+**Scenario:**
+
+You have an Azure subscription named Subscription1 that contains a virtual network named VNet1. VNet1 is in a resource group named RG1.
+
+Subscription1 has a user named User1. User1 has the following roles:
+- Reader
+- Security Admin
+- Security Reader
+
+**Requirement:**
+
+You need to ensure that User1 can assign the Reader role for VNet1 to other users.
+
+**Question:**
+
+What should you do?
+
+**Options:**
+
+A. Assign User1 the Network Contributor role for VNet1  
+B. Assign User1 the Network Contributor role for RG1  
+C. Remove User1 from the Security Reader and Reader roles for Subscription1  
+D. Assign User1 the User Access Administrator role for VNet1
+
+---
+
+### Answer: D - Assign User1 the User Access Administrator role for VNet1
+
+### Explanation
+
+**Why Option D is Correct:**
+
+The **User Access Administrator** role is specifically designed to manage access permissions for Azure resources. This role grants the ability to:
+- Create, update, and delete role assignments
+- Manage user access to Azure resources at the assigned scope
+- Delegate role assignment capabilities to others
+
+Since the requirement is to ensure User1 can assign the Reader role for VNet1 to other users, assigning the User Access Administrator role at the VNet1 scope directly achieves this goal.
+
+**Role Assignment Scope:**
+
+```
+User1
+└── User Access Administrator role (at VNet1 scope)
+    └── Can assign any role (including Reader) for VNet1 to other users
+```
+
+**Required RBAC Action:**
+
+The User Access Administrator role includes the following critical action:
+- `Microsoft.Authorization/roleAssignments/write` - Create and update role assignments
+
+**Why Other Options are Incorrect:**
+
+### Option A: Assign User1 the Network Contributor role for VNet1 ❌
+
+**Network Contributor Role Capabilities:**
+- Manage network resources (create, update, delete virtual networks, subnets, NSGs, etc.)
+- Configure network settings
+- Manage network security
+
+**Why It Doesn't Work:**
+- Network Contributor is focused on **managing network resources**, not managing access permissions
+- Does **NOT** include `Microsoft.Authorization/roleAssignments/write` permission
+- User1 would be able to configure VNet1 but **NOT** assign roles to other users
+- This is an example of confusing resource management with access management
+
+**RBAC Actions Comparison:**
+
+| Role | Network Management | Role Assignment |
+|------|-------------------|-----------------|
+| Network Contributor | ✅ `Microsoft.Network/*` | ❌ No `roleAssignments/write` |
+| User Access Administrator | ❌ No network actions | ✅ `Microsoft.Authorization/roleAssignments/*` |
+
+### Option B: Assign User1 the Network Contributor role for RG1 ❌
+
+**Why It Doesn't Work:**
+- Same issue as Option A - Network Contributor doesn't include role assignment permissions
+- Assigning at RG1 scope instead of VNet1 scope doesn't change the role's capabilities
+- User1 would manage all network resources in RG1, but still cannot assign roles
+
+**Scope Considerations:**
+
+```
+RG1 (Resource Group)
+├── VNet1 (Virtual Network)
+├── Storage Account
+└── Other Resources
+
+Network Contributor at RG1 scope:
+├── ✅ Can manage VNet1 and all other network resources in RG1
+└── ❌ Still cannot assign roles for any resource in RG1
+```
+
+### Option C: Remove User1 from the Security Reader and Reader roles for Subscription1 ❌
+
+**Why It Doesn't Work:**
+- Removing existing roles **does not grant new capabilities**
+- User1 would have **less permissions** after removal, not more
+- Reader and Security Reader roles are not preventing User1 from assigning roles
+- The issue is **lack of User Access Administrator role**, not presence of other roles
+
+**Current vs After Removal:**
+
+| State | Roles | Can Assign Roles? |
+|-------|-------|-------------------|
+| **Current** | Reader, Security Admin, Security Reader | ❌ No |
+| **After Removal** | Security Admin only | ❌ No (same problem) |
+| **Correct Solution** | Reader, Security Admin, Security Reader, **User Access Administrator** | ✅ Yes |
+
+---
+
+### Key Concepts
+
+#### 1. Role Assignment Permissions in Azure RBAC
+
+**Only specific roles can assign roles to other users:**
+
+| Role | Scope | Can Assign Roles | Typical Use Case |
+|------|-------|------------------|------------------|
+| **Owner** | Any scope | ✅ All roles within scope | Full management including access control |
+| **User Access Administrator** | Any scope | ✅ All roles within scope | Dedicated access management role |
+| **Custom Role** | Defined scopes | Only if includes `roleAssignments/write` | Specific delegation scenarios |
+
+**All other built-in roles (including Contributor):**
+- ❌ **Cannot** assign roles to other users
+- ❌ **Cannot** modify role assignments
+- ❌ **Cannot** manage access permissions
+
+#### 2. Separation Between Resource Management and Access Management
+
+Azure RBAC enforces a clear separation:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Resource Management Roles                               │
+│  ├── Contributor: Manage resources, but NOT access       │
+│  ├── Network Contributor: Manage network resources       │
+│  ├── Storage Account Contributor: Manage storage         │
+│  └── Cannot assign roles to others                       │
+└──────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────┐
+│  Access Management Roles                                 │
+│  ├── User Access Administrator: Manage role assignments  │
+│  ├── Owner: Manage resources AND access                  │
+│  └── Can assign roles to others                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Why This Matters:**
+- Prevents privilege escalation
+- Implements principle of least privilege
+- Ensures security team controls who can access resources
+- DevOps can manage infrastructure without granting themselves access to sensitive data
+
+#### 3. User Access Administrator vs Owner Role
+
+| Aspect | User Access Administrator | Owner |
+|--------|--------------------------|-------|
+| **Manage role assignments** | ✅ Yes | ✅ Yes |
+| **Manage resources** | ❌ No | ✅ Yes |
+| **Typical use case** | Security team managing access | Full administrative control |
+| **Principle of least privilege** | ✅ Better - focused on access only | ⚠️ Broader permissions |
+
+**Best Practice:**
+- Use **User Access Administrator** when you only need to manage access
+- Use **Owner** when you need both resource management and access management
+- For the exam scenario, User Access Administrator is the **minimum required permission**
+
+#### 4. Scope-Based Role Assignments
+
+Role assignments are scoped - you can only assign roles within your scope:
+
+```
+Subscription1
+├── RG1 (Resource Group)
+│   └── VNet1 (Virtual Network)
+└── RG2 (Resource Group)
+
+User1 with User Access Administrator at VNet1 scope:
+├── ✅ Can assign roles for VNet1
+├── ❌ Cannot assign roles for RG1
+├── ❌ Cannot assign roles for other resources in RG1
+└── ❌ Cannot assign roles for Subscription1
+```
+
+**Scope Hierarchy:**
+
+| Scope | User1 Can Assign Roles For |
+|-------|----------------------------|
+| **VNet1** | Only VNet1 |
+| **RG1** | VNet1 and all resources in RG1 |
+| **Subscription1** | All resources in subscription |
+
+---
+
+### Exam Tips
+
+**Common Traps:**
+
+1. ❌ Confusing resource management roles with access management roles
+   - Network Contributor, Storage Account Contributor, etc. **cannot** assign roles
+   - Only Owner and User Access Administrator can assign roles
+
+2. ❌ Assuming Contributor role includes role assignment permissions
+   - Contributor can manage resources but **NOT** access permissions
+   - This is by design for security separation
+
+3. ❌ Thinking you need to remove existing roles to add new capabilities
+   - Azure RBAC is additive - you need to **add** User Access Administrator, not remove other roles
+
+4. ❌ Confusing Azure RBAC roles with Microsoft Entra ID (Azure AD) administrative roles
+   - User Access Administrator = Azure RBAC role (for Azure resources)
+   - User Administrator = Entra ID role (for users/groups in Azure AD)
+   - They are different role systems with different permissions
+
+**Key Recognition Patterns:**
+
+When you see these phrases in exam questions:
+- "Assign roles to other users" → User Access Administrator or Owner
+- "Manage access permissions" → User Access Administrator or Owner  
+- "Delegate role assignment" → User Access Administrator or Owner
+- "Manage network resources" → Network Contributor (NOT for role assignment)
+- "Configure resource settings" → Contributor or resource-specific role (NOT for role assignment)
+
+**Quick Decision Tree:**
+
+```
+Question asks: "User needs to assign roles to others"
+    │
+    ├─── Resource management roles mentioned? 
+    │    (Contributor, Network Contributor, etc.)
+    │    └─── ❌ These are WRONG - cannot assign roles
+    │
+    └─── Access management roles mentioned?
+         (User Access Administrator, Owner)
+         └─── ✅ These are CORRECT - can assign roles
+              │
+              ├─── User Access Administrator: Minimum required permission
+              └─── Owner: Works but gives more permissions than needed
+```
+
+---
+
+**References:**
+- [Azure Built-in Roles - User Access Administrator](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)
+- [Azure Built-in Roles - Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner)
+- [Assign Azure roles using Azure Portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal)
+- [Understand Azure role assignments](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments)
 
