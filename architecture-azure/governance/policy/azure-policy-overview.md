@@ -1683,6 +1683,147 @@ To automatically inherit tags from resource groups, use the built-in policy **"I
 
 ---
 
+### Question 15: Cloning Azure VMs with ARM Templates
+
+**Scenario:**
+You have VM1, a virtual machine in Azure. You need to create five more virtual machines with the identical parameters as VM1. The solution must ensure that VM1 remains accessible throughout the process.
+
+You open the blade for VM1 from the Azure portal.
+
+**Question:**
+What should you do next?
+
+**Options:**
+
+1. **Choose Scalability and availability** ❌
+2. **Choose Export template** ✅
+3. **Choose Capture** ❌
+4. **Choose Redeploy + to reapply** ❌
+
+**Answer:** Choose Export template
+
+**Explanation:**
+
+**Why Export Template is Correct:**
+
+The **Export template** option allows you to download an ARM (Azure Resource Manager) template of VM1 with all its current configuration settings. You can then:
+
+| Benefit | Description |
+|---------|-------------|
+| **Preserve VM1** | VM1 remains fully accessible and operational during and after the export |
+| **Exact Configuration** | Captures all VM settings including size, disks, networking, extensions |
+| **Reusability** | Template can be modified (e.g., change VM name) and deployed multiple times |
+| **Automation** | Deploy five new VMs with identical configuration programmatically |
+
+**Export Template Workflow:**
+
+```
+1. Open VM1 blade in Azure Portal
+   ↓
+2. Select "Export template" under Automation section
+   ↓
+3. Review the generated ARM template
+   ↓
+4. Download or save the template
+   ↓
+5. Modify template (change VM name, adjust parameters)
+   ↓
+6. Deploy template 5 times to create new VMs
+   ↓
+7. All 6 VMs (original + 5 new) are now running
+```
+
+**Sample ARM Template Structure:**
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual machine"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-03-01",
+      "name": "[parameters('vmName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        // VM configuration from VM1
+      }
+    }
+  ]
+}
+```
+
+**Why Other Options Are Incorrect:**
+
+| Option | Reason for Incorrect |
+|--------|---------------------|
+| **Choose Scalability and availability** | This option is useful for configuring availability sets or VM scale sets, but it does **not directly clone VM1 with the same settings**. It's designed for high availability configuration, not VM duplication. |
+| **Choose Capture** | This creates an image of the VM, but it requires VM1 to be **generalized** (deallocated and sysprep applied), which makes VM1 **unavailable**. This violates the requirement that VM1 must remain accessible. Additionally, generalization removes unique settings, making the VM unusable afterward. |
+| **Choose Redeploy + to reapply** | This option is used for **troubleshooting VM issues** by redeploying the VM to a new host within Azure. It does **not create new VMs** and is only used for fixing connectivity or boot issues with the existing VM. |
+
+**Comparison: Export Template vs Capture**
+
+| Aspect | Export Template | Capture (Image) |
+|--------|-----------------|-----------------|
+| **VM Availability** | ✅ VM remains accessible | ❌ VM must be generalized (unavailable) |
+| **Use Case** | Clone VMs with exact settings | Create reusable VM images |
+| **VM State** | Preserves running VM | Destroys original VM |
+| **Configuration** | Exact replica including unique settings | Generalized image (no unique data) |
+| **Deployment** | ARM template deployment | Image-based deployment |
+
+**When to Use Each Approach:**
+
+| Approach | Best For |
+|----------|----------|
+| **Export Template** | Cloning existing VMs while keeping them operational; maintaining exact configuration |
+| **Capture (Image)** | Creating golden images for new deployments; standardizing base VM configurations |
+| **VM Scale Sets** | Auto-scaling identical VMs based on demand; production workloads requiring elasticity |
+| **Availability Sets** | High availability within same datacenter; protecting against hardware failures |
+
+**Deployment Options with Exported Template:**
+
+1. **Azure Portal**: Upload and deploy through Custom Deployment
+2. **Azure CLI**:
+   ```bash
+   az deployment group create \
+     --resource-group myResourceGroup \
+     --template-file vm-template.json \
+     --parameters vmName=VM2
+   ```
+3. **PowerShell**:
+   ```powershell
+   New-AzResourceGroupDeployment `
+     -ResourceGroupName myResourceGroup `
+     -TemplateFile vm-template.json `
+     -vmName VM2
+   ```
+4. **Azure DevOps/GitHub Actions**: Integrate into CI/CD pipelines
+
+**Best Practices:**
+
+- ✅ Review exported template before deployment
+- ✅ Parameterize unique values (VM name, IP addresses, disk names)
+- ✅ Remove or update dependencies that shouldn't be duplicated
+- ✅ Test deployment with one VM before creating all five
+- ✅ Consider using VM Scale Sets if VMs need to scale dynamically
+
+**Reference Links:**
+- [Export ARM Templates from Azure Portal](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/export-template-portal)
+- [Create VM from Custom Image](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/capture-image)
+- [ARM Template Deployment](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-portal)
+
+**Domain:** Azure Resource Manager and Templates
+
+---
+
 ## Summary
 
 ### Key Takeaways

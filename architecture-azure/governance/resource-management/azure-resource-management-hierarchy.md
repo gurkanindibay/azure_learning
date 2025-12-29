@@ -2044,6 +2044,270 @@ Development Management Group
 
 ---
 
+### Question 10: Resource Locks and Tags Scope
+
+**Scenario:**
+You have the following Azure resources in your environment:
+
+**Resource Hierarchy:**
+```
+Tenant Root Group
+│
+├── Management Group: MG1
+│   │
+│   └── Subscription: Sub1
+│       │
+│       └── Resource Group: RG1
+│           │
+│           └── Virtual Machine: VM1
+```
+
+You plan to track resource usage and prevent the deletion of resources.
+
+**Question:**
+To which resources can you apply locks and tags?
+
+**Options for Locks:**
+
+1. **RG1 and VM1 only** ❌
+2. **Sub1 and RG1 only** ❌
+3. **Sub1, RG1, and VM1 only** ✅
+4. **MG1, Sub1, RG1, and VM1 only** ❌
+5. **Tenant Root Group, MG1, Sub1, RG1, and VM1** ❌
+
+**Options for Tags:**
+
+1. **RG1 and VM1 only** ❌
+2. **Sub1 and RG1 only** ❌
+3. **Sub1, RG1, and VM1 only** ✅
+4. **MG1, Sub1, RG1, and VM1 only** ❌
+5. **Tenant Root Group, MG1, Sub1, RG1, and VM1** ❌
+
+**Answer:**
+- **Locks:** Sub1, RG1, and VM1 only
+- **Tags:** Sub1, RG1, and VM1 only
+
+**Explanation:**
+
+This question tests your understanding of which Azure resource hierarchy levels support locks and tags. The answer reveals an important limitation: **locks and tags can only be applied to certain levels of the Azure resource hierarchy**.
+
+**1. Resource Locks Scope:**
+
+Azure Resource Locks can be applied at the following levels:
+
+| Level | Locks Supported? | Why/Why Not |
+|-------|------------------|-------------|
+| **Tenant Root Group** | ❌ No | Management groups do not support locks |
+| **Management Groups (MG1)** | ❌ No | Management groups do not support locks |
+| **Subscriptions (Sub1)** | ✅ Yes | Subscriptions support locks |
+| **Resource Groups (RG1)** | ✅ Yes | Resource groups support locks |
+| **Resources (VM1)** | ✅ Yes | Individual resources support locks |
+
+**Note:** Subscriptions, resource groups, and individual resources all support locks. From the hierarchy shown in the exhibit, **Sub1, RG1, and VM1** can all have locks applied.
+
+**Lock Inheritance Pattern:**
+
+```
+Subscription: Sub1
+│
+├── Lock: CanNotDelete ──────┐
+│                             │ Inherits lock
+└── Resource Group: RG1 ──────┤
+    │                         │ Inherits lock
+    ├── Lock: ReadOnly ───────┤ (Own lock + inherited)
+    │                         │
+    └── VM1 ──────────────────┘ Inherits all locks
+```
+
+**2. Resource Tags Scope:**
+
+Azure Resource Tags can be applied at the following levels:
+
+| Level | Tags Supported? | Why/Why Not |
+|-------|------------------|-------------|
+| **Tenant Root Group** | ❌ No | Tenant root is not an Azure resource |
+| **Management Groups (MG1)** | ❌ No | Management groups do not support tags |
+| **Subscriptions (Sub1)** | ✅ Yes | Subscriptions support tags |
+| **Resource Groups (RG1)** | ✅ Yes | Resource groups support tags |
+| **Resources (VM1)** | ✅ Yes | Individual resources support tags |
+
+**Note:** Subscriptions, resource groups, and individual resources all support tags. From the hierarchy shown in the exhibit, **Sub1, RG1, and VM1** can all have tags applied.
+
+**Tag Inheritance Behavior:**
+
+```
+⚠️ IMPORTANT: Tags do NOT inherit automatically in Azure!
+
+Subscription: Sub1
+├── Tags: Environment=Production
+│
+└── Resource Group: RG1
+    ├── Tags: Project=WebApp
+    │
+    └── VM1
+        └── Tags: (NONE - does not inherit!)
+
+To inherit tags, you must use Azure Policy with the "Modify" effect.
+```
+
+**3. Comparison Table:**
+
+| Resource Level | Locks Supported | Tags Supported | Why |
+|----------------|-----------------|----------------|-----|
+| **Tenant Root Group** | ❌ | ❌ | Not an Azure resource; identity/organizational boundary |
+| **Management Groups** | ❌ | ❌ | Organizational hierarchy; not actual resources |
+| **Subscriptions** | ✅ * | ✅ * | Billing containers; support locks and tags |
+| **Resource Groups** | ✅ | ✅ | Lifecycle containers; full support |
+| **Resources** | ✅ | ✅ | Actual Azure services; full support |
+
+\* Subscriptions support both locks and tags for resource management and organization.
+
+**4. Why Management Groups Don't Support Locks and Tags:**
+
+```
+Management Groups = Organizational Hierarchy
+├── Purpose: Policy and RBAC inheritance
+├── Not actual Azure resources
+├── Cannot be tagged (no cost allocation needed)
+├── Cannot be locked (no delete/modify operations)
+└── Use Azure Policy instead for governance
+
+Resource Groups & Resources = Actual Azure Resources
+├── Purpose: Deploy, manage, bill actual services
+├── Support tagging (cost allocation, organization)
+├── Support locking (prevent accidental deletion)
+└── Subject to lifecycle operations
+```
+
+**5. Practical Implementation:**
+
+**Applying Locks:**
+
+```bash
+# Lock on Resource Group (RG1)
+az lock create \
+  --name PreventDeleteRG1 \
+  --lock-type CanNotDelete \
+  --resource-group RG1 \
+  --notes "Prevent accidental deletion of production resource group"
+
+# Lock on Virtual Machine (VM1)
+az lock create \
+  --name PreventDeleteVM1 \
+  --lock-type CanNotDelete \
+  --resource-group RG1 \
+  --resource-name VM1 \
+  --resource-type Microsoft.Compute/virtualMachines \
+  --notes "Prevent accidental deletion of critical VM"
+
+# ❌ This will FAIL - Management groups don't support locks
+az lock create \
+  --name PreventDeleteMG1 \
+  --scope "/providers/Microsoft.Management/managementGroups/MG1"
+  # Error: Locks cannot be applied to management groups
+```
+
+**Applying Tags:**
+
+```bash
+# Tags on Resource Group (RG1)
+az tag create \
+  --resource-id /subscriptions/<sub-id>/resourceGroups/RG1 \
+  --tags Environment=Production Project=WebApp
+
+# Tags on Virtual Machine (VM1)
+az tag create \
+  --resource-id /subscriptions/<sub-id>/resourceGroups/RG1/providers/Microsoft.Compute/virtualMachines/VM1 \
+  --tags Environment=Production Tier=Web CostCenter=IT-001
+
+# ❌ This will FAIL - Management groups don't support tags
+az tag create \
+  --resource-id /providers/Microsoft.Management/managementGroups/MG1 \
+  --tags Environment=Production
+  # Error: Tags cannot be applied to management groups
+```
+
+**6. Best Practices:**
+
+**For Resource Locks:**
+- ✅ Apply **CanNotDelete** locks to production resource groups
+- ✅ Apply locks to critical individual resources (VMs, databases, Key Vaults)
+- ✅ Lock at the resource group level to protect all resources within
+- ✅ Use **ReadOnly** locks for resources that should never change
+- ❌ Don't rely on management groups for lock inheritance (not supported)
+- ✅ Document which resources are locked and why
+
+**For Resource Tags:**
+- ✅ Apply tags at both resource group and resource levels for flexibility
+- ✅ Use consistent tagging strategy across all resources
+- ✅ Use Azure Policy to enforce required tags
+- ✅ Use Azure Policy "Modify" effect to inherit tags from resource groups
+- ❌ Don't assume tags inherit automatically (they don't)
+- ✅ Use tags for cost allocation, resource organization, and automation
+
+**7. Common Exam Pitfall:**
+
+```
+❌ WRONG THINKING:
+"Management groups are at the top of the hierarchy,
+ so they should support everything including locks and tags."
+
+✅ CORRECT THINKING:
+"Management groups are organizational containers for governance.
+ They support RBAC and Policy inheritance, but NOT locks or tags.
+ 
+ Only actual Azure resources support locks and tags:
+ - Subscriptions (billing resources)
+ - Resource Groups (lifecycle containers)
+ - Resources (actual services)"
+```
+
+**8. Use Cases:**
+
+**Scenario: Prevent Deletion of Production Resources**
+
+```
+Solution: Apply locks at resource group level
+
+Resource Group: RG-Production
+├── Lock: CanNotDelete ✅
+├── Virtual Machine: WebServer ──── Inherits lock ✅
+├── SQL Database: ProdDB ──────────── Inherits lock ✅
+└── Storage Account: prodstorage ─── Inherits lock ✅
+
+Result: All resources protected with a single lock on RG
+```
+
+**Scenario: Track Resource Usage by Project**
+
+```
+Solution: Apply tags at resource group and resource levels
+
+Resource Group: RG-Production
+├── Tags: Project=WebApp, Environment=Production ✅
+│
+├── VM1
+│   └── Tags: Role=WebServer, Tier=Frontend ✅
+│
+└── SQL Database
+    └── Tags: Role=Database, Tier=Backend ✅
+
+Result: Granular cost tracking and resource organization
+```
+
+**Key Principle:**
+> In the Azure resource hierarchy, locks and tags can only be applied to actual Azure resources: subscriptions, resource groups, and resources. Management groups and tenant root groups are organizational constructs that do not support locks or tags. For governance at management group level, use Azure Policy and RBAC instead.
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions (25–30%)
+
+**References:**
+- [Lock Resources to Prevent Unexpected Changes](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources)
+- [Use Tags to Organize Azure Resources](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources)
+- [Azure Resource Manager Overview](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview)
+- [Resource Naming and Tagging Decision Guide](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging)
+
+---
+
 ## Summary
 
 ### Key Hierarchy Levels
