@@ -36,6 +36,13 @@
 - [Privileged Identity Management (PIM)](#privileged-identity-management-pim)
 - [Cross-Tenant and Multi-Tenant Considerations](#cross-tenant-and-multi-tenant-considerations)
 - [Troubleshooting Common Issues](#troubleshooting-common-issues)
+- [Custom Role Configuration - Practical Examples](#custom-role-configuration---practical-examples)
+  - [Understanding Custom Role Components](#understanding-custom-role-components)
+  - [Common Exam Scenarios: Custom Role Configuration](#common-exam-scenarios-custom-role-configuration)
+  - [assignableScopes Scope Hierarchy](#assignablescopes-scope-hierarchy)
+  - [assignableScopes Best Practices](#assignablescopes-best-practices)
+  - [Key Takeaways: Custom Role Configuration](#key-takeaways-custom-role-configuration)
+  - [Common Mistakes to Avoid](#common-mistakes-to-avoid)
 - [Quick Reference Tables](#quick-reference-tables)
 
 ---
@@ -1791,7 +1798,465 @@ Azure Subscription Roles (RBAC)     ≠     Microsoft Entra ID Roles
 - ❌ User3 (User Admin in original tenant, not in new tenant)
 - ❌ User4 (Owner role is Azure RBAC, not Entra ID role)
 
-### Scenario 7: Multi-Subscription Governance
+### Scenario 7: Delegating User Management to Local Office Administrators
+
+**Problem:** You have three offices (New York, London, Tokyo) with local IT administrators who need to manage users in their specific offices only, without access to users in other offices.
+
+**Wrong Solutions:**
+
+❌ **Access Packages in Azure AD Entitlement Management**
+- Access packages are designed for managing **access to resources**, not delegating administrative permissions
+- Used for granting/revoking access to applications, groups, SharePoint sites, etc.
+- Not suitable for delegating user management permissions to office administrators
+
+❌ **Azure Roles (Azure RBAC)**
+- Azure roles control access to **Azure resources** (VMs, storage, networks)
+- They do NOT grant permissions to manage users, groups, or other Microsoft Entra ID objects
+- Cannot be used for user management delegation
+
+❌ **Azure AD Roles (Tenant-wide assignment)**
+- Azure AD roles like User Administrator grant permissions **across the entire tenant**
+- Assigning User Administrator gives access to ALL users in the organization
+- Cannot restrict Azure AD roles to specific groups or offices without Administrative Units
+- Provides broader permissions than required (violates least privilege)
+
+**✅ Correct Solution: Administrative Units**
+
+**Solution:** Create Administrative Units for each office and assign scoped User Administrator roles
+
+```
+Microsoft Entra ID Tenant: contoso.onmicrosoft.com
+
+Administrative Units:
+├── AU-NewYork
+│   ├── Members: NY users and groups
+│   └── Role Assignment: NYAdmin → User Administrator (scoped to AU-NewYork)
+│
+├── AU-London
+│   ├── Members: London users and groups
+│   └── Role Assignment: LondonAdmin → User Administrator (scoped to AU-London)
+│
+└── AU-Tokyo
+    ├── Members: Tokyo users and groups
+    └── Role Assignment: TokyoAdmin → User Administrator (scoped to AU-Tokyo)
+```
+
+**Implementation:**
+
+```powershell
+# Create Administrative Units
+$nyAU = New-MgDirectoryAdministrativeUnit -DisplayName "AU-NewYork" -Description "New York Office Users"
+$londonAU = New-MgDirectoryAdministrativeUnit -DisplayName "AU-London" -Description "London Office Users"
+$tokyoAU = New-MgDirectoryAdministrativeUnit -DisplayName "AU-Tokyo" -Description "Tokyo Office Users"
+
+# Add users to Administrative Units
+Add-MgDirectoryAdministrativeUnitMemberByRef -AdministrativeUnitId $nyAU.Id -OdataId "https://graph.microsoft.com/v1.0/users/{user-id}"
+
+# Assign User Administrator role scoped to AU
+$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'User Administrator'"
+New-MgRoleManagementDirectoryRoleAssignment `
+    -DirectoryScopeId "/administrativeUnits/$($nyAU.Id)" `
+    -RoleDefinitionId $roleDefinition.Id `
+    -PrincipalId "{ny-admin-user-id}"
+```
+
+**Result:**
+
+| Administrator | Can Manage | Cannot Manage |
+|---------------|------------|---------------|
+| **NYAdmin** (User Administrator for AU-NewYork) | ✅ Create/modify/delete users in NY office<br>✅ Reset passwords for NY users<br>✅ Assign licenses to NY users<br>✅ Manage NY groups | ❌ Cannot access London users<br>❌ Cannot access Tokyo users<br>❌ Cannot manage users outside their AU |
+| **LondonAdmin** (User Administrator for AU-London) | ✅ Manage London office users only | ❌ Cannot access NY or Tokyo users |
+| **TokyoAdmin** (User Administrator for AU-Tokyo) | ✅ Manage Tokyo office users only | ❌ Cannot access NY or London users |
+
+#### Common Exam Scenario: Choosing Between Administrative Units vs Other Solutions
+
+**Question:**
+
+You have an Azure subscription with three regional offices. Each office has a local administrator who needs to manage users in their specific region only.
+
+**What should you use?**
+
+A. Access packages in Azure AD Entitlement Management  
+B. Azure roles (Azure RBAC)  
+C. Azure AD roles (User Administrator)  
+D. Administrative Units
+
+---
+
+**Answer: D - Administrative Units**
+
+### Explanation
+
+#### Why Option D is Correct: Administrative Units ✅
+
+**Administrative Units (AUs)** are specifically designed for delegating administrative tasks to specific users within a defined scope:
+
+**Key Capabilities:**
+- Delegate administration of a **subset of users and groups** within the tenant
+- Scope Microsoft Entra ID role assignments to specific organizational units
+- Ideal for scenarios requiring **geographic**, **departmental**, or **organizational** delegation
+- Supports dynamic membership based on user attributes (e.g., department, location)
+
+**Use Cases:**
+- Regional office administration (as in the exam question)
+- Department-specific user management (HR, Finance, IT)
+- Subsidiary or business unit delegation in large organizations
+- Educational institutions with multiple schools/colleges
+
+**How It Works:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Microsoft Entra ID Tenant                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Administrative Unit: NY Office                                 │
+│  ├── Members: 500 users in New York                            │
+│  ├── Dynamic Rule: user.officeLocation -eq "New York"          │
+│  └── Role Assignment:                                          │
+│      └── NYAdmin → User Administrator (AU scope only)          │
+│                                                                 │
+│  Administrative Unit: London Office                             │
+│  ├── Members: 300 users in London                              │
+│  ├── Dynamic Rule: user.officeLocation -eq "London"            │
+│  └── Role Assignment:                                          │
+│      └── LondonAdmin → User Administrator (AU scope only)      │
+│                                                                 │
+│  Global Administrator                                           │
+│  └── Can manage ALL users across all AUs                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Benefits:**
+- ✅ **Principle of Least Privilege**: Admins only see and manage their assigned users
+- ✅ **Security**: Prevents privilege escalation across organizational boundaries
+- ✅ **Compliance**: Aligns with regulatory requirements for data segregation
+- ✅ **Scalability**: Can create multiple AUs with different membership rules
+- ✅ **Flexibility**: Supports both manual and dynamic membership
+
+#### Why Other Options are Incorrect
+
+### Option A: Access Packages in Azure AD Entitlement Management ❌
+
+**Purpose of Access Packages:**
+- Manage **access to resources** (applications, groups, SharePoint sites)
+- Enable self-service access requests
+- Automate access lifecycle (joiner/mover/leaver scenarios)
+- Facilitate B2B collaboration with external users
+
+**Why It Doesn't Solve This Problem:**
+- Access packages grant **access to resources**, not **administrative permissions**
+- They don't delegate the ability to create, modify, or delete users
+- Not designed for administrative delegation scenarios
+
+**When to Use Access Packages:**
+```
+Use Case: External partner needs temporary access to SharePoint site
+Solution: Create access package
+├── Resources: SharePoint site, related groups
+├── Policies: Approval required, 90-day expiration
+└── Access reviews: Quarterly recertification
+
+❌ NOT for: Delegating user management to local admins
+```
+
+**Comparison:**
+
+| Feature | Administrative Units | Access Packages |
+|---------|---------------------|-----------------|
+| **Purpose** | Delegate **administrative permissions** | Grant **access to resources** |
+| **Use Case** | Office admins managing users | Employees requesting access to apps |
+| **Scope** | Microsoft Entra ID role delegation | Resource access management |
+| **Administrative Tasks** | Create/delete users, reset passwords | Request/approve/revoke resource access |
+
+### Option B: Azure Roles (Azure RBAC) ❌
+
+**Purpose of Azure Roles:**
+- Control access to **Azure resources** (subscriptions, VMs, storage, networks)
+- Manage **infrastructure and platform** permissions
+- Separate from identity and user management
+
+**Why It Doesn't Solve This Problem:**
+- Azure RBAC roles manage **Azure resources**, not **users and groups**
+- Owner, Contributor, Reader roles do NOT grant permission to create/manage users
+- Completely separate permission system from Microsoft Entra ID
+
+**Clear Separation:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Microsoft Entra ID Roles (Identity Management)                  │
+├─────────────────────────────────────────────────────────────────┤
+│  • Global Administrator                                         │
+│  • User Administrator         ← For managing USERS             │
+│  • Groups Administrator                                         │
+│  • Helpdesk Administrator                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Azure RBAC Roles (Resource Management)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  • Owner                                                        │
+│  • Contributor               ← For managing RESOURCES          │
+│  • Reader                                                       │
+│  • Virtual Machine Contributor                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Example That Demonstrates the Difference:**
+
+| Administrator | Role | Can Do | Cannot Do |
+|---------------|------|--------|-----------|
+| **Alice** | Owner (Azure RBAC) | ✅ Create VMs<br>✅ Configure networks<br>✅ Deploy resources | ❌ Create users<br>❌ Reset passwords<br>❌ Manage groups |
+| **Bob** | User Administrator (Entra ID) | ✅ Create users<br>✅ Reset passwords<br>✅ Manage groups | ❌ Create VMs<br>❌ Configure networks<br>❌ Deploy resources |
+
+### Option C: Azure AD Roles (Tenant-wide assignment) ❌
+
+**Purpose of Azure AD Roles:**
+- Manage Microsoft Entra ID resources (users, groups, applications)
+- Correct **category** of roles, but wrong **scope**
+
+**Why It Doesn't Fully Solve This Problem:**
+- Azure AD roles like **User Administrator** apply **tenant-wide** by default
+- Assigning User Administrator gives access to **ALL users** in the organization
+- No built-in way to restrict to specific offices or departments
+- Violates principle of least privilege
+
+**The Problem:**
+
+```
+Scenario: Assign User Administrator role (without Administrative Units)
+
+NYAdmin → User Administrator (Tenant-wide)
+├── ✅ Can manage NY users
+├── ⚠️ Can ALSO manage London users (not intended)
+├── ⚠️ Can ALSO manage Tokyo users (not intended)
+└── ⚠️ Can manage ALL 10,000 users in organization (excessive privilege)
+
+Problem: No way to restrict scope to only NY users
+```
+
+**Why You Need Administrative Units:**
+
+Azure AD roles **can** be scoped using Administrative Units:
+
+```
+Correct Implementation:
+
+NYAdmin → User Administrator (scoped to AU-NewYork)
+├── ✅ Can manage NY users (intended)
+├── ❌ CANNOT manage London users
+├── ❌ CANNOT manage Tokyo users
+└── ✅ Least privilege principle maintained
+
+This requires Administrative Units!
+```
+
+**Key Distinction:**
+
+| Approach | Scope | Access Level | Suitable? |
+|----------|-------|--------------|-----------|
+| **Azure AD Role (no AU)** | Tenant-wide | All users in organization | ❌ Too broad |
+| **Azure AD Role + Administrative Unit** | AU scope only | Only users in specific AU | ✅ Correct |
+
+---
+
+### Administrative Units: Deep Dive
+
+#### What Are Administrative Units?
+
+Administrative Units are **containers within Microsoft Entra ID** that allow you to:
+- Group users and groups for administrative purposes
+- Scope administrative role assignments to specific subsets of the directory
+- Implement hierarchical delegation of administrative tasks
+
+#### Key Concepts
+
+**Membership Types:**
+
+| Type | Management | Use Case |
+|------|------------|----------|
+| **Dynamic** | Rule-based automatic membership | `user.department -eq "Sales"`<br>`user.city -eq "London"` |
+| **Assigned** | Manual member addition | Specific users or groups added manually |
+
+**Supported Member Types:**
+- Users
+- Groups
+- Devices (limited scenarios)
+
+**Supported Roles:**
+
+The following Microsoft Entra ID roles can be assigned with AU scope:
+
+| Role | Purpose | What They Can Do in AU |
+|------|---------|----------------------|
+| **User Administrator** | User management | Create/delete users, reset passwords, manage groups |
+| **Helpdesk Administrator** | Password support | Reset passwords for non-admin users |
+| **Groups Administrator** | Group management | Create/manage groups, assign group owners |
+| **License Administrator** | License management | Assign/remove user licenses |
+| **Password Administrator** | Password resets | Reset passwords for users and other password admins |
+| **Authentication Administrator** | Authentication settings | Manage MFA and authentication methods |
+| **Cloud Device Administrator** | Device management | Manage devices within the AU |
+
+**Roles that CANNOT be scoped to AUs:**
+- Global Administrator (always tenant-wide)
+- Privileged Role Administrator (always tenant-wide)
+- Application Administrator (different scoping model)
+
+#### Creating Administrative Units
+
+**Prerequisites:**
+- Azure AD Premium P1 or P2 license
+- Global Administrator or Privileged Role Administrator role
+
+**Using Azure Portal:**
+```
+1. Azure Portal → Microsoft Entra ID
+2. Administrative units → New
+3. Configure:
+   - Name: AU-NewYork
+   - Description: New York Office Users
+   - Membership type: Assigned or Dynamic
+4. Add members (users/groups)
+5. Assign roles with AU scope
+```
+
+**Using PowerShell:**
+```powershell
+# Create Administrative Unit
+$auParams = @{
+    DisplayName = "AU-Finance"
+    Description = "Finance Department Users"
+}
+$au = New-MgDirectoryAdministrativeUnit @auParams
+
+# Add members (assigned membership)
+$userId = (Get-MgUser -Filter "userPrincipalName eq 'john@contoso.com'").Id
+$params = @{
+    "@odata.id" = "https://graph.microsoft.com/v1.0/users/$userId"
+}
+New-MgDirectoryAdministrativeUnitMemberByRef -AdministrativeUnitId $au.Id -BodyParameter $params
+
+# Create dynamic membership rule
+$auDynamic = New-MgDirectoryAdministrativeUnit -DisplayName "AU-Sales-Dynamic" `
+    -MembershipType "Dynamic" `
+    -MembershipRule "(user.department -eq 'Sales')" `
+    -MembershipRuleProcessingState "On"
+
+# Assign User Administrator role scoped to AU
+$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'User Administrator'"
+$adminUserId = (Get-MgUser -Filter "userPrincipalName eq 'admin@contoso.com'").Id
+
+New-MgRoleManagementDirectoryRoleAssignment -DirectoryScopeId "/administrativeUnits/$($au.Id)" `
+    -RoleDefinitionId $roleDefinition.Id `
+    -PrincipalId $adminUserId
+```
+
+#### Dynamic Membership Rules
+
+**Supported Attributes:**
+
+| Attribute | Example Rule | Use Case |
+|-----------|--------------|----------|
+| **department** | `user.department -eq "Finance"` | Department-based delegation |
+| **city** | `user.city -eq "London"` | Geographic delegation |
+| **country** | `user.country -eq "United States"` | Regional management |
+| **jobTitle** | `user.jobTitle -contains "Manager"` | Role-based grouping |
+| **companyName** | `user.companyName -eq "Subsidiary A"` | Multi-company scenarios |
+| **employeeType** | `user.employeeType -eq "Contractor"` | Employment type segregation |
+
+**Complex Rules:**
+
+```powershell
+# Combine multiple conditions
+(user.city -eq "London") -and (user.department -eq "Sales")
+
+# Multiple values
+(user.department -in ["Sales", "Marketing", "Customer Service"])
+
+# Exclusions
+(user.city -eq "New York") -and (user.employeeType -ne "Contractor")
+```
+
+#### Licensing Requirements
+
+| Feature | License Required |
+|---------|-----------------|
+| **Create Administrative Units** | Azure AD Premium P1 or P2 |
+| **Assign roles to AU** | Azure AD Premium P1 or P2 |
+| **Dynamic membership** | Azure AD Premium P1 or P2 |
+| **View AU members** | Azure AD Free (read-only) |
+
+---
+
+### Exam Tips
+
+**Common Recognition Patterns:**
+
+When you see these phrases in exam questions, think Administrative Units:
+- "Grant user management permissions to **local** administrators"
+- "Manage users in **specific offices**"
+- "Delegate administration for **subset of users**"
+- "Restrict user management to **specific department**"
+- "Regional/office/department-specific **user administration**"
+
+**Common Traps:**
+
+1. ❌ Confusing Azure RBAC roles with Microsoft Entra ID roles
+   - Azure roles = Resource management
+   - Entra ID roles = User/identity management
+
+2. ❌ Thinking Access Packages delegate administrative permissions
+   - Access packages = Resource access management
+   - Administrative Units = Administrative delegation
+
+3. ❌ Assuming Azure AD roles alone can be scoped to offices
+   - Azure AD roles are tenant-wide without Administrative Units
+   - Must use Administrative Units to scope Azure AD roles
+
+4. ❌ Using groups to scope administrative permissions
+   - Groups cannot scope Microsoft Entra ID role assignments
+   - Only Administrative Units provide scoping for Entra ID roles
+
+**Decision Tree:**
+
+```
+Question: Need to delegate user management for specific subset of users?
+    │
+    ├─── Specific geographic location (office)?
+    │    └─── ✅ Administrative Units
+    │
+    ├─── Specific department?
+    │    └─── ✅ Administrative Units
+    │
+    ├─── Temporary access to resources (apps, SharePoint)?
+    │    └─── ❌ Access Packages (not for admin delegation)
+    │
+    └─── Manage Azure resources (VMs, storage)?
+         └─── ❌ Azure RBAC roles (not for user management)
+```
+
+**Quick Comparison Table:**
+
+| Requirement | Solution | Wrong Answers |
+|-------------|----------|---------------|
+| Delegate user management to offices | Administrative Units | Access Packages, Azure roles, Azure AD roles (without AU) |
+| Grant access to applications | Access Packages | Administrative Units, Azure roles |
+| Manage Azure resources | Azure RBAC roles | Entra ID roles, Access Packages |
+| Just-in-time privileged access | PIM | Access Packages |
+| Review guest user access | Access Reviews | Access Packages alone |
+
+---
+
+**References:**
+- [Administrative Units in Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/administrative-units)
+- [Assign Microsoft Entra roles with Administrative Unit scope](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/admin-units-assign-roles)
+- [Manage administrative units](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/admin-units-manage)
+- [Azure AD Entitlement Management](https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-overview)
+- [Difference between Azure roles and Microsoft Entra ID roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/rbac-and-directory-admin-roles)
+
+### Scenario 8: Multi-Subscription Governance
 
 **Solution:** Use **Management Groups**
 
@@ -2293,6 +2758,284 @@ Recovery Steps:
 4. Creates/invites users in new tenant
 5. Assigns roles with new tenant identities
 6. Removes broken role assignments from old tenant
+```
+
+---
+
+## Custom Role Configuration - Practical Examples
+
+### Understanding Custom Role Components
+
+When working with Azure custom roles, understanding each component of the role definition is critical for exam scenarios and real-world implementations.
+
+#### Custom Role Structure
+
+```json
+{
+  "properties": {
+    "roleName": "role1",
+    "description": "",
+    "roletype": "true",
+    "assignableScopes": [
+      "/subscriptions/3d6209d5-c714-4440-9556e-d6342086c2d7/"
+    ],
+    "permissions": [
+      {
+        "actions": [
+          "Microsoft.Authorization/*/read",
+          "Microsoft.Compute/availabilitySets/*",
+          "Microsoft.Compute/locations/*",
+          "Microsoft.Compute/virtualMachines/*",
+          "Microsoft.Compute/virtualMachineScaleSets/*",
+          "Microsoft.Compute/disks/write",
+          "Microsoft.Compute/disks/read",
+          "Microsoft.Compute/disks/delete",
+          "Microsoft.Network/locations/*",
+          "Microsoft.Network/networkInterfaces/*",
+          "Microsoft.Network/networkSecurityGroups/join/action",
+          "Microsoft.Network/networkSecurityGroups/read",
+          "Microsoft.Network/publicIPAddresses/join/action",
+          "Microsoft.Network/publicIPAddresses/read",
+          "Microsoft.Network/virtualNetworks/read",
+          "Microsoft.Network/virtualNetworks/subnets/join/action",
+          "Microsoft.Resources/deployments/*",
+          "Microsoft.Resources/subscriptions/resourceGroups/read",
+          "Microsoft.Support/*"
+        ],
+        "notActions": [],
+        "dataActions": [],
+        "notDataActions": []
+      }
+    ]
+  }
+}
+```
+
+### Common Exam Scenarios: Custom Role Configuration
+
+#### Scenario 1: VM Login Permissions
+
+**Question:** To ensure that users can sign in to virtual machines that are assigned role1, modify which section?
+
+**Options:**
+- actions
+- roletype
+- notActions
+- dataActions ✅ **CORRECT**
+- notDataActions
+- assignableScopes
+
+**Answer:** **dataActions**
+
+**Explanation:**
+
+Virtual machine login is a **data plane operation**, not a management plane operation. To enable users to sign in to VMs, you must grant permissions in the `dataActions` section.
+
+**Why Other Options Are Wrong:**
+
+| Section | Purpose | Why Wrong for VM Login |
+|---------|---------|----------------------|
+| `actions` | Management plane operations (create, delete, modify VMs) | VM login is data plane, not management |
+| `roletype` | Defines if role is custom or built-in | Not related to permissions |
+| `notActions` | Excludes management plane actions | VM login is data plane |
+| `notDataActions` | Excludes data plane actions | Need to grant, not exclude |
+| `assignableScopes` | Defines where role can be assigned | Doesn't control permissions |
+
+**Required dataActions for VM Login:**
+
+```json
+{
+  "dataActions": [
+    "Microsoft.Compute/virtualMachines/login/action",
+    "Microsoft.Compute/virtualMachines/loginAsAdmin/action"
+  ]
+}
+```
+
+**Built-in Roles with VM Login:**
+- **Virtual Machine User Login** - Standard user login
+- **Virtual Machine Administrator Login** - Admin login
+
+**Complete Example:**
+
+```json
+{
+  "properties": {
+    "roleName": "VM Manager with Login",
+    "description": "Can manage VMs and login to them",
+    "permissions": [
+      {
+        "actions": [
+          "Microsoft.Compute/virtualMachines/*",
+          "Microsoft.Compute/virtualMachineScaleSets/*"
+        ],
+        "notActions": [],
+        "dataActions": [
+          "Microsoft.Compute/virtualMachines/login/action",
+          "Microsoft.Compute/virtualMachines/loginAsAdmin/action"
+        ],
+        "notDataActions": []
+      }
+    ]
+  }
+}
+```
+
+#### Scenario 2: Restricting Role Assignment Scope
+
+**Question:** To ensure that role1 can be assigned only to a resource group named RG1, modify which section?
+
+**Options:**
+- actions
+- roletype
+- notActions
+- dataActions
+- notDataActions
+- assignableScopes ✅ **CORRECT**
+
+**Answer:** **assignableScopes**
+
+**Explanation:**
+
+The `assignableScopes` property defines **where a custom role can be assigned**. It controls the scope hierarchy at which the role can be used.
+
+**Why Other Options Are Wrong:**
+
+| Section | Purpose | Why Wrong for Scope Restriction |
+|---------|---------|-------------------------------|
+| `actions` | Defines what permissions are granted | Doesn't control where role is assigned |
+| `roletype` | Identifies custom vs built-in role | Doesn't control assignment scope |
+| `notActions` | Excludes specific permissions | Doesn't control assignment scope |
+| `dataActions` | Data plane permissions | Doesn't control assignment scope |
+| `notDataActions` | Excludes data plane permissions | Doesn't control assignment scope |
+
+**Current Configuration (Subscription-wide):**
+
+```json
+{
+  "assignableScopes": [
+    "/subscriptions/3d6209d5-c714-4440-9556e-d6342086c2d7/"
+  ]
+}
+```
+
+This allows role1 to be assigned at:
+- ✅ Subscription level
+- ✅ Any resource group in the subscription
+- ✅ Any resource in the subscription
+
+**Modified Configuration (RG1 only):**
+
+```json
+{
+  "assignableScopes": [
+    "/subscriptions/3d6209d5-c714-4440-9556e-d6342086c2d7/resourceGroups/RG1"
+  ]
+}
+```
+
+This restricts role1 to be assigned only at:
+- ✅ RG1 resource group level
+- ✅ Any resource within RG1
+- ❌ Other resource groups
+- ❌ Subscription level
+
+### assignableScopes Scope Hierarchy
+
+```mermaid
+graph TD
+    A[Management Group] --> B[Subscription]
+    B --> C[Resource Group RG1]
+    B --> D[Resource Group RG2]
+    C --> E[VM1 in RG1]
+    C --> F[Storage1 in RG1]
+    D --> G[VM2 in RG2]
+    
+    style C fill:#90EE90
+    style E fill:#90EE90
+    style F fill:#90EE90
+    style B fill:#FFE4B5
+    style D fill:#FFB6C1
+    style G fill:#FFB6C1
+    
+    classDef allowed fill:#90EE90
+    classDef notAllowed fill:#FFB6C1
+```
+
+**Legend:**
+- 🟢 Green = Can assign role (RG1 and resources in RG1)
+- 🔴 Red = Cannot assign role (other resource groups)
+- 🟡 Yellow = Can assign if scope includes subscription
+
+### assignableScopes Best Practices
+
+| Scope Level | Example | When to Use | Risk Level |
+|-------------|---------|-------------|------------|
+| **Management Group** | `/providers/Microsoft.Management/managementGroups/mg1` | Enterprise-wide standard roles | Low (centrally governed) |
+| **Subscription** | `/subscriptions/{sub-id}` | Subscription-specific roles | Medium |
+| **Resource Group** | `/subscriptions/{sub-id}/resourceGroups/RG1` | Team or project-specific roles | Low (limited blast radius) |
+| **Multiple RGs** | Multiple RG paths in array | Multi-team delegation | Medium |
+
+**Example with Multiple Scopes:**
+
+```json
+{
+  "assignableScopes": [
+    "/subscriptions/{sub-id}/resourceGroups/Dev-RG",
+    "/subscriptions/{sub-id}/resourceGroups/Test-RG",
+    "/subscriptions/{sub-id}/resourceGroups/Staging-RG"
+  ]
+}
+```
+
+### Key Takeaways: Custom Role Configuration
+
+| Component | Controls | Exam Tip |
+|-----------|----------|----------|
+| **actions** | Management plane permissions (create, modify, delete resources) | For resource management |
+| **dataActions** | Data plane permissions (access data, sign in to VMs) | For data access and VM login |
+| **notActions** | Excludes specific management actions | Use with wildcard actions |
+| **notDataActions** | Excludes specific data actions | Use with wildcard data actions |
+| **assignableScopes** | Where the role can be assigned | Controls role assignment scope, not permissions |
+| **roleName** | Display name of the role | Descriptive naming |
+| **description** | Documentation of role purpose | Clear purpose statement |
+
+### Common Mistakes to Avoid
+
+❌ **Don't confuse actions with dataActions**
+```json
+// WRONG - This grants VM management, not VM login
+{
+  "actions": ["Microsoft.Compute/virtualMachines/*"],
+  "dataActions": []
+}
+```
+
+✅ **Do separate management from data plane**
+```json
+// CORRECT - This grants both VM management and login
+{
+  "actions": ["Microsoft.Compute/virtualMachines/*"],
+  "dataActions": ["Microsoft.Compute/virtualMachines/login/action"]
+}
+```
+
+---
+
+❌ **Don't set overly broad assignableScopes**
+```json
+// WRONG - Role can be assigned anywhere in subscription
+{
+  "assignableScopes": ["/subscriptions/{sub-id}"]
+}
+```
+
+✅ **Do limit scope to specific resource groups**
+```json
+// CORRECT - Role limited to specific RG
+{
+  "assignableScopes": ["/subscriptions/{sub-id}/resourceGroups/ProjectA-RG"]
+}
 ```
 
 ---
