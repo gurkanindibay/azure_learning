@@ -13,6 +13,7 @@
 - [Kudu Service](#kudu-service)
 - [App Settings and Environment Configuration](#app-settings-and-environment-configuration)
 - [Moving Web Apps Between Regions](#moving-web-apps-between-regions)
+  - [Moving Web Apps Between Resource Groups](#moving-web-apps-between-resource-groups)
 - [Exam Tips](#exam-tips)
 - [References](#references)
 
@@ -696,6 +697,82 @@ The App Service Plan's region is immutable. If you need your app in a different 
 2. **Redeploy** the app from scratch in the target region
 
 **Reference:** [Manage an App Service plan - Microsoft Docs](https://docs.microsoft.com/en-us/azure/app-service/app-service-plan-manage)
+
+---
+
+### Moving Web Apps Between Resource Groups
+
+**Important:** When you move a web app between resource groups, the App Service Plan's location does NOT change, but the Azure Policy assignments change based on the new resource group.
+
+#### What Happens When You Move a Web App
+
+| Aspect | Behavior | Example |
+|--------|----------|---------|
+| **App Service Plan Location** | ✅ **Remains the same** | WebApp1 in West Europe stays in West Europe even after moving |
+| **App Service Plan** | ✅ **Does not move** | The App Service Plan itself is not moved to the new resource group |
+| **Azure Policy** | ⚠️ **Changes** | Policy from the new resource group applies; policy from the old resource group no longer applies |
+| **Resource Group** | ✅ **Changes** | The web app is now part of the new resource group |
+
+#### Practice Question: Moving Between Resource Groups
+
+**Question:**
+
+You have an Azure subscription named Subscription1. Subscription1 contains the following resource groups:
+
+| Resource Group | Location | Azure Policy |
+|----------------|----------|--------------|
+| RG1 | West Europe | Policy1 |
+| RG2 | North Europe | Policy2 |
+
+RG1 has a web app named WebApp1. WebApp1 is located in West Europe.
+
+You move WebApp1 to RG2.
+
+**What is the effect of the move?**
+
+**Options:**
+
+A) The App Service plan for WebApp1 moves to North Europe. Policy1 applies to WebApp1.
+
+B) The App Service plan for WebApp1 remains in West Europe. Policy1 applies to WebApp1.
+
+C) The App Service plan for WebApp1 remains in West Europe. Policy2 applies to WebApp1. ✅
+
+D) The App Service plan for WebApp1 moves to North Europe. Policy2 applies to WebApp1.
+
+---
+
+**Correct Answer: C) The App Service plan for WebApp1 remains in West Europe. Policy2 applies to WebApp1.**
+
+---
+
+**Explanation:**
+
+| Option | Why Correct/Incorrect |
+|--------|----------------------|
+| **A) Plan moves to North Europe, Policy1 applies** | ❌ Incorrect - The App Service plan location does NOT change, and Policy1 (from RG1) no longer applies after the move |
+| **B) Plan stays in West Europe, Policy1 applies** | ❌ Incorrect - While the plan location is correct, Policy1 (associated with RG1) no longer applies after moving to RG2 |
+| **C) Plan stays in West Europe, Policy2 applies** | ✅ **Correct** - The App Service plan remains in its original region (West Europe), and Policy2 (from RG2) now applies |
+| **D) Plan moves to North Europe, Policy2 applies** | ❌ Incorrect - The App Service plan location does NOT change, even though Policy2 is correct |
+
+**Key Takeaways:**
+
+1. **App Service Plan Region is Immutable**
+   - The region in which your app runs is the region of the App Service plan it's in
+   - You cannot change an App Service plan's region
+   - Moving a web app to a different resource group does NOT change the App Service plan's location
+
+2. **Azure Policy Follows the Resource Group**
+   - When you move a web app to a new resource group, the Azure Policies of the **new resource group** apply
+   - Policies from the old resource group no longer apply
+
+3. **Alternative for Different Regions**
+   - If you want to run your app in a different region, use **app cloning**
+   - Cloning creates a copy of your app in a new or existing App Service plan in any region
+
+**Remember for Exams:**
+- Moving between resource groups = Azure Policy changes, but App Service Plan location stays the same
+- Moving between regions = Not possible; must use cloning or redeployment
 
 ---
 
