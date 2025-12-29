@@ -1812,6 +1812,83 @@ All subscriptions automatically:
 ✅ Grant Reader access to AuditTeam
 ```
 
+### Scenario 7a: Virtual Network Permissions - Resource Management vs Access Management
+
+**Problem:** Determine which users can add subnets and assign RBAC roles for a virtual network
+
+#### Common Exam Scenario
+
+**Question:** You have an Azure subscription named Subscription1 that contains a virtual network VNet1.
+
+You have the following users with assigned roles **at the subscription level**:
+
+| User | Role | Scope |
+|------|------|-------|
+| User1 | Owner | Subscription1 |
+| User2 | Security Admin | Subscription1 |
+| User3 | Network Contributor | Subscription1 |
+
+**Note:** In exam questions, when scope is not explicitly stated but users are listed with roles, it typically means roles are assigned at the subscription level (or at a scope that includes the resource). This is a common exam pattern.
+
+**Questions:**
+1. Which user(s) can add a subnet to VNet1?
+2. Which user(s) can assign a user the Reader role to VNet1?
+
+**Answers:**
+
+**1. Add a subnet to VNet1:** ✅ **User1 and User3 only**
+
+**2. Assign a user the Reader role to VNet1:** ✅ **User1 only**
+
+#### Detailed Explanation
+
+**User1 (Owner Role):**
+- ✅ Can add subnets (Owner includes all Contributor permissions)
+- ✅ Can assign RBAC roles (Owner includes User Access Administrator permissions)
+- Owner = Full resource management + Full access management
+
+**User2 (Security Admin Role):**
+- ❌ Cannot add subnets (Security Admin focuses on security-related resources)
+- ❌ Cannot assign general RBAC roles like Reader (can only manage security-specific assignments)
+- Security Admin permissions:
+  - Manage security policies
+  - View security states
+  - Manage security center settings
+  - **NOT** general network resource management
+
+**User3 (Network Contributor Role):**
+- ✅ Can add subnets (Network Contributor can manage all network resources)
+- ❌ Cannot assign RBAC roles (Contributor-type roles cannot manage access)
+- Network Contributor permissions:
+  - Create/delete/modify virtual networks
+  - Add/remove subnets
+  - Configure network security groups
+  - **NOT** role assignments
+
+**Key Concept: Two Distinct Permission Categories**
+```
+Resource Management              Access Management
+       ↓                                ↓
+Contributor-based roles          Owner/User Access Admin
+(Create, modify, delete)         (Assign roles, manage access)
+       ↓                                ↓
+   User1 ✅                          User1 ✅
+   User3 ✅ (Network only)           User2 ❌
+   User2 ❌                          User3 ❌
+```
+
+**Summary Table:**
+
+| User | Role | Add Subnet | Assign Reader Role | Reason |
+|------|------|------------|-------------------|---------|
+| User1 | Owner | ✅ | ✅ | Full management + access control |
+| User2 | Security Admin | ❌ | ❌ | Security-focused, not network management |
+| User3 | Network Contributor | ✅ | ❌ | Network management only, no access control |
+
+**Important Rule:**
+- **Contributor-type roles** (Network Contributor, Storage Contributor, etc.) = Resource management ONLY
+- **Owner** or **User Access Administrator** = Required for RBAC role assignments
+
 ### Scenario 8: Access Needed Across Multiple Tenants
 
 **Problem:** User needs access to resources in multiple Microsoft Entra ID tenants
