@@ -388,6 +388,102 @@ For extremely high-throughput scenarios, Standard Logic Apps offer:
 
 ---
 
+## RBAC Requirements for Creating Logic Apps
+
+To create and manage Azure Logic Apps, users or groups need appropriate Azure RBAC (Role-Based Access Control) permissions. Understanding which roles grant the necessary permissions is critical for proper access management.
+
+### Practice Question: Granting Logic Apps Creation Permissions
+
+**Given:**
+- You have a Microsoft Entra ID (formerly Azure AD) tenant named Adatum
+- You have an Azure subscription named Subscription1
+- Adatum contains a group named Developers
+- Subscription1 contains a resource group named Dev
+- You need to provide the Developers group with the ability to create Azure Logic Apps in the Dev resource group
+
+**Question:** Would assigning the DevTest Labs User role to the Developers group on Subscription1 meet this goal?
+
+**Options:**
+- A) Yes
+- B) No
+
+---
+
+### Answer: B ✅
+
+**Correct Answer: B) No**
+
+---
+
+### Detailed Explanation
+
+**Why DevTest Labs User Role Is Incorrect:**
+
+The **DevTest Labs User** role in Azure is focused **exclusively** on allowing users to manage Azure DevTest Labs resources, which include:
+- Virtual machines within DevTest Labs
+- Lab environments
+- DevTest Labs instances
+- Creating VMs, starting/stopping VMs, claiming VMs in labs
+
+However, this role does **NOT** provide the permissions necessary to create Azure Logic Apps.
+
+**What Role Is Needed:**
+
+To allow users to create and manage Logic Apps, they need a role with appropriate permissions for Logic App creation, such as:
+
+| Role | Scope | Permissions Granted |
+|------|-------|---------------------|
+| **Contributor** | Resource Group or Subscription | Full access to all resources including create, read, update, delete Logic Apps |
+| **Logic App Contributor** | Resource Group or Subscription | Manage Logic Apps and workflows (create, update, delete) |
+| **Custom Role** | Resource Group or Subscription | Specific permissions: `Microsoft.Logic/workflows/*` |
+
+**Correct Solution:**
+
+On the **Dev resource group** (or on Subscription1), assign the **Contributor** role or **Logic App Contributor** role to the Developers group:
+
+```bash
+# Using Azure CLI to assign Logic App Contributor role at resource group scope
+az role assignment create \
+  --assignee-object-id <Developers-Group-Object-ID> \
+  --role "Logic App Contributor" \
+  --scope "/subscriptions/<subscription-id>/resourceGroups/Dev"
+```
+
+**Why Other Options Are Incorrect:**
+
+| Role | Logic Apps Creation | Use Case |
+|------|-------------------|----------|
+| **DevTest Labs User** | ❌ No | Managing VMs and environments within DevTest Labs |
+| **Reader** | ❌ No | Read-only access to all resources |
+| **Owner** | ✅ Yes (but excessive) | Full management including RBAC assignments |
+| **Contributor** | ✅ Yes | Full resource management (recommended) |
+| **Logic App Contributor** | ✅ Yes | Logic Apps-specific management (most specific) |
+
+### Required Permissions for Logic Apps
+
+To create Logic Apps, the following Azure RBAC actions (permissions) are required:
+
+```json
+{
+  "permissions": [
+    {
+      "actions": [
+        "Microsoft.Logic/workflows/write",
+        "Microsoft.Logic/workflows/read",
+        "Microsoft.Logic/workflows/delete",
+        "Microsoft.Logic/locations/workflows/validate/action"
+      ]
+    }
+  ]
+}
+```
+
+### Key Takeaway
+
+> **📘 The DevTest Labs User role is specifically for DevTest Labs resources** and does not grant permissions to create Logic Apps. To enable Logic Apps creation, assign the **Contributor** role or **Logic App Contributor** role at the appropriate scope (resource group or subscription level).
+
+---
+
 ## References
 
 - [Connect to on-premises data sources from Logic Apps](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-gateway-connection)
@@ -399,3 +495,5 @@ For extremely high-throughput scenarios, Standard Logic Apps offer:
 - [Azure Service Bus Messaging Overview](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview)
 - [Run background tasks with WebJobs in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/webjobs-create)
 - [On-Premises Data Gateway](on-premises-data-gateway.md) - Detailed gateway documentation
+- [Azure Logic App Contributor Role](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#logic-app-contributor)
+- [Azure RBAC Built-in Roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles)
