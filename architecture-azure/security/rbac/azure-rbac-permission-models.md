@@ -25,6 +25,7 @@
 - [Practice Question: Preventing Contributor Role Data Plane Access](#practice-question-preventing-contributor-role-data-plane-access)
 - [Practice Question: Subscription Tenant Migration and Access Elevation](#practice-question-subscription-tenant-migration-and-access-elevation)
 - [Practice Question: Azure AD Tenant Creation and User Management Permissions](#practice-question-azure-ad-tenant-creation-and-user-management-permissions)
+- [Practice Question: Azure AD Device and Group Management Permissions](#practice-question-azure-ad-device-and-group-management-permissions)
 
 ## Overview
 
@@ -708,3 +709,197 @@ Only after these steps can User3 create user accounts in `external.contoso.onmic
 - [Azure AD Built-in Roles](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference)
 - [Difference between Azure roles and Azure AD roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/rbac-and-directory-admin-roles)
 - [Add or delete users in Azure AD](https://learn.microsoft.com/en-us/entra/fundamentals/add-users)
+
+---
+
+## Practice Question: Azure AD Device and Group Management Permissions
+
+**Scenario:**
+
+You have an Azure Active Directory (Microsoft Entra ID) tenant named **Contoso.com** that includes the following users:
+
+| Name | Role |
+|------|------|
+| User1 | Cloud device administrator |
+| User2 | User administrator |
+
+**Contoso.com** includes the following Windows 10 devices:
+
+| Name | Join type |
+|------|-----------|
+| Device1 | Azure AD registered |
+| Device2 | Azure AD joined |
+
+You create the following security groups in **Contoso.com**:
+
+| Name | Membership Type | Owner |
+|------|----------------|--------|
+| Group1 | Assigned | User2 |
+| Group2 | Dynamic Device | User2 |
+
+**Question:**
+
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+| Statement | Answer |
+|-----------|--------|
+| User1 can add Device2 to Group1 | ❌ **No** |
+| User2 can add Device1 to Group1 | ✅ **Yes** |
+| User2 can add Device2 to Group2 | ❌ **No** |
+
+---
+
+**Explanation:**
+
+### Statement 1: User1 can add Device2 to Group1 - ❌ No
+
+**User1 Role: Cloud Device Administrator**
+
+The **Cloud Device Administrator** role provides the following permissions:
+- Enable, disable, and delete devices in Azure AD
+- Read Windows 10 BitLocker keys in the Azure portal
+- Manage device properties
+
+**What Cloud Device Administrator CANNOT Do:**
+- ❌ Manage group memberships (adding devices to groups)
+- ❌ Create or delete groups
+- ❌ Manage group owners or properties
+
+**Why the Answer is No:**
+- User1 has permissions to manage the **device object itself** (enable/disable/delete)
+- User1 does **NOT** have permissions to manage **group memberships**
+- Adding a device to a group requires either:
+  - Being the **group owner**
+  - Having **Groups Administrator** role
+  - Having **Global Administrator** role
+
+### Statement 2: User2 can add Device1 to Group1 - ✅ Yes
+
+**User2 Role: User Administrator + Group1 Owner**
+
+**User Administrator Role Permissions:**
+- Create and manage users and groups
+- Manage group memberships
+- Reset passwords for non-admin users
+- Manage user properties
+
+**Group Owner Permissions:**
+- Add or remove group members
+- Update group properties
+- Delete the group they own
+
+**Why the Answer is Yes:**
+- User2 is the **owner of Group1**
+- Group1 has **Assigned** membership type (manual membership management)
+- Group owners can add any valid member (users or devices) to assigned groups
+- Device1 is a valid Azure AD object (registered device) that can be added to groups
+- User2's User Administrator role also provides group management permissions
+
+**Important Note:**
+- Both **Azure AD registered** and **Azure AD joined** devices can be members of Azure AD groups
+- The join type (registered vs joined) does not affect the ability to add devices to assigned groups
+
+### Statement 3: User2 can add Device2 to Group2 - ❌ No
+
+**Group2 Membership Type: Dynamic Device**
+
+**Dynamic Device Groups:**
+- Membership is **automatically managed** based on device properties
+- Membership rules are defined using device attributes (e.g., OS version, device name, etc.)
+- Manual addition or removal of members is **not allowed**
+
+**Why the Answer is No:**
+- Group2 uses **Dynamic Device** membership type
+- Dynamic groups do not allow manual member management
+- **Neither** group owners **nor** administrators can manually add or remove members
+- Membership is determined solely by the dynamic membership rule
+- To add Device2 to Group2, you would need to:
+  1. Modify the dynamic membership rule to include Device2's properties, OR
+  2. Change Device2's properties to match the existing rule, OR
+  3. Convert Group2 from Dynamic to Assigned membership type
+
+**Key Difference:**
+- **Assigned Groups**: Members are manually added/removed by owners or administrators
+- **Dynamic Groups**: Members are automatically determined by rules based on object properties
+
+---
+
+**Key Takeaways:**
+
+### 1. Azure AD Administrative Roles and Permissions
+
+| Role | Device Management | Group Management |
+|------|------------------|------------------|
+| **Cloud Device Administrator** | ✅ Enable/disable/delete devices<br/>✅ Read BitLocker keys<br/>✅ Manage device properties | ❌ Cannot manage group memberships<br/>❌ Cannot add devices to groups |
+| **User Administrator** | ✅ Basic device operations<br/>❌ Cannot update or delete devices | ✅ Create/manage groups<br/>✅ Manage group memberships<br/>✅ Add users/devices to groups |
+| **Global Administrator** | ✅ Full device management | ✅ Full group management |
+
+### 2. Device Join Types
+
+Both device join types can be members of Azure AD groups:
+
+| Join Type | Description | Group Membership |
+|-----------|-------------|------------------|
+| **Azure AD Registered** | Personal devices registered to organization<br/>(BYOD scenario) | ✅ Can be group members |
+| **Azure AD Joined** | Corporate devices fully joined to Azure AD<br/>(Cloud-only or hybrid) | ✅ Can be group members |
+
+### 3. Group Membership Types
+
+| Membership Type | Management | Who Can Modify |
+|----------------|------------|----------------|
+| **Assigned** | Manual membership management | Group owners, Groups Administrator, Global Administrator |
+| **Dynamic User** | Rule-based automatic membership for users | No manual management - only by changing rules or user properties |
+| **Dynamic Device** | Rule-based automatic membership for devices | No manual management - only by changing rules or device properties |
+
+### 4. Group Ownership Permissions
+
+**As a Group Owner, you can:**
+- ✅ Add or remove members (for assigned groups only)
+- ✅ Update group properties
+- ✅ Add or remove other group owners
+- ✅ Delete the group
+
+**Group Owners CANNOT:**
+- ❌ Modify dynamic group membership rules (requires Groups Administrator or Global Administrator)
+- ❌ Add/remove members from dynamic groups
+- ❌ Override their own administrative role limitations
+
+### 5. Permission Hierarchy
+
+For adding devices to groups, the following hierarchy applies:
+
+```
+Can add device to assigned group:
+├── Global Administrator ......................... ✅ Yes (all permissions)
+├── Groups Administrator ......................... ✅ Yes (group-specific permissions)
+├── Group Owner .................................. ✅ Yes (only for owned groups)
+├── User Administrator ........................... ✅ Yes (user and group management)
+└── Cloud Device Administrator ................... ❌ No (device-only permissions)
+
+Can add device to dynamic group:
+└── No one ....................................... ❌ No (membership is rule-based)
+    └── Modify membership rule instead ........... ✅ Groups Administrator or Global Administrator
+```
+
+### 6. Exam Tips
+
+**Common Traps:**
+- ❌ Assuming Cloud Device Administrator can manage group memberships (they cannot)
+- ❌ Assuming group owners can add members to dynamic groups (they cannot)
+- ❌ Confusing device management permissions with group management permissions
+- ❌ Thinking Azure AD registered devices cannot be group members (they can)
+
+**Key Points to Remember:**
+1. **Separate Permissions**: Device management ≠ Group management
+2. **Dynamic Groups**: No manual member management allowed
+3. **Group Ownership**: Powerful for assigned groups, but limited for dynamic groups
+4. **Role Specificity**: Each Azure AD role has specific, non-overlapping permissions
+
+**References:**
+- [Azure AD built-in roles - Cloud Device Administrator](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#cloud-device-administrator)
+- [Azure AD built-in roles - User Administrator](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#user-administrator)
+- [Dynamic membership rules for groups in Azure AD](https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-membership)
+- [Manage group ownership in Azure AD](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-manage-groups)
+- [Azure AD registered devices](https://learn.microsoft.com/en-us/entra/identity/devices/concept-device-registration)
+- [Azure AD joined devices](https://learn.microsoft.com/en-us/entra/identity/devices/concept-directory-join)
+
