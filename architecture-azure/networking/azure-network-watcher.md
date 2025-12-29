@@ -86,6 +86,44 @@ VM Insights in Azure Monitor, enabled through the Azure Monitoring Agent and the
 **Correct Approach:**
 To analyze whether packets are being explicitly allowed or denied, you need to use **Azure Network Watcher**, specifically the **IP Flow Verify** feature. This tool checks effective NSG rules for specific VMs and tells you whether traffic on a given port and protocol is allowed or blocked — which is the correct solution for diagnosing the type of issue described.
 
+---
+
+### Scenario: Enabling Traffic Analytics with Proper Role Assignment
+
+**Context:**
+You need to ensure that an Azure Active Directory (Azure AD) user named Admin1 is assigned the required role to enable Traffic Analytics for an Azure subscription.
+
+**Goal:**
+Assign the appropriate role to Admin1 to enable Traffic Analytics.
+
+**Proposed Solution:**
+Assign the **Traffic Manager Contributor** role at the subscription level to Admin1.
+
+**Evaluation:**
+Does the solution meet the goal? **No**.
+
+**Explanation:**
+Assigning the Traffic Manager Contributor role does not provide sufficient permissions to manage or enable Traffic Analytics, as this feature is **unrelated to Azure Traffic Manager**.
+
+**Key Points:**
+- **Traffic Analytics** is a feature of **Azure Network Watcher** that provides insights into network traffic patterns by analyzing NSG flow logs
+- **Azure Traffic Manager** is a DNS-based traffic load balancing service - a completely different service
+- The Traffic Manager Contributor role grants permissions only for managing Traffic Manager resources (DNS-based load balancing), not Network Watcher or Traffic Analytics
+
+**Correct Approach:**
+To enable Traffic Analytics, Admin1 needs one of the following roles at the subscription level:
+- **Network Contributor** - Recommended role that provides permissions to manage all network resources including Network Watcher and Traffic Analytics
+- **Owner** or **Contributor** - These broader roles also include the necessary permissions but provide more access than needed
+
+**Required Permissions for Traffic Analytics:**
+- Permissions to enable NSG flow logs
+- Permissions to configure Log Analytics workspace
+- Permissions to read and write Network Watcher resources
+- Permissions to access storage accounts (where flow logs are stored)
+
+**Common Misconception:**
+Do not confuse Azure Traffic Manager (DNS-based global load balancing) with Traffic Analytics (network flow analysis tool). They are separate services with different purposes and different role requirements.
+
 ## References
 
 - [IP Flow Verify Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-ip-flow-verify-overview)
