@@ -24,6 +24,7 @@
 - [Practice Question: Multi-Tenant RBAC Role Assignments](#practice-question-multi-tenant-rbac-role-assignments)
 - [Practice Question: Preventing Contributor Role Data Plane Access](#practice-question-preventing-contributor-role-data-plane-access)
 - [Practice Question: Subscription Tenant Migration and Access Elevation](#practice-question-subscription-tenant-migration-and-access-elevation)
+- [Practice Question: Azure AD Tenant Creation and User Management Permissions](#practice-question-azure-ad-tenant-creation-and-user-management-permissions)
 
 ## Overview
 
@@ -626,3 +627,84 @@ Which role should you assign to User2?
 - [Classic Subscription Administrator Roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/classic-administrators)
 - [Elevate Access for Global Administrators](https://learn.microsoft.com/en-us/azure/role-based-access-control/elevate-access-global-admin)
 - [Associate or Change Azure Subscription Directory](https://learn.microsoft.com/en-us/entra/fundamentals/how-subscriptions-associated-directory)
+
+## Practice Question: Azure AD Tenant Creation and User Management Permissions
+
+**Scenario:**
+You have an Azure subscription that contains the following users in an Azure Active Directory tenant named `contoso.onmicrosoft.com`:
+
+| User | Role in contoso.onmicrosoft.com Tenant | Role in Azure Subscription |
+|------|---------------------------------------|---------------------------|
+| User1 | Global Administrator | N/A |
+| User2 | User | Contributor |
+| User3 | User | Owner |
+
+User1 creates a new Azure Active Directory tenant named `external.contoso.onmicrosoft.com`.
+
+**Question:**
+You need to create new user accounts in `external.contoso.onmicrosoft.com`. 
+
+**Solution:** You instruct User3 to create the user accounts.
+
+Does this meet the goal?
+
+**Answer:** ❌ **No**
+
+---
+
+**Explanation:**
+
+In Azure, only a **Global Administrator** can create a new Azure Active Directory (Azure AD) tenant. In this scenario:
+
+1. **User1** is a Global Administrator and creates the new Azure AD tenant named `external.contoso.onmicrosoft.com`
+2. **User1**, as the creator of the new tenant, automatically becomes the **only Global Administrator** in the new tenant by default
+3. **User3** is an **Owner** of an Azure subscription in the original tenant (`contoso.onmicrosoft.com`)
+
+**Why User3 Cannot Create User Accounts:**
+
+- Azure subscription roles (like **Owner** or **Contributor**) are **separate from Azure AD tenant roles** (like **Global Administrator** or **User Administrator**)
+- User3's **Owner role** in an Azure subscription **does not grant any permissions** in the new Azure AD tenant
+- User3 **does not automatically have access** to the new tenant `external.contoso.onmicrosoft.com` just because they have an Owner role in a subscription linked to the original tenant
+- To create user accounts in an Azure AD tenant, a user must have one of the following directory roles:
+  - **Global Administrator**
+  - **User Administrator**
+
+**How to Meet the Goal:**
+
+User1 must first grant User3 the necessary permissions in the new tenant `external.contoso.onmicrosoft.com` by:
+1. Adding User3 as a user in the new tenant (as a guest or member)
+2. Assigning User3 the **User Administrator** or **Global Administrator** role in the new tenant
+
+Only after these steps can User3 create user accounts in `external.contoso.onmicrosoft.com`.
+
+---
+
+**Key Takeaways:**
+
+1. **Azure Subscription Roles ≠ Azure AD Tenant Roles:**
+   
+   | Azure Subscription RBAC Roles | Azure AD Tenant Roles |
+   |------------------------------|----------------------|
+   | Owner, Contributor, Reader | Global Administrator, User Administrator, etc. |
+   | Control access to Azure resources | Control access to directory and user management |
+   | Scoped to subscription/resource group/resource | Scoped to the entire tenant |
+
+2. **New Tenant = Fresh Start:**
+   - When a new Azure AD tenant is created, it starts with **no inherited permissions** from other tenants
+   - The creator (User1) is the only Global Administrator initially
+   - Users from other tenants must be explicitly added and granted roles
+
+3. **User Management Permissions:**
+   - Creating user accounts requires **directory-level permissions**, not subscription-level permissions
+   - Required roles: **Global Administrator** or **User Administrator**
+   - **Owner** role at subscription level has **no effect** on Azure AD tenant user management
+
+4. **Multi-Tenant Isolation:**
+   - Each Azure AD tenant is completely isolated from others
+   - Permissions in one tenant do not carry over to another tenant
+   - Cross-tenant access must be explicitly configured
+
+**References:**
+- [Azure AD Built-in Roles](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference)
+- [Difference between Azure roles and Azure AD roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/rbac-and-directory-admin-roles)
+- [Add or delete users in Azure AD](https://learn.microsoft.com/en-us/entra/fundamentals/add-users)
