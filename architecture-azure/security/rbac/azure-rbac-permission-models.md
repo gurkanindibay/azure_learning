@@ -631,7 +631,7 @@ Which role should you assign to User2?
 ## Practice Question: Azure AD Tenant Creation and User Management Permissions
 
 **Scenario:**
-You have an Azure subscription that contains the following users in an Azure Active Directory tenant named `contoso.onmicrosoft.com`:
+You have an Azure subscription that contains the following users in an Microsoft Entra ID tenant named `contoso.onmicrosoft.com`:
 
 | User | Role in contoso.onmicrosoft.com Tenant | Role in Azure Subscription |
 |------|---------------------------------------|---------------------------|
@@ -639,7 +639,7 @@ You have an Azure subscription that contains the following users in an Azure Act
 | User2 | User | Contributor |
 | User3 | User | Owner |
 
-User1 creates a new Azure Active Directory tenant named `external.contoso.onmicrosoft.com`.
+User1 creates a new Microsoft Entra ID tenant named `external.contoso.onmicrosoft.com`.
 
 **Question:**
 You need to create new user accounts in `external.contoso.onmicrosoft.com`. 
@@ -654,7 +654,7 @@ Does this meet the goal?
 
 **Explanation:**
 
-In Azure, only a **Global Administrator** can create a new Azure Active Directory (Azure AD) tenant. In this scenario:
+In Azure, only a **Global Administrator** can create a new Microsoft Entra ID (Azure AD) tenant. In this scenario:
 
 1. **User1** is a Global Administrator and creates the new Azure AD tenant named `external.contoso.onmicrosoft.com`
 2. **User1**, as the creator of the new tenant, automatically becomes the **only Global Administrator** in the new tenant by default
