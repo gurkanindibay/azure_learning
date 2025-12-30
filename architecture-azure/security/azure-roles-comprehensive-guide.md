@@ -337,6 +337,214 @@ This can be done either:
 
 ---
 
+### Practice Question 2: Assigning Azure AD Premium Licenses
+
+#### Scenario
+
+You have an Azure Active Directory (Azure AD) tenant named `contoso.onmicrosoft.com` that contains 100 user accounts.
+
+You purchase 10 Azure AD Premium P2 licenses for the tenant.
+
+You need to ensure that 10 users can use all the Azure AD Premium features.
+
+**Question:** What should you do?
+
+#### Options Analysis
+
+**❌ Option A: From the Directory role blade of each user, modify the directory role**
+
+**Why this is incorrect:**
+- Changing a user's directory role assigns administrative privileges (e.g., Global Administrator, User Administrator)
+- Directory roles grant **administrative permissions** to manage Azure AD resources
+- Directory roles do NOT enable premium features that are tied to Azure AD Premium licensing
+- Administrative roles and licenses are completely separate concepts
+- A user can be a Global Administrator but still not have access to premium features without a license
+
+**✅ Option B: From the Licenses blade of Azure AD, assign a license**
+
+**Why this is CORRECT:**
+- To enable specific users to access Azure AD Premium P2 features, you **must assign licenses** to those users
+- The **Licenses blade** in Azure AD allows you to assign purchased licenses to users
+- Once assigned, users gain access to all Premium P2 features including:
+  - **Privileged Identity Management (PIM)**: Just-in-time privileged access
+  - **Identity Protection**: Risk-based conditional access and identity risk detection
+  - **Access Reviews**: Automated reviews of group memberships and application access
+  - **Conditional Access policies**: Advanced access control based on signals
+  - **Entitlement Management**: Automated access package management
+- Without a license assignment, premium features remain unavailable regardless of user roles
+
+**❌ Option C: From the Azure AD domain, add an enterprise application**
+
+**Why this is incorrect:**
+- Adding an enterprise application allows integration with third-party or custom applications
+- Enterprise applications enable SSO (Single Sign-On) and application access management
+- This does NOT assign Azure AD Premium features to users
+- Enterprise applications are for application integration, not feature licensing
+
+**❌ Option D: From the Groups blade of each user, invite the users to a group**
+
+**Why this is incorrect:**
+- Inviting users to a group is for organizational purposes and resource access management
+- Groups can be used for license assignment (group-based licensing), but the option doesn't specify this
+- The option says "invite the users to a group" which doesn't automatically assign licenses
+- Even with group-based licensing, you still need to assign the license to the **group**, not just add users to it
+
+#### Step-by-Step: How to Assign Licenses
+
+**Method 1: Assign Licenses to Individual Users**
+
+1. Navigate to: **Azure Portal** → **Microsoft Entra ID** → **Licenses** → **All products**
+2. Select: **Azure Active Directory Premium P2**
+3. Click: **+ Assign**
+4. Click: **Add users**
+5. Select the 10 users who need access
+6. Click: **Select**
+7. Review **Assignment options** (ensure all features are enabled)
+8. Click: **Assign**
+
+**Method 2: Group-Based License Assignment (Recommended for Larger Deployments)**
+
+1. Navigate to: **Azure Portal** → **Microsoft Entra ID** → **Groups**
+2. Create a new group (e.g., "Premium Users") or select an existing group
+3. Add the 10 users to this group
+4. Navigate to: **Microsoft Entra ID** → **Licenses** → **All products**
+5. Select: **Azure Active Directory Premium P2**
+6. Click: **+ Assign**
+7. Click: **Add groups**
+8. Select the group containing your 10 users
+9. Review **Assignment options**
+10. Click: **Assign**
+
+#### Visual Flow
+
+```mermaid
+graph TD
+    A[Azure Portal] --> B[Microsoft Entra ID]
+    B --> C[Licenses]
+    C --> D[All products]
+    D --> E[Azure AD Premium P2]
+    E --> F[+ Assign]
+    F --> G{Assignment Method}
+    G -->|Individual Users| H[Add users]
+    G -->|Group-Based| I[Add groups]
+    H --> J[Select 10 users]
+    I --> K[Select group with 10 users]
+    J --> L[Review Assignment Options]
+    K --> L
+    L --> M[Click: Assign]
+    M --> N[✅ Licenses Assigned Successfully]
+    
+    style C fill:#4ecdc4
+    style E fill:#FFD700
+    style N fill:#90EE90
+```
+
+#### Key Concepts
+
+**1. Azure AD Premium P2 Features**
+```
+Azure AD Premium P2 License Enables:
+├── Privileged Identity Management (PIM)
+│   ├── Just-in-time privileged access
+│   ├── Time-bound access
+│   └── Approval-based role activation
+├── Identity Protection
+│   ├── Risk-based conditional access
+│   ├── Identity risk detection
+│   └── Vulnerability reporting
+├── Access Reviews
+│   ├── Periodic access certification
+│   ├── Automated group membership reviews
+│   └── Application access reviews
+├── Entitlement Management
+│   ├── Access packages
+│   ├── Automated access workflows
+│   └── External user access management
+└── All Premium P1 features
+    ├── Conditional Access
+    ├── Self-service password reset
+    └── Cloud app discovery
+```
+
+**2. Licenses vs Roles (Critical Distinction)**
+```
+Licenses:
+├── Purpose: Enable service features and capabilities
+├── Examples: Azure AD Premium P2, Microsoft 365 E5
+├── Grant: Access to premium features (PIM, Identity Protection, etc.)
+├── Assignment: Via Licenses blade
+└── Effect: Users can USE premium features
+
+Directory Roles:
+├── Purpose: Grant administrative permissions
+├── Examples: Global Administrator, User Administrator
+├── Grant: Permission to MANAGE Azure AD resources
+├── Assignment: Via Directory role blade (Assigned roles)
+└── Effect: Users can ADMINISTER resources
+
+Key Difference:
+├── A user with a Premium P2 license can USE Identity Protection
+└── A user with Security Administrator role can CONFIGURE Identity Protection
+    └── But needs the license to access the feature!
+```
+
+**3. Group-Based License Assignment Benefits**
+```
+Group-Based Licensing:
+├── Automated license assignment
+│   └── Users automatically get licenses when added to group
+├── Centralized management
+│   └── Manage licenses at group level, not individual users
+├── Automatic license removal
+│   └── Licenses removed when users leave the group
+├── Error handling
+│   └── Azure AD reports licensing conflicts
+└── Best Practice for:
+    ├── Large-scale deployments
+    ├── Dynamic user populations
+    └── Department or role-based licensing
+```
+
+**4. License Assignment Options**
+```
+When assigning a license, you can control:
+├── Which service plans to enable/disable
+│   └── Example: Enable PIM but disable Access Reviews
+├── Location assignment (for multi-geo tenants)
+├── Automatic assignment via groups
+└── License inheritance from parent groups
+```
+
+#### Common Pitfalls
+
+**❌ Mistake 1: Confusing Roles with Licenses**
+- Assigning a Security Administrator role does NOT give access to Premium P2 features
+- The user needs BOTH: a license (to access features) AND appropriate role (to configure them)
+
+**❌ Mistake 2: Assuming Enterprise Apps Provide Licenses**
+- Enterprise applications are for SSO and app integration
+- They don't enable Azure AD Premium features
+
+**❌ Mistake 3: Not Verifying License Availability**
+- Ensure you have enough licenses before assigning
+- Check **Licenses** → **All products** → **Azure AD Premium P2** to see available licenses
+
+**❌ Mistake 4: Using Groups Without Group-Based Licensing**
+- Simply adding users to a group doesn't assign licenses
+- You must assign the license to the group itself
+
+#### Answer Summary
+
+To enable 10 users to use all Azure AD Premium P2 features:
+
+✅ **Navigate to the Licenses blade in Azure AD and assign Azure AD Premium P2 licenses to the 10 users**
+
+This can be done either:
+- **Individual assignment**: Licenses → All products → Azure AD Premium P2 → Assign → Add users
+- **Group-based assignment**: Create/use group → Licenses → All products → Azure AD Premium P2 → Assign → Add groups (Recommended)
+
+---
+
 ## Azure RBAC Roles
 
 ### What Are Azure RBAC Roles?
