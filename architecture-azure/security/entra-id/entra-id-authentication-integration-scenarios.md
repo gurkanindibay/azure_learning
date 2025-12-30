@@ -45,6 +45,7 @@ This document provides comprehensive guidance on integrating Microsoft Entra ID 
     - [Question 13: SSO Access to On-Premises Web App with Integrated Windows Authentication](#exam-question-13-sso-access-to-on-premises-web-app-with-integrated-windows-authentication)
     - [Question 14: Pre-Authentication for ASP.NET Application on Azure VM](#exam-question-14-pre-authentication-for-aspnet-application-on-azure-vm)
     - [Question 15: AD and Entra ID Synchronization for Seamless Machine Access](#exam-question-15-ad-and-entra-id-synchronization-for-seamless-machine-access)
+    - [Question 16: Granting AKS Access to Microsoft Entra ID Users](#exam-question-16-granting-aks-access-to-microsoft-entra-id-users)
 
 ---
 
@@ -7432,8 +7433,237 @@ The requirement is for users to access corporate machines **without entering a p
 
 ---
 
-**Document Version:** 1.4  
-**Last Updated:** December 18, 2025  
+## Exam Question 16: Granting AKS Access to Microsoft Entra ID Users
+
+### Scenario
+
+You have an Azure subscription that contains a Microsoft Entra ID (formerly Azure Active Directory) tenant named `contoso.com` and an Azure Kubernetes Service (AKS) cluster named `AKS1`.
+
+An administrator reports that she is unable to grant access to `AKS1` to the users in `contoso.com`.
+
+You need to ensure that access to `AKS1` can be granted to the `contoso.com` users.
+
+### Question
+
+What should you do first?
+
+### Options
+
+1. ❌ **Recreate AKS1**
+2. ✅ **From contoso.com, create an OAuth 2.0 authorization endpoint**
+3. ❌ **From contoso.com, modify the Organization relationships settings**
+4. ❌ **From AKS1, create a namespace**
+
+---
+
+### Answer Analysis
+
+#### ✅ Correct Answer: From contoso.com, create an OAuth 2.0 authorization endpoint
+
+**Why this is correct:**
+
+Cluster administrators can configure **Kubernetes role-based access control (Kubernetes RBAC)** based on a user's identity or directory group membership. Microsoft Entra ID authentication is provided to AKS clusters with **OpenID Connect**.
+
+**OpenID Connect** is an identity layer built on top of the **OAuth 2.0 protocol**. By creating an OAuth 2.0 authorization endpoint in the Microsoft Entra ID tenant, you enable the integration between AKS and Microsoft Entra ID for user authentication.
+
+**How it works:**
+
+```plaintext
+┌────────────────────────────────────────────────────────────────────────┐
+│          AKS + Microsoft Entra ID Authentication Flow                  │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  1. User attempts to access AKS cluster (kubectl command)             │
+│                    │                                                   │
+│                    ▼                                                   │
+│  2. AKS redirects to Microsoft Entra ID OAuth 2.0 endpoint            │
+│                    │                                                   │
+│                    ▼                                                   │
+│  3. User authenticates with Entra ID (username/password + MFA)        │
+│                    │                                                   │
+│                    ▼                                                   │
+│  4. Entra ID issues ID token via OpenID Connect                       │
+│     (contains user identity and group membership)                     │
+│                    │                                                   │
+│                    ▼                                                   │
+│  5. AKS validates token and checks Kubernetes RBAC                    │
+│                    │                                                   │
+│                    ▼                                                   │
+│  6. User granted access based on RBAC role bindings                   │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Steps:**
+
+1. **Enable Microsoft Entra ID integration on AKS:**
+   ```bash
+   az aks update -g <resource-group> -n AKS1 --enable-aad
+   ```
+
+2. **Configure OAuth 2.0 authorization endpoint in Microsoft Entra ID:**
+   - This is automatically configured when you enable Entra ID integration
+   - The OAuth 2.0 endpoint is: `https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/authorize`
+
+3. **Create Kubernetes RBAC role bindings:**
+   ```yaml
+   apiVersion: rbac.authorization.k8s.io/v1
+   kind: ClusterRoleBinding
+   metadata:
+     name: contoso-cluster-admins
+   roleRef:
+     apiGroup: rbac.authorization.k8s.io
+     kind: ClusterRole
+     name: cluster-admin
+   subjects:
+   - apiGroup: rbac.authorization.k8s.io
+     kind: User
+     name: "user@contoso.com"
+   ```
+
+4. **Users authenticate via kubectl:**
+   ```bash
+   az aks get-credentials --resource-group <rg> --name AKS1
+   kubectl get nodes  # Triggers Entra ID authentication
+   ```
+
+**Key Technologies:**
+- **OAuth 2.0**: Authorization framework for delegated access
+- **OpenID Connect (OIDC)**: Authentication layer built on OAuth 2.0
+- **Kubernetes RBAC**: Role-based access control within the cluster
+- **Microsoft Entra ID**: Identity provider for user authentication
+
+---
+
+#### ❌ Incorrect: Recreate AKS1
+
+**Why this is wrong:**
+
+Recreating `AKS1` is **not necessary** to grant access to users in `contoso.com`. The issue lies with the **access control configuration** in Microsoft Entra ID integration, not with the AKS cluster itself.
+
+**Problems with this approach:**
+- ❌ **Unnecessary downtime**: Recreating the cluster causes service disruption
+- ❌ **Data loss risk**: All deployments, services, and configurations would be lost
+- ❌ **Doesn't solve the problem**: The same access issue would persist after recreation
+- ❌ **Waste of resources**: Requires redeploying all workloads
+
+**When recreating AKS might be needed:**
+- Cluster is in a failed state that cannot be recovered
+- Need to change fundamental cluster settings (e.g., network plugin)
+- Major version upgrade with breaking changes
+
+---
+
+#### ❌ Incorrect: From contoso.com, modify the Organization relationships settings
+
+**Why this is wrong:**
+
+Modifying the **Organization relationships settings** in `contoso.com` does **not directly address** the issue of granting access to `AKS1` to the users in the same directory.
+
+**What Organization relationships settings are for:**
+- Configuring **B2B collaboration** with external organizations
+- Managing **cross-tenant access** settings
+- Defining policies for external user invitations
+- Not related to internal resource access control
+
+**Why it doesn't help:**
+- ❌ This setting is for **external organizations**, not internal users
+- ❌ AKS access requires **authentication integration**, not organizational relationships
+- ❌ Doesn't configure OAuth 2.0/OpenID Connect for AKS
+
+**When Organization relationships ARE relevant:**
+- Enabling B2B collaboration with partner organizations
+- Allowing external users to access your resources
+- Configuring cross-tenant access policies
+
+---
+
+#### ❌ Incorrect: From AKS1, create a namespace
+
+**Why this is wrong:**
+
+Creating a **namespace** in `AKS1` does **not directly address** the issue of granting access to users in `contoso.com`.
+
+**What Kubernetes namespaces are for:**
+- **Organizing resources** within the cluster
+- **Isolating workloads** (dev, staging, production)
+- **Applying resource quotas** and limits
+- **Scoping RBAC** permissions to specific namespaces
+
+**Why it doesn't solve the authentication problem:**
+- ❌ Namespaces are for **resource organization**, not user authentication
+- ❌ Users still cannot authenticate without **Entra ID integration**
+- ❌ Namespace creation requires cluster access, which users don't have yet
+- ❌ Doesn't configure OAuth 2.0/OpenID Connect authentication
+
+**Correct use of namespaces:**
+- **After** authentication is configured
+- To organize and isolate applications
+- To apply namespace-scoped RBAC:
+  ```yaml
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: dev-team-binding
+    namespace: development
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: developer
+  subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: "dev-team@contoso.com"
+  ```
+
+---
+
+### Key Takeaways
+
+| Requirement | Solution |
+|-------------|----------|
+| Grant AKS access to Entra ID users | Configure OAuth 2.0 authorization endpoint (enable Entra ID integration) |
+| Authenticate users to AKS | OpenID Connect (OIDC) built on OAuth 2.0 |
+| Authorize users in AKS | Kubernetes RBAC with role bindings |
+| Organize workloads | Namespaces (after authentication is configured) |
+
+**Authentication Flow Summary:**
+1. **Enable Entra ID integration** on AKS → Creates OAuth 2.0 endpoint
+2. **User authenticates** via kubectl → Redirected to Entra ID
+3. **Entra ID issues token** → Contains user identity and groups
+4. **AKS validates token** → Checks Kubernetes RBAC
+5. **Access granted** → Based on role bindings
+
+**Remember:**
+- **OAuth 2.0/OpenID Connect** = Required for Entra ID authentication to AKS
+- **Kubernetes RBAC** = Controls what authenticated users can do
+- **Namespaces** = Organize resources, not for authentication
+- **Organization relationships** = For B2B collaboration, not internal access
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [AKS-managed Microsoft Entra ID integration](https://learn.microsoft.com/en-us/azure/aks/managed-azure-ad)
+- [Use Azure RBAC for Kubernetes Authorization](https://learn.microsoft.com/en-us/azure/aks/manage-azure-rbac)
+- [Access and identity options for AKS](https://learn.microsoft.com/en-us/azure/aks/concepts-identity)
+- [Use Kubernetes RBAC with Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/aks/azure-ad-rbac)
+- [OpenID Connect overview](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)
+
+**Related Topics:**
+- Azure Kubernetes Service (AKS)
+- Microsoft Entra ID integration
+- Kubernetes RBAC
+- OpenID Connect (OIDC)
+- OAuth 2.0
+
+**Domain:** Design Identity, Governance, and Monitoring Solutions
+
+---
+
+**Document Version:** 1.5  
+**Last Updated:** December 30, 2025  
 **Author:** Azure Learning Documentation
 
 ---
