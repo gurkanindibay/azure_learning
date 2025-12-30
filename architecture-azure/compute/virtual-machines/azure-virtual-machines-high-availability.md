@@ -298,7 +298,7 @@ New-AzAvailabilitySet `
   -Sku Aligned
 ```
 
-**Azure Resource Manager (ARM) Template**:
+   **Azure Resource Manager (ARM) Template**:
 ```json
 {
   "type": "Microsoft.Compute/availabilitySets",
