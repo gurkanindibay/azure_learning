@@ -697,6 +697,152 @@ az policy assignment create \
   --scope "/subscriptions/.../resourceGroups/RG-Storage-Prod"
 ```
 
+### Policy Inheritance Practical Example
+
+**Scenario: Policy Conflicts and Inheritance Behavior**
+
+This real-world example demonstrates how Azure Policy inheritance works, especially when there are conflicting "Allow" and "Deny" policies at different levels of the management group hierarchy.
+
+**Management Group Hierarchy:**
+
+```
+Tenant Root Group
+├─ Policy: NOT ALLOWED resource types = virtualNetworks (DENY)
+│
+├─ ManagementGroup11
+│  │
+│  └─ ManagementGroup21
+│     └─ Subscription1
+│
+└─ ManagementGroup12
+   ├─ Policy: ALLOWED resource types = virtualNetworks (ALLOW)
+   │
+   └─ Subscription2
+```
+
+**Test Results:**
+
+| Statement | Result | Explanation |
+|-----------|--------|-------------|
+| **Can create a virtual network in Subscription1?** | ❌ **No** | Even though there's no explicit policy at ManagementGroup11 or ManagementGroup21, the **deny policy at Tenant Root Group** cascades down and blocks virtualNetworks creation everywhere. Deny policies take precedence and cannot be overridden at lower levels. |
+| **Can create a virtual machine in Subscription2?** | ❌ **No** | The "Allowed resource types = virtualNetworks" policy at ManagementGroup12 creates a **whitelist** that only allows virtualNetworks. Since virtual machines are not in the allowed list, they are implicitly denied. Additionally, the root-level deny on virtualNetworks means even those cannot be created. |
+| **Can add Subscription1 to ManagementGroup11?** | ✅ **Yes** | Subscriptions can be moved to **parent or ancestor** management groups. ManagementGroup11 is an ancestor (parent of ManagementGroup21) of Subscription1's current location, so the move is allowed. |
+
+**Key Policy Inheritance Rules Demonstrated:**
+
+1. **Deny Policies Take Precedence:**
+   ```
+   Root MG: Deny virtualNetworks (scope: entire tenant)
+   Child MG: Allow virtualNetworks (scope: child only)
+   
+   Result: Deny wins - virtualNetworks blocked everywhere
+   ```
+   - Deny policies at higher levels **cannot be overridden** by allow policies at lower levels
+   - This ensures security and compliance policies set at organizational level are enforced
+
+2. **"Allowed Resource Types" Creates a Whitelist:**
+   ```
+   Policy: "Allowed resource types = virtualNetworks"
+   
+   Effect:
+   ✓ virtualNetworks: Allowed
+   ✗ Virtual Machines: Implicitly denied (not in whitelist)
+   ✗ Storage Accounts: Implicitly denied (not in whitelist)
+   ✗ All other resources: Implicitly denied (not in whitelist)
+   ```
+   - When you use "Allowed resource types", **only** those types can be created
+   - Everything else is automatically denied
+
+3. **Policy Evaluation Order:**
+   ```
+   Step 1: Check for Deny policies (from root down)
+   Step 2: Check for Allow policies (from root down)
+   Step 3: Apply most restrictive policy
+   
+   If any Deny policy matches → Resource creation blocked
+   If no Deny, but not in Allow whitelist → Resource creation blocked
+   If no policies apply → Resource creation allowed (default)
+   ```
+
+4. **Subscription Movement Rules:**
+   ```
+   Current: Subscription1 in ManagementGroup21
+   Target:  ManagementGroup11
+   
+   Relationship: ManagementGroup11 → ManagementGroup21 → Subscription1
+   
+   ✅ Can move UP the hierarchy (to parent/ancestor)
+   ✅ Can move to sibling management groups
+   ❌ Cannot move to unrelated management groups without permissions
+   ```
+
+**Visual Policy Flow:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Tenant Root Group                                                │
+│ ❌ DENY: virtualNetworks                                         │
+│ (This policy cascades to ALL children)                           │
+└────────────────┬───────────────────────────────┬─────────────────┘
+                 │                               │
+        ┌────────▼────────┐           ┌─────────▼─────────┐
+        │ ManagementGroup11│           │ ManagementGroup12 │
+        │ (No policies)    │           │ ✅ ALLOW: vNets    │
+        │                 │           │ (Whitelist mode)   │
+        └────────┬─────────┘           └─────────┬─────────┘
+                 │                               │
+        ┌────────▼────────┐           ┌─────────▼─────────┐
+        │ManagementGroup21│           │  Subscription2     │
+        │  (No policies)  │           │                    │
+        └────────┬─────────┘           │ Effective Policies:│
+                 │                     │ ❌ DENY: vNets     │
+        ┌────────▼────────┐           │    (from Root)     │
+        │  Subscription1   │           │ ❌ DENY: VMs       │
+        │                 │           │    (not in allow)  │
+        │ Effective Policy:│           └────────────────────┘
+        │ ❌ DENY: vNets   │
+        │    (from Root)   │
+        └──────────────────┘
+
+Legend:
+❌ = Resources blocked
+✅ = Policy assigned
+```
+
+**Best Practices from This Example:**
+
+1. **Place Restrictive Policies High in Hierarchy:**
+   - Deny policies at root level ensure organization-wide compliance
+   - Cannot be bypassed by teams at lower levels
+
+2. **Use Allow Lists Carefully:**
+   - "Allowed resource types" blocks everything not explicitly listed
+   - Can accidentally prevent legitimate resource creation
+
+3. **Test Policy Impact Before Deployment:**
+   - Use Azure Policy's "What-if" analysis
+   - Deploy in audit mode first before switching to deny
+
+4. **Document Management Group Structure:**
+   - Clear hierarchy helps predict policy inheritance
+   - Prevents unexpected blocks during resource deployment
+
+5. **Plan Subscription Placement:**
+   - Subscriptions inherit all policies from parent management groups
+   - Moving subscriptions changes their policy scope
+
+**Lab-Tested Behavior:**
+
+> 🧪 **Lab Verification:** The behavior described above has been tested in a live Azure environment:
+> - Subscription under a management group with "Allowed virtualNetworks" was successfully blocked by the root-level "Not allowed virtualNetworks" policy
+> - Virtual machine deployment was blocked in a subscription where only virtualNetworks were in the allowed list
+> - Subscription was successfully moved to a higher-tier management group (ancestor)
+
+**References:**
+- [Azure Policy Assignment Scopes](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/assignment-structure)
+- [Policy Evaluation Order](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effects)
+- [Management Group Operations](https://learn.microsoft.com/en-us/azure/governance/management-groups/manage)
+
 ## Azure Blueprints and Governance at Scale
 
 **What are Azure Blueprints?**
