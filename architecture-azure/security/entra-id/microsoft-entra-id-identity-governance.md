@@ -20,6 +20,7 @@ Microsoft Entra ID Identity Governance is a comprehensive suite of identity life
 10. [Licensing Requirements](#licensing-requirements)
 11. [Best Practices](#best-practices)
 12. [Exam Scenarios](#exam-scenarios)
+13. [User and Group Deletion Rules](#user-and-group-deletion-rules)
 
 ---
 
@@ -682,6 +683,95 @@ Key indicators:
 - **Access Reviews (A)**: For periodic verification, not on-demand access
 - **Entitlement Management (B)**: For access packages (days/months), not privileged role activation (hours)
 - **Azure RBAC (D)**: No built-in approval workflow or automatic revocation
+
+---
+
+## User and Group Deletion Rules
+
+### Overview
+
+Understanding when users and groups can be deleted in Microsoft Entra ID is crucial for tenant management and cleanup operations. The ability to delete objects depends on their configuration, particularly license assignments.
+
+### Deletion Rules
+
+#### Users
+- **All users can be deleted** regardless of:
+  - License assignments (Microsoft Entra ID P1/P2, etc.)
+  - Group memberships
+  - Their role or status in the tenant
+
+#### Groups
+- **Groups can only be deleted if they do NOT have assigned licenses**
+- Group deletion is **independent of**:
+  - Whether the group is a member of other groups
+  - Whether other groups are members of it
+  - The type of group (Security, Microsoft 365, etc.)
+
+### Key Principle
+
+**License assignments on groups block deletion**. This is a protective measure to prevent accidental removal of groups that are actively managing user licenses.
+
+### Exam Scenario Example
+
+Given the following configuration:
+
+**Users:**
+| Name | Member of | Assigned License |
+|------|-----------|-----------------|
+| User1 | Group1 | Microsoft Entra ID P2 |
+| User2 | Group2 | None |
+| User3 | None | Microsoft Entra ID P2 |
+| User4 | None | None |
+
+**Groups:**
+| Name | Member of | Assigned License |
+|------|-----------|-----------------|
+| Group1 | None | None |
+| Group2 | Group3 | Microsoft Entra ID P2 |
+| Group3 | Group4 | None |
+| Group4 | None | Microsoft Entra ID P2 |
+
+**Question:** Which users and groups can be deleted?
+
+**Answer:**
+- **Users:** User1, User2, User3, and User4 (all users)
+- **Groups:** Group1 and Group3 only
+
+**Explanation:**
+- **Users:** All users can be deleted regardless of their license assignments or group memberships
+- **Groups:**
+  - ✅ **Group1:** No assigned license → Can be deleted
+  - ❌ **Group2:** Has Microsoft Entra ID P2 license assigned → Cannot be deleted
+  - ✅ **Group3:** No assigned license → Can be deleted (even though it's a member of Group4)
+  - ❌ **Group4:** Has Microsoft Entra ID P2 license assigned → Cannot be deleted
+
+### Best Practices
+
+1. **Before deleting groups**, ensure:
+   - All licenses are removed from the group
+   - Dependencies on the group are documented
+   - Alternative licensing mechanisms are in place if needed
+
+2. **User deletion**:
+   - Users are soft-deleted for 30 days and can be restored
+   - Consider removing licenses before deletion to free up quota
+   - Document group memberships for recovery scenarios
+
+3. **License management**:
+   - Use groups for license assignment (group-based licensing)
+   - Regularly review license assignments to optimize costs
+   - Remove unused license assignments before decommissioning groups
+
+### Common Mistakes
+
+❌ **Incorrect assumption:** "Groups with members cannot be deleted"
+✅ **Correct:** Groups can be deleted if they have members, as long as there are no assigned licenses
+
+❌ **Incorrect assumption:** "Users with licenses cannot be deleted"
+✅ **Correct:** All users can be deleted regardless of license assignments
+
+❌ **Incorrect assumption:** "Nested groups cannot be deleted"
+✅ **Correct:** Group nesting doesn't prevent deletion; only license assignments do
 
 ---
 
