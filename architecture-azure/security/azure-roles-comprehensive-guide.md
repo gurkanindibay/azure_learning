@@ -10,6 +10,7 @@
   - [Common Microsoft Entra ID Roles](#common-microsoft-entra-id-roles)
   - [Microsoft Entra ID Role Hierarchy](#microsoft-entra-id-role-hierarchy)
   - [Assignment Scope Levels](#assignment-scope-levels)
+  - [Practice Question: Assigning Directory Roles to Users](#practice-question-assigning-directory-roles-to-users)
 - [Azure RBAC Roles](#azure-rbac-roles)
   - [What Are Azure RBAC Roles?](#what-are-azure-rbac-roles)
   - [Scope of Azure RBAC Roles](#scope-of-azure-rbac-roles)
@@ -186,6 +187,153 @@ User Administrator (HR AU) → HR Administrative Unit Only
 Cloud Application Administrator → Specific Application
 └── App1 Registration and Enterprise App
 ```
+
+### Practice Question: Assigning Directory Roles to Users
+
+**Scenario:**
+
+You have an Azure Active Directory (Azure AD) tenant that contains 5,000 user accounts.
+
+You create a new user account named AdminUser1.
+
+You need to assign the **User Administrator** administrative role to AdminUser1.
+
+**Question:** What should you do from the user account properties?
+
+#### Options Analysis
+
+**❌ Option A: From the Groups blade, invite the user account to a new group**
+
+**Why this is incorrect:**
+- Groups in Azure AD are used for organizing users and managing access to resources
+- Adding a user to a group does NOT grant administrative roles unless the group is explicitly assigned a role (role-assignable groups)
+- This option doesn't describe assigning a role to a group, only adding a user to a group
+- Simply adding a user to a regular group will not grant any administrative permissions
+
+**❌ Option B: From the Licenses blade, assign a new license**
+
+**Why this is incorrect:**
+- Assigning a license grants access to specific services (e.g., Microsoft 365, Dynamics 365, Azure AD Premium features)
+- Licenses enable service functionality but do NOT provide administrative permissions
+- Example: Assigning an Azure AD Premium P2 license enables features like Conditional Access and PIM, but doesn't make the user an administrator
+- Administrative roles must be explicitly assigned separately from licenses
+
+**✅ Option C: From the Directory role blade, modify the directory role**
+
+**Why this is CORRECT:**
+- The **Directory role blade** (also called "Assigned roles" in the Azure portal) is where you assign Microsoft Entra ID administrative roles
+- This is the proper method to grant administrative permissions like User Administrator
+- User Administrator role allows the user to manage user-related tasks such as:
+  - Resetting passwords for non-administrator users
+  - Creating and deleting users
+  - Managing group membership
+  - Managing user licenses
+  - Managing user properties
+
+#### Step-by-Step: How to Assign a Directory Role
+
+**Method 1: From the User's Properties**
+
+1. Navigate to: **Azure Portal** → **Microsoft Entra ID** → **Users**
+2. Select the user: **AdminUser1**
+3. Click: **Assigned roles** (in the left menu)
+4. Click: **+ Add assignments**
+5. Search for and select: **User Administrator**
+6. Click: **Add**
+
+**Method 2: From the Roles and Administrators Section**
+
+1. Navigate to: **Azure Portal** → **Microsoft Entra ID** → **Roles and administrators**
+2. Search for and click: **User Administrator**
+3. Click: **+ Add assignments**
+4. Search for and select: **AdminUser1**
+5. Click: **Add**
+
+#### Visual Flow
+
+```mermaid
+graph TD
+    A[Azure Portal] --> B[Microsoft Entra ID]
+    B --> C[Users]
+    C --> D[Select AdminUser1]
+    D --> E[Assigned roles blade]
+    E --> F[+ Add assignments]
+    F --> G[Select: User Administrator]
+    G --> H[Click: Add]
+    H --> I[✅ Role Assigned Successfully]
+    
+    style E fill:#4ecdc4
+    style G fill:#90EE90
+    style I fill:#90EE90
+```
+
+#### Key Concepts
+
+**1. Directory Roles vs Group Membership**
+```
+Directory Role Assignment (Assigned roles blade)
+├── Grants administrative permissions
+├── Scoped to Microsoft Entra ID resources
+└── Examples: User Administrator, Global Administrator
+
+Group Membership (Groups blade)
+├── Organizes users
+├── Can be used for resource access (when assigned to resources)
+├── Does NOT grant admin roles (unless role-assignable group)
+└── Examples: HR-Department, Marketing-Team
+```
+
+**2. Role-Assignable Groups (Advanced Scenario)**
+
+It's worth noting that Azure AD does support **role-assignable groups**, which is an advanced feature:
+
+- **Requirements**: Azure AD Premium P1 or P2 license
+- **How it works**: You can create a special group that can have directory roles assigned to it
+- **Benefit**: Any user added to this group automatically gets the assigned role
+- **Creation**: Must be designated as "role-assignable" at creation time (cannot be changed later)
+
+**Example:**
+```powershell
+# Create a role-assignable group
+New-MgGroup -DisplayName "User Administrators Group" `
+    -IsAssignableToRole $true `
+    -MailEnabled $false `
+    -SecurityEnabled $true
+
+# Assign User Administrator role to the group
+# Then add AdminUser1 to this group
+```
+
+**However**, in the exam question:
+- The question asks about using the **user account properties**
+- The option only mentions "From the Groups blade, invite the user to a new group"
+- It doesn't specify creating a role-assignable group or assigning a role to that group
+- Therefore, this option is incorrect in the context of the question
+
+**3. Licenses vs Roles**
+```
+Licenses
+├── Enable service features
+├── Examples: Azure AD Premium P2, Microsoft 365 E5
+├── Grant access to services (PIM, Conditional Access, Office apps)
+└── Do NOT grant administrative permissions
+
+Directory Roles
+├── Grant administrative permissions
+├── Examples: User Administrator, Global Administrator
+├── Allow management of Entra ID resources
+└── Require licenses for some features (e.g., PIM requires P2)
+```
+
+#### Answer Summary
+
+To assign the User Administrator role to AdminUser1, you must:
+
+✅ **Navigate to the Directory role blade (Assigned roles) and modify the directory role**
+
+This can be done either:
+- From the user's **Assigned roles** blade (User properties → Assigned roles)
+- From the **Roles and administrators** section in Microsoft Entra ID
 
 ---
 
