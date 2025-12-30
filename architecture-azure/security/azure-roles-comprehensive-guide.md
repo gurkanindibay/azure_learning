@@ -692,6 +692,219 @@ This can be done either:
 
 ---
 
+### Practice Question: Group-Based License Inheritance and Assignment Rules
+
+#### Scenario
+
+You have an Azure AD tenant named **adatum.com** that contains the following groups:
+
+| Name | Type | Member of |
+|------|------|-----------|
+| Group1 | Security | None |
+| Group2 | Security | Group1 |
+
+The tenant contains the following users:
+
+| Name | Member of |
+|------|-----------|
+| User1 | Group1 |
+| User2 | Group2 |
+
+You assign licenses to **Group1** as follows:
+- ✅ Azure Active Directory Premium P2 - **ON**
+- ❌ Microsoft Defender for Cloud Apps Discovery - **OFF** (not assigned)
+
+**Important:** Group2 is NOT directly assigned any licenses.
+
+#### Questions
+
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+| Statement | Answer |
+|-----------|--------|
+| You can assign User1 the Microsoft Defender for Cloud Apps Discovery license | **No** |
+| You can remove the Azure Active Directory Premium P2 license from User1 | **No** |
+| User2 is assigned the Azure Active Directory Premium P2 license | **No** |
+
+#### Explanation
+
+**Statement 1: You can assign User1 the Microsoft Defender for Cloud Apps Discovery license**
+
+**Answer: No**
+
+**Why:**
+- User1 is a member of Group1, which has been assigned the Azure Active Directory Premium P2 license
+- Group1 does **NOT** have the Microsoft Defender for Cloud Apps Discovery license assigned
+- User1 can only inherit licenses that are assigned to groups they are members of
+- To assign the Microsoft Defender for Cloud Apps Discovery license to User1, you would need to either:
+  - Assign it directly to User1 as an individual license, OR
+  - Assign it to Group1 (which User1 is a member of), OR
+  - Assign it to another group and add User1 to that group
+- The question asks if you can assign it **through the current group configuration**, which is not possible
+
+**Statement 2: You can remove the Azure Active Directory Premium P2 license from User1**
+
+**Answer: No**
+
+**Why:**
+- User1 is a member of Group1, which has been **directly assigned** the Azure Active Directory Premium P2 license
+- User1 **inherits** this license from Group1
+- **Inherited licenses cannot be removed from individual users**
+- The only way to remove the Azure Active Directory Premium P2 license from User1 is to:
+  - Remove the license assignment from Group1 (affects all members), OR
+  - Remove User1 from Group1 (removes the group membership)
+- You cannot selectively remove an inherited license from an individual user while keeping them in the group
+
+**Statement 3: User2 is assigned the Azure Active Directory Premium P2 license**
+
+**Answer: No**
+
+**Why:**
+- User2 is a member of Group2
+- Group2 is a member of Group1 (nested group)
+- Group1 has the Azure Active Directory Premium P2 license assigned
+- **License assignments do NOT inherit through nested group memberships**
+- Even though Group2 is a member of Group1, Group2 itself does NOT have any licenses directly assigned
+- User2, as a member of Group2, does not inherit the licenses from Group1
+- To assign the Azure Active Directory Premium P2 license to User2, you would need to:
+  - Assign the license directly to User2, OR
+  - Directly assign the license to Group2, OR
+  - Add User2 as a direct member of Group1
+
+#### Key Concepts: License Inheritance Rules
+
+**1. Direct vs Inherited License Assignment**
+
+```
+License Assignment Methods:
+├── Direct Assignment
+│   ├── License assigned directly to a user
+│   └── Can be added or removed individually
+└── Group-Based Assignment (Inherited)
+    ├── License assigned to a group
+    ├── Users in the group automatically inherit the license
+    └── Cannot be removed from individual users (only from the group)
+```
+
+**2. Nested Groups and License Inheritance**
+
+```
+License Inheritance Behavior:
+├── Direct Group Membership
+│   ├── Group1 has License X
+│   ├── User1 is member of Group1
+│   └── ✅ User1 inherits License X
+└── Nested Group Membership
+    ├── Group1 has License X
+    ├── Group2 is member of Group1
+    ├── User2 is member of Group2
+    └── ❌ User2 does NOT inherit License X
+        └── Licenses do NOT flow through nested groups
+```
+
+**3. Removing Inherited Licenses**
+
+```
+License Removal Rules:
+├── Direct License Assignment
+│   ├── Assigned: Directly to User1
+│   └── ✅ Can be removed: From User1 individually
+└── Group-Based License Assignment
+    ├── Assigned: To Group1
+    ├── Inherited by: User1 (member of Group1)
+    └── ❌ Cannot be removed: From User1 individually
+        └── Must remove from Group1 OR remove User1 from Group1
+```
+
+#### Visual Representation
+
+```mermaid
+graph TD
+    subgraph "License Assignment"
+        L1[Azure AD Premium P2 License]
+        L2[Defender for Cloud Apps Discovery]
+    end
+    
+    subgraph "Groups"
+        G1[Group1<br/>Has: AD Premium P2]
+        G2[Group2<br/>Has: No licenses<br/>Member of: Group1]
+    end
+    
+    subgraph "Users"
+        U1[User1<br/>Member of: Group1]
+        U2[User2<br/>Member of: Group2]
+    end
+    
+    L1 -->|Assigned| G1
+    L2 -.->|NOT Assigned| G1
+    
+    G1 -->|Contains| U1
+    G2 -->|Nested in| G1
+    G2 -->|Contains| U2
+    
+    U1 -->|✅ Inherits| L1
+    U1 -.->|❌ No Access| L2
+    U2 -.->|❌ No Inheritance<br/>from nested group| L1
+    
+    style G1 fill:#90EE90
+    style G2 fill:#FFD700
+    style L1 fill:#87CEEB
+    style L2 fill:#FFB6C1
+    style U1 fill:#DDA0DD
+    style U2 fill:#F0E68C
+```
+
+#### Common Misconceptions
+
+**❌ Misconception 1: Nested Groups Inherit Licenses**
+- **Wrong:** "Group2 is a member of Group1, so users in Group2 will get licenses assigned to Group1"
+- **Correct:** License inheritance only works for **direct group membership**, not nested groups
+- **Solution:** If you need nested groups to inherit licenses, assign the license to each group individually
+
+**❌ Misconception 2: Inherited Licenses Can Be Removed Per User**
+- **Wrong:** "I can remove the Azure AD Premium P2 license from User1 while keeping them in Group1"
+- **Correct:** Inherited licenses are managed at the group level and cannot be selectively removed from individual users
+- **Solution:** Remove the user from the group or remove the license from the group entirely
+
+**❌ Misconception 3: Any License Can Be Assigned to Any User**
+- **Wrong:** "I can assign any license to User1 regardless of their group memberships"
+- **Correct:** You can only assign licenses that:
+  - You have available in your tenant subscription
+  - Are not already inherited from a group (for removal scenarios)
+  - The user is eligible for based on organizational policies
+
+#### Best Practices
+
+1. **Use Direct Group Membership for Licensing**
+   - Avoid relying on nested group structures for license distribution
+   - Assign licenses to the groups where users are direct members
+
+2. **Plan Group Structure for License Management**
+   - Create dedicated groups for license assignment
+   - Don't mix nested group hierarchies with license management
+
+3. **Document License Assignment Strategy**
+   - Clearly document which groups are used for licensing
+   - Maintain a mapping of licenses to groups
+
+4. **Regular License Audits**
+   - Review group memberships regularly
+   - Ensure users have appropriate licenses based on their roles
+   - Remove unused licenses to optimize costs
+
+5. **Understand Assignment vs Inheritance**
+   - Know the difference between direct and inherited licenses
+   - Plan user management activities accordingly
+
+#### Related Concepts
+
+- **Group-Based Licensing**: Automatically assign licenses to users based on group membership
+- **License Inheritance**: Automatic assignment of licenses from groups to their direct members
+- **Nested Groups**: Groups that are members of other groups (do NOT inherit licenses)
+- **Direct License Assignment**: Manual assignment of licenses to individual users
+
+---
+
 ## Azure RBAC Roles
 
 ### What Are Azure RBAC Roles?
