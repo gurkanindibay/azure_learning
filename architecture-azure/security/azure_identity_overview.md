@@ -69,6 +69,15 @@
   - [Understanding X.509 Certificates vs. Access Tokens](#understanding-x509-certificates-vs-access-tokens)
   - [Practice Question: X.509 Certificate for VM Access](#practice-question-x509-certificate-for-vm-access)
   - [Key Takeaway](#key-takeaway-3)
+- [16. Managing User Attributes in Hybrid Azure AD Deployments](#16-managing-user-attributes-in-hybrid-azure-ad-deployments)
+  - [Scenario](#scenario-3)
+  - [Question](#question-3)
+  - [Answer](#answer)
+  - [Attributes Managed by On-Premises AD in Hybrid Scenarios](#attributes-managed-by-on-premises-ad-in-hybrid-scenarios)
+  - [Attributes Always Managed in Azure AD](#attributes-always-managed-in-azure-ad)
+  - [PowerShell Examples](#powershell-examples)
+  - [Architecture: Attribute Authority in Hybrid Deployments](#architecture-attribute-authority-in-hybrid-deployments)
+  - [Key Takeaways](#key-takeaways)
 
 
 ## 1. Introduction
@@ -993,6 +1002,171 @@ Invoke-RestMethod -Uri 'https://management.azure.com/subscriptions/{subscription
 #### Key Takeaway
 
 Using `Invoke-RestMethod` to call the local managed identity endpoint (IMDS) is a **valid and correct approach** to obtain Azure Resource Manager access tokens. This is the PowerShell equivalent of using the Azure SDK's `ManagedIdentityCredential` class.
+
+---
+
+## 16. Managing User Attributes in Hybrid Azure AD Deployments
+
+### Scenario
+
+You have a hybrid deployment of Azure Active Directory (Azure AD) that contains the following users:
+
+| Name  | User type | On-premises sync enabled |
+|-------|-----------|--------------------------|
+| User1 | Member    | No                       |
+| User2 | Member    | Yes                      |
+| User3 | Guest     | No                       |
+
+### Question
+
+You need to modify the **JobTitle** and **UsageLocation** attributes for the users.
+
+For which users can you modify the attributes **from Azure AD** (not on-premises Active Directory)?
+
+**Available Options:**
+- User1 only
+- User1 and User2 only
+- User1 and User3 only
+- User1, User2, and User3
+
+### Answer
+
+#### JobTitle Modification
+
+**✅ Correct Answer: User1 and User3 only**
+
+**Explanation:**
+
+You must use **Windows Server Active Directory** to update the identity, contact info, or job info for users whose source of authority is Windows Server Active Directory.
+
+| User  | Can modify JobTitle in Azure AD? | Reason |
+|-------|----------------------------------|--------|
+| User1 | ✅ Yes | Member user with no on-premises sync - fully managed in Azure AD |
+| User2 | ❌ No | Member user with on-premises sync enabled - JobTitle must be modified in on-premises AD and will sync to Azure AD |
+| User3 | ✅ Yes | Guest user with no on-premises sync - managed in Azure AD |
+
+**Key Principle:** When **on-premises sync is enabled**, attributes related to identity, contact info, and job info are **authoritative in on-premises AD** and cannot be modified directly in Azure AD. Changes must be made in on-premises AD and will sync to Azure AD.
+
+#### UsageLocation Modification
+
+**✅ Correct Answer: User1, User2, and User3**
+
+**Explanation:**
+
+The **UsageLocation** attribute is **not synchronized** from on-premises Active Directory. It can be set directly in Azure AD for all users, including those with on-premises sync enabled.
+
+| User  | Can modify UsageLocation in Azure AD? | Reason |
+|-------|---------------------------------------|--------|
+| User1 | ✅ Yes | No sync - fully managed in Azure AD |
+| User2 | ✅ Yes | Even with sync enabled, UsageLocation is not synced from on-premises AD |
+| User3 | ✅ Yes | Guest user - managed in Azure AD |
+
+**Key Principle:** **UsageLocation** is an Azure AD-specific attribute required for license assignment and is not part of the on-premises AD schema. It must be set in Azure AD regardless of sync status.
+
+### Attributes Managed by On-Premises AD in Hybrid Scenarios
+
+When a user has **on-premises sync enabled** (like User2), the following attributes are typically managed in on-premises AD:
+
+**Identity Attributes:**
+- DisplayName
+- GivenName (First Name)
+- Surname (Last Name)
+- UserPrincipalName (UPN)
+- sAMAccountName
+
+**Contact Info:**
+- EmailAddress
+- PhoneNumber
+- StreetAddress
+- City, State, PostalCode, Country
+
+**Job Info:**
+- **JobTitle** ✓
+- Department
+- Company
+- Manager
+- Office
+
+### Attributes Always Managed in Azure AD
+
+These attributes can be set in Azure AD even for synced users:
+
+- **UsageLocation** ✓ (Required for license assignment)
+- Licenses
+- MFA settings
+- Conditional Access policies
+- Azure AD-specific properties
+
+### PowerShell Examples
+
+#### Modify JobTitle (Azure AD - Cloud-Only User)
+
+```powershell
+# For User1 or User3 (no sync)
+Connect-AzureAD
+Set-AzureADUser -ObjectId user1@contoso.com -JobTitle "Cloud Architect"
+```
+
+#### Modify JobTitle (On-Premises AD - Synced User)
+
+```powershell
+# For User2 (sync enabled) - Must use on-premises AD
+Import-Module ActiveDirectory
+Set-ADUser -Identity user2 -Title "Senior Engineer"
+# Wait for Azure AD Connect sync cycle (default: 30 minutes)
+# Or force sync: Start-ADSyncSyncCycle -PolicyType Delta
+```
+
+#### Modify UsageLocation (Azure AD - All Users)
+
+```powershell
+# Can be set for all users, including synced ones
+Connect-AzureAD
+Set-AzureADUser -ObjectId user1@contoso.com -UsageLocation "US"
+Set-AzureADUser -ObjectId user2@contoso.com -UsageLocation "US"
+Set-AzureADUser -ObjectId user3@contoso.com -UsageLocation "US"
+```
+
+### Architecture: Attribute Authority in Hybrid Deployments
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    Hybrid Azure AD Deployment                    │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌────────────────────────┐         ┌─────────────────────────┐ │
+│  │  On-Premises AD        │         │     Azure AD            │ │
+│  │  (Source of Authority) │◄────────┤   (Cloud Directory)     │ │
+│  └────────────────────────┘         └─────────────────────────┘ │
+│           │                                      │               │
+│           │ Azure AD Connect Sync                │               │
+│           │ (One-way for most attributes)        │               │
+│           │                                      │               │
+│  Synced Attributes:                  Cloud-Only Attributes:      │
+│  • DisplayName                       • UsageLocation ✓           │
+│  • JobTitle ✓                        • Licenses                  │
+│  • Department                        • MFA Settings              │
+│  • Email                             • Conditional Access        │
+│  • Phone                                                         │
+│  • Manager                                                       │
+│                                                                  │
+│  User2 (Sync Enabled)                User1, User3 (Cloud Only)  │
+│  └─► Managed in On-Premises AD       └─► Managed in Azure AD    │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Key Takeaways
+
+1. **On-Premises Sync = On-Premises Authority**: When on-premises sync is enabled, most user attributes (especially identity, contact, and job info) must be managed in on-premises AD.
+
+2. **UsageLocation Exception**: UsageLocation is always set in Azure AD, regardless of sync status, because it's required for Office 365 license assignment.
+
+3. **Guest Users**: Guest users (User3) are typically cloud-only and fully managed in Azure AD unless specifically synced.
+
+4. **Sync Direction**: Azure AD Connect typically syncs **from on-premises to cloud** for user attributes. Direct modifications in Azure AD for synced attributes will be overwritten on the next sync cycle.
+
+5. **Writeback Scenarios**: Some attributes can be configured for **writeback** (cloud to on-premises), but this requires specific configuration and is limited to certain attributes like password writeback.
 
 ---
 
