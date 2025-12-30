@@ -450,6 +450,183 @@ This persistent connection is one of the fundamental differences between Azure B
 
 ---
 
+### Question 3: ARM Template Copy Loop for Resource Group Creation
+
+**Scenario:**
+You purchase a new Azure subscription. You create an Azure Resource Manager (ARM) template named `deploy.json` as shown below:
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "obj1": {
+      "type": "object",
+      "defaultValue": {
+        "propA": "one",
+        "propB": "two",
+        "propC": "three",
+        "propD": {
+          "propD-1": "sub",
+          "propD-2": "sub"
+        }
+      }
+    }
+  },
+  "variables": {
+    "par1": {
+      "type": "string",
+      "allowedValues": [
+        "centralus",
+        "eastus",
+        "westus"
+      ],
+      "defaultValue": "eastus"
+    },
+    "var1": [
+      "westus",
+      "centraus",
+      "eastus"
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2018-05-01",
+      "location": "eastus",
+      "name": "[concat('RG', copyIndex())]",
+      "copy": {
+        "name": "copy",
+        "count": 2
+      }
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2018-05-01",
+      "location": "[last(variables('var1'))]",
+      "name": "[concat('ResGrp', '8')]"
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2018-05-01",
+      "location": "[parameters('par1')]",
+      "name": "[concat('RGroup', length(parameters('obj1')))]"
+    }
+  ],
+  "outputs": {}
+}
+```
+
+You connect to the subscription and run the following command:
+
+```powershell
+New-AzDeployment –Location westus –TemplateFile "deploy.json"
+```
+
+**For each of the following statements, select Yes if the statement is true. Otherwise, select No.**
+
+| Statement | Answer |
+|-----------|--------|
+| Three resource groups are created when you run the script. | ❌ No |
+| A resource group named RGroup5 is created. | ❌ No |
+| All the resource groups are created in the East US Azure region. | ✅ Yes |
+
+#### Explanation
+
+**Statement 1: "Three resource groups are created when you run the script." - No**
+
+The template actually creates **4 resource groups**, not 3:
+
+1. **First resource definition** (with copy loop):
+   - Uses `copy` with `count: 2`
+   - Creates 2 resource groups: `RG0` and `RG1`
+   - Location: `eastus`
+
+2. **Second resource definition**:
+   - Creates 1 resource group: `ResGrp8`
+   - Location: `[last(variables('var1'))]` = `eastus` (last element of ["westus", "centraus", "eastus"])
+
+3. **Third resource definition**:
+   - Creates 1 resource group: `RGroup4` (because `length(parameters('obj1'))` = 4 properties: propA, propB, propC, propD)
+   - Location: `[parameters('par1')]` = `eastus` (default value)
+
+**Total: 2 + 1 + 1 = 4 resource groups**
+
+**Key Concept:** When a resource uses the `copy` property, it creates multiple instances based on the `count` value. The `copyIndex()` function starts at 0 by default.
+
+---
+
+**Statement 2: "A resource group named RGroup5 is created." - No**
+
+No resource group named `RGroup5` is created. Here's what actually gets created:
+
+- `RG0` (from copy loop, index 0)
+- `RG1` (from copy loop, index 1)
+- `ResGrp8` (second resource)
+- `RGroup4` (third resource - calculated as `length(parameters('obj1'))`)
+
+The third resource group name is determined by:
+```json
+"name": "[concat('RGroup', length(parameters('obj1')))]"
+```
+
+The `obj1` parameter has 4 properties (propA, propB, propC, propD), so:
+- `length(parameters('obj1'))` = 4
+- Result: `RGroup4`
+
+**RGroup5 does not exist** based on the template conditions.
+
+---
+
+**Statement 3: "All the resource groups are created in the East US Azure region." - Yes**
+
+All 4 resource groups are created in the **East US** region:
+
+1. **First resource (RG0, RG1)**:
+   - `"location": "eastus"` - ✅ Hardcoded as "eastus"
+
+2. **Second resource (ResGrp8)**:
+   - `"location": "[last(variables('var1'))]"`
+   - `variables('var1')` = `["westus", "centraus", "eastus"]`
+   - `last()` function returns the last element: **"eastus"** ✅
+
+3. **Third resource (RGroup4)**:
+   - `"location": "[parameters('par1')]"`
+   - `par1` parameter defaults to **"eastus"** ✅
+   - Note: The template shows `par1` in the `variables` section, but it should be in `parameters`. Assuming it's a parameter with default value "eastus".
+
+**All locations resolve to "eastus"**, making this statement true.
+
+---
+
+#### Key Takeaways
+
+1. **Copy Loop Mechanics**:
+   - The `copy` property with `count: 2` creates 2 instances
+   - `copyIndex()` starts at 0 by default
+   - Names become `RG0` and `RG1`
+
+2. **Array Functions**:
+   - `last(array)` returns the last element
+   - `length(object)` returns the number of properties
+
+3. **Resource Naming**:
+   - Use `concat()` to build dynamic names
+   - `copyIndex()` provides the iteration number for loops
+
+4. **Location Resolution**:
+   - Can be hardcoded strings
+   - Can reference parameters with `[parameters('name')]`
+   - Can reference variables with `[variables('name')]`
+   - Can use functions like `last()` to extract values
+
+5. **Common Mistakes**:
+   - Forgetting that `copyIndex()` starts at 0
+   - Miscounting total resources when copy loops are involved
+   - Not evaluating expressions and functions to their actual values
+
+---
+
 ## ARM Templates vs Azure Blueprints
 
 ### Key Difference: Connection to Deployed Resources
