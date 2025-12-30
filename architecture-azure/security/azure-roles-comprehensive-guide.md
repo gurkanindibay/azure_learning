@@ -310,6 +310,113 @@ New-MgGroup -DisplayName "User Administrators Group" `
 - It doesn't specify creating a role-assignable group or assigning a role to that group
 - Therefore, this option is incorrect in the context of the question
 
+#### Role-Assignable Groups and Nested Group Limitations
+
+**Critical Limitation: Role-assignable groups CANNOT contain other groups as members.**
+
+This is a fundamental security restriction that prevents privilege escalation through nested group membership.
+
+**What Are Role-Assignable Groups?**
+
+Role-assignable groups are special groups that can be assigned Azure AD administrative roles or Azure RBAC roles. When you enable "Azure AD roles can be assigned to the group" = Yes, the group becomes role-assignable.
+
+**Key Characteristics:**
+
+| Feature | Role-Assignable Group | Regular Security Group |
+|---------|----------------------|------------------------|
+| **Can be assigned Azure AD roles** | ✅ Yes | ❌ No |
+| **Can be assigned Azure RBAC roles** | ✅ Yes | ✅ Yes |
+| **Can contain users** | ✅ Yes | ✅ Yes |
+| **Can contain other groups (nesting)** | ❌ **NO** | ✅ Yes |
+| **Can be nested in other groups** | ❌ **NO** | ✅ Yes |
+| **Requires Premium License** | ✅ Yes (P1 or P2) | ❌ No |
+| **Can change after creation** | ❌ No (immutable) | ✅ Yes |
+
+**Security Rationale:**
+
+The prohibition on nesting prevents scenarios like:
+```
+❌ BLOCKED SCENARIO:
+Group1 (Role-Assignable, has Owner role for RG1)
+└── Group2 (contains User2) ← CANNOT add Group2 to Group1!
+    └── User2 would inherit Owner role → Security risk
+```
+
+**Exam Scenario: Role Assignment with Role-Assignable Groups**
+
+**Scenario:**
+- User1 → Member of Group1
+- User2 → Member of Group2  
+- User3 → Member of Group3
+- All groups have "Azure AD roles can be assigned to the group" = **Yes**
+- RG1 has role assignments: Group1 = Owner
+
+**Questions:**
+1. Can you assign User2 the Owner role for RG1 by adding Group2 as a member of Group1? **NO**
+2. Can you assign User3 the Owner role for RG1 by adding Group3 as a member of Group1? **NO**
+3. Can you assign User3 the Owner role for RG1 by assigning the Owner role to Group3? **YES**
+
+**Explanation:**
+
+**Statement 1 & 2: NO** ❌
+```
+❌ Adding groups as members of role-assignable groups is NOT supported
+
+Group1 (Role-Assignable = Yes, Owner for RG1)
+├── ❌ CANNOT add Group2 as member
+└── ❌ CANNOT add Group3 as member
+
+Why? Security restriction: Role-assignable groups cannot have other groups as members
+```
+
+**Statement 3: YES** ✅
+```
+✅ Directly assigning Azure RBAC role to Group3 works
+
+Resource Group RG1
+├── Role Assignment 1: Group1 → Owner (existing)
+└── Role Assignment 2: Group3 → Owner (new assignment)
+    └── User3 inherits Owner role through Group3 membership
+
+Why? This is a direct role assignment, not nested group membership
+```
+
+**Key Takeaways:**
+
+1. 🔑 **Role-assignable groups CANNOT contain other groups** - No nesting allowed
+2. 🔑 **Role-assignable groups CANNOT be nested in other groups** - Works both ways
+3. 🔑 **Direct role assignment to groups always works** - Regardless of role-assignable status
+4. 🔑 **Users inherit roles from their direct group memberships** - Not from nested groups (for role-assignable groups)
+
+**Valid Pattern:**
+```bash
+# ✅ CORRECT: Assign Owner role directly to Group3
+az role assignment create \
+  --role "Owner" \
+  --assignee-object-id <Group3-object-id> \
+  --scope "/subscriptions/<sub-id>/resourceGroups/RG1"
+
+# User3 now has Owner role through Group3 membership
+```
+
+**Invalid Pattern:**
+```bash
+# ❌ INCORRECT: Try to add Group3 to Group1
+# This will FAIL because Group1 is role-assignable
+az ad group member add \
+  --group Group1 \
+  --member-id <Group3-object-id>
+
+# Error: Adding groups as members of a role-assignable group is not supported
+```
+
+**Exam Recognition Pattern:**
+
+When you see:
+- "Azure AD roles can be assigned to the group" = **Yes**
+- Questions about "adding Group X as a member of Group Y"
+- Think: **CANNOT add groups to role-assignable groups**
+
 **3. Licenses vs Roles**
 ```
 Licenses
