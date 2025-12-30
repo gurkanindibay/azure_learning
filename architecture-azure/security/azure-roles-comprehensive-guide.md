@@ -652,7 +652,154 @@ When planning group-based licensing deployments:
 - Avoid **mail-enabled security groups** for licensing purposes
 - Ensure Microsoft 365 groups have security enabled if they will be used for license assignment
 
-**5. License Assignment Options**
+**5. Microsoft Entra ID Tier Limitations for License Assignment**
+
+Not all Microsoft Entra ID (formerly Azure AD) tiers support group-based licensing. Understanding these limitations is critical for planning license deployments and exam scenarios.
+
+**License Assignment Capabilities by Entra ID Tier:**
+
+| Entra ID Tier | Individual User License Assignment | Group-Based License Assignment |
+|---------------|-----------------------------------|-------------------------------|
+| **Free** | ✅ Yes | ❌ No |
+| **Premium P1** | ✅ Yes | ✅ Yes |
+| **Premium P2** | ✅ Yes | ✅ Yes |
+
+**Key Rules:**
+
+1. **Microsoft Entra ID Free** - Supports ONLY individual user-based license assignment
+   - You must assign licenses to each user individually
+   - Cannot assign licenses to groups (Security Groups or Microsoft 365 Groups)
+   - Group-based licensing feature is not available
+
+2. **Microsoft Entra ID Premium P1 or P2** - Supports both methods
+   - Individual user-based license assignment
+   - Group-based license assignment (recommended for scale)
+   - Automated license management through group membership
+
+**Practice Question: Microsoft Fabric License Assignment in Free Tier**
+
+#### Scenario
+
+You have a Microsoft Entra tenant configured with the following settings:
+
+**Tenant Information:**
+- Name: Default Directory
+- Tenant ID: c4d2baba-3de9-4dbe-abdb-2892387a97dd
+- Primary domain: sk230128outlook.onmicrosoft.com
+- License: **Microsoft Entra ID Free**
+
+The tenant contains the following identities:
+
+| Name | Type |
+|------|------|
+| User1 | User account |
+| Group1 | Security group |
+| Group2 | Microsoft 365 group |
+
+You purchase a **Microsoft Fabric license**.
+
+**Question:** To which identities can you assign the license?
+
+#### Options Analysis
+
+**❌ Option A: User1 and Group1 only**
+
+**Why this is incorrect:**
+- While User1 can receive the license (individual assignment is supported in Free tier)
+- Group1 **cannot** receive license assignment in Microsoft Entra ID Free tier
+- Group-based licensing requires Premium P1 or P2 license
+
+**❌ Option B: User1 and Group2 only**
+
+**Why this is incorrect:**
+- While User1 can receive the license (individual assignment is supported in Free tier)
+- Group2 **cannot** receive license assignment in Microsoft Entra ID Free tier
+- Group-based licensing requires Premium P1 or P2 license
+- The type of group (Security vs Microsoft 365) doesn't matter - Free tier does not support any group-based licensing
+
+**✅ Option C: User1 only (CORRECT ANSWER)**
+
+**Why this is CORRECT:**
+- The Entra tenant is in **FREE** mode (no Premium P1 or P2 assigned)
+- Without Premium licensing, **all license assignments must be done at the user level ONLY**
+- You can only assign the Microsoft Fabric license to **User1** (individual user account)
+- **Group1** and **Group2** cannot receive license assignments because:
+  - Group-based licensing is a Premium feature
+  - Requires Azure AD Premium P1 or P2 license to be enabled
+- When you have a Premium license, then you are allowed to assign licenses to groups
+
+**❌ Option D: User1, Group1, and Group2**
+
+**Why this is incorrect:**
+- This would only be correct if the tenant had **Azure AD Premium P1 or P2** licenses
+- With Free tier, group-based licensing is not available
+- Only individual user assignment is supported
+
+#### Visual Comparison
+
+```mermaid
+graph TD
+    subgraph "Microsoft Entra ID Free"
+        A[Microsoft Fabric License]
+        A -->|✅ Can Assign| B[User1]
+        A -->|❌ Cannot Assign| C[Group1<br/>Security Group]
+        A -->|❌ Cannot Assign| D[Group2<br/>Microsoft 365 Group]
+    end
+    
+    subgraph "Microsoft Entra ID Premium P1/P2"
+        E[Microsoft Fabric License]
+        E -->|✅ Can Assign| F[User1]
+        E -->|✅ Can Assign| G[Group1<br/>Security Group]
+        E -->|✅ Can Assign| H[Group2<br/>Microsoft 365 Group]
+    end
+    
+    style A fill:#FFD700
+    style B fill:#90EE90
+    style C fill:#FF6B6B
+    style D fill:#FF6B6B
+    style E fill:#FFD700
+    style F fill:#90EE90
+    style G fill:#90EE90
+    style H fill:#90EE90
+```
+
+#### Key Takeaways
+
+**Critical Exam Pattern Recognition:**
+
+When you see questions about license assignment:
+1. **Check the Entra ID tier first** - Is it Free, P1, or P2?
+2. **If FREE tier** → Only individual user assignment is possible
+3. **If Premium P1/P2** → Both individual and group-based assignment are possible
+
+**License Assignment Decision Tree:**
+
+```
+Do you have Azure AD Premium P1 or P2?
+├── ❌ No (Free tier)
+│   └── You can ONLY assign licenses to individual users
+│       └── Example: User1 ✅, Group1 ❌, Group2 ❌
+│
+└── ✅ Yes (Premium P1/P2)
+    └── You can assign licenses to:
+        ├── Individual users (User1 ✅)
+        └── Groups (Group1 ✅, Group2 ✅)
+            └── Must be security-enabled
+            └── Cannot be mail-enabled security groups
+```
+
+**Real-World Implications:**
+
+- **Small organizations** with Free tier must manage licenses individually
+- **Large organizations** should upgrade to Premium P1/P2 to enable group-based licensing automation
+- **Cost-benefit analysis**: Premium licensing investment vs. manual license management overhead
+
+**Common Mistake:**
+
+❌ Assuming that being able to assign licenses to groups depends only on the **group type**
+✅ Understanding that it also depends on the **Entra ID tier** of your tenant
+
+**6. License Assignment Options**
 ```
 When assigning a license, you can control:
 ├── Which service plans to enable/disable
