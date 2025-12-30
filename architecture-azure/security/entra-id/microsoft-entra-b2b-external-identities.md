@@ -555,6 +555,149 @@ What should you implement?
 
 ---
 
+## Bulk Operations for Guest Users
+
+When you need to invite multiple external users at scale, Microsoft Entra ID provides bulk operations that streamline the process.
+
+### Bulk Invite vs Bulk Create Users
+
+It's critical to understand the difference between these two operations:
+
+| Operation | Purpose | User Type | Use Case |
+|-----------|---------|-----------|----------|
+| **Bulk create users** | Create new internal users in the tenant | Member (UserType = Member) | Onboarding new employees |
+| **Bulk invite users** | Invite external users as guests | Guest (UserType = Guest) | Partner collaboration, B2B scenarios |
+
+### Common Exam Scenario: Bulk Guest Invitation
+
+**Question:**
+
+You have an Azure Active Directory (Azure AD) tenant named `contoso.com`.
+
+You have a CSV file that contains the names and email addresses of 500 external users.
+
+You need to create a guest user account in `contoso.com` for each of the 500 external users.
+
+Solution: From Azure AD in the Azure portal, you use the **Bulk create user** operation.
+
+**Does this meet the goal?**
+
+❌ **NO** - This is incorrect.
+
+**Why?**
+
+- **Bulk create users** is designed for creating **new Azure AD member users** (internal users)
+- For guest users (external users), you must use **Bulk invite users** instead
+- Using "Bulk create users" would create member accounts, not guest accounts
+
+**✅ Correct Solution:**
+
+Use **Bulk invite users** operation:
+
+1. Navigate to **Microsoft Entra ID** → **Users** → **Bulk operations** → **Bulk invite**
+2. Download the CSV template
+3. Prepare a comma-separated value (.csv) file with:
+   - User information (name, email address)
+   - Invitation preferences
+   - Redirect URL
+   - Personal message (optional)
+4. Upload the .csv file to Azure AD
+5. Verify the users were added to the directory as guests
+
+### Bulk Invite Process Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Bulk Invite Guest Users Process                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Step 1: Prepare CSV File                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Email to invite,Redirection URL,Send invite message              │    │
+│  │ alice@partner.com,https://myapps.microsoft.com,TRUE              │    │
+│  │ bob@vendor.com,https://myapps.microsoft.com,TRUE                 │    │
+│  │ carol@external.com,https://myapps.microsoft.com,FALSE            │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  Step 2: Upload to Azure Portal                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Entra ID → Users → Bulk operations → Bulk invite                 │    │
+│  │ • Upload CSV file                                                 │    │
+│  │ • Validate entries                                                │    │
+│  │ • Submit bulk operation                                           │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  Step 3: Azure AD Processing                                            │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ • Creates guest user objects (UserType = Guest)                   │    │
+│  │ • Sends invitation emails (if configured)                         │    │
+│  │ • Sets redemption URL                                             │    │
+│  │ • Generates invitation status report                              │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  Step 4: Guest User Redemption                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ • External users receive invitation emails                        │    │
+│  │ • Click invitation link                                           │    │
+│  │ • Consent to permissions                                          │    │
+│  │ • Can now access assigned resources                               │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Bulk Operations Comparison Table
+
+| Feature | Bulk Create Users | Bulk Invite Users |
+|---------|------------------|-------------------|
+| **Target Users** | Internal users (employees) | External users (guests/partners) |
+| **UserType Created** | Member | Guest |
+| **Authentication** | Managed by inviting tenant | Federated to home tenant |
+| **Required Info** | Username, display name, password | Email address, redirect URL |
+| **Invitation Email** | Not applicable | Optional |
+| **Use Case** | Onboarding new employees | B2B collaboration |
+| **Portal Location** | Entra ID → Users → Bulk operations → Bulk create | Entra ID → Users → Bulk operations → Bulk invite |
+
+### CSV File Requirements
+
+**For Bulk Invite (Guest Users):**
+
+| Field | Required | Description | Example |
+|-------|----------|-------------|---------|
+| `Email to invite` | ✅ Yes | Email address of external user | `alice@partner.com` |
+| `Redirection url` | ✅ Yes | Where to send user after redemption | `https://myapps.microsoft.com` |
+| `Send invite message` | ❌ No | Whether to send invitation email | `TRUE` or `FALSE` |
+| `Personal message` | ❌ No | Custom message in invitation | `Welcome to our project!` |
+
+**For Bulk Create (Member Users):**
+
+| Field | Required | Description | Example |
+|-------|----------|-------------|---------|
+| `User name` | ✅ Yes | User principal name | `alice@contoso.com` |
+| `Display name` | ✅ Yes | Full name | `Alice Smith` |
+| `Initial password` | ✅ Yes | Temporary password | `P@ssw0rd123!` |
+| `Job title` | ❌ No | Job title | `Developer` |
+
+### Key Exam Points
+
+1. **Bulk Create Users** ≠ **Bulk Invite Users**
+   - Different operations for different user types
+   - Using the wrong operation will fail to meet requirements
+
+2. **Guest users require invitation:**
+   - Cannot be created as members using bulk create
+   - Must use bulk invite to create guest accounts
+
+3. **CSV file structure matters:**
+   - Template provided by Azure portal
+   - Different fields for create vs invite operations
+
+4. **Validation before processing:**
+   - Azure validates CSV before bulk operation
+   - Errors are reported for correction
+
+---
+
 ## Best Practices
 
 ### Invitation and Onboarding
