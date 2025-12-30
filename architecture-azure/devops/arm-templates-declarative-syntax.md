@@ -34,6 +34,12 @@
   - [Policy Definitions](#policy-definitions)
   - [What Blueprints Can Include](#what-blueprints-can-include)
   - [When to Use Each](#when-to-use-each)
+- [Securing Sensitive Data in ARM Templates](#securing-sensitive-data-in-arm-templates)
+  - [Question: Storing Administrative Passwords Securely](#question-storing-administrative-passwords-securely)
+  - [Solution Components](#solution-components)
+  - [Why Other Options Are Incorrect](#why-other-options-are-incorrect)
+  - [Implementation Example](#implementation-example)
+  - [Key Takeaway](#key-takeaway)
 - [Related Technologies](#related-technologies)
 - [References](#references)
 
@@ -493,6 +499,157 @@ Need version-controlled, repeatable governance?
 - [How Blueprints are Different from Azure Policy](https://learn.microsoft.com/en-us/azure/governance/blueprints/overview#how-its-different-from-azure-policy)
 - [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
 - [ARM Templates Overview](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview)
+
+---
+
+## Securing Sensitive Data in ARM Templates
+
+### Question: Storing Administrative Passwords Securely
+
+**Scenario:**
+You have downloaded an Azure Resource Manager (ARM) template to deploy numerous virtual machines (VMs). The ARM template is based on a current VM, but must be adapted to reference an administrative password. You need to make sure that the password cannot be stored in plain text.
+
+**Question:** Which TWO components should you create to achieve this goal?
+
+**Correct Answers:**
+1. ✅ **An Azure Key Vault**
+2. ✅ **An Access Policy**
+
+### Solution Components
+
+#### 1. Azure Key Vault
+
+Azure Key Vault provides secure storage and management of sensitive information such as passwords, cryptographic keys, and certificates.
+
+**Benefits:**
+- Passwords are **never stored in plain text**
+- Provides **encryption at rest** and **in transit**
+- Centralized management of secrets
+- Integration with ARM templates through parameter references
+- Audit logging of secret access
+
+**Usage in ARM Templates:**
+```json
+"parameters": {
+  "adminPassword": {
+    "type": "securestring",
+    "metadata": {
+      "description": "Admin password from Key Vault"
+    }
+  }
+}
+```
+
+#### 2. Access Policy
+
+An Access Policy controls who can access secrets stored in the Key Vault.
+
+**Purpose:**
+- Specify **which users, applications, and services** can access Key Vault secrets
+- Define **permission levels** (Get, List, Set, Delete secrets)
+- Ensure the administrative password is **only accessible to authorized entities**
+- Control **data plane operations** on Key Vault objects
+
+**Key Permissions:**
+- **Get**: Retrieve secret values
+- **List**: List secrets in the vault
+- **Set**: Create or update secrets
+- **Delete**: Remove secrets
+
+### Why Other Options Are Incorrect
+
+| Option | Why It's Incorrect |
+|--------|-------------------|
+| **Entra ID Identity Protection** | Identity Protection is designed for detecting and responding to identity-based risks (suspicious sign-ins, leaked credentials). It does not provide secure storage for passwords in ARM templates. |
+| **Azure Storage Account** | Storage Accounts are for data storage (blobs, files, queues, tables) but are **not designed for secure secret management**. Passwords stored in Storage Accounts would not have the same security controls as Key Vault. |
+| **Azure Policy** | Azure Policies enforce compliance rules and governance across Azure resources. They **cannot securely store or manage sensitive data** like passwords. |
+| **Backup Policy** | Backup Policies define backup schedules and retention for Azure resources. They are **unrelated to secret management** and do not provide secure password storage. |
+
+### Implementation Example
+
+#### Step 1: Create Key Vault and Store Secret
+
+```bash
+# Create Key Vault
+az keyvault create \
+  --name myKeyVault \
+  --resource-group myResourceGroup \
+  --location eastus
+
+# Store admin password as secret
+az keyvault secret set \
+  --vault-name myKeyVault \
+  --name vmAdminPassword \
+  --value 'SecurePassword123!'
+```
+
+#### Step 2: Create Access Policy
+
+```bash
+# Grant access to a service principal
+az keyvault set-policy \
+  --name myKeyVault \
+  --spn <service-principal-id> \
+  --secret-permissions get list
+
+# Enable for template deployment
+az keyvault update \
+  --name myKeyVault \
+  --resource-group myResourceGroup \
+  --enabled-for-template-deployment true
+```
+
+#### Step 3: Reference in ARM Template Parameters
+
+**parameters.json:**
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "vmAdminPassword"
+      }
+    }
+  }
+}
+```
+
+**template.json:**
+```json
+{
+  "type": "Microsoft.Compute/virtualMachines",
+  "apiVersion": "2023-03-01",
+  "name": "myVM",
+  "properties": {
+    "osProfile": {
+      "computerName": "myVM",
+      "adminUsername": "azureuser",
+      "adminPassword": "[parameters('adminPassword')]"
+    }
+  }
+}
+```
+
+### Key Takeaway
+
+To securely store administrative passwords in ARM templates:
+
+1. **Create an Azure Key Vault** to securely store the password as a secret
+2. **Create an Access Policy** to control who can retrieve the secret
+3. **Enable the Key Vault for template deployment** (`enabled-for-template-deployment`)
+4. **Reference the secret** in your ARM template parameters using Key Vault reference syntax
+5. **Never store passwords in plain text** in template files or parameter files
+
+This approach ensures:
+- ✅ Passwords are encrypted and secured
+- ✅ Access is controlled and auditable
+- ✅ Secrets can be rotated without changing templates
+- ✅ Compliance with security best practices
 
 ---
 
