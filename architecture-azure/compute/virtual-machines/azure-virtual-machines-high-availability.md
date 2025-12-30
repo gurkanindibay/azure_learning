@@ -5,6 +5,7 @@
 - [Overview](#overview)
 - [Availability Zones](#availability-zones)
 - [Availability Sets](#availability-sets)
+  - [Resizing VMs in Availability Sets](#resizing-vms-in-availability-sets)
 - [Proximity Placement Groups](#proximity-placement-groups)
 - [Azure Dedicated Hosts](#azure-dedicated-hosts)
 - [Virtual Machine Scale Sets (VMSS)](#virtual-machine-scale-sets-vmss)
@@ -133,6 +134,42 @@ Update Domain 4                       VM9               VM10
 ❌ **Must be configured at VM creation** - Cannot add existing VMs to an availability set  
 ❌ **Same region required** - All VMs must be in the same region  
 ❌ **No auto-scaling** - Does not provide automatic scaling (use VMSS instead)  
+
+### Resizing VMs in Availability Sets
+
+When attempting to resize a VM that is part of an availability set, you may encounter **allocation failure** errors. This occurs because Azure must find available capacity that can accommodate the new VM size while maintaining the availability set's fault domain and update domain distribution requirements.
+
+#### Handling Allocation Failures During Resize
+
+**Problem**: Resizing a VM in an availability set returns an allocation failure message.
+
+**Solution**: **Stop all VMs in the availability set** before attempting the resize operation.
+
+#### Why This Works
+
+- **Releases Hardware Constraints**: Stopping all VMs frees up the hardware cluster, allowing Azure to reallocate resources
+- **Flexible Placement**: Azure can place the resized VM on any available hardware within the availability set's constraints
+- **Ensures Successful Resize**: Provides the most flexibility for Azure to find suitable capacity
+
+#### Common Misconceptions
+
+❌ **Stopping one VM** - May not resolve the allocation failure; other running VMs still constrain available hardware  
+❌ **Stopping two VMs** - Still may be insufficient; all VMs must be stopped for guaranteed success  
+❌ **Removing VM from availability set** - Unnecessary and breaks high availability configuration; stopping all VMs is the recommended approach  
+
+#### Recommended Process
+
+1. **Stop all VMs** in the availability set
+2. **Resize the target VM** to the desired size
+3. **Start the resized VM** to verify successful resize
+4. **Start the remaining VMs** in the availability set
+
+#### Important Considerations
+
+⚠️ **Downtime**: Stopping all VMs means temporary unavailability of your application  
+⚠️ **Plan Accordingly**: Schedule resize operations during maintenance windows  
+⚠️ **Test First**: If possible, test the resize in a non-production environment  
+⚠️ **Alternative**: Consider using Virtual Machine Scale Sets (VMSS) for more flexible scaling operations  
 
 ### Availability Sets vs. Availability Zones
 
