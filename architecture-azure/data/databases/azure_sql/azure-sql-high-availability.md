@@ -15,6 +15,7 @@
   - [Auto-Failover Groups](#auto-failover-groups)
 - [Azure SQL Managed Instance HA](#azure-sql-managed-instance-ha)
 - [SQL Server on Azure VMs HA](#sql-server-on-azure-vms-ha)
+  - [Azure Internal Load Balancer Configuration for AG Listener](#azure-internal-load-balancer-configuration-for-ag-listener)
 - [SLA Comparison](#sla-comparison)
 - [Compute and Storage Scaling](#compute-and-storage-scaling)
 - [RPO and RTO](#rpo-and-rto)
@@ -500,6 +501,151 @@ Azure SQL provides comprehensive high availability options across its product fa
 | **VNN (Virtual Network Name)** | Traditional listener with ILB | Required |
 | **DNN (Distributed Network Name)** | SQL 2019+ direct connection | Not required |
 
+### Azure Internal Load Balancer Configuration for AG Listener
+
+When using **Virtual Network Name (VNN)** for Always On Availability Group listeners, you must configure an **Azure Internal Load Balancer (ILB)** to enable proper failover functionality.
+
+#### What is Floating IP?
+
+**Floating IP** (also known as **Direct Server Return - DSR**) is a load balancing configuration where the backend server responds directly to the client using the load balancer's frontend IP address as the source IP, rather than using its own IP address.
+
+**Technical Explanation:**
+
+| Mode | Source IP in Response | Return Path |
+|------|----------------------|-------------|
+| **Floating IP Disabled** | Backend VM's IP (e.g., 10.0.1.5) | Response goes through load balancer |
+| **Floating IP Enabled** | Frontend IP (e.g., 10.0.1.100) | Response goes directly to client |
+
+**How Floating IP Works:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              Floating IP (Direct Server Return)                  │
+│                                                                  │
+│   WITHOUT Floating IP (Normal Mode):                             │
+│   ┌────────┐    ┌─────────┐    ┌──────────┐                    │
+│   │ Client │───►│   ILB   │───►│ Backend  │                    │
+│   │        │    │         │    │   VM     │                    │
+│   │        │◄───│         │◄───│          │                    │
+│   └────────┘    └─────────┘    └──────────┘                    │
+│   Response uses VM's IP (10.0.1.5)                              │
+│                                                                  │
+│   WITH Floating IP (DSR Mode):                                  │
+│   ┌────────┐    ┌─────────┐    ┌──────────┐                    │
+│   │ Client │───►│   ILB   │───►│ Backend  │                    │
+│   │        │    │         │    │   VM     │                    │
+│   │        │◄───┼─────────┼────│          │                    │
+│   └────────┘    └─────────┘    └──────────┘                    │
+│   Response uses Frontend IP (10.0.1.100)                        │
+│   VM bypasses load balancer on return path                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Characteristics:**
+
+- **IP Transparency**: Backend server sees and uses the load balancer's frontend IP
+- **Network Configuration**: Backend VM must have the frontend IP configured on a loopback adapter or network interface
+- **Performance**: Reduces load on the load balancer since return traffic bypasses it
+- **Use Cases**: Required for SQL Server AG listeners, gaming servers, and other protocols that need consistent IP addressing
+
+#### Floating IP Requirement
+
+**Critical Configuration:** Floating IP (Direct Server Return) **MUST be enabled** on the load balancer.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│      Azure Internal Load Balancer for AG Listener               │
+│                                                                  │
+│   ┌───────────────────────────────────────────────────────────┐ │
+│   │        Azure Internal Load Balancer (ILB)                 │ │
+│   │        • Floating IP: ENABLED ✅ (Required)               │ │
+│   │        • Health Probe: Port 59999 (custom)                │ │
+│   │        • Backend Pool: All AG replica VMs                 │ │
+│   └───────────────────────────────────────────────────────────┘ │
+│                            │                                     │
+│              ┌─────────────┴─────────────┐                      │
+│              │                           │                      │
+│              ▼                           ▼                      │
+│   ┌──────────────────┐        ┌──────────────────┐             │
+│   │  SQL Server VM 1 │        │  SQL Server VM 2 │             │
+│   │  (Primary)       │        │  (Secondary)     │             │
+│   │  • Probe ✅      │        │  • Probe ❌      │             │
+│   │  Receives traffic│        │  Standby         │             │
+│   └──────────────────┘        └──────────────────┘             │
+│                                                                  │
+│   Client connects to Listener IP (ILB Frontend)                 │
+│   ILB routes to primary replica based on health probe           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Why Floating IP is Required
+
+| Reason | Explanation |
+|--------|-------------|
+| **Consistent Endpoint** | Provides a stable IP address for the AG listener that doesn't change during failover |
+| **Azure VNet Limitation** | Azure Virtual Networks do not support broadcasting, unlike on-premises networks |
+| **Failover Handling** | ILB + Floating IP work together to identify the primary replica and direct traffic accordingly |
+| **Probe-Based Routing** | Health probe determines which node is primary; only the primary responds to the probe |
+| **No Client Reconfiguration** | Applications continue using the same listener IP; failover is transparent |
+
+#### Configuration Requirements
+
+**Load Balancer Settings:**
+
+| Setting | Value | Required |
+|---------|-------|----------|
+| **Floating IP (Direct Server Return)** | Enabled | ✅ Yes |
+| **Load Balancing Rule** | TCP port 1433 (or custom) | ✅ Yes |
+| **Health Probe** | Custom port (e.g., 59999) | ✅ Yes |
+| **Session Persistence** | None (or Client IP) | Optional |
+| **Backend Pool** | All AG replica VMs | ✅ Yes |
+
+**Health Probe Behavior:**
+
+- Only the **primary replica** responds to health probe
+- Secondary replicas fail the probe (by design)
+- ILB routes traffic only to the VM that passes the health probe
+- During failover, new primary starts responding; old primary stops
+
+#### Step-by-Step Configuration
+
+1. **Create Internal Load Balancer**
+   - Type: Internal
+   - SKU: Standard (recommended)
+   - Frontend IP: Within AG subnet
+
+2. **Configure Backend Pool**
+   - Add all SQL Server VMs participating in the AG
+
+3. **Create Health Probe**
+   - Protocol: TCP
+   - Port: 59999 (or custom port, configure in SQL listener)
+   - Interval: 5 seconds
+   - Unhealthy threshold: 2
+
+4. **Create Load Balancing Rule**
+   - Frontend IP: Listener IP address
+   - Protocol: TCP
+   - Port: 1433 (SQL Server port)
+   - Backend port: 1433
+   - **Floating IP: Enabled** ✅
+
+5. **Configure AG Listener in SQL Server**
+   ```sql
+   -- Configure listener to respond to health probe
+   -- The listener must respond on the probe port
+   ```
+
+#### Common Mistakes
+
+| Mistake | Impact | Solution |
+|---------|--------|----------|
+| **Floating IP disabled** | Failover doesn't work; connections fail | Enable Floating IP on load balancing rule |
+| **Wrong health probe port** | ILB cannot determine primary | Ensure probe port matches AG listener configuration |
+| **Missing backend pool members** | Some replicas unreachable | Add all AG VMs to backend pool |
+| **Using Public Load Balancer** | Security risk; unnecessary | Use Internal Load Balancer for AG listeners |
+
 ---
 
 ## SLA Comparison
@@ -855,6 +1001,54 @@ Auto-failover groups provide automatic failover capabilities for Azure SQL datab
 - **Manual database failover**: Does not provide automatic failover; requires human intervention which increases RTO
 
 Reference: [Azure SQL Database Failover Groups](https://learn.microsoft.com/en-us/azure/azure-sql/database/failover-group-sql-db?view=azuresql)
+
+</details>
+
+### Question 6
+**Your company has a Microsoft SQL Server Always On availability group configured on their Azure virtual machines (VMs). You need to configure an Azure internal load balancer as a listener for the availability group.**
+
+**Solution: You enable Floating IP.**
+
+**Does the solution meet the goal?**
+
+A. Yes  
+B. No
+
+<details>
+<summary>Answer</summary>
+
+**A. Yes**
+
+Enabling **Floating IP (Direct Server Return)** on the Azure Internal Load Balancer is **required** for SQL Server Always On Availability Group listeners.
+
+**Why Floating IP is critical:**
+
+1. **Consistent Endpoint**: Provides a stable IP address for the AG listener that remains constant during failover events
+
+2. **Azure VNet Limitation**: Azure Virtual Networks do not support broadcasting mechanisms like traditional on-premises networks. The Floating IP configuration compensates for this limitation
+
+3. **Failover Handling**: The combination of Floating IP and the internal load balancer's health probe mechanism enables automatic detection of which node is the primary replica
+
+4. **Traffic Routing**: The health probe determines which SQL Server VM is currently the primary replica, and the load balancer directs all application traffic to that node without requiring client reconfiguration
+
+5. **Direct Server Return**: Floating IP allows the SQL Server to respond directly using the listener's IP address rather than the VM's IP, which is essential for the AG listener functionality
+
+**Required Configuration:**
+
+```
+Azure Internal Load Balancer Settings:
+├─ Floating IP (DSR): ENABLED ✅ (Required)
+├─ Health Probe: Custom port (e.g., 59999)
+├─ Backend Pool: All AG replica VMs
+└─ Load Balancing Rule: Port 1433 (SQL)
+```
+
+**What happens without Floating IP:**
+- Failover will not function properly
+- Clients cannot connect to the listener after failover
+- Traffic routing to the primary replica fails
+
+Reference: [Configure a load balancer for an AG on Azure SQL VMs](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/availability-group-load-balancer-portal-configure)
 
 </details>
 
