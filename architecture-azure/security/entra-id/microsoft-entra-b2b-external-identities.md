@@ -604,6 +604,50 @@ Use **Bulk invite users** operation:
 4. Upload the .csv file to Azure AD
 5. Verify the users were added to the directory as guests
 
+### Practice Question: CSV File Requirements
+
+**Question:**
+
+You have an Azure Active Directory (Azure AD) tenant named `contoso.com`.
+
+You have a CSV file that contains the names and email addresses of 500 external users.
+
+You need to create a guest user account in `contoso.com` for each of the 500 external users.
+
+Solution: From Azure AD in the Azure portal, you use the **Bulk invite users** operation.
+
+**Does this meet the goal?**
+
+❌ **NO** - This is incorrect.
+
+**Why?**
+
+The question states that you have a CSV file that contains **only the names and email addresses** of 500 external users. However, the **Bulk invite users** operation requires specific fields in the CSV file:
+
+**Required Fields for Bulk Invite:**
+1. ✅ **Email to invite** - You have this (email addresses)
+2. ❌ **Redirection URL** - **MISSING** from your CSV file
+3. ❌ **Send invite message** - Not mentioned in your CSV file
+
+**Key Point:**
+
+While bulk invite users is the correct operation for creating guest accounts, it will **fail** if the CSV file doesn't contain the required fields. Simply having names and email addresses is **not sufficient**.
+
+**✅ Correct Solution:**
+
+1. Download the **Bulk invite users** CSV template from Azure AD
+2. Populate it with:
+   - Email addresses (from your existing CSV)
+   - **Redirection URL** (e.g., `https://myapps.microsoft.com`) - **Required field**
+   - Send invite message (`TRUE` or `FALSE`)
+   - Personal message (optional)
+3. Upload the properly formatted CSV file
+4. Execute the bulk invite operation
+
+**Critical Exam Tip:**
+
+⚠️ **Pay attention to CSV file contents** - Even if you choose the correct operation (Bulk invite users), the solution can still fail if the CSV file is missing required fields like **Redirection URL**.
+
 ### Bulk Invite Process Flow
 
 ```
@@ -660,6 +704,8 @@ Use **Bulk invite users** operation:
 
 ### CSV File Requirements
 
+⚠️ **Important:** All required fields must be present in the CSV file, or the bulk operation will fail.
+
 **For Bulk Invite (Guest Users):**
 
 | Field | Required | Description | Example |
@@ -668,6 +714,10 @@ Use **Bulk invite users** operation:
 | `Redirection url` | ✅ Yes | Where to send user after redemption | `https://myapps.microsoft.com` |
 | `Send invite message` | ❌ No | Whether to send invitation email | `TRUE` or `FALSE` |
 | `Personal message` | ❌ No | Custom message in invitation | `Welcome to our project!` |
+
+**Common Mistake:**
+
+Having a CSV file with only names and email addresses is **insufficient** for bulk invite operations. The **Redirection URL** field is mandatory and must be included.
 
 **For Bulk Create (Member Users):**
 
