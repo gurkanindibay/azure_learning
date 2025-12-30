@@ -505,7 +505,47 @@ Group-Based Licensing:
     └── Department or role-based licensing
 ```
 
-**4. License Assignment Options**
+**4. Group Type Requirements for License Assignment**
+
+Not all group types can be assigned licenses in Microsoft Entra ID. Understanding which groups are eligible for license assignment is critical for proper planning.
+
+**Eligible Group Types for License Assignment:**
+
+| Group Type | Security Enabled | Can Assign Licenses | Notes |
+|------------|------------------|---------------------|-------|
+| **Security Group** | ✅ Yes | ✅ Yes | Standard group for license assignment |
+| **Microsoft 365 Group** | ✅ Yes | ✅ Yes | Must be security-enabled |
+| **Mail-enabled Security Group** | ✅ Yes | ❌ No | **Cannot assign licenses** |
+| **Security-disabled Microsoft 365 Group** | ❌ No | ❌ No | **Cannot assign licenses** |
+
+**Key Rules:**
+
+1. **Security-enabled groups are required** - The group must have security enabled to receive license assignments
+2. **Mail-enabled security groups are NOT supported** - Even though they are security-enabled, Microsoft Entra ID does not allow license assignment to mail-enabled security groups
+3. **Microsoft 365 groups must be security-enabled** - Security-disabled Microsoft 365 groups cannot receive licenses
+
+**Example Scenario:**
+
+You have the following groups and need to assign Azure AD Premium P2 licenses:
+
+```
+Group1: Security Group (Security Enabled) → ✅ Can assign licenses
+Group2: Mail-enabled Security Group (Security Enabled) → ❌ Cannot assign licenses
+Group3: Microsoft 365 Group (Security Enabled) → ✅ Can assign licenses
+Group4: Microsoft 365 Group (Security Disabled) → ❌ Cannot assign licenses
+```
+
+**Answer:** You can assign licenses to **Group1 and Group3 only**.
+
+**Why This Matters:**
+
+When planning group-based licensing deployments:
+- Use regular **Security Groups** for pure license management
+- Use **Microsoft 365 Groups** when you need both licensing AND collaboration features (mailbox, SharePoint, Teams)
+- Avoid **mail-enabled security groups** for licensing purposes
+- Ensure Microsoft 365 groups have security enabled if they will be used for license assignment
+
+**5. License Assignment Options**
 ```
 When assigning a license, you can control:
 ├── Which service plans to enable/disable
