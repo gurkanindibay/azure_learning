@@ -13,6 +13,8 @@
   - [Question 6: Recovery Services Vault for Cross-Region VM Protection](#question-6-recovery-services-vault-for-cross-region-vm-protection)
   - [Question 7: Azure Backup Agent for Windows File Server Protection](#question-7-azure-backup-agent-for-windows-file-server-protection)
   - [Question 8: Deleting Resource Groups with Recovery Services Vaults](#question-8-deleting-resource-groups-with-recovery-services-vaults)
+  - [Question 9: Azure Backup Instant Restore File Recovery After Ransomware](#question-9-azure-backup-instant-restore-file-recovery-after-ransomware)
+  - [Question 10: Full VM Restore After Ransomware Infection](#question-10-full-vm-restore-after-ransomware-infection)
 - [References](#references)
 
 ---
@@ -75,6 +77,131 @@
 ✅ Long-term data retention for compliance  
 ✅ Protection against accidental deletion or corruption  
 ✅ Granular file-level or application-level restore
+
+### Azure Backup Instant Restore
+
+**Azure Backup Instant Restore** is a feature that enables fast recovery of Azure VM files and disks from backup snapshots.
+
+#### Key Features
+
+- **Snapshot-Based Recovery**: Backups are stored as snapshots for quick access
+- **Instant Restore Tier**: Snapshots retained locally for 1-5 days (default: 2 days)
+- **Fast Recovery**: Restore files within minutes instead of hours
+- **Flexible Recovery Options**: Restore to any VM within the subscription
+
+#### File-Level Recovery
+
+Azure Backup allows you to recover individual files from VM backups without restoring the entire VM:
+
+```plaintext
+File Recovery Process:
+┌────────────────────────────────────────────────────────────────┐
+│                                                                │
+│  1. Select Recovery Point                                      │
+│     └─→ Choose backup snapshot (within last 2 days for        │
+│         instant restore, or older from vault)                  │
+│                                                                │
+│  2. Download Executable Script                                 │
+│     └─→ Azure generates a script to mount backup as           │
+│         local disk on target VM                                │
+│                                                                │
+│  3. Run Script on Target VM                                    │
+│     └─→ Can be ANY VM in the subscription                     │
+│     └─→ Not limited to the original/source VM                 │
+│     └─→ Mounts backup snapshot as local drive                 │
+│                                                                │
+│  4. Browse and Copy Files                                      │
+│     └─→ Navigate mounted drive and copy needed files          │
+│                                                                │
+│  5. Unmount and Clean Up                                       │
+│     └─→ Run unmount command when done                         │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+#### Recovery Flexibility
+
+**Important:** File recovery can be performed to **any VM within the subscription**, providing maximum flexibility:
+
+| Recovery Target | Supported | Notes |
+|----------------|-----------|-------|
+| **Original VM** | ✅ | Restore files to the backed-up VM |
+| **Different VM (same VNet)** | ✅ | Restore to another VM in same virtual network |
+| **Different VM (different VNet)** | ✅ | Restore to VM in different virtual network |
+| **New VM** | ✅ | Restore to a newly created VM |
+| **Different Subscription** | ❌ | Must be within same subscription |
+
+**Key Constraints:**
+- Target VM must be in the **same Azure subscription**
+- Target VM must have network connectivity (for script download)
+- Target VM must meet OS compatibility requirements
+
+#### Use Cases
+
+✅ **Ransomware Recovery**: Recover clean files from backups after infection  
+✅ **Accidental Deletion**: Restore specific files without full VM recovery  
+✅ **Corruption Recovery**: Retrieve uncorrupted versions of files  
+✅ **Development/Testing**: Copy production files to test environments  
+✅ **Cross-VM Recovery**: Restore files to different VMs as needed
+
+#### Example: Ransomware Recovery Scenario
+
+```plaintext
+Scenario:
+┌─────────────────────────────────────────────────────────────────┐
+│  Production VM (VM1) - Infected with Ransomware                 │
+│  ├─ Encrypted files                                             │
+│  ├─ Cannot use this VM for recovery                            │
+│  └─ Daily backups available via Azure Backup                   │
+│                                                                 │
+│  Recovery Options:                                              │
+│                                                                 │
+│  Option 1: Restore to Same VM (Not Recommended)                │
+│  └─→ Risk of re-infection if malware still active              │
+│                                                                 │
+│  Option 2: Restore to Different VM ✅ (Recommended)            │
+│  └─→ Deploy clean VM (VM2)                                     │
+│      └─→ Download file recovery script from Azure Backup      │
+│          └─→ Run script on VM2 to mount VM1's backup          │
+│              └─→ Copy clean files from backup                 │
+│                  └─→ Scan and verify files are clean          │
+│                      └─→ Deploy to production                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Instant Restore Snapshot Retention
+
+Backup policies can be configured to retain instant restore snapshots:
+
+```bash
+# Configure instant restore snapshot retention (1-5 days)
+az backup policy set \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryVault \
+  --name myBackupPolicy \
+  --instant-rp-retention-range-in-days 5
+```
+
+**Retention Tiers:**
+
+```plaintext
+┌────────────────────────────────────────────────────────────────┐
+│                    Backup Storage Tiers                        │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  Instant Restore Tier (Snapshot)                               │
+│  ├─ Retention: 1-5 days (default: 2 days)                     │
+│  ├─ Location: Same region as VM (fast access)                 │
+│  └─ Use Case: Fast recovery of recent data                    │
+│                                                                │
+│  Vault Tier (Recovery Services Vault)                          │
+│  ├─ Retention: 7 days to 99 years                             │
+│  ├─ Location: Recovery Services vault                         │
+│  └─ Use Case: Long-term retention, compliance                 │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -3346,6 +3473,907 @@ Remove-AzResourceGroup -Name "RG26" -Force
 
 5. **Check all vault dependencies**
    > Before attempting vault deletion, verify there are no protected items, backup data, soft-deleted items, or registered storage accounts.
+
+---
+
+### Question 9: Azure Backup Instant Restore File Recovery After Ransomware
+
+#### Scenario
+
+Your company's Azure subscription includes Azure virtual machines (VMs) that run Windows Server 2016.
+
+One of the VMs is backed up every day using **Azure Backup Instant Restore**.
+
+When the VM becomes infected with **data encrypting ransomware**, you decide to recover the VM's files.
+
+---
+
+#### Question
+
+**Which of the following is TRUE in this scenario?**
+
+A. You can only recover the files to the infected VM  
+B. You can only recover the files to a new VM  
+C. You can recover the files to any VM within the company's subscription  
+D. You will not be able to recover the files
+
+---
+
+**Correct Answer:** **C. You can recover the files to any VM within the company's subscription**
+
+---
+
+### Detailed Explanation
+
+#### Azure Backup Instant Restore File Recovery Capabilities
+
+Azure Backup Instant Restore provides **flexible file-level recovery** that allows you to restore files from a VM backup to **any VM within the same Azure subscription**.
+
+##### Recovery Process
+
+```plaintext
+File Recovery Workflow:
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  1. Infected VM (Original)                                      │
+│     └─→ VM1 infected with ransomware                           │
+│         └─→ Files encrypted                                    │
+│             └─→ Daily backups exist in Recovery Services vault │
+│                                                                 │
+│  2. Select Recovery Point                                       │
+│     └─→ Azure Portal → Recovery Services vault                 │
+│         └─→ Select VM1's backup                                │
+│             └─→ Choose recovery point (before infection)       │
+│                 └─→ Click "File Recovery"                      │
+│                                                                 │
+│  3. Download Recovery Script                                    │
+│     └─→ Azure generates executable script                      │
+│         └─→ Script contains credentials to mount backup        │
+│                                                                 │
+│  4. Choose Target VM (Any VM in subscription) ✅               │
+│     └─→ Can be: Original VM (VM1)                             │
+│     └─→ Can be: Different existing VM (VM2, VM3, etc.)        │
+│     └─→ Can be: Newly created VM (VM-Clean)                   │
+│     └─→ Can be: VM in different VNet                          │
+│     └─→ Cannot be: VM in different subscription ❌            │
+│                                                                 │
+│  5. Run Script on Target VM                                     │
+│     └─→ Script mounts backup as local drive (e.g., E:\)       │
+│         └─→ Browse files from backup                           │
+│             └─→ Copy needed files                              │
+│                 └─→ Unmount when done                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Why Answer C is Correct ✅
+
+**"You can recover the files to any VM within the company's subscription"**
+
+Azure Backup Instant Restore provides **maximum flexibility** for file recovery:
+
+##### 1. **Not Limited to Original VM** ✅
+
+```plaintext
+Supported Recovery Targets:
+
+┌─────────────────────────────────────────────────────────────┐
+│  Same VM (VM1 - Infected)         ✅ Supported             │
+│  ├─→ Can restore to original VM                            │
+│  └─→ Not recommended for ransomware scenarios              │
+│                                                             │
+│  Different VM - Same VNet (VM2)   ✅ Supported             │
+│  ├─→ Restore to another VM in same virtual network        │
+│  └─→ Good for isolated recovery                           │
+│                                                             │
+│  Different VM - Different VNet     ✅ Supported             │
+│  ├─→ Restore to VM in different virtual network           │
+│  └─→ Maximum isolation from infected environment          │
+│                                                             │
+│  Newly Created VM                  ✅ Supported             │
+│  ├─→ Deploy fresh, clean VM                               │
+│  └─→ Best practice for ransomware recovery                │
+│                                                             │
+│  VM in Different Subscription      ❌ Not Supported        │
+│  └─→ Must be in same subscription                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+##### 2. **Ransomware Recovery Best Practice** ✅
+
+For ransomware scenarios, recovering to a **different, clean VM** is recommended:
+
+**Why recover to a different VM:**
+- ✅ Avoids risk of re-infection from residual malware
+- ✅ Provides clean environment for file verification
+- ✅ Allows antivirus scanning before production use
+- ✅ Maintains infected VM for forensic analysis
+- ✅ Prevents accidental execution of encrypted files
+
+**Recovery workflow example:**
+
+```plaintext
+Best Practice Ransomware Recovery:
+
+1. Isolate Infected VM (VM1)
+   └─→ Disconnect from network
+       └─→ Take snapshot for forensics
+
+2. Deploy Clean VM (VM-Recovery)
+   └─→ Fresh Windows Server 2016
+       └─→ Latest security updates
+           └─→ Antivirus installed
+
+3. Recover Files to Clean VM
+   └─→ Download file recovery script from Azure Backup
+       └─→ Run on VM-Recovery (not on infected VM1)
+           └─→ Mount backup as local drive
+               └─→ Copy needed files
+
+4. Scan and Verify Files
+   └─→ Run antivirus on recovered files
+       └─→ Verify file integrity
+           └─→ Test file functionality
+
+5. Deploy to Production
+   └─→ Move verified files to production environment
+       └─→ Or rename VM-Recovery to production VM
+```
+
+##### 3. **Subscription Scope** ✅
+
+The key constraint is **subscription boundary**:
+
+| Target VM Location | Can Recover Files | Notes |
+|-------------------|-------------------|-------|
+| **Same subscription, same resource group** | ✅ Yes | Simplest scenario |
+| **Same subscription, different resource group** | ✅ Yes | Full flexibility within subscription |
+| **Same subscription, different region** | ✅ Yes | Can recover across regions |
+| **Different subscription** | ❌ No | Backup is subscription-scoped |
+| **On-premises VM** | ❌ No | Azure VM backups only restore to Azure VMs |
+
+---
+
+#### Why Other Answers are Incorrect ❌
+
+##### A. "You can only recover the files to the infected VM" ❌
+
+**Incorrect** because:
+- Azure Backup file recovery is **NOT** limited to the original VM
+- You can restore to **any VM** within the subscription
+- Restricting recovery to infected VM would be dangerous for ransomware scenarios
+- Would eliminate the benefit of recovering to a clean environment
+
+**Why this would be problematic:**
+```plaintext
+If only original VM was supported:
+
+ Infected VM (VM1)
+ ├─→ Contains active ransomware malware
+ ├─→ Recovering files to this VM would:
+ │   ├─→ Risk re-encryption of recovered files ❌
+ │   ├─→ Potential malware interference ❌
+ │   └─→ Compromise recovered data ❌
+ └─→ This is NOT how Azure Backup works ✅
+```
+
+##### B. "You can only recover the files to a new VM" ❌
+
+**Incorrect** because:
+- Azure Backup does **NOT** restrict recovery to only new VMs
+- You can recover to **new VMs** (recommended) **OR** existing VMs
+- You have full flexibility to choose any VM in the subscription
+- The limitation to "new VMs only" does not exist
+
+**Actual flexibility:**
+```plaintext
+Recovery Target Options:
+
+✅ New VM (newly created)           ← Supported
+✅ Existing VM (VM2, VM3, etc.)     ← Also Supported  
+✅ Original VM (VM1)                ← Also Supported (though not recommended)
+
+The answer "only new VM" is too restrictive ❌
+```
+
+##### D. "You will not be able to recover the files" ❌
+
+**Incorrect** because:
+- Azure Backup **specifically provides** file recovery capability
+- Ransomware infection does **NOT** prevent backup recovery
+- Recovery points exist in the Recovery Services vault (protected from VM)
+- File-level recovery is a core feature of Azure Backup
+
+**How Azure Backup protects against ransomware:**
+
+```plaintext
+Backup Protection Architecture:
+
+┌─────────────────────────────────────────────────────────────┐
+│  Azure VM (VM1)                                             │
+│  ├─→ Infected with ransomware                              │
+│  └─→ Local files encrypted                                 │
+│                                                             │
+│  ⬇️ Backups stored separately                              │
+│                                                             │
+│  Recovery Services Vault (Isolated)                         │
+│  ├─→ Backup data NOT on the VM                            │
+│  ├─→ Protected by Azure security                          │
+│  ├─→ Ransomware CANNOT access vault ✅                    │
+│  ├─→ Soft delete protection (14 days)                     │
+│  └─→ Recovery points remain available ✅                  │
+│                                                             │
+│  Result: Files CAN be recovered ✅                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Key Technical Concepts
+
+##### File Recovery Script
+
+Azure generates a PowerShell (Windows) or Python (Linux) script that:
+
+1. **Authenticates** with Azure using temporary credentials
+2. **Mounts** the backup snapshot as an iSCSI device
+3. **Exposes** the backup as a local drive on the target VM
+4. **Allows** browsing and copying files
+5. **Unmounts** after 12 hours (or manual unmount)
+
+**Example PowerShell script workflow:**
+
+```powershell
+# Script generated by Azure (simplified)
+
+# 1. Connect to Azure backup service
+Connect-AzAccount -ServicePrincipal -Credential $credential
+
+# 2. Mount backup snapshot as iSCSI device
+Mount-IscsiSnapshot -SnapshotId "<snapshot-id>" -TargetPortal "<portal>"
+
+# 3. Assign drive letter
+New-PartitionAccessPath -DiskNumber 2 -AssignDriveLetter
+
+# 4. Files now accessible at E:\ (example)
+Write-Host "Backup mounted at E:\"
+Write-Host "Copy needed files and run unmount when done"
+
+# 5. Unmount (after user copies files)
+Dismount-IscsiSnapshot
+```
+
+##### Instant Restore vs Standard Restore
+
+| Feature | Instant Restore | Standard Restore |
+|---------|----------------|------------------|
+| **Source** | Snapshot (local to region) | Vault (Recovery Services) |
+| **Speed** | Minutes | Hours |
+| **Retention** | 1-5 days | 7 days to 99 years |
+| **Use Case** | Recent data, fast recovery | Long-term retention |
+| **Cost** | Higher (snapshot storage) | Lower (vault storage) |
+
+---
+
+#### Exam Tips
+
+**Key Points to Remember:**
+
+1. **Subscription Scope** ✅
+   > Azure Backup file recovery can restore files to **any VM within the same subscription**, not just the original VM.
+
+2. **Ransomware Protection** ✅
+   > Backup data is stored in the Recovery Services vault, **isolated from the VM**, making it protected from ransomware that infects the VM.
+
+3. **Best Practice for Ransomware** ✅
+   > When recovering from ransomware, restore files to a **clean, different VM** to avoid re-infection risk.
+
+4. **No Limitations to Original VM** ✅
+   > File recovery is **NOT** limited to the original/infected VM. You have full flexibility to choose any target VM.
+
+5. **File Recovery vs Full Restore** ✅
+   > File-level recovery allows selective file restore without needing to restore the entire VM.
+
+**Common Misconceptions:**
+
+❌ "Can only restore to the original VM" → **FALSE**  
+❌ "Can only restore to a new VM" → **FALSE**  
+❌ "Ransomware prevents recovery" → **FALSE**  
+✅ "Can restore to any VM in subscription" → **TRUE**
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Recover files from Azure VM backup](https://learn.microsoft.com/en-us/azure/backup/backup-azure-restore-files-from-vm)
+- [Azure Backup Instant Restore](https://learn.microsoft.com/en-us/azure/backup/backup-instant-restore-capability)
+- [Restore Azure VMs](https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms)
+- [Azure Backup security features](https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature)
+
+**Related Concepts:**
+- Azure Backup file-level recovery
+- Instant Restore snapshots
+- Ransomware protection with Azure Backup
+- Cross-VM file recovery
+- Backup storage tiers
+
+**Exam Tip:**
+> When you see ransomware or file corruption scenarios with Azure Backup, remember that you can recover files to **any VM within the subscription**. This flexibility is key for secure recovery workflows.
+
+**Domain:** Design Business Continuity Solutions
+
+---
+
+### Question 10: Full VM Restore After Ransomware Infection
+
+#### Scenario
+
+Your company's Azure subscription includes Azure virtual machines (VMs) that run Windows Server 2016.
+
+One of the VMs is backed up every day using **Azure Backup Instant Restore**.
+
+When the VM becomes infected with **data encrypting ransomware**, you are required to **restore the VM**.
+
+---
+
+#### Question
+
+**Which of the following actions should you take?**
+
+A. You should restore the VM after deleting the infected VM  
+B. You should restore the VM to any VM within the company's subscription  
+C. You should restore the VM to a new Azure VM  
+D. You should restore the VM to an on-premises Windows device
+
+---
+
+**Correct Answer:** **C. You should restore the VM to a new Azure VM**
+
+---
+
+### Detailed Explanation
+
+#### Full VM Restore Best Practices for Ransomware Recovery
+
+When restoring a complete VM after ransomware infection, **best practice** is to restore to a **new Azure VM** rather than overwriting the infected VM or restoring to existing VMs.
+
+##### VM Restore Options in Azure Backup
+
+```plaintext
+Azure Backup VM Restore Options:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  1. Create New VM ✅ (Recommended for Ransomware)                   │
+│     ├─→ Creates a completely new VM from backup                    │
+│     ├─→ Original infected VM remains untouched                     │
+│     ├─→ Clean environment, no infection risk                       │
+│     └─→ Allows forensic analysis of infected VM                    │
+│                                                                     │
+│  2. Replace Existing VM                                             │
+│     ├─→ Replaces disks of existing VM                              │
+│     ├─→ VM configuration remains same                              │
+│     ├─→ Not recommended for ransomware (overwrites evidence)       │
+│     └─→ Risk of configuration conflicts                            │
+│                                                                     │
+│  3. Restore Disks Only                                              │
+│     ├─→ Restores only the VM disks                                 │
+│     ├─→ You manually create VM from disks                          │
+│     ├─→ Advanced scenario, more flexibility                        │
+│     └─→ Requires manual VM configuration                           │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Why Answer C is Correct ✅
+
+**"You should restore the VM to a new Azure VM"**
+
+Restoring to a **new Azure VM** is the best practice for ransomware recovery scenarios:
+
+##### 1. **Clean Environment** ✅
+
+```plaintext
+New VM Benefits:
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  New Azure VM (VM-Restored)                                     │
+│  ├─→ Fresh VM resource created                                 │
+│  ├─→ Restored from clean backup (pre-infection)                │
+│  ├─→ No ransomware malware present ✅                           │
+│  ├─→ No encrypted files ✅                                      │
+│  ├─→ No malicious processes running ✅                          │
+│  └─→ Ready for production use after validation                 │
+│                                                                 │
+│  Original Infected VM (VM1)                                     │
+│  ├─→ Remains in stopped/isolated state                         │
+│  ├─→ Available for forensic analysis                           │
+│  ├─→ Can investigate attack vectors                            │
+│  ├─→ Can extract logs and indicators of compromise (IOCs)      │
+│  └─→ Delete after investigation complete                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+##### 2. **Preserves Evidence for Investigation** ✅
+
+By creating a **new VM**, you preserve the infected VM for analysis:
+
+```plaintext
+Forensic Analysis Workflow:
+
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│  Step 1: Isolate Infected VM                                │
+│  └─→ Stop VM1 (infected)                                    │
+│      └─→ Disconnect from network                            │
+│          └─→ Take snapshot for forensics                    │
+│                                                             │
+│  Step 2: Restore to New VM ✅                               │
+│  └─→ Azure Portal → Recovery Services vault                │
+│      └─→ Select restore point (before infection)            │
+│          └─→ Choose "Create new VM"                         │
+│              └─→ Specify new VM name (e.g., VM1-Restored)   │
+│                  └─→ Configure network settings             │
+│                      └─→ Start restore process              │
+│                                                             │
+│  Step 3: Validate Restored VM                               │
+│  └─→ VM1-Restored created and running                      │
+│      └─→ Verify data integrity                              │
+│          └─→ Run antivirus scan                             │
+│              └─→ Test application functionality             │
+│                  └─→ Update security patches                │
+│                                                             │
+│  Step 4: Forensic Analysis (Parallel)                       │
+│  └─→ Analyze VM1 (infected) in isolated environment        │
+│      └─→ Identify attack vector                             │
+│          └─→ Extract malware samples                        │
+│              └─→ Review logs and timeline                   │
+│                  └─→ Document findings                      │
+│                                                             │
+│  Step 5: Production Deployment                              │
+│  └─→ Promote VM1-Restored to production                    │
+│      └─→ Update DNS/load balancer                           │
+│          └─→ Delete or archive VM1 (infected)               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+##### 3. **No Risk of Re-infection** ✅
+
+Creating a new VM ensures complete isolation from any residual threats:
+
+| Aspect | New VM (Recommended) | Replace/Overwrite Existing |
+|--------|---------------------|----------------------------|
+| **Malware Persistence** | ✅ No risk - completely fresh VM | ❌ Risk if malware in registry/startup |
+| **Hidden Backdoors** | ✅ Clean state from backup | ❌ May persist in system areas |
+| **Compromised Credentials** | ✅ Can be reset during restore | ❌ Same credentials may be compromised |
+| **File System Artifacts** | ✅ Clean from backup snapshot | ❌ May have hidden malicious files |
+| **Evidence Preservation** | ✅ Original VM intact | ❌ Evidence destroyed |
+
+##### 4. **Flexible Rollback Options** ✅
+
+With the original VM preserved, you have flexibility:
+
+```plaintext
+Rollback Scenarios:
+
+ Scenario 1: Restore Successful ✅
+ ├─→ New VM (VM1-Restored) works perfectly
+ ├─→ Promote to production
+ └─→ Delete infected VM1 after investigation
+
+ Scenario 2: Need Different Restore Point
+ ├─→ Keep VM1-Restored running
+ ├─→ Create another VM (VM1-Restored-v2) from earlier backup
+ ├─→ Compare and choose best version
+ └─→ Delete unwanted VMs
+
+ Scenario 3: Need to Extract Additional Data
+ ├─→ Production running on VM1-Restored
+ ├─→ Can still analyze infected VM1 safely
+ └─→ Extract any needed data under controlled conditions
+```
+
+##### 5. **Azure Backup Native Support** ✅
+
+Azure Backup provides **built-in "Create new VM" option**:
+
+**Azure Portal Workflow:**
+
+```plaintext
+1. Navigate to Recovery Services vault
+   └─→ Backup items → Azure Virtual Machine
+       └─→ Select infected VM (VM1)
+
+2. Click "Restore VM"
+   └─→ Select restore point (choose date before infection)
+       └─→ Restore configuration options:
+
+           ┌──────────────────────────────────────────────┐
+           │  ○ Create new VM ✅ (Recommended)           │
+           │  ○ Replace existing                          │
+           │  ○ Restore disks                             │
+           └──────────────────────────────────────────────┘
+
+3. Configure New VM
+   └─→ Virtual machine name: VM1-Restored
+       └─→ Resource group: Same or different
+           └─→ Virtual network: Same or different
+               └─→ Subnet: Select subnet
+                   └─→ Staging location: Storage account
+
+4. Click "Restore" → Azure creates new VM ✅
+```
+
+**Azure CLI:**
+
+```bash
+# Restore VM to a new Azure VM
+az backup restore restore-azurevm \
+  --resource-group myResourceGroup \
+  --vault-name myRecoveryVault \
+  --container-name "IaasVMContainer;iaasvmcontainerv2;myRG;VM1" \
+  --item-name "VM;iaasvmcontainerv2;myRG;VM1" \
+  --restore-mode AlternateLocation \
+  --rp-name "<recovery-point-name>" \
+  --target-resource-group myResourceGroup \
+  --target-vm-name VM1-Restored \
+  --target-vnet-name myVNet \
+  --target-subnet-name mySubnet \
+  --storage-account myStorageAccount
+```
+
+**PowerShell:**
+
+```powershell
+# Set vault context
+$vault = Get-AzRecoveryServicesVault -ResourceGroupName "myResourceGroup" -Name "myRecoveryVault"
+Set-AzRecoveryServicesVaultContext -Vault $vault
+
+# Get backup item
+$backupItem = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM `
+  -WorkloadType AzureVM -Name "VM1"
+
+# Get recovery point (before infection date)
+$startDate = (Get-Date).AddDays(-30)
+$endDate = Get-Date
+$rp = Get-AzRecoveryServicesBackupRecoveryPoint -Item $backupItem `
+  -StartDate $startDate -EndDate $endDate | Where-Object {$_.RecoveryPointTime -lt (Get-Date "2025-12-15")}
+
+# Restore to new VM
+$restorejob = Restore-AzRecoveryServicesBackupItem -RecoveryPoint $rp[0] `
+  -TargetResourceGroupName "myResourceGroup" `
+  -StorageAccountName "mystorageaccount" `
+  -TargetVMName "VM1-Restored" `
+  -TargetVNetName "myVNet" `
+  -TargetSubnetName "mySubnet"
+```
+
+---
+
+#### Why Other Answers are Incorrect ❌
+
+##### A. "You should restore the VM after deleting the infected VM" ❌
+
+**Incorrect** because deleting the infected VM **before** restore has several drawbacks:
+
+❌ **Loss of Forensic Evidence**
+```plaintext
+Deleting Infected VM:
+├─→ Loses all forensic data ❌
+├─→ Cannot investigate attack vector
+├─→ Cannot identify indicators of compromise (IOCs)
+├─→ Cannot determine how ransomware entered
+├─→ Cannot extract malware samples for analysis
+└─→ Prevents learning from the incident
+
+Recommendation: Keep infected VM until investigation complete ✅
+```
+
+❌ **No Advantage Over Creating New VM**
+```plaintext
+Deleting first:
+├─→ Doesn't speed up restore process
+├─→ Doesn't reduce costs (restore takes same time)
+├─→ Loses valuable diagnostic information
+└─→ Makes incident response harder ❌
+
+Creating new VM:
+├─→ Same restore speed
+├─→ Preserves evidence ✅
+├─→ Allows parallel investigation ✅
+└─→ Better practice ✅
+```
+
+❌ **Risk of Configuration Loss**
+```plaintext
+If you delete VM1 before restore:
+├─→ May lose custom network configurations
+├─→ May lose NSG rules and associations
+├─→ May lose public IP assignments
+├─→ May lose tags and metadata
+└─→ Harder to replicate exact configuration ❌
+```
+
+**Best Practice:**
+> Restore to a **new VM first**, validate it works correctly, **then** delete the infected VM after forensic analysis is complete.
+
+##### B. "You should restore the VM to any VM within the company's subscription" ❌
+
+**Incorrect** because this is **technically possible** but **NOT best practice** for ransomware:
+
+❌ **Confusion with File Recovery**
+```plaintext
+This answer confuses two different scenarios:
+
+✅ File Recovery (Question 9):
+   └─→ CAN restore files to any VM in subscription
+       └─→ This is correct for selective file recovery
+
+❌ Full VM Restore for Ransomware (Question 10):
+   └─→ Should restore to NEW VM (not just "any VM")
+       └─→ This is best practice for infected VMs
+```
+
+❌ **Risk of Overwriting Existing VMs**
+```plaintext
+Restoring to "any VM" could mean:
+
+ Scenario 1: Replace existing production VM (VM2)
+ ├─→ Overwrites VM2's current state ❌
+ ├─→ VM2's data is lost ❌
+ ├─→ May disrupt unrelated services ❌
+ └─→ Not recommended ❌
+
+ Scenario 2: Restore over infected VM (VM1)
+ ├─→ Destroys forensic evidence ❌
+ ├─→ Cannot investigate incident ❌
+ └─→ Not recommended ❌
+
+ ✅ Best Practice: Create NEW VM
+ ├─→ No existing VMs affected ✅
+ ├─→ Evidence preserved ✅
+ └─→ Clean, isolated recovery ✅
+```
+
+❌ **Not Specific Enough**
+
+While technically you *can* restore to any VM, the answer lacks the precision needed:
+- Doesn't specify **new** VM (best practice)
+- Could imply overwriting existing VMs (risky)
+- Doesn't emphasize clean environment creation
+
+**Why "Create New VM" is better answer:**
+> The question asks what you **should** do (best practice), not what you **can** do (technical capability). Best practice for ransomware is specifically to create a **new** VM.
+
+##### D. "You should restore the VM to an on-premises Windows device" ❌
+
+**Incorrect** because Azure Backup for Azure VMs **cannot** restore to on-premises devices:
+
+❌ **Not Supported by Azure Backup**
+```plaintext
+Azure VM Backup Restore Targets:
+
+✅ Supported:
+├─→ New Azure VM in same subscription
+├─→ Replace existing Azure VM in same subscription
+├─→ Restore disks to storage account (then create Azure VM)
+└─→ Cross-region restore (to paired region)
+
+❌ Not Supported:
+├─→ On-premises physical servers ❌
+├─→ On-premises Hyper-V VMs ❌
+├─→ On-premises VMware VMs ❌
+└─→ Different cloud providers ❌
+```
+
+❌ **Wrong Recovery Architecture**
+```plaintext
+Azure VM Backup is designed for Azure-to-Azure recovery:
+
+┌─────────────────────────────────────────────────────────────┐
+│  Azure VM Backup Architecture                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Source: Azure VM (IaaS)                                    │
+│  ↓                                                          │
+│  Backup: Recovery Services Vault (Azure)                    │
+│  ↓                                                          │
+│  Restore Target: Azure VM only ✅                           │
+│                                                             │
+│  ❌ Cannot restore to:                                      │
+│     • On-premises servers                                   │
+│     • Other cloud platforms                                 │
+│     • Physical devices                                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+❌ **For On-Premises Recovery, Use Different Tools**
+
+If you need to move Azure VM to on-premises:
+
+```plaintext
+Alternative Approaches:
+
+ Option 1: Azure Site Recovery (ASR)
+ ├─→ Can replicate Azure VMs to on-premises Hyper-V/VMware
+ ├─→ Disaster recovery failback scenario
+ └─→ Not applicable for ransomware recovery
+
+ Option 2: Manual VHD Download
+ ├─→ Restore disks to storage account
+ ├─→ Download VHD files
+ ├─→ Convert and import to on-premises hypervisor
+ └─→ Complex, not recommended for ransomware recovery
+
+ ✅ Best Practice: Stay in Azure
+ ├─→ Restore to new Azure VM
+ ├─→ Keep infrastructure consistent
+ └─→ Leverage Azure security features
+```
+
+**Why this doesn't make sense:**
+- The scenario states the company uses Azure VMs
+- Azure Backup is designed for Azure-to-Azure recovery
+- Moving to on-premises adds complexity without benefit
+- Faster to restore within Azure than migrate to on-premises
+
+---
+
+#### Key Differences: File Recovery vs Full VM Restore
+
+It's important to distinguish between **Question 9** (file recovery) and **Question 10** (full VM restore):
+
+| Aspect | Q9: File Recovery | Q10: Full VM Restore |
+|--------|-------------------|----------------------|
+| **Use Case** | Recover specific files | Recover entire VM |
+| **Target Flexibility** | Any VM in subscription ✅ | New VM recommended ✅ |
+| **Answer Precision** | "Any VM" is correct | "New VM" is best practice |
+| **Reasoning** | Need flexibility for file placement | Need clean environment for VM |
+| **Original VM** | Can remain running | Should be isolated/stopped |
+| **Evidence Preservation** | Original VM unchanged | Original VM preserved for analysis |
+| **Risk Level** | Low (just files) | High (full system restore) |
+
+```plaintext
+Scenario Comparison:
+
+┌──────────────────────────────────────────────────────────────────┐
+│  File Recovery (Q9):                                             │
+│  ├─→ Need: Few specific files                                   │
+│  ├─→ Original VM: Can keep running                              │
+│  ├─→ Target: Any VM in subscription (maximum flexibility) ✅    │
+│  └─→ Risk: Low - just copying files                             │
+│                                                                  │
+│  Full VM Restore (Q10):                                          │
+│  ├─→ Need: Complete VM recovery                                 │
+│  ├─→ Original VM: Infected, should isolate                      │
+│  ├─→ Target: NEW VM (best practice for clean environment) ✅    │
+│  └─→ Risk: High - entire system, need clean state               │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Complete Ransomware Recovery Workflow
+
+**End-to-End Process:**
+
+```plaintext
+Ransomware Recovery: Full VM Restore
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  Phase 1: Incident Detection & Isolation                            │
+│  ├─→ 1. Ransomware detected on VM1                                 │
+│  ├─→ 2. Immediately stop VM1                                       │
+│  ├─→ 3. Disconnect VM1 from network (NSG rules)                    │
+│  ├─→ 4. Take snapshot of VM1 (forensic preservation)               │
+│  └─→ 5. Alert security team                                        │
+│                                                                     │
+│  Phase 2: VM Restore (This Question) ✅                            │
+│  ├─→ 1. Identify clean restore point (before infection)            │
+│  │      └─→ Check backup timeline vs. infection indicators         │
+│  ├─→ 2. Navigate to Recovery Services vault                        │
+│  ├─→ 3. Select VM1 backup item                                     │
+│  ├─→ 4. Choose restore point (pre-infection date)                  │
+│  ├─→ 5. Select "Create new VM" ✅                                  │
+│  ├─→ 6. Configure new VM (VM1-Restored)                            │
+│  ├─→ 7. Start restore process                                      │
+│  └─→ 8. Wait for restore completion (15-30 minutes typical)        │
+│                                                                     │
+│  Phase 3: Validation & Hardening                                    │
+│  ├─→ 1. Start VM1-Restored                                         │
+│  ├─→ 2. Run full antivirus scan                                    │
+│  ├─→ 3. Verify data integrity                                      │
+│  ├─→ 4. Test application functionality                             │
+│  ├─→ 5. Apply latest security patches                              │
+│  ├─→ 6. Update antivirus signatures                                │
+│  ├─→ 7. Review and harden security configuration                   │
+│  └─→ 8. Enable enhanced monitoring                                 │
+│                                                                     │
+│  Phase 4: Forensic Analysis (Parallel)                              │
+│  ├─→ 1. Analyze VM1 (infected) in isolated environment             │
+│  ├─→ 2. Identify malware entry point                               │
+│  ├─→ 3. Extract indicators of compromise (IOCs)                    │
+│  ├─→ 4. Review security logs                                       │
+│  ├─→ 5. Document attack timeline                                   │
+│  └─→ 6. Share findings with security team                          │
+│                                                                     │
+│  Phase 5: Production Deployment                                     │
+│  ├─→ 1. Confirm VM1-Restored is fully functional                   │
+│  ├─→ 2. Update DNS entries to point to VM1-Restored                │
+│  ├─→ 3. Update load balancer configurations                        │
+│  ├─→ 4. Restore production traffic to VM1-Restored                 │
+│  ├─→ 5. Monitor for 24-48 hours                                    │
+│  └─→ 6. Confirm no issues                                          │
+│                                                                     │
+│  Phase 6: Cleanup                                                   │
+│  ├─→ 1. Complete forensic analysis of VM1                          │
+│  ├─→ 2. Document lessons learned                                   │
+│  ├─→ 3. Update security procedures                                 │
+│  ├─→ 4. Delete infected VM1 (after approval)                       │
+│  └─→ 5. Optional: Rename VM1-Restored to VM1                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Exam Tips
+
+**Key Points to Remember:**
+
+1. **New VM for Ransomware** ✅
+   > When restoring a VM after ransomware infection, **always create a new VM** rather than replacing the existing one. This preserves evidence and ensures a clean environment.
+
+2. **Evidence Preservation** ✅
+   > Keep the infected VM for forensic analysis. Don't delete it before completing the investigation and creating a successful restore.
+
+3. **File Recovery vs VM Restore** ✅
+   > File recovery can target any VM (Q9), but full VM restore for ransomware should create a **new VM** (Q10). Know the distinction.
+
+4. **Azure-to-Azure Only** ✅
+   > Azure VM backups can only restore to Azure VMs within the same subscription, not to on-premises devices.
+
+5. **Best Practice vs Technical Capability** ✅
+   > Questions asking "should you do" want best practices, not just technical capabilities. "New VM" is the best practice answer.
+
+**Common Misconceptions:**
+
+❌ "Must delete infected VM first" → **FALSE** (preserve for analysis)  
+❌ "Can restore to any VM" → **INCOMPLETE** (should be specific: new VM)  
+❌ "Can restore to on-premises" → **FALSE** (Azure-to-Azure only)  
+✅ "Create new VM for ransomware" → **TRUE** (best practice)
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Restore Azure VMs](https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms)
+- [Azure Backup security features](https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature)
+- [Azure VM restore options](https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms#restore-options)
+- [Ransomware protection with Azure Backup](https://learn.microsoft.com/en-us/azure/backup/backup-azure-ransomware-protection)
+
+**Related Concepts:**
+- Azure VM full restore vs file recovery
+- Ransomware incident response
+- Forensic analysis in Azure
+- Azure Backup restore configurations
+- VM restore best practices
+
+**Exam Tip:**
+> For ransomware VM restore questions, remember: **Create NEW VM** (not replace/delete). This preserves evidence, ensures clean environment, and follows security best practices.
+
+**Domain:** Design Business Continuity Solutions
 
 ---
 
