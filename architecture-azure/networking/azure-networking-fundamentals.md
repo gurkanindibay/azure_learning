@@ -25,6 +25,8 @@
     - [3.4.1 DNS Resolution for Hybrid/On-Premises Connectivity](#341-dns-resolution-for-hybridon-premises-connectivity)
   - [3.5 Supported Services](#35-supported-services)
   - [3.6 Benefits of Private Endpoints](#36-benefits-of-private-endpoints)
+  - [3.7 Common Scenarios and Use Cases](#37-common-scenarios-and-use-cases)
+    - [3.7.1 Ensuring Traffic Stays on Microsoft Backbone Network](#371-ensuring-traffic-stays-on-microsoft-backbone-network)
 - [4. Service Endpoints vs Private Endpoints](#4-service-endpoints-vs-private-endpoints)
   - [4.1 Service Endpoints](#41-service-endpoints)
   - [4.2 Comparison Table](#42-comparison-table)
@@ -1122,6 +1124,101 @@ Private Endpoints are supported for many Azure services:
 | **On-premises Access** | Connect via VPN/ExpressRoute to private endpoints |
 | **Cross-region** | Access services in different regions privately |
 | **No Public IP Required** | Resources don't need public IPs to access PaaS services |
+
+### 3.7 Common Scenarios and Use Cases
+
+#### 3.7.1 Ensuring Traffic Stays on Microsoft Backbone Network
+
+**Scenario:** You have an on-premises network connected to Azure via VPN Gateway, and you need to ensure that all traffic from a VM to a Storage Account travels across the Microsoft backbone network (never the public internet).
+
+**Setup:**
+
+| Resource | Type | Description |
+|----------|------|-------------|
+| **vgw1** | Virtual network gateway | Gateway for Site-to-Site VPN to the on-premises network |
+| **storage1** | Storage account | Standard performance tier |
+| **Vnet1** | Virtual network | Enabled for forced tunneling |
+| **VM1** | Virtual machine | Connected to Vnet1 |
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                  ON-PREMISES TO AZURE STORAGE VIA PRIVATE ENDPOINT            │
+│                                                                               │
+│  On-Premises Network                     Azure Virtual Network (Vnet1)       │
+│  ┌─────────────────────┐                ┌──────────────────────────────────┐ │
+│  │                     │   VPN Tunnel   │                                  │ │
+│  │  On-Prem Resources  │◄───────────────┤  vgw1 (VPN Gateway)              │ │
+│  │                     │   (Encrypted)  │                                  │ │
+│  └─────────────────────┘                └──────────────┬───────────────────┘ │
+│                                                        │                     │
+│                                                        ▼                     │
+│                                         ┌──────────────────────────────────┐ │
+│                                         │  VM1                             │ │
+│                                         │  Connected to Vnet1              │ │
+│                                         └──────────────┬───────────────────┘ │
+│                                                        │                     │
+│                                                        │ Private IP          │
+│                                                        ▼                     │
+│                                         ┌──────────────────────────────────┐ │
+│                                         │  Private Endpoint                │ │
+│                                         │  (Network Interface)             │ │
+│                                         │  Private IP: 10.0.1.5            │ │
+│                                         └──────────────┬───────────────────┘ │
+│                                                        │                     │
+│                                          Private Link Connection            │
+│                                         (Microsoft Backbone)                │
+│                                                        │                     │
+│                                                        ▼                     │
+│                                         ┌──────────────────────────────────┐ │
+│                                         │  storage1 (Storage Account)      │ │
+│                                         │  Public endpoint: DISABLED       │ │
+│                                         │  Only accessible via PE          │ │
+│                                         └──────────────────────────────────┘ │
+│                                                                               │
+│  Result: All traffic from VM1 to storage1 uses Private Endpoint              │
+│          Traffic NEVER traverses the public internet                         │
+│          Communication happens entirely over Microsoft backbone network      │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Solution: Private Endpoints** ✅
+
+**Why Private Endpoints?**
+
+A **private endpoint** is a network interface that uses a private IP address from your virtual network. This network interface connects you privately and securely to a service powered by Azure Private Link. By enabling a private endpoint, you're bringing the service into your virtual network.
+
+**Key Benefits in This Scenario:**
+
+| Aspect | Benefit |
+|--------|---------|
+| **Traffic Path** | All traffic flows over the Microsoft backbone network via Private Link |
+| **No Public Internet** | Traffic never leaves Azure's private network infrastructure |
+| **On-Premises Access** | On-premises resources can access the storage account through the VPN connection to the VNet |
+| **Private IP Addressing** | VM1 accesses storage1 using a private IP address (e.g., 10.0.1.5) |
+| **Public Access Control** | Storage account's public endpoint can be completely disabled |
+
+**Alternative Solutions Comparison:**
+
+| Solution | Keeps Traffic on Backbone? | Explanation |
+|----------|----------------------------|-------------|
+| **Private Endpoints** | ✅ **Yes** | Creates a network interface with private IP in your VNet. All traffic flows over Private Link via Microsoft backbone |
+| **Azure AD Application Proxy** | ❌ **No** | Used for publishing on-premises web applications to external users. Not related to storage connectivity |
+| **Azure Peering Service** | ❌ **No** | Optimizes public internet routing to Microsoft services. Still uses public internet paths |
+| **Network Security Group (NSG)** | ❌ **No** | Controls traffic filtering (allow/deny rules) but doesn't change the network path. Traffic would still use public endpoints |
+
+**Configuration Steps:**
+
+1. **Create a Private Endpoint** for storage1 in Vnet1
+2. **Configure Private DNS Zone** (`privatelink.blob.core.windows.net`) linked to Vnet1
+3. **Disable public network access** on storage1 (optional but recommended)
+4. **Verify DNS resolution**: VM1 resolves `storage1.blob.core.windows.net` to the private endpoint IP
+5. **Test connectivity**: VM1 can now access storage1 via private IP over Microsoft backbone
+
+**Traffic Flow:**
+```
+On-Premises → VPN Gateway → Vnet1 → VM1 → Private Endpoint → storage1
+                   (All via Microsoft Backbone Network)
+```
 
 ---
 
