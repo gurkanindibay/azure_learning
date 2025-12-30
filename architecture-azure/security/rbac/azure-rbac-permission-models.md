@@ -27,6 +27,7 @@
 - [Practice Question: Azure AD Tenant Creation and User Management Permissions](#practice-question-azure-ad-tenant-creation-and-user-management-permissions)
 - [Practice Question: Azure AD Device and Group Management Permissions](#practice-question-azure-ad-device-and-group-management-permissions)
 - [Practice Question: User Access Administrator Role for Role Assignment](#practice-question-user-access-administrator-role-for-role-assignment)
+- [Practice Question: Management Group RBAC Inheritance and Role Permissions](#practice-question-management-group-rbac-inheritance-and-role-permissions)
 
 ## Overview
 
@@ -1152,6 +1153,154 @@ Question asks: "User needs to assign roles to others"
 ```
 
 ---
+
+## Practice Question: Management Group RBAC Inheritance and Role Permissions
+
+### Scenario
+
+You have three Azure subscriptions named **Sub1**, **Sub2**, and **Sub3** that are linked to a Microsoft Entra ID tenant.
+
+The tenant contains:
+- A user named **User1**
+- A security group named **Group1** (User1 is a member)
+- A management group named **MG1**
+
+**Resource Hierarchy:**
+- **Sub1** and **Sub2** are members of **MG1**
+- **Sub3** is not a member of **MG1**
+- **Sub1** contains a resource group named **RG1**
+- **RG1** contains five Azure functions
+
+**Role Assignments:**
+
+At **MG1** level:
+- **Group1**: Reader role
+- **User1**: User Access Administrator role
+
+At **Sub1** and **Sub2** level:
+- **User1**: Virtual Machine Contributor role
+
+### Questions
+
+Evaluate the following statements:
+
+| Statement | Yes | No |
+|-----------|-----|-----|
+| The Group1 members can view the configurations of the Azure functions. | ⭕ | ⭕ |
+| User1 can assign the Owner role for RG1. | ⭕ | ⭕ |
+| User1 can create a new resource group and deploy a virtual machine to the new group. | ⭕ | ⭕ |
+
+### Correct Answers
+
+| Statement | Answer |
+|-----------|--------|
+| The Group1 members can view the configurations of the Azure functions. | **Yes** |
+| User1 can assign the Owner role for RG1. | **Yes** |
+| User1 can create a new resource group and deploy a virtual machine to the new group. | **No** |
+
+### Explanation
+
+#### Statement 1: Group1 members can view Azure function configurations ✅ YES
+
+**Analysis:**
+- Group1 has the **Reader** role assigned at **MG1** level
+- Sub1 is a member of MG1, so the Reader role **inherits** to Sub1 and all its child resources
+- The Reader role provides read-only access to all resources within scope
+- RG1 and its Azure functions are within Sub1
+- Therefore, Group1 members (including User1) can view the configurations of the Azure functions
+
+**Key Concept:**
+- RBAC role assignments at management group level inherit to all subscriptions and resource groups under that management group
+
+#### Statement 2: User1 can assign Owner role for RG1 ✅ YES
+
+**Analysis:**
+- User1 has the **User Access Administrator** role at **MG1** level
+- This role grants the ability to manage user access to Azure resources
+- The User Access Administrator role has these key permissions:
+  - `Microsoft.Authorization/*/read` - Read all authorization settings
+  - `Microsoft.Authorization/roleAssignments/*` - Manage all role assignments
+  - `Microsoft.Support/*` - Create and manage support tickets
+- Since MG1 contains Sub1, and Sub1 contains RG1, User1 can assign roles at any scope within the management group hierarchy
+- User1 can assign the Owner role (or any other role) for RG1
+
+**Key Concept:**
+- User Access Administrator allows managing role assignments but does NOT grant permissions to manage resources themselves
+- This role is specifically designed for delegating access management without granting resource management capabilities
+
+#### Statement 3: User1 can create new resource group and deploy VM ❌ NO
+
+**Analysis:**
+
+Let's examine User1's effective permissions:
+
+1. **From MG1 level:**
+   - **User Access Administrator**: Only allows managing role assignments, NOT creating resources
+   - **Reader** (via Group1 membership): Only read access, no write permissions
+
+2. **From Sub1 and Sub2 level:**
+   - **Virtual Machine Contributor**: Allows only VM management operations, NOT resource group creation
+
+**Why User1 cannot create resource groups:**
+- Resource group creation requires one of these roles at subscription level:
+  - Owner
+  - Contributor
+  - Custom role with `Microsoft.Resources/subscriptions/resourceGroups/write` permission
+- Virtual Machine Contributor only includes:
+  - `Microsoft.Compute/virtualMachines/*` - VM operations
+  - `Microsoft.Network/*` (some network operations)
+  - `Microsoft.Storage/*/read` - Read storage
+- It does NOT include `Microsoft.Resources/subscriptions/resourceGroups/write`
+
+**Why User1 cannot deploy VMs to a new resource group:**
+- Even if User1 could create the resource group, deploying a VM requires the VM Contributor role at that resource group scope
+- User1 only has VM Contributor at Sub1 and Sub2 subscription level
+- This doesn't automatically grant access to resources User1 creates
+
+**What User1 COULD do:**
+1. User1 could use the User Access Administrator role to assign themselves the Contributor role at Sub1 level
+2. Then User1 could create resource groups and deploy VMs
+3. However, with the current role assignments, User1 cannot perform these operations
+
+**Key Concept:**
+- Role inheritance flows down the hierarchy (Management Group → Subscription → Resource Group → Resource)
+- Having a role at subscription level doesn't automatically mean you can create the containers (resource groups) within it
+- Virtual Machine Contributor is a targeted role that only manages VMs, not the resource groups that contain them
+
+### Key Takeaways
+
+1. **Management Group Inheritance**
+   - Role assignments at management group level cascade down to all child subscriptions and their resources
+   - This provides centralized access management across multiple subscriptions
+
+2. **Reader Role Scope**
+   - Reader role provides read-only access to all resources within scope
+   - Includes viewing resource configurations, but no write or execute permissions
+
+3. **User Access Administrator vs Contributor**
+   - **User Access Administrator**: Manages who has access (role assignments only)
+   - **Contributor**: Manages resources themselves (create, update, delete)
+   - These roles serve different purposes and are often used together
+
+4. **Virtual Machine Contributor Limitations**
+   - Virtual Machine Contributor is a resource-specific role
+   - It does NOT include permissions to create resource groups
+   - Resource group creation requires Contributor or Owner role at subscription level
+
+5. **Effective Permissions**
+   - A user's effective permissions are the combination of ALL role assignments (direct and inherited)
+   - Multiple role assignments are additive (union of all permissions)
+   - Group membership role assignments apply to all members
+
+### Role Permission Reference
+
+| Role | Key Permissions | What It Can Do | What It Cannot Do |
+|------|----------------|----------------|-------------------|
+| **Reader** | `*/read` | View all resources and configurations | Create, modify, or delete resources; Manage access |
+| **User Access Administrator** | `Microsoft.Authorization/roleAssignments/*` | Assign and remove role assignments | Create, modify, or delete resources |
+| **Virtual Machine Contributor** | `Microsoft.Compute/virtualMachines/*` | Create, manage, and delete VMs | Create resource groups; Assign roles |
+| **Contributor** | `*` (except authorization) | Create, modify, and delete all resources | Assign roles or manage access |
+| **Owner** | `*` | Everything including role assignments | Nothing - full control |
 
 **References:**
 - [Azure Built-in Roles - User Access Administrator](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)
