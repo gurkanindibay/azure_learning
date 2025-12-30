@@ -298,7 +298,152 @@ New-AzAvailabilitySet `
   -Sku Aligned
 ```
 
-> **Note**: Use `-Sku Aligned` for managed disks (recommended) or `-Sku Classic` for unmanaged disks.
+**Azure Resource Manager (ARM) Template**:
+```json
+{
+  "type": "Microsoft.Compute/availabilitySets",
+  "apiVersion": "2023-03-01",
+  "name": "MyAvailabilitySet",
+  "location": "[resourceGroup().location]",
+  "sku": {
+    "name": "Aligned"
+  },
+  "properties": {
+    "platformFaultDomainCount": 3,
+    "platformUpdateDomainCount": 20
+  }
+}
+```
+
+> **Note**: 
+> - Use `"Aligned"` SKU for managed disks (recommended) or `"Classic"` for unmanaged disks.
+> - **Maximum values**: `platformFaultDomainCount`: **3**, `platformUpdateDomainCount`: **20**
+> - To maximize VM availability during planned maintenance or fabric failures, configure `platformUpdateDomainCount` to **20** (the maximum supported value)
+
+### ARM Template Configuration Best Practices
+
+#### Maximizing Availability
+
+When deploying VMs with ARM templates into an availability set, configure the properties to maximize availability:
+
+**platformUpdateDomainCount Configuration:**
+- **Minimum**: 1 update domain
+- **Default**: 5 update domains (if not specified)
+- **Maximum**: **20 update domains** ✅ **Recommended for maximum availability**
+- **Purpose**: Determines how many update domain groups VMs are distributed across during planned maintenance
+
+**platformFaultDomainCount Configuration:**
+- **Minimum**: 1 fault domain
+- **Maximum**: **3 fault domains** ✅ **Recommended for maximum availability**
+- **Purpose**: Determines how many physical hardware racks VMs are distributed across
+
+#### Why Configure Maximum Values?
+
+Setting `platformUpdateDomainCount` to **20** provides:
+- **Maximum protection during planned maintenance** - Only 1/20th of VMs are updated at a time
+- **Better availability** - More VMs remain operational during Azure platform updates
+- **Compliance with SLA** - Ensures the 99.95% uptime SLA is maintained
+
+Setting `platformFaultDomainCount` to **3** provides:
+- **Maximum hardware failure protection** - VMs spread across 3 separate physical racks
+- **Power/network redundancy** - Each fault domain has independent infrastructure
+- **Best fault isolation** - Survives failures of multiple hardware racks
+
+#### Common ARM Template Mistakes
+
+❌ **Exceeding maximum values**:
+```json
+"platformUpdateDomainCount": 30  // INVALID - Max is 20
+"platformUpdateDomainCount": 40  // INVALID - Max is 20
+"platformFaultDomainCount": 5    // INVALID - Max is 3
+```
+
+✅ **Correct configuration**:
+```json
+"platformUpdateDomainCount": 20  // Valid - Maximum value
+"platformUpdateDomainCount": 10  // Valid but not optimal
+"platformFaultDomainCount": 3    // Valid - Maximum value
+```
+
+#### Complete ARM Template Example
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "availabilitySetName": {
+      "type": "string",
+      "defaultValue": "MyAvailabilitySet",
+      "metadata": {
+        "description": "Name of the availability set"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for the availability set"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "apiVersion": "2023-03-01",
+      "name": "[parameters('availabilitySetName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 20
+      },
+      "tags": {
+        "environment": "production",
+        "purpose": "high-availability"
+      }
+    }
+  ],
+  "outputs": {
+    "availabilitySetId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+    }
+  }
+}
+```
+
+#### Deploying VMs to an Availability Set via ARM Template
+
+```json
+{
+  "type": "Microsoft.Compute/virtualMachines",
+  "apiVersion": "2023-03-01",
+  "name": "MyVM1",
+  "location": "[resourceGroup().location]",
+  "dependsOn": [
+    "[resourceId('Microsoft.Compute/availabilitySets', 'MyAvailabilitySet')]"
+  ],
+  "properties": {
+    "availabilitySet": {
+      "id": "[resourceId('Microsoft.Compute/availabilitySets', 'MyAvailabilitySet')]"
+    },
+    "hardwareProfile": {
+      "vmSize": "Standard_D2s_v3"
+    },
+    // ... other VM properties
+  }
+}
+```
+
+#### Key Considerations for ARM Template Deployment
+
+⚠️ **Region Limitations**: Some regions may support fewer than 3 fault domains. Check regional capabilities before deployment.
+⚠️ **SKU Dependency**: Use `"Aligned"` SKU when deploying VMs with managed disks (strongly recommended).
+⚠️ **VM Size Constraints**: Ensure the chosen VM size is available across all fault domains in the region.
+⚠️ **Modification Restrictions**: Cannot change fault domain or update domain count after creation; requires recreating the availability set.
 
 ---
 
@@ -1101,6 +1246,189 @@ C) NV
 
 5. **Cost Optimization = Right-Sizing**
    > Choosing the appropriate VM series (DS for disk-intensive workloads) avoids paying for unused GPU or specialized compute capabilities.
+
+---
+
+### Question 4: ARM Template Configuration for Maximum Availability
+
+**Scenario**: Your company has an Azure subscription. You need to deploy a number of Azure virtual machines (VMs) using Azure Resource Manager (ARM) templates. You have been informed that the VMs will be included in a single availability set.
+
+**Requirement**: Make sure that the ARM template you configure allows for as many VMs as possible to remain accessible in the event of fabric failure or maintenance.
+
+**Question**: Which of the following is the value that you should configure for the `platformUpdateDomainCount` property?
+
+**Options**:
+
+A) 10
+
+B) **20**
+
+C) 30
+
+D) 40
+
+---
+
+**Correct Answer**: **B) 20**
+
+---
+
+### Explanation
+
+**Why platformUpdateDomainCount = 20?**
+
+#### 1. **Maximum Supported Value** ✅
+
+- **Update Domains** can be configured with a **maximum of 20** in Azure availability sets
+- **Fault Domains** can be configured with a **maximum of 3** in Azure availability sets
+- Configuring the maximum value ensures the highest level of availability during planned maintenance
+
+#### 2. **Update Domain Purpose**
+
+Update domains determine how VMs are distributed for **planned maintenance events**:
+
+- Azure updates VMs **one update domain at a time**
+- With **20 update domains**, only **1/20th (5%)** of your VMs are updated simultaneously
+- Azure waits **at least 30 minutes** between updating each update domain
+- More update domains = more VMs remain available during maintenance
+
+#### 3. **Comparison of Values**
+
+| platformUpdateDomainCount | VMs Affected During Update | Availability During Maintenance |
+|--------------------------|----------------------------|--------------------------------|
+| 10 | 10% (1/10) | 90% available |
+| **20** | **5% (1/20)** | **95% available** ✅ |
+| 30 | ❌ Invalid (exceeds max) | N/A |
+| 40 | ❌ Invalid (exceeds max) | N/A |
+
+#### 4. **ARM Template Configuration**
+
+**Correct Configuration**:
+```json
+{
+  "type": "Microsoft.Compute/availabilitySets",
+  "apiVersion": "2023-03-01",
+  "name": "MyAvailabilitySet",
+  "location": "[resourceGroup().location]",
+  "sku": {
+    "name": "Aligned"
+  },
+  "properties": {
+    "platformFaultDomainCount": 3,
+    "platformUpdateDomainCount": 20
+  }
+}
+```
+
+**Key Properties**:
+- `platformFaultDomainCount`: **3** (maximum, for hardware rack failure protection)
+- `platformUpdateDomainCount`: **20** (maximum, for maintenance availability)
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) platformUpdateDomainCount: 10** ❌
+- **Valid configuration** but does NOT maximize availability
+- Only 90% of VMs remain available during updates (1/10 are updated at a time)
+- **Suboptimal**: Does not meet the requirement to allow "as many VMs as possible to remain accessible"
+- While functional, it's not the best answer when maximum availability is required
+
+**C) platformUpdateDomainCount: 30** ❌
+- **Exceeds the maximum supported limit** of 20 update domains
+- ARM template deployment will **fail validation**
+- Azure does not support more than 20 update domains per availability set
+- Invalid configuration that cannot be deployed
+
+**D) platformUpdateDomainCount: 40** ❌
+- **Far exceeds the maximum supported limit** of 20 update domains
+- ARM template deployment will **fail validation**
+- Same issue as option C but with an even higher invalid value
+- Azure enforces the 20 update domain maximum limit
+
+---
+
+### Azure Availability Set Limits
+
+**Official Limits**:
+
+| Property | Minimum | Default | Maximum |
+|----------|---------|---------|---------|
+| **platformUpdateDomainCount** | 1 | 5 | **20** ✅ |
+| **platformFaultDomainCount** | 1 | 2 | **3** ✅ |
+
+**Important Notes**:
+- These limits are **hard limits** enforced by Azure
+- Attempting to exceed them will cause ARM template validation failures
+- Some regions may support fewer fault domains (check regional capabilities)
+
+---
+
+### Maximizing VM Availability Strategy
+
+#### Fabric Failure Protection (Fault Domains)
+
+- **Configure**: `"platformFaultDomainCount": 3`
+- **Benefit**: VMs distributed across 3 physical racks
+- **Protection**: Survives hardware, power, or network failures affecting 2 out of 3 racks
+
+#### Planned Maintenance Protection (Update Domains)
+
+- **Configure**: `"platformUpdateDomainCount": 20`
+- **Benefit**: Only 5% of VMs updated at once
+- **Protection**: 95% of VMs remain operational during Azure platform maintenance
+
+#### Combined Protection
+
+```
+Maximum Availability Configuration:
+├─ Fault Domains: 3 (hardware failure protection)
+└─ Update Domains: 20 (maintenance availability)
+
+Result:
+✅ Survives multiple hardware rack failures
+✅ 95% availability during planned maintenance
+✅ Meets 99.95% SLA for availability sets
+```
+
+---
+
+### Real-World Example
+
+**Scenario**: 60 VMs in an availability set with maximum configuration
+
+**Distribution**:
+- **Fault Domains**: 3 FDs → ~20 VMs per fault domain
+- **Update Domains**: 20 UDs → 3 VMs per update domain
+
+**During Maintenance**:
+- Only **1 update domain** (3 VMs) is updated at a time
+- **57 VMs (95%)** remain fully operational
+- Each update domain receives 30+ minute recovery time
+
+**During Hardware Failure**:
+- If one rack (fault domain) fails completely
+- **~40 VMs (67%)** remain operational on the other 2 racks
+- Application continues with reduced capacity
+
+---
+
+### Key Takeaways
+
+1. **20 is the Maximum for Update Domains**
+   > Azure availability sets support a maximum of 20 update domains. Configuring this value maximizes the number of VMs that remain accessible during planned maintenance.
+
+2. **3 is the Maximum for Fault Domains**
+   > Configure `platformFaultDomainCount` to 3 to maximize protection against hardware rack failures and ensure VMs are distributed across the maximum number of physical racks.
+
+3. **Values Above Maximum Cause Deployment Failures**
+   > ARM templates with `platformUpdateDomainCount` values exceeding 20 or `platformFaultDomainCount` values exceeding 3 will fail during validation and cannot be deployed.
+
+4. **Maximize Both for Complete Protection**
+   > For maximum availability, configure both properties to their maximum values: fault domains = 3, update domains = 20.
+
+5. **Update Domains = Maintenance Availability**
+   > The more update domains configured, the smaller the percentage of VMs affected during Azure platform updates, maximizing application availability during maintenance windows.
 
 ---
 
