@@ -341,10 +341,10 @@ When you need to ensure that one resource is created only after another resource
 
 ## Practice Questions
 
-### Question 1: Identifying ARM Template Used for Resource Deployment
+### Question 1: Reviewing ARM Templates Used for Deployment
 
 **Scenario:**
-Your company has an Azure subscription that includes a storage account, a resource group, a blob container, and a file share. A fellow administrator named Jon Ross used an Azure Resource Manager template to deploy a virtual machine and an Azure Storage account. You need to identify the Azure Resource Manager template that Jon Ross used.
+Your company has an Azure subscription that includes a storage account, a resource group, a blob container, and a file share. A colleague named Jon Ross makes use of a solitary Azure Resource Manager (ARM) template to deploy a virtual machine and an additional Azure Storage account. You want to review the ARM template that was used by Jon Ross.
 
 **Solution:** You access the Resource Group blade.
 
@@ -354,7 +354,11 @@ Your company has an Azure subscription that includes a storage account, a resour
 
 **Explanation:**
 
-Yes, accessing the Resource Group blade allows you to view all the resources deployed within that specific resource group. By navigating to the Resource Group blade, you can:
+Accessing the Resource Group blade can meet the goal of reviewing the ARM template used by Jon Ross to deploy the virtual machine and additional Azure Storage account. In the Resource Group blade, you can select the resource group where the virtual machine and additional storage account were deployed, and then click on the "Deployments" tab. This will display a list of all deployments made to the resource group, including the ARM template used for the deployment. Therefore, the solution of accessing the Resource Group blade meets the goal of reviewing the ARM template used by Jon Ross.
+
+**Detailed Steps:**
+
+By navigating to the Resource Group blade, you can:
 
 1. **View Deployment History**: The Resource Group blade contains a "Deployments" section that shows all ARM template deployments that have been executed
 2. **Access Deployment Details**: Click on any deployment to view:
@@ -372,7 +376,12 @@ Yes, accessing the Resource Group blade allows you to view all the resources dep
 4. In the left menu, click **Deployments** (under Settings)
 5. Select the specific deployment to view the ARM template details
 
-This is the correct and most straightforward approach to identify the Azure Resource Manager template that was used by Jon Ross for the deployment.
+**Why This Works:**
+
+Accessing the Resource Group blade is the correct way to review the ARM template used by Jon Ross. By accessing the Resource Group blade, you can see all the resources deployed within that resource group, including the virtual machine and additional Azure Storage account deployed using the ARM template. The Deployments section provides a complete audit trail of all template deployments, making it easy to identify and review the specific template used for any deployment.
+
+**Key Takeaway:**
+The Resource Group blade's Deployments section is the primary location in Azure Portal for reviewing historical ARM template deployments, accessing template content, and understanding what resources were created by each deployment.
 
 ---
 
