@@ -33,6 +33,8 @@
 - [Classic Subscription Administrator Roles (Deprecated)](#classic-subscription-administrator-roles-deprecated)
 - [Role Assignment Best Practices](#role-assignment-best-practices)
 - [Common Scenarios and Solutions](#common-scenarios-and-solutions)
+  - [Administrative Units: Deep Dive](#administrative-units-deep-dive)
+  - [Microsoft 365 Groups vs Security Groups](#microsoft-365-groups-vs-security-groups)
 - [Privileged Identity Management (PIM)](#privileged-identity-management-pim)
 - [Cross-Tenant and Multi-Tenant Considerations](#cross-tenant-and-multi-tenant-considerations)
 - [Troubleshooting Common Issues](#troubleshooting-common-issues)
@@ -2246,6 +2248,248 @@ Question: Need to delegate user management for specific subset of users?
 | Manage Azure resources | Azure RBAC roles | Entra ID roles, Access Packages |
 | Just-in-time privileged access | PIM | Access Packages |
 | Review guest user access | Access Reviews | Access Packages alone |
+
+---
+
+### Microsoft 365 Groups vs Security Groups
+
+#### Overview
+
+Microsoft Entra ID supports different types of groups for various purposes. Understanding the differences between **Security Groups** and **Microsoft 365 Groups**, along with their membership types, is essential for implementing proper access management and collaboration solutions.
+
+#### Group Types Comparison
+
+| Feature | Security Groups | Microsoft 365 Groups |
+|---------|----------------|----------------------|
+| **Primary Purpose** | Access control and permissions | Collaboration and communication |
+| **Use Cases** | • Assign permissions to apps/resources<br>• Assign licenses<br>• Grant Azure RBAC roles<br>• Manage device access | • Shared mailbox<br>• Shared calendar<br>• SharePoint site<br>• Microsoft Teams<br>• Planner<br>• OneNote |
+| **Member Types** | • Users<br>• Devices<br>• Service Principals<br>• Other groups (nesting) | • Users only |
+| **Group Expiration** | ❌ No automatic expiration | ✅ Supports expiration policies |
+| **Collaboration Services** | None | Mailbox, Calendar, Files, SharePoint, Teams |
+| **Dynamic Membership** | ✅ Supported | ✅ Supported |
+| **Assigned Membership** | ✅ Supported | ✅ Supported |
+| **License Required** | Azure AD Free | Azure AD Free (expiration requires Premium) |
+
+#### Membership Types
+
+Both Security Groups and Microsoft 365 Groups support two membership types:
+
+| Membership Type | Description | Example | Best For |
+|----------------|-------------|---------|----------|
+| **Assigned** | Members are manually added/removed | Manually add User1, User2, User3 | • Small, stable groups<br>• Specific users<br>• Manual control needed |
+| **Dynamic User** | Members automatically added based on rules | `user.department -eq "Sales"`<br>`user.city -eq "London"` | • Large departments<br>• Automatic onboarding/offboarding<br>• Attribute-based membership |
+| **Dynamic Device** | Devices automatically added based on rules | `device.deviceOSType -eq "Windows"`<br>(Security groups only) | • Device management<br>• Security policies<br>• Compliance requirements |
+
+**Important Notes:**
+- **Dynamic Device** membership is only available for Security Groups
+- **Dynamic User** membership is available for both Security Groups and Microsoft 365 Groups
+- **Assigned** membership is available for both types
+
+#### Microsoft 365 Group Expiration Policies
+
+One of the key differentiators is that **Microsoft 365 Groups support automatic expiration**, which is crucial for temporary collaboration scenarios.
+
+**How Group Expiration Works:**
+
+```
+Day 0: Microsoft 365 Group Created
+    ↓
+Day 150: Group owner receives 30-day warning email
+    ↓
+Day 180: Group expires if not renewed
+    ↓
+         ├─→ Group is "soft-deleted"
+         ├─→ All associated services deleted:
+         │   • Mailbox
+         │   • Calendar
+         │   • SharePoint site
+         │   • Teams
+         │   • Planner
+         │   • Files
+         └─→ Can be restored within 30 days
+    ↓
+Day 210: Permanent deletion (cannot be recovered)
+```
+
+**Key Features:**
+- **Automatic Cleanup**: Removes unused groups and associated resources
+- **Soft Delete**: 30-day recovery window after expiration
+- **Owner Notifications**: Warnings sent before expiration
+- **Renewal Options**: Owners can renew before expiration
+- **Policy Scope**: Can apply to all groups or specific groups
+
+**Configuration Example:**
+
+```powershell
+# Set expiration policy for Microsoft 365 Groups
+Install-Module -Name AzureAD
+Connect-AzureAD
+
+# Configure group expiration policy
+$Policy = New-AzureADMSGroupLifecyclePolicy `
+    -GroupLifetimeInDays 180 `
+    -ManagedGroupTypes "All" `
+    -AlternateNotificationEmails "groupadmin@contoso.com"
+
+# Apply to specific groups only
+$Policy = New-AzureADMSGroupLifecyclePolicy `
+    -GroupLifetimeInDays 180 `
+    -ManagedGroupTypes "Selected" `
+    -AlternateNotificationEmails "groupadmin@contoso.com"
+
+# Add specific groups to policy
+Add-AzureADMSLifecyclePolicyGroup -Id $Policy.Id -GroupId $groupId
+```
+
+#### Common Exam Scenario: Temporary SharePoint Access
+
+**Question Pattern:**
+> You need to grant users temporary access to a SharePoint document library. The groups should be automatically deleted after 180 days.
+
+**Analysis:**
+
+| Option | Supports Expiration? | Supports SharePoint? | Correct? |
+|--------|---------------------|---------------------|----------|
+| Security Group - Dynamic User | ❌ No | ✅ Yes (via permissions) | ❌ |
+| Security Group - Assigned | ❌ No | ✅ Yes (via permissions) | ❌ |
+| Security Group - Dynamic Device | ❌ No | ❌ No (devices, not users) | ❌ |
+| Microsoft 365 Group - Assigned | ✅ Yes | ✅ Yes | ✅ |
+| Microsoft 365 Group - Dynamic User | ✅ Yes | ✅ Yes | ✅ |
+
+**Correct Answer:** Both Microsoft 365 Group options are correct:
+- ✅ **Microsoft 365 Group with Assigned membership**
+- ✅ **Microsoft 365 Group with Dynamic User membership**
+
+**Why Security Groups Don't Work:**
+- Security groups do NOT support automatic expiration policies
+- Manual deletion would be required
+- Does not meet the "automatically deleted after 180 days" requirement
+
+**Why Dynamic Device is Wrong:**
+- Dynamic Device groups are for managing devices, not user access
+- Users need access to SharePoint, not devices
+- Only available for Security Groups (which don't support expiration anyway)
+
+#### Decision Tree: Choosing Group Type
+
+```mermaid
+graph TD
+    A[Need to create a group] --> B{What's the primary purpose?}
+    
+    B -->|Collaboration & Communication| C[Microsoft 365 Group]
+    B -->|Access Control & Permissions| D{Need automatic expiration?}
+    
+    D -->|Yes| C
+    D -->|No| E[Security Group]
+    
+    C --> M[Includes: Mailbox, Calendar, SharePoint, Teams, Files]
+    E --> N[Used for: RBAC, licenses, app permissions]
+    
+    M --> F{How to manage membership?}
+    N --> F
+    
+    F -->|Manual control| G[Assigned Membership]
+    F -->|Attribute-based rules| H{Users or Devices?}
+    
+    H -->|Users| I[Dynamic User Membership]
+    H -->|Devices| J{Which group type?}
+    
+    J -->|Security Group| K[Dynamic Device Membership]
+    J -->|Microsoft 365 Group| L[❌ Not Supported]
+```
+
+#### Practical Examples
+
+**Example 1: Temporary Project Team**
+
+**Requirement:**
+- 3 users need access to a SharePoint site for a 6-month project
+- Group should be automatically cleaned up after the project
+
+**Solution:**
+```powershell
+# Create Microsoft 365 Group with Assigned membership
+New-MgGroup -DisplayName "Project-Phoenix-Team" `
+    -MailEnabled $true `
+    -MailNickname "project-phoenix" `
+    -SecurityEnabled $false `
+    -GroupTypes @("Unified")
+
+# Add members
+$users = @("user1@contoso.com", "user2@contoso.com", "user3@contoso.com")
+foreach ($user in $users) {
+    $userId = (Get-MgUser -Filter "userPrincipalName eq '$user'").Id
+    New-MgGroupMember -GroupId $groupId -DirectoryObjectId $userId
+}
+
+# Group expiration policy (180 days) already configured tenant-wide
+```
+
+**Example 2: Sales Department Dynamic Group**
+
+**Requirement:**
+- All users in Sales department need access to SharePoint sales resources
+- Users automatically added when department attribute = "Sales"
+- Clean up after 180 days if inactive
+
+**Solution:**
+```powershell
+# Create Microsoft 365 Group with Dynamic User membership
+New-MgGroup -DisplayName "Sales-Team" `
+    -MailEnabled $true `
+    -MailNickname "sales-team" `
+    -SecurityEnabled $false `
+    -GroupTypes @("Unified", "DynamicMembership") `
+    -MembershipRule "(user.department -eq 'Sales')" `
+    -MembershipRuleProcessingState "On"
+
+# Expiration policy applies automatically
+```
+
+**Example 3: Device Management (Security Group Only)**
+
+**Requirement:**
+- Apply security policies to all Windows devices
+
+**Solution:**
+```powershell
+# Create Security Group with Dynamic Device membership
+# Note: Microsoft 365 Groups don't support device membership
+New-MgGroup -DisplayName "All-Windows-Devices" `
+    -MailEnabled $false `
+    -SecurityEnabled $true `
+    -GroupTypes @("DynamicMembership") `
+    -MembershipRule "(device.deviceOSType -eq 'Windows')" `
+    -MembershipRuleProcessingState "On"
+
+# No expiration policy (Security Groups don't support it)
+```
+
+#### Key Takeaways
+
+**When to Use Security Groups:**
+- ✅ Assigning Azure RBAC roles
+- ✅ Granting permissions to applications
+- ✅ Assigning licenses
+- ✅ Device management (Dynamic Device)
+- ✅ Nesting groups
+- ✅ Service principal membership
+- ❌ Don't support automatic expiration
+
+**When to Use Microsoft 365 Groups:**
+- ✅ Team collaboration
+- ✅ Shared mailbox and calendar
+- ✅ SharePoint site access
+- ✅ Microsoft Teams
+- ✅ Automatic cleanup (expiration policies)
+- ✅ Temporary projects
+- ❌ Users only (no devices, service principals, or nested groups)
+- ❌ Cannot be used for some permission scenarios
+
+**For Temporary Access Scenarios:**
+- Always use **Microsoft 365 Groups** when automatic expiration is required
+- Works with both **Assigned** and **Dynamic User** membership types
+- Security Groups require manual cleanup
 
 ---
 
