@@ -13,6 +13,7 @@
     - [2.5.1 Connecting Virtual Networks Across Subscriptions](#251-connecting-virtual-networks-across-subscriptions)
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
   - [2.7 Application Security Groups (ASG)](#27-application-security-groups-asg)
+  - [2.8 Network Interfaces (NICs)](#28-network-interfaces-nics)
 - [3. Private Endpoints](#3-private-endpoints)
   - [3.1 What is a Private Endpoint?](#31-what-is-a-private-endpoint)
   - [3.2 How Private Endpoints Work](#32-how-private-endpoints-work)
@@ -510,6 +511,272 @@ How would you group virtual machines into Web Servers and Management Servers?
 **References:**
 - [Application Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
 - [Filter network traffic with NSGs](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic)
+
+---
+
+### 2.8 Network Interfaces (NICs)
+
+**Network Interfaces (NICs)** are the interconnection between a virtual machine and a virtual network. A NIC enables an Azure VM to communicate with internet, Azure, and on-premises resources.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Purpose** | Connects VM to a virtual network subnet |
+| **IP Assignment** | Can have both public AND private IP addresses |
+| **One NIC Minimum** | Each VM requires at least one NIC |
+| **Multiple NICs** | Larger VM sizes support multiple NICs for network redundancy |
+| **Attachment** | Must be attached to a VM in the same location and subscription |
+
+**IP Address Configuration:**
+
+A single NIC can have:
+- ✅ **One Private IP Address** (required) - Used for communication within VNet
+- ✅ **One Public IP Address** (optional) - Used for internet-facing communication
+- ✅ **Multiple IP Configurations** - A single NIC can have multiple private IPs
+
+**Network Interface Components:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Azure Virtual Machine                     │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │            Network Interface (NIC)                     │  │
+│  │                                                        │  │
+│  │  Private IP: 10.0.1.4 ────────────► Virtual Network   │  │
+│  │  Public IP:  20.1.2.3  ─────────────► Internet        │  │
+│  │                                                        │  │
+│  │  NSG: Attached to control traffic                     │  │
+│  └────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Important Characteristics:**
+
+| Characteristic | Details |
+|----------------|----------|
+| **Subnet Association** | NIC is associated with a specific subnet in a VNet |
+| **Security** | NSGs can be applied to NICs for traffic filtering |
+| **IP Forwarding** | Can be enabled for routing scenarios |
+| **Accelerated Networking** | Can be enabled for improved network performance |
+| **DNS Settings** | Can have custom DNS servers configured |
+
+**Multiple NICs per VM:**
+
+Larger VM sizes support multiple NICs:
+- **Standard_D2s_v3**: Maximum 2 NICs
+- **Standard_D4s_v3**: Maximum 4 NICs
+- **Standard_D8s_v3**: Maximum 8 NICs
+
+**Use Cases for Multiple NICs:**
+- 🔹 Network virtual appliances (firewalls, load balancers)
+- 🔹 Front-end/back-end network separation
+- 🔹 Management traffic isolation
+- 🔹 High-availability scenarios
+
+**Practice Question: Minimum NICs for VM Deployment**
+
+**Scenario:**
+
+Your company has a Microsoft Entra ID subscription. You need to deploy five virtual machines (VMs) to your company's virtual network subnet.
+
+**Requirements:**
+- ✅ Each VM will have both a public and private IP address
+- ✅ Inbound and outbound security rules must be identical for all VMs
+- ❓ What is the minimum number of network interfaces needed?
+
+**Options:**
+- A) 5 ✅
+- B) 10
+- C) 20
+- D) 40
+
+**Correct Answer: A) 5 Network Interfaces**
+
+**Why 5 is Correct:**
+
+| Reasoning | Explanation |
+|-----------|-------------|
+| **One NIC per VM** | Each VM requires at least one network interface to connect to the VNet |
+| **Both IP Types on One NIC** | A single NIC can have BOTH a private IP (required) and a public IP (optional) |
+| **No Need for Multiple NICs** | The requirement for both IP types does NOT require separate NICs |
+| **Security Rules** | NSGs can be applied at subnet or NIC level to maintain identical rules |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **10 NICs** | Would mean 2 NICs per VM - unnecessary since one NIC supports both public and private IPs |
+| **20 NICs** | Would mean 4 NICs per VM - excessive and not required for this scenario |
+| **40 NICs** | Would mean 8 NICs per VM - far more than necessary and wasteful |
+
+**Configuration Breakdown:**
+
+```plaintext
+VM1: NIC1 → Private IP: 10.0.1.4, Public IP: 20.1.2.3
+VM2: NIC2 → Private IP: 10.0.1.5, Public IP: 20.1.2.4
+VM3: NIC3 → Private IP: 10.0.1.6, Public IP: 20.1.2.5
+VM4: NIC4 → Private IP: 10.0.1.7, Public IP: 20.1.2.6
+VM5: NIC5 → Private IP: 10.0.1.8, Public IP: 20.1.2.7
+
+Total NICs Required: 5
+```
+
+**Maintaining Identical Security Rules:**
+
+To ensure identical inbound/outbound rules for all VMs:
+
+| Approach | Implementation |
+|----------|----------------|
+| **Subnet-Level NSG** | Apply one NSG to the subnet containing all 5 VMs |
+| **Application Security Group** | Create an ASG, add all 5 VMs to it, and reference in NSG rules |
+| **NIC-Level NSG** | Apply the same NSG to all 5 NICs (more management overhead) |
+
+**Best Practice:**
+Use a **subnet-level NSG** or **Application Security Groups** for centralized rule management rather than managing individual NIC-level NSGs.
+
+**Key Takeaway:**
+> 🔑 **One NIC can have both public and private IP addresses.** You don't need separate NICs for each IP type. The minimum number of NICs equals the number of VMs.
+
+---
+
+**Practice Question: Network Virtual Appliance with Multiple NICs**
+
+**Scenario:**
+
+You are deploying a network virtual appliance (NVA) in Azure to act as a firewall between your frontend and backend subnets. The architecture requires:
+
+- **Frontend Subnet** (10.0.1.0/24): Web servers that receive traffic from the internet
+- **Backend Subnet** (10.0.2.0/24): Database servers that should only be accessible through the NVA
+- **Management Subnet** (10.0.3.0/24): For administrative access to the NVA
+
+**Requirements:**
+- ✅ NVA must inspect and route traffic between frontend and backend subnets
+- ✅ NVA must have dedicated management access isolated from application traffic
+- ✅ Each network segment must be on a separate subnet for security policy enforcement
+- ✅ Traffic from frontend to backend must pass through the NVA
+
+**Question:** How many network interfaces does the NVA virtual machine require?
+
+**Options:**
+- A) 1 NIC
+- B) 2 NICs
+- C) 3 NICs ✅
+- D) 4 NICs
+
+**Correct Answer: C) 3 NICs**
+
+**Why 3 NICs are Required:**
+
+| NIC | Purpose | Subnet | IP Address | Traffic Type |
+|-----|---------|--------|------------|--------------|
+| **NIC 1** | Frontend Interface | Frontend Subnet | 10.0.1.10 | Receives traffic from web servers |
+| **NIC 2** | Backend Interface | Backend Subnet | 10.0.2.10 | Forwards inspected traffic to database servers |
+| **NIC 3** | Management Interface | Management Subnet | 10.0.3.10 | Administrative access (SSH/RDP) |
+
+**Architecture Diagram:**
+
+```
+                              Internet
+                                 │
+                                 ▼
+                    ┌────────────────────────┐
+                    │   Frontend Subnet      │
+                    │   (10.0.1.0/24)        │
+                    │  ┌──────┐  ┌──────┐    │
+                    │  │ Web1 │  │ Web2 │    │
+                    │  └──────┘  └──────┘    │
+                    └──────────┬─────────────┘
+                               │
+                     ┌─────────▼──────────┐
+                     │   NVA Firewall     │
+                     │                    │
+                     │  NIC1: 10.0.1.10   │◄─── Frontend Traffic
+                     │  NIC2: 10.0.2.10   │◄─── Backend Traffic
+                     │  NIC3: 10.0.3.10   │◄─── Management Access
+                     └─────────┬──────────┘
+                               │
+                    ┌──────────▼─────────────┐
+                    │   Backend Subnet       │
+                    │   (10.0.2.0/24)        │
+                    │  ┌──────┐  ┌──────┐    │
+                    │  │ DB1  │  │ DB2  │    │
+                    │  └──────┘  └──────┘    │
+                    └────────────────────────┘
+                    
+        Management Subnet (10.0.3.0/24) for NVA admin access
+```
+
+**Why Each NIC is Necessary:**
+
+| Reason | Explanation |
+|--------|-------------|
+| **Network Segmentation** | Each subnet requires a separate NIC for the NVA to participate in that network |
+| **Routing Between Subnets** | NVA needs to receive traffic on one NIC and forward to another after inspection |
+| **Security Isolation** | Management traffic must be isolated from application traffic |
+| **IP Forwarding** | Each NIC can have IP forwarding enabled to route between networks |
+| **NSG Policies** | Different NSG rules can be applied to each NIC/subnet |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **1 NIC** | Cannot route between multiple subnets; NVA would only connect to one subnet |
+| **2 NICs** | Could handle frontend-backend routing but lacks isolated management access |
+| **4 NICs** | More than needed for this three-subnet scenario |
+
+**Configuration Requirements:**
+
+```plaintext
+1. Create the NVA VM with appropriate size:
+   → Standard_D4s_v3 or higher (supports 4+ NICs)
+
+2. Attach three NICs during or after VM creation:
+   → NIC1 attached to Frontend Subnet
+   → NIC2 attached to Backend Subnet
+   → NIC3 attached to Management Subnet
+
+3. Enable IP Forwarding on NIC1 and NIC2:
+   → Required for routing traffic between subnets
+   → Management NIC typically doesn't need IP forwarding
+
+4. Configure User-Defined Routes (UDR):
+   → Frontend subnet: Route 10.0.2.0/24 → Next hop: NVA NIC1 (10.0.1.10)
+   → Backend subnet: Route 0.0.0.0/0 → Next hop: NVA NIC2 (10.0.2.10)
+
+5. Configure NSGs for each NIC:
+   → NIC1: Allow inbound from internet/web servers
+   → NIC2: Allow outbound to database servers
+   → NIC3: Allow SSH/RDP from admin workstations only
+```
+
+**Real-World Use Cases for Multiple NICs:**
+
+| Scenario | NICs Required | Reason |
+|----------|---------------|--------|
+| **Firewall/NVA** | 2-4 NICs | Separate NICs for each security zone (DMZ, internal, management) |
+| **Load Balancer Appliance** | 2 NICs | Frontend for clients, backend for servers |
+| **VPN Gateway Appliance** | 2 NICs | Public NIC for VPN, private NIC for internal network |
+| **Database Server with Replication** | 2 NICs | Application traffic vs. database replication traffic |
+| **Multi-Tier App Component** | 2-3 NICs | Frontend, backend, and management separation |
+
+**Key Takeaway:**
+> 🔑 **Multiple NICs are required when a VM needs to route traffic between different subnets, provide network services across multiple networks, or isolate different types of traffic for security and performance.**
+
+**Comparison: When You Need 1 NIC vs Multiple NICs:**
+
+| Requirement | NICs Needed | Example |
+|-------------|-------------|---------|
+| VM needs both public and private IP | **1 NIC** | Standard web server |
+| VM needs to route between two networks | **2 NICs** | Simple firewall between subnets |
+| VM provides services across three networks | **3 NICs** | NVA with management network |
+| VM acts as DMZ appliance | **3-4 NICs** | External, DMZ, internal, management |
+
+**References:**
+- [Virtual Network Interfaces](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-network-interface)
+- [IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
+- [Multiple NICs in Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/multiple-nics)
+- [Network Virtual Appliances in Azure](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
 
 ---
 
