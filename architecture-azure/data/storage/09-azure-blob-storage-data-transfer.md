@@ -322,6 +322,55 @@ azcopy copy 'C:\CompanyFiles\*' 'https://store1.blob.core.windows.net/data/?sv=2
 # AzCopy provides real-time progress and can resume interrupted transfers
 ```
 
+#### AzCopy Authentication Methods
+
+AzCopy supports different authentication methods depending on the Azure Storage service you're targeting.
+
+##### Blob Storage Authentication
+
+**Supported Methods:**
+- ✅ **Azure AD (Microsoft Entra ID)** - Recommended for security
+- ✅ **Shared Access Signatures (SAS)** - For temporary, limited access
+
+**Example with Azure AD:**
+```bash
+# Authenticate with Azure AD
+azcopy login
+
+# Copy to Blob Storage using Azure AD credentials
+azcopy copy 'C:\LocalData\*' 'https://storage1.blob.core.windows.net/container/' --recursive=true
+```
+
+**Example with SAS:**
+```bash
+# Copy to Blob Storage using SAS token
+azcopy copy 'C:\LocalData\*' 'https://storage1.blob.core.windows.net/container/?sv=2021-06-08&ss=b&srt=sco&sp=rwdlac&se=...' --recursive=true
+```
+
+##### File Storage Authentication
+
+**Supported Methods:**
+- ✅ **Shared Access Signatures (SAS) only** - Only SAS tokens are supported for Azure Files
+
+**Important:** Azure AD authentication is **NOT supported** for Azure Files when using AzCopy.
+
+**Example with SAS:**
+```bash
+# Copy to Azure Files using SAS token (ONLY option)
+azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/?sv=2021-06-08&ss=f&srt=sco&sp=rwdlac&se=...' --recursive=true
+```
+
+**Authentication Method Summary:**
+
+| Storage Service | Azure AD | SAS Token |
+|----------------|----------|-----------|
+| **Blob Storage** | ✅ Supported | ✅ Supported |
+| **File Storage** | ❌ Not Supported | ✅ Supported (Only option) |
+
+**Exam Takeaway:**
+- 🔑 **Blob Storage**: Use Azure AD or SAS for AzCopy
+- 🔑 **File Storage**: Use SAS only for AzCopy (Azure AD not supported)
+
 ---
 
 ### Azure Storage Mover
