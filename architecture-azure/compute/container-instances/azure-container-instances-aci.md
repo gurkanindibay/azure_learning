@@ -758,6 +758,55 @@ az container create \
   --command-line "/bin/sh -c 'echo hello > /data/test.txt && cat /data/test.txt'"
 ```
 
+#### Choosing the Right Storage Service for ACI
+
+When selecting a storage service for Azure Container Instances, it's crucial to understand which Azure Storage services are suitable for persistent file-based storage requirements.
+
+**Common Exam Question:** You plan to create an Azure container instance that will use a Docker image containing a Microsoft SQL Server instance that requires persistent storage. What storage service should you use?
+
+| Storage Service | Suitable for ACI Persistent Storage? | Reason |
+|----------------|--------------------------------------|---------|
+| **Azure Files** | ✅ **Yes** (Correct Answer) | Provides fully managed file shares with file system interface that can be mounted as volumes in ACI containers. Ideal for SQL Server data files requiring persistent, file-based storage. |
+| **Azure Blob Storage** | ❌ No | Object storage without file system interface. Does not support direct mounting as a volume with file system semantics required by SQL Server. |
+| **Azure Table Storage** | ❌ No | NoSQL key-value storage service. Not suitable for persistent file-based storage needs or SQL Server data files. |
+| **Azure Queue Storage** | ❌ No | Messaging service for communication between services. Does not store files or support file system access. |
+
+**Why Azure Files is the Correct Choice:**
+
+1. **File System Interface**: Azure Files provides SMB/NFS protocol support, allowing containers to access storage as a traditional file system
+2. **Persistent Storage**: Data persists beyond container lifecycle, essential for database files
+3. **Concurrent Access**: Multiple containers can mount the same file share simultaneously
+4. **SQL Server Compatibility**: SQL Server requires a file system to store `.mdf`, `.ldf`, and other database files
+5. **Managed Service**: Fully managed without need to configure file servers or manage OS
+
+**Use Case Example:**
+
+```bash
+# Create an ACI container running SQL Server with persistent storage using Azure Files
+az container create \
+  --resource-group database-rg \
+  --name sql-server-container \
+  --image mcr.microsoft.com/mssql/server:2019-latest \
+  --cpu 2 \
+  --memory 4 \
+  --azure-file-volume-account-name sqlstorageaccount \
+  --azure-file-volume-account-key <storage-account-key> \
+  --azure-file-volume-share-name sqldata \
+  --azure-file-volume-mount-path /var/opt/mssql/data \
+  --secure-environment-variables \
+    ACCEPT_EULA=Y \
+    SA_PASSWORD="YourStrongPassword123!" \
+  --ports 1433 \
+  --restart-policy Always
+```
+
+**Key Considerations:**
+
+- **Performance**: For production SQL Server workloads, consider using Premium Azure Files for better IOPS and throughput
+- **Backup**: Azure Files supports snapshots for point-in-time recovery
+- **Security**: Use storage account keys securely (consider Azure Key Vault integration)
+- **Limitations**: ACI is suitable for development/testing SQL Server scenarios; for production, consider Azure SQL Database or SQL Server on VMs
+
 ### Environment Variables
 
 ```bash
@@ -1039,6 +1088,131 @@ az container create \
   --resource-group myResourceGroup \
   --file multi-container-app.yaml
 ```
+
+### Scenario 5: SQL Server Container with Persistent Storage
+
+**Requirement:** Run SQL Server in a container with persistent data storage
+
+This scenario demonstrates how to run a Microsoft SQL Server instance in Azure Container Instances with persistent storage using Azure Files. This is essential for database workloads where data must persist beyond the container lifecycle.
+
+**Prerequisites:**
+- Azure Storage account created
+- Azure Files share created for database files
+
+```bash
+# Create storage account (if not exists)
+az storage account create \
+  --resource-group database-rg \
+  --name sqlstorageaccount \
+  --sku Standard_LRS \
+  --location eastus
+
+# Create file share for SQL Server data
+az storage share create \
+  --account-name sqlstorageaccount \
+  --name sqldata
+
+# Get storage account key
+STORAGE_KEY=$(az storage account keys list \
+  --resource-group database-rg \
+  --account-name sqlstorageaccount \
+  --query '[0].value' \
+  --output tsv)
+
+# Create SQL Server container instance with persistent storage
+az container create \
+  --resource-group database-rg \
+  --name sql-server-dev \
+  --image mcr.microsoft.com/mssql/server:2019-latest \
+  --cpu 2 \
+  --memory 4 \
+  --azure-file-volume-account-name sqlstorageaccount \
+  --azure-file-volume-account-key $STORAGE_KEY \
+  --azure-file-volume-share-name sqldata \
+  --azure-file-volume-mount-path /var/opt/mssql/data \
+  --restart-policy Always \
+  --ports 1433 \
+  --dns-name-label sql-server-dev-instance \
+  --secure-environment-variables \
+    ACCEPT_EULA=Y \
+    SA_PASSWORD="YourStrong!Passw0rd" \
+    MSSQL_PID=Developer
+
+# Connect to SQL Server
+# Connection string: Server=sql-server-dev-instance.<region>.azurecontainer.io,1433;User Id=sa;Password=YourStrong!Passw0rd
+```
+
+**YAML Alternative:**
+
+```yaml
+# sql-server-container.yaml
+apiVersion: 2021-09-01
+location: eastus
+name: sql-server-dev
+properties:
+  containers:
+  - name: sqlserver
+    properties:
+      image: mcr.microsoft.com/mssql/server:2019-latest
+      resources:
+        requests:
+          cpu: 2
+          memoryInGb: 4
+      ports:
+      - port: 1433
+        protocol: TCP
+      environmentVariables:
+      - name: ACCEPT_EULA
+        secureValue: "Y"
+      - name: SA_PASSWORD
+        secureValue: "YourStrong!Passw0rd"
+      - name: MSSQL_PID
+        value: "Developer"
+      volumeMounts:
+      - name: sqldata
+        mountPath: /var/opt/mssql/data
+  volumes:
+  - name: sqldata
+    azureFile:
+      shareName: sqldata
+      storageAccountName: sqlstorageaccount
+      storageAccountKey: <storage-account-key>
+  restartPolicy: Always
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: sql-server-dev-instance
+    ports:
+    - port: 1433
+      protocol: TCP
+type: Microsoft.ContainerInstance/containerGroups
+```
+
+```bash
+az container create \
+  --resource-group database-rg \
+  --file sql-server-container.yaml
+```
+
+**Why This Configuration Works:**
+
+| Component | Purpose |
+|-----------|---------|
+| **Azure Files Volume** | Provides persistent file system for SQL Server `.mdf` and `.ldf` files |
+| **Mount Path `/var/opt/mssql/data`** | Default SQL Server data directory location |
+| **Restart Policy `Always`** | Ensures database service stays running and restarts on failures |
+| **CPU: 2 cores, Memory: 4GB** | Minimum recommended resources for SQL Server |
+| **DNS Name Label** | Creates predictable endpoint for database connections |
+| **Secure Environment Variables** | Protects sensitive configuration like SA password |
+
+**Important Considerations:**
+
+- ⚠️ **Production Workloads**: ACI is suitable for dev/test SQL Server scenarios. For production, use Azure SQL Database, Azure SQL Managed Instance, or SQL Server on VMs
+- ⚠️ **Performance**: Consider Premium Azure Files for better I/O performance
+- ⚠️ **Backup**: Implement backup strategy using Azure Files snapshots or SQL Server backup commands
+- ⚠️ **Security**: Use Azure Key Vault for storing sensitive credentials
+- ⚠️ **High Availability**: ACI does not provide built-in HA; single instance deployment
+- ⚠️ **Networking**: For production scenarios, deploy in a virtual network for network isolation
 
 ## Best Practices
 
