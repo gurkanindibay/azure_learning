@@ -11,6 +11,7 @@
   - [Supported Authentication Methods](#supported-authentication-methods)
   - [Authentication Method Details](#authentication-method-details)
   - [Authentication Methods NOT Supported](#authentication-methods-not-supported)
+  - [AzCopy Authentication for Azure Files](#azcopy-authentication-for-azure-files)
 - [Storage Tiers](#storage-tiers)
   - [Premium Tier](#premium-tier)
   - [Transaction Optimized Tier](#transaction-optimized-tier)
@@ -97,7 +98,7 @@ Azure Files supports multiple authentication mechanisms for secure access to you
 | **On-premises AD DS** | ✅ Yes | Extends on-premises Active Directory to Azure for seamless authentication |
 | **Storage Account Keys** | ✅ Yes | Full access authentication using storage account keys |
 | **Azure RBAC** | ✅ Yes | Role-based access control for granular permissions on Azure Files |
-| **Shared Access Signature (SAS)** | ❌ No | Not supported for Azure Files authentication |
+| **Shared Access Signature (SAS)** | ⚠️ Limited | Not supported for SMB/NFS protocol access, but **supported for AzCopy and REST API operations** as of November 2024 |
 | **Shared Key Authorization** | ❌ No | Not supported by Azure Files |
 
 ### Authentication Method Details
@@ -212,6 +213,72 @@ When securing Azure Files, use identity-based authentication methods (Microsoft 
 - [Overview of Azure Files identity-based authentication](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-active-directory-overview)
 - [Enable Microsoft Entra Domain Services authentication on Azure Files](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-auth-domain-services-enable)
 - [Enable on-premises AD DS authentication to Azure file shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-ad-ds-enable)
+
+---
+
+### AzCopy Authentication for Azure Files
+
+**AzCopy** is a command-line utility designed for high-performance data transfer to and from Azure Storage services, including Azure Files.
+
+#### Supported Authentication Methods for AzCopy
+
+As of **November 11, 2024**, Microsoft supports **both Microsoft Entra ID (Azure AD) and Shared Access Signatures (SAS)** for authenticating AzCopy operations with Azure File shares.
+
+| Authentication Method | Supported | Description |
+|-----------------------|-----------|-------------|
+| **Microsoft Entra ID (Azure AD)** | ✅ Yes (as of Nov 2024) | Identity-based authentication using Azure AD credentials |
+| **Shared Access Signature (SAS)** | ✅ Yes | Token-based authentication with time-limited access |
+
+**Important Update:** Previously, Azure AD authentication was **NOT supported** for Azure Files when using AzCopy. However, Microsoft added this capability in November 2024, making both authentication methods available for Azure Files, matching the authentication options available for Azure Blob Storage.
+
+#### AzCopy Authentication Examples
+
+**Using Microsoft Entra ID (Azure AD):**
+```bash
+# Authenticate with Azure AD
+azcopy login
+
+# Copy files to Azure Files using Azure AD credentials
+azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/' --recursive=true
+```
+
+**Using Shared Access Signature (SAS):**
+```bash
+# Copy files to Azure Files using SAS token
+azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/?sv=2021-06-08&ss=f&srt=sco&sp=rwdlac&se=2024-12-31T23:59:59Z' --recursive=true
+```
+
+#### Exam Question: AzCopy Authentication Methods
+
+**Scenario:**
+You have an Azure Storage account named **storage1** that uses Azure Blob storage and Azure File storage.
+
+You need to use AzCopy to copy data to the blob storage and file storage in storage1.
+
+**Question:**
+Which authentication method should you use for each type of storage?
+
+**Answer:**
+
+| Storage Type | Authentication Methods |
+|--------------|------------------------|
+| **Blob Storage** | Microsoft Entra ID (Azure AD) and Shared Access Signatures (SAS) |
+| **File Storage** | Microsoft Entra ID (Azure AD) and Shared Access Signatures (SAS) |
+
+**Explanation:**
+- **Blob Storage**: Both Microsoft Entra ID and SAS tokens are supported for authenticating AzCopy operations
+- **File Storage**: As of November 11, 2024, Microsoft supports **both Azure AD and SAS** for Azure File shares when using AzCopy
+
+**Common Misconception:** Many older exam materials and documentation indicated that Azure AD authentication was NOT supported for Azure Files with AzCopy. This changed in November 2024.
+
+**Key Takeaway:**
+- 🔑 **AzCopy with Blob Storage**: Use Azure AD or SAS
+- 🔑 **AzCopy with File Storage**: Use Azure AD or SAS (both supported as of November 2024)
+- 🔑 **SMB/NFS protocol access to Azure Files**: SAS is still **NOT supported**; use identity-based authentication or storage account keys
+
+**References:**
+- [Use AzCopy to transfer data to Azure Files](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-files)
+- [Authorize access to data in Azure Storage](https://learn.microsoft.com/en-us/azure/storage/common/authorize-data-access)
 
 ---
 
@@ -973,6 +1040,73 @@ mount_smbfs //Azure@<storage-account>.file.core.windows.net/<share-name> /Volume
 | **Dev/Test** | Share tools and utilities across development environments |
 | **Containerization** | Persistent storage for containers (AKS, ACI) |
 | **Hybrid Scenarios** | Extend on-premises file servers with Azure File Sync |
+
+### Container Persistent Storage (Azure Container Instances)
+
+Azure Files is the **recommended storage service** for providing persistent storage to Azure Container Instances (ACI). It's particularly suitable for containerized applications that require file-based persistent storage, such as databases running in containers.
+
+**Why Azure Files for ACI?**
+
+| Feature | Benefit for Container Instances |
+|---------|--------------------------------|
+| **File System Interface** | Provides SMB/NFS protocols that containers can mount as traditional file systems |
+| **Persistent Data** | Data persists beyond container lifecycle, essential for stateful applications |
+| **Concurrent Access** | Multiple containers can mount the same file share simultaneously |
+| **Database Compatibility** | Supports database files (`.mdf`, `.ldf`) required by SQL Server and other databases |
+| **Managed Service** | No need to configure or manage file servers |
+
+**Common Exam Scenario:** 
+
+**Question:** You plan to create an Azure container instance that will use a Docker image containing a Microsoft SQL Server instance that requires persistent storage. What storage service should you use?
+
+| Storage Service | Suitable? | Reason |
+|----------------|-----------|---------|
+| **Azure Files** | ✅ **Yes** | Provides file system interface with SMB/NFS support, allowing containers to store database files persistently. Can be mounted as a volume in ACI. |
+| Azure Blob Storage | ❌ No | Object storage without file system interface. Cannot be directly mounted with file system semantics required by SQL Server. |
+| Azure Table Storage | ❌ No | NoSQL key-value storage. Not suitable for file-based storage or database files. |
+| Azure Queue Storage | ❌ No | Messaging service for inter-service communication. Does not store files or support file system access. |
+
+**Implementation Example:**
+
+```bash
+# Create SQL Server container instance with Azure Files persistent storage
+az container create \
+  --resource-group database-rg \
+  --name sql-server-container \
+  --image mcr.microsoft.com/mssql/server:2019-latest \
+  --cpu 2 \
+  --memory 4 \
+  --azure-file-volume-account-name sqlstorageaccount \
+  --azure-file-volume-account-key <storage-account-key> \
+  --azure-file-volume-share-name sqldata \
+  --azure-file-volume-mount-path /var/opt/mssql/data \
+  --secure-environment-variables \
+    ACCEPT_EULA=Y \
+    SA_PASSWORD="YourStrong!Passw0rd" \
+  --ports 1433 \
+  --restart-policy Always
+```
+
+**Key Configuration Parameters:**
+
+| Parameter | Purpose |
+|-----------|---------|
+| `--azure-file-volume-share-name` | Name of the Azure Files share to mount |
+| `--azure-file-volume-account-name` | Storage account containing the file share |
+| `--azure-file-volume-account-key` | Authentication credential for storage account access |
+| `--azure-file-volume-mount-path` | Container path where the file share is mounted (e.g., `/var/opt/mssql/data` for SQL Server) |
+
+**Important Considerations:**
+
+- ⚠️ **Performance**: For production-grade database workloads, use **Premium Azure Files** for better IOPS and lower latency
+- ⚠️ **Backup**: Implement backup strategy using Azure Files snapshots or application-level backups
+- ⚠️ **Production Workloads**: ACI is suitable for dev/test SQL Server scenarios; for production, consider Azure SQL Database, Azure SQL Managed Instance, or SQL Server on VMs
+- ⚠️ **Security**: Store storage account keys in Azure Key Vault instead of hardcoding them
+
+**Related Documentation:**
+- See [Azure Container Instances - Storage Volumes](../../../compute/container-instances/azure-container-instances-aci.md#storage-volumes) for detailed ACI storage configuration
+
+---
 
 ## Azure Files vs Azure Blob Storage
 

@@ -503,26 +503,36 @@ azcopy copy 'C:\LocalData\*' 'https://storage1.blob.core.windows.net/container/?
 ##### File Storage Authentication
 
 **Supported Methods:**
-- ✅ **Shared Access Signatures (SAS) only** - Only SAS tokens are supported for Azure Files
+- ✅ **Microsoft Entra ID (Azure AD)** - Supported as of November 2024
+- ✅ **Shared Access Signatures (SAS)** - Supported for Azure Files
 
-**Important:** Azure AD authentication is **NOT supported** for Azure Files when using AzCopy.
+**Important:** As of November 11, 2024, Microsoft now supports **both Azure AD and SAS** for authenticating AzCopy with Azure File shares.
+
+**Example with Azure AD:**
+```bash
+# Authenticate with Azure AD
+azcopy login
+
+# Copy to Azure Files using Azure AD credentials
+azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/' --recursive=true
+```
 
 **Example with SAS:**
 ```bash
-# Copy to Azure Files using SAS token (ONLY option)
+# Copy to Azure Files using SAS token
 azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/?sv=2021-06-08&ss=f&srt=sco&sp=rwdlac&se=...' --recursive=true
 ```
 
 **Authentication Method Summary:**
 
-| Storage Service | Azure AD | SAS Token |
-|----------------|----------|-----------|
+| Storage Service | Microsoft Entra ID (Azure AD) | SAS Token |
+|----------------|-------------------------------|-----------|
 | **Blob Storage** | ✅ Supported | ✅ Supported |
-| **File Storage** | ❌ Not Supported | ✅ Supported (Only option) |
+| **File Storage** | ✅ Supported (as of Nov 2024) | ✅ Supported |
 
 **Exam Takeaway:**
 - 🔑 **Blob Storage**: Use Azure AD or SAS for AzCopy
-- 🔑 **File Storage**: Use SAS only for AzCopy (Azure AD not supported)
+- 🔑 **File Storage**: Use Azure AD or SAS for AzCopy (both supported as of November 2024)
 
 ---
 
