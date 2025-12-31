@@ -82,6 +82,78 @@ The "Allow trusted Microsoft services to access this storage account" checkbox i
 
 **Key Takeaway**: Even Microsoft's own services need explicit permission via the trusted services exception when network restrictions are enabled.
 
+### Question 3: VM Disk Upload and Access Configuration
+
+**Scenario**:
+You have an Azure subscription with a storage account named account1. You plan to:
+- Upload disk files (.vhd) from on-premises network (public IP: 131.107.1.0/24)
+- Use these disk files to provision VM1
+- Attach VM1 to VNet1 (IP address space: 192.168.0.0/24)
+- Prevent all other access to account1
+
+**Question**: Which two actions should you perform to meet the requirements?
+
+**Correct Answers**:
+
+1. **From the Networking blade of account1, select Selected networks**
+   - **Why**: This restricts access to only specified networks/IP ranges
+   - **Impact**: Prevents all other access to the storage account (meets security requirement)
+   - **Result**: Enhances security by denying all traffic except explicitly allowed sources
+
+2. **From the Networking blade of account1, add the 131.107.1.0/24 IP address range**
+   - **Why**: Allows the on-premises network to upload disk files
+   - **Configuration**: Add to "Firewall" → "Address range" section
+   - **Result**: Enables VHD upload from on-premises (meets upload requirement)
+
+**Additional Configuration Needed** (after upload):
+
+3. **From the Networking blade of account1, add VNet1**
+   - **Why**: Allows VM1 to attach and access the VHD disks
+   - **When**: Required after upload is complete, before VM provisioning
+   - **Result**: Enables VM1 to access its disk files (meets attachment requirement)
+
+**Analysis of Other Options**:
+
+❌ **From the Service endpoints blade of VNet1, add a service endpoint**
+- **Purpose**: Enhances performance and security for VNet-to-Storage connectivity
+- **Not Mandatory**: Access can be granted through storage account networking settings alone
+- **Benefit**: Improves latency and enables private IP routing
+- **When Useful**: Production environments requiring optimal performance
+
+❌ **From the Networking blade of account1, select Allow trusted Microsoft services**
+- **Purpose**: Enables Azure Backup, Site Recovery, and other Microsoft services
+- **Not Required**: This scenario doesn't involve trusted Microsoft services
+- **Use Case**: Enable when using Azure Backup for unmanaged disks or Site Recovery
+
+**Implementation Steps**:
+
+```
+Phase 1: Enable On-Premises Upload
+1. Storage Account → Networking
+2. Select "Selected networks"
+3. Firewall section → Add IP range: 131.107.1.0/24
+4. Save configuration
+5. Upload VHD files from on-premises
+
+Phase 2: Configure VM Access
+6. Networking blade → Virtual networks section
+7. Add VNet1 (192.168.0.0/24)
+8. Optionally add service endpoint on VNet1 subnet
+9. Save configuration
+10. Provision VM1 and attach disks
+```
+
+**Key Insights**:
+
+| Requirement | Configuration | Why |
+|-------------|---------------|-----|
+| Upload disks from on-premises | Add 131.107.1.0/24 IP range | Allows access from public IP space |
+| Prevent other access | Select "Selected networks" | Restricts to explicit allow list |
+| VM1 access to disks | Add VNet1 to allowed networks | VM needs to read VHD during boot/operation |
+| Enhanced security (optional) | Service endpoint on VNet1 | Private IP routing, better performance |
+
+**Security Best Practice**: Use "Selected networks" mode as the foundation, then explicitly add only required sources (on-premises IP + VNet). This follows the principle of least privilege.
+
 ## Best Practices
 
 ### 1. Network Security Configuration
