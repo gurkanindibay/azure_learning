@@ -5,12 +5,14 @@
 - [Overview](#overview)
 - [Data Transfer Methods](#data-transfer-methods)
   - [Azure Import/Export Service](#azure-importexport-service)
+    - [Required Files for Import/Export Jobs](#required-files-for-importexport-jobs)
   - [Azure Data Factory](#azure-data-factory)
   - [AzCopy](#azcopy)
   - [Azure Storage Mover](#azure-storage-mover)
 - [Comparison Matrix](#comparison-matrix)
 - [Exam Question Analysis](#exam-question-analysis)
-  - [Question: On-Premises File Server to Blob Storage Migration](#question-on-premises-file-server-to-blob-storage-migration)
+  - [Question 1: Required Files for Azure Import/Export Service](#question-1-required-files-for-azure-importexport-service)
+  - [Question 2: On-Premises File Server to Blob Storage Migration](#question-2-on-premises-file-server-to-blob-storage-migration)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -64,23 +66,126 @@ This document covers the primary methods for transferring large amounts of data 
 - Continuous data synchronization is required
 - Time-to-cloud is critical (shipping adds days)
 
+#### Required Files for Import/Export Jobs
+
+Before preparing drives for an Azure Import/Export job, you must create **two critical CSV files**:
+
+##### 1. Dataset CSV File
+
+The **dataset CSV file** specifies the list of files and directories to be imported to the storage account. It provides details about the data you want to transfer.
+
+**Purpose:**
+- Defines the source data (files/directories) to be imported
+- Specifies the destination path in Azure Storage
+- Maps local data to blob containers or file shares
+
+**Format:**
+```csv
+BasePath,DstBlobPathOrPrefix,BlobType,Disposition,MetadataFile,PropertiesFile
+C:\Data\Documents\,documents/,BlockBlob,rename,metadata.txt,properties.txt
+C:\Data\Images\,images/,BlockBlob,no-overwrite,,
+C:\Data\Archive.zip,archive/Archive.zip,BlockBlob,overwrite,,
+```
+
+**Column Descriptions:**
+
+| Column | Description | Required |
+|--------|-------------|----------|
+| `BasePath` | Source directory or file path on local system | Yes |
+| `DstBlobPathOrPrefix` | Destination path/prefix in Azure Storage | Yes |
+| `BlobType` | Type of blob: `BlockBlob`, `PageBlob`, or `AppendBlob` | Yes |
+| `Disposition` | Action if blob exists: `rename`, `no-overwrite`, `overwrite` | Yes |
+| `MetadataFile` | Optional metadata file for blobs | No |
+| `PropertiesFile` | Optional properties file for blobs | No |
+
+**Example Dataset CSV:**
+```csv
+BasePath,DstBlobPathOrPrefix,BlobType,Disposition,MetadataFile,PropertiesFile
+C:\myfiles\documents\,import/documents/,BlockBlob,rename,,
+C:\myfiles\videos\,import/videos/,BlockBlob,no-overwrite,,
+```
+
+##### 2. Driveset CSV File
+
+The **driveset CSV file** contains information about the drives you will use for the import job. It maps the physical drives and provides Azure with the necessary information to identify and process them.
+
+**Purpose:**
+- Identifies the physical drives to be used
+- Maps drive letters to their usage in the job
+- Specifies BitLocker encryption keys for each drive
+
+**Format:**
+```csv
+DriveLetter,FormatOption,SilentOrPromptOnFormat,Encryption,ExistingBitLockerKey
+X:,Format,SilentMode,Encrypt,
+Y:,AlreadyFormatted,SilentMode,AlreadyEncrypted,123456-789012-345678-901234-567890-123456-789012-345678
+```
+
+**Column Descriptions:**
+
+| Column | Description | Required |
+|--------|-------------|----------|
+| `DriveLetter` | Drive letter of the disk to prepare | Yes |
+| `FormatOption` | `Format` or `AlreadyFormatted` | Yes |
+| `SilentOrPromptOnFormat` | `SilentMode` or `PromptOnFormat` | Yes |
+| `Encryption` | `Encrypt` or `AlreadyEncrypted` | Yes |
+| `ExistingBitLockerKey` | BitLocker key if already encrypted (48 digits) | Conditional |
+
+**Example Driveset CSV:**
+```csv
+DriveLetter,FormatOption,SilentOrPromptOnFormat,Encryption,ExistingBitLockerKey
+G:,Format,SilentMode,Encrypt,
+H:,Format,SilentMode,Encrypt,
+```
+
+##### Using CSV Files with WAImportExport Tool
+
+Once you've created both CSV files, use them with the WAImportExport tool:
+
+```bash
+# Prepare drives using both CSV files
+WAImportExport.exe PrepImport \
+  /j:JournalFile.jrn \
+  /id:session1 \
+  /sk:StorageAccountKey \
+  /InitialDriveSet:driveset.csv \
+  /DataSet:dataset.csv \
+  /logdir:C:\Logs
+```
+
+**Parameters Explained:**
+- `/j` - Journal file to track progress
+- `/id` - Session identifier
+- `/sk` - Storage account key for authentication
+- `/InitialDriveSet` - Path to driveset CSV file
+- `/DataSet` - Path to dataset CSV file
+- `/logdir` - Directory for log files
+
 #### Implementation Example
 
 ```bash
 # 1. Install WAImportExport tool
 # Download from: https://aka.ms/waiev2
 
-# 2. Prepare drives with data
-WAImportExport.exe PrepImport /j:FirstDrive.jrn /id:session1 /srcdir:C:\Data /dstdir:imports/ /bk:489A35C73217F582DDD22B82456E82BB7C1E5B06EA8F1B3E8DD6F75E8D7DA15B /encrypt /logdir:C:\Logs
+# 2. Create dataset.csv
+echo "BasePath,DstBlobPathOrPrefix,BlobType,Disposition,MetadataFile,PropertiesFile" > dataset.csv
+echo "C:\\Data\\,imports/,BlockBlob,rename,," >> dataset.csv
 
-# 3. Create Azure Import Job via Azure Portal
+# 3. Create driveset.csv
+echo "DriveLetter,FormatOption,SilentOrPromptOnFormat,Encryption,ExistingBitLockerKey" > driveset.csv
+echo "X:,Format,SilentMode,Encrypt," >> driveset.csv
+
+# 4. Prepare drives with data
+WAImportExport.exe PrepImport /j:FirstDrive.jrn /id:session1 /sk:YourStorageAccountKey /InitialDriveSet:driveset.csv /DataSet:dataset.csv /logdir:C:\Logs
+
+# 5. Create Azure Import Job via Azure Portal
 # - Specify storage account
 # - Upload journal files
 # - Provide shipping information
 
-# 4. Ship drives to Azure data center
-# 5. Monitor job status in Azure Portal
-# 6. Verify data after import completes
+# 6. Ship drives to Azure data center
+# 7. Monitor job status in Azure Portal
+# 8. Verify data after import completes
 ```
 
 #### Cost Considerations
@@ -447,7 +552,172 @@ azcopy copy 'C:\LocalData\*' 'https://storage1.file.core.windows.net/share/?sv=2
 
 ## Exam Question Analysis
 
-### Question: On-Premises File Server to Blob Storage Migration
+### Question 1: Required Files for Azure Import/Export Service
+
+#### Scenario
+
+You plan to use the **Azure Import/Export service** to copy files to a storage account.
+
+#### Question
+
+Which **TWO files** should you create before you prepare the drives for the import job?
+
+Each correct answer presents part of the solution.
+
+**NOTE**: Each correct selection is worth one point.
+
+#### Answer Options
+
+##### ❌ Option A: A PowerShell PS1 File
+
+**Why This Is Wrong:**
+
+While PowerShell can be used to **automate parts of the process**, it is **not mandatory** for creating or preparing drives for the import job.
+
+**Key Points:**
+- ❌ PowerShell scripts are optional for automation
+- ❌ Not a required file for the WAImportExport tool
+- ❌ The tool uses CSV files for configuration, not PowerShell scripts
+- ⚠️ PowerShell could be used to generate CSV files or automate tool execution, but it's not required
+
+**What It Could Do (Optional):**
+You might use PowerShell to automate CSV creation or call WAImportExport.exe, but the tool itself requires CSV files, not PS1 files.
+
+---
+
+##### ✅ Option B: A Dataset CSV File (CORRECT)
+
+**Why This Is Correct:**
+
+The **dataset CSV file** specifies the list of files and directories to be imported to the storage account. It provides details about the data you want to transfer.
+
+**Key Points:**
+- ✅ **Mandatory File**: Required by WAImportExport tool
+- ✅ **Defines Source Data**: Lists files/directories to import
+- ✅ **Specifies Destination**: Maps local paths to Azure Storage paths
+- ✅ **Configuration Format**: CSV format with specific columns
+
+**What It Contains:**
+- Source directory or file paths on local system (`BasePath`)
+- Destination path in Azure Storage (`DstBlobPathOrPrefix`)
+- Blob type specification (`BlockBlob`, `PageBlob`, `AppendBlob`)
+- Disposition rules (rename, no-overwrite, overwrite)
+- Optional metadata and properties files
+
+**Example:**
+```csv
+BasePath,DstBlobPathOrPrefix,BlobType,Disposition,MetadataFile,PropertiesFile
+C:\myfiles\documents\,import/documents/,BlockBlob,rename,,
+C:\myfiles\videos\,import/videos/,BlockBlob,no-overwrite,,
+```
+
+**Critical Purpose:**
+This file outlines **what data** to import, **where** to import it from, and **where** in Azure Storage it should go.
+
+---
+
+##### ❌ Option C: An XML Manifest File
+
+**Why This Is Wrong:**
+
+**Not required** for the Azure Import/Export service. The service uses **CSV files**, not XML manifests.
+
+**Key Points:**
+- ❌ Azure Import/Export uses CSV format, not XML
+- ❌ WAImportExport tool generates **journal (.jrn) files**, not XML manifests
+- ❌ No XML configuration is needed for this service
+
+**Confusion Point:**
+Other Azure services may use XML for configuration, but Import/Export specifically requires CSV files for dataset and driveset configurations.
+
+---
+
+##### ❌ Option D: A JSON Configuration File
+
+**Why This Is Wrong:**
+
+**Not relevant** to Azure Import/Export jobs. The service requires CSV files, not JSON.
+
+**Key Points:**
+- ❌ Import/Export does not use JSON for configuration
+- ❌ CSV is the required format for dataset and driveset files
+- ❌ JSON might be used in other Azure services (ARM templates, etc.), but not here
+
+**Confusion Point:**
+While JSON is commonly used in Azure (ARM templates, Azure CLI output), the Import/Export service specifically requires CSV files.
+
+---
+
+##### ✅ Option E: A Driveset CSV File (CORRECT)
+
+**Why This Is Correct:**
+
+The **driveset CSV file** contains information about the drives you will use for the import job, such as drive IDs and mapping details.
+
+**Key Points:**
+- ✅ **Mandatory File**: Required by WAImportExport tool
+- ✅ **Identifies Physical Drives**: Specifies which drives to prepare
+- ✅ **Drive Configuration**: Format options, encryption settings
+- ✅ **BitLocker Management**: Handles encryption key information
+
+**What It Contains:**
+- Drive letter of disks to prepare (`DriveLetter`)
+- Format options (`Format` or `AlreadyFormatted`)
+- Silent or prompt mode for formatting
+- Encryption settings (`Encrypt` or `AlreadyEncrypted`)
+- Existing BitLocker keys if already encrypted
+
+**Example:**
+```csv
+DriveLetter,FormatOption,SilentOrPromptOnFormat,Encryption,ExistingBitLockerKey
+X:,Format,SilentMode,Encrypt,
+Y:,Format,SilentMode,Encrypt,
+```
+
+**Critical Purpose:**
+This file maps the physical drives and provides Azure with the necessary information to identify and process them during the import job.
+
+---
+
+#### Summary: Two Required Files
+
+When using the Azure Import/Export service, you need to prepare **two specific CSV files** before preparing the drives:
+
+| File | Purpose | Required Columns |
+|------|---------|------------------|
+| **Dataset CSV** | Defines **what data** to import and **where** it goes in Azure | `BasePath`, `DstBlobPathOrPrefix`, `BlobType`, `Disposition` |
+| **Driveset CSV** | Defines **which drives** to use and **how** to prepare them | `DriveLetter`, `FormatOption`, `SilentOrPromptOnFormat`, `Encryption` |
+
+#### Complete Workflow
+
+```
+1. Create dataset.csv      ──┐
+                             │
+2. Create driveset.csv     ──┤
+                             ├──► 3. Run WAImportExport.exe PrepImport
+                             │         (References both CSV files)
+                             │
+                             ├──► 4. Drives prepared and encrypted
+                             │
+                             └──► 5. Ship drives to Azure data center
+
+6. Microsoft imports data to storage account
+
+7. Verify data in Azure Storage
+```
+
+#### Key Takeaway
+
+**Always create both CSV files before running WAImportExport tool:**
+
+✅ **Dataset CSV** - Specifies the data to import  
+✅ **Driveset CSV** - Specifies the drives to use
+
+❌ PowerShell, XML, and JSON files are **not required** for Azure Import/Export jobs.
+
+---
+
+### Question 2: On-Premises File Server to Blob Storage Migration
 
 #### Scenario
 
