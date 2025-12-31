@@ -85,6 +85,7 @@ Azure Storage offers several types of storage accounts, each supporting differen
 ### Premium Block Blobs
 
 - **Supported Services**: Blob Storage (including Data Lake Storage) - Block blobs and append blobs only
+- **Storage Account Kind**: **BlockBlobStorage**
 - **Redundancy Options**: LRS, ZRS
 - **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
 - **Use Case**: High transaction rates, smaller objects, or consistently low storage latency requirements
@@ -93,10 +94,33 @@ Azure Storage offers several types of storage accounts, each supporting differen
 ### Premium File Shares
 
 - **Supported Services**: Azure Files only
+- **Storage Account Kind**: **FileStorage** (dedicated account type for premium file shares)
 - **Redundancy Options**: LRS, ZRS
 - **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
 - **Use Case**: Enterprise or high-performance scale applications
 - **Features**: Supports both SMB and NFS file shares
+- **Key Requirement**: Premium file shares are **ONLY** available in **FileStorage** storage account kind
+
+> ⚠️ **Important**: Premium file shares are hosted in a special purpose storage account kind called **FileStorage**. You **cannot** create premium file shares in StorageV2, Storage (GPv1), or BlobStorage account types.
+
+### Premium Page Blobs
+
+- **Supported Services**: Page blobs only
+- **Storage Account Kind**: **PageBlobStorage**
+- **Redundancy Options**: LRS, ZRS
+- **Performance**: Uses solid-state drives (SSDs) for low latency and high throughput
+- **Use Case**: Azure IaaS disks for virtual machines, databases requiring random read/write operations
+
+### BlobStorage (Legacy)
+
+- **Supported Services**: Blob Storage only (block blobs and append blobs)
+- **Storage Account Kind**: **BlobStorage**
+- **Redundancy Options**: LRS, GRS, RA-GRS, ZRS, GZRS, RA-GZRS
+- **Use Case**: Legacy account type for blob-only storage scenarios
+- **Access Tiers**: Supports Hot, Cool, and Archive tiers
+- **Note**: Microsoft recommends using **StorageV2** for new deployments instead of BlobStorage accounts
+
+> 💡 **Exam Tip**: BlobStorage accounts support the **Archive access tier**, making them one of only two account kinds (along with StorageV2) that support archive tier for long-term data retention.
 
 #### Exam Scenario: Lowest Latency for File Share Access
 
@@ -151,12 +175,14 @@ Which storage tier should you recommend?
 
 ## Storage Account Types Comparison
 
-| Account Type | Supported Services | Redundancy Options | Performance | Use Case |
-|-------------|-------------------|-------------------|-------------|----------|
-| **Standard GPv2** | Blobs, Files, Queues, Tables, Data Lake | LRS, ZRS, GRS, RA-GRS, GZRS, RA-GZRS | Standard | Most scenarios |
-| **Premium Block Blobs** | Block blobs, Append blobs | LRS, ZRS | Premium (SSD) | High transactions, low latency |
-| **Premium File Shares** | Azure Files | LRS, ZRS | Premium (SSD) | Enterprise file shares, SMB/NFS |
-| **Premium Page Blobs** | Page blobs | LRS, ZRS | Premium (SSD) | VM disks, databases |
+| Account Type | Account Kind | Supported Services | Redundancy Options | Performance | Use Case |
+|-------------|--------------|-------------------|-------------------|-------------|----------|
+| **Standard GPv2** | StorageV2 | Blobs, Files, Queues, Tables, Data Lake | LRS, ZRS, GRS, RA-GRS, GZRS, RA-GZRS | Standard | Most scenarios |
+| **GPv1 (Legacy)** | Storage | Blobs, Files, Queues, Tables | LRS, GRS, RA-GRS | Standard | Legacy applications |
+| **BlobStorage (Legacy)** | BlobStorage | Blobs only | LRS, ZRS, GRS, RA-GRS, GZRS, RA-GZRS | Standard | Legacy blob-only scenarios |
+| **Premium Block Blobs** | BlockBlobStorage | Block blobs, Append blobs | LRS, ZRS | Premium (SSD) | High transactions, low latency |
+| **Premium File Shares** | FileStorage | Azure Files | LRS, ZRS | Premium (SSD) | Enterprise file shares, SMB/NFS |
+| **Premium Page Blobs** | PageBlobStorage | Page blobs | LRS, ZRS | Premium (SSD) | VM disks, databases |
 
 > **Important**: You cannot change a storage account to a different type after creation. To move data to a different account type, you must create a new account and copy the data.
 
@@ -511,6 +537,120 @@ Not all storage account types support the Archive access tier:
 - ✅ Archive tier works with **LRS, GRS, and RA-GRS** redundancy only
 - ❌ Premium storage accounts (Block Blobs, File Shares, Page Blobs) do **NOT** support archive tier
 - ❌ Azure Files does **NOT** support archive tier regardless of account type
+
+---
+
+### Practice Question: Storage Account Types and Archive Tier
+
+**Scenario:**
+You have an Azure subscription that contains the storage accounts shown in the following table:
+
+| Name | Type | Kind | Resource Group | Location |
+|------|------|------|----------------|----------|
+| contoso101 | Storage account | **StorageV2** | RG1 | East US |
+| contoso102 | Storage account | **Storage** | RG1 | East US |
+| contoso103 | Storage account | **BlobStorage** | RG1 | East US |
+| contoso104 | Storage account | **FileStorage** | RG1 | East US |
+
+**Questions:**
+
+**Question 1: In which storage account(s) can you create a premium file share?**
+
+**Options:**
+- A. contoso101 only
+- B. contoso104 only ✅
+- C. contoso101 or contoso104 only
+- D. contoso101, contoso102, or contoso104 only
+- E. contoso101, contoso102, contoso103, or contoso104
+
+**Answer: B - contoso104 only**
+
+**Explanation:**
+
+✅ **contoso104 only is correct** because:
+- **Premium file shares** are hosted in a **special purpose storage account kind called FileStorage**
+- contoso104 is the **ONLY** FileStorage account in the list
+- FileStorage accounts are specifically designed for premium Azure Files with:
+  - **SSD-backed storage** for low latency and high performance
+  - Support for both **SMB and NFS** protocols
+  - **Enterprise-grade performance** for latency-sensitive workloads
+
+**Why Other Accounts Cannot Host Premium File Shares:**
+
+| Storage Account | Kind | Explanation |
+|----------------|------|-------------|
+| **contoso101** | StorageV2 | General Purpose v2 accounts support **standard** file shares only (Transaction Optimized, Hot, Cool tiers) using HDD storage |
+| **contoso102** | Storage (GPv1) | Legacy General Purpose v1 accounts do not support premium file shares; limited to basic file share capabilities |
+| **contoso103** | BlobStorage | BlobStorage accounts are designed for **blob storage only**; do not support Azure Files at all |
+
+---
+
+**Question 2: In which storage account(s) can you use the Archive access tier?**
+
+**Options:**
+- A. contoso101 only
+- B. contoso101 or contoso103 only ✅
+- C. contoso101, contoso102, and contoso103 only
+- D. contoso101, contoso102, and contoso104 only
+- E. contoso101, contoso102, contoso103, and contoso104
+
+**Answer: B - contoso101 or contoso103 only**
+
+**Explanation:**
+
+✅ **contoso101 and contoso103 only is correct** because:
+- **Object storage data tiering** between Hot, Cool, and Archive is supported in:
+  - **Blob Storage** accounts (contoso103)
+  - **General Purpose v2 (StorageV2)** accounts (contoso101)
+- The Archive tier supports only **LRS, GRS, and RA-GRS** redundancy options
+- Both account types are designed for blob storage with access tier management capabilities
+
+**Why Other Accounts Do NOT Support Archive Tier:**
+
+| Storage Account | Kind | Explanation |
+|----------------|------|-------------|
+| **contoso102** | Storage (GPv1) | **General Purpose v1** accounts don't support access tier management; legacy account type without tiering capabilities |
+| **contoso104** | FileStorage | **FileStorage** accounts are premium accounts for Azure Files, **not blob storage**; no access tiers available (uses SSD, not tiered HDD storage) |
+
+**Critical Archive Tier Requirements:**
+- ⚠️ Archive tier is a **blob storage feature** (NOT for Azure Files)
+- ✅ Supported account kinds: **StorageV2** and **BlobStorage**
+- ✅ Supported redundancy: **LRS, GRS, RA-GRS** only
+- ❌ NOT supported with: **ZRS, GZRS, RA-GZRS**
+- ❌ NOT supported in: **GPv1**, **FileStorage**, **BlockBlobStorage**, **PageBlobStorage**
+
+---
+
+**Summary Table: Storage Account Type Capabilities**
+
+| Storage Account Kind | Premium File Shares | Archive Tier | Standard File Shares | Blob Storage |
+|---------------------|--------------------|--------------|--------------------|--------------|
+| **StorageV2** (GPv2) | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Storage** (GPv1) | ❌ No | ❌ No | ✅ Yes (basic) | ✅ Yes (basic) |
+| **BlobStorage** | ❌ No | ✅ Yes | ❌ No | ✅ Yes |
+| **FileStorage** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **BlockBlobStorage** | ❌ No | ❌ No | ❌ No | ✅ Yes (premium) |
+| **PageBlobStorage** | ❌ No | ❌ No | ❌ No | ✅ Yes (page blobs) |
+
+**Quick Decision Guide:**
+
+| Your Requirement | Choose This Account Type |
+|-----------------|-------------------------|
+| **Premium file shares** with lowest latency | **FileStorage** |
+| **Archive access tier** for blob data | **StorageV2** or **BlobStorage** |
+| **General-purpose** storage (blobs, files, queues, tables) | **StorageV2** |
+| **Premium block blobs** (low-latency blob operations) | **BlockBlobStorage** |
+| **VM disks** (page blobs) | **PageBlobStorage** (premium) or **StorageV2** (standard) |
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Azure Storage account overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview)
+- [Types of storage accounts](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview#types-of-storage-accounts)
+- [Azure Files planning guide](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-planning)
+- [Access tiers for blob data](https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview)
+
+---
 
 ## Available Access Tiers
 
