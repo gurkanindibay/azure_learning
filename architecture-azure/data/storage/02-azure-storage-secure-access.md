@@ -37,6 +37,7 @@
   - [What is ABAC?](#what-is-abac)
   - [ABAC vs Other Access Control Methods](#abac-vs-other-access-control-methods)
   - [Role Assignment Conditions](#role-assignment-conditions)
+  - [Storage Services Supporting RBAC Conditions](#storage-services-supporting-rbac-conditions)
   - [ABAC Use Cases for Storage](#abac-use-cases-for-storage)
   - [Exam Question: ABAC for Tag-Based Access](#exam-question-abac-for-tag-based-access)
 - [Comparison: Authentication Methods](#comparison-authentication-methods)
@@ -2347,6 +2348,44 @@ ABAC role assignment conditions allow you to add "if-then" logic to your role as
 ```
 
 This condition allows read access only to blobs tagged with `Project=ProjectA`.
+
+### Storage Services Supporting RBAC Conditions
+
+Not all Azure Storage services support ABAC role assignment conditions. Understanding which services support conditions is critical for designing fine-grained access control solutions.
+
+| Storage Service | Supports RBAC Conditions | Notes |
+|-----------------|-------------------------|-------|
+| **Blob Containers** (Blob Storage) | ✅ Yes | Full support for conditions based on blob tags, container names, paths, encryption scopes |
+| **Queues** (Queue Storage) | ✅ Yes | Support for conditions on queue operations |
+| **File Shares** (Azure Files) | ❌ No | Does not support conditions when assigning RBAC roles |
+| **Tables** (Table Storage) | ❌ No | Does not support conditions when assigning RBAC roles |
+
+**Key Takeaway:**
+> When assigning RBAC roles with conditions to Azure Storage accounts, you can only apply conditions to **Blob Containers** and **Queues**. File shares and tables do not support role assignment conditions.
+
+**Why This Matters:**
+- **Design Implications**: If you need fine-grained, attribute-based access control, use Blob Storage or Queue Storage
+- **Exam Scenarios**: Questions often test whether you know which services support conditions
+- **Migration Considerations**: If moving from file shares to blob storage, you gain the ability to use ABAC conditions
+
+**Example Scenario:**
+
+**Question:** You have an Azure subscription that contains a storage account named storage1. You plan to use conditions when assigning role-based access control (RBAC) roles to storage1. Which storage1 services support conditions when assigning roles?
+
+**Answer:** Containers and queues only
+
+**Why:**
+- ✅ **Blob Containers**: Support conditions for fine-grained access control based on tags, paths, and other attributes
+- ✅ **Queues**: Support conditions for queue operations
+- ❌ **File Shares**: Do not support conditions when assigning RBAC roles
+- ❌ **Tables**: Do not support conditions when assigning RBAC roles
+
+**Verification via Azure Portal:**
+1. Navigate to your storage account
+2. Go to **Access Control (IAM)** → **Add role assignment**
+3. Select a role and assignee
+4. Click on the **Conditions** tab
+5. The condition editor will show supported attributes only for blob and queue operations
 
 ### ABAC Use Cases for Storage
 
