@@ -17,6 +17,7 @@
   - [Question 10: Full VM Restore After Ransomware Infection](#question-10-full-vm-restore-after-ransomware-infection)
   - [Question 11: Azure Backup Reports Diagnostic Settings Configuration](#question-11-azure-backup-reports-diagnostic-settings-configuration)
   - [Question 12: Azure File Sync - Server Endpoints and Sync Groups](#question-12-azure-file-sync---server-endpoints-and-sync-groups)
+  - [Question 13: Azure File Sync - Cloud and Server Endpoint Registration](#question-13-azure-file-sync---cloud-and-server-endpoint-registration)
 - [References](#references)
 
 ---
@@ -5598,6 +5599,449 @@ Step 3: Does the path overlap with existing endpoints?
 > Remember the "1-1-Many" rule: **1 cloud endpoint**, **1 server endpoint per server per sync group**, and **many sync groups allowed**. This pattern appears frequently in Azure File Sync questions.
 
 **Domain:** Data Storage and File Services / Hybrid Cloud Solutions
+
+---
+
+### Question 13: Azure File Sync - Cloud and Server Endpoint Registration
+
+#### Scenario
+
+You have an Azure subscription that contains the file shares shown in the following table:
+
+| Name | Location |
+|------|----------|
+| **share1** | West US |
+| **share2** | West US |
+| **share3** | East US |
+
+You have the on-premises file shares shown in the following table:
+
+| Name | Server | Path |
+|------|--------|------|
+| **data1** | Server1 | D:\Folder1 |
+| **data2** | Server2 | E:\Folder2 |
+| **data3** | Server3 | E:\Folder2 |
+
+You create an Azure file sync group named **Sync1** and perform the following actions:
+
+1. Add **share1** as the cloud endpoint for **Sync1**
+2. Add **data1** as a server endpoint for **Sync1**
+3. Register **Server1** and **Server2** to **Sync1**
+
+---
+
+#### Question
+
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+| Statement | Answer |
+|-----------|--------|
+| **1. You can add share3 as an additional cloud endpoint for Sync1** | No |
+| **2. You can add data2 as an additional server endpoint for Sync1** | Yes |
+| **3. You can add data3 as an additional server endpoint for Sync1** | No |
+
+---
+
+**Correct Answers:**
+1. **No** ❌
+2. **Yes** ✅  
+3. **No** ❌
+
+---
+
+### Detailed Explanation
+
+#### Statement 1: Can you add share3 as an additional cloud endpoint for Sync1? ❌ NO
+
+**Analysis:**
+
+```plaintext
+Current State:
+Sync1
+├── Cloud Endpoint: share1 (West US) ✅ Already exists
+└── Attempting to add: share3 (East US) ❌
+
+Rule Violation:
+- A sync group must contain ONE cloud endpoint
+- Sync1 already has share1 as its cloud endpoint
+- Cannot add a second cloud endpoint (share3) regardless of location
+```
+
+**Key Point:**
+> The location of the Azure file share (West US vs East US) is **irrelevant**. The fundamental rule is that **a sync group must contain one cloud endpoint**, which represents an Azure file share.
+
+**Solution:**
+- To sync with **share3**, you must create a **new sync group** (e.g., Sync2)
+- Configure share3 as the cloud endpoint for the new sync group
+
+**Correct Answer: NO** ❌
+
+---
+
+#### Statement 2: Can you add data2 as an additional server endpoint for Sync1? ✅ YES
+
+**Analysis:**
+
+```plaintext
+Current State:
+Sync1
+├── Cloud Endpoint: share1
+├── Server Endpoint: data1 (Server1, D:\Folder1) ✅ Already exists
+└── Attempting to add: data2 (Server2, E:\Folder2) ✅
+
+Rule Compliance:
+✅ Server2 is registered to Sync1
+✅ Server2 has NO existing endpoints in Sync1
+✅ data2 (E:\Folder2) is a valid, non-overlapping path
+✅ Different server than existing endpoint (Server1)
+```
+
+**Why This Works:**
+
+1. **Server2 is Already Registered**
+   - Server2 was registered to Sync1 in the setup actions
+   - Registration is a prerequisite for creating server endpoints
+
+2. **No Conflict with Existing Endpoints**
+   - Current endpoint: Server1\D:\Folder1
+   - Proposed endpoint: Server2\E:\Folder2
+   - Different servers ✅
+
+3. **Multiple Server Endpoints Allowed**
+   - A sync group can have multiple server endpoints
+   - They must be from different servers OR non-overlapping paths
+
+**Configuration After Adding data2:**
+
+```plaintext
+Sync1
+├── Cloud Endpoint: share1 (Azure)
+├── Server Endpoint 1: Server1\D:\Folder1 ✅
+└── Server Endpoint 2: Server2\E:\Folder2 ✅
+
+Sync Behavior:
+- Files in Server1\D:\Folder1 sync to share1
+- Files in Server2\E:\Folder2 sync to share1
+- All locations stay synchronized ⇄
+```
+
+**Correct Answer: YES** ✅
+
+---
+
+#### Statement 3: Can you add data3 as an additional server endpoint for Sync1? ❌ NO
+
+**Analysis:**
+
+```plaintext
+Current State:
+Sync1
+├── Cloud Endpoint: share1
+├── Server Endpoint: Server1\D:\Folder1
+└── Attempting to add: data3 (Server3, E:\Folder2) ❌
+
+Issue:
+- data3 is located on Server3
+- Server3 is NOT registered to Sync1
+- Only Server1 and Server2 are registered
+```
+
+**Why This Fails:**
+
+1. **Server Registration is Required**
+   - Before creating a server endpoint, the server must be registered
+   - Registration involves installing the Azure File Sync agent
+   - Registering the server with the Storage Sync Service
+
+2. **Server3 is Not Registered**
+   - The scenario states: "Register Server1 and Server2 to Sync1"
+   - Server3 is NOT mentioned in the registration list
+   - Therefore, Server3 cannot have endpoints in Sync1
+
+3. **Prerequisites for Server Endpoints**
+
+```plaintext
+Steps to Create Server Endpoint:
+
+Step 1: Install Azure File Sync Agent ✅
+└── Must be installed on the target server
+
+Step 2: Register Server with Storage Sync Service ❌ (Missing for Server3)
+└── Creates trust relationship between server and Azure
+
+Step 3: Create Server Endpoint ❌ (Cannot proceed)
+└── Requires completed Step 2
+```
+
+**Solution to Add data3:**
+1. Install Azure File Sync agent on Server3
+2. Register Server3 with the Storage Sync Service (Sync1)
+3. Then add Server3\E:\Folder2 as a server endpoint
+
+**Correct Answer: NO** ❌
+
+---
+
+#### Key Concepts Summary
+
+##### Cloud Endpoint Rules
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| **One per sync group** | Each sync group can only have ONE cloud endpoint | ❌ Cannot add share3 when share1 exists in Sync1 |
+| **Must be Azure file share** | Cloud endpoint is always an Azure file share | share1, share2, share3 are all valid Azure file shares |
+| **Location independent** | Azure file share can be in any region | West US and East US shares follow same rules |
+
+##### Server Endpoint Rules
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| **Server must be registered** | Server registration is mandatory before endpoint creation | ✅ Server1, Server2 registered → can create endpoints<br>❌ Server3 not registered → cannot create endpoints |
+| **Multiple endpoints allowed** | Can have multiple server endpoints from different servers | ✅ Server1 and Server2 can both have endpoints in Sync1 |
+| **One endpoint per server per sync group** | Same server cannot have multiple endpoints in same sync group | ❌ Cannot add both Server1\D:\Folder1 and Server1\E:\Folder2 to Sync1 |
+
+##### Server Registration Process
+
+**What is Server Registration?**
+
+Server registration establishes a trust relationship between an on-premises Windows Server and an Azure Storage Sync Service.
+
+```mermaid
+graph LR
+    A[On-Premises Server] -->|1. Install Agent| B[Azure File Sync Agent]
+    B -->|2. Register| C[Storage Sync Service]
+    C -->|3. Enable| D[Create Server Endpoints]
+    
+    style A fill:#e1f5ff
+    style C fill:#ffe1e1
+    style D fill:#e1ffe1
+```
+
+**Registration Steps:**
+
+```plaintext
+Step 1: Install Azure File Sync Agent
+└── Download and install agent on Windows Server
+    └── Agent version must be compatible with Storage Sync Service
+
+Step 2: Register Server
+└── Run Server Registration UI
+    ├── Authenticate with Azure AD
+    ├── Select subscription
+    ├── Select Storage Sync Service
+    └── Complete registration
+
+Step 3: Verify Registration
+└── Check Azure Portal → Storage Sync Service → Registered Servers
+    └── Server appears in list ✅
+
+Step 4: Create Server Endpoints
+└── Now eligible to add folders from this server
+```
+
+**Registration Status in This Scenario:**
+
+| Server | Registration Status | Can Create Endpoints? |
+|--------|-------------------|---------------------|
+| Server1 | ✅ Registered to Sync1 | ✅ Yes |
+| Server2 | ✅ Registered to Sync1 | ✅ Yes |
+| Server3 | ❌ Not Registered | ❌ No |
+
+---
+
+#### Visual Representation
+
+**Current Configuration:**
+
+```plaintext
+Azure Subscription
+│
+├── Azure File Shares (Cloud Endpoints)
+│   ├── share1 (West US) ☁️ → Used by Sync1
+│   ├── share2 (West US) ☁️ → Available
+│   └── share3 (East US) ☁️ → Available
+│
+└── Storage Sync Service (Sync1)
+    │
+    ├── Registered Servers
+    │   ├── Server1 ✅
+    │   ├── Server2 ✅
+    │   └── Server3 ❌ (Not Registered)
+    │
+    └── Sync Group: Sync1
+        ├── Cloud Endpoint: share1 ☁️
+        └── Server Endpoints:
+            └── data1: Server1\D:\Folder1 🖥️
+
+On-Premises Environment
+├── Server1 (Registered) ✅
+│   └── D:\Folder1 (data1) → Syncing to share1
+│
+├── Server2 (Registered) ✅
+│   └── E:\Folder2 (data2) → Available to add ✅
+│
+└── Server3 (Not Registered) ❌
+    └── E:\Folder2 (data3) → Cannot add ❌
+```
+
+**After Adding data2 (Server2\E:\Folder2):**
+
+```plaintext
+Sync1 Configuration:
+├── Cloud Endpoint: share1 ☁️
+├── Server Endpoint 1: Server1\D:\Folder1 🖥️
+└── Server Endpoint 2: Server2\E:\Folder2 🖥️
+
+Sync Flow:
+Server1\D:\Folder1 ⇄ share1 ⇄ Server2\E:\Folder2
+
+Result:
+- Files created on Server1 appear on Server2 and in Azure
+- Files created on Server2 appear on Server1 and in Azure
+- Files created in Azure appear on both servers
+```
+
+---
+
+#### Common Mistakes to Avoid
+
+##### ❌ Mistake 1: Assuming Location Matters for Cloud Endpoints
+
+**Wrong Assumption:**
+> "share3 is in East US, so maybe I can add it as a cloud endpoint alongside share1 which is in West US"
+
+**Correct Understanding:**
+> Location is irrelevant. The rule is **one cloud endpoint per sync group**, regardless of region.
+
+---
+
+##### ❌ Mistake 2: Forgetting Server Registration Requirement
+
+**Wrong Assumption:**
+> "Server3 exists and has a folder (data3), so I can add it as a server endpoint"
+
+**Correct Understanding:**
+> Server registration is a **mandatory prerequisite**. Without registration, no server endpoints can be created.
+
+---
+
+##### ❌ Mistake 3: Confusing Storage Sync Service with Sync Group
+
+**Wrong Understanding:**
+> "I registered Server1 and Server2 to Sync1, so they're registered to the sync group"
+
+**Correct Understanding:**
+> Servers are registered to the **Storage Sync Service**, not to individual sync groups. Once registered, they can participate in any sync group within that Storage Sync Service.
+
+---
+
+#### Decision Tree for Adding Endpoints
+
+```plaintext
+Question: Can I add this endpoint?
+
+┌─────────────────────────────────────┐
+│ Is it a CLOUD endpoint?             │
+└─────────────────┬───────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+      YES                  NO (Server Endpoint)
+        │                   │
+        ▼                   ▼
+Does sync group      Is the server registered
+already have a       with Storage Sync Service?
+cloud endpoint?               │
+        │              ┌──────┴──────┐
+  ┌─────┴─────┐       │             │
+ YES          NO      YES           NO
+  │            │       │             │
+  ▼            ▼       ▼             ▼
+ ❌ NO        ✅ YES   Continue      ❌ NO
+(Rule 1)              │           (Must register
+                      │            first)
+                      ▼
+            Does this server already
+            have an endpoint in
+            this sync group?
+                      │
+                ┌─────┴─────┐
+               YES          NO
+                │            │
+                ▼            ▼
+               ❌ NO        ✅ YES
+            (Rule 2)
+```
+
+---
+
+#### Best Practices
+
+##### ✅ Planning Server Registration
+
+1. **Register All Potential Servers Early**
+   - Register servers when you set up Storage Sync Service
+   - Avoid delays when creating endpoints later
+
+2. **Document Registered Servers**
+   - Keep track of which servers are registered
+   - Monitor registration health in Azure Portal
+
+3. **Keep Azure File Sync Agent Updated**
+   - Updates include bug fixes and new features
+   - Check for updates regularly
+
+##### ✅ Managing Sync Groups
+
+1. **One Cloud Endpoint per Sync Group**
+   - Design sync topology based on this constraint
+   - Create multiple sync groups for multiple Azure file shares
+
+2. **Plan Server Endpoint Distribution**
+   - Consider bandwidth and latency
+   - Distribute endpoints based on data access patterns
+
+3. **Monitor Sync Health**
+   - Check sync status regularly
+   - Address sync errors promptly
+
+---
+
+#### Troubleshooting Guide
+
+| Issue | Possible Cause | Solution |
+|-------|---------------|----------|
+| Cannot add server endpoint | Server not registered | Install agent and register server with Storage Sync Service |
+| Cannot add second cloud endpoint | Sync group already has cloud endpoint | Create new sync group for second cloud endpoint |
+| Server registration fails | Network connectivity or permissions | Check firewall rules, Azure AD permissions |
+| Endpoint creation fails | Path invalid or overlapping | Verify path syntax, check for namespace overlaps |
+
+---
+
+#### Summary Table
+
+**Endpoint Addition Rules:**
+
+| Scenario | Can Add? | Reason |
+|----------|----------|--------|
+| **share3 as cloud endpoint to Sync1** | ❌ No | Sync group must contain ONE cloud endpoint (share1 already exists) |
+| **data2 (Server2\E:\Folder2) as server endpoint to Sync1** | ✅ Yes | Server2 is registered, has no existing endpoints in Sync1 |
+| **data3 (Server3\E:\Folder2) as server endpoint to Sync1** | ❌ No | Server3 is NOT registered to Sync1 |
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Azure File Sync Overview](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-introduction)
+- [Deploy Azure File Sync](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-deployment-guide)
+- [Register a Server with Storage Sync Service](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-server-registration)
+- [Planning for Azure File Sync](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-planning)
+
+**Exam Tip:**
+> Remember the prerequisites for server endpoints: **Registration first, endpoints second**. A server must be registered with the Storage Sync Service before any folders from that server can be added as server endpoints. Also, remember **one cloud endpoint per sync group** - this is a fundamental constraint.
+
+**Domain:** Data Storage and File Services / Hybrid Cloud Solutions / Azure File Sync
 
 ---
 
