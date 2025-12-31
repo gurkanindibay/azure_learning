@@ -603,7 +603,193 @@ Provides artifacts (schemas, maps, agreements, certificates) for B2B integration
 | **Logic Apps Integration Account** | ❌ No | B2B/EDI enterprise integrations |
 
 ---
+### Question: Creating a Blob Container for VM Images
 
+#### Scenario
+
+You have an Azure subscription that contains an Azure Storage account.
+
+You plan to copy an on-premises virtual machine image to a container named **vmimages**.
+
+**Requirement**: You need to create the container for the planned image.
+
+**Question**: Which command should you run?
+
+---
+
+#### Command Format
+
+```
+azcopy [command] 'https://[storageaccount].[service].core.windows.net/[containername]'
+```
+
+---
+
+#### Answer
+
+The correct command is:
+
+```bash
+azcopy make 'https://mystorageaccount.blob.core.windows.net/vmimages'
+```
+
+**Components:**
+- **Command**: `make` - Creates a new container or file share
+- **Service**: `blob` - Specifies Azure Blob Storage service
+- **Container Name**: `vmimages` - The container to be created
+
+---
+
+#### Explanation
+
+##### ✅ Correct Components
+
+**1. Command: `make`**
+
+The `azcopy make` command is specifically designed to create containers and file shares in Azure Storage.
+
+**Key Points:**
+- ✅ **Creates containers**: Specifically used for creating new blob containers
+- ✅ **Creates file shares**: Can also create Azure Files shares
+- ✅ **Idempotent**: Safe to run multiple times (won't error if container exists)
+- ✅ **Simple syntax**: Requires only the container URL
+
+**Usage:**
+```bash
+# Create a blob container
+azcopy make 'https://storageaccount.blob.core.windows.net/containername'
+
+# Create a file share
+azcopy make 'https://storageaccount.file.core.windows.net/sharename'
+```
+
+**2. Service: `blob`**
+
+The blob service endpoint is required for creating blob containers.
+
+**Key Points:**
+- ✅ **Blob Storage**: Uses `.blob.core.windows.net` endpoint
+- ✅ **Container Storage**: Blob containers are part of Azure Blob Storage
+- ✅ **VM Image Storage**: VM images are typically stored as blobs (VHD/VHDX files)
+
+**Service Endpoint Patterns:**
+- **Blob Storage**: `https://[account].blob.core.windows.net/`
+- **File Storage**: `https://[account].file.core.windows.net/`
+- **Queue Storage**: `https://[account].queue.core.windows.net/`
+- **Table Storage**: `https://[account].table.core.windows.net/`
+
+---
+
+##### ❌ Incorrect Options
+
+**Command Alternatives:**
+
+**❌ `azcopy copy`**
+- **Purpose**: Copies data between locations
+- **Why Wrong**: Used for copying files/blobs, not creating containers
+- **Use Case**: `azcopy copy 'source' 'destination'`
+
+**❌ `azcopy sync`**
+- **Purpose**: Synchronizes source and destination locations
+- **Why Wrong**: Syncs content between existing locations, doesn't create containers
+- **Use Case**: `azcopy sync 'source' 'destination'` (one-way sync)
+
+**Service Alternatives:**
+
+**❌ `file`**
+- **Purpose**: Azure Files service endpoint
+- **Why Wrong**: Creates file shares, not blob containers
+- **Example**: `https://storageaccount.file.core.windows.net/sharename`
+
+**❌ `queue`**
+- **Purpose**: Azure Queue Storage service endpoint
+- **Why Wrong**: Queue storage is for message queues, not container storage
+- **Example**: `https://storageaccount.queue.core.windows.net/queuename`
+
+**❌ `table`**
+- **Purpose**: Azure Table Storage service endpoint
+- **Why Wrong**: Table storage is for NoSQL data, not blob containers
+- **Example**: `https://storageaccount.table.core.windows.net/tablename`
+
+**❌ `dfs`**
+- **Purpose**: Azure Data Lake Storage Gen2 endpoint
+- **Why Wrong**: While ADLS Gen2 uses blob storage underneath, the question specifies creating a container for VM images, which uses the blob endpoint
+- **Example**: `https://storageaccount.dfs.core.windows.net/filesystem`
+
+**❌ `images`**
+- **Purpose**: Not a valid Azure Storage service
+- **Why Wrong**: There is no "images" service in Azure Storage
+- **Note**: Images are stored as blobs in blob containers
+
+---
+
+#### Complete Workflow Example
+
+After creating the container, you would copy the VM image:
+
+```bash
+# Step 1: Authenticate
+azcopy login
+
+# Step 2: Create the container
+azcopy make 'https://mystorageaccount.blob.core.windows.net/vmimages'
+
+# Step 3: Copy VM image to the container
+azcopy copy 'C:\VMs\myvm.vhd' 'https://mystorageaccount.blob.core.windows.net/vmimages/myvm.vhd'
+
+# Step 4: Verify the upload
+# Check in Azure Portal or use Azure CLI
+az storage blob list --account-name mystorageaccount --container-name vmimages
+```
+
+---
+
+#### Key Takeaways
+
+**AzCopy Commands:**
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| **`azcopy make`** | Create container/file share | `azcopy make 'https://account.blob.core.windows.net/container'` |
+| **`azcopy copy`** | Copy files/blobs | `azcopy copy 'source' 'destination'` |
+| **`azcopy sync`** | Synchronize locations | `azcopy sync 'source' 'destination'` |
+| **`azcopy remove`** | Delete blobs | `azcopy remove 'https://account.blob.core.windows.net/container/*'` |
+| **`azcopy list`** | List blobs | `azcopy list 'https://account.blob.core.windows.net/container'` |
+
+**Azure Storage Service Endpoints:**
+
+| Service | Endpoint Pattern | Use Case |
+|---------|------------------|----------|
+| **Blob Storage** | `https://[account].blob.core.windows.net/` | Object storage, VM images, backups |
+| **File Storage** | `https://[account].file.core.windows.net/` | SMB file shares |
+| **Queue Storage** | `https://[account].queue.core.windows.net/` | Message queues |
+| **Table Storage** | `https://[account].table.core.windows.net/` | NoSQL key-value storage |
+| **Data Lake Gen2** | `https://[account].dfs.core.windows.net/` | Big data analytics |
+
+---
+
+#### Exam Strategy
+
+**For the Exam, Remember:**
+
+🎯 **Container Creation:**
+- Use `azcopy make` to create new containers
+- Blob containers use `.blob.core.windows.net` endpoint
+- File shares use `.file.core.windows.net` endpoint
+
+🎯 **Common AzCopy Commands:**
+- `make` = Create container/share
+- `copy` = Copy data
+- `sync` = Synchronize (one-way)
+- `remove` = Delete blobs
+- `list` = List contents
+
+🎯 **VM Image Storage:**
+- VM images (VHD/VHDX) are stored in blob containers
+- Use blob service endpoint, not file or other services
+- Container must exist before uploading VM images
+
+---
 #### Exam Strategy
 
 **For the Exam, Remember:**
