@@ -16,6 +16,7 @@
   - [Question 9: Azure Backup Instant Restore File Recovery After Ransomware](#question-9-azure-backup-instant-restore-file-recovery-after-ransomware)
   - [Question 10: Full VM Restore After Ransomware Infection](#question-10-full-vm-restore-after-ransomware-infection)
   - [Question 11: Azure Backup Reports Diagnostic Settings Configuration](#question-11-azure-backup-reports-diagnostic-settings-configuration)
+  - [Question 12: Azure File Sync - Server Endpoints and Sync Groups](#question-12-azure-file-sync---server-endpoints-and-sync-groups)
 - [References](#references)
 
 ---
@@ -5070,6 +5071,533 @@ While this question focuses on **AzureBackupReport**, remember that Recovery Ser
 > For diagnostic settings questions, always distinguish between **storage account** (region-dependent) and **Log Analytics workspace** (region-independent) requirements. This is a common trap in Azure exams.
 
 **Domain:** Design Business Continuity Solutions / Monitoring and Governance
+
+---
+
+### Question 12: Azure File Sync - Server Endpoints and Sync Groups
+
+#### Scenario
+
+You have an Azure subscription that includes the following Azure file shares:
+
+| Name | In storage account | Location |
+|------|-------------------|----------|
+| **share1** | storage1 | West US |
+| **share2** | storage1 | West US |
+
+You have the following on-premises servers:
+
+| Name | Folders |
+|------|---------|
+| **Server1** | D:\Folder1, E:\Folder2 |
+| **Server2** | D:\Data |
+
+You create a **Storage Sync Service** named **Sync1** and an **Azure File Sync group** named **Group1**.
+
+**Group1** uses **share1** as a **cloud endpoint**.
+
+You register **Server1** and **Server2** in **Sync1**.
+
+You add **D:\Folder1** on **Server1** as a **server endpoint** of **Group1**.
+
+---
+
+#### Question
+
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+| Statement | Answer |
+|-----------|--------|
+| **1. You can add share2 as a cloud endpoint for Group1** | No |
+| **2. You can add E:\Folder2 on Server1 as a server endpoint for Group1** | No |
+| **3. You can add D:\Data on Server2 as a server endpoint for a new sync group** | Yes |
+
+---
+
+**Correct Answers:**
+1. **No** ❌
+2. **No** ❌  
+3. **Yes** ✅
+
+---
+
+### Detailed Explanation
+
+#### Azure File Sync Architecture Overview
+
+**Azure File Sync** enables you to centralize your organization's file shares in Azure Files while keeping the flexibility, performance, and compatibility of an on-premises file server.
+
+```plaintext
+Azure File Sync Components:
+
+┌─────────────────────────────────────────────────────────────┐
+│  Storage Sync Service (Sync1)                               │
+│  ├── Sync Group 1 (Group1)                                 │
+│  │   ├── Cloud Endpoint: share1 (1 per sync group) ☁️       │
+│  │   └── Server Endpoints: (1+ per sync group) 🖥️          │
+│  │       └── Server1: D:\Folder1 ✅                         │
+│  │                                                           │
+│  ├── Sync Group 2 (potential)                              │
+│  │   ├── Cloud Endpoint: share2 (different) ☁️              │
+│  │   └── Server Endpoints:                                 │
+│  │       └── Server2: D:\Data ✅                            │
+│  │                                                           │
+│  └── Registered Servers:                                    │
+│      ├── Server1 (registered) ✅                            │
+│      └── Server2 (registered) ✅                            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Key Azure File Sync Rules
+
+##### Rule 1: One Cloud Endpoint Per Sync Group 🔐
+
+**A sync group contains ONE cloud endpoint (Azure file share) and at least ONE server endpoint.**
+
+| Rule | Details | Impact |
+|------|---------|--------|
+| **1 Cloud Endpoint** | Each sync group can only have ONE Azure file share | ❌ Cannot add multiple cloud endpoints |
+| **1+ Server Endpoints** | Each sync group can have multiple server endpoints | ✅ Can sync multiple servers to same cloud endpoint |
+
+**Why This Matters:**
+- A sync group represents a **synchronization topology**
+- All server endpoints in a sync group sync **to/from the same cloud endpoint**
+- To sync with multiple Azure file shares, create **separate sync groups**
+
+---
+
+##### Rule 2: No Multiple Server Endpoints from Same Server in Same Sync Group 🔐
+
+**Azure File Sync does NOT support more than one server endpoint from the same server in the same sync group.**
+
+```plaintext
+INVALID Configuration (Same Sync Group): ❌
+
+Sync Group 1:
+├── Cloud Endpoint: share1
+├── Server Endpoint 1: Server1\D:\Folder1 ✅
+└── Server Endpoint 2: Server1\E:\Folder2 ❌ (SAME SERVER!)
+
+Reason: Cannot have multiple endpoints from Server1 in Group1
+```
+
+```plaintext
+VALID Configuration (Different Sync Groups): ✅
+
+Sync Group 1:
+├── Cloud Endpoint: share1
+└── Server Endpoint: Server1\D:\Folder1 ✅
+
+Sync Group 2:
+├── Cloud Endpoint: share2
+└── Server Endpoint: Server1\E:\Folder2 ✅ (DIFFERENT GROUP!)
+```
+
+**Why This Restriction Exists:**
+- Prevents **sync conflicts** and **circular dependencies**
+- Ensures **clear ownership** of folder hierarchies
+- Simplifies **conflict resolution** logic
+
+---
+
+##### Rule 3: Multiple Server Endpoints Allowed with Non-Overlapping Namespaces ✅
+
+**Multiple server endpoints CAN exist on the same volume if:**
+1. Their **namespaces do not overlap**
+2. Each endpoint syncs to a **unique sync group**
+
+```plaintext
+VALID: Different Volumes, Same Server, Same Sync Group ✅
+
+Sync Group 1:
+├── Cloud Endpoint: share1
+├── Server Endpoint 1: Server1\D:\Folder1 ✅
+└── Server Endpoint 2: Server1\E:\Folder2 ✅ (DIFFERENT VOLUME!)
+```
+
+```plaintext
+VALID: Same Volume, Non-Overlapping Paths, Different Sync Groups ✅
+
+Server1:
+└── F:\ (Volume)
+    ├── sync1\ 
+    │   └── (syncs to Sync Group A)
+    └── sync2\
+        └── (syncs to Sync Group B)
+
+Both paths are on F:\ but don't overlap ✅
+```
+
+```plaintext
+INVALID: Overlapping Namespaces ❌
+
+Server1:
+└── F:\
+    └── data\
+        ├── (Sync Group A endpoint) ❌
+        └── subfolder\
+            └── (Sync Group B endpoint) ❌ (NESTED!)
+
+Reason: Overlapping/nested paths cause conflicts
+```
+
+**Non-Overlapping Examples:**
+- ✅ `F:\sync1` and `F:\sync2` (same volume, different folders)
+- ✅ `D:\data` and `E:\data` (different volumes)
+- ❌ `F:\data` and `F:\data\subfolder` (overlapping hierarchy)
+
+---
+
+#### Answering the Questions
+
+##### Statement 1: Can you add share2 as a cloud endpoint for Group1? ❌ NO
+
+**Analysis:**
+
+```plaintext
+Current State:
+Group1
+├── Cloud Endpoint: share1 (already exists)
+└── Attempting to add: share2 ❌
+
+Rule Violation:
+- Rule 1: "A sync group contains ONE cloud endpoint"
+- Group1 already has share1 as its cloud endpoint
+- Cannot add share2 to the same sync group
+```
+
+**Solution:**
+- To sync with **share2**, create a **new sync group** (e.g., Group2)
+- Configure share2 as the cloud endpoint for Group2
+
+**Correct Answer: NO** ❌
+
+---
+
+##### Statement 2: Can you add E:\Folder2 on Server1 as a server endpoint for Group1? ❌ NO
+
+**Analysis:**
+
+```plaintext
+Current State:
+Group1
+├── Cloud Endpoint: share1
+├── Server Endpoint: Server1\D:\Folder1 (already exists)
+└── Attempting to add: Server1\E:\Folder2 ❌
+
+Rule Violation:
+- Rule 2: "No multiple server endpoints from same server in same sync group"
+- Server1 already has D:\Folder1 registered in Group1
+- Cannot add another endpoint (E:\Folder2) from Server1 to Group1
+```
+
+**Solution:**
+- To sync **E:\Folder2**, create a **new sync group** (e.g., Group2)
+- Use a different cloud endpoint (e.g., share2)
+- Add Server1\E:\Folder2 as a server endpoint for Group2
+
+**Correct Answer: NO** ❌
+
+---
+
+##### Statement 3: Can you add D:\Data on Server2 as a server endpoint for a new sync group? ✅ YES
+
+**Analysis:**
+
+```plaintext
+Proposed Configuration:
+
+New Sync Group (e.g., Group2):
+├── Cloud Endpoint: share2 (or any other Azure file share)
+└── Server Endpoint: Server2\D:\Data ✅
+
+Rule Compliance:
+✅ Rule 1: Group2 would have its own cloud endpoint
+✅ Rule 2: Server2 has NO existing endpoints in Group2
+✅ Rule 3: D:\Data doesn't overlap with any existing endpoints
+✅ Server2 is already registered with Sync1
+```
+
+**Why This Works:**
+1. **Server2 is already registered** with Storage Sync Service (Sync1)
+2. **Server2 has no existing endpoints** in the new sync group
+3. **D:\Data is a valid, non-overlapping path**
+4. A **new sync group** can be created with its own cloud endpoint
+
+**Correct Answer: YES** ✅
+
+---
+
+#### Azure File Sync Key Concepts
+
+##### Storage Sync Service
+
+**Storage Sync Service** is the top-level Azure resource for Azure File Sync.
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| **Name** | Unique name for the sync service | Sync1 |
+| **Resource Group** | Logical container | RG-FileSync |
+| **Region** | Deployment location | West US |
+| **Registered Servers** | On-premises servers registered with the service | Server1, Server2 |
+| **Sync Groups** | Logical groupings of sync relationships | Group1, Group2 |
+
+**Key Characteristics:**
+- One Storage Sync Service can have **multiple sync groups**
+- Servers must be **registered** before endpoints can be created
+- Manages **sync relationships** and **cloud tiering policies**
+
+---
+
+##### Sync Group
+
+**Sync Group** defines the sync topology for a set of files.
+
+```plaintext
+Sync Group Components:
+
+┌───────────────────────────────────────────────────┐
+│  Sync Group (Group1)                              │
+│                                                   │
+│  Cloud Endpoint (1 required):                    │
+│  └── Azure File Share (share1) ☁️                │
+│                                                   │
+│  Server Endpoints (1+ required):                 │
+│  ├── Server1\D:\Folder1 🖥️                       │
+│  ├── Server3\E:\Data 🖥️                          │
+│  └── Server4\C:\SharedFiles 🖥️                   │
+│                                                   │
+│  Sync Direction: Bidirectional ⇄                 │
+│  - Changes on servers → Azure file share         │
+│  - Changes on Azure file share → servers         │
+└───────────────────────────────────────────────────┘
+```
+
+**Synchronization Behavior:**
+- All files sync **to and from** the cloud endpoint
+- Changes on any server endpoint replicate to all other endpoints
+- Supports **cloud tiering** to free up local storage
+
+---
+
+##### Cloud Endpoint
+
+**Cloud Endpoint** is an Azure file share that participates in sync.
+
+| Property | Details |
+|----------|---------|
+| **Type** | Azure file share |
+| **Limit** | 1 per sync group |
+| **Requirements** | Must be in the same region as Storage Sync Service |
+| **Access** | Accessible via SMB/FileREST |
+
+**Example:**
+- Cloud Endpoint: `//storage1.file.core.windows.net/share1`
+
+---
+
+##### Server Endpoint
+
+**Server Endpoint** is a specific folder on a registered server.
+
+| Property | Details |
+|----------|---------|
+| **Type** | Folder path on Windows Server |
+| **Limit** | Multiple per sync group (from different servers) |
+| **Requirements** | Must be on an NTFS volume, cannot be system volume |
+| **Cloud Tiering** | Optional feature to tier infrequently used files to Azure |
+
+**Valid Server Endpoint Paths:**
+- ✅ `D:\Folder1`
+- ✅ `E:\Data`
+- ✅ `F:\Shares\Projects`
+- ❌ `C:\` (system volume)
+- ❌ `D:\Folder1\Subfolder` (if D:\Folder1 is already an endpoint)
+
+---
+
+#### Common Configuration Scenarios
+
+##### Scenario 1: Multi-Location File Server Sync
+
+**Requirement:** Sync files between headquarters (Server1) and branch office (Server2)
+
+```plaintext
+Configuration:
+
+Sync Group 1:
+├── Cloud Endpoint: //storage1.file.core.windows.net/shared-files
+├── Server Endpoint: Server1\D:\SharedFiles (HQ)
+└── Server Endpoint: Server2\D:\SharedFiles (Branch)
+
+Result:
+- Files created in HQ sync to Azure and Branch
+- Files created in Branch sync to Azure and HQ
+- Azure file share acts as central hub ☁️
+```
+
+---
+
+##### Scenario 2: Separate Departments with Isolated Shares
+
+**Requirement:** HR and Finance departments need separate, isolated file shares
+
+```plaintext
+Configuration:
+
+Sync Group 1 (HR):
+├── Cloud Endpoint: //storage1.file.core.windows.net/hr-files
+└── Server Endpoint: Server1\D:\HR-Data
+
+Sync Group 2 (Finance):
+├── Cloud Endpoint: //storage1.file.core.windows.net/finance-files
+└── Server Endpoint: Server1\E:\Finance-Data
+
+Result:
+- HR and Finance data remain separate
+- Server1 has endpoints in multiple sync groups ✅
+- Different volumes/folders on same server ✅
+```
+
+---
+
+##### Scenario 3: Cloud Tiering for Large Archives
+
+**Requirement:** Keep active files local, tier old files to cloud
+
+```plaintext
+Configuration:
+
+Sync Group 1:
+├── Cloud Endpoint: //storage1.file.core.windows.net/archive
+├── Server Endpoint: Server1\D:\Archive
+│   └── Cloud Tiering: Enabled
+│       ├── Volume Free Space Policy: 20%
+│       └── Date Policy: Files not accessed in 30 days
+
+Result:
+- All files available in Azure ☁️
+- Frequently accessed files cached locally
+- Old files exist as "stubs" (pointers) locally
+- Automatic retrieval when accessed
+```
+
+---
+
+#### Best Practices
+
+##### ✅ DO:
+
+1. **Plan Sync Topology Before Implementation**
+   - Map out departments, locations, and access requirements
+   - Design sync groups based on data isolation needs
+
+2. **Use Separate Sync Groups for Different Data Sets**
+   - Avoids conflicts and simplifies management
+   - Enables granular cloud tiering policies
+
+3. **Register Servers Before Creating Endpoints**
+   - Servers must be registered with Storage Sync Service
+   - Requires Azure File Sync agent installation
+
+4. **Monitor Sync Health**
+   - Use Azure Portal to check sync status
+   - Review sync errors and resolve promptly
+
+5. **Enable Cloud Tiering for Large Data Sets**
+   - Optimizes local storage usage
+   - Maintains fast access to frequently used files
+
+---
+
+##### ❌ DON'T:
+
+1. **Don't Add Multiple Cloud Endpoints to Same Sync Group**
+   - Violates Azure File Sync design constraints
+   - Create separate sync groups instead
+
+2. **Don't Create Multiple Endpoints from Same Server in Same Sync Group**
+   - Causes sync conflicts
+   - Use different sync groups for different folders on same server
+
+3. **Don't Use Overlapping Namespaces**
+   - Example: D:\Data and D:\Data\Subfolder
+   - Leads to unpredictable sync behavior
+
+4. **Don't Use System Volume (C:\) as Server Endpoint**
+   - Not supported for reliability and security reasons
+
+5. **Don't Forget to Monitor Sync Performance**
+   - Large file sets may take time to sync initially
+   - Monitor bandwidth usage and sync errors
+
+---
+
+#### Troubleshooting Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Cannot add second cloud endpoint to sync group** | Rule: 1 cloud endpoint per sync group | Create new sync group for second Azure file share |
+| **Cannot add second folder from same server** | Rule: 1 server endpoint per server per sync group | Create new sync group or use different server |
+| **Server endpoint creation fails** | Server not registered or agent not installed | Install Azure File Sync agent and register server |
+| **Overlapping namespace error** | Attempting to create nested endpoints | Choose non-overlapping paths |
+| **Sync not occurring** | Network issues, permissions, or agent health | Check server connectivity, Azure File Sync agent status |
+
+---
+
+#### Summary and Key Takeaways
+
+##### Core Rules to Remember 📋
+
+| Rule # | Description | Impact |
+|--------|-------------|--------|
+| **1** | **One cloud endpoint per sync group** | ❌ Cannot add share2 to Group1 if share1 already exists |
+| **2** | **No multiple server endpoints from same server in same sync group** | ❌ Cannot add Server1\E:\Folder2 to Group1 if Server1\D:\Folder1 exists |
+| **3** | **Multiple endpoints allowed if non-overlapping and in different sync groups** | ✅ Can add Server2\D:\Data to a new sync group |
+
+##### Quick Decision Matrix
+
+**Question: Can I add this endpoint?**
+
+```plaintext
+Step 1: Is it a cloud endpoint?
+├─ YES → Does sync group already have a cloud endpoint?
+│  ├─ YES → ❌ NO (Rule 1)
+│  └─ NO → ✅ YES
+└─ NO (it's a server endpoint) → Continue to Step 2
+
+Step 2: Is this server already in this sync group?
+├─ YES → ❌ NO (Rule 2)
+└─ NO → Continue to Step 3
+
+Step 3: Does the path overlap with existing endpoints?
+├─ YES → ❌ NO (Rule 3)
+└─ NO → ✅ YES
+```
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Azure File Sync Overview](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-introduction)
+- [Planning for Azure File Sync Deployment](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-planning)
+- [Deploy Azure File Sync](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-deployment-guide)
+- [Cloud Tiering Overview](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-cloud-tiering-overview)
+- [Troubleshoot Azure File Sync](https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-troubleshoot)
+
+**Related Topics:**
+- Azure Files vs Azure File Sync comparison
+- Storage Sync Service management
+- Azure File Sync agent updates
+- Sync group monitoring and metrics
+
+**Exam Tip:**
+> Remember the "1-1-Many" rule: **1 cloud endpoint**, **1 server endpoint per server per sync group**, and **many sync groups allowed**. This pattern appears frequently in Azure File Sync questions.
+
+**Domain:** Data Storage and File Services / Hybrid Cloud Solutions
 
 ---
 

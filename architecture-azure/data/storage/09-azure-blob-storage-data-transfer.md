@@ -12,10 +12,11 @@
   - [Azure Storage Mover](#azure-storage-mover)
 - [Comparison Matrix](#comparison-matrix)
 - [Exam Question Analysis](#exam-question-analysis)
-  - [Question 1: Required Files for Azure Import/Export Service](#question-1-required-files-for-azure-importexport-service)
-  - [Question 2: On-Premises File Server to Blob Storage Migration](#question-2-on-premises-file-server-to-blob-storage-migration)
-  - [Question 3: Creating a Blob Container for VM Images](#question-3-creating-a-blob-container-for-vm-images)
-  - [Question 4: Azure Storage Explorer Capabilities](#question-4-azure-storage-explorer-capabilities)
+  - [Question 1: Azure Import/Export Supported Destinations](#question-1-azure-importexport-supported-destinations)
+  - [Question 2: Required Files for Azure Import/Export Service](#question-2-required-files-for-azure-importexport-service)
+  - [Question 3: On-Premises File Server to Blob Storage Migration](#question-3-on-premises-file-server-to-blob-storage-migration)
+  - [Question 4: Creating a Blob Container for VM Images](#question-4-creating-a-blob-container-for-vm-images)
+  - [Question 5: Azure Storage Explorer Capabilities](#question-5-azure-storage-explorer-capabilities)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -45,6 +46,50 @@ This document covers the primary methods for transferring large amounts of data 
 | **Network Dependency** | Minimal - no internet bandwidth required for data transfer |
 | **Transfer Speed** | Depends on shipping time + data copy time at Azure data center |
 | **Use Cases** | Bandwidth-limited environments, initial bulk migrations, disaster recovery |
+
+#### Supported Destinations
+
+Azure Import/Export service supports importing data to the following Azure services:
+
+| Service | Support Status | Tool Version | Notes |
+|---------|----------------|--------------|-------|
+| **Azure Blob Storage** | ✅ Supported | Version 1 & 2 | Primary destination for import/export operations |
+| **Azure Files** | ✅ Supported | Version 2 | Maximum file share size: 5 TB |
+
+#### Unsupported Destinations
+
+The following Azure services are **NOT** supported as direct destinations for Azure Import/Export:
+
+| Service | Support Status | Reason | Workaround |
+|---------|----------------|--------|------------|
+| **Azure Cosmos DB** | ❌ Not Supported | Import/Export does not support Cosmos DB natively | Import to Blob Storage first, then use Data Factory or custom migration tools to transfer to Cosmos DB |
+| **Azure File Sync Storage Sync Service** | ❌ Not Supported | File Sync is for synchronizing on-premises data with Azure File Shares | Use Azure File Sync directly for synchronization scenarios; Import/Export can import to Azure Files, but not to File Sync service directly |
+| **Azure Data Lake Store (Gen1)** | ❌ Not Supported | Service is deprecated and not supported | Use Azure Data Lake Storage Gen2 (which is built on Blob Storage) as destination |
+| **Azure SQL Database** | ❌ Not Supported | Import/Export is for storage services only | Import to Blob Storage, then use SQL Database Import/Export or BACPAC files |
+| **Azure Tables** | ❌ Not Supported | Not a supported destination | Import to Blob Storage first |
+
+**Key Takeaway**: Data must first be imported into **Azure Blob Storage** or **Azure Files**, then transferred to other services using appropriate migration tools like Azure Data Factory, AzCopy, or service-specific import utilities.
+
+#### WAImportExport Tool Versions
+
+There are **two versions** of the WAImportExport tool:
+
+| Version | Supported Destination | Import/Export | Platform Requirement |
+|---------|----------------------|---------------|----------------------|
+| **Version 1** | Azure Blob Storage | Import & Export | 64-bit Windows only |
+| **Version 2** | Azure Files | Import only | 64-bit Windows only |
+
+**Important Requirements:**
+- WAImportExport.exe is **ONLY compatible with 64-bit Windows** operating systems
+- Version 1: Use for Blob Storage import and export jobs
+- Version 2: Use specifically for Azure Files import jobs
+- Both versions require:
+  - `driveset.csv` file in the root folder where the tool resides
+  - `dataset.csv` file in the root folder where the tool resides
+
+**Azure Files Size Limitation:**
+- Maximum size of an Azure Files file share resource: **5 TB**
+- If you need to import more than 5 TB to Azure Files, split across multiple file shares
 
 #### How It Works
 
@@ -777,7 +822,139 @@ Once the storage account exists, you can connect to it in Storage Explorer and p
 
 ## Exam Question Analysis
 
-### Question 1: Required Files for Azure Import/Export Service
+### Question 1: Azure Import/Export Supported Destinations
+
+#### Scenario
+
+You have an Azure subscription named **Subscription1**.
+
+You have **5 TB of data** that you need to transfer to Subscription1.
+
+You plan to use an **Azure Import/Export job**.
+
+#### Question
+
+What can you use as the **destination** of the imported data?
+
+#### Answer Options
+
+##### ❌ Option A: Azure Cosmos DB Database
+
+**Why This Is Wrong:**
+
+The Azure Import/Export service **does not support Cosmos DB** as a direct destination.
+
+**Key Points:**
+- ❌ Cosmos DB is not a supported destination for Import/Export jobs
+- ⚠️ Data must first be imported into a supported storage service (e.g., Blob Storage)
+- ✅ After importing to Blob Storage, you can transfer to Cosmos DB using:
+  - Azure Data Factory
+  - Custom migration tools
+  - Cosmos DB Data Migration Tool
+
+**Why Not Supported:**
+- Azure Import/Export is designed for **storage services** (Blob Storage, Azure Files)
+- Cosmos DB is a **database service** with different data models and APIs
+- Different ingestion mechanisms are required for Cosmos DB
+
+##### ❌ Option B: Azure File Sync Storage Sync Service
+
+**Why This Is Wrong:**
+
+Azure File Sync is used to synchronize on-premises data with Azure File Shares. It is **not a direct destination** for the Import/Export service.
+
+**Key Points:**
+- ❌ File Sync is a synchronization service, not a storage destination
+- ✅ Import/Export can import to **Azure Files** (the actual file shares)
+- ⚠️ File Sync operates on top of Azure Files for ongoing synchronization
+
+**Clarification:**
+- **Azure Files**: Storage service where data resides (✅ Supported by Import/Export)
+- **Azure File Sync**: Synchronization service that keeps on-premises and Azure Files in sync (❌ Not a destination)
+
+**Correct Approach:**
+1. Use Import/Export to import data to **Azure Files** (not File Sync)
+2. Configure File Sync after data is imported to synchronize with on-premises servers
+
+##### ✅ Option C: Azure Blob Storage (CORRECT ANSWER)
+
+**Why This Is Correct:**
+
+Azure Blob Storage is a **primary supported destination** for Azure Import/Export jobs.
+
+**Key Points:**
+- ✅ **Version 1** of WAImportExport tool supports import/export to Blob Storage
+- ✅ Both Block Blobs and Page Blobs are supported
+- ✅ Most common destination for Import/Export jobs
+- ✅ Can handle very large datasets (petabytes)
+
+**WAImportExport Tool Support:**
+
+There are **two versions** of WAImportExport:
+
+| Version | Supported Destination | Operations | Platform |
+|---------|----------------------|------------|----------|
+| **Version 1** | Azure Blob Storage | Import & Export | 64-bit Windows only |
+| **Version 2** | Azure Files | Import only | 64-bit Windows only |
+
+**Important Requirements:**
+- WAImportExport.exe is **ONLY compatible with 64-bit Windows** operating systems
+- Must modify `driveset.csv` file in the root folder where the tool resides
+- Must modify `dataset.csv` file in the root folder where the tool resides
+- Depending on whether you want to import a file or folder or both, add entries in the `dataset.csv` file
+
+**Workflow for Blob Storage:**
+1. Download and install WAImportExport Version 1
+2. Create and configure `driveset.csv` with drive information
+3. Create and configure `dataset.csv` with source files and destination blob paths
+4. Run WAImportExport.exe to prepare drives
+5. Create Import Job in Azure Portal
+6. Ship drives to Azure data center
+7. Data is imported to specified Blob Storage account
+
+##### ❌ Option D: Azure Data Lake Store
+
+**Why This Is Wrong:**
+
+Azure Data Lake Store (Gen1) is **not currently supported** by the Azure Import/Export service as a destination.
+
+**Key Points:**
+- ❌ Data Lake Store Gen1 is deprecated
+- ❌ Not a supported destination for Import/Export
+- ⚠️ Azure Data Lake Storage **Gen2** is built on Blob Storage and can be used indirectly
+
+**Workaround for Data Lake Storage Gen2:**
+- Azure Data Lake Storage Gen2 is built on **Azure Blob Storage**
+- You can import data to a storage account with **hierarchical namespace enabled** (which makes it ADLS Gen2)
+- This works because ADLS Gen2 is fundamentally Blob Storage with additional capabilities
+
+#### Summary
+
+**Supported Destinations for Azure Import/Export:**
+- ✅ **Azure Blob Storage** (Version 1 - Import/Export)
+- ✅ **Azure Files** (Version 2 - Import only)
+  - Maximum file share size: **5 TB**
+
+**Unsupported Destinations:**
+- ❌ Azure Cosmos DB
+- ❌ Azure File Sync Storage Sync Service
+- ❌ Azure Data Lake Store (Gen1)
+- ❌ Azure SQL Database
+- ❌ Azure Tables
+
+**Correct Answer:** **Azure Blob Storage**
+
+#### Key Exam Tips
+
+1. **Only Two Destinations**: Azure Import/Export supports only Blob Storage and Azure Files
+2. **Tool Versions Matter**: Version 1 for Blob Storage, Version 2 for Azure Files
+3. **Platform Requirement**: WAImportExport.exe requires 64-bit Windows
+4. **Azure Files Limit**: Maximum 5 TB per file share
+5. **Indirect Destinations**: For other services like Cosmos DB, import to Blob Storage first, then migrate
+
+---
+
+### Question 2: Required Files for Azure Import/Export Service
 
 #### Scenario
 
