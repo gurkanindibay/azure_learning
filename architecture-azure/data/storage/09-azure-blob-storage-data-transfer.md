@@ -14,7 +14,8 @@
 - [Exam Question Analysis](#exam-question-analysis)
   - [Question 1: Required Files for Azure Import/Export Service](#question-1-required-files-for-azure-importexport-service)
   - [Question 2: On-Premises File Server to Blob Storage Migration](#question-2-on-premises-file-server-to-blob-storage-migration)
-  - [Question 3: Azure Storage Explorer Capabilities](#question-3-azure-storage-explorer-capabilities)
+  - [Question 3: Creating a Blob Container for VM Images](#question-3-creating-a-blob-container-for-vm-images)
+  - [Question 4: Azure Storage Explorer Capabilities](#question-4-azure-storage-explorer-capabilities)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -580,9 +581,11 @@ Should be avoided in production scenarios
 4. Enter entity properties
 5. Click "Insert"
 
-#### Exam Question: Azure Storage Explorer Capabilities
+---
 
-##### Scenario
+### Question 4: Azure Storage Explorer Capabilities
+
+#### Scenario
 
 You have an Azure subscription that contains the following resources:
 
@@ -601,7 +604,7 @@ You need to perform the following tasks:
 | Task3 | Create a file share in storage1 |
 | Task4 | Add data to table1 |
 
-##### Question
+#### Question
 
 Which tasks can you perform by using Azure Storage Explorer?
 
@@ -615,7 +618,7 @@ E. Task1 and Task3 only
 
 ---
 
-##### ✅ Correct Answer: C - Task2, Task3, and Task4 only
+#### ✅ Correct Answer: C - Task2, Task3, and Task4 only
 
 **Explanation:**
 
@@ -663,7 +666,7 @@ Once the storage account exists, you can connect to it in Storage Explorer and p
 
 ---
 
-##### Key Takeaways
+#### Key Takeaways
 
 **Azure Storage Explorer Capabilities:**
 
@@ -1095,7 +1098,7 @@ Provides artifacts (schemas, maps, agreements, certificates) for B2B integration
 | **Logic Apps Integration Account** | ❌ No | B2B/EDI enterprise integrations |
 
 ---
-### Question: Creating a Blob Container for VM Images
+### Question 3: Creating a Blob Container for VM Images
 
 #### Scenario
 
