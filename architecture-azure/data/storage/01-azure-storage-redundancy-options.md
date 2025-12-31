@@ -128,6 +128,82 @@ az storage account create \
 **Supported regions:**
 Not all regions support ZRS. Check the Azure documentation for current availability.
 
+---
+
+#### Practice Question: ZRS Configuration Requirements
+
+**Scenario:**
+
+You plan to create an Azure Storage account in the Azure region of East US 2. You need to create a storage account that meets the following requirements:
+
+- Replicates synchronously
+- Remains available if a single data center in the region fails
+
+**Question:**
+How should you configure the storage account? Select the appropriate options.
+
+**Answer Area:**
+
+| Configuration | Options | Your Selection |
+|--------------|---------|----------------|
+| **Replication** | Geo-redundant storage (GRS)<br>Locally-redundant storage (LRS)<br>Read-access geo-redundant storage (RA-GRS)<br>Zone-redundant storage (ZRS) | ✅ **Zone-redundant storage (ZRS)** |
+| **Account type** | Blob storage<br>Storage (general purpose v1)<br>StorageV2 (general purpose v2) | ✅ **StorageV2 (general purpose v2)** |
+
+---
+
+**Answer Explanation:**
+
+**Replication: Zone-redundant storage (ZRS)** ✅
+
+Zone-redundant storage (ZRS) is the correct choice because it:
+- **Replicates synchronously** across 3 availability zones in a single region
+- **Remains available** if an entire data center (availability zone) fails
+- Meets both requirements specified in the scenario
+
+**Why other replication options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **LRS (Locally-redundant storage)** | ❌ Replicates within a **single data center only**. If that data center fails, the storage account will **NOT remain available**. Does not meet the availability requirement. |
+| **GRS (Geo-redundant storage)** | ❌ Uses **asynchronous replication** to the secondary region. Does not meet the **synchronous replication** requirement. |
+| **RA-GRS (Read-access geo-redundant storage)** | ❌ Like GRS, uses **asynchronous replication**. Does not meet the synchronous requirement. |
+
+**Account Type: StorageV2 (general purpose v2)** ✅
+
+StorageV2 (GPv2) is the correct choice because:
+- **ZRS is only supported** on General Purpose v2 (GPv2) accounts
+- GPv2 is Microsoft's recommended storage account type for most scenarios
+- Provides full support for all redundancy options including ZRS
+
+**Why other account types are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Storage (general purpose v1)** | ❌ GPv1 does **NOT support ZRS**. It only supports LRS and GRS. This is a legacy account type with limited features. |
+| **Blob storage** | ❌ Blob storage accounts do **NOT support ZRS**. Only supports LRS and GRS. This is also a legacy account type. |
+
+**Key Takeaways:**
+
+1. **Synchronous + Data Center Failure Protection = ZRS**
+   - ZRS is the only option that replicates synchronously AND survives data center failures
+   - LRS replicates synchronously but can't survive data center failures
+   - GRS/RA-GRS survive region failures but replicate asynchronously
+
+2. **ZRS Requires GPv2**
+   - ZRS is only available on StorageV2 (general purpose v2) accounts
+   - GPv1 and Blob storage accounts are legacy types that don't support ZRS
+
+3. **Understanding Replication Types:**
+   - **Synchronous (LRS, ZRS)**: Data is written to all copies before write operation completes
+   - **Asynchronous (GRS, RA-GRS)**: Data is written to primary first, then replicated to secondary with a delay (typically ~15 min RPO)
+
+**Reference(s):**
+- [Azure Storage redundancy](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy)
+- [Zone-redundant storage](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy#zone-redundant-storage)
+- [Storage account overview](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview)
+
+---
+
 ## Redundancy in a Secondary Region
 
 For applications requiring high durability, you can replicate data to a secondary region that is hundreds of miles away from the primary region.
