@@ -14,9 +14,11 @@
 - [Exam Question Analysis](#exam-question-analysis)
   - [Question 1: Azure Import/Export Supported Destinations](#question-1-azure-importexport-supported-destinations)
   - [Question 2: Required Files for Azure Import/Export Service](#question-2-required-files-for-azure-importexport-service)
-  - [Question 3: On-Premises File Server to Blob Storage Migration](#question-3-on-premises-file-server-to-blob-storage-migration)
-  - [Question 4: Creating a Blob Container for VM Images](#question-4-creating-a-blob-container-for-vm-images)
-  - [Question 5: Azure Storage Explorer Capabilities](#question-5-azure-storage-explorer-capabilities)
+  - [Question 3: Azure Import/Export Job Workflow Order](#question-3-azure-importexport-job-workflow-order)
+  - [Question 4: On-Premises File Server to Blob Storage Migration](#question-4-on-premises-file-server-to-blob-storage-migration)
+  - [Question 5: Creating a Blob Container for VM Images](#question-5-creating-a-blob-container-for-vm-images)
+  - [Question 6: Controlling Blob Access Based on Index Tags](#question-6-controlling-blob-access-based-on-index-tags)
+  - [Question 7: Azure Storage Explorer Capabilities](#question-7-azure-storage-explorer-capabilities)
 - [Best Practices](#best-practices)
 - [References](#references)
 
@@ -97,6 +99,45 @@ There are **two versions** of the WAImportExport tool:
 2. **Ship to Azure**: Send drives to designated Azure data center via carrier
 3. **Data Import**: Microsoft imports data to your Azure Storage account
 4. **Return Shipment**: Microsoft returns drives to you (optional)
+
+#### Import Job Workflow (Step-by-Step)
+
+At a high level, an import job involves the following steps:
+
+**Step 1: Attach an external disk to Server1 and then run waimportexport.exe**
+
+- Determine data to be imported, number of drives you need, and destination blob location for your data in Azure storage
+- Use the WAImportExport tool to copy data to disk drives
+- Encrypt the disk drives with BitLocker (mandatory security requirement)
+- The tool will create journal files (.jrn) that track the preparation process
+
+**Step 2: From the Azure portal, create an import job**
+
+- Create an import job in your target storage account in Azure portal
+- Upload the drive journal files (.jrn files generated in Step 1)
+- Specify storage account destination and import job details
+- Provide shipping information (return address and carrier account number)
+
+**Step 3: Detach the external disks from Server1 and ship the disks to an Azure data center**
+
+- Safely detach the prepared and encrypted external disks from Server1
+- Provide the return address and carrier account number for shipping the drives back to you
+- Ship the disk drives to the shipping address provided during job creation
+- Use a reliable carrier service (e.g., FedEx, UPS, DHL)
+
+**Step 4: From the Azure portal, update the import job**
+
+- Update the delivery tracking number in the import job details
+- Submit the import job to activate processing
+- The drives are received and processed at the Azure data center
+- Microsoft imports the data to your specified storage account
+- The drives are shipped back using your carrier account to the return address provided in the import job
+
+**Key Points:**
+- Steps must be performed in this exact order
+- BitLocker encryption is mandatory for all drives
+- Journal files are critical for Azure to process your data correctly
+- Track shipment status through both carrier and Azure portal
 
 #### When to Use Azure Import/Export
 
@@ -638,7 +679,7 @@ Should be avoided in production scenarios
 
 ---
 
-### Question 4: Azure Storage Explorer Capabilities
+### Question 7: Azure Storage Explorer Capabilities
 
 #### Scenario
 
@@ -1129,7 +1170,118 @@ When using the Azure Import/Export service, you need to prepare **two specific C
 
 ---
 
-### Question 2: On-Premises File Server to Blob Storage Migration
+### Question 3: Azure Import/Export Job Workflow Order
+
+#### Scenario
+
+You have an Azure subscription that contains an Azure Blob storage account.
+
+You have an on-premises file server named **Server1** that contains multiple terabytes of data that needs to be transferred to Azure Blob Storage.
+
+Due to limited network bandwidth, you decide to use the **Azure Import/Export service** to transfer the data.
+
+**Requirement**: You need to complete the import job process.
+
+#### Question
+
+**Which steps should you perform in the correct order to complete an Azure Import/Export job?**
+
+**Available Actions:**
+- From the Azure portal, update the import job
+- From the Azure portal, create an import job
+- Attach an external disk to Server1 and then run waimportexport.exe
+- Detach the external disks from Server1 and ship the disks to an Azure data center
+
+#### Answer
+
+**Correct Order:**
+
+| Step | Action |
+|------|--------|
+| **Step 1** | Attach an external disk to Server1 and then run waimportexport.exe |
+| **Step 2** | From the Azure portal, create an import job |
+| **Step 3** | Detach the external disks from Server1 and ship the disks to an Azure data center |
+| **Step 4** | From the Azure portal, update the import job |
+
+#### Detailed Explanation
+
+**Step 1: Attach an external disk to Server1 and then run waimportexport.exe** ✅
+
+This is the first step in the process:
+- Determine data to be imported, number of drives needed, and destination blob location
+- Attach external disk(s) to the on-premises server (Server1)
+- Use the WAImportExport tool to copy data to the disk drives
+- The tool encrypts the disk drives with BitLocker (mandatory)
+- Journal files (.jrn) are created to track the preparation process
+
+**Why this is first:**
+- You must prepare the data on the drives before creating the Azure import job
+- The journal files generated are required for the Azure portal job creation
+
+**Step 2: From the Azure portal, create an import job** ✅
+
+After preparing the drives, create the import job in Azure:
+- Navigate to your target storage account in Azure portal
+- Create a new import job
+- Upload the drive journal files generated in Step 1
+- Specify storage account destination and import job details
+- Provide shipping information (return address and carrier account)
+- Azure provides the data center shipping address
+
+**Why this is second:**
+- You need the journal files from Step 1 to create the job
+- The portal provides the shipping address needed for Step 3
+
+**Step 3: Detach the external disks from Server1 and ship the disks to an Azure data center** ✅
+
+After creating the import job:
+- Safely detach the prepared and encrypted external disks from Server1
+- Package the drives securely for shipment
+- Ship the disk drives to the shipping address provided in Step 2
+- Use the carrier account specified in the import job
+
+**Why this is third:**
+- Drives must be prepared (Step 1) before shipping
+- You need the Azure data center shipping address from Step 2
+
+**Step 4: From the Azure portal, update the import job** ✅
+
+Final step after shipping:
+- Update the delivery tracking number in the import job details
+- Submit the import job to activate processing
+- Azure monitors the shipment and processes the drives when received
+- The drives are received and processed at the Azure data center
+- Data is imported to your specified storage account
+- Drives are shipped back to your return address using your carrier account
+
+**Why this is fourth and last:**
+- Can only update tracking after drives have been shipped (Step 3)
+- This activates the job for processing when drives arrive
+
+#### Common Mistakes
+
+❌ **Creating import job before preparing drives**
+- The import job requires journal files from WAImportExport tool
+- You must prepare drives first
+
+❌ **Shipping drives before creating import job**
+- You need the Azure data center shipping address from the portal
+- Without creating the job, you don't know where to ship
+
+❌ **Not updating tracking information**
+- Azure needs tracking number to monitor shipment
+- This finalizes the job submission
+
+#### Key Workflow Rules
+
+1. **Preparation comes first**: Always prepare drives with WAImportExport tool before any Azure portal actions
+2. **Portal job provides shipping address**: Create the import job to get the destination address
+3. **Update activates processing**: Updating tracking number submits the job for processing
+4. **BitLocker encryption is mandatory**: Drives must be encrypted for security
+
+---
+
+### Question 4: On-Premises File Server to Blob Storage Migration
 
 #### Scenario
 
@@ -1285,7 +1437,7 @@ Provides artifacts (schemas, maps, agreements, certificates) for B2B integration
 | **Logic Apps Integration Account** | ❌ No | B2B/EDI enterprise integrations |
 
 ---
-### Question 3: Creating a Blob Container for VM Images
+### Question 5: Creating a Blob Container for VM Images
 
 #### Scenario
 
@@ -1492,6 +1644,397 @@ az storage blob list --account-name mystorageaccount --container-name vmimages
 - **One-time quick transfer** → AzCopy
 - **B2B integrations** → Logic Apps Integration Account (but NOT for file transfers)
 - **Live BI queries** → Analysis Services Gateway
+
+---
+
+### Question 6: Controlling Blob Access Based on Index Tags
+
+#### Scenario
+
+You have an Azure Storage account that contains **5,000 blobs** accessed by multiple users.
+
+**Requirement**: You need to ensure that the users can view only specific blobs based on **blob index tags**.
+
+**Question**: What should you include in the solution?
+
+---
+
+#### Answer Options Analysis
+
+##### ✅ Role Assignment Condition (CORRECT)
+
+**Why This Is Correct:**
+
+Azure role-based access control (RBAC) with **role assignment conditions** allows you to control access to specific blobs based on blob index tags. This is the most direct and efficient method to ensure users can view only specific blobs based on tags.
+
+**Key Points:**
+- ✅ **Index Tag-Based Access Control**: RBAC conditions can filter access based on blob index tags
+- ✅ **Fine-Grained Permissions**: Control access at the blob level using tag-based conditions
+- ✅ **Native Azure Integration**: Built into Azure's identity and access management system
+- ✅ **Scalable**: Efficiently handles thousands of blobs without performance degradation
+- ✅ **Attribute-Based Access Control (ABAC)**: Leverages Azure's ABAC capabilities for dynamic access control
+
+**How It Works:**
+
+1. **Apply Index Tags to Blobs**: Tag blobs with key-value pairs (e.g., `Department=Finance`, `Classification=Confidential`)
+2. **Create Role Assignment**: Assign users to appropriate roles (e.g., Storage Blob Data Reader)
+3. **Add Conditions**: Define conditions that check blob index tags before granting access
+
+**Example Condition:**
+
+```
+(
+  @Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:Department<$key_case_sensitive$>] StringEquals 'Finance'
+)
+```
+
+This condition ensures users can only access blobs tagged with `Department=Finance`.
+
+**Implementation Steps:**
+
+```bash
+# 1. Apply index tags to blobs (Azure CLI)
+az storage blob tag set \
+  --account-name mystorageaccount \
+  --container-name mycontainer \
+  --name myblob.txt \
+  --tags Department=Finance Classification=Confidential
+
+# 2. Create role assignment with condition (Azure Portal or CLI)
+# In Azure Portal:
+# IAM → Add role assignment → Select role → Select members → 
+# Add condition → Build expression using blob tags
+```
+
+**Use Case Fit:**
+
+Perfect for scenarios where:
+- Different departments need access to different subsets of blobs
+- Data classification levels require different access controls
+- Compliance requirements mandate attribute-based access control
+- Dynamic access control based on metadata is required
+
+**Architecture:**
+
+```mermaid
+graph LR
+    A[User] -->|Request Access| B[Azure RBAC]
+    B -->|Check Role| C[Role Assignment]
+    C -->|Evaluate Condition| D{Blob Index Tag Match?}
+    D -->|Yes| E[Grant Access]
+    D -->|No| F[Deny Access]
+    E --> G[Blob Storage]
+```
+
+---
+
+##### ❌ Shared Access Signature (SAS) - INCORRECT
+
+**Why This Is Wrong:**
+
+While SAS tokens are used to grant time-limited access to Azure Storage resources, they **do not natively support filtering by blob index tags**.
+
+**Limitations:**
+- ❌ **No Tag-Based Filtering**: SAS tokens cannot enforce access based on blob index tags
+- ❌ **Token-Based Access**: Grants access to specific resources or containers, not based on metadata
+- ❌ **Static Permissions**: Once generated, SAS permissions are fixed and don't dynamically evaluate tags
+- ❌ **Management Overhead**: Would require generating individual SAS tokens for each blob or subset
+
+**What SAS Can Do:**
+- ✅ Grant time-limited access to specific blobs, containers, or storage accounts
+- ✅ Limit access by IP address or protocol
+- ✅ Restrict operations (read, write, delete, list)
+
+**What SAS Cannot Do:**
+- ❌ Filter access based on blob metadata or index tags
+- ❌ Dynamically evaluate blob properties before granting access
+- ❌ Implement attribute-based access control
+
+**When to Use SAS:**
+- Temporary access to specific resources
+- Third-party access without Azure AD credentials
+- Granular permissions for specific operations
+
+---
+
+##### ❌ Stored Access Policy - INCORRECT
+
+**Why This Is Wrong:**
+
+Stored access policies are used **in conjunction with SAS tokens** to manage the permissions and validity of SAS tokens centrally. However, they are **not related to controlling access based on blob index tags**.
+
+**What Stored Access Policies Do:**
+- ✅ Define permissions for SAS tokens centrally
+- ✅ Allow revocation of SAS tokens by deleting the policy
+- ✅ Enable modification of SAS expiration times and permissions
+- ✅ Provide centralized management of SAS token parameters
+
+**Limitations:**
+- ❌ **No Tag-Based Filtering**: Cannot filter access based on blob metadata or tags
+- ❌ **SAS-Related Only**: Only works with SAS tokens, inherits their limitations
+- ❌ **Not Designed for ABAC**: Not intended for attribute-based access control scenarios
+
+**Example Use Case (Not Applicable Here):**
+
+```bash
+# Create a stored access policy (manages SAS permissions)
+az storage container policy create \
+  --container-name mycontainer \
+  --name mypolicy \
+  --permissions r \
+  --expiry 2026-12-31
+
+# This policy doesn't help with tag-based filtering
+```
+
+**When to Use Stored Access Policies:**
+- Managing multiple SAS tokens with the same permissions
+- Need to revoke multiple SAS tokens at once
+- Centralized SAS token management
+
+---
+
+##### ❌ Just-In-Time (JIT) VM Access - INCORRECT
+
+**Why This Is Wrong:**
+
+JIT VM access is a **security feature for Azure virtual machines**, completely unrelated to blob storage or controlling access based on blob tags.
+
+**What JIT VM Access Does:**
+- ✅ Controls access to Azure Virtual Machines
+- ✅ Reduces exposure by locking down inbound traffic to VMs
+- ✅ Provides time-limited access to VM ports when needed
+- ✅ Enhances VM security by minimizing attack surface
+
+**Why It's Not Applicable:**
+- ❌ **VM-Specific Feature**: Only applies to virtual machines, not storage
+- ❌ **Network-Level Control**: Controls network access to VMs, not data access to blobs
+- ❌ **Different Service**: Part of Azure Security Center, not Azure Storage
+- ❌ **Wrong Scope**: Addresses VM access, not blob storage permissions
+
+**JIT VM Access Use Cases:**
+- Securing management access to VMs
+- Reducing VM attack surface
+- Implementing time-bound access to SSH/RDP ports
+
+---
+
+#### Blob Index Tags Overview
+
+**What Are Blob Index Tags?**
+
+Blob index tags are **key-value metadata attributes** that you can apply to blobs in Azure Storage. They enable categorization, organization, and **attribute-based access control**.
+
+**Key Features:**
+
+| Feature | Description |
+|---------|-------------|
+| **Key-Value Pairs** | Tags are defined as key-value pairs (e.g., `Project=Alpha`, `Status=Active`) |
+| **Multiple Tags** | Each blob can have up to 10 index tags |
+| **Queryable** | Can search and filter blobs using tag queries |
+| **RBAC Integration** | Can be used in role assignment conditions for access control |
+| **Case Sensitive** | Tag keys and values are case-sensitive |
+| **Indexable** | Automatically indexed for fast queries across millions of blobs |
+
+**Blob Index Tags vs. Blob Metadata:**
+
+| Aspect | Blob Index Tags | Blob Metadata |
+|--------|----------------|---------------|
+| **Queryable** | ✅ Yes - Native query support | ❌ No - Must enumerate blobs |
+| **RBAC Integration** | ✅ Yes - Can use in conditions | ❌ No - Cannot use for access control |
+| **Max Count** | 10 tags per blob | 8 KB total metadata |
+| **Use Case** | Categorization, access control, filtering | Application-specific metadata |
+| **Performance** | Fast indexed queries | Requires blob enumeration |
+
+**Example Tag Usage:**
+
+```bash
+# Apply tags to a blob
+az storage blob tag set \
+  --account-name mystorageaccount \
+  --container-name documents \
+  --name report.pdf \
+  --tags Department=Finance Year=2025 Classification=Internal
+
+# Query blobs by tags
+az storage blob query \
+  --account-name mystorageaccount \
+  --query "@container='documents' AND Department='Finance' AND Year='2025'"
+```
+
+---
+
+#### Role Assignment Conditions - Deep Dive
+
+**What Are Role Assignment Conditions?**
+
+Role assignment conditions add **attribute-based access control (ABAC)** to Azure RBAC, allowing you to define fine-grained access controls based on attributes like blob index tags.
+
+**Supported Conditions:**
+
+| Condition Type | Description | Example |
+|----------------|-------------|----------|
+| **Blob Index Tags** | Access based on blob tags | `@Resource[...tags:Department] StringEquals 'Finance'` |
+| **Container Name** | Access based on container | `@Resource[...containerName] StringEquals 'finance-data'` |
+| **Blob Path** | Access based on blob path/prefix | `@Resource[...path] StringStartsWith 'reports/'` |
+| **Encryption Scope** | Access based on encryption scope | `@Resource[...encryptionScope] StringEquals 'finance-scope'` |
+
+**Condition Operators:**
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `StringEquals` | Exact string match (case-sensitive) | `Department='Finance'` |
+| `StringNotEquals` | String does not match | `Status!='Archived'` |
+| `StringStartsWith` | String starts with prefix | `Path starts with 'public/'` |
+| `StringLike` | Pattern matching with wildcards | `Name like 'report-*.pdf'` |
+
+**Example Condition (JSON Format):**
+
+```json
+{
+  "condition": "(
+    (
+      !(ActionMatches{'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read'})
+    )
+    OR
+    (
+      @Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:Department<$key_case_sensitive$>] StringEquals 'Finance'
+    )
+  )",
+  "conditionVersion": "2.0"
+}
+```
+
+**This condition means:**
+- Allow all actions EXCEPT blob read operations
+- OR allow blob read operations only if the blob has tag `Department=Finance`
+
+---
+
+#### Implementation Guide
+
+**Step 1: Enable Index Tags (Already Enabled by Default)**
+
+Blob index tags are automatically available for all general-purpose v2 storage accounts.
+
+**Step 2: Apply Tags to Blobs**
+
+```bash
+# Using Azure CLI
+az storage blob tag set \
+  --account-name mystorageaccount \
+  --container-name documents \
+  --name financial-report.pdf \
+  --tags Department=Finance Classification=Confidential Year=2025
+
+# Using PowerShell
+$tags = @{
+    Department = "Finance"
+    Classification = "Confidential"
+    Year = "2025"
+}
+Set-AzStorageBlobTag -Container "documents" -Blob "financial-report.pdf" -Tag $tags
+```
+
+**Step 3: Create Role Assignment with Condition**
+
+```bash
+# Assign Storage Blob Data Reader role with condition
+az role assignment create \
+  --assignee user@contoso.com \
+  --role "Storage Blob Data Reader" \
+  --scope "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.Storage/storageAccounts/{account-name}" \
+  --condition "@Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:Department<$key_case_sensitive$>] StringEquals 'Finance'" \
+  --condition-version "2.0"
+```
+
+**Step 4: Test Access**
+
+```bash
+# User should be able to access Finance-tagged blobs
+az storage blob download \
+  --account-name mystorageaccount \
+  --container-name documents \
+  --name financial-report.pdf \
+  --auth-mode login
+
+# User should NOT be able to access non-Finance blobs
+# This will fail with 403 Forbidden
+az storage blob download \
+  --account-name mystorageaccount \
+  --container-name documents \
+  --name hr-document.pdf \
+  --auth-mode login
+```
+
+---
+
+#### Key Takeaways
+
+**Access Control Methods Comparison:**
+
+| Method | Tag-Based Filtering | Use Case | Complexity |
+|--------|---------------------|----------|------------|
+| **Role Assignment Conditions** | ✅ Yes | Dynamic access based on blob attributes | Medium |
+| **Shared Access Signature (SAS)** | ❌ No | Time-limited access to specific resources | Low |
+| **Stored Access Policy** | ❌ No | Centralized SAS token management | Low |
+| **JIT VM Access** | ❌ No | Securing VM access (not applicable to storage) | N/A |
+
+**When to Use Each:**
+
+🎯 **Role Assignment Conditions:**
+- Need to filter access based on blob metadata/tags
+- Implementing attribute-based access control (ABAC)
+- Dynamic access control requirements
+- Compliance-driven data classification scenarios
+
+🎯 **Shared Access Signature:**
+- Temporary access for external parties
+- Time-bound access to specific blobs/containers
+- Third-party integrations without Azure AD
+
+🎯 **Stored Access Policies:**
+- Managing multiple SAS tokens centrally
+- Need to revoke SAS tokens by deleting policy
+- Centralizing SAS token configuration
+
+🎯 **JIT VM Access:**
+- Securing management access to virtual machines
+- Reducing VM attack surface
+- *Not applicable to blob storage scenarios*
+
+---
+
+#### Exam Strategy
+
+**For the Exam, Remember:**
+
+🎯 **Blob Index Tags:**
+- Enable categorization and organization of blobs
+- Queryable and indexable
+- Can be used in RBAC conditions
+- Maximum 10 tags per blob
+
+🎯 **Role Assignment Conditions:**
+- Add ABAC capabilities to Azure RBAC
+- Can filter access based on blob index tags
+- **CORRECT solution** for tag-based access control
+- Uses condition expressions to evaluate blob attributes
+
+🎯 **SAS Limitations:**
+- SAS tokens **cannot** filter by blob index tags
+- SAS provides time-limited access, not attribute-based filtering
+- Good for temporary access, not for tag-based scenarios
+
+🎯 **Not Storage-Related:**
+- JIT VM Access is for virtual machines, not blob storage
+- Stored access policies manage SAS tokens, not blob tags
+
+🎯 **Decision Matrix:**
+- **Tag-based access control** → Role Assignment Conditions ✅
+- **Time-limited access** → SAS tokens
+- **VM access control** → JIT VM Access
+- **SAS management** → Stored Access Policies
 
 ---
 
