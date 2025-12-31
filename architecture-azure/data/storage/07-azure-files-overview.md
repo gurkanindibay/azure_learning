@@ -23,6 +23,7 @@
   - [Data Protection Features NOT Applicable to Azure Files](#data-protection-features-not-applicable-to-azure-files)
 - [Supported Operating Systems](#supported-operating-systems)
 - [Mounting Azure File Shares](#mounting-azure-file-shares)
+  - [Network Requirements](#network-requirements)
   - [Windows](#windows)
   - [Linux](#linux)
   - [macOS](#macos)
@@ -580,6 +581,106 @@ Azure Files offers fully managed file shares in the cloud that are accessible vi
 ---
 
 ## Mounting Azure File Shares
+
+### Network Requirements
+
+Before mounting Azure file shares, ensure that the required network ports are open:
+
+#### Port 445 Requirement
+
+**Port 445** is used for the **SMB (Server Message Block) protocol**, which is what Windows (and other operating systems) use for file sharing and mounting Azure file shares.
+
+| Port | Protocol | Direction | Purpose |
+|------|----------|-----------|---------|
+| **445** | TCP | Outbound | SMB protocol for file share access |
+
+**Important Considerations:**
+
+- 🔒 **Security Best Practices**: Always ensure you follow security best practices when opening ports, especially when dealing with potentially sensitive data
+- ⚠️ **ISP Blocking**: Some Internet Service Providers (ISPs) block port 445 for security reasons. If you experience connection issues:
+  - Use a **VPN connection** to bypass ISP restrictions
+  - Use **Azure ExpressRoute** for dedicated private connectivity
+  - Consider **Azure File Sync** for hybrid scenarios
+- ✅ **Test Connectivity**: Before mounting, verify port 445 is accessible using network testing tools
+
+**Common Blocked Ports (NOT used for Azure Files):**
+
+| Port | Protocol | Purpose | Relevant to Azure Files? |
+|------|----------|---------|-------------------------|
+| **3389** | RDP | Remote Desktop Protocol | ❌ No - Used for remote desktop connections, unrelated to file shares |
+| **80** | HTTP | Standard web traffic | ❌ No - Not used for SMB or file share mapping |
+| **443** | HTTPS | Secure web traffic | ❌ No - Not used for SMB connections |
+
+**Testing Port 445 Connectivity:**
+
+```powershell
+# Windows PowerShell
+Test-NetConnection -ComputerName <storage-account>.file.core.windows.net -Port 445
+
+# If TcpTestSucceeded is True, port 445 is accessible
+# If TcpTestSucceeded is False, port 445 is blocked
+```
+
+```bash
+# Linux
+nc -zv <storage-account>.file.core.windows.net 445
+
+# macOS
+nc -zv <storage-account>.file.core.windows.net 445
+```
+
+---
+
+### Practice Question: Mapping Drive to Azure File Share
+
+**Scenario:**
+You create an Azure Storage account named **contosostorage**.
+
+You plan to create a file share named **data**.
+
+Users need to map a drive to the data file share from home computers that run Windows 10.
+
+**Question:**
+Which outbound port should you open between the home computers and the data file share?
+
+**Options:**
+1. ❌ **3389**
+2. ✅ **445**
+3. ❌ **80**
+4. ❌ **443**
+
+**Answer: 445**
+
+**Explanation:**
+
+✅ **Port 445 is correct** because:
+- This port is used for the **SMB (Server Message Block) protocol**, which is what Windows uses for file sharing
+- When mapping a drive to an Azure file share from Windows, the connection is established over SMB protocol on port 445
+- **Note**: Some ISPs block this port, so if you experience issues, a VPN or Azure ExpressRoute connection may be necessary to allow the traffic
+- Always ensure you are following security best practices when opening ports, especially when dealing with potentially sensitive data
+
+❌ **Port 3389 is incorrect** because:
+- Used for **Remote Desktop Protocol (RDP)** for remote desktop connections
+- Completely unrelated to file shares or SMB protocol
+
+❌ **Port 80 is incorrect** because:
+- Used for standard **HTTP web traffic**
+- Not used for SMB or file share mapping
+
+❌ **Port 443 is incorrect** because:
+- Used for secure **HTTPS web traffic**
+- Not used for SMB connections
+
+**Key Takeaway:**
+When mapping drives to Azure file shares from Windows (or other OS), **port 445** must be open for outbound connections. This is a critical requirement for SMB-based file share access.
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Troubleshoot Azure Files connectivity and access issues (SMB)](https://learn.microsoft.com/en-us/troubleshoot/azure/azure-storage/files-troubleshoot-smb-connectivity)
+- [Mount SMB Azure file share on Windows](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-windows)
+
+---
 
 ### Windows
 
