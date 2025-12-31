@@ -682,6 +682,92 @@ When mapping drives to Azure file shares from Windows (or other OS), **port 445*
 
 ---
 
+### Practice Question: UNC Path for Azure File Share
+
+**Scenario:**
+You have an Azure subscription named **Subscription1**.
+
+You create an Azure Storage account named **contosostorage**, and then you create a file share named **data**.
+
+**Question:**
+Which UNC path should you include in a script that references files from the **data** file share?
+
+**Answer:**
+
+The correct UNC path format for Azure File Shares is:
+
+```
+\\[storageaccountname].file.core.windows.net\[FileShareName]
+```
+
+For this specific scenario:
+```
+\\contosostorage.file.core.windows.net\data
+```
+
+**UNC Path Component Breakdown:**
+
+| Component | Value | Description |
+|-----------|-------|-------------|
+| **Storage Account Name** | `contosostorage` | The name of your Azure Storage account |
+| **Service Endpoint** | `file.core.windows.net` | The Azure Files service endpoint (constant) |
+| **File Share Name** | `data` | The name of the file share you created |
+
+**Common Mistakes to Avoid:**
+
+❌ **Incorrect - Using subscription name:**
+```
+\\subscription1.file.core.windows.net\data
+```
+*The subscription name is NOT part of the UNC path*
+
+❌ **Incorrect - Using blob endpoint:**
+```
+\\contosostorage.blob.core.windows.net\data
+```
+*`blob.core.windows.net` is for Blob Storage, not Azure Files*
+
+❌ **Incorrect - Wrong service endpoint:**
+```
+\\contosostorage.core.windows.net\data
+```
+*Missing the `.file` subdomain*
+
+**Key Points:**
+- The UNC path format is **always** `\\[storage-account-name].file.core.windows.net\[share-name]`
+- The **storage account name** comes first, not the subscription name
+- Use `.file.core.windows.net` endpoint (not `.blob.core.windows.net`)
+- The **file share name** comes at the end of the path
+- This format is used when mounting drives from Windows, scripting access, or configuring applications
+
+**Usage Example in Script:**
+
+```powershell
+# PowerShell script to access Azure File Share
+$storageAccountName = "contosostorage"
+$shareName = "data"
+$storageAccountKey = "your-storage-account-key"
+
+# UNC path format
+$uncPath = "\\$storageAccountName.file.core.windows.net\$shareName"
+
+# Map network drive
+net use Z: $uncPath /user:Azure\$storageAccountName $storageAccountKey
+```
+
+```batch
+REM Batch script to map drive
+net use Z: \\contosostorage.file.core.windows.net\data /user:Azure\contosostorage STORAGE_ACCOUNT_KEY
+```
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Mount SMB Azure file share on Windows](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-windows)
+- [Azure Files UNC path format](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction)
+
+---
+
 ### Windows
 
 ```powershell
