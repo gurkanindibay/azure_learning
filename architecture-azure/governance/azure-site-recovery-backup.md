@@ -15,6 +15,7 @@
   - [Question 8: Deleting Resource Groups with Recovery Services Vaults](#question-8-deleting-resource-groups-with-recovery-services-vaults)
   - [Question 9: Azure Backup Instant Restore File Recovery After Ransomware](#question-9-azure-backup-instant-restore-file-recovery-after-ransomware)
   - [Question 10: Full VM Restore After Ransomware Infection](#question-10-full-vm-restore-after-ransomware-infection)
+  - [Question 11: Azure Backup Reports Diagnostic Settings Configuration](#question-11-azure-backup-reports-diagnostic-settings-configuration)
 - [References](#references)
 
 ---
@@ -463,6 +464,203 @@ az monitor metrics alert create \
   --scopes "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.RecoveryServices/vaults/{vault-name}" \
   --condition "count BackupHealthEvent > 0" \
   --description "Alert when backup fails"
+```
+
+### Azure Backup Reports and Diagnostic Settings
+
+Azure Backup provides comprehensive reporting capabilities through **Azure Backup Reports**, which rely on **diagnostic settings** to send backup data to monitoring destinations.
+
+#### Overview
+
+Azure Backup Reports enable you to:
+- Track backup and restore jobs across vaults
+- Monitor backup health and compliance
+- Analyze backup storage consumption and trends
+- Create custom dashboards and alerts
+
+Reports are powered by **Azure Monitor diagnostic settings** that export data from Recovery Services vaults to:
+- **Log Analytics workspaces** (for querying and visualization)
+- **Storage accounts** (for archival and long-term retention)
+- **Event Hubs** (for streaming to third-party tools)
+
+#### Diagnostic Settings Configuration
+
+To configure Azure Backup reports, you must enable **diagnostic settings** on the Recovery Services vault and select the **AzureBackupReport** log category.
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────┐
+│          Recovery Services Vault (Vault1)                       │
+│          Location: West Europe                                  │
+│          Resource Group: RG1                                    │
+│                                                                 │
+│   Diagnostic Settings: AzureBackupReport                        │
+│   ├─→ Destination 1: Log Analytics Workspace                   │
+│   └─→ Destination 2: Storage Account (optional)                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Log Analytics Workspace Requirements
+
+**✅ Key Requirement:** Log Analytics workspaces can be in **any region** and **any subscription**.
+
+**The location and subscription of the Log Analytics workspace is independent of the Recovery Services vault location and subscription.**
+
+| Vault Location | Log Analytics Workspace Location | Supported? |
+|----------------|----------------------------------|------------|
+| West Europe | East US | ✅ Yes |
+| West Europe | West US | ✅ Yes |
+| West Europe | West Europe | ✅ Yes |
+| East US | Any region | ✅ Yes |
+
+**Example Configuration:**
+
+| Resource | Type | Location | Resource Group | Can Be Used for Vault1 Reports? |
+|----------|------|----------|----------------|----------------------------------|
+| **Vault1** | Recovery Services vault | West Europe | RG1 | - |
+| **Analytics1** | Log Analytics workspace | East US | RG1 | ✅ **Yes** |
+| **Analytics2** | Log Analytics workspace | West US | RG2 | ✅ **Yes** |
+| **Analytics3** | Log Analytics workspace | West Europe | RG1 | ✅ **Yes** |
+
+> **💡 Exam Tip:** When configuring Azure Backup reports with Log Analytics workspace destinations, remember that **all Log Analytics workspaces are valid targets regardless of their location or subscription**. This is different from the Recovery Services vault's protection scope, which must be in the same region as the protected resources.
+
+**Azure CLI Example:**
+
+```bash
+# Configure diagnostic settings to send AzureBackupReport logs to Log Analytics
+az monitor diagnostic-settings create \
+  --name "BackupReports" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics1" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+
+# Can also send to workspace in different region
+az monitor diagnostic-settings create \
+  --name "BackupReportsMultiRegion" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.OperationalInsights/workspaces/Analytics2" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+```
+
+#### Storage Account Requirements
+
+**⚠️ Important:** Storage accounts used for Azure Backup diagnostic logs must be in the **same region** as the Recovery Services vault.
+
+**Unlike Log Analytics workspaces, storage accounts have a region dependency.**
+
+| Vault Location | Storage Account Location | Supported? |
+|----------------|-------------------------|------------|
+| West Europe | West Europe | ✅ Yes |
+| West Europe | East US | ❌ No |
+| West Europe | West US | ❌ No |
+
+**Example Configuration:**
+
+| Resource | Type | Location | Resource Group | Can Be Used for Vault1 Diagnostics? |
+|----------|------|----------|----------------|-------------------------------------|
+| **Vault1** | Recovery Services vault | West Europe | RG1 | - |
+| **storage1** | Storage account | East US | RG2 | ❌ **No** (different region) |
+| **storage2** | Storage account | West US | RG1 | ❌ **No** (different region) |
+| **storage3** | Storage account | West Europe | RG2 | ✅ **Yes** (same region as vault) |
+
+> **💡 Exam Tip:** When asked about storage accounts for Azure Backup diagnostic settings, always verify the **region match**. Only storage accounts in the **same region as the Recovery Services vault** can be used. The resource group or subscription does not matter—only the region.
+
+**Azure CLI Example:**
+
+```bash
+# Configure diagnostic settings to send logs to storage account (must be same region)
+az monitor diagnostic-settings create \
+  --name "BackupLogsArchive" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage3" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true, "retentionPolicy": {"enabled": true, "days": 365}}]'
+
+# This will fail because storage1 is in East US, but Vault1 is in West Europe
+# az monitor diagnostic-settings create \
+#   --name "BackupLogsArchiveFail" \
+#   --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+#   --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage1" \
+#   --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+```
+
+#### Comparison: Log Analytics vs Storage Account for Diagnostics
+
+| Requirement | Log Analytics Workspace | Storage Account |
+|-------------|------------------------|-----------------|
+| **Region Dependency** | ❌ **None** - Can be in any region | ✅ **Must match vault region** |
+| **Subscription Dependency** | ❌ None - Can be in any subscription | ❌ None - Can be in any subscription |
+| **Use Case** | Querying, dashboards, alerts | Long-term archival, compliance |
+| **Access Pattern** | Frequent querying via KQL | Infrequent access, blob storage |
+| **Cost Model** | Per GB ingested + retention | Storage costs based on data size |
+
+#### Complete Multi-Destination Configuration
+
+You can configure diagnostic settings to send data to **both** Log Analytics and Storage simultaneously:
+
+```bash
+# Configure diagnostic settings with both destinations
+az monitor diagnostic-settings create \
+  --name "BackupReportsComplete" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics3" \
+  --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage3" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true, "retentionPolicy": {"enabled": true, "days": 90}}]'
+```
+
+**Multi-Destination Architecture:**
+
+```plaintext
+┌──────────────────────────────────────────────────────────────────┐
+│        Recovery Services Vault (Vault1 - West Europe)            │
+│                                                                  │
+│   Diagnostic Settings: AzureBackupReport                         │
+│        │                                                         │
+│        ├──→ Analytics3 (West Europe) ✅                          │
+│        │    └─→ Interactive queries, dashboards, alerts         │
+│        │                                                         │
+│        ├──→ Analytics1 (East US) ✅                              │
+│        │    └─→ Global monitoring dashboard                     │
+│        │                                                         │
+│        └──→ storage3 (West Europe) ✅                            │
+│             └─→ Long-term archival, compliance                  │
+│                                                                  │
+│   Cannot use:                                                    │
+│   ├──→ storage1 (East US) ❌ - Wrong region                      │
+│   └──→ storage2 (West US) ❌ - Wrong region                      │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### Available Diagnostic Log Categories
+
+Azure Backup supports multiple diagnostic log categories:
+
+| Category | Description | Use Case |
+|----------|-------------|----------|
+| **AzureBackupReport** | Backup and restore job details, backup items, policies, and vault usage | Comprehensive reporting and dashboards |
+| **CoreAzureBackup** | Core backup events and operations | Detailed operational monitoring |
+| **AddonAzureBackupJobs** | Extended job information for workloads like SQL, SAP HANA | Workload-specific job tracking |
+| **AddonAzureBackupAlerts** | Alert events and notifications | Alert management and tracking |
+| **AddonAzureBackupPolicy** | Policy-related events and changes | Policy compliance and auditing |
+| **AddonAzureBackupStorage** | Storage consumption and tier information | Cost analysis and capacity planning |
+| **AddonAzureBackupProtectedInstance** | Protected instance details | Inventory and billing |
+
+**Enable all categories for complete reporting:**
+
+```bash
+az monitor diagnostic-settings create \
+  --name "BackupReportsAll" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics3" \
+  --logs '[
+    {"category": "AzureBackupReport", "enabled": true},
+    {"category": "CoreAzureBackup", "enabled": true},
+    {"category": "AddonAzureBackupJobs", "enabled": true},
+    {"category": "AddonAzureBackupAlerts", "enabled": true},
+    {"category": "AddonAzureBackupPolicy", "enabled": true},
+    {"category": "AddonAzureBackupStorage", "enabled": true},
+    {"category": "AddonAzureBackupProtectedInstance", "enabled": true}
+  ]'
 ```
 
 ### Vault Deletion Constraints
@@ -4409,10 +4607,479 @@ Ransomware Recovery: Full VM Restore
 
 ---
 
+### Question 11: Azure Backup Reports Diagnostic Settings Configuration
+
+#### Scenario
+
+You have an Azure subscription named **Subscription1** that contains the following resources:
+
+| Name | Type | Location | Resource Group |
+|------|------|----------|----------------|
+| **RG1** | Resource group | East US | *Not applicable* |
+| **RG2** | Resource group | West US | *Not applicable* |
+| **Vault1** | Recovery Services vault | West Europe | RG1 |
+| **storage1** | Storage account | East US | RG2 |
+| **storage2** | Storage account | West US | RG1 |
+| **storage3** | Storage account | West Europe | RG2 |
+| **Analytics1** | Log Analytics workspace | East US | RG1 |
+| **Analytics2** | Log Analytics workspace | West US | RG2 |
+| **Analytics3** | Log Analytics workspace | West Europe | RG1 |
+
+**Task:**
+
+You plan to configure **Azure Backup reports** for **Vault1**. You are configuring the **diagnostic settings** for the **AzureBackupReport** log category.
+
+**Question:**
+
+Which storage accounts and which Log Analytics workspaces can you use for the Azure Backup reports of Vault1?
+
+**Options:**
+
+**Storage accounts:**
+- A. storage1 only
+- B. storage2 only
+- C. storage3 only
+- D. storage1, storage2, and storage3
+
+**Log Analytics workspaces:**
+- E. Analytics1 only
+- F. Analytics2 only
+- G. Analytics3 only
+- H. Analytics1, Analytics2, and Analytics3
+
+---
+
+**Correct Answers:**
+
+**Storage accounts:** **C. storage3 only** ✅
+
+**Log Analytics workspaces:** **H. Analytics1, Analytics2, and Analytics3** ✅
+
+---
+
+### Detailed Explanation
+
+#### Requirements Analysis
+
+When configuring **diagnostic settings** for a Recovery Services vault to send **AzureBackupReport** logs:
+
+1. **Log Analytics Workspace** destination requirements
+2. **Storage Account** destination requirements
+3. Region and subscription dependencies
+
+---
+
+#### Answer 1: Storage Accounts - storage3 Only ✅
+
+**Correct:** **C. storage3 only**
+
+##### Why storage3 is Correct ✅
+
+Storage accounts used for diagnostic settings must be in the **same region** as the Recovery Services vault:
+
+```plaintext
+Region Requirement: Storage Account = Vault Region
+
+┌──────────────────────────────────────────────────────────┐
+│  Vault1: West Europe                                     │
+│                                                          │
+│  Storage Accounts:                                       │
+│  ├─→ storage1 (East US) ❌ Different region             │
+│  ├─→ storage2 (West US) ❌ Different region             │
+│  └─→ storage3 (West Europe) ✅ SAME REGION              │
+│                                                          │
+│  Verdict: Only storage3 can be used ✅                   │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Key Points:**
+
+| Storage Account | Location | Vault1 Location | Same Region? | Can Be Used? |
+|-----------------|----------|-----------------|--------------|--------------|
+| **storage1** | East US | West Europe | ❌ No | ❌ No |
+| **storage2** | West US | West Europe | ❌ No | ❌ No |
+| **storage3** | West Europe | West Europe | ✅ Yes | ✅ **Yes** |
+
+**Azure Portal Validation:**
+
+When you try to configure diagnostic settings for Vault1 with storage accounts from different regions:
+
+```plaintext
+Attempting to Use storage1 (East US):
+┌────────────────────────────────────────────────────┐
+│  ❌ Error: InvalidStorageAccountRegion             │
+│                                                    │
+│  The storage account must be in the same region   │
+│  as the resource being monitored.                 │
+│                                                    │
+│  Resource: Vault1 (West Europe)                   │
+│  Storage: storage1 (East US)                      │
+│                                                    │
+│  Suggested Actions:                               │
+│  • Use storage3 (West Europe) ✅                  │
+│  • Create new storage account in West Europe      │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
+
+**Why Resource Group Doesn't Matter:**
+
+Notice that **storage3** is in **RG2** (different resource group from Vault1 which is in RG1), but this is **allowed**:
+
+```plaintext
+Resource Group Independence:
+
+✅ Vault1 in RG1 can use storage3 in RG2
+   └─→ Because they are in the SAME REGION (West Europe)
+
+❌ Vault1 in RG1 CANNOT use storage2 in RG1
+   └─→ Even though they are in the SAME RESOURCE GROUP
+   └─→ Because they are in DIFFERENT REGIONS
+```
+
+**Configuration Example:**
+
+```bash
+# This will succeed - storage3 is in West Europe like Vault1
+az monitor diagnostic-settings create \
+  --name "BackupReportsStorage" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage3" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true, "retentionPolicy": {"enabled": true, "days": 365}}]'
+
+# This will fail - storage1 is in East US, Vault1 is in West Europe
+# az monitor diagnostic-settings create \
+#   --name "BackupReportsStorageFail" \
+#   --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+#   --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage1" \
+#   --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+#   Error: Storage account must be in the same region as the vault
+```
+
+##### Why Other Storage Accounts Are Incorrect ❌
+
+**A. storage1 only** ❌
+
+- **Location:** East US
+- **Vault1 Location:** West Europe
+- **Problem:** Different regions
+- **Result:** Cannot be used for diagnostic settings
+
+**B. storage2 only** ❌
+
+- **Location:** West US  
+- **Vault1 Location:** West Europe
+- **Problem:** Different regions
+- **Result:** Cannot be used for diagnostic settings
+
+**D. storage1, storage2, and storage3** ❌
+
+- **Partially Correct:** Only storage3 is valid
+- **Problem:** storage1 and storage2 are in different regions
+- **Result:** Incorrect because not all three can be used
+
+---
+
+#### Answer 2: Log Analytics Workspaces - All Three ✅
+
+**Correct:** **H. Analytics1, Analytics2, and Analytics3**
+
+##### Why All Three Workspaces Are Correct ✅
+
+**Log Analytics workspaces can be in ANY region and ANY subscription** - there is **no regional constraint** for diagnostic settings when using Log Analytics workspaces:
+
+```plaintext
+Region Independence: Log Analytics Workspaces
+
+┌──────────────────────────────────────────────────────────────┐
+│  Vault1: West Europe                                         │
+│                                                              │
+│  Log Analytics Workspaces:                                   │
+│  ├─→ Analytics1 (East US, RG1) ✅ Different region OK       │
+│  ├─→ Analytics2 (West US, RG2) ✅ Different region OK       │
+│  └─→ Analytics3 (West Europe, RG1) ✅ Same region OK        │
+│                                                              │
+│  Verdict: All three can be used ✅                           │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Key Points:**
+
+| Log Analytics Workspace | Location | Vault1 Location | Same Region? | Can Be Used? |
+|-------------------------|----------|-----------------|--------------|--------------|
+| **Analytics1** | East US | West Europe | ❌ No | ✅ **Yes** |
+| **Analytics2** | West US | West Europe | ❌ No | ✅ **Yes** |
+| **Analytics3** | West Europe | West Europe | ✅ Yes | ✅ **Yes** |
+
+**Official Microsoft Documentation:**
+
+> "The location and subscription where this Log Analytics workspace can be created is **independent** of the location and subscription where your vaults exist."
+
+**Multi-Region Architecture Example:**
+
+This flexibility enables powerful cross-region monitoring scenarios:
+
+```plaintext
+Global Backup Monitoring Architecture:
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   Central Monitoring Hub                        │
+│               Analytics1 (East US - RG1)                        │
+│         ┌──────────────────────────────────────┐               │
+│         │   Unified Backup Dashboards          │               │
+│         │   • All vaults across all regions    │               │
+│         │   • Consolidated reporting            │               │
+│         └──────────────────────────────────────┘               │
+│                         ↑                                       │
+│          ┌──────────────┼──────────────┐                       │
+│          │              │              │                       │
+│    ┌─────▼────┐   ┌────▼─────┐   ┌───▼──────┐                │
+│    │ Vault1   │   │ Vault2   │   │ Vault3   │                │
+│    │West Eur. │   │East US   │   │West US   │                │
+│    └──────────┘   └──────────┘   └──────────┘                │
+│                                                                 │
+│  All vaults send diagnostics to Analytics1 (East US) ✅        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Configuration Example:**
+
+```bash
+# Configure Vault1 to send logs to Analytics1 (East US) ✅
+az monitor diagnostic-settings create \
+  --name "BackupReportsToAnalytics1" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics1" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+
+# Configure Vault1 to send logs to Analytics2 (West US) ✅
+az monitor diagnostic-settings create \
+  --name "BackupReportsToAnalytics2" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.OperationalInsights/workspaces/Analytics2" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+
+# Configure Vault1 to send logs to Analytics3 (West Europe) ✅
+az monitor diagnostic-settings create \
+  --name "BackupReportsToAnalytics3" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics3" \
+  --logs '[{"category": "AzureBackupReport", "enabled": true}]'
+
+# All three commands will succeed ✅
+```
+
+##### Why Single-Workspace Answers Are Incorrect ❌
+
+**E. Analytics1 only** ❌
+
+- **Technically:** Analytics1 CAN be used ✅
+- **Problem:** Analytics2 and Analytics3 can ALSO be used
+- **Result:** Incomplete answer
+
+**F. Analytics2 only** ❌
+
+- **Technically:** Analytics2 CAN be used ✅
+- **Problem:** Analytics1 and Analytics3 can ALSO be used
+- **Result:** Incomplete answer
+
+**G. Analytics3 only** ❌
+
+- **Technically:** Analytics3 CAN be used ✅
+- **Problem:** Analytics1 and Analytics2 can ALSO be used
+- **Result:** Incomplete answer
+- **Common Misconception:** "Must be same region as vault" (incorrect for Log Analytics)
+
+---
+
+#### Critical Distinction: Storage vs Log Analytics
+
+This question highlights a crucial difference in diagnostic settings requirements:
+
+```plaintext
+Diagnostic Settings Destination Requirements:
+
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  Storage Account Destination:                                   │
+│  ├─→ ✅ Must be in SAME REGION as vault                        │
+│  ├─→ ❌ Resource group doesn't matter                          │
+│  ├─→ ❌ Subscription doesn't matter                            │
+│  └─→ Example: Vault1 (West Europe) → storage3 (West Europe)   │
+│                                                                 │
+│  Log Analytics Workspace Destination:                           │
+│  ├─→ ✅ Can be in ANY REGION                                   │
+│  ├─→ ✅ Can be in ANY SUBSCRIPTION                             │
+│  ├─→ ✅ Can be in ANY RESOURCE GROUP                           │
+│  └─→ Example: Vault1 (West Europe) → Any Analytics workspace  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Comparison Table:**
+
+| Requirement | Storage Account | Log Analytics Workspace |
+|-------------|-----------------|-------------------------|
+| **Region** | Must match vault ✅ | Any region ✅ |
+| **Subscription** | Any subscription ✅ | Any subscription ✅ |
+| **Resource Group** | Any resource group ✅ | Any resource group ✅ |
+| **Use Case** | Long-term archival | Querying, dashboards, alerts |
+
+---
+
+#### Use Cases for Multiple Destinations
+
+**Why send to multiple Log Analytics workspaces?**
+
+```plaintext
+Multi-Workspace Scenarios:
+
+Scenario 1: Regional Segmentation
+├─→ Analytics3 (West Europe): European compliance reporting
+├─→ Analytics1 (East US): Global consolidated dashboard
+└─→ Benefit: Compliance + Global visibility
+
+Scenario 2: Team Segregation
+├─→ Analytics1 (East US): Operations team monitoring
+├─→ Analytics2 (West US): Security team analysis
+└─→ Benefit: Role-based access and specialized dashboards
+
+Scenario 3: Development vs Production
+├─→ Analytics3 (West Europe): Production monitoring
+├─→ Analytics2 (West US): Development analytics and testing
+└─→ Benefit: Environment isolation
+```
+
+**Complete Configuration Example:**
+
+```bash
+# Configure all destinations simultaneously
+az monitor diagnostic-settings create \
+  --name "BackupReportsComplete" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.RecoveryServices/vaults/Vault1" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/RG1/providers/Microsoft.OperationalInsights/workspaces/Analytics3" \
+  --storage-account "/subscriptions/{sub-id}/resourceGroups/RG2/providers/Microsoft.Storage/storageAccounts/storage3" \
+  --logs '[
+    {"category": "AzureBackupReport", "enabled": true, "retentionPolicy": {"enabled": true, "days": 90}},
+    {"category": "CoreAzureBackup", "enabled": true},
+    {"category": "AddonAzureBackupJobs", "enabled": true},
+    {"category": "AddonAzureBackupAlerts", "enabled": true}
+  ]'
+```
+
+---
+
+#### Exam Tips
+
+**Key Points to Remember:**
+
+1. **Storage Account Region Requirement** ✅
+   > Storage accounts for diagnostic settings must be in the **same region** as the Recovery Services vault. Resource group and subscription don't matter—only region.
+
+2. **Log Analytics Region Independence** ✅
+   > Log Analytics workspaces can be in **any region** and **any subscription**. There is no regional constraint for diagnostic settings using Log Analytics.
+
+3. **Don't Confuse with Vault Protection Scope** ❌
+   > Recovery Services vaults can only protect resources in their **own region**, but diagnostic settings have **different rules** for destinations.
+
+4. **Resource Group Is Irrelevant** ✅
+   > For both storage accounts and Log Analytics workspaces, the resource group doesn't matter. Only region matters for storage accounts.
+
+5. **Multiple Destinations Supported** ✅
+   > You can send diagnostic logs to multiple Log Analytics workspaces and one storage account simultaneously.
+
+**Common Misconceptions:**
+
+❌ "Log Analytics workspace must be in same region" → **FALSE** (any region works)  
+❌ "Storage account can be in any region" → **FALSE** (must match vault region)  
+❌ "Resource group must match" → **FALSE** (resource group doesn't matter)  
+✅ "Storage needs region match, Log Analytics doesn't" → **TRUE**
+
+**Memory Aid:**
+
+```plaintext
+Diagnostic Settings Destination Rules:
+
+Storage = STRICT (Same region required) 📍
+Log Analytics = FLEXIBLE (Any region allowed) 🌍
+
+Remember: "S for Storage = S for Strict (Same region)"
+          "L for Log Analytics = L for Liberal (any Location)"
+```
+
+---
+
+#### Related Concepts
+
+**Azure Backup Reports Architecture:**
+
+```plaintext
+Azure Backup Reports Flow:
+
+┌──────────────────────────────────────────────────────────────┐
+│  Recovery Services Vault (Vault1)                            │
+│  ├─→ Backup jobs executed                                   │
+│  ├─→ Backup data generated                                  │
+│  └─→ Diagnostic logs created                                │
+│                                                              │
+│  Diagnostic Settings Enabled:                                │
+│  ├─→ Category: AzureBackupReport                            │
+│  │                                                           │
+│  │   ┌─→ Log Analytics Workspace (any region) ✅            │
+│  │   │   └─→ KQL queries, dashboards, alerts               │
+│  └───┤                                                       │
+│      └─→ Storage Account (same region) ✅                   │
+│          └─→ Long-term archival, compliance                 │
+│                                                              │
+│  Reporting:                                                  │
+│  └─→ Azure Backup Center                                    │
+│      └─→ Pre-built dashboards and insights                  │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Other Diagnostic Log Categories:**
+
+While this question focuses on **AzureBackupReport**, remember that Recovery Services vaults support multiple diagnostic categories:
+
+| Category | Purpose | Data Volume |
+|----------|---------|-------------|
+| **AzureBackupReport** | Comprehensive backup reporting | High |
+| **CoreAzureBackup** | Core backup operations | Medium |
+| **AddonAzureBackupJobs** | Detailed job information | High |
+| **AddonAzureBackupAlerts** | Alert events | Low |
+| **AddonAzureBackupPolicy** | Policy changes | Low |
+| **AddonAzureBackupStorage** | Storage consumption | Medium |
+| **AddonAzureBackupProtectedInstance** | Protected instances inventory | Low |
+
+---
+
+#### Reference Links
+
+**Official Documentation:**
+- [Azure Backup Reports Overview](https://learn.microsoft.com/en-us/azure/backup/backup-reports-overview)
+- [Configure Azure Backup Reports](https://learn.microsoft.com/en-us/azure/backup/configure-reports)
+- [Diagnostic settings in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings)
+- [Log Analytics workspace overview](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)
+
+**Related Questions:**
+- Question 5: Recovery Services Vault Region Requirement (for protecting resources)
+- Question 6: Recovery Services Vault for Cross-Region VM Protection
+
+**Exam Tip:**
+> For diagnostic settings questions, always distinguish between **storage account** (region-dependent) and **Log Analytics workspace** (region-independent) requirements. This is a common trap in Azure exams.
+
+**Domain:** Design Business Continuity Solutions / Monitoring and Governance
+
+---
+
 ## References
 
 - [Azure Site Recovery Overview](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview)
 - [Azure Backup Overview](https://learn.microsoft.com/en-us/azure/backup/backup-overview)
+- [Azure Backup Reports](https://learn.microsoft.com/en-us/azure/backup/backup-reports-overview)
+- [Configure Azure Backup Reports](https://learn.microsoft.com/en-us/azure/backup/configure-reports)
+- [Diagnostic Settings in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings)
 - [Business Continuity Management](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/backup-and-recovery)
 - [Choose Between Backup and Site Recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-sla)
 
