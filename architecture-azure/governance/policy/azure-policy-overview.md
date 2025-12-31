@@ -1824,6 +1824,237 @@ The **Export template** option allows you to download an ARM (Azure Resource Man
 
 ---
 
+### Question 14: Policy Impact on Existing and Running Resources
+
+**Scenario:**
+You have an Azure subscription that contains the following resources:
+
+| Name | Type | Resource Group |
+|------|------|----------------|
+| VNET1 | Virtual network | RG1 |
+| VNET2 | Virtual network | RG2 |
+| VM1 | Virtual machine | RG2 |
+
+The status of VM1 is **Running**.
+
+You assign an Azure policy to resource group **RG2** with the following configuration:
+
+**Policy Definition:** Not allowed resource types  
+**Assignment Scope:** Azure Pass/RG2  
+**Policy Parameters (Not allowed resource types):**
+- `Microsoft.ClassicNetwork/virtualNetworks`
+- `Microsoft.Network/virtualNetworks`
+- `Microsoft.Compute/virtualMachines`
+
+**Questions:**
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+| Statement | Answer |
+|-----------|--------|
+| You can create a virtual network in RG2. | **No** |
+| VM1 is deleted automatically. | **No** |
+| You can change the address space of VNET2. | **No** |
+
+**Explanation:**
+
+**Critical Principle: Azure Policy is NOT Retroactive**
+
+Azure Policy operates as an **allow/deny mechanism during resource creation or modification**. It does **NOT** retroactively delete, stop, or modify existing resources that were created before the policy was applied.
+
+**Key Behavior Explained:**
+
+| Azure Policy Behavior | What It Does | What It Doesn't Do |
+|----------------------|--------------|-------------------|
+| **Preventive** | Blocks creation/modification of non-compliant resources | Does NOT delete existing resources |
+| **Evaluation Timing** | Evaluates during resource operations (create, update, delete) | Does NOT scan and remove existing resources |
+| **Scope** | Affects new and modified resources only | Does NOT affect running resources retroactively |
+
+**Detailed Analysis:**
+
+#### Statement 1: "You can create a virtual network in RG2" - **No**
+
+| Aspect | Detail |
+|--------|--------|
+| **Policy Effect** | Deny |
+| **Blocked Resource Type** | `Microsoft.Network/virtualNetworks` |
+| **Result** | Any attempt to create a new virtual network in RG2 will be **blocked** |
+| **Error Message** | "Resource creation was disallowed by policy" |
+
+**Why it's blocked:**
+- The policy explicitly lists `Microsoft.Network/virtualNetworks` as a not-allowed resource type
+- When you try to create a VNET, Azure evaluates the request against active policies
+- The policy denies the creation before it happens
+- The deployment fails with a policy violation error
+
+**Portal Behavior:**
+```
+Deployment failed. Correlation ID: xxx-xxx-xxx
+
+Error details:
+{
+  "code": "RequestDisallowedByPolicy",
+  "message": "Resource 'VNET3' was disallowed by policy. 
+             Policy identifiers: 
+             [{"policyAssignment":{"name":"Not allowed resource types",
+               "id":"/subscriptions/.../resourceGroups/RG2/providers/
+                     Microsoft.Authorization/policyAssignments/..."}
+             }]."
+}
+```
+
+#### Statement 2: "VM1 is deleted automatically" - **No**
+
+| Aspect | Detail |
+|--------|--------|
+| **VM1 Status** | Running before policy assignment |
+| **Policy Effect** | Deny (for new/modified resources) |
+| **Policy Behavior** | Only affects future operations |
+| **VM1 After Policy** | Continues running normally |
+
+**Why VM1 is NOT deleted:**
+
+1. **No Retroactive Action**: Azure Policy does not scan for and remove existing resources
+2. **Existing Resources Unaffected**: VM1 was created before the policy, so it remains intact
+3. **Running State Preserved**: VM1 continues to run; no interruption to operations
+4. **Read Operations Allowed**: You can still view, monitor, and access VM1
+5. **Compliance Status**: VM1 will be marked as "Non-compliant" in Azure Policy dashboard, but not deleted
+
+**What Azure Policy Does:**
+
+```
+Before Policy Assignment:
+- VM1: Running ✅
+- VNET2: Active ✅
+
+Policy Assigned to RG2:
+- Deny: Microsoft.Compute/virtualMachines
+- Deny: Microsoft.Network/virtualNetworks
+
+After Policy Assignment:
+- VM1: Still Running ✅ (Marked non-compliant but NOT deleted)
+- VNET2: Still Active ✅ (Marked non-compliant but NOT deleted)
+- New VM creation in RG2: ❌ Blocked
+- New VNET creation in RG2: ❌ Blocked
+```
+
+**Compliance Dashboard View:**
+
+| Resource | Type | Compliance State | Action Taken |
+|----------|------|------------------|--------------|
+| VM1 | Virtual Machine | Non-compliant | None (continues running) |
+| VNET2 | Virtual Network | Non-compliant | None (remains active) |
+
+**How to Handle Non-Compliant Existing Resources:**
+
+If you want to remove VM1, you must:
+1. **Manually delete** the resource through Azure Portal, CLI, or API
+2. **Move the resource** to another resource group not affected by the policy
+3. **Create a policy exemption** for specific resources
+
+Azure Policy will never automatically delete resources for you.
+
+#### Statement 3: "You can change the address space of VNET2" - **No**
+
+| Aspect | Detail |
+|--------|--------|
+| **Operation Type** | Update/Modification |
+| **Policy Effect** | Deny on `Microsoft.Network/virtualNetworks` |
+| **Result** | Update operation is **blocked** |
+| **VNET2 State** | Remains unchanged with original address space |
+
+**Why modification is blocked:**
+
+1. **Policy Scope**: The policy prevents actions on `Microsoft.Network/virtualNetworks`
+2. **Modification Evaluation**: When you attempt to update VNET2's address space, Azure evaluates the operation
+3. **Policy Application**: The policy denies the update operation because it affects a `Microsoft.Network/virtualNetworks` resource
+4. **Result**: The update fails; VNET2 retains its original configuration
+
+**Allowed vs Blocked Operations on VNET2:**
+
+| Operation | Allowed? | Reason |
+|-----------|----------|--------|
+| **View properties** | ✅ Yes | Read operations are not restricted by policy |
+| **Change address space** | ❌ No | Update operation blocked by policy |
+| **Add subnet** | ❌ No | Modification to VNET resource blocked |
+| **Delete VNET2** | ✅ Yes | Delete operations typically allowed (unless specific delete policy exists) |
+| **Add NSG to subnet** | ✅ Yes (if NSG not restricted) | NSG is a separate resource type |
+
+**Error When Attempting to Modify VNET2:**
+
+```
+Failed to update virtual network 'VNET2'
+
+Error details:
+{
+  "code": "RequestDisallowedByPolicy",
+  "message": "The resource action 'Microsoft.Network/virtualNetworks/write' 
+             was disallowed by policy. 
+             Policy assignment: 'Not allowed resource types'"
+}
+```
+
+**Key Insight: Write Operations are Blocked**
+
+The policy denies the `write` action on `Microsoft.Network/virtualNetworks`, which includes:
+- Creating new VNETs ❌
+- Updating existing VNETs (address space, DNS, etc.) ❌
+- Modifying VNET properties ❌
+
+However, it does NOT block:
+- Reading VNET properties ✅
+- Viewing VNET configuration ✅
+- Deleting VNET ✅ (unless explicitly denied by another policy)
+
+**Workarounds:**
+
+If you need to modify VNET2, you can:
+1. **Create a policy exemption** for VNET2 specifically
+2. **Temporarily disable** the policy assignment (DoNotEnforce mode)
+3. **Move VNET2** to a different resource group (e.g., RG1) not covered by the policy
+4. **Remove the policy assignment** temporarily
+
+---
+
+**Summary: Azure Policy Behavior**
+
+| Policy Impact | New Resources | Existing Resources |
+|---------------|---------------|-------------------|
+| **Creation** | ❌ Blocked | N/A |
+| **Modification** | ❌ Blocked | ❌ Blocked |
+| **Deletion** | ✅ Typically Allowed | ✅ Typically Allowed |
+| **Read/View** | ✅ Allowed | ✅ Allowed |
+| **Automatic Remediation** | N/A | ❌ No automatic deletion |
+| **Compliance Status** | Evaluated at creation | Marked non-compliant |
+
+**Best Practices:**
+
+1. **Test Policies First**: Use `DoNotEnforce` mode to see what would be blocked without actually blocking operations
+2. **Plan for Existing Resources**: 
+   - Inventory resources before applying restrictive policies
+   - Create exemptions for resources that need to remain
+   - Move resources to appropriate resource groups before policy assignment
+3. **Audit Before Deny**: Start with `Audit` effect to identify non-compliant resources, then switch to `Deny`
+4. **Use Resource Locks for Protection**: If goal is to prevent deletion, use resource locks instead of policies
+5. **Exemptions for Special Cases**: Use policy exemptions for specific resources that need to bypass the policy
+
+**Related Policy Effects Comparison:**
+
+| Effect | Impact on Existing Resources | Impact on New Resources |
+|--------|----------------------------|------------------------|
+| **Deny** | No automatic change; blocks modifications | Blocks creation |
+| **Audit** | Logs non-compliance | Logs but allows creation |
+| **Modify** | Requires remediation task | Automatically modifies at creation |
+| **DeployIfNotExists** | Requires remediation task | Deploys companion resources |
+
+**Reference Links:**
+- [Understand Azure Policy effects](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effects)
+- [Azure Policy assignment structure](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/assignment-structure)
+- [Remediate non-compliant resources](https://learn.microsoft.com/en-us/azure/governance/policy/how-to/remediate-resources)
+
+**Domain:** Azure Policy and Governance
+
+---
+
 ## Summary
 
 ### Key Takeaways
