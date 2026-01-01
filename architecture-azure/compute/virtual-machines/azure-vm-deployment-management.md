@@ -12,6 +12,8 @@
   - [Cloud-Init for Linux VMs](#cloud-init-for-linux-vms)
   - [Custom Script Extension](#custom-script-extension)
   - [Installing Trusted Root CA Certificates](#installing-trusted-root-ca-certificates)
+- [VM Migration and Movement](#vm-migration-and-movement)
+  - [Moving VMs Between Virtual Networks](#moving-vms-between-virtual-networks)
 - [Tool Comparison](#tool-comparison)
 - [Best Practices](#best-practices)
 - [Practice Questions](#practice-questions)
@@ -400,6 +402,75 @@ az vm extension set \
 
 ---
 
+## VM Migration and Movement
+
+### Moving VMs Between Virtual Networks
+
+**Important:** You cannot directly move a virtual machine from one VNet to another. The VM's network interface is permanently bound to its VNet and this binding cannot be changed while the VM exists.
+
+#### The Disk Preservation Approach
+
+When you need to move a VM's workload to a different VNet, follow this process:
+
+1. **Delete the VM while retaining the disk**
+   - The OS disk contains all installed applications and configurations
+   - When deleting the VM, ensure you keep the OS disk
+   - Only the VM resource is deleted, not the attached disks
+
+2. **Create a new VM in the target VNet**
+   - Create a new VM in the target resource group or VNet
+   - During creation, attach the existing OS disk instead of creating a new one
+   - Configure the new VM to connect to the target VNet
+   - All applications and data remain intact on the disk
+
+#### Key Limitations
+
+| Operation | Supported | Explanation |
+|-----------|-----------|-------------|
+| **Move VM between VNets** | ❌ No | VMs cannot be moved between VNets directly |
+| **Change NIC's VNet** | ❌ No | Network interfaces are bound to their VNet |
+| **Attach/Detach NICs** | ✅ Yes | But cannot change which VNet the NIC belongs to |
+| **Move Disks** | ✅ Yes | Disks can be attached to VMs in any VNet |
+| **Move between Resource Groups** | ✅ Yes | VM can be moved to different resource group in same VNet |
+
+#### Example Scenario
+
+**Scenario:** You have VM1 in VNet1 (RG1) with a custom application installed. You need to move it to VNet2 (RG2).
+
+**Solution:**
+
+```bash
+# Step 1: Note the disk name before deletion
+DISK_ID=$(az vm show --resource-group RG1 --name VM1 --query "storageProfile.osDisk.managedDisk.id" -o tsv)
+
+# Step 2: Delete VM1 (keeps the disk by default)
+az vm delete --resource-group RG1 --name VM1 --yes
+
+# Step 3: Create new VM in RG2 connected to VNet2, using the existing disk
+az vm create \
+  --resource-group RG2 \
+  --name VM1-New \
+  --attach-os-disk $DISK_ID \
+  --os-type Linux \
+  --vnet-name VNet2 \
+  --subnet default
+```
+
+**Result:** The custom application is now running in VNet2 with minimal administrative effort (no reinstallation required).
+
+#### Best Practices for VM Network Migration
+
+| Practice | Description |
+|----------|-------------|
+| **Plan Networking First** | Ensure target VNet has proper subnets, NSGs, and connectivity |
+| **Backup Before Migration** | Create snapshots of disks before deletion |
+| **Document Dependencies** | Note all attached disks, extensions, and configurations |
+| **Update DNS/Application Configs** | New VM will have different IP addresses |
+| **Test Connectivity** | Verify network connectivity after recreation |
+| **Use Tags** | Tag resources to track migration status |
+
+---
+
 ## Best Practices
 
 ### VM Deployment Best Practices
@@ -551,6 +622,91 @@ For multiple VMs requiring identical custom configuration, **ARM templates with 
 - **A**: Manual configuration is not scalable or maintainable for 10 VMs
 - **B**: Shell scripts work but lack the declarative benefits and Azure integration of ARM templates
 - **D**: New-AzureRmVM is deprecated; should never be used
+
+</details>
+
+### Question 3
+
+**You have an Azure subscription that contains two resource groups named RG1 and RG2. RG1 contains a virtual network VNet1. RG2 contains a virtual network VNet2. There is no connectivity between VNet1 and VNet2.**
+
+**An administrator named Admin1 creates an Azure virtual machine named VM1 in RG1. VM1 uses a disk named Disk1 and connects to VNet1. Admin1 then installs a custom application in VM1.**
+
+**You need to move the custom application to VNet2. The solution must minimize administrative effort.**
+
+**Which two actions should you perform?**
+
+A. Create a network interface in RG2  
+B. Detach a network interface  
+C. Delete VM1  
+D. Attach a network interface  
+E. Create a new virtual machine  
+F. Move a network interface to RG2
+
+<details>
+<summary>Answer</summary>
+
+**Correct Answers: C and E**
+
+**C. Delete VM1**  
+**E. Create a new virtual machine**
+
+**Explanation:**
+
+You cannot directly move a virtual machine between virtual networks. The VM's network interface is bound to a specific VNet, and this binding cannot be changed. The correct approach is to:
+
+1. **First Action: Delete VM1**
+   - Delete the virtual machine while **retaining the OS disk (Disk1)**
+   - The disk contains the installed custom application
+   - Only the VM compute resource is deleted, not the storage
+
+2. **Second Action: Create a new virtual machine**
+   - Create a new VM in RG2 (or RG1, but connected to VNet2)
+   - During creation, attach the existing Disk1 as the OS disk
+   - Connect the new VM to VNet2
+   - The custom application remains intact and functional
+
+**Why this minimizes administrative effort:**
+- No need to reinstall the custom application
+- No need to reconfigure the application
+- No data migration required
+- The disk is portable across VMs and VNets
+
+**Why other options are incorrect:**
+
+| Option | Status | Explanation |
+|--------|--------|-------------|
+| **A. Create a network interface in RG2** | ❌ Incorrect | While technically part of creating a new VM, this is handled automatically during VM creation. Not a standalone required action. |
+| **B. Detach a network interface** | ❌ Incorrect | Detaching a NIC doesn't help move the VM to a different VNet. The NIC is bound to VNet1 and cannot be moved to VNet2. |
+| **D. Attach a network interface** | ❌ Incorrect | You cannot attach a NIC from VNet1 to make the VM accessible in VNet2. NICs are bound to specific VNets. |
+| **F. Move a network interface to RG2** | ❌ Incorrect | Moving a NIC to a different resource group doesn't change which VNet it's connected to. The NIC remains bound to VNet1. |
+
+**Key Concepts:**
+
+- **VMs are not portable** between VNets (must delete and recreate)
+- **Disks are portable** across VMs and VNets
+- **NICs are bound** to their VNet and cannot be moved between VNets
+- **Resource groups** are logical containers; moving resources between them doesn't affect network connectivity
+
+**Step-by-Step Process:**
+
+```bash
+# Step 1: Get the OS disk ID before deleting VM
+az vm show --resource-group RG1 --name VM1 --query "storageProfile.osDisk.managedDisk.id"
+
+# Step 2: Delete VM1 (disk is retained by default)
+az vm delete --resource-group RG1 --name VM1 --yes
+
+# Step 3: Create new VM in RG2 connected to VNet2 using existing disk
+az vm create \
+  --resource-group RG2 \
+  --name VM1 \
+  --attach-os-disk /subscriptions/.../Disk1 \
+  --os-type Linux \
+  --vnet-name VNet2 \
+  --subnet default
+```
+
+**Reference:** [Move Azure VMs to another region](https://learn.microsoft.com/en-us/azure/resource-mover/tutorial-move-region-virtual-machines)
 
 </details>
 
