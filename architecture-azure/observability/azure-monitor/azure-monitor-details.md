@@ -50,6 +50,7 @@
   - [Question 9: Correlating Azure Resource Usage with Application Performance](#question-9-correlating-azure-resource-usage-with-application-performance)
   - [Question 10: Monthly Report of Deployed Azure Resources](#question-10-monthly-report-of-deployed-azure-resources)
   - [Question 11: KQL Query Syntax for Error Events](#question-11-kql-query-syntax-for-error-events)
+  - [Question 12: Monitoring Windows Event Logs on Azure VMs](#question-12-monitoring-windows-event-logs-on-azure-vms)
 - [Related Learning Resources](#related-learning-resources)
 
 ## Overview
@@ -2382,6 +2383,182 @@ Event
 - [Search Operator](https://learn.microsoft.com/azure/data-explorer/kusto/query/searchoperator)
 - [Where Operator](https://learn.microsoft.com/azure/data-explorer/kusto/query/whereoperator)
 - [Log Analytics Tutorial](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial)
+
+---
+
+### Question 12: Monitoring Windows Event Logs on Azure VMs
+
+**Scenario:**
+You have an Azure virtual machine named VM1 that runs Windows Server 2016.
+
+You need to create an alert in Azure when more than two error events are logged to the System event log on VM1 within an hour.
+
+**Question:**
+Solution: You create an event subscription on VM1. You create an alert in Azure Monitor and specify VM1 as the source.
+
+Does this meet the goal?
+
+**Options:**
+
+**A.** Yes  
+**B.** No
+
+**Answer: B (No)** ✅
+
+---
+
+**Explanation:**
+
+The proposed solution does **NOT** meet the goal because **Event Subscriptions (Azure Event Grid)** are not designed for monitoring guest OS-level logs like Windows System event logs inside a VM.
+
+---
+
+**Why Event Subscriptions Don't Work:**
+
+| Feature | Event Subscriptions (Event Grid) | What's Needed |
+|---------|----------------------------------|---------------|
+| **Purpose** | Azure platform-level events | Guest OS-level logs |
+| **Event Types** | Resource creation, deletion, Activity Log | Windows Event Log entries |
+| **Scope** | Azure control plane | VM operating system |
+| **Data Access** | No access to VM internal logs | Requires agent inside VM |
+
+**Event Subscriptions are designed for:**
+- Azure Activity Log events
+- Azure Resource Manager events (resource created, deleted, modified)
+- Storage account events (blob created, deleted)
+- Azure service health events
+- Custom topics
+
+**Event Subscriptions are NOT designed for:**
+- Windows Event Logs (System, Application, Security)
+- Linux syslog
+- Custom application logs inside VMs
+- Performance counters from guest OS
+
+---
+
+**Correct Solution:**
+
+To monitor Windows event logs on a VM and create alerts, you need:
+
+| Step | Component | Purpose |
+|------|-----------|----------|
+| 1 | **Azure Monitor Agent (AMA)** or **Log Analytics Agent (MMA)** | Installed on VM1 to collect event logs |
+| 2 | **Data Collection Rule (DCR)** | Configure which logs to collect (System event log) |
+| 3 | **Log Analytics Workspace** | Store the collected log data |
+| 4 | **Log Query Alert Rule** | Query for error events and trigger when count > 2 in 1 hour |
+
+---
+
+**Implementation Steps:**
+
+**Step 1: Install Azure Monitor Agent on VM1**
+```bash
+# Using Azure CLI
+az vm extension set \
+  --resource-group <resource-group> \
+  --vm-name VM1 \
+  --name AzureMonitorWindowsAgent \
+  --publisher Microsoft.Azure.Monitor \
+  --version 1.0
+```
+
+**Step 2: Create Data Collection Rule**
+```json
+{
+  "properties": {
+    "dataSources": {
+      "windowsEventLogs": [
+        {
+          "name": "SystemErrors",
+          "streams": ["Microsoft-Event"],
+          "xPathQueries": [
+            "System!*[System[(Level=1 or Level=2)]]"
+          ]
+        }
+      ]
+    },
+    "destinations": {
+      "logAnalytics": [
+        {
+          "workspaceResourceId": "/subscriptions/.../workspaces/myWorkspace",
+          "name": "centralWorkspace"
+        }
+      ]
+    },
+    "dataFlows": [
+      {
+        "streams": ["Microsoft-Event"],
+        "destinations": ["centralWorkspace"]
+      }
+    ]
+  }
+}
+```
+
+**Step 3: Create Log Query Alert Rule**
+
+```kql
+Event
+| where Computer == "VM1"
+| where EventLog == "System"
+| where EventLevelName == "Error"
+| where TimeGenerated > ago(1h)
+| summarize ErrorCount = count()
+| where ErrorCount > 2
+```
+
+---
+
+**Alert Configuration:**
+
+| Setting | Value |
+|---------|-------|
+| **Signal type** | Custom log search |
+| **Log query** | KQL query above |
+| **Measurement** | Measure: Table rows |
+| **Alert logic** | Operator: Greater than, Threshold: 0 |
+| **Evaluation period** | 1 hour |
+| **Frequency** | 5 minutes (or as needed) |
+
+---
+
+**Monitoring Approach Comparison:**
+
+| Monitoring Type | Correct Tool | Incorrect Tool |
+|-----------------|--------------|----------------|
+| Azure resource events (platform level) | Event Grid + Event Subscriptions | - |
+| Guest OS logs (inside VM) | Azure Monitor Agent + Log Analytics + Log Alerts | Event Subscriptions |
+| Azure Activity Log | Event Grid or Azure Monitor | - |
+| Application performance | Application Insights | Event Subscriptions |
+
+---
+
+**Agent Comparison for VM Monitoring:**
+
+| Agent | Status | Supports DCR | Recommended |
+|-------|--------|--------------|-------------|
+| **Azure Monitor Agent (AMA)** | Current | ✅ Yes | ✅ Yes |
+| **Log Analytics Agent (MMA)** | Legacy (deprecated Aug 2024) | ❌ No | ❌ Migrate to AMA |
+| **Diagnostics Extension** | Limited | ❌ No | For specific scenarios only |
+
+---
+
+**Key Takeaways:**
+
+1. ❌ **Event Subscriptions** are for Azure platform events, NOT guest OS logs
+2. ✅ **Azure Monitor Agent** must be installed on the VM to collect Windows Event Logs
+3. ✅ **Data Collection Rules** configure what logs to collect and where to send them
+4. ✅ **Log Analytics Workspace** stores the collected log data
+5. ✅ **Log Query Alert Rules** in Azure Monitor enable alerting based on KQL queries
+6. ✅ Always use **Azure Monitor Agent (AMA)** for new deployments (Log Analytics Agent is deprecated)
+
+**References:**
+- [Azure Monitor Agent Overview](https://learn.microsoft.com/azure/azure-monitor/agents/azure-monitor-agent-overview)
+- [Collect Windows Events with AMA](https://learn.microsoft.com/azure/azure-monitor/agents/data-collection-windows-events)
+- [Log Alerts in Azure Monitor](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-log)
+- [Event Grid Overview](https://learn.microsoft.com/azure/event-grid/overview)
+- [Migrate from Log Analytics Agent to AMA](https://learn.microsoft.com/azure/azure-monitor/agents/azure-monitor-agent-migration)
 
 ---
 
