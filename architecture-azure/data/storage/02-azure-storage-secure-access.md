@@ -29,6 +29,7 @@
   - [Question 8: Maximum Security Access Authorization for File Shares](#question-8-maximum-security-access-authorization-for-file-shares)
   - [Question 9: Stored Access Policies and Immutable Storage Limits](#question-9-stored-access-policies-and-immutable-storage-limits)
   - [Question 10: SAS Settings for Enumerate and Download Blobs](#question-10-sas-settings-for-enumerate-and-download-blobs)
+  - [Question 11: Configuring Read-Only Container Access with HTTP/HTTPS Support](#question-11-configuring-read-only-container-access-with-httphttps-support)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -2461,6 +2462,380 @@ var sasUri = $"https://storage1.blob.core.windows.net/container1?{sasToken}";
 - [Create account SAS](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas)
 - [Account SAS permissions](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas#specify-account-sas-permissions)
 - [SAS resource types](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas#specify-the-signed-resource-types)
+
+---
+
+### Question 11: Configuring Read-Only Container Access with HTTP/HTTPS Support
+
+**Scenario:**
+You have an Azure subscription that contains a storage account named **storage1**. The storage1 account contains a container named **container1**.
+
+You need to configure access to container1. The solution must meet the following requirements:
+- Only allow **read access**
+- Allow both **HTTP and HTTPS protocols**
+- Apply access permissions to **all the content in the container**
+
+**Question:**
+What should you use?
+
+**Options:**
+1. Azure Content Delivery Network (CDN)
+2. a shared access signature (SAS) ✅
+3. access keys
+4. an access policy
+
+---
+
+**Correct Answer: A Shared Access Signature (SAS)** ✅
+
+---
+
+### Explanation
+
+#### Why Shared Access Signature (SAS) is CORRECT ✅
+
+**A Shared Access Signature (SAS)** is the appropriate solution for the given requirements:
+
+**1. Only Allow Read Access** ✅
+
+SAS tokens allow you to specify precise permissions, such as **read-only access**, for the resources in the storage account.
+
+```csharp
+// Create SAS with read-only permissions
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "container1",
+    Resource = "c", // Container level
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(24)
+};
+
+// Set read-only permissions
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+```
+
+**Available SAS Permissions for Blob Containers:**
+| Permission | Symbol | Description |
+|------------|--------|-------------|
+| **Read** | r | Read blob content, properties, metadata ✅ |
+| **Write** | w | Create or write blobs |
+| **Delete** | d | Delete blobs |
+| **List** | l | List blobs in container |
+| **Add** | a | Add blocks to append blobs |
+| **Create** | c | Create new blobs |
+
+**Key Points:**
+- ✅ SAS provides **granular permission control** at the operation level
+- ✅ Can restrict to **read-only** access (no write, delete, or modify)
+- ✅ Supports **time-limited access** for enhanced security
+- ✅ Follows the **principle of least privilege**
+
+---
+
+**2. Allow Both HTTP and HTTPS Protocols** ✅
+
+SAS tokens can be configured to support either **HTTPS only** or **both HTTP and HTTPS protocols**.
+
+```csharp
+// Option 1: HTTPS only (most secure)
+sasBuilder.Protocol = SasProtocol.Https;
+
+// Option 2: Both HTTP and HTTPS (meets requirement)
+sasBuilder.Protocol = SasProtocol.HttpsAndHttp;
+```
+
+**Protocol Configuration Options:**
+| Protocol Setting | HTTP Allowed | HTTPS Allowed | Use Case |
+|-----------------|--------------|---------------|----------|
+| `SasProtocol.Https` | ❌ No | ✅ Yes | Production (most secure) |
+| `SasProtocol.HttpsAndHttp` | ✅ Yes | ✅ Yes | Legacy compatibility ✅ |
+
+**Key Points:**
+- ✅ SAS supports **protocol-level restrictions**
+- ✅ Can allow **both HTTP and HTTPS** as required
+- ⚠️ **Best practice**: Use HTTPS-only in production; HTTP support is typically for legacy systems
+
+---
+
+**3. Apply Access Permissions to All Content in the Container** ✅
+
+A **container-level SAS** can be created to apply permissions to **all blobs within the container**.
+
+```csharp
+// Container-level SAS applies to all blobs in the container
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "container1",
+    Resource = "c", // ✅ "c" = Container (applies to all blobs)
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(24),
+    Protocol = SasProtocol.HttpsAndHttp // Both HTTP and HTTPS
+};
+
+// Read-only access to all blobs
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
+
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+
+// SAS URI grants read access to entire container
+var containerSasUri = $"https://storage1.blob.core.windows.net/container1?{sasToken}";
+```
+
+**SAS Resource Scopes:**
+| Resource Type | Symbol | Scope | Use Case |
+|---------------|--------|-------|----------|
+| **Container** | c | All blobs in container ✅ | Apply permissions to entire container |
+| **Blob** | b | Individual blob only | Single blob access |
+| **Blob Version** | bv | Specific blob version | Versioned blob access |
+| **Blob Snapshot** | bs | Specific blob snapshot | Snapshot access |
+
+**Key Points:**
+- ✅ Container-level SAS applies to **all current and future blobs** in the container
+- ✅ No need to generate individual SAS tokens for each blob
+- ✅ Simplifies access management for bulk content
+
+---
+
+#### Complete Implementation Example
+
+```csharp
+using Azure.Storage;
+using Azure.Storage.Sas;
+using Azure.Storage.Blobs;
+
+// Storage account credentials
+var accountName = "storage1";
+var accountKey = "<storage-account-key>";
+var containerName = "container1";
+
+// Create SAS builder for container
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = containerName,
+    Resource = "c", // Container-level access
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(24),
+    Protocol = SasProtocol.HttpsAndHttp // ✅ Both HTTP and HTTPS
+};
+
+// Set read-only permissions
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read); // ✅ Read access only
+
+// Generate SAS token
+var credential = new StorageSharedKeyCredential(accountName, accountKey);
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+
+// Construct container SAS URI
+var containerSasUri = $"https://{accountName}.blob.core.windows.net/{containerName}?{sasToken}";
+
+Console.WriteLine($"Container SAS URI: {containerSasUri}");
+
+// Users can now access any blob in container1 with read-only access
+// Example: https://storage1.blob.core.windows.net/container1/blob1.txt?sv=...
+```
+
+**Testing the SAS Token:**
+```bash
+# Download a blob using the SAS URI (HTTP)
+curl "http://storage1.blob.core.windows.net/container1/myfile.txt?sv=2021-06-08&..."
+
+# Download a blob using the SAS URI (HTTPS)
+curl "https://storage1.blob.core.windows.net/container1/myfile.txt?sv=2021-06-08&..."
+
+# Both will work because Protocol = HttpsAndHttp
+```
+
+---
+
+#### Why Azure Content Delivery Network (CDN) is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Purpose Mismatch**: Azure CDN is used for **delivering cached content** to users globally
+- ❌ **No Direct Access Control**: CDN does **not configure access permissions** directly for a storage container
+- ❌ **Layer of Abstraction**: CDN sits in front of storage, but doesn't replace access control mechanisms
+- ⚠️ CDN can **use** SAS tokens for origin access, but is not itself an access control method
+
+**What Azure CDN Actually Does:**
+```
+┌──────────┐     Caches content     ┌─────────────┐
+│   User   │ ◄──────────────────── │  Azure CDN  │
+└──────────┘                        └─────────────┘
+                                           │
+                                           │ Retrieves from origin
+                                           │ (may use SAS for access)
+                                           ▼
+                                    ┌─────────────┐
+                                    │  Storage    │
+                                    │  Container  │
+                                    └─────────────┘
+```
+
+**Why It Doesn't Meet Requirements:**
+- ❌ CDN doesn't **configure permissions** on the container
+- ❌ CDN doesn't **grant read access** - it caches content
+- ❌ You would still need **SAS or another access method** for CDN to access the origin
+
+**When to Use Azure CDN:**
+- ✅ Reduce latency by caching content at edge locations
+- ✅ Offload traffic from origin storage
+- ✅ Global content distribution
+- ✅ Static website acceleration
+
+---
+
+#### Why Access Keys are INCORRECT ❌
+
+**Key Points:**
+- ❌ **Too Broad**: Access keys grant **full control** over the entire storage account
+- ❌ **Violates Least Privilege**: Cannot be scoped to read-only or single container
+- ❌ **No Granular Control**: No way to restrict to specific permissions or protocols
+- ❌ **Security Risk**: If compromised, attacker has complete storage account access
+
+**What Access Keys Provide:**
+```csharp
+// Access keys grant FULL control - all operations, all services
+var connectionString = $"DefaultEndpointsProtocol=https;AccountName=storage1;AccountKey={accountKey}";
+var blobServiceClient = new BlobServiceClient(connectionString);
+
+// Can do ANYTHING:
+await blobServiceClient.DeleteBlobContainerAsync("container1"); // ✅ Can delete
+await blobServiceClient.CreateBlobContainerAsync("newcontainer"); // ✅ Can create
+// No way to restrict to read-only!
+```
+
+**Access Key Permissions:**
+| Requirement | Access Keys | SAS |
+|-------------|-------------|-----|
+| Read-only access | ❌ Not possible | ✅ Yes |
+| Container-specific | ❌ Not possible | ✅ Yes |
+| Time-limited | ❌ Not possible | ✅ Yes |
+| Protocol restriction | ❌ Not possible | ✅ Yes |
+| Granular permissions | ❌ Not possible | ✅ Yes |
+
+**Why They Don't Meet Requirements:**
+- ❌ Cannot restrict to **read-only** access
+- ❌ Cannot scope to **single container**
+- ❌ Cannot limit to **specific protocols**
+- ❌ Violates **principle of least privilege**
+
+**When to Use Access Keys:**
+- ⚠️ Legacy applications (with plans to migrate)
+- ⚠️ Internal admin operations (with key rotation)
+- ❌ **Never** for external access or least-privilege scenarios
+
+---
+
+#### Why Access Policy is INCORRECT ❌
+
+**Key Points:**
+- ❌ **Not a Standalone Solution**: Access policies (stored access policies) are used **in conjunction with SAS tokens**
+- ❌ **Requires SAS**: They define access parameters, but require an **SAS token** for implementation
+- ❌ **No Direct Control**: Access policies alone do **not grant access** - they're metadata for SAS
+
+**What Access Policies Actually Are:**
+
+Access policies (stored access policies) are **policy definitions** that can be associated with a **Service SAS** to provide:
+- Centralized management of SAS permissions
+- Ability to revoke SAS by deleting the policy
+- Modification of SAS constraints without regenerating tokens
+
+**Relationship Between Access Policy and SAS:**
+```
+┌─────────────────────┐
+│  Access Policy      │  ◄── Defines permissions, expiry, etc.
+│  (Stored Policy)    │      BUT does NOT grant access
+└─────────────────────┘
+          │
+          │ Referenced by
+          ▼
+┌─────────────────────┐
+│   Service SAS       │  ◄── Actually grants access
+│   (SAS Token)       │      Uses policy parameters
+└─────────────────────┘
+```
+
+**Implementation Example:**
+```csharp
+// Step 1: Create stored access policy (does NOT grant access yet)
+var container = new BlobContainerClient(connectionString, "container1");
+
+var policy = new BlobSignedIdentifier
+{
+    Id = "read-policy",
+    AccessPolicy = new BlobAccessPolicy
+    {
+        PolicyStartsOn = DateTimeOffset.UtcNow,
+        PolicyExpiresOn = DateTimeOffset.UtcNow.AddHours(24),
+        Permissions = "r" // Read-only
+    }
+};
+
+await container.SetAccessPolicyAsync(permissions: new[] { policy });
+
+// Step 2: Create SAS that references the policy (THIS grants access)
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "container1",
+    Resource = "c",
+    Identifier = "read-policy" // References the stored access policy
+};
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+// ✅ Now users can access with this SAS token
+```
+
+**Why Access Policy Alone Doesn't Work:**
+- ❌ Access policy is **metadata** stored on the container
+- ❌ Does **not generate a token** or URI that users can use
+- ❌ Requires **SAS token creation** to actually grant access
+- ✅ Useful for **managing SAS tokens**, but not a replacement for them
+
+**When to Use Stored Access Policies:**
+- ✅ Centralized management of multiple SAS tokens
+- ✅ Need to revoke SAS without regenerating keys
+- ✅ Want to modify SAS expiry/permissions after creation
+- ✅ **Always used WITH Service SAS**, not instead of it
+
+---
+
+### Comparison Table
+
+| Solution | Read-Only | HTTP/HTTPS Support | Container-Scoped | Direct Access Control | Meets Requirements |
+|----------|-----------|-------------------|------------------|----------------------|--------------------|
+| **Shared Access Signature (SAS)** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ **CORRECT** |
+| **Azure CDN** | ❌ N/A | ✅ Yes | ❌ No | ❌ No | ❌ Incorrect |
+| **Access Keys** | ❌ No | ✅ Yes | ❌ No | ❌ Full access only | ❌ Incorrect |
+| **Access Policy** | ⚠️ With SAS | ⚠️ With SAS | ⚠️ With SAS | ❌ No (requires SAS) | ❌ Incorrect |
+
+---
+
+### Key Takeaways
+
+**Question Pattern:** "Configure container access with specific permission, protocol, and scope requirements"
+
+**Answer:** **Shared Access Signature (SAS)** ✅
+
+**Why SAS is the Correct Choice:**
+1. ✅ **Granular Permissions**: Can specify read-only access
+2. ✅ **Protocol Control**: Supports HTTP, HTTPS, or both
+3. ✅ **Container Scope**: Can apply to all content in a container
+4. ✅ **Time-Limited**: Supports expiration for enhanced security
+5. ✅ **Least Privilege**: Provides minimum necessary access
+
+**Remember:**
+- 🎯 **SAS** = Delegated access with granular control
+- 🎯 **Access Keys** = Full account access (not granular)
+- 🎯 **Access Policy** = SAS management tool (not standalone)
+- 🎯 **CDN** = Content caching/delivery (not access control)
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Grant limited access to Azure Storage resources using SAS](https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview)
+- [Create a service SAS for a container or blob](https://learn.microsoft.com/en-us/azure/storage/blobs/sas-service-create)
+- [Define a stored access policy](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
 
 ---
 
