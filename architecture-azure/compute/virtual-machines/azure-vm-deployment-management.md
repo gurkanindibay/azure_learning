@@ -14,6 +14,7 @@
   - [Installing Trusted Root CA Certificates](#installing-trusted-root-ca-certificates)
 - [VM Migration and Movement](#vm-migration-and-movement)
   - [Moving VMs Between Virtual Networks](#moving-vms-between-virtual-networks)
+  - [VM Redeployment and Host Migration](#vm-redeployment-and-host-migration)
 - [Tool Comparison](#tool-comparison)
 - [Best Practices](#best-practices)
 - [Practice Questions](#practice-questions)
@@ -710,6 +711,108 @@ az vm create \
 
 </details>
 
+### Question 4
+
+**You have an Azure virtual machine named VM1. VM1 was deployed by using a custom Azure Resource Manager template named ARM1.json.**
+
+**You receive a notification that VM1 will be affected by maintenance.**
+
+**You need to move VM1 to a different host immediately.**
+
+**Solution: From the Redeploy blade, you click Redeploy.**
+
+**Does this meet the goal?**
+
+A. Yes  
+B. No
+
+<details>
+<summary>Answer</summary>
+
+**A. Yes**
+
+**Explanation:**
+
+Clicking **"Redeploy"** from the Redeploy blade (now called **"Redeploy + reapply"** in Azure Portal) is the correct and immediate solution to move a virtual machine to a different physical host.
+
+**Why this solution works:**
+
+1. **Immediate Host Migration**: The redeploy operation moves the VM from its current physical host to a different host within the same Azure region
+
+2. **Bypasses Maintenance**: By redeploying immediately, you move the VM away from the host scheduled for maintenance, avoiding potential downtime during the maintenance window
+
+3. **Configuration Preserved**: All VM configurations, disks, IP addresses (if static), and extensions are preserved during redeployment
+
+4. **Azure-Managed Process**: Azure automatically selects a healthy target host and handles the migration
+
+**How to Perform Redeploy:**
+
+**Via Azure Portal:**
+- Navigate to VM1 → Help → Redeploy + reapply → Click "Redeploy"
+
+**Via Azure CLI:**
+```bash
+az vm redeploy --resource-group myResourceGroup --name VM1
+```
+
+**Via PowerShell:**
+```powershell
+Set-AzVM -Redeploy -ResourceGroupName "myResourceGroup" -Name "VM1"
+```
+
+**What Happens During Redeploy:**
+
+| Phase | Action | Impact |
+|-------|--------|--------|
+| **1. Preparation** | VM configuration captured | No impact yet |
+| **2. Shutdown** | VM is stopped | Service unavailable |
+| **3. Migration** | VM moved to new host | Downtime (10-15 min) |
+| **4. Restart** | VM started on new host | Service resuming |
+| **5. Verification** | Health checks performed | Service available |
+
+**Important Considerations:**
+
+| Aspect | Details |
+|--------|----------|
+| **Downtime** | Expect 10-15 minutes of downtime |
+| **Data Preservation** | OS disk and data disks are fully preserved |
+| **Temporary Disk** | Data on temporary disk (D: or /mnt) will be lost |
+| **IP Address** | Static IPs are preserved; dynamic IPs may change |
+| **Same Region** | VM stays in the same region and availability zone |
+| **No Manual Configuration** | No need to update ARM template or recreate resources |
+
+**Alternative Solutions That Would NOT Work:**
+
+| Action | Why It Doesn't Meet the Goal |
+|--------|------------------------------|
+| **Stop and Start** | Returns VM to the same host; doesn't move to different host |
+| **Restart** | VM remains on same host |
+| **Deallocate** | May or may not move to different host; not guaranteed |
+| **Delete and Recreate** | Excessive administrative effort; risk of data loss |
+
+**Best Practices:**
+
+1. **Backup First**: Create a snapshot before redeploying (optional but recommended)
+   ```bash
+   az snapshot create --resource-group myRG --name VM1-snapshot --source $(az vm show --resource-group myRG --name VM1 --query storageProfile.osDisk.managedDisk.id -o tsv)
+   ```
+
+2. **Use Static IPs**: Ensure VM has static IP assignment to avoid connectivity issues
+
+3. **Check Temporary Disk**: Move any important data from temporary disk before redeploying
+
+4. **Schedule Appropriately**: Notify users about the brief downtime window
+
+**Summary:**
+
+The **Redeploy** feature is specifically designed for this scenario. It immediately moves the VM to a different physical host, allowing you to proactively avoid maintenance impact without waiting for the scheduled maintenance window.
+
+**Reference:** 
+- [Redeploy Windows VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-windows)
+- [Redeploy Linux VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-linux)
+
+</details>
+
 ---
 
 ## References
@@ -721,3 +824,6 @@ az vm create \
 - [Azure VM Extensions Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/overview)
 - [Azure Resource Manager Templates](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview)
 - [Installing CA Certificates on Linux](https://ubuntu.com/server/docs/security-trust-store)
+- [Redeploy Windows VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-windows)
+- [Redeploy Linux VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-linux)
+- [Azure VM Maintenance](https://learn.microsoft.com/en-us/azure/virtual-machines/maintenance-and-updates)
