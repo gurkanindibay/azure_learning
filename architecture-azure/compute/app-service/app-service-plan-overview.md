@@ -8,6 +8,7 @@
 - [App Service Plan vs Other Azure Concepts](#app-service-plan-vs-other-azure-concepts)
 - [How App Service Plans Work](#how-app-service-plans-work)
 - [Multiple Apps in One Plan](#multiple-apps-in-one-plan)
+- [Operating System and Runtime Stack Compatibility](#operating-system-and-runtime-stack-compatibility)
 - [Pricing Tiers](#pricing-tiers)
 - [Creating an App Service Plan](#creating-an-app-service-plan)
 - [Kudu Service](#kudu-service)
@@ -415,6 +416,137 @@ The **App Service Plan** determines the number of VM instances. Apps and slots a
 
 ---
 
+## Operating System and Runtime Stack Compatibility
+
+### Critical Rule: No Mixing Windows and Linux
+
+> **Important:** You **cannot mix Windows and Linux apps** in the same App Service Plan. When you create an App Service Plan, you must choose the OS type (Windows or Linux), and all apps in that plan must use the same OS.
+
+### Runtime Stack OS Compatibility
+
+Different runtime stacks have different operating system support:
+
+| Runtime Stack | Windows Support | Linux Support |
+|---------------|-----------------|---------------|
+| **.NET Core / .NET 5+** | ✅ Yes | ✅ Yes |
+| **ASP.NET (Framework)** | ✅ Yes | ❌ No |
+| **Java** | ✅ Yes | ✅ Yes |
+| **Node.js** | ✅ Yes | ✅ Yes |
+| **PHP** | ✅ Yes | ✅ Yes |
+| **Python** | ❌ No | ✅ Yes |
+| **Ruby** | ❌ No | ✅ Yes |
+
+### Key Points
+
+- **ASP.NET (Framework) apps** (e.g., ASP.NET 4.x) run **only on Windows**
+- **Ruby apps** run **only on Linux**
+- **Python apps** run **only on Linux** in Azure App Service
+- **.NET Core, Java, Node.js, PHP** can run on **either Windows or Linux**
+
+---
+
+### Practice Question: Minimum App Service Plans
+
+**Question:**
+
+You plan to create the Azure web apps shown in the following table:
+
+| Name | Runtime Stack |
+|------|---------------|
+| WebApp1 | .NET Core 3.1 (LTS) |
+| WebApp2 | ASP.NET V4.8 |
+| WebApp3 | PHP 7.3 |
+| WebApp4 | Ruby 2.6 |
+
+What is the minimum number of App Service plans you should create for the web apps?
+
+**Options:**
+
+A) 1
+
+B) 2 ✅
+
+C) 3
+
+D) 4
+
+---
+
+**Correct Answer: B) 2**
+
+---
+
+**Explanation:**
+
+**Step 1: Identify OS Requirements for Each Runtime**
+
+| Web App | Runtime | Windows? | Linux? | Required OS |
+|---------|---------|----------|--------|-------------|
+| WebApp1 | .NET Core 3.1 | ✅ | ✅ | Either |
+| WebApp2 | ASP.NET V4.8 | ✅ | ❌ | **Windows Only** |
+| WebApp3 | PHP 7.3 | ✅ | ✅ | Either |
+| WebApp4 | Ruby 2.6 | ❌ | ✅ | **Linux Only** |
+
+**Step 2: Apply the Constraint**
+
+- You **cannot mix Windows and Linux apps** in the same App Service Plan
+- WebApp2 (ASP.NET V4.8) **requires Windows**
+- WebApp4 (Ruby 2.6) **requires Linux**
+- Therefore, you need **at least 2 App Service Plans**
+
+**Step 3: Optimal Configuration**
+
+| App Service Plan | OS | Web Apps |
+|------------------|---------|----------|
+| Plan 1 | Windows | WebApp1, WebApp2, WebApp3 |
+| Plan 2 | Linux | WebApp4 |
+
+Or alternatively:
+
+| App Service Plan | OS | Web Apps |
+|------------------|---------|----------|
+| Plan 1 | Windows | WebApp2 |
+| Plan 2 | Linux | WebApp1, WebApp3, WebApp4 |
+
+**Visual Representation:**
+
+```
+┌─────────────────────────────────────┐    ┌─────────────────────────────────────┐
+│  Windows App Service Plan           │    │  Linux App Service Plan             │
+│                                     │    │                                     │
+│  ┌─────────────────────────────┐   │    │  ┌─────────────────────────────┐   │
+│  │ WebApp1 (.NET Core 3.1)     │   │    │  │ WebApp4 (Ruby 2.6)          │   │
+│  └─────────────────────────────┘   │    │  └─────────────────────────────┘   │
+│  ┌─────────────────────────────┐   │    │                                     │
+│  │ WebApp2 (ASP.NET V4.8) ⚠️   │   │    │  ⚠️ Ruby requires Linux             │
+│  └─────────────────────────────┘   │    │                                     │
+│  ┌─────────────────────────────┐   │    │                                     │
+│  │ WebApp3 (PHP 7.3)           │   │    │                                     │
+│  └─────────────────────────────┘   │    │                                     │
+│                                     │    │                                     │
+│  ⚠️ ASP.NET V4.8 requires Windows  │    │                                     │
+└─────────────────────────────────────┘    └─────────────────────────────────────┘
+```
+
+**Why Other Answers Are Wrong:**
+
+| Answer | Why Incorrect |
+|--------|---------------|
+| **1** | ❌ Impossible - ASP.NET V4.8 requires Windows, Ruby requires Linux. You cannot mix OS types in one plan. |
+| **3** | ❌ Unnecessary - You can group compatible apps together. No need for a third plan. |
+| **4** | ❌ Over-provisioning - Creates unnecessary resource allocation and increased costs. |
+
+**Key Takeaway:**
+
+When calculating minimum App Service Plans:
+1. First identify which runtimes are **OS-exclusive** (Windows-only or Linux-only)
+2. If you have at least one Windows-only AND one Linux-only app, you need **minimum 2 plans**
+3. Apps with flexible OS support can be placed in either plan
+
+**Reference:** [Configure apps - Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/configure-common)
+
+---
+
 ## Pricing Tiers
 
 App Service Plans come in different pricing tiers:
@@ -798,6 +930,13 @@ D) The App Service plan for WebApp1 moves to North Europe. Policy2 applies to We
 5. **Multiple Apps Can Share One Plan**
    - Cost optimization strategy
    - All apps share the same resources
+
+6. **Cannot Mix Windows and Linux Apps**
+   - OS type is set when creating the App Service Plan
+   - All apps in a plan must use the same OS
+   - ASP.NET (Framework) = Windows only
+   - Ruby, Python = Linux only
+   - .NET Core, Java, Node.js, PHP = Either OS
 
 ### Common Exam Question Format
 
