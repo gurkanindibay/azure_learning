@@ -1453,7 +1453,139 @@ Result:
 
 ---
 
-### Question 4: Multi-Tier App Infrastructure with Cross-Region Deployment
+### Question 4: Ensuring Minimum VMs During Planned Maintenance
+
+**Scenario**: You plan to move a distributed on-premises app named App1 to an Azure subscription. After the planned move, App1 will be hosted on several Azure virtual machines.
+
+**Requirement**: You need to ensure that App1 always runs on at least eight virtual machines during planned Azure maintenance.
+
+**Question**: What should you create?
+
+**Options**:
+
+A) One Availability Set that has 10 update domains and one fault domain
+
+B) One Availability Set that has three fault domains and one update domain
+
+C) **One virtual machine scale set that has 10 virtual machine instances**
+
+D) One virtual machine scale set that has 12 virtual machine instances
+
+---
+
+**Correct Answer**: **C) One virtual machine scale set that has 10 virtual machine instances**
+
+---
+
+### Explanation
+
+**Why Virtual Machine Scale Set with 10 Instances?**
+
+#### 1. **VMSS Provides High Availability During Maintenance** ✅
+
+Virtual Machine Scale Sets (VMSS) ensure high availability for your application by:
+- **Automatically distributing VM instances** across multiple fault and update domains
+- **Handling maintenance and failure events** gracefully
+- **Maintaining the desired instance count** even during updates
+
+#### 2. **10 Instances Ensures 8+ VMs Available** ✅
+
+During planned Azure maintenance:
+- Azure updates VMs in **batches** (typically using update domains)
+- With **10 instances**, even if some VMs are being updated or rebooted, you will still have **at least 8 VMs running**
+- VMSS automatically manages the update process to minimize service disruption
+
+**Calculation**:
+```
+Total Instances: 10
+Maximum VMs affected during maintenance: ~20% (typical update domain batch)
+VMs being updated: 10 × 20% = 2 VMs
+VMs remaining available: 10 - 2 = 8 VMs ✅
+```
+
+#### 3. **VMSS vs Availability Sets for This Scenario**
+
+| Feature | VMSS | Availability Sets |
+|---------|------|-------------------|
+| **Auto-distribution** | Automatic across FD/UD | Automatic across FD/UD |
+| **Instance guarantee** | Maintains target count | Static, manual configuration |
+| **Scaling** | Dynamic, auto-scaling | Fixed number of VMs |
+| **Maintenance handling** | Optimized rolling updates | Sequential UD updates |
+| **Flexibility** | High | Limited |
+
+---
+
+### Why Other Options Are Incorrect
+
+**A) Availability Set with 10 update domains and 1 fault domain** ❌
+
+- **Single fault domain is problematic**: With only **one fault domain**, all VMs share the same physical hardware rack
+- **No hardware failure protection**: If that single fault domain experiences a failure (power, network, hardware), **all VMs could be affected**
+- **Update domains alone are insufficient**: While 10 update domains help with planned maintenance, the lack of fault domain redundancy creates a single point of failure
+- **Best practice violation**: Availability sets should have **multiple fault domains** (up to 3) for proper VM distribution across physical hardware
+
+**B) Availability Set with 3 fault domains and 1 update domain** ❌
+
+- **Single update domain is critically problematic**: With only **one update domain**, all VMs are updated **simultaneously** during planned maintenance
+- **No maintenance protection**: During an Azure platform update, **all VMs would be rebooted together**, causing complete application downtime
+- **Defeats the purpose**: Update domains exist to ensure only a subset of VMs are updated at a time, maintaining availability during maintenance
+- **Cannot guarantee 8 VMs**: With 1 update domain, either all VMs are available or none are during maintenance
+
+**Why VMSS is Better Than Availability Sets Here**:
+
+```
+Availability Set Limitations:
+├─ Fixed number of VMs
+├─ No automatic scaling
+├─ Manual management of instance count
+└─ Less flexible during maintenance windows
+
+VMSS Advantages:
+├─ Maintains target instance count automatically
+├─ Optimized rolling update strategies
+├─ Self-healing capabilities
+└─ Distributes across fault/update domains automatically
+```
+
+**D) VMSS with 12 instances** ❌
+
+- **Would work**, but is **over-provisioned**
+- **12 instances** would also ensure at least 8 VMs during maintenance
+- However, this leads to **unnecessary resource consumption** and higher costs
+- **10 instances is sufficient** to meet the requirement of 8 VMs during maintenance
+- **Option C (10 instances) is more efficient** while still meeting the requirement
+
+---
+
+### Key Takeaways
+
+1. **VMSS for Planned Maintenance Resilience**
+   > Virtual Machine Scale Sets automatically handle VM distribution and maintenance, ensuring high availability during Azure platform updates.
+
+2. **Avoid Single Fault Domain**
+   > Never configure an availability set with only 1 fault domain. This creates a single point of failure for hardware-related issues.
+
+3. **Multiple Update Domains Required**
+   > Always configure multiple update domains in availability sets to ensure only a portion of VMs are updated during planned maintenance.
+
+4. **Right-Size Your Instance Count**
+   > Calculate the minimum instances needed: if you need N VMs available and expect ~20% to be in maintenance, provision at least N × 1.25 instances.
+
+5. **VMSS vs Availability Sets Decision**
+   > For flexible, automatically managed VM groups that maintain availability during maintenance, VMSS is typically the better choice over availability sets.
+
+---
+
+### Reference Links
+
+- [Virtual Machine Scale Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
+- [Azure Availability Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview)
+- [Manage the availability of VMs in Azure](https://learn.microsoft.com/en-us/azure/virtual-machines/availability)
+- [VMSS Update Domain Distribution](https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-automatic-upgrade)
+
+---
+
+### Question 5: Multi-Tier App Infrastructure with Cross-Region Deployment
 
 **Scenario**: You are developing a multi-tier app named App1 that will be hosted on Azure virtual machines. The peak utilization periods for App1 will be from 8 AM to 9 AM and 4 PM to 5 PM on weekdays.
 
