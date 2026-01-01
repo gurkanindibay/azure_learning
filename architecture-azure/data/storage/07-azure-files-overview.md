@@ -145,6 +145,17 @@ Azure Files supports multiple authentication mechanisms for secure access to you
 
 **Use Case:** Perfect for hybrid scenarios where organizations already have on-premises AD and want seamless integration with Azure Files.
 
+**Hybrid Identity Requirement:**
+⚠️ **Critical Requirement**: Identity-based authentication with on-premises AD DS requires **hybrid user identities**. Users must be:
+1. Created in on-premises Active Directory (AD DS)
+2. Synchronized to Microsoft Entra ID (Azure AD) using **Azure AD Connect**
+
+**Important Limitation:**
+- ❌ Users created **solely in Microsoft Entra ID** (cloud-only accounts) are **NOT supported** for identity-based file share access
+- ✅ Only **hybrid identities** (created in AD DS and synced to Azure AD) can access file shares using identity-based authentication
+
+This requirement applies when configuring share-level permissions for Azure Files with on-premises AD DS authentication.
+
 #### Storage Account Keys
 
 **Storage account keys** provide:
@@ -173,6 +184,25 @@ Azure Files supports multiple authentication mechanisms for secure access to you
 | **Storage File Data SMB Share Reader** | Read access to files and directories |
 | **Storage File Data SMB Share Contributor** | Read, write, delete access to files and directories |
 | **Storage File Data SMB Share Elevated Contributor** | Read, write, delete, modify NTFS permissions |
+
+**Configuring Share-Level Permissions:**
+
+When enabling identity-based authentication for Azure Files, you must configure **share-level permissions** to control user access. There are two approaches:
+
+1. **Default Permissions for All Authenticated Users**
+   - Apply a default role to all authenticated users and groups
+   - Simplifies access management for scenarios where all domain users should have the same level of access
+   - Configured during the identity-based authentication setup
+
+2. **Specific Permissions for Azure AD Users/Groups**
+   - Assign roles to specific Microsoft Entra ID users or user groups
+   - Provides granular control over who can access file shares
+   - Recommended for scenarios requiring different access levels for different users
+
+**Important Notes:**
+- Share-level permissions are assigned at the **storage account** level and apply to all shares within that account
+- After configuring share-level permissions, you can further control access using NTFS permissions on individual files and directories
+- Users must be assigned at least one share-level permission role to access any file share in the storage account
 
 ### Authentication Methods NOT Supported
 
@@ -302,6 +332,81 @@ Which authentication method should you use for each type of storage?
 **References:**
 - [Use AzCopy to transfer data to Azure Files](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-files)
 - [Authorize access to data in Azure Storage](https://learn.microsoft.com/en-us/azure/storage/common/authorize-data-access)
+
+---
+
+### Practice Question: Identity-Based Access for Azure Files
+
+**Scenario:**
+You have an Azure subscription linked to a hybrid Microsoft Entra tenant. The tenant contains the following users:
+
+| Name | On-premises sync enabled |
+|------|--------------------------|
+| User1 | No |
+| User2 | Yes |
+
+You create the following Azure Files shares:
+
+| Name | Storage Account |
+|------|-----------------|
+| share1 | contoso2024 |
+| share2 | contoso2024 |
+| share3 | contoso2025 |
+
+You configure identity-based access for **contoso2024** storage account with the following settings:
+- **Active Directory source**: Enabled with on-premises AD DS
+- **Default share-level permissions**: Enable permissions for all authenticated users and groups
+- **Role**: Storage File Data SMB Share Contributor
+
+**Storage account contoso2025** does NOT have identity-based authentication enabled.
+
+**Questions:**
+For each of the following statements, select **Yes** if the statement is true. Otherwise, select **No**.
+
+1. **User1 can access share1 from an Azure virtual machine**
+2. **User2 can access share2 from an Azure virtual machine**
+3. **User2 can access share3 from an Azure virtual machine**
+
+**Answer:**
+
+| Statement | Answer |
+|-----------|--------|
+| User1 can access share1 from an Azure virtual machine | ❌ No |
+| User2 can access share2 from an Azure virtual machine | ✅ Yes |
+| User2 can access share3 from an Azure virtual machine | ❌ No |
+
+**Explanation:**
+
+❌ **User1 cannot access share1** - Although share1 is hosted on contoso2024 which has identity-based authentication enabled, **User1 is NOT a hybrid identity**. Identity-based authentication with on-premises AD DS requires users to be:
+- Created in on-premises Active Directory (AD DS)
+- Synchronized to Microsoft Entra ID using Azure AD Connect
+
+User1 has "On-premises sync enabled = No", meaning this user was created solely in Microsoft Entra ID (cloud-only account). **Cloud-only accounts are NOT supported** for identity-based file share access with on-premises AD DS authentication.
+
+✅ **User2 can access share2** - User2 meets all requirements:
+- ✅ User2 is a **hybrid identity** (On-premises sync enabled = Yes)
+- ✅ share2 is hosted on contoso2024, which has identity-based authentication enabled
+- ✅ Default share-level permissions grant access to all authenticated users and groups
+- ✅ The Storage File Data SMB Share Contributor role provides read, write, and delete access
+
+❌ **User2 cannot access share3** - Although User2 is a hybrid identity with proper authentication, **share3 is hosted on contoso2025**, which does **NOT have identity-based authentication enabled**. Without identity-based authentication configured on the storage account, users cannot use their AD credentials to access file shares, regardless of their identity type.
+
+**Key Takeaways:**
+
+1. 🔑 **Hybrid Identity Requirement**: Identity-based authentication with on-premises AD DS only supports **hybrid user identities** (created in AD DS and synced to Azure AD via Azure AD Connect)
+
+2. 🔑 **Cloud-Only Accounts Not Supported**: Users created solely in Microsoft Entra ID cannot use identity-based authentication for Azure Files when on-premises AD DS is the authentication source
+
+3. 🔑 **Storage Account Configuration Required**: Identity-based authentication must be enabled on the storage account hosting the file share. Shares on storage accounts without this configuration cannot use identity-based access, even for hybrid users
+
+4. 🔑 **Share-Level Permissions**: After enabling identity-based authentication, you must configure share-level permissions (Azure RBAC roles) to grant users access to file shares
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Overview of Azure Files identity-based authentication](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-active-directory-overview)
+- [Enable on-premises AD DS authentication to Azure file shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-ad-ds-enable)
+- [Assign share-level permissions to an identity](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-identity-ad-ds-assign-permissions)
 
 ---
 
