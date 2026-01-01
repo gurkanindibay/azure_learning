@@ -4,6 +4,11 @@
 
 - [Overview](#overview)
 - [Disk Types](#disk-types)
+- [Azure Disk Encryption](#azure-disk-encryption)
+  - [Encryption Requirements and Limitations](#encryption-requirements-and-limitations)
+  - [Windows VM Encryption Limitations](#windows-vm-encryption-limitations)
+  - [Linux VM Encryption Limitations](#linux-vm-encryption-limitations)
+  - [Encryption Compatibility Matrix](#encryption-compatibility-matrix)
 - [Attaching and Detaching Data Disks](#attaching-and-detaching-data-disks)
   - [Minimizing Downtime When Moving Disks](#minimizing-downtime-when-moving-disks)
   - [Detach Operation](#detach-operation)
@@ -41,6 +46,93 @@ Azure VMs use several types of disks:
 - **Ephemeral**: Data is lost when VM is stopped/deallocated
 - **Not for persistent data**: Should not store critical data
 - **Included**: Automatically provisioned with most VM sizes
+
+---
+
+## Azure Disk Encryption
+
+Azure Disk Encryption (ADE) helps protect and safeguard your data to meet organizational security and compliance commitments. It uses industry-standard encryption technology to encrypt the OS and data disks of Azure virtual machines. However, not all VM configurations support Azure Disk Encryption due to specific technical limitations.
+
+### Encryption Requirements and Limitations
+
+Azure Disk Encryption has specific requirements and limitations based on the VM's operating system, disk type, and VM series. Understanding these limitations is critical when planning VM encryption strategies.
+
+**Key Points:**
+- Uses **BitLocker** for Windows VMs
+- Uses **DM-Crypt** for Linux VMs
+- Requires **Azure Key Vault** to manage disk encryption keys
+- Integrates with **Key Encryption Keys (KEK)** for additional security
+- Not all VM configurations are compatible with encryption
+
+### Windows VM Encryption Limitations
+
+Azure Disk Encryption **does NOT work** for the following Windows VM scenarios:
+
+| Limitation | Description | Why Not Supported |
+|------------|-------------|-------------------|
+| **M-series VMs with Write Accelerator** | VMs using Write Accelerator enabled disks | Write Accelerator and Azure Disk Encryption are incompatible technologies |
+| **Dynamic volumes** | VMs using Windows dynamic disks or volumes | BitLocker cannot encrypt dynamic volumes |
+| **Basic disks** | ✅ **Supported** | Basic volumes (not dynamic) are fully supported |
+
+**Example VMs that CANNOT be encrypted (Windows):**
+- VM4: M-series VM with Write Accelerator disks → ❌ Cannot encrypt
+- VM5: Windows Server with dynamic volumes → ❌ Cannot encrypt
+
+**Example VMs that CAN be encrypted (Windows):**
+- VM2: Windows Server 2022 with basic volumes → ✅ Can encrypt
+
+### Linux VM Encryption Limitations
+
+Azure Disk Encryption **does NOT work** for the following Linux VM scenarios:
+
+| Limitation | Description | Why Not Supported |
+|------------|-------------|-------------------|
+| **Ephemeral OS disks** | VMs using ephemeral (temporary) OS disks | Ephemeral disks exist only in local VM cache; encryption is not applicable |
+| **Standard SSDs** | ✅ **Supported** | Standard and premium SSDs are fully supported |
+
+**Example VMs that CANNOT be encrypted (Linux):**
+- VM1: Red Hat Enterprise Linux (RHEL) with ephemeral OS disk → ❌ Cannot encrypt
+
+**Example VMs that CAN be encrypted (Linux):**
+- VM3: Red Hat Enterprise Linux (RHEL) with standard SSD → ✅ Can encrypt
+
+### Encryption Compatibility Matrix
+
+| VM Name | Size | OS | Disk Configuration | Encryption Support | Reason |
+|---------|------|----|--------------------|-------------------|--------|
+| **VM1** | A | RHEL | Ephemeral OS disk | ❌ Cannot encrypt | Linux: Ephemeral OS disks not supported |
+| **VM2** | D | Windows Server 2022 | Basic volumes | ✅ Can encrypt | Windows: Basic volumes supported |
+| **VM3** | B | RHEL | Standard SSD | ✅ Can encrypt | Linux: Standard SSD supported |
+| **VM4** | M | Windows Server 2022 | Write Accelerator disks | ❌ Cannot encrypt | Windows: M-series with Write Accelerator incompatible |
+| **VM5** | E | Windows Server 2022 | Dynamic volume | ❌ Cannot encrypt | Windows: Dynamic volumes not supported |
+
+**Summary:**
+- ✅ **VMs that can be encrypted**: VM2, VM3
+- ❌ **VMs that cannot be encrypted**: VM1, VM4, VM5
+
+### Best Practices for Encryption Planning
+
+1. **Verify VM Configuration**: Before planning encryption, verify the VM series, disk type, and volume configuration
+2. **Avoid Write Accelerator for Encrypted VMs**: If encryption is required, do not enable Write Accelerator on M-series VMs
+3. **Use Basic Volumes on Windows**: For Windows VMs requiring encryption, use basic disks/volumes instead of dynamic volumes
+4. **Avoid Ephemeral OS Disks for Linux**: If encryption is required for Linux VMs, use persistent OS disks (standard or premium SSDs)
+5. **Test Before Production**: Always test encryption on non-production VMs before applying to production workloads
+6. **Use Key Encryption Keys (KEK)**: Whenever possible, use KEK for additional security layer on top of disk encryption
+
+### Azure Disk Encryption with Key Encryption Keys (KEK)
+
+For enhanced security, Azure Disk Encryption supports using a **Key Encryption Key (KEK)** stored in Azure Key Vault. The KEK adds an additional layer of protection by encrypting the disk encryption keys themselves.
+
+**Benefits of using KEK:**
+- **Defense in depth**: Encryption keys are themselves encrypted
+- **Key rotation**: Easier to rotate KEKs without re-encrypting entire disks
+- **Compliance**: Meets regulatory requirements for key management
+- **Separation of duties**: Different teams can manage disk encryption and key encryption
+
+**Architecture:**
+```
+VM Disk → Encrypted with BitLocker/DM-Crypt key → BitLocker/DM-Crypt key encrypted with KEK → KEK stored in Key Vault
+```
 
 ---
 
@@ -554,6 +646,199 @@ az vm show \
 | Stop source VM first | 5-10 min | 0 min | 5-10 min | ⚠️ Medium |
 | Stop target VM first | 0 min | 5-10 min | 5-10 min | ⚠️ Medium |
 | Delete source VM | Permanent | 0 min | N/A | ❌ High |
+
+---
+
+### Question 2: Azure Disk Encryption Compatibility
+
+**Scenario**: You manage an Azure subscription with the following virtual machines:
+
+| VM Name | Size | Operating System | Disk Configuration |
+|---------|------|------------------|-------------------|
+| VM1 | A | Red Hat Enterprise Linux (RHEL) | Uses ephemeral OS disks |
+| VM2 | D | Windows Server 2022 | Uses basic volumes |
+| VM3 | B | Red Hat Enterprise Linux (RHEL) | Uses a standard SSD |
+| VM4 | M | Windows Server 2022 | Uses Write Accelerator disks |
+| VM5 | E | Windows Server 2022 | Has a dynamic volume |
+
+**Requirements**:
+- You plan to use **Azure Disk Encryption** to encrypt virtual machines whenever possible
+- You want to use a **Key Encryption Key (KEK)** for additional security
+
+**Question**: Which virtual machines can you encrypt with Azure Disk Encryption?
+
+**Options**:
+
+A) VM1 and VM3
+
+B) VM2 and VM4
+
+C) **VM2 and VM3**
+
+D) VM4 and VM5
+
+---
+
+**Correct Answer**: **C) VM2 and VM3**
+
+---
+
+### Explanation
+
+**Azure Disk Encryption Limitations Overview:**
+
+Azure Disk Encryption has specific limitations based on the operating system and disk configuration. Understanding these limitations is crucial for planning encryption strategies.
+
+#### Windows VM Limitations
+
+Azure Disk Encryption **does NOT work** for the following **Windows scenarios**:
+- ❌ **M-series VMs with Write Accelerator disks**
+- ❌ **Dynamic volumes**
+- ✅ **Basic volumes** (supported)
+
+#### Linux VM Limitations
+
+Azure Disk Encryption **does NOT work** for the following **Linux scenarios**:
+- ❌ **Ephemeral OS disks**
+- ✅ **Standard SSDs** (supported)
+- ✅ **Premium SSDs** (supported)
+
+---
+
+### VM-by-VM Analysis
+
+#### ✅ **VM2: Can Be Encrypted**
+
+**Configuration**: Windows Server 2022, Size D, Basic volumes
+
+**Encryption Status**: ✅ **Can encrypt**
+
+**Reason**:
+- Windows Server 2022 is supported
+- **Basic volumes** are fully compatible with Azure Disk Encryption
+- D-series VMs do not have any encryption restrictions
+- No conflicting features (e.g., Write Accelerator, dynamic volumes)
+
+**Encryption Technology**: BitLocker (Windows)
+
+---
+
+#### ✅ **VM3: Can Be Encrypted**
+
+**Configuration**: Red Hat Enterprise Linux (RHEL), Size B, Standard SSD
+
+**Encryption Status**: ✅ **Can encrypt**
+
+**Reason**:
+- RHEL is a supported Linux distribution
+- **Standard SSD** is fully compatible with Azure Disk Encryption
+- Not using ephemeral OS disks
+- B-series VMs do not have encryption restrictions
+
+**Encryption Technology**: DM-Crypt (Linux)
+
+---
+
+#### ❌ **VM1: Cannot Be Encrypted**
+
+**Configuration**: Red Hat Enterprise Linux (RHEL), Size A, Ephemeral OS disks
+
+**Encryption Status**: ❌ **Cannot encrypt**
+
+**Reason**:
+- Uses **ephemeral OS disks**
+- Azure Disk Encryption does **NOT support ephemeral OS disks** for Linux VMs
+- Ephemeral disks exist only in local VM cache/temporary storage
+- Encryption is not applicable to temporary, non-persistent disks
+
+**Technical Background**:
+- Ephemeral OS disks are designed for stateless workloads
+- They provide faster boot times and lower costs
+- Data is lost when VM is stopped/deallocated
+- Encryption of ephemeral storage is not supported by Azure Disk Encryption
+
+---
+
+#### ❌ **VM4: Cannot Be Encrypted**
+
+**Configuration**: Windows Server 2022, Size M, Write Accelerator disks
+
+**Encryption Status**: ❌ **Cannot encrypt**
+
+**Reason**:
+- M-series VM with **Write Accelerator** enabled
+- Azure Disk Encryption and Write Accelerator are **incompatible technologies**
+- Write Accelerator requires direct access to disk I/O without encryption overhead
+- Cannot enable both features on the same VM/disk
+
+**Technical Background**:
+- Write Accelerator is designed for ultra-low-latency write operations
+- Commonly used for SQL Server transaction logs and other high-performance scenarios
+- Encryption adds overhead that conflicts with Write Accelerator's performance goals
+
+**Workaround**: If encryption is required, disable Write Accelerator before enabling Azure Disk Encryption
+
+---
+
+#### ❌ **VM5: Cannot Be Encrypted**
+
+**Configuration**: Windows Server 2022, Size E, Dynamic volume
+
+**Encryption Status**: ❌ **Cannot encrypt**
+
+**Reason**:
+- Uses **dynamic volumes** (Windows Storage Spaces, spanned volumes, striped volumes, etc.)
+- Azure Disk Encryption (BitLocker) does **NOT support dynamic volumes**
+- Only **basic volumes** are compatible with BitLocker encryption
+
+**Technical Background**:
+- Dynamic volumes provide advanced storage management features (RAID, spanning, striping)
+- BitLocker architecture is designed for basic volumes only
+- Converting dynamic volumes to basic volumes may result in data loss
+
+**Workaround**: Use basic volumes instead of dynamic volumes if encryption is required
+
+---
+
+### Summary Table
+
+| VM | OS | Disk Configuration | Can Encrypt? | Reason |
+|----|----|--------------------|--------------|--------|
+| **VM1** | Linux (RHEL) | Ephemeral OS disk | ❌ No | Linux: Ephemeral OS disks not supported |
+| **VM2** | Windows 2022 | Basic volumes | ✅ Yes | Windows: Basic volumes fully supported |
+| **VM3** | Linux (RHEL) | Standard SSD | ✅ Yes | Linux: Standard SSD fully supported |
+| **VM4** | Windows 2022 | Write Accelerator (M-series) | ❌ No | Windows: Write Accelerator incompatible |
+| **VM5** | Windows 2022 | Dynamic volume | ❌ No | Windows: Dynamic volumes not supported |
+
+**VMs that can be encrypted**: **VM2 and VM3** ✅
+
+**VMs that cannot be encrypted**: VM1, VM4, VM5 ❌
+
+---
+
+### Key Takeaways
+
+1. **Windows VMs**:
+   - ✅ Basic volumes: Supported
+   - ❌ Dynamic volumes: Not supported
+   - ❌ M-series with Write Accelerator: Not supported
+
+2. **Linux VMs**:
+   - ✅ Standard/Premium SSDs: Supported
+   - ❌ Ephemeral OS disks: Not supported
+
+3. **Best Practices**:
+   - Verify VM configuration before planning encryption
+   - Use basic volumes on Windows for encryption compatibility
+   - Avoid ephemeral OS disks on Linux if encryption is required
+   - Do not enable Write Accelerator on VMs that require encryption
+   - Test encryption on non-production VMs first
+
+4. **Key Encryption Keys (KEK)**:
+   - Always use KEK for enhanced security
+   - KEK adds an additional layer of protection
+   - Stored in Azure Key Vault for centralized key management
+   - Required Key Vault permission: `enabledForDiskEncryption = true`
 
 ---
 
