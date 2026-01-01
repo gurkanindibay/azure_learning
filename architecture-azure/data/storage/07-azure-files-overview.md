@@ -58,6 +58,29 @@ Azure Files offers **fully managed file shares in the cloud** that are accessibl
 | **Resilient** | Built for high availability |
 | **Programmable** | REST API, client libraries, Azure CLI, PowerShell |
 | **Hybrid Support** | Azure File Sync for on-premises caching |
+| **Native Directory Support** | True file system with real directories and folders |
+
+### Native Directory Support
+
+Unlike Azure Blob Storage (which requires hierarchical namespace to support true directories), **Azure File Shares provide native directory support** out of the box:
+
+- **True File System**: Operates like a traditional file system with real directories and files
+- **No Special Configuration**: Directory support is built-in; no need to enable hierarchical namespace
+- **Standard Operations**: Full support for creating, deleting, renaming, and navigating directories
+- **Nested Structures**: Support for deeply nested directory hierarchies
+- **Protocol Support**: Works with SMB and NFS protocols providing familiar file system semantics
+
+#### Comparison with Blob Storage
+
+| Feature | Azure File Share | Blob Container (No HNS) | Blob Container (HNS Enabled) |
+|---------|------------------|-------------------------|------------------------------|
+| **Directory Support** | ✅ Native | ❌ Simulated only | ✅ True directories |
+| **Special Configuration** | ❌ Not required | N/A | ✅ Hierarchical namespace required |
+| **Rename Directory** | ✅ Atomic operation | ❌ Copy all blobs | ✅ Atomic operation |
+| **Delete Directory** | ✅ Delete directory object | ❌ Delete individual blobs | ✅ Delete directory object |
+| **Access Protocol** | SMB, NFS, REST | HTTP/HTTPS, REST | HTTP/HTTPS, REST |
+
+**Key Takeaway**: If your primary need is organizing content in directories and you're not specifically working with blob storage, Azure File Shares provide native directory support without requiring any special configuration like hierarchical namespace.
 
 ## Protocols
 
@@ -1207,6 +1230,75 @@ To what should you migrate the file server data?
 
 **Key Takeaway:**
 When you need **interoperability** between Windows clients (SMB) and Unix clients (NFS) accessing the **same data**, **Azure NetApp Files** is the only Azure solution that supports this requirement.
+
+**Domain:** Design data storage solutions
+
+---
+
+### Practice Question: Storage Content Organization with Directories
+
+**Scenario:**
+You are managing an Azure subscription with the following storage resources:
+
+**Storage Account: storage1** (Hierarchical namespace: Yes)
+- `cont1` - blob container
+- `share1` - file share
+
+**Storage Account: storage2** (Hierarchical namespace: No)
+- `cont2` - blob container
+- `share2` - file share
+
+**Planned Change:**
+You need to organize storage account content using directories whenever possible.
+
+**Question:**
+Which containers and file shares can you use to organize the content with true directory support?
+
+**Options:**
+1. ❌ cont1, cont2, share1, and share2
+2. ❌ share1 only
+3. ✅ cont1, share1, and share2 only
+4. ❌ cont1 and share1 only
+5. ❌ share1 and share2 only
+
+**Answer: cont1, share1, and share2 only**
+
+**Explanation:**
+
+**Directory Support Requirements:**
+
+✅ **cont1 is correct** because:
+- It's a blob container in `storage1` which has **hierarchical namespace enabled**
+- With hierarchical namespace enabled, blob containers support **true directories**
+- Provides filesystem semantics with real directory objects
+- Supports atomic directory operations (rename, delete)
+
+✅ **share1 and share2 are correct** because:
+- Both are Azure File shares which provide **native directory support**
+- File shares support true directories **regardless of hierarchical namespace setting**
+- Work as traditional file systems with SMB/NFS protocols
+- No special configuration required for directory support
+
+❌ **cont2 is incorrect** because:
+- It's a blob container in `storage2` which has **hierarchical namespace disabled**
+- Without hierarchical namespace, blob containers **only simulate directories** using naming conventions (e.g., `folder/subfolder/file.txt`)
+- Directories are not real objects - just delimiters in blob names
+- Does not provide true directory-based organization
+- Directory operations like rename require copying all blobs
+
+**Key Concepts:**
+
+| Storage Type | Hierarchical Namespace | Directory Support | Method |
+|--------------|------------------------|-------------------|--------|
+| **Blob Container** | Yes | ✅ True directories | Data Lake Storage Gen2 |
+| **Blob Container** | No | ❌ Simulated only | Naming conventions with delimiters |
+| **File Share** | N/A | ✅ True directories | Native SMB/NFS file system |
+
+**Key Takeaway:**
+For organizing content with true directories:
+- Blob containers **require hierarchical namespace** to be enabled on the storage account
+- Azure File Shares **always support native directories** without special configuration
+- Without hierarchical namespace, blob containers can only simulate directories through naming, which doesn't meet true directory organization requirements
 
 **Domain:** Design data storage solutions
 
