@@ -124,6 +124,117 @@ To enable Traffic Analytics, Admin1 needs one of the following roles at the subs
 **Common Misconception:**
 Do not confuse Azure Traffic Manager (DNS-based global load balancing) with Traffic Analytics (network flow analysis tool). They are separate services with different purposes and different role requirements.
 
+---
+
+### Scenario: Recording All Connection Attempts to a VM
+
+**Context:**
+You have an Azure virtual machine (VM1) in East US region with the following configuration:
+- Private IP: 10.0.0.4 (dynamic)
+- Network Security Group: NSG1
+- Public IP: None
+- Availability set: AVSet
+- Subnet: 10.0.0.0/24
+- Managed disks: No
+
+Your subscription has the following providers registered:
+- Authorization, Automation, Resources, Compute, KeyVault, Network, Storage, Billing, Web
+
+**Goal:**
+You need to record ALL successful and failed connection attempts to VM1.
+
+**Required Actions (3 correct answers):**
+
+✅ **1. Register the Microsoft.Insights resource provider**
+- Microsoft Insights is the resource provider for Azure monitoring and diagnostics
+- Required to access monitoring services including Log Analytics and Application Insights
+- Essential for enabling logging features needed to collect connection attempt data
+- Without this provider, you cannot use advanced monitoring capabilities
+
+✅ **2. Enable Azure Network Watcher in the East US Azure region**
+- Network Watcher is a regional service that must be enabled in each region where you want to use it
+- Provides network monitoring and diagnostic capabilities
+- **Prerequisites**: Must be enabled in the same region as your resources (VM1 is in East US)
+- Required before you can enable NSG flow logs or use any Network Watcher tools
+
+✅ **3. Enable Azure Network Watcher flow logs (NSG Flow Logs)**
+- **Primary solution** for recording successful and failed connection attempts at the network level
+- Captures information about IP traffic flowing through network interfaces
+- Records both inbound and outbound traffic through NSGs
+- Logs include: source/destination IP, port, protocol, traffic decision (allowed/denied), and timestamp
+- Version 2 flow logs also include flow state information (new, established, terminated)
+
+**Why Other Options Are Incorrect:**
+
+❌ **Add an Azure Network Watcher connection monitor**
+- Connection Monitor is for **proactive monitoring** of connectivity between specific endpoints
+- Tests if a VM **can connect to** another endpoint (outbound connectivity testing)
+- Does **NOT** record all incoming connection attempts to a VM
+- Use case: Monitoring specific connectivity paths and performance metrics, not comprehensive traffic logging
+
+❌ **Register the Microsoft.LogAnalytics provider**
+- Log Analytics is a destination/storage option for flow logs, not a requirement
+- Flow logs can be stored in Azure Storage accounts **or** sent to Log Analytics
+- While useful for analysis, it's not required to enable flow logging itself
+- The critical provider is Microsoft.Insights, not LogAnalytics
+
+❌ **Create an Azure Storage account**
+- While a storage account **can** be used as a destination for flow logs, it's optional
+- Flow logs can be sent directly to Log Analytics workspace instead
+- Therefore, not a **required** step for recording connection attempts
+- However, in practice, you typically need either a storage account **or** Log Analytics workspace
+
+**Implementation Steps (Correct Order):**
+
+1. **Register Microsoft.Insights provider** (if not already registered)
+   ```bash
+   az provider register --namespace Microsoft.Insights
+   ```
+
+2. **Enable Network Watcher in East US region**
+   ```bash
+   az network watcher configure --resource-group <rg-name> --locations eastus --enabled true
+   ```
+
+3. **Enable NSG Flow Logs for NSG1**
+   ```bash
+   az network watcher flow-log create \
+     --resource-group <rg-name> \
+     --nsg <nsg-name> \
+     --name <flow-log-name> \
+     --location eastus \
+     --storage-account <storage-account-id> \
+     --enabled true \
+     --retention 7 \
+     --format JSON \
+     --log-version 2
+   ```
+
+**Key Concepts:**
+
+- **NSG Flow Logs** are the cornerstone for recording all connection attempts
+- **Flow Log Versions:**
+  - Version 1: Basic flow information (5-tuple: source, destination, port, protocol, action)
+  - Version 2: Adds flow state (bytes and packets transmitted)
+- **Traffic Analytics** (optional): Provides visualization and analysis of flow log data
+- **Connection Monitor** vs **Flow Logs**: Different purposes - proactive testing vs passive recording
+
+**What Gets Recorded in NSG Flow Logs:**
+- Source and destination IP addresses
+- Source and destination ports
+- Protocol (TCP/UDP)
+- Traffic flow direction (inbound/outbound)
+- Allow or deny decision (based on NSG rules)
+- Number of packets and bytes
+- Flow state (new, established, terminated) in v2
+
+**Best Practice:**
+For comprehensive connection monitoring, combine:
+- **NSG Flow Logs**: Record all traffic (required for this scenario)
+- **Traffic Analytics**: Visualize and analyze patterns
+- **Connection Monitor**: Proactively test specific connectivity paths
+- **Log Analytics**: Store and query flow log data for long-term analysis
+
 ## References
 
 - [IP Flow Verify Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-ip-flow-verify-overview)
@@ -132,3 +243,5 @@ Do not confuse Azure Traffic Manager (DNS-based global load balancing) with Traf
 - [NSG Flow Logging Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-nsg-flow-logging-overview)
 - [VM Insights Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-overview)
 - [VM Insights Dependency Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-dependency-agent)
+- [Connection Monitor](https://learn.microsoft.com/en-us/azure/network-watcher/connection-monitor-overview)
+- [Resource Providers Registration](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-providers-and-types)
