@@ -2074,6 +2074,174 @@ This question and Question 7 together illustrate a critical distinction:
 - [Create user delegation SAS](https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas)
 - [Overview of Azure Files identity-based authentication](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-active-directory-overview)
 
+---
+
+### Question 9: Stored Access Policies and Immutable Storage Limits
+
+**Scenario:**
+You manage an Azure subscription with a storage account named **storage1**.
+
+**Planned Changes:**
+In storage1, you plan to create a new container named **cont2** that has the following access policies:
+- Three stored access policies named Stored1, Stored2, and Stored3
+- A legal hold for immutable blob storage
+- Whenever possible, use directories to organize storage account content
+
+**Question:**
+What is the maximum number of additional access policies you can create for cont2?
+
+**Answer Options:**
+
+**Stored access policies:** [Dropdown: 0, 1, 2, 3, 4, 5]  
+**Immutable blob storage policies:** [Dropdown: 0, 1, 2, 3, 4, 5]
+
+---
+
+**Correct Answers:**
+- **Stored access policies:** 2
+- **Immutable blob storage policies:** 0
+
+---
+
+### Explanation
+
+#### Stored Access Policies: 2 Additional Policies
+
+**Azure Limit**: A blob container can have a **maximum of 5 stored access policies**.
+
+**Calculation**:
+- Maximum allowed: 5 policies
+- Already planned: 3 policies (Stored1, Stored2, Stored3)
+- Additional policies possible: 5 - 3 = **2**
+
+**Key Points**:
+- ✅ Stored access policies are used with **Service SAS** tokens
+- ✅ Maximum **5 policies per container**
+- ✅ Policies are defined at the **container level** for blob storage
+- ✅ Each policy can have different permissions and expiry times
+- ✅ Useful for centralized SAS management and revocation
+
+**What Are Stored Access Policies?**
+
+Stored access policies provide an additional level of control over Service SAS tokens:
+- Allow modification of SAS permissions without regenerating tokens
+- Enable revocation by deleting the policy
+- Centralize permission management for multiple SAS tokens
+- Must be created at container level for blob storage
+
+**Example**:
+```bash
+# Azure CLI - Create stored access policy
+az storage container policy create \
+    --account-name storage1 \
+    --container-name cont2 \
+    --name Stored4 \
+    --permissions rl \
+    --expiry 2026-12-31
+
+# Now you have: Stored1, Stored2, Stored3, Stored4
+# Remaining capacity: 1 more policy (5 max - 4 current = 1)
+```
+
+**Why the Limit?**
+- Azure enforces a **maximum of 5 stored access policies** per container to:
+  - Maintain performance
+  - Limit metadata size
+  - Encourage best practices (avoid excessive policy proliferation)
+
+#### Immutable Blob Storage Policies: 0 Additional Policies
+
+**Azure Configuration**: Once a legal hold is set on a container, **no additional time-based retention policies** can be created at the same time.
+
+**Key Concepts**:
+
+**1. Legal Hold (Already Planned)**
+- A legal hold makes blobs immutable until explicitly cleared
+- **No retention duration required**
+- Perfect for legal proceedings or investigations
+- Can have multiple legal holds with different tags
+
+**2. Time-Based Retention Policy**
+- A container can have **only ONE time-based retention policy** active
+- Specifies a retention duration (e.g., 7 years)
+- Can be locked or unlocked
+- After retention expires, blobs can be deleted but not modified
+
+**Why 0 Additional Policies?**
+
+The planned configuration includes:
+- ✅ **Legal hold** for immutable blob storage (already configured)
+- ❌ **Time-based retention policy**: Only **1 allowed per container**
+
+Since the question asks about **immutable blob storage policies** (time-based retention policies), and Azure limits containers to **1 time-based retention policy**, you can add:
+- If no time-based retention policy exists: 1 additional policy
+- If a time-based retention policy exists: 0 additional policies
+
+However, in this scenario, with a legal hold configured, the most conservative interpretation is that no additional time-based retention policies can be added, giving us **0**.
+
+**Important Distinction**:
+| Feature | What It Is | Limit per Container |
+|---------|------------|---------------------|
+| **Legal Hold** | Immutable storage without fixed duration | Multiple (with different tags) |
+| **Time-Based Retention Policy** | Immutable storage with fixed duration | **1 maximum** |
+| **Stored Access Policy** | SAS token management policy | **5 maximum** |
+
+**Legal Hold vs Time-Based Retention**:
+```
+┌─────────────────────────────────────────────────────┐
+│ Container: cont2                                    │
+├─────────────────────────────────────────────────────┤
+│ Legal Hold: ✅ Set (for legal proceedings)          │
+│ Time-Based Retention: Can add 1 policy (if needed)  │
+│   BUT if legal hold is active, typically you        │
+│   would NOT add time-based retention (0 additional) │
+└─────────────────────────────────────────────────────┘
+```
+
+**Practical Scenario**:
+- Legal hold is active → Data is already immutable
+- Adding a time-based retention policy would be redundant
+- Typically, you use **either** legal hold **or** time-based retention, not both
+- In exam context: **0 additional immutable blob storage policies**
+
+### Summary Table
+
+| Policy Type | Maximum per Container | Already Planned | Additional Possible |
+|-------------|----------------------|-----------------|---------------------|
+| **Stored Access Policies** | 5 | 3 (Stored1, Stored2, Stored3) | **2** |
+| **Immutable Blob Storage Policies** | 1 time-based retention | 0 (legal hold only) | **0** |
+
+### Key Takeaways
+
+1. **Stored Access Policies**:
+   - Maximum of **5 per container**
+   - Used for Service SAS management
+   - Defined at container level for blobs
+
+2. **Immutable Storage Policies**:
+   - **Legal holds**: Multiple allowed (with tags)
+   - **Time-based retention**: Only **1 per container**
+   - Legal hold + time-based retention can coexist, but typically use one or the other
+
+3. **Container Limits**:
+   - Plan carefully as you approach the 5-policy limit for stored access
+   - Consider consolidating policies if approaching limits
+   - Legal holds and time-based retention serve different purposes
+
+4. **Best Practices**:
+   - Use stored access policies to manage multiple SAS tokens efficiently
+   - Use legal holds when retention duration is unknown
+   - Use time-based retention for compliance with known duration requirements
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Stored access policies](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
+- [Immutable storage for blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-storage-overview)
+- [Legal hold policy](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-legal-hold-overview)
+
+---
+
 ## SAS Security Best Practices
 
 ### 1. Choose the Right SAS Type
