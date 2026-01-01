@@ -553,6 +553,88 @@ The client's data currently resides in fewer than 10 storage accounts, with larg
 
 ---
 
+### Question 5: Directory Organization Across Storage Types
+
+**Scenario**: You manage an Azure subscription with the following storage resources:
+
+**Storage Account: storage1** (Hierarchical namespace: Yes)
+- `cont1` - blob container
+- `share1` - file share
+
+**Storage Account: storage2** (Hierarchical namespace: No)
+- `cont2` - blob container  
+- `share2` - file share
+
+**Planned Change**: You need to organize storage account content using directories whenever possible, following best practices for efficient content organization.
+
+**Question**: Which containers and file shares can you use to organize the content with true directory support?
+
+**Options**:
+- A) cont1, cont2, share1, and share2
+- B) share1 only
+- C) cont1, share1, and share2 only
+- D) cont1 and share1 only
+- E) share1 and share2 only
+
+<details>
+<summary>Click to reveal answer</summary>
+
+**Correct Answer**: C) cont1, share1, and share2 only
+
+**Explanation**:
+
+**Directory Support Analysis:**
+
+✅ **cont1 is correct** because:
+- It's a blob container in `storage1` which has **hierarchical namespace enabled**
+- With hierarchical namespace enabled, blob containers support **true directories** (Data Lake Storage Gen2)
+- Provides real directory objects with filesystem semantics
+- Supports atomic directory operations (rename, delete)
+- Can efficiently organize content with directory structures
+
+✅ **share1 and share2 are correct** because:
+- Both are **Azure File shares** which provide **native directory support**
+- File shares support true directories **regardless of the hierarchical namespace setting**
+- They function as traditional file systems with SMB/NFS protocols
+- No special configuration is required for directory support
+- Can organize content efficiently using standard file system operations
+
+❌ **cont2 is incorrect** because:
+- It's a blob container in `storage2` which has **hierarchical namespace disabled**
+- Without hierarchical namespace, blob containers **only simulate directories** using naming conventions
+- Uses delimiter-based naming (e.g., `folder/subfolder/file.txt`) where directories are not real objects
+- Directory operations like rename require copying all blobs individually (inefficient)
+- Does **not provide true directory-based organization** required by the planned change
+
+**Directory Support Summary:**
+
+| Storage Resource | Hierarchical Namespace | Directory Support | Explanation |
+|------------------|------------------------|-------------------|-------------|
+| **cont1** | Yes | ✅ True | Data Lake Storage Gen2 with real directories |
+| **cont2** | No | ❌ Simulated only | Flat namespace with delimiter-based naming |
+| **share1** | N/A | ✅ True | Native file system support |
+| **share2** | N/A | ✅ True | Native file system support |
+
+**Key Concepts:**
+
+1. **Blob Containers with HNS**: When hierarchical namespace is enabled, blob containers support true directory structures (Data Lake Storage Gen2)
+2. **Blob Containers without HNS**: Only simulate directories through blob naming conventions (delimiter-separated paths)
+3. **Azure File Shares**: Always support native directories regardless of storage account configuration
+
+**Key Takeaway**: 
+- For blob containers to support true directory organization, the storage account **must have hierarchical namespace enabled**
+- Azure File Shares **always support native directories** without requiring special configuration
+- When organizing content with directories, exclude blob containers that lack hierarchical namespace support
+
+**References**:
+- [Hierarchical Namespace in Azure Data Lake Storage Gen2](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-namespace)
+- [Azure Files directory structure](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction)
+- [Data Lake Storage Gen2 directory operations](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-directory-file-acl-cli)
+
+</details>
+
+---
+
 ## Related Learning Resources
 
 ### Microsoft Learn Documentation
