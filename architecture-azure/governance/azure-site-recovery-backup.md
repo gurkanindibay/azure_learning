@@ -18,6 +18,7 @@
   - [Question 11: Azure Backup Reports Diagnostic Settings Configuration](#question-11-azure-backup-reports-diagnostic-settings-configuration)
   - [Question 12: Azure File Sync - Server Endpoints and Sync Groups](#question-12-azure-file-sync---server-endpoints-and-sync-groups)
   - [Question 13: Azure File Sync - Cloud and Server Endpoint Registration](#question-13-azure-file-sync---cloud-and-server-endpoint-registration)
+  - [Question 14: Recovery Services Vault Backup Capabilities and Regional Restrictions](#question-14-recovery-services-vault-backup-capabilities-and-regional-restrictions)
 - [References](#references)
 
 ---
@@ -6042,6 +6043,462 @@ cloud endpoint?               │
 > Remember the prerequisites for server endpoints: **Registration first, endpoints second**. A server must be registered with the Storage Sync Service before any folders from that server can be added as server endpoints. Also, remember **one cloud endpoint per sync group** - this is a fundamental constraint.
 
 **Domain:** Data Storage and File Services / Hybrid Cloud Solutions / Azure File Sync
+
+---
+
+### Question 14: Recovery Services Vault Backup Capabilities and Regional Restrictions
+
+#### Scenario
+
+You have an Azure subscription named Subscription1 that contains the following resources:
+
+| Name | Type | Location | Resource group |
+|------|------|----------|----------------|
+| RG1 | Resource group | West US | Not applicable |
+| RG2 | Resource group | West US | Not applicable |
+| Vault1 | Recovery Services vault | Central US | RG1 |
+| Vault2 | Recovery Services vault | West US | RG2 |
+| VM1 | Virtual machine | Central US | RG2 |
+| storage1 | Storage account | West US | RG1 |
+| SQL1 | Azure SQL database | East US | RG2 |
+
+In storage1, you create a blob container named blob1 and a file share named share1.
+
+---
+
+#### Question
+
+**Which resources can be backed up to Vault1 and Vault2?**
+
+To answer, select the appropriate options in the answer area.
+
+**Can use Vault1 for backups:**
+- A. VM1 only
+- B. VM1 and share1 only
+- C. VM1 and SQL1 only
+- D. VM1, storage1, and SQL1 only
+- E. VM1, blob1, share1, and SQL1
+
+**Can use Vault2 for backups:**
+- A. storage1 only
+- B. share1 only
+- C. VM1 and share1 only
+- D. blob1 and share1 only
+- E. storage1 and SQL1 only
+
+---
+
+**Correct Answers:**
+- **Can use Vault1 for backups:** B. VM1 and share1 only
+- **Can use Vault2 for backups:** B. share1 only
+
+---
+
+### Detailed Explanation
+
+#### Key Principles for Recovery Services Vault Backups
+
+**1. Regional Restriction Rule** ⚠️
+
+> **Critical:** A Recovery Services vault can **only protect resources in the same Azure region** as the vault.
+
+**However, there's an important exception:**
+- ✅ **Azure Files (file shares)** can be backed up to a Recovery Services vault in a **different region** than the storage account
+- ❌ **Virtual Machines** must be in the same region as the vault
+- ❌ **Azure SQL Databases** must be in the same region as the vault
+
+**2. Supported Workload Types**
+
+| Workload Type | Can Be Backed Up to Recovery Services Vault? |
+|---------------|---------------------------------------------|
+| Azure Virtual Machines | ✅ Yes (same region required) |
+| Azure Files (File Shares) | ✅ Yes (cross-region supported) |
+| SQL Server in Azure VM | ✅ Yes (same region required) |
+| Azure SQL Database | ❌ No (uses built-in automated backups or Azure Backup vault) |
+| Azure Blob Storage | ❌ No (uses operational backup or blob versioning) |
+| Azure Managed Disks | ✅ Yes (via Azure Backup vault, not Recovery Services vault) |
+
+---
+
+#### Analysis for Vault1 (Central US)
+
+**Vault1 Location:** Central US  
+**Resource Group:** RG1
+
+**Available Resources to Evaluate:**
+
+| Resource | Type | Location | Same Region as Vault1? | Can Be Backed Up? |
+|----------|------|----------|------------------------|-------------------|
+| **VM1** | Virtual Machine | Central US | ✅ Yes | ✅ **Yes** |
+| **storage1** | Storage Account | West US | ❌ No | ❌ No (wrong resource type for backup) |
+| **blob1** | Blob Container | West US | ❌ No | ❌ **No** (blobs not supported in Recovery Services vault) |
+| **share1** | File Share | West US | ❌ No | ✅ **Yes** (cross-region file share backup supported) |
+| **SQL1** | Azure SQL Database | East US | ❌ No | ❌ **No** (wrong region + PaaS SQL not supported) |
+
+**Why VM1 can be backed up to Vault1:**
+- ✅ VM1 is in Central US (same region as Vault1)
+- ✅ Virtual Machines are supported by Recovery Services vault
+- ✅ Regional restriction requirement is met
+
+```plaintext
+┌────────────────────────────────────────┐
+│         Central US Region              │
+│                                        │
+│  ┌──────────────┐    ┌──────────────┐ │
+│  │   Vault1     │───▶│     VM1      │ │
+│  │  (RG1)       │    │   (RG2)      │ │
+│  └──────────────┘    └──────────────┘ │
+│         ✅ Can backup (same region)     │
+└────────────────────────────────────────┘
+```
+
+**Why share1 can be backed up to Vault1:**
+- ✅ File shares have cross-region backup capability
+- ✅ Vault1 is a Recovery Services vault that supports Azure Files backup
+- ⚠️ Even though storage1 is in West US and Vault1 is in Central US, the backup is supported
+
+```plaintext
+┌────────────────────┐       ┌────────────────────┐
+│   Central US       │       │     West US        │
+│                    │       │                    │
+│  ┌──────────────┐  │       │  ┌──────────────┐ │
+│  │   Vault1     │──┼───────┼─▶│   share1     │ │
+│  │  (RG1)       │  │       │  │ (in storage1)│ │
+│  └──────────────┘  │       │  └──────────────┘ │
+│                    │       │                    │
+└────────────────────┘       └────────────────────┘
+     ✅ Cross-region file share backup supported
+```
+
+**Why storage1 CANNOT be backed up:**
+- ❌ Storage accounts themselves are not a backup target
+- ❌ The backup target is the **data inside** the storage account (file shares, not the account itself)
+
+**Why blob1 CANNOT be backed up:**
+- ❌ Blob containers are **not supported** by Recovery Services vaults
+- ✅ Alternative: Use **operational backup for blobs** (different backup solution)
+- ✅ Alternative: Use **blob versioning** and **soft delete** for data protection
+
+**Why SQL1 CANNOT be backed up:**
+- ❌ SQL1 is in East US (different region than Vault1 in Central US)
+- ❌ Azure SQL Database (PaaS) is **not supported** by Recovery Services vaults
+- ✅ Alternative: Azure SQL has **built-in automated backups**
+- ✅ Alternative: Use **Azure Backup vault** (different from Recovery Services vault) for long-term retention
+
+**Vault1 Backup Summary:**
+
+✅ **Can backup:** VM1 and share1  
+❌ **Cannot backup:** storage1, blob1, SQL1
+
+---
+
+#### Analysis for Vault2 (West US)
+
+**Vault2 Location:** West US  
+**Resource Group:** RG2
+
+**Available Resources to Evaluate:**
+
+| Resource | Type | Location | Same Region as Vault2? | Can Be Backed Up? |
+|----------|------|----------|------------------------|-------------------|
+| **VM1** | Virtual Machine | Central US | ❌ No | ❌ **No** (wrong region) |
+| **storage1** | Storage Account | West US | ✅ Yes | ❌ No (wrong resource type) |
+| **blob1** | Blob Container | West US | ✅ Yes | ❌ **No** (not supported) |
+| **share1** | File Share | West US | ✅ Yes | ✅ **Yes** |
+| **SQL1** | Azure SQL Database | East US | ❌ No | ❌ **No** (wrong region + not supported) |
+
+**Why VM1 CANNOT be backed up to Vault2:**
+- ❌ VM1 is in Central US (different region than Vault2 in West US)
+- ❌ Virtual Machines **must be in the same region** as the Recovery Services vault
+
+```plaintext
+┌────────────────────┐       ┌────────────────────┐
+│     West US        │       │   Central US       │
+│                    │       │                    │
+│  ┌──────────────┐  │       │  ┌──────────────┐ │
+│  │   Vault2     │  │   ❌  │  │     VM1      │ │
+│  │  (RG2)       │──┼───────┼─X│   (RG2)      │ │
+│  └──────────────┘  │       │  └──────────────┘ │
+│                    │       │                    │
+└────────────────────┘       └────────────────────┘
+   ❌ Cannot backup VM across regions
+```
+
+**Why share1 CAN be backed up to Vault2:**
+- ✅ share1 is in storage1, which is in West US (same region as Vault2)
+- ✅ File shares are supported by Recovery Services vaults
+- ✅ This is the standard same-region scenario
+
+```plaintext
+┌────────────────────────────────────────┐
+│         West US Region                 │
+│                                        │
+│  ┌──────────────┐    ┌──────────────┐ │
+│  │   Vault2     │───▶│   share1     │ │
+│  │  (RG2)       │    │ (in storage1)│ │
+│  └──────────────┘    └──────────────┘ │
+│         ✅ Can backup (same region)     │
+└────────────────────────────────────────┘
+```
+
+**Why storage1 CANNOT be backed up:**
+- ❌ Same reason as Vault1: storage accounts are not backup targets
+- ✅ The backup targets are the **contents** (file shares), not the account itself
+
+**Why blob1 CANNOT be backed up:**
+- ❌ Same reason as Vault1: blobs are not supported by Recovery Services vaults
+
+**Why SQL1 CANNOT be backed up:**
+- ❌ SQL1 is in East US (different region than Vault2 in West US)
+- ❌ Azure SQL Database (PaaS) is not supported by Recovery Services vaults
+
+**Vault2 Backup Summary:**
+
+✅ **Can backup:** share1 only  
+❌ **Cannot backup:** VM1, storage1, blob1, SQL1
+
+---
+
+#### Critical Rules Summary
+
+**Rule 1: Regional Restrictions for VMs and SQL in Azure VMs** ⚠️
+
+```plaintext
+Virtual Machines and SQL Server in Azure VMs:
+├── Must be in the SAME region as the Recovery Services vault
+├── Resource group does NOT matter
+└── Subscription does NOT matter (can be cross-subscription with proper permissions)
+
+Example:
+┌─────────────────────────────────────────────────────────┐
+│ Vault in Central US → Can backup VMs in Central US ✅   │
+│ Vault in Central US → Cannot backup VMs in West US ❌   │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Rule 2: Azure Files (File Shares) Cross-Region Backup** ✅
+
+```plaintext
+Azure Files (File Shares):
+├── Can be backed up to Recovery Services vaults in DIFFERENT regions
+├── Provides flexibility for centralized backup management
+└── No strict regional requirement
+
+Example:
+┌─────────────────────────────────────────────────────────┐
+│ Vault in Central US → Can backup file share in West US ✅│
+│ Vault in West US → Can backup file share in East US ✅   │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Rule 3: Unsupported Workloads** ❌
+
+```plaintext
+NOT Supported by Recovery Services Vault:
+├── Azure Blob Storage (blob containers)
+│   └── Alternative: Operational backup for blobs, blob versioning
+├── Azure SQL Database (PaaS)
+│   └── Alternative: Built-in automated backups, Azure Backup vault for LTR
+├── Azure Cosmos DB
+│   └── Alternative: Built-in continuous backup
+├── Storage Accounts (the account itself)
+│   └── Backup the contents (file shares, VMs using the storage)
+└── Azure Managed Disks directly
+    └── Alternative: Azure Backup vault (not Recovery Services vault)
+```
+
+---
+
+#### Complete Resource Mapping
+
+**Resource Compatibility Matrix:**
+
+| Resource | Type | Location | Vault1 (Central US) | Vault2 (West US) |
+|----------|------|----------|---------------------|------------------|
+| **VM1** | Virtual Machine | Central US | ✅ Yes (same region) | ❌ No (different region) |
+| **storage1** | Storage Account | West US | ❌ Not a backup target | ❌ Not a backup target |
+| **blob1** | Blob Container | West US | ❌ Not supported | ❌ Not supported |
+| **share1** | File Share | West US | ✅ Yes (cross-region) | ✅ Yes (same region) |
+| **SQL1** | Azure SQL DB | East US | ❌ No (wrong region + not supported) | ❌ No (wrong region + not supported) |
+
+---
+
+#### Common Exam Mistakes to Avoid
+
+##### ❌ Mistake 1: Thinking Storage Account Can Be Backed Up
+
+**Wrong Understanding:**
+> "storage1 is in the same region as Vault2, so Vault2 can back up storage1"
+
+**Correct Understanding:**
+> Storage accounts themselves are not backup targets. You back up the **data inside** the storage account:
+> - ✅ File shares (share1) can be backed up
+> - ❌ Blob containers (blob1) cannot be backed up to Recovery Services vault
+> - ❌ The storage account resource itself is not backed up
+
+---
+
+##### ❌ Mistake 2: Applying Same-Region Rule to All Resources
+
+**Wrong Understanding:**
+> "Vault1 is in Central US and share1 is in West US, so Vault1 cannot back up share1"
+
+**Correct Understanding:**
+> File shares are an **exception** to the same-region rule:
+> - ✅ Azure Files can be backed up **cross-region**
+> - ❌ VMs must be in the **same region**
+> - ❌ SQL in Azure VMs must be in the **same region**
+
+---
+
+##### ❌ Mistake 3: Thinking Azure SQL Database Can Be Backed Up
+
+**Wrong Understanding:**
+> "SQL1 is an Azure database, so it can be backed up to a Recovery Services vault"
+
+**Correct Understanding:**
+> Azure SQL Database (PaaS) is **not supported** by Recovery Services vaults:
+> - ✅ SQL Server in Azure VM → Can use Recovery Services vault
+> - ❌ Azure SQL Database (PaaS) → Cannot use Recovery Services vault
+> - ✅ Azure SQL Database has **built-in automated backups** (7-35 days)
+> - ✅ For long-term retention → Use **Azure Backup vault** (different service)
+
+---
+
+##### ❌ Mistake 4: Thinking Blobs Can Be Backed Up to Recovery Services Vault
+
+**Wrong Understanding:**
+> "blob1 is in West US, same as Vault2, so it can be backed up"
+
+**Correct Understanding:**
+> Blobs are **not supported** by Recovery Services vaults:
+> - ❌ Recovery Services vault does not support blob backup
+> - ✅ Alternative 1: **Operational backup for blobs** (continuous backup)
+> - ✅ Alternative 2: **Blob versioning** + **soft delete**
+> - ✅ Alternative 3: **Blob snapshots**
+
+---
+
+#### Backup Alternatives for Unsupported Resources
+
+**For Azure Blob Storage:**
+
+```bash
+# Enable blob versioning
+az storage account blob-service-properties update \
+  --account-name storage1 \
+  --enable-versioning true
+
+# Enable soft delete
+az storage account blob-service-properties update \
+  --account-name storage1 \
+  --enable-delete-retention true \
+  --delete-retention-days 30
+
+# Enable operational backup (requires Backup vault)
+az dataprotection backup-instance create \
+  --resource-group RG1 \
+  --vault-name BackupVault1 \
+  --backup-instance '{...}'
+```
+
+**For Azure SQL Database:**
+
+```bash
+# View built-in automated backups (no configuration needed)
+az sql db show \
+  --resource-group RG2 \
+  --server sqlserver1 \
+  --name SQL1 \
+  --query '{backupRetention: earliestRestoreDate}'
+
+# Configure long-term retention (optional)
+az sql db ltr-policy set \
+  --resource-group RG2 \
+  --server sqlserver1 \
+  --name SQL1 \
+  --weekly-retention P4W \
+  --monthly-retention P12M \
+  --yearly-retention P5Y
+```
+
+---
+
+#### Visual Summary
+
+**Complete Backup Topology:**
+
+```plaintext
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Azure Subscription1                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌───────────────────┐      ┌───────────────────┐      ┌──────────────┐│
+│  │   Central US      │      │     West US       │      │   East US    ││
+│  ├───────────────────┤      ├───────────────────┤      ├──────────────┤│
+│  │                   │      │                   │      │              ││
+│  │ Vault1 (RG1)      │      │ Vault2 (RG2)      │      │ SQL1 (RG2)   ││
+│  │   ↓               │      │   ↓               │      │              ││
+│  │   ├─✅ VM1        │      │   ├─❌ VM1        │      │ ❌ Not       ││
+│  │   │  (RG2)        │      │   │  (different   │      │ supported    ││
+│  │   │  Same region  │      │   │   region)     │      │ by Recovery  ││
+│  │   │               │      │   │               │      │ Services     ││
+│  │   └─✅ share1     │      │   └─✅ share1     │      │ vaults       ││
+│  │     (storage1)    │      │     (storage1)    │      │              ││
+│  │     Cross-region  │      │     Same region   │      │              ││
+│  │     supported     │      │                   │      │              ││
+│  │                   │      │                   │      │              ││
+│  │ ❌ Cannot backup: │      │ ❌ Cannot backup: │      │              ││
+│  │   • SQL1          │      │   • VM1           │      │              ││
+│  │   • blob1         │      │   • blob1         │      │              ││
+│  │   • storage1      │      │   • storage1      │      │              ││
+│  │                   │      │   • SQL1          │      │              ││
+│  └───────────────────┘      └───────────────────┘      └──────────────┘│
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Legend:
+  ✅ Can backup
+  ❌ Cannot backup
+```
+
+---
+
+#### Key Takeaways
+
+**1. Regional Rules:**
+- ✅ **VMs:** Must be in the **same region** as the vault
+- ✅ **File Shares:** Can be backed up **cross-region**
+- ❌ **SQL Database (PaaS):** Not supported (uses different backup mechanism)
+
+**2. Supported Workloads:**
+- ✅ Azure Virtual Machines
+- ✅ Azure Files (File Shares)
+- ✅ SQL Server in Azure VM (same region)
+- ✅ SAP HANA in Azure VM (same region)
+- ❌ Azure Blob Storage (use operational backup instead)
+- ❌ Azure SQL Database (PaaS - has built-in backups)
+
+**3. Resource Group Independence:**
+- ✅ Vault and resources can be in **different resource groups**
+- ✅ Only **region** matters for VMs
+- ✅ Only **workload type** matters for all resources
+
+**4. Backup Targets:**
+- ✅ Backup the **data** (VMs, file shares), not infrastructure (storage accounts, resource groups)
+- ✅ Storage account is a **container**, not a backup target
+- ✅ File shares **inside** the storage account are the backup target
+
+---
+
+**Exam Tip:**
+> When asked about Recovery Services vault backup capabilities:
+> 1. Check if the resource **type is supported** (VMs ✅, File Shares ✅, Blobs ❌, PaaS SQL ❌)
+> 2. For VMs: Check if **same region** as vault
+> 3. For File Shares: **Any region** is fine
+> 4. Remember: You backup **data**, not the infrastructure containers
+
+**Domain:** Azure Backup / Recovery Services / Business Continuity and Disaster Recovery (BCDR)
 
 ---
 
