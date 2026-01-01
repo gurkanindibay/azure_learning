@@ -17,6 +17,10 @@
   - [VM Redeployment and Host Migration](#vm-redeployment-and-host-migration)
 - [Tool Comparison](#tool-comparison)
 - [Best Practices](#best-practices)
+- [Virtual Machine Scale Set (VMSS) Provisioning](#virtual-machine-scale-set-vmss-provisioning)
+  - [Installing Components During VMSS Provisioning](#installing-components-during-vmss-provisioning)
+  - [Methods That Do NOT Work for VMSS Provisioning](#methods-that-do-not-work-for-vmss-provisioning)
+  - [Alternative Approaches](#alternative-approaches)
 - [Practice Questions](#practice-questions)
 - [References](#references)
 
@@ -500,6 +504,180 @@ az vm create \
 
 ---
 
+## Virtual Machine Scale Set (VMSS) Provisioning
+
+### Overview
+
+**Virtual Machine Scale Sets (VMSS)** allow you to create and manage a group of load-balanced VMs. The number of VM instances can automatically increase or decrease in response to demand or a defined schedule.
+
+When deploying VMSS with specific software configurations (like web server components), you need to ensure the configuration is applied automatically during provisioning.
+
+### Installing Components During VMSS Provisioning
+
+To install components like web server (IIS) on Windows VMSS during provisioning, you need two key actions:
+
+#### 1. Upload a Configuration Script
+
+Create a PowerShell script (for Windows) or Bash script (for Linux) that installs the required components.
+
+**Example: PowerShell script to install IIS**
+
+```powershell
+# install-iis.ps1
+# Install IIS Web Server with management tools
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+
+# Optional: Enable additional IIS features
+Install-WindowsFeature -Name Web-Asp-Net45
+Install-WindowsFeature -Name Web-Net-Ext45
+
+# Optional: Start the web service
+Start-Service W3SVC
+
+# Optional: Create a simple default page
+Set-Content -Path "C:\inetpub\wwwroot\index.html" -Value "Hello from VMSS!"
+```
+
+**Upload the script to a location accessible by the VMSS:**
+- Azure Storage Blob (recommended)
+- GitHub repository (public URL)
+- Any publicly accessible HTTPS endpoint
+
+```bash
+# Upload script to Azure Storage
+az storage blob upload \
+  --account-name mystorageaccount \
+  --container-name scripts \
+  --name install-iis.ps1 \
+  --file install-iis.ps1
+```
+
+#### 2. Modify the extensionProfile Section of the ARM Template
+
+The **extensionProfile** in the ARM template specifies VM extensions that run after the VM is provisioned. The **Custom Script Extension** downloads and executes your uploaded script.
+
+**ARM Template - extensionProfile Section:**
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "apiVersion": "2021-03-01",
+      "name": "myVMSS",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_DS2_v2",
+        "tier": "Standard",
+        "capacity": 2
+      },
+      "properties": {
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServer",
+              "offer": "WindowsServer",
+              "sku": "2016-Datacenter",
+              "version": "latest"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "vmss",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "myNicConfig",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "myIPConfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[parameters('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "InstallWebServer",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.10",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "https://mystorageaccount.blob.core.windows.net/scripts/install-iis.ps1"
+                    ],
+                    "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File install-iis.ps1"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "upgradePolicy": {
+          "mode": "Automatic"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Methods That Do NOT Work for VMSS Provisioning
+
+| Method | Why It Doesn't Work |
+|--------|---------------------|
+| **Automation Account** | Automation accounts are for general automation tasks, not for component installation during VMSS provisioning. Custom Script Extension is the recommended approach. |
+| **Azure Policy** | Azure policies enforce compliance and governance rules, not deployment-specific configurations like installing software components. |
+| **Azure Portal (Create VMSS)** | Simply creating a VMSS doesn't automatically install web server components. You still need Custom Script Extension configuration. |
+
+### Alternative Approaches
+
+| Approach | Description | Best For |
+|----------|-------------|----------|
+| **Custom Script Extension (Recommended)** | Download and execute scripts during provisioning | VMSS provisioning, flexible configuration |
+| **Custom VM Images** | Pre-create an image with IIS installed | Large-scale deployments, faster provisioning |
+| **DSC Extension** | Desired State Configuration for Windows | Complex configurations, drift correction |
+| **Cloud-Init (Linux)** | Standard Linux initialization | Linux VMSS deployments |
+
+### Azure CLI Example
+
+```bash
+# Create VMSS with Custom Script Extension
+az vmss create \
+  --resource-group myResourceGroup \
+  --name myVMSS \
+  --image Win2016Datacenter \
+  --upgrade-policy-mode automatic \
+  --admin-username azureuser \
+  --admin-password 'YourSecurePassword123!' \
+  --instance-count 2
+
+# Add Custom Script Extension to install IIS
+az vmss extension set \
+  --resource-group myResourceGroup \
+  --vmss-name myVMSS \
+  --name CustomScriptExtension \
+  --publisher Microsoft.Compute \
+  --settings '{"fileUris": ["https://mystorageaccount.blob.core.windows.net/scripts/install-iis.ps1"], "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File install-iis.ps1"}'
+```
+
+---
+
 ## Practice Questions
 
 ### Question 1
@@ -813,6 +991,106 @@ The **Redeploy** feature is specifically designed for this scenario. It immediat
 
 </details>
 
+### Question 5
+
+**You plan to automate the deployment of a virtual machine scale set that uses the Windows Server 2016 Datacenter image.**
+
+**You need to ensure that when the scale set virtual machines are provisioned, they have web server components installed.**
+
+**Which two actions should you perform? Each correct answer presents part of the solution.**
+
+A. Create an automation account  
+B. Upload a configuration script  
+C. Modify the extensionProfile section of the Azure Resource Manager template  
+D. Create an Azure policy  
+E. Create a new virtual machine scale set in the Azure portal
+
+<details>
+<summary>Answer</summary>
+
+**Correct Answers: B and C**
+
+**B. Upload a configuration script**  
+**C. Modify the extensionProfile section of the Azure Resource Manager template**
+
+**Explanation:**
+
+To install web server components (like IIS) during VMSS provisioning, you need to use the **Custom Script Extension**. This requires two key actions:
+
+**B. Upload a configuration script:**
+- Create a PowerShell script (e.g., to install IIS) or Bash script (for Linux)
+- Upload the script to a location accessible by the scale set:
+  - Azure Storage Blob (recommended)
+  - Public URL (GitHub, etc.)
+- Example script to install IIS:
+
+```powershell
+# install-iis.ps1
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+```
+
+**C. Modify the extensionProfile section of the ARM template:**
+- The `extensionProfile` in the ARM template specifies VM extensions for the VMSS
+- Include the **Azure Custom Script Extension** to download and execute the uploaded script
+- The extension runs automatically during VM provisioning
+
+```json
+"extensionProfile": {
+  "extensions": [
+    {
+      "name": "InstallWebServer",
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.10",
+        "settings": {
+          "fileUris": ["https://storage.blob.core.windows.net/scripts/install-iis.ps1"],
+          "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File install-iis.ps1"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Why other options are incorrect:**
+
+| Option | Status | Explanation |
+|--------|--------|-------------|
+| **A. Create an automation account** | ❌ Incorrect | While automation accounts can be used for general automation, they are **not required for installing components during VMSS provisioning**. The Custom Script Extension is the recommended and direct approach. |
+| **D. Create an Azure policy** | ❌ Incorrect | Azure policies enforce **compliance and governance**, not deployment-specific configurations. Policies audit or deny non-compliant resources—they don't install software components. |
+| **E. Create a new virtual machine scale set in the Azure portal** | ❌ Incorrect | Simply creating a VMSS in the portal does **not address how to ensure web server components are installed during provisioning**. You still need the Custom Script Extension configuration. |
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Custom Script Extension** | VM extension that downloads and executes scripts on VMs |
+| **extensionProfile** | ARM template section that defines VM extensions for VMSS |
+| **Provisioning-time Configuration** | Scripts run automatically when new VM instances are created |
+| **Script Location** | Scripts must be accessible via HTTP/HTTPS URL |
+
+**Alternative Approaches (Not Asked):**
+
+| Approach | When to Use |
+|----------|-------------|
+| **Custom VM Image** | Pre-install IIS in image for faster provisioning |
+| **DSC Extension** | Complex configurations requiring drift correction |
+| **cloud-init (Linux)** | Standard Linux VM initialization |
+
+**Summary:**
+
+For Windows VMSS with web server components installed during provisioning:
+1. ✅ **Upload a script** (install-iis.ps1) to Azure Storage
+2. ✅ **Modify extensionProfile** in ARM template to use Custom Script Extension
+
+**Reference:**
+- [Virtual Machine Scale Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
+- [Custom Script Extension for Windows](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-windows)
+- [VMSS ARM Template Reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachinescalesets)
+
+</details>
+
 ---
 
 ## References
@@ -821,9 +1099,12 @@ The **Redeploy** feature is specifically designed for this scenario. It immediat
 - [Azure PowerShell New-AzVM](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm)
 - [Cloud-Init Documentation](https://cloudinit.readthedocs.io/)
 - [Custom Script Extension for Linux](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-linux)
+- [Custom Script Extension for Windows](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-windows)
 - [Azure VM Extensions Overview](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/overview)
 - [Azure Resource Manager Templates](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview)
 - [Installing CA Certificates on Linux](https://ubuntu.com/server/docs/security-trust-store)
 - [Redeploy Windows VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-windows)
 - [Redeploy Linux VM](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/redeploy-to-new-node-linux)
 - [Azure VM Maintenance](https://learn.microsoft.com/en-us/azure/virtual-machines/maintenance-and-updates)
+- [Virtual Machine Scale Sets Overview](https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
+- [VMSS ARM Template Reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachinescalesets)
