@@ -23,6 +23,7 @@
 - [Practice Questions](#practice-questions)
   - [Question 1: Recommending AKS Scaling Solution for Linux Containers](#question-1-recommending-aks-scaling-solution-for-linux-containers)
   - [Question 2: Deploying a New Containerized Application to Specific Nodes](#question-2-deploying-a-new-containerized-application-to-specific-nodes)
+  - [Question 3: Deploying a YAML File to AKS](#question-3-deploying-a-yaml-file-to-aks)
 - [References](#references)
 - [Related Topics](#related-topics)
 
@@ -1184,6 +1185,239 @@ Virtual nodes are excellent for rapid scaling and burst workloads but don't meet
 - [Multiple Node Pools](https://learn.microsoft.com/en-us/azure/aks/use-multiple-node-pools)
 
 **Domain:** Design Infrastructure Solutions
+
+---
+
+### Question 3: Deploying a YAML File to AKS
+
+#### Scenario
+
+You deploy an Azure Kubernetes Service (AKS) cluster named **AKS1**.
+
+You need to deploy a YAML file to AKS1.
+
+**Solution:** From Azure CLI, you run `az aks`.
+
+**Question:** Does this meet the goal?
+
+---
+
+#### Options
+
+A. Yes  
+B. No
+
+---
+
+**Correct Answer:** **B. No**
+
+---
+
+### Detailed Explanation
+
+#### Why "No" is Correct ✅
+
+The `az aks` command in Azure CLI is used for **managing AKS clusters** (creating, updating, deleting, scaling), but it **does not directly deploy YAML files** to an AKS cluster.
+
+To deploy a YAML file to an AKS cluster, you must use **`kubectl`**, which is the Kubernetes command-line tool for interacting with Kubernetes clusters.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Tool Responsibilities                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  az aks (Azure CLI):                                                     │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  ✅ Create AKS cluster                                            │   │
+│  │  ✅ Delete AKS cluster                                            │   │
+│  │  ✅ Scale cluster                                                 │   │
+│  │  ✅ Get credentials (kubeconfig)                                  │   │
+│  │  ✅ Manage node pools                                             │   │
+│  │  ✅ Enable/disable add-ons                                        │   │
+│  │  ✅ Upgrade cluster                                               │   │
+│  │  ❌ Deploy applications/YAML files                                │   │
+│  │  ❌ Manage pods, services, deployments                            │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  kubectl (Kubernetes CLI):                                               │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  ❌ Create AKS cluster                                            │   │
+│  │  ❌ Delete AKS cluster                                            │   │
+│  │  ✅ Deploy YAML files                                             │   │
+│  │  ✅ Manage pods, services, deployments                            │   │
+│  │  ✅ View logs                                                     │   │
+│  │  ✅ Execute commands in pods                                      │   │
+│  │  ✅ Scale deployments                                             │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Correct Solution: Using kubectl ✅
+
+##### Step 1: Get AKS Credentials
+
+Before you can use `kubectl` with your AKS cluster, you need to configure it with cluster credentials:
+
+```bash
+# Get AKS credentials and configure kubectl
+az aks get-credentials --resource-group myResourceGroup --name AKS1
+```
+
+This command:
+- Downloads the Kubernetes configuration
+- Merges it with your `~/.kube/config` file
+- Sets AKS1 as the current context
+
+##### Step 2: Deploy YAML File
+
+```bash
+# Deploy the YAML file to AKS
+kubectl apply -f deployment.yaml
+```
+
+##### Example YAML File (deployment.yaml):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx
+```
+
+##### Step 3: Verify Deployment
+
+```bash
+# Check deployment status
+kubectl get deployments
+
+# Check pods
+kubectl get pods
+
+# Check services
+kubectl get services
+
+# Detailed information
+kubectl describe deployment nginx-deployment
+```
+
+---
+
+#### Command Comparison
+
+| Task | Correct Tool | Command |
+|------|--------------|---------|
+| **Create AKS cluster** | `az aks` | `az aks create --resource-group myRG --name myAKS` |
+| **Get cluster credentials** | `az aks` | `az aks get-credentials --resource-group myRG --name myAKS` |
+| **Deploy YAML file** | `kubectl` | `kubectl apply -f deployment.yaml` |
+| **Delete resources in cluster** | `kubectl` | `kubectl delete -f deployment.yaml` |
+| **Scale deployment** | `kubectl` | `kubectl scale deployment nginx --replicas=5` |
+| **View pod logs** | `kubectl` | `kubectl logs <pod-name>` |
+| **Add node pool** | `az aks` | `az aks nodepool add --cluster-name myAKS --name pool2` |
+| **Upgrade cluster** | `az aks` | `az aks upgrade --resource-group myRG --name myAKS` |
+
+---
+
+#### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Azure CLI (az aks)** | Manages the AKS **infrastructure** (cluster lifecycle, nodes, networking) |
+| **kubectl** | Manages **workloads** running inside the Kubernetes cluster (pods, services, deployments) |
+| **YAML Manifest** | Declarative configuration file that defines Kubernetes resources |
+| **kubeconfig** | Configuration file that contains cluster connection details and credentials |
+
+---
+
+#### Common Workflow
+
+```bash
+# 1. Create AKS cluster (Azure CLI)
+az aks create \
+  --resource-group myResourceGroup \
+  --name AKS1 \
+  --node-count 3 \
+  --enable-managed-identity \
+  --generate-ssh-keys
+
+# 2. Get credentials (Azure CLI)
+az aks get-credentials --resource-group myResourceGroup --name AKS1
+
+# 3. Deploy application (kubectl)
+kubectl apply -f deployment.yaml
+
+# 4. Monitor deployment (kubectl)
+kubectl get pods -w
+
+# 5. Get service endpoint (kubectl)
+kubectl get service nginx-service
+
+# Later: Scale node pool if needed (Azure CLI)
+az aks nodepool scale \
+  --resource-group myResourceGroup \
+  --cluster-name AKS1 \
+  --name nodepool1 \
+  --node-count 5
+```
+
+---
+
+#### Why You Cannot Use "az aks" to Deploy YAML ❌
+
+The `az aks` command set doesn't include any subcommands for deploying YAML files or managing Kubernetes resources. Available `az aks` subcommands include:
+
+- `az aks create` - Create cluster
+- `az aks delete` - Delete cluster
+- `az aks get-credentials` - Get credentials
+- `az aks nodepool` - Manage node pools
+- `az aks update` - Update cluster
+- `az aks upgrade` - Upgrade cluster
+- `az aks scale` - Scale node count
+- `az aks enable-addons` - Enable add-ons
+
+**None of these deploy YAML files.**
+
+---
+
+### Reference Links
+
+**Official Documentation:**
+- [Deploy to AKS using kubectl](https://learn.microsoft.com/en-us/azure/aks/learn/quick-kubernetes-deploy-cli)
+- [kubectl apply command](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply)
+- [az aks command reference](https://learn.microsoft.com/en-us/cli/azure/aks)
+- [kubectl overview](https://kubernetes.io/docs/reference/kubectl/)
+- [AKS get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-get-credentials)
+
+**Domain:** Design Infrastructure Solutions / Implement and Manage Infrastructure
 
 ---
 
