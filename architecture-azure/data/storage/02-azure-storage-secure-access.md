@@ -27,6 +27,8 @@
   - [Question 6: Time-Limited Blob Access for Finance Department](#question-6-time-limited-blob-access-for-finance-department)
   - [Question 7: Maximum Security Access Authorization for Blob Storage](#question-7-maximum-security-access-authorization-for-blob-storage)
   - [Question 8: Maximum Security Access Authorization for File Shares](#question-8-maximum-security-access-authorization-for-file-shares)
+  - [Question 9: Stored Access Policies and Immutable Storage Limits](#question-9-stored-access-policies-and-immutable-storage-limits)
+  - [Question 10: SAS Settings for Enumerate and Download Blobs](#question-10-sas-settings-for-enumerate-and-download-blobs)
 - [SAS Security Best Practices](#sas-security-best-practices)
 - [RBAC Roles for Storage Access](#rbac-roles-for-storage-access)
   - [Common Built-in Roles](#common-built-in-roles)
@@ -2239,6 +2241,226 @@ However, in this scenario, with a legal hold configured, the most conservative i
 - [Stored access policies](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy)
 - [Immutable storage for blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-storage-overview)
 - [Legal hold policy](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-legal-hold-overview)
+
+---
+
+### Question 10: SAS Settings for Enumerate and Download Blobs
+
+**Scenario:**
+You have an Azure subscription that contains a storage account named **storage1**. The storage1 account contains blobs in a container named **container1**.
+
+You plan to share access to storage1.
+
+You need to generate a shared access signature (SAS). The solution must meet the following requirements:
+- Ensure that the SAS can only be used to **enumerate** and **download** blobs stored in container1
+- Use the **principle of least privilege**
+
+**Question:**
+Which three settings should you enable?
+
+**Answer Options:**
+
+**Allowed services:** ☑️ Blob ☐ File ☐ Queue ☐ Table
+
+**Allowed resource types:** ☐ Service ☐ Container ☐ Object
+
+**Allowed permissions:** ☐ Read ☐ Write ☐ Delete ☐ List ☐ Add ☐ Create ☐ Update ☐ Process ☐ Immutable storage ☐ Permanent delete
+
+**Blob versioning permissions:** ☐ Enables deletion of versions
+
+**Allowed blob index permissions:** ☐ Read/Write ☐ Filter
+
+---
+
+**Correct Answers:**
+- **Allowed resource types:** Container ✅
+- **Allowed permissions:** Read ✅
+- **Allowed permissions:** List ✅
+
+---
+
+### Explanation
+
+#### Allowed Resource Types: Container ✅ **CORRECT**
+
+**Why This Is Correct:**
+- **Container** resource type grants access to the content and metadata of any blob in the container, AND to the list of blobs in the container
+- This is the appropriate scope for enumerating blobs in a specific container
+- Specifying **Object** additionally would be redundant because it is a subset of **Container**
+
+**Key Points:**
+- ✅ Container provides access to blob content (download)
+- ✅ Container provides access to list blobs (enumerate)
+- ✅ Container is the correct scope for container-level operations
+
+**Resource Type Hierarchy:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Service                                                      │
+│   - Account-level operations (list containers, etc.)        │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │ Container                                            │   │
+│   │   - List blobs in container ✅                       │   │
+│   │   - Access blob content and metadata ✅              │   │
+│   │                                                      │   │
+│   │   ┌──────────────────────────────────────────────┐   │   │
+│   │   │ Object                                        │   │   │
+│   │   │   - Individual blob operations                │   │   │
+│   │   │   - Subset of Container (redundant here)      │   │   │
+│   │   └──────────────────────────────────────────────┘   │   │
+│   └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Why NOT Service ❌
+
+- **Service** provides account-level operations like listing containers
+- Not required for accessing blobs within a specific container
+- Violates principle of least privilege (too broad)
+
+#### Why NOT Object (Alone) ❌
+
+- **Object** grants access to individual blob operations only
+- Does NOT include the ability to list blobs in the container
+- Would not satisfy the "enumerate" requirement
+
+**Note:** Selecting **Object** in addition to **Container** would be redundant, not incorrect per se, but violates the principle of least privilege by being overly explicit.
+
+---
+
+#### Allowed Permissions: Read ✅ **CORRECT**
+
+**Why This Is Correct:**
+- **Read** permission allows reading the content, blocklist, properties, and metadata of any blob in the container
+- This is required to **download** blobs
+- Use a blob as the source of a copy operation
+
+**What Read Permission Grants:**
+| Operation | Allowed |
+|-----------|--------|
+| Read blob content | ✅ Yes |
+| Read blob properties | ✅ Yes |
+| Read blob metadata | ✅ Yes |
+| Read blob blocklist | ✅ Yes |
+| Get blob (download) | ✅ Yes |
+| Source of copy | ✅ Yes |
+
+**Implementation:**
+```csharp
+// Read permission for downloading blobs
+sasBuilder.SetPermissions(BlobContainerSasPermissions.Read);
+```
+
+---
+
+#### Allowed Permissions: List ✅ **CORRECT**
+
+**Why This Is Correct:**
+- **List** permission allows listing blobs in the container (non-recursively)
+- This is required to **enumerate** blobs in the container
+- Essential for discovering what blobs exist before downloading them
+
+**What List Permission Grants:**
+| Operation | Allowed |
+|-----------|--------|
+| List blobs in container | ✅ Yes |
+| Enumerate blob names | ✅ Yes |
+| Get container metadata | ✅ Yes (with Read) |
+
+**Implementation:**
+```csharp
+// List permission for enumerating blobs
+sasBuilder.SetPermissions(BlobContainerSasPermissions.List);
+```
+
+**Combined Implementation:**
+```csharp
+// Minimal permissions for enumerate and download
+var sasBuilder = new BlobSasBuilder
+{
+    BlobContainerName = "container1",
+    Resource = "c", // Container resource type
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1),
+    Protocol = SasProtocol.Https
+};
+
+// Read + List = Enumerate and Download
+sasBuilder.SetPermissions(
+    BlobContainerSasPermissions.Read |   // ✅ Download blobs
+    BlobContainerSasPermissions.List     // ✅ Enumerate blobs
+);
+
+var sasToken = sasBuilder.ToSasQueryParameters(credential).ToString();
+var sasUri = $"https://storage1.blob.core.windows.net/container1?{sasToken}";
+```
+
+---
+
+### Why Other Permissions Are INCORRECT ❌
+
+| Permission | Why Incorrect |
+|------------|---------------|
+| **Write** | Creates/overwrites blobs - not needed for download/enumerate |
+| **Delete** | Deletes blobs - not needed for download/enumerate |
+| **Add** | Adds blocks to append blobs - not needed |
+| **Create** | Creates new blobs - not needed |
+| **Update** | Updates blob metadata - not needed |
+| **Process** | Processes blob data - not needed |
+| **Immutable storage** | Manages immutable policies - not needed |
+| **Permanent delete** | Permanently deletes soft-deleted blobs - not needed |
+
+---
+
+### Principle of Least Privilege Application
+
+**What We Need:**
+1. ✅ **Enumerate blobs** → List permission
+2. ✅ **Download blobs** → Read permission
+3. ✅ **Container scope** → Container resource type
+
+**What We Exclude:**
+- ❌ Service resource type (too broad)
+- ❌ Object resource type (redundant with Container)
+- ❌ Write, Delete, Add, Create permissions (not required)
+- ❌ File, Queue, Table services (not relevant to blob storage)
+
+**Minimal SAS Configuration:**
+```
+┌─────────────────────────────────────────────────┐
+│ SAS Configuration for Enumerate & Download      │
+├─────────────────────────────────────────────────┤
+│ Allowed Services:      Blob only ✅             │
+│ Allowed Resource Type: Container ✅             │
+│ Allowed Permissions:   Read + List ✅           │
+│                                                 │
+│ Everything else:       ❌ Not selected          │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+### Key Takeaways
+
+**Question Pattern:** "Minimum SAS settings for enumerate and download blobs"
+
+**Answer:**
+1. ✅ **Container** resource type (not Object, not Service)
+2. ✅ **Read** permission (for downloading)
+3. ✅ **List** permission (for enumerating)
+
+**Remember:**
+- 🎯 Container includes Object-level access (Object is redundant)
+- 🎯 Read is required for downloading blob content
+- 🎯 List is required for enumerating blobs in a container
+- 🎯 Always apply the principle of least privilege
+
+**Domain:** Design data storage solutions
+
+**References:**
+- [Create account SAS](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas)
+- [Account SAS permissions](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas#specify-account-sas-permissions)
+- [SAS resource types](https://learn.microsoft.com/en-us/rest/api/storageservices/create-account-sas#specify-the-signed-resource-types)
 
 ---
 
