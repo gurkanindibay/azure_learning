@@ -9,6 +9,10 @@ This section covers data management, analytics platforms, and AI/ML architecture
 - [BASE Properties](data-architecture-fundamentals/base-properties.md) - Distributed availability approach
 - [CAP Theorem](data-architecture-fundamentals/cap-theorem.md) - Distributed systems trade-offs
 
+### 4.0.1 Database Performance & Caching
+- [PostgreSQL Performance & Caching Strategies](database-performance/postgres-performance-caching.md) - Modern PostgreSQL features and caching decisions
+- [Database Caching Patterns](database-performance/database-caching-patterns.md) - General caching strategies and patterns
+
 ### 4.1 Data Architecture
 - OLTP Architecture
 - OLAP Architecture
