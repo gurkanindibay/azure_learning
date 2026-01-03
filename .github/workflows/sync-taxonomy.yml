@@ -28,10 +28,9 @@ jobs:
   auto-sync:
     name: Auto-sync Taxonomy (main only)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: check-sync
-    # Only run if check-sync fails (taxonomy is out of sync)
-    if: failure()
+    # Only run if check-sync fails (taxonomy is out of sync) and on main branch push
+    if: failure() && github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
         with:
