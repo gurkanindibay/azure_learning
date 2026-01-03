@@ -142,3 +142,17 @@ Links to related concepts
 ## Key Reference Documents
 
 - **Architecture Taxonomy**: See `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` for comprehensive architecture type definitions, naming conventions, and classification standards
+
+### Taxonomy Sync Script
+
+The taxonomy reference file is automatically generated from README.md files. To keep it in sync:
+
+```bash
+# Regenerate from all README.md files
+python scripts/sync_taxonomy_reference.py
+
+# Check if sync is needed (for CI/CD)
+python scripts/sync_taxonomy_reference.py --check
+```
+
+A GitHub Action (`.github/workflows/sync-taxonomy.yml`) automatically checks sync status on PRs affecting README.md files.
