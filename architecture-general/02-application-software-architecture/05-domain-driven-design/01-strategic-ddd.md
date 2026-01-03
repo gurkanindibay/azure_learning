@@ -288,10 +288,13 @@ Key differentiators:
 | **Too Many Bounded Contexts** | Over-engineering, too fine-grained | Start coarse, split when needed |
 | **No Context Map** | Implicit, undocumented relationships | Make integrations explicit |
 | **Core Domain Neglect** | Equal investment across all subdomains | Focus best talent on core domain |
+| **Confusing DDD with Microservices** | Assuming DDD requires distributed services | Start with modular monolith, extract services when needed |
+
+> **Real-World Lesson**: See [DDD at Scale Case Study](05-ddd-at-scale-case-study.md) for a $10M example of how misapplying DDD strategic patterns led to costly mistakes, and what to do instead.
 
 ## Strategic DDD and Microservices
 
-Bounded Contexts often map well to microservices:
+Bounded Contexts often map well to microservices, **but this is not required**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -313,6 +316,23 @@ Bounded Contexts often map well to microservices:
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+### Important Considerations
+
+**DDD Does Not Mandate Microservices**:
+- Strategic DDD defines domain boundaries and contexts
+- These can be implemented as modules in a monolith
+- Microservices add distribution complexity (network, deployment, debugging)
+- Start with a modular monolith, extract services only when evidence demands it
+
+**When to Extract to Microservices**:
+- Different scaling requirements per domain
+- Team ownership and autonomy needs
+- Technology heterogeneity requirements
+- Independent deployment necessity
+- Clear performance or availability benefits
+
+**Warning**: Jumping to microservices prematurely can increase costs 3-5x. See [DDD at Scale Case Study](05-ddd-at-scale-case-study.md) for real-world evidence.
+
 ## References
 
 - **Domain-Driven Design** - Eric Evans (2003)
@@ -320,3 +340,4 @@ Bounded Contexts often map well to microservices:
 - **Domain-Driven Design Distilled** - Vaughn Vernon (2016)
 - [Context Mapping](https://www.infoq.com/articles/ddd-contextmapping/) - InfoQ
 - [Strategic Domain-Driven Design](https://vaadin.com/blog/ddd-part-2-strategic-domain-driven-design) - Vaadin Blog
+- [DDD at Scale Case Study](05-ddd-at-scale-case-study.md) - $10M lessons learned

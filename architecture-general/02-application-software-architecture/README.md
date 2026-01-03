@@ -35,6 +35,7 @@ This section covers application design patterns, architectural styles, and softw
 - Tactical DDD (Entities, Value Objects, Aggregates) → [02-tactical-ddd.md](./05-domain-driven-design/02-tactical-ddd.md)
 - Ubiquitous Language → [03-ubiquitous-language.md](./05-domain-driven-design/03-ubiquitous-language.md)
 - Event Storming → [04-event-storming.md](./05-domain-driven-design/04-event-storming.md)
+- **DDD at Scale Case Study** → [05-ddd-at-scale-case-study.md](./05-domain-driven-design/05-ddd-at-scale-case-study.md) - Real $10M lessons learned
 
 ### 2.6 Design Patterns
 - Event Sourcing → [event-sourcing-pattern.md](./06-design-patterns/event-sourcing-pattern.md)
