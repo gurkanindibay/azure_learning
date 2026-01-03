@@ -1,6 +1,6 @@
 # Language Selection & Technology Choice
 
-> **Taxonomy Reference**: §2 Application & Software Architecture (see ../reference/architecture_taxonomy_reference.md)
+> **Taxonomy Reference**: §2 Application & Software Architecture (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
 ## Overview
 

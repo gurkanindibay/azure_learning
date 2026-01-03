@@ -138,3 +138,7 @@ Links to related concepts
 
 - See `architecture-azure/.copilot-instructions.md` for Azure-specific guidance
 - See `architecture-general/.copilot-instructions.md` for general architecture guidance
+
+## Key Reference Documents
+
+- **Architecture Taxonomy**: See `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` for comprehensive architecture type definitions, naming conventions, and classification standards
