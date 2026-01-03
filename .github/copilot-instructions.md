@@ -42,6 +42,15 @@ azure_learning/
 - General patterns can link to Azure implementations in `architecture-azure/`
 - Use relative links for cross-repository references: `../architecture-azure/`
 
+### Language and Technology Selection
+
+When discussing language or technology choices:
+1. **Consider organizational factors**: Team size, hiring constraints, velocity requirements
+2. **Reference case studies**: See `architecture-general/02-application-software-architecture/07-language-selection/`
+3. **Balance trade-offs**: Raw performance vs team productivity vs operational simplicity
+4. **Document decisions**: Create ADRs (Architecture Decision Records) for significant choices
+5. **Learn from real-world examples**: Uber, Netflix, Amazon case studies provide valuable insights
+
 ## Naming Conventions
 
 - **Files**: Use kebab-case: `azure-event-hubs-tiers.md`
@@ -93,6 +102,36 @@ Decision criteria
 
 ## Migration Considerations
 If applicable
+```
+
+### Case Study Documentation Structure
+```markdown
+# Case Study: Organization Name - Decision Title
+
+> **Source**: [Origin]
+> **Timeframe**: When this decision was made
+> **Relevance**: Current applicability
+
+## Overview
+Brief summary of the decision
+
+## The Context
+What problem was being solved
+
+## The Decision Matrix
+Comparison table of options
+
+## Real-World Implementation
+How it was actually implemented
+
+## Key Lessons Learned
+Actionable takeaways
+
+## Modern Context
+Is this still relevant today?
+
+## Related Documentation
+Links to related concepts
 ```
 
 ## Related Instructions

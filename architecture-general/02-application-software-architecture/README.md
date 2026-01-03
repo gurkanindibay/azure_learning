@@ -43,6 +43,10 @@ This section covers application design patterns, architectural styles, and softw
 - Saga Pattern → [saga-pattern.md](./06-design-patterns/saga-pattern.md)
 - Strangler Fig Pattern → [strangler-fig-pattern.md](./06-design-patterns/strangler-fig-pattern.md)
 
+### 2.7 Language Selection & Technology Choice
+- **Uber's Go vs Rust Decision** → [01-uber-go-vs-rust-case-study.md](./07-language-selection/01-uber-go-vs-rust-case-study.md) - Why organizational scale trumped raw performance
+- Decision frameworks and criteria for language selection
+
 ## Contents
 
 - [01-architectural-styles/](./01-architectural-styles/) - Architecture style patterns
@@ -51,6 +55,7 @@ This section covers application design patterns, architectural styles, and softw
 - [04-mobile-architecture/](./04-mobile-architecture/) - Mobile architecture (Native, Cross-Platform, Offline-First)
 - [05-domain-driven-design/](./05-domain-driven-design/) - DDD concepts and event storming
 - [06-design-patterns/](./06-design-patterns/) - Design patterns (Event Sourcing, CQRS, etc.)
+- [07-language-selection/](./07-language-selection/) - Language selection criteria and real-world case studies
 
 ## Related
 
