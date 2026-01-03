@@ -9,6 +9,7 @@ This section covers high-level, business-aligned architecture disciplines.
 - Capability Architecture
 - Value Stream Architecture
 - Organization Architecture
+- Team Topologies & Conway's Law
 
 ### 1.2 Information Architecture
 - Information Models
