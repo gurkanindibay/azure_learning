@@ -2,12 +2,19 @@
 
 This document is a **canonical markdown reference** for commonly recognized architecture types used in enterprise, cloud, and software engineering contexts. It is suitable for **architecture handbooks, governance boards, interviews, and internal standards**.
 
+> **Auto-generated**: This file is automatically synchronized with README.md files in the architecture-general directory structure.
+> 
+> **Last updated**: 2026-01-04 02:25:00
+> 
+> **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
+
 ---
 
 ## Table of Contents
 
+
 <details>
-<summary><a href="#1-enterprise--strategic-architecture">1. Enterprise & Strategic Architecture</a></summary>
+<summary><a href="#1-enterprise-strategic-architecture">1. Enterprise & Strategic Architecture</a></summary>
 
   - [1.1 Enterprise Architecture](#11-enterprise-architecture)
   - [1.2 Information Architecture](#12-information-architecture)
@@ -15,33 +22,41 @@ This document is a **canonical markdown reference** for commonly recognized arch
 </details>
 
 <details>
-<summary><a href="#2-application--software-architecture">2. Application & Software Architecture</a></summary>
+<summary><a href="#2-application-software-architecture">2. Application & Software Architecture</a></summary>
 
   - [2.1 Application Architecture Styles](#21-application-architecture-styles)
   - [2.2 Backend Architecture](#22-backend-architecture)
   - [2.3 Frontend Architecture](#23-frontend-architecture)
   - [2.4 Mobile Architecture](#24-mobile-architecture)
+  - [2.5 Domain-Driven Design (DDD)](#25-domain-driven-design-ddd)
+  - [2.6 Design Patterns](#26-design-patterns)
+  - [2.7 Language Selection & Technology Choice](#27-language-selection-technology-choice)
 </details>
 
 <details>
-<summary><a href="#3-integration--communication-architecture">3. Integration & Communication Architecture</a></summary>
+<summary><a href="#3-integration-communication-architecture">3. Integration & Communication Architecture</a></summary>
 
-  - [3.1 Integration Architecture](#31-integration-architecture)
-  - [3.2 API Architecture](#32-api-architecture)
-  - [3.3 Event-Driven & Messaging Architecture](#33-event-driven--messaging-architecture)
+  - [Architectural Paradigms](#architectural-paradigms)
+  - [Messaging Patterns](#messaging-patterns)
+  - [Core Documentation](#core-documentation)
+  - [Detailed Guides](#detailed-guides)
+  - [When to Use Each Integration Style](#when-to-use-each-integration-style)
+  - [Pattern Selection Matrix](#pattern-selection-matrix)
 </details>
 
 <details>
-<summary><a href="#4-data-analytics--ai-architecture">4. Data, Analytics & AI Architecture</a></summary>
+<summary><a href="#4-data-analytics-ai-architecture">4. Data, Analytics & AI Architecture</a></summary>
 
+  - [4.0 Data Architecture Fundamentals](#40-data-architecture-fundamentals)
+  - [4.0.1 Database Performance & Caching](#401-database-performance-caching)
   - [4.1 Data Architecture](#41-data-architecture)
   - [4.2 Analytics Architecture](#42-analytics-architecture)
-  - [4.3 Streaming & Real-Time Architecture](#43-streaming--real-time-architecture)
-  - [4.4 AI / ML Architecture](#44-ai--ml-architecture)
+  - [4.3 Streaming & Real-Time Architecture](#43-streaming-real-time-architecture)
+  - [4.4 AI / ML Architecture](#44-ai-ml-architecture)
 </details>
 
 <details>
-<summary><a href="#5-cloud-infrastructure--platform-architecture">5. Cloud, Infrastructure & Platform Architecture</a></summary>
+<summary><a href="#5-cloud-infrastructure-platform-architecture">5. Cloud, Infrastructure & Platform Architecture</a></summary>
 
   - [5.1 Cloud Architecture](#51-cloud-architecture)
   - [5.2 Infrastructure Architecture](#52-infrastructure-architecture)
@@ -58,7 +73,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 </details>
 
 <details>
-<summary><a href="#7-reliability-performance--operations">7. Reliability, Performance & Operations</a></summary>
+<summary><a href="#7-reliability-performance-operations">7. Reliability, Performance & Operations</a></summary>
 
   - [7.1 Reliability Architecture](#71-reliability-architecture)
   - [7.2 Performance Architecture](#72-performance-architecture)
@@ -66,14 +81,15 @@ This document is a **canonical markdown reference** for commonly recognized arch
 </details>
 
 <details>
-<summary><a href="#8-devops-delivery--runtime-architecture">8. DevOps, Delivery & Runtime Architecture</a></summary>
+<summary><a href="#8-devops-delivery-runtime-architecture">8. DevOps, Delivery & Runtime Architecture</a></summary>
 
   - [8.1 DevOps Architecture](#81-devops-architecture)
-  - [8.2 Runtime & Deployment Architecture](#82-runtime--deployment-architecture)
+  - [8.2 Runtime & Deployment Architecture](#82-runtime-deployment-architecture)
+  - [8.3 Git Branching Strategies](#83-git-branching-strategies)
 </details>
 
 <details>
-<summary><a href="#9-industry--specialized-architectures">9. Industry & Specialized Architectures</a></summary>
+<summary><a href="#9-industry-specialized-architectures">9. Industry & Specialized Architectures</a></summary>
 
   - [9.1 Industry Architectures](#91-industry-architectures)
   - [9.2 Specialized Architectures](#92-specialized-architectures)
@@ -82,18 +98,33 @@ This document is a **canonical markdown reference** for commonly recognized arch
 <details>
 <summary><a href="#10-practicality-taxonomy-abstraction-levels">10. Practicality Taxonomy (Abstraction Levels)</a></summary>
 
-  - [10.1 Conceptual Architecture](#101-conceptual-architecture-strategic--abstract)
-  - [10.2 Logical Architecture](#102-logical-architecture-design--structural)
-  - [10.3 Physical / Implementation Architecture](#103-physical--implementation-architecture-tactical--concrete)
-  - [10.4 Runtime / Operational Architecture](#104-runtime--operational-architecture-execution--live)
+
 </details>
 
 <details>
 <summary><a href="#11-architectural-qualities-non-functional">11. Architectural Qualities (Non-Functional)</a></summary>
-</details>
 
-<details>
-<summary><a href="#recommended-naming-convention">Recommended Naming Convention</a></summary>
+  - [1. Functional Suitability *(ISO)*](#1-functional-suitability-iso)
+  - [2. Performance Efficiency *(ISO, SEI, NETAS)*](#2-performance-efficiency-iso-sei-netas)
+  - [3. Compatibility *(ISO)*](#3-compatibility-iso)
+  - [4. Usability *(ISO, SEI, NETAS)*](#4-usability-iso-sei-netas)
+  - [5. Reliability *(ISO, SEI, NETAS)*](#5-reliability-iso-sei-netas)
+  - [6. Security *(ISO, SEI, NETAS)*](#6-security-iso-sei-netas)
+  - [7. Safety *(SEI)*](#7-safety-sei)
+  - [8. Maintainability *(ISO, NETAS)*](#8-maintainability-iso-netas)
+  - [9. Portability *(ISO, SEI)*](#9-portability-iso-sei)
+  - [10. Scalability *(SEI, NETAS)*](#10-scalability-sei-netas)
+  - [11. Deployability *(SEI, NETAS)*](#11-deployability-sei-netas)
+  - [12. Manageability *(NETAS)*](#12-manageability-netas)
+  - [13. Observability](#13-observability)
+  - [14. Monitorability *(SEI, NETAS)*](#14-monitorability-sei-netas)
+  - [15. Supportability *(NETAS)*](#15-supportability-netas)
+  - [16. Sensibility *(NETAS)*](#16-sensibility-netas)
+  - [17. Mobility *(SEI, NETAS)*](#17-mobility-sei-netas)
+  - [18. Variability *(SEI)*](#18-variability-sei)
+  - [19. Development Distributability *(SEI, NETAS)*](#19-development-distributability-sei-netas)
+  - [20. Conceptual Integrity *(NETAS - Design Quality)*](#20-conceptual-integrity-netas-design-quality)
+  - [21. Additional Quality Considerations](#21-additional-quality-considerations)
 </details>
 
 ---
@@ -105,6 +136,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Capability Architecture
 - Value Stream Architecture
 - Organization Architecture
+- Team Topologies & Conway's Law
 
 ### 1.2 Information Architecture
 - Information Models
@@ -117,9 +149,9 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - IT Governance
 - Data Governance
 - Security Governance
+- Architecture Taxonomy Reference
 
 ---
-
 ## 2. Application & Software Architecture
 
 ### 2.1 Application Architecture Styles
@@ -135,69 +167,73 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - REST-based Architecture
 - GraphQL Architecture
 - gRPC Architecture
-- RPC Architecture
 - Backend-for-Frontend (BFF)
 - Serverless Backend Architecture
 
 ### 2.3 Frontend Architecture
-- Web Architecture
 - Single Page Application (SPA)
 - Server-Side Rendering (SSR / ISR)
 - Micro-Frontend Architecture
-- Edge-rendered Architecture
 
 ### 2.4 Mobile Architecture
 - Native Mobile Architecture
 - Cross-Platform Architecture
 - Offline-First Architecture
-- Mobile Backend Architecture
-- Super-App Architecture
+
+### 2.5 Domain-Driven Design (DDD)
+- Strategic DDD (Bounded Contexts, Context Mapping)
+- Tactical DDD (Entities, Value Objects, Aggregates)
+- Ubiquitous Language
+- Event Storming
+- **DDD at Scale Case Study**
+
+### 2.6 Design Patterns
+- Event Sourcing
+- CQRS
+- Saga Pattern
+- Strangler Fig Pattern
+
+### 2.7 Language Selection & Technology Choice
+- **Uber's Go vs Rust Decision**
+- Decision frameworks and criteria for language selection
+- 01-architectural-styles/ - Architecture style patterns
+- 02-backend-architecture/ - Backend architecture (REST, GraphQL, gRPC, BFF, Serverless)
+- 03-frontend-architecture/ - Frontend architecture (SPA, SSR, Micro-Frontends)
+- 04-mobile-architecture/ - Mobile architecture (Native, Cross-Platform, Offline-First)
+- 05-domain-driven-design/ - DDD concepts and event storming
+- 06-design-patterns/ - Design patterns (Event Sourcing, CQRS, etc.)
+- 07-language-selection/ - Language selection criteria and real-world case studies
+- Architecture Taxonomy Reference
 
 ---
-
 ## 3. Integration & Communication Architecture
 
-### 3.1 Integration Architecture
-- Point-to-Point Integration
-- Hub-and-Spoke Architecture
-- Enterprise Service Bus (ESB)
-- API-Led Architecture
-- B2B / EDI Architecture
+### Architectural Paradigms
 
-### 3.2 API Architecture
-- REST API Architecture
-- GraphQL API Architecture
-- AsyncAPI Architecture
-- OpenAPI-driven Architecture
-- API Gateway Architecture
+### Messaging Patterns
 
-### 3.3 Event-Driven & Messaging Architecture
+### Core Documentation
 
-#### Architectural Paradigms
-- Event-Driven Architecture (EDA)
-- Event Sourcing
-- CQRS (Command Query Responsibility Segregation)
-- Reactive Architecture
-- Saga / Choreography Architecture
+### Detailed Guides
 
-#### Messaging Delivery Patterns
-- Message Queue Architecture (Point-to-Point)
-- Topic-based Pub/Sub Architecture (One-to-Many)
-- Event Streaming Architecture
-- Broker-based Architecture
-- Request-Reply Messaging Architecture
+### When to Use Each Integration Style
 
-#### Operational Patterns
-- Dead Letter Queue Architecture
-- Competing Consumers Architecture
-- Message Routing Architecture
-- Poison Message Handling
-- Message Deduplication Architecture
-- Ordered Delivery Architecture
+### Pattern Selection Matrix
+- Azure Integration Services - Azure-specific implementations
+- Architecture Taxonomy Reference
+- Reliability Patterns
 
 ---
-
 ## 4. Data, Analytics & AI Architecture
+
+### 4.0 Data Architecture Fundamentals
+- ACID Properties - Transaction guarantees
+- BASE Properties - Distributed availability approach
+- CAP Theorem - Distributed systems trade-offs
+
+### 4.0.1 Database Performance & Caching
+- PostgreSQL Performance & Caching Strategies - Modern PostgreSQL features and caching decisions
+- Database Caching Patterns - General caching strategies and patterns
 
 ### 4.1 Data Architecture
 - OLTP Architecture
@@ -224,9 +260,9 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Model Training Architecture
 - Model Inference Architecture
 - Vector Database Architecture
+- Architecture Taxonomy Reference
 
 ---
-
 ## 5. Cloud, Infrastructure & Platform Architecture
 
 ### 5.1 Cloud Architecture
@@ -247,9 +283,15 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Serverless Architecture
 - Internal Developer Platform (IDP)
 - Platform Engineering Architecture
+- networking/ - Network topology, proxy, and load balancing patterns
+- Hub-Spoke Network Architecture
+- Proxy and Load Balancing Architecture
+- Service Mesh Architecture
+- scaling/ - System design evolution and scaling patterns
+- Architecture Taxonomy Reference
+- Azure Architecture - Azure-specific implementations
 
 ---
-
 ## 6. Security Architecture (Cross-Cutting)
 
 ### 6.1 Security Architecture
@@ -263,6 +305,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Federated Identity Architecture
 - Single Sign-On (SSO)
 - Managed Identity Architecture
+- OAuth 2.0 with PKCE
 
 ### 6.3 Network Security Architecture
 - Perimeter Security Architecture
@@ -275,9 +318,15 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Key Management (HSM / KMS)
 - Confidential Computing
 - Privacy-by-Design Architecture
+- 6.1-security-architecture.md - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
+- 6.2-identity-architecture.md - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
+- 6.3-network-security-architecture.md - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
+- 6.4-data-security-architecture.md - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
+- authentication-methods-overview.md - Authentication methods and patterns
+- Architecture Taxonomy Reference
+- Azure Security - Azure-specific security implementations
 
 ---
-
 ## 7. Reliability, Performance & Operations
 
 ### 7.1 Reliability Architecture
@@ -285,21 +334,31 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Disaster Recovery (DR)
 - Fault-Tolerant Architecture
 - Chaos Engineering Architecture
+- Resilience Patterns (Circuit Breaker, Retry, Bulkhead, etc.)
 
 ### 7.2 Performance Architecture
 - Low-Latency Architecture
 - Caching Architecture
 - Load Balancing Architecture
 - Edge Optimization
+- **Tail Latency and Distributed Systems** (Case Study)
+- **Language Transition Anti-Patterns** (Case Study)
 
 ### 7.3 Observability Architecture
 - Logging Architecture
 - Metrics Architecture
 - Distributed Tracing
 - Monitoring Architecture
+- reliability-performance-operations-patterns.md - Comprehensive patterns reference
+- 7.1-reliability-architecture/ - Reliability architecture patterns and practices
+- 7.2-performance-architecture/ - Performance architecture patterns and practices
+- tail-latency-distributed-systems.md - **Case study: Why variance matters more than speed (Aurora DSQL)**
+- language-transition-anti-patterns.md - **Case study: When language rewrites don't help (Java to Go)**
+- 7.3-observability-architecture/ - Observability concepts and practices
+- Architecture Taxonomy Reference
+- Azure Observability - Azure Monitor, Application Insights
 
 ---
-
 ## 8. DevOps, Delivery & Runtime Architecture
 
 ### 8.1 DevOps Architecture
@@ -314,12 +373,26 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Feature Flag Architecture
 - Rollback Architecture
 
----
+### 8.3 Git Branching Strategies
+- GitFlow - Scheduled releases with multiple branch types
+- GitHub Flow - Simplified continuous delivery
+- GitLab Flow - Environment-based deployments
+- Trunk-Based Development - High-velocity continuous deployment
+- Release Flow - Microsoft's large-scale approach
+- Feature Branch Workflow - Simple isolated development
+- Forking Workflow - Open source collaboration
+- Architecture Taxonomy Reference
+- Azure DevOps - Azure DevOps and ARM templates
 
+---
 ## 9. Industry & Specialized Architectures
 
 ### 9.1 Industry Architectures
-- Financial Services Architecture
+- Core Banking Architecture
+- Payment Processing
+- Trading Platforms
+- Regulatory Compliance
+- Security Architecture
 - Healthcare Architecture
 - Telecommunications Architecture
 - Government Architecture
@@ -331,9 +404,9 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Blockchain Architecture
 - Metaverse Architecture
 - Gaming Architecture
+- Architecture Taxonomy Reference
 
 ---
-
 ## 10. Practicality Taxonomy (Abstraction Levels)
 
 This taxonomy classifies architectures by their **level of abstraction** and **proximity to implementation**. It helps distinguish between conceptual frameworks and deployment-ready patterns.
@@ -449,5 +522,4 @@ These apply **across all architecture types**:
 
 ---
 
-**Status:** Living document – intended to evolve with organizational and industry needs.
-
+**Status:** Living document – automatically synchronized with README.md files in architecture-general directory.

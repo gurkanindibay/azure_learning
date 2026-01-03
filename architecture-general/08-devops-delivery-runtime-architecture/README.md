@@ -1,6 +1,6 @@
 # 8. DevOps, Delivery & Runtime Architecture
 
-This section covers CI/CD pipelines, deployment strategies, and runtime patterns.
+This section covers CI/CD pipelines, deployment strategies, version control strategies, and runtime patterns.
 
 ## Subsections
 
@@ -15,6 +15,15 @@ This section covers CI/CD pipelines, deployment strategies, and runtime patterns
 - Canary Deployment
 - Feature Flag Architecture
 - Rollback Architecture
+
+### 8.3 Git Branching Strategies
+- [GitFlow](./8.3-git-branching-strategies.md#gitflow) - Scheduled releases with multiple branch types
+- [GitHub Flow](./8.3-git-branching-strategies.md#github-flow) - Simplified continuous delivery
+- [GitLab Flow](./8.3-git-branching-strategies.md#gitlab-flow) - Environment-based deployments
+- [Trunk-Based Development](./8.3-git-branching-strategies.md#trunk-based-development) - High-velocity continuous deployment
+- [Release Flow](./8.3-git-branching-strategies.md#release-flow-microsoft) - Microsoft's large-scale approach
+- [Feature Branch Workflow](./8.3-git-branching-strategies.md#feature-branch-workflow) - Simple isolated development
+- [Forking Workflow](./8.3-git-branching-strategies.md#forking-workflow) - Open source collaboration
 
 ## Related
 
