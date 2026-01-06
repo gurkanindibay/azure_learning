@@ -19,6 +19,7 @@ This section covers security principles, identity management, and data protectio
 
 ### 6.3 Network Security Architecture
 - Perimeter Security Architecture
+- **Demilitarized Zone (DMZ) Architecture**
 - Micro-Segmentation
 - Web Application Firewall (WAF)
 - DDoS Protection Architecture
@@ -34,6 +35,7 @@ This section covers security principles, identity management, and data protectio
 - [6.1-security-architecture.md](./6.1-security-architecture.md) - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
 - [6.2-identity-architecture.md](./6.2-identity-architecture.md) - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
 - [6.3-network-security-architecture.md](./6.3-network-security-architecture.md) - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
+- **[6.3.1-demilitarized-zone-dmz-architecture.md](./6.3.1-demilitarized-zone-dmz-architecture.md)** - Comprehensive DMZ design, topologies, and implementation guide
 - [6.4-data-security-architecture.md](./6.4-data-security-architecture.md) - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
 - [authentication-methods-overview.md](./authentication-methods-overview.md) - Authentication methods and patterns
 
