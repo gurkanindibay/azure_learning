@@ -81,8 +81,8 @@ graph TB
     
     A -.Cross-system elevation.-> E
     
-    style A fill:#ff6b6b
-    style E fill:#4ecdc4
+    style A fill:#d63031,color:#ffffff
+    style E fill:#00cec9,color:#000000
 ```
 
 **Key Principle:** These are **separate systems** with different purposes, scopes, and permissions.
@@ -156,9 +156,9 @@ graph TD
     C -.Can assign.-> E
     C -.Can assign.-> G
     
-    style A fill:#ff6b6b
-    style C fill:#ffa07a
-    style K fill:#90EE90
+    style A fill:#d63031,color:#ffffff
+    style C fill:#e17055,color:#ffffff
+    style K fill:#27ae60,color:#ffffff
 ```
 
 ### Assignment Scope Levels
@@ -262,9 +262,9 @@ graph TD
     G --> H[Click: Add]
     H --> I[✅ Role Assigned Successfully]
     
-    style E fill:#4ecdc4
-    style G fill:#90EE90
-    style I fill:#90EE90
+    style E fill:#00cec9,color:#000000
+    style G fill:#27ae60,color:#ffffff
+    style I fill:#27ae60,color:#ffffff
 ```
 
 #### Key Concepts
@@ -541,9 +541,9 @@ graph TD
     L --> M[Click: Assign]
     M --> N[✅ Licenses Assigned Successfully]
     
-    style C fill:#4ecdc4
-    style E fill:#FFD700
-    style N fill:#90EE90
+    style C fill:#00cec9,color:#000000
+    style E fill:#f39c12,color:#000000
+    style N fill:#27ae60,color:#ffffff
 ```
 
 #### Key Concepts
@@ -753,8 +753,8 @@ graph TD
         E -->|✅ Can Assign| H[Group2<br/>Microsoft 365 Group]
     end
     
-    style A fill:#FFD700
-    style B fill:#90EE90
+    style A fill:#f39c12,color:#000000
+    style B fill:#27ae60,color:#ffffff
     style C fill:#FF6B6B
     style D fill:#FF6B6B
     style E fill:#FFD700

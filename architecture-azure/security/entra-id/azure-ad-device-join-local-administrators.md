@@ -302,9 +302,9 @@ graph TB
     U3 -.->|No Access| LA
     U4 -.->|No Access| LA
     
-    style U1Admin fill:#90EE90
-    style U2Admin fill:#90EE90
-    style LA fill:#FFE4B5
+    style U1Admin fill:#27ae60,color:#ffffff
+    style U2Admin fill:#27ae60,color:#ffffff
+    style LA fill:#f39c12,color:#000000
 ```
 
 ---

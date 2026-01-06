@@ -76,9 +76,9 @@ graph LR
     CD --> PS[Payment Systems<br/>billing, insurance<br/>transactions]
     CD --> SS[Support Services<br/>everything else]
     
-    style HS fill:#2E8B57
-    style PS fill:#4682B4
-    style SS fill:#DC143C
+    style HS fill:#2d3436,color:#ffffff
+    style PS fill:#0984e3,color:#ffffff
+    style SS fill:#d63031,color:#ffffff
 ```
 
 ### The Fatal Flaw
@@ -320,10 +320,10 @@ graph TB
     OC --> CC[Customer churn<br/>during transition<br/>$2,100,000]
     OC --> EH[Emergency hotfixes<br/>and rollbacks<br/>$900,000]
     
-    style Total fill:#DC143C
-    style SE fill:#FF6B6B
-    style FT fill:#4ECDC4
-    style OC fill:#FFE66D
+    style Total fill:#d63031,color:#ffffff
+    style SE fill:#e84393,color:#ffffff
+    style FT fill:#00cec9,color:#000000
+    style OC fill:#fdcb6e,color:#000000
 ```
 
 ### Detailed Breakdown

@@ -80,11 +80,11 @@ graph TB
     B --> G[Kafka - Driver Events]
     B --> H[MySQL - Persistence]
     
-    style A fill:#00ADD8
-    style B fill:#00ADD8
-    style C fill:#00ADD8
-    style D fill:#00ADD8
-    style E fill:#00ADD8
+    style A fill:#0984e3,color:#ffffff
+    style B fill:#0984e3,color:#ffffff
+    style C fill:#0984e3,color:#ffffff
+    style D fill:#0984e3,color:#ffffff
+    style E fill:#0984e3,color:#ffffff
 ```
 
 ### Go Implementation: Goroutines in Action
