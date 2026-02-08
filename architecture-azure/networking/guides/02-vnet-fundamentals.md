@@ -20,6 +20,11 @@ See [Index](./01-index.md) for overview.
   - [9.1 User-Defined Routes (UDR)](#91-user-defined-routes-udr)
   - [9.2 Effective Routes](#92-effective-routes)
   - [9.3 Azure Route Server](#93-azure-route-server)
+- [10. Azure Virtual NAT (NAT Gateway)](#10-azure-virtual-nat-nat-gateway)
+  - [10.1 What is Azure NAT Gateway?](#101-what-is-azure-nat-gateway)
+  - [10.2 How NAT Gateway Works](#102-how-nat-gateway-works)
+  - [10.3 Benefits and Use Cases](#103-benefits-and-use-cases)
+  - [10.4 Configuration and Best Practices](#104-configuration-and-best-practices)
 
 ---
 
@@ -1190,8 +1195,387 @@ Currently, whenever a new branch is added, you manually create UDRs and associat
 
 ---
 
+## 10. Azure Virtual NAT (NAT Gateway)
+
+**Azure NAT Gateway** is a fully managed, highly resilient service that provides outbound internet connectivity for resources in a virtual network. It simplifies outbound connectivity by providing a dedicated, static public IP address for all outbound connections.
+
+### 10.1 What is Azure NAT Gateway?
+
+**NAT Gateway** enables resources in a private subnet (without public IP addresses) to connect to the internet while remaining unreachable from the internet. It replaces the default outbound connectivity method with a more reliable, scalable, and secure solution.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Azure Virtual Network                            │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────┐    │
+│  │  Subnet (10.0.1.0/24)                                      │    │
+│  │                                                            │    │
+│  │  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐                      │    │
+│  │  │ VM1 │  │ VM2 │  │ VM3 │  │VMSS │  (No public IPs)     │    │
+│  │  └──┬──┘  └──┬──┘  └──┬──┘  └──┬──┘                      │    │
+│  │     │        │        │        │                          │    │
+│  │     └────────┴────────┴────────┘                          │    │
+│  │                    │                                       │    │
+│  │                    ▼                                       │    │
+│  │            ┌────────────────┐                             │    │
+│  │            │  NAT Gateway   │                             │    │
+│  │            │ (Attached to   │                             │    │
+│  │            │   subnet)      │                             │    │
+│  │            └────────┬───────┘                             │    │
+│  └─────────────────────┼─────────────────────────────────────┘    │
+│                        │                                           │
+│                        ▼                                           │
+│              Static Public IP(s)                                   │
+│              (20.100.50.10)                                        │
+└────────────────────────┼───────────────────────────────────────────┘
+                         │
+                         ▼
+                     Internet
+```
+
+**Key Characteristics:**
+
+| Feature | Description |
+|---------|-------------|
+| **Outbound Only** | Provides outbound internet access, blocks unsolicited inbound |
+| **Static IP** | Uses static public IP address(es) for all outbound traffic |
+| **High Availability** | Zone-redundant by default, 99.9% SLA |
+| **No Management** | Fully managed service, no VMs to maintain |
+| **SNAT Port Scale** | Up to 64,000 simultaneous outbound connections per IP |
+| **Subnet Association** | Attached to subnet(s), applies to all resources in subnet |
+
+### 10.2 How NAT Gateway Works
+
+**Outbound Traffic Flow:**
+
+```
+1. VM initiates outbound connection (e.g., download updates)
+   Source: 10.0.1.4:50000  →  Destination: 1.1.1.1:443
+
+2. Traffic reaches NAT Gateway (attached to subnet)
+   NAT Gateway performs SNAT (Source Network Address Translation)
+
+3. Translates private IP to public IP:
+   Source: 20.100.50.10:10001  →  Destination: 1.1.1.1:443
+   (Mapped: 10.0.1.4:50000 → 20.100.50.10:10001)
+
+4. Internet server responds:
+   Source: 1.1.1.1:443  →  Destination: 20.100.50.10:10001
+
+5. NAT Gateway translates back:
+   Source: 1.1.1.1:443  →  Destination: 10.0.1.4:50000
+
+6. VM receives response
+```
+
+**SNAT Port Allocation:**
+
+Each public IP address assigned to NAT Gateway provides:
+- **64,000 SNAT ports** for outbound connections
+- **Dynamic allocation** across all resources in the subnet
+- **Idle timeout:** 4 minutes by default (configurable)
+
+**Example Calculations:**
+
+```
+Scenario: 100 VMs making outbound connections
+
+NAT Gateway with 1 Public IP:
+  64,000 ports ÷ 100 VMs = 640 ports per VM average
+
+NAT Gateway with 2 Public IPs:
+  128,000 ports ÷ 100 VMs = 1,280 ports per VM average
+
+Recommendation: Use multiple IPs if VMs make many concurrent connections
+```
+
+### 10.3 Benefits and Use Cases
+
+**Benefits of NAT Gateway:**
+
+| Benefit | Explanation |
+|---------|-------------|
+| **Security** | VMs have no public IPs, reducing attack surface |
+| **Simplified Management** | Single point for outbound connectivity |
+| **Static Outbound IP** | Whitelisting on external firewalls easier |
+| **High Availability** | Built-in redundancy, no single point of failure |
+| **SNAT Port Exhaustion Prevention** | 64K ports per IP, scales with multiple IPs |
+| **Performance** | Low latency, high throughput (up to 10 Gbps) |
+| **Cost Effective** | No VM costs, pay only for resource and bandwidth |
+
+**Comparison: Default Outbound vs NAT Gateway vs Public IPs**
+
+| Method | How It Works | Pros | Cons |
+|--------|--------------|------|------|
+| **Default Outbound** | Azure assigns dynamic public IP | Free, automatic | Unpredictable IP, limited SNAT ports |
+| **NAT Gateway** | Dedicated gateway with static IP(s) | Static IP, scalable, HA | Additional cost (~$44/month) |
+| **Public IP per VM** | Each VM gets public IP | Direct connectivity | Security risk, management overhead |
+| **Load Balancer Outbound Rules** | Use LB for outbound | Works with existing LB | Complex configuration |
+
+**Common Use Cases:**
+
+1. **Software Updates & Package Downloads**
+   ```
+   VMs without public IPs need to:
+   ├─ Download OS patches from Microsoft Update
+   ├─ Install packages from public repositories (apt, yum, npm)
+   └─ Access third-party APIs
+   
+   Solution: NAT Gateway provides outbound access
+   ```
+
+2. **Firewall Whitelisting**
+   ```
+   Scenario: External SaaS requires IP whitelisting
+   
+   Without NAT Gateway:
+   ├─ Each VM gets different public IP (dynamic)
+   └─ Must whitelist many changing IPs
+   
+   With NAT Gateway:
+   ├─ All VMs use same static public IP(s)
+   └─ Whitelist only NAT Gateway IP(s)
+   ```
+
+3. **Container & Kubernetes Workloads (AKS)**
+   ```
+   AKS Cluster with many pods:
+   ├─ Pods need outbound internet (pull images, call APIs)
+   ├─ Default outbound often hits SNAT port limits
+   └─ NAT Gateway provides 64K ports per IP
+   
+   Result: Eliminates connection failures from port exhaustion
+   ```
+
+4. **SNAT Port Exhaustion Prevention**
+   ```
+   Symptoms:
+   ├─ Outbound connections fail intermittently
+   ├─ "SNAT port exhaustion" errors in logs
+   └─ VMs can't reach external services
+   
+   Root Cause: Default outbound has limited ports (~1,024 per VM)
+   Solution: NAT Gateway with 64,000 ports per IP
+   ```
+
+5. **Multi-Tenant Applications**
+   ```
+   Scenario: SaaS platform serving multiple customers
+   
+   Each customer tenant:
+   ├─ Separate subnet with dedicated NAT Gateway
+   ├─ Unique static public IP per tenant
+   └─ IP-based access control and audit trails
+   ```
+
+### 10.4 Configuration and Best Practices
+
+**Basic Configuration Steps:**
+
+```plaintext
+1. Create Public IP Address (or reuse existing):
+   → Type: Standard (NOT Basic)
+   → SKU: Standard
+   → Assignment: Static
+
+2. Create NAT Gateway:
+   → Idle timeout: 4-120 minutes (default: 4)
+   → Attach public IP address(es)
+   → Select availability zones (for redundancy)
+
+3. Associate to Subnet:
+   → Virtual network → Subnet → NAT Gateway
+   → All resources in subnet now use NAT Gateway for outbound
+```
+
+**Azure CLI Example:**
+
+```bash
+# Create public IP for NAT Gateway
+az network public-ip create \
+  --resource-group myResourceGroup \
+  --name myNATGatewayIP \
+  --sku Standard \
+  --allocation-method Static
+
+# Create NAT Gateway
+az network nat gateway create \
+  --resource-group myResourceGroup \
+  --name myNATGateway \
+  --public-ip-addresses myNATGatewayIP \
+  --idle-timeout 10
+
+# Associate NAT Gateway to subnet
+az network vnet subnet update \
+  --resource-group myResourceGroup \
+  --vnet-name myVNet \
+  --name mySubnet \
+  --nat-gateway myNATGateway
+```
+
+**Best Practices:**
+
+1. **Capacity Planning**
+   ```
+   Calculate required SNAT ports:
+   
+   Ports needed = Number of VMs × Avg connections per VM × 1.2 (buffer)
+   
+   Example: 50 VMs × 500 connections × 1.2 = 30,000 ports
+   Result: 1 Public IP (64,000 ports) is sufficient
+   
+   If > 64,000 ports needed:
+   └─ Add multiple public IP addresses (up to 16 IPs = 1,024,000 ports)
+   ```
+
+2. **Idle Timeout Configuration**
+   ```
+   Default: 4 minutes
+   Range: 4-120 minutes
+   
+   Use Cases:
+   ├─ Short timeout (4-10 min): General web traffic, APIs
+   ├─ Medium timeout (10-30 min): Database connections, file transfers
+   └─ Long timeout (30-120 min): Long-running operations, SSH sessions
+   
+   Trade-off: Longer timeout = fewer port recycling but more ports held
+   ```
+
+3. **High Availability**
+   ```
+   ✓ NAT Gateway is zone-redundant by default (no extra config)
+   ✓ Deploy across availability zones for 99.99% SLA
+   ✓ No need for multiple NAT Gateways for HA
+   
+   Zone Configuration:
+   └─ Specify zones: [1, 2, 3] when creating NAT Gateway
+   ```
+
+4. **Multiple Subnets**
+   ```
+   Option 1: Shared NAT Gateway (cost-effective)
+   ├─ One NAT Gateway attached to multiple subnets
+   └─ All subnets share same outbound IP(s)
+   
+   Option 2: Dedicated NAT Gateway per subnet
+   ├─ Each subnet has its own NAT Gateway
+   └─ Different outbound IPs per subnet (isolation)
+   
+   Use dedicated when:
+   └─ Compliance requires IP-based tenant isolation
+   └─ Different capacity needs per subnet
+   ```
+
+5. **Monitoring**
+   ```
+   Key Metrics to Monitor:
+   ├─ SNAT Connection Count (approaching 64K limit?)
+   ├─ Bytes/Packets transmitted (bandwidth usage)
+   ├─ Dropped packets (capacity issues)
+   └─ Connection count per destination (identify heavy users)
+   
+   Alerts:
+   └─ Alert when SNAT connections > 80% of capacity
+   └─ Alert on packet drops > 1%
+   ```
+
+**Exam Scenario: NAT Gateway vs Alternatives**
+
+**Question:**
+
+You have an Azure subscription with a virtual network containing 100 VMs in a private subnet (no public IP addresses). The VMs need to:
+- Download software updates from the internet
+- Access external APIs
+- Use a consistent, static IP address for external firewall whitelisting
+
+Currently, VMs are experiencing intermittent connection failures due to SNAT port exhaustion.
+
+**Requirements:**
+- ✅ Resolve SNAT port exhaustion
+- ✅ Provide static outbound IP
+- ✅ Minimize management overhead
+- ✅ High availability required
+
+**What should you deploy?**
+
+**Options:**
+- A) Assign a public IP address to each VM
+- B) Deploy Azure NAT Gateway ✅
+- C) Configure Azure Firewall for outbound traffic
+- D) Use default outbound connectivity
+
+**Answer: B) Deploy Azure NAT Gateway**
+
+**Why NAT Gateway is Correct:**
+
+| Requirement | How NAT Gateway Addresses It |
+|-------------|-----------------------------|
+| **SNAT Port Exhaustion** | Provides 64,000 ports per public IP (vs ~1,024 default) |
+| **Static Outbound IP** | Uses dedicated static public IP address(es) |
+| **Management Overhead** | Fully managed, no VMs to maintain |
+| **High Availability** | Built-in zone redundancy, 99.9% SLA |
+| **Cost** | ~$44/month + bandwidth (more cost-effective than 100 public IPs) |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Public IP per VM** | 100 IPs to manage; security risk; doesn't solve SNAT issue; expensive |
+| **Azure Firewall** | Overkill for this scenario; higher cost (~$1,200/month); more complex |
+| **Default Outbound** | Already failing due to SNAT exhaustion; dynamic IP (not static) |
+
+**Implementation:**
+
+```plaintext
+1. Create NAT Gateway with 1-2 static public IPs
+2. Associate NAT Gateway to VM subnet
+3. All 100 VMs automatically use NAT Gateway for outbound
+4. Whitelist NAT Gateway IP(s) on external firewalls
+5. Monitor SNAT port usage, add IPs if needed
+
+Result:
+  ✅ SNAT port exhaustion resolved (64K-128K ports available)
+  ✅ Static outbound IP for whitelisting
+  ✅ Fully managed, HA solution
+  ✅ VMs remain private (no public IPs)
+```
+
+**Cost Comparison:**
+
+```
+Option A (Public IPs):
+  100 VMs × $3.65/month = $365/month
+  + Security risk and management overhead
+
+Option B (NAT Gateway): ✅ BEST
+  NAT Gateway: $44/month
+  Public IP: $3.65/month
+  Total: ~$48/month
+
+Option C (Azure Firewall):
+  Firewall: $1,200/month
+  Public IP: $3.65/month
+  Total: ~$1,204/month
+
+Option D (Default Outbound):
+  Free, but SNAT exhaustion = broken functionality
+```
+
+**NAT Gateway Limitations:**
+
+| Limitation | Workaround |
+|------------|------------|
+| **Outbound only** | Use Load Balancer or Application Gateway for inbound |
+| **Max 16 public IPs** | Should support up to ~1M concurrent connections |
+| **Not for inbound** | Cannot use NAT Gateway for incoming traffic |
+| **Costs apply** | ~$44/month + bandwidth; evaluate if traffic is minimal |
+
+---
+
 **References:**
 - [User-Defined Routes - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview)
 - [Effective Routes - Network Troubleshooting](https://learn.microsoft.com/en-us/azure/virtual-network/manage-route-table)
 - [Azure Route Server Documentation](https://learn.microsoft.com/en-us/azure/route-server/overview)
 - [Network Virtual Appliances](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
+- [Azure NAT Gateway Documentation](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
+- [Design virtual networks with NAT Gateway](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-gateway-resource)
