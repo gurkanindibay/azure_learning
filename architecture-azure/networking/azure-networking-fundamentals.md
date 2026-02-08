@@ -11,9 +11,14 @@
     - [2.4.1 Subnet Planning for Hybrid Connectivity](#241-subnet-planning-for-hybrid-connectivity)
   - [2.5 VNet Peering](#25-vnet-peering)
     - [2.5.1 Connecting Virtual Networks Across Subscriptions](#251-connecting-virtual-networks-across-subscriptions)
+      - [2.5.2 Gateway Transit and Connectivity](#252-gateway-transit-and-connectivity)
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
   - [2.7 Application Security Groups (ASG)](#27-application-security-groups-asg)
   - [2.8 Network Interfaces (NICs)](#28-network-interfaces-nics)
+  - [2.9 Virtual Network Traffic Routing](#29-virtual-network-traffic-routing)
+    - [2.9.1 User-Defined Routes (UDR)](#291-user-defined-routes-udr)
+    - [2.9.2 Effective Routes](#292-effective-routes)
+    - [2.9.3 Azure Route Server](#293-azure-route-server)
 - [3. Private Endpoints](#3-private-endpoints)
   - [3.1 What is a Private Endpoint?](#31-what-is-a-private-endpoint)
   - [3.2 How Private Endpoints Work](#32-how-private-endpoints-work)
@@ -376,6 +381,41 @@ Azure Private Link is designed for accessing PaaS services privately, not for co
 **References:**
 - [Design for subscriptions - Microsoft Learn](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-subscriptions)
 - [Configure a VNet-to-VNet VPN gateway connection - Azure Portal](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-vnet-vnet-resource-manager-portal)
+
+#### 2.5.2 Gateway Transit and Connectivity
+
+**Gateway transit** lets a peered VNet use the VPN gateway in the **remote VNet** to reach networks **outside** the peering. This avoids deploying a second gateway.
+
+**Explicit definition:** Gateway transit is **not** a separate Azure resource. It is a **VNet peering configuration** that enables a spoke VNet to use the hub VNet's existing **VPN/ExpressRoute gateway** for external connectivity.
+
+**Typical uses:**
+- **Site-to-site VPN** from the hub VNet to on-premises
+- **VNet-to-VNet** connection to another VNet
+- **Point-to-site VPN** for client access
+
+**How it works (hub-and-spoke):**
+```
+On-Premises
+   |
+S2S VPN
+   |
+Hub VNet (has VPN Gateway)
+   |  (gateway transit)
+   |
+Spoke VNet (no gateway)
+```
+
+**Key points:**
+- A VNet can have **only one** gateway.
+- Gateway transit is supported for **regional** and **global** VNet peering.
+- The **hub VNet** advertises its gateway; the **spoke VNet** uses that remote gateway.
+- Traffic to external networks flows **through the hub gateway**; east-west traffic between VNets still uses peering.
+
+**Configuration terms (portal/API):**
+- **Hub peering**: *Allow gateway transit* = Enabled
+- **Spoke peering**: *Use remote gateways* = Enabled
+
+**Why it matters:** Gateway transit enables centralized connectivity (single gateway, centralized routing and security) while keeping spokes lightweight and cost-effective.
 
 ### 2.6 Network Security Groups (NSG)
 
@@ -904,6 +944,331 @@ You are deploying a network virtual appliance (NVA) in Azure to act as a firewal
 - [IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
 - [Multiple NICs in Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/multiple-nics)
 - [Network Virtual Appliances in Azure](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
+
+---
+
+## 2.9 Virtual Network Traffic Routing
+
+**Azure routing** determines how network traffic flows between subnets and to external networks. Traffic routing decisions are governed by **route tables** containing routing entries, **system routes** (created automatically by Azure), and **user-defined routes (UDRs)** that you create.
+
+### 2.9.1 User-Defined Routes (UDR)
+
+**User-Defined Routes** allow you to override Azure's default routing and explicitly control traffic paths within your virtual network.
+
+**Key Concept:**
+UDRs let you specify custom destinations and next hops. For example, instead of letting traffic flow directly between subnets, you can force it through a **network virtual appliance (NVA)** like a firewall or router for inspection and logging.
+
+**Route Table Structure:**
+
+```
+Route Table: RT-Production
+├── Route 1: Destination: 10.0.2.0/24, Next Hop: Virtual Appliance 10.0.1.5
+├── Route 2: Destination: 192.168.0.0/16, Next Hop: VPN Gateway
+├── Route 3: Destination: 0.0.0.0/0, Next Hop: Internet
+└── [System Routes - added automatically]
+```
+
+**How UDRs Work:**
+
+1. **Create a Route Table** in your VNet
+2. **Define Routes** with destination CIDR and next hop
+3. **Associate Route Table** to a subnet
+4. **Traffic is evaluated** against routes in order of matching:
+   - Most specific (longest CIDR prefix) matches first
+   - If no match, system routes apply
+   - If still no match, packet is dropped
+
+**Route Components:**
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| **Destination** | CIDR block of traffic destination | 192.168.0.0/16, 10.0.2.0/24, 0.0.0.0/0 |
+| **Next Hop Type** | Where traffic is sent | Virtual Appliance, VPN Gateway, Virtual Network Gateway, Internet, None |
+| **Next Hop IP** | Address of next hop | 10.0.1.5 (NVA), 192.168.1.1 (gateway) |
+
+**Common Next Hop Types:**
+
+| Next Hop Type | Use Case | Example |
+|---------------|----------|---------|
+| **Virtual Appliance** | Force traffic through NVA (firewall, router) | Route all internet traffic through firewall |
+| **Virtual Network Gateway** | Send traffic to VPN/ExpressRoute gateway | Route on-premises traffic to VPN gateway |
+| **Internet** | Allow internet access | Default route 0.0.0.0/0 to internet |
+| **Virtual Network** | Route within VNet (rarely used - automatic) | Intra-VNet routing |
+| **None** | Drop the traffic | Block specific destinations |
+
+**Practical Example: Hub-and-Spoke with NVA Routing**
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│              Spoke Subnet (10.1.1.0/24)                       │
+│         RT-Spoke Applied                                      │
+│                                                               │
+│  ┌──────────────────────┐                                    │
+│  │ VM1 (10.1.1.5)       │                                    │
+│  │ Wants to reach:      │                                    │
+│  │ 10.2.0.0/16          │                                    │
+│  └────────┬─────────────┘                                    │
+│           │ Check RT-Spoke routes for 10.2.0.0/16            │
+│           │ Found: Destination 10.2.0.0/16 → NVA 10.1.0.10   │
+│           ▼                                                   │
+│  ┌─────────────────────────────────────┐                    │
+│  │ Hub Subnet (10.1.0.0/24)            │                    │
+│  │ ┌──────────────────────────────┐    │                    │
+│  │ │ NVA Firewall (10.1.0.10)     │    │                    │
+│  │ │ - Inspects traffic           │    │                    │
+│  │ │ - Logs connections           │    │                    │
+│  │ │ - Allows/denies based on     │    │                    │
+│  │ │   security policy            │    │                    │
+│  │ └────────────┬──────────────────┘    │                    │
+│  └─────────────┼──────────────────────┘ │                    │
+│                │ Routes to 10.2.0.0/16  │                    │
+│                ▼                        │                    │
+│  ┌──────────────────────────────────────┼──────┐            │
+│  │ Peered Spoke2 (10.2.0.0/16)         │      │            │
+│  │ - Backend database servers          │      │            │
+│  └─────────────────────────────────────┼──────┘            │
+│                                        │                    │
+└───────────────────────────────────────┼────────────────────┘
+```
+
+**Route Table Configuration:**
+
+```plaintext
+Route Table: RT-Spoke (associated with Spoke1 subnet 10.1.1.0/24)
+
+┌────────────────────────────────────────────────────────────────┐
+│ Destination      │ Name              │ Next Hop Type  │ IP     │
+├────────────────────────────────────────────────────────────────┤
+│ 10.2.0.0/16      │ ToSpoke2          │ Virtual App.   │10.1.0.10│
+│ 192.168.0.0/16   │ ToOnPremises      │ VPN Gateway    │  N/A   │
+│ 0.0.0.0/0        │ ToInternet        │ Internet       │  N/A   │
+│ 10.1.0.0/16      │ (System Route)    │ Virtual Net.   │  N/A   │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Why UDRs Matter:**
+
+- ✅ **Security**: Route traffic through firewall for inspection
+- ✅ **Network segmentation**: Enforce communication policies between subnets
+- ✅ **Traffic control**: Prioritize or redirect traffic to specific paths
+- ✅ **Compliance**: Ensure all traffic meets organizational policies
+
+### 2.9.2 Effective Routes
+
+**Effective Routes** show the actual routes that apply to a specific network interface (NIC), combining system routes, route tables, and route priorities.
+
+**What Are Effective Routes?**
+
+Effective routes are the **consolidated set of routes** Azure evaluates when determining where to send packets from a NIC. They include:
+- System routes (automatically created)
+- Custom routes from associated route tables
+- Routes from BGP (if using ExpressRoute/VPN)
+
+**Why Check Effective Routes?**
+
+When traffic doesn't reach its destination as expected, examining effective routes helps you:
+- ✅ Verify route table is correctly associated
+- ✅ Confirm routing priority and matching
+- ✅ Diagnose routing conflicts or missing routes
+- ✅ Understand route precedence
+
+**How to View Effective Routes:**
+
+**Azure Portal Method:**
+```
+1. Navigate to VM → Networking → Network Interfaces
+2. Select NIC → Support + Troubleshooting → Effective Routes
+3. Review routes matching destination CIDR blocks
+```
+
+**Azure CLI Method:**
+```bash
+# Get effective routes for a NIC
+az network nic show-effective-route-table \
+  --resource-group myResourceGroup \
+  --name myNIC \
+  --output table
+```
+
+**Route Matching and Precedence:**
+
+When evaluating routes, Azure uses **longest prefix match** (most specific route wins):
+
+```
+VM tries to send to: 192.168.1.5
+
+Available routes:
+┌──────────────────────┬───────────┬─────────────────┐
+│ Destination          │ Specificity │ Selected?     │
+├──────────────────────┼───────────┼─────────────────┤
+│ 192.168.1.0/25       │ /25 (most)│ ✅ SELECTED    │
+│ 192.168.1.0/24       │ /24       │ ✗ Ignored      │
+│ 192.168.0.0/16       │ /16       │ ✗ Ignored      │
+│ 0.0.0.0/0            │ /0 (least)│ ✗ Ignored      │
+└──────────────────────┴───────────┴─────────────────┘
+
+Result: Traffic sent via 192.168.1.0/25 route (most specific)
+```
+
+**System Routes (Always Present):**
+
+| Destination | Next Hop Type | Purpose |
+|-------------|---------------|---------|
+| VNet address space (e.g., 10.0.0.0/16) | Virtual Network | Intra-VNet communication |
+| Connected VNets (peering) | VNet Peering | Cross-VNet traffic |
+| 0.0.0.0/0 | Internet | Default internet route |
+
+`System routes always have lower priority than user-defined routes.`
+
+**Exam Scenario: Diagnosing Routing Issues**
+
+**Question:**
+
+VM1 (IP: 10.0.1.5) in Subnet A is unable to reach VM2 (IP: 10.0.2.10) in Subnet B. Both VMs are in the same VNet. You created a route table RT-Custom and associated it to Subnet A, expecting traffic to route through an NVA (10.0.1.10).
+
+When you check effective routes on VM1's NIC:
+```
+Destination      Next Hop Type      Next Hop IP
+10.0.1.0/24      Virtual Network    -
+10.0.2.0/24      Virtual Network    -
+0.0.0.0/0        Internet           -
+```
+
+Why isn't the route to 10.0.2.0/24 going through the NVA?
+
+**Root Cause:**
+The custom route table was not properly associated to Subnet A, so only system routes are active. System routes automatically allow intra-VNet communication, which is why you see "10.0.2.0/24 → Virtual Network."
+
+**Solution:**
+```
+1. Verify route table association to Subnet A
+2. Confirm the custom route rule exists:
+   Destination: 10.0.2.0/24, Next Hop: Virtual Appliance 10.0.1.10
+3. Check NVA has IP forwarding enabled
+4. Verify NSG rules allow traffic to NVA
+5. Re-check effective routes
+```
+
+### 2.9.3 Azure Route Server
+
+**Azure Route Server** is a fully managed service that simplifies dynamic routing in your Azure Virtual Network. It acts as a central hub that exchanges routes with **Network Virtual Appliances (NVAs)** and **VPN/ExpressRoute gateways** using **BGP (Border Gateway Protocol)**.
+
+**The Problem Azure Route Server Solves:**
+
+| Scenario | Without Route Server | With Route Server |
+|----------|---------------------|--------------------|
+| NVA route updates | Manual, static routes | Dynamic BGP exchange |
+| High availability | Multiple route updates needed | Automatic failover |
+| Multi-site routing | Complex manual configuration | Centralized route management |
+| On-premises integration | Static routes per site | Dynamic BGP learning |
+
+**How Azure Route Server Works:**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Azure Virtual Network                          │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ Route Server Subnet (Must be named RouteServerSubnet)       │   │
+│  │ Hosts: Azure Route Server service                           │   │
+│  │                                                              │   │
+│  │ ┌────────────────────────────────────────────────────────┐  │   │
+│  │ │         Azure Route Server                            │  │   │
+│  │ │    (BGP ASN: 65515, IP: 10.0.254.1)                 │  │   │
+│  │ │                                                        │  │   │
+│  │ │  BGP ↕ NVA1          BGP ↕ NVA2         BGP ↕ VPN GW │  │   │
+│  │ └────────┬──────────────────┬──────────────────┬────────┘  │   │
+│  └─────────┼──────────────────┼──────────────────┼──────────┘   │
+│            │                  │                  │              │
+│            ▼                  ▼                  ▼              │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌─────────────────┐│
+│  │ NVA1 Firewall    │ │ NVA2 Router      │ │  VPN Gateway    ││
+│  │ (BGP enabled)    │ │ (BGP enabled)    │ │ (To On-premises)││
+│  └──────────────────┘ └──────────────────┘ └─────────────────┘│
+│                                                                  │
+│  Routes learned via BGP:                                       │
+│  - NVA1 advertises: On-premises routes                         │
+│  - NVA2 advertises: Branch office routes                       │
+│  - VPN GW advertises: On-premises network CIDR                 │
+│  - Route Server publishes learned routes to ALL NICs           │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Components:**
+
+| Component | Purpose | Details |
+|-----------|---------|---------|
+| **Route Server** | Central BGP hub | Managed Azure service, no VM needed |
+| **BGP Peering** | Route exchange protocol | NVAs configure BGP to peer with Route Server |
+| **NVA Advertising** | NVAs announce learned routes | Firewall shares on-premises routes discovered from VPN |
+| **Route Injection** | Routes pushed to VNets | Server publishes routes to all connected subnets |
+
+**Benefits of Azure Route Server:**
+
+- ✅ **Automated Route Distribution**: Routes dynamically shared across resources
+- ✅ **Failover Support**: NVA failure detected automatically via BGP down
+- ✅ **Reduced Manual Configuration**: No static route updates needed
+- ✅ **Multi-NVA Load Balancing**: Multiple NVAs can advertise same routes
+- ✅ **On-Premises Routing**: Simplifies hybrid routing scenarios
+
+**Azure Route Server vs Manual UDRs:**
+
+| Aspect | Manual UDRs | Azure Route Server |
+|--------|------------|-------------------|
+| **Route Updates** | Manual (static) | Automatic (dynamic) |
+| **NVA Failover** | Must manually update routes | BGP detects, routes withdrawn |
+| **Scalability** | Difficult with many routes | Scales to hundreds of routes |
+| **Configuration** | Each subnet needs route table | Central, applies to VNet |
+| **Learning Time** | Instant (hardcoded) | BGP convergence (seconds) |
+| **Use Case** | Simple, stable topologies | Large, dynamic environments |
+
+**Common Use Cases:**
+
+1. **Multi-NVA High Availability**: Two firewalls advertise routes; if one fails, traffic auto-redirects
+2. **Branch Site Aggregation**: Multiple branch offices connect to hub NVA; routes learned dynamically
+3. **Hybrid Cloud Routing**: On-premises routes dynamically shared via VPN+BGP
+4. **Network Scaling**: Add new internal networks; routes automatically propagate
+
+**Configuration Requirements:**
+
+| Item | Requirement |
+|------|-------------|
+| **Route Server Subnet** | Must exist and be named exactly: `RouteServerSubnet` |
+| **Subnet Size** | Minimum /27 (32 addresses) |
+| **NVA BGP** | NVA must support BGP (most enterprise firewalls do) |
+| **BGP ASN** | NVA uses different ASN than Route Server (65515) |
+
+**Exam Question: Route Server vs UDR**
+
+**Scenario:**
+
+Your organization has a hub-and-spoke network with multiple branch offices connecting through on-premises routers. The hub NVA discovers new branch networks dynamically from the on-premises network.
+
+Currently, whenever a new branch is added, you manually create UDRs and associate them to all spoke subnets. This is becoming unmanageable.
+
+**Question:** What is the best solution?
+
+**Options:**
+- A) Create more detailed UDR rules
+- B) Deploy Azure Route Server ✅
+- C) Use Azure Firewall instead of NVA
+- D) Create separate VNets per branch
+
+**Answer: B) Deploy Azure Route Server**
+
+**Why:**
+- Route Server automatically learns routes from NVAs via BGP
+- New branch routes automatically propagate to all subnets
+- No manual UDR updates required for each new branch
+- NVA failure is automatically detected and routes withdrawn
+
+---
+
+**References:**
+- [User-Defined Routes - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview)
+- [Effective Routes - Network Troubleshooting](https://learn.microsoft.com/en-us/azure/virtual-network/manage-route-table)
+- [Azure Route Server Documentation](https://learn.microsoft.com/en-us/azure/route-server/overview)
+- [Network Virtual Appliances](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
 
 ---
 
