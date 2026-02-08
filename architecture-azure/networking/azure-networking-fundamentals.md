@@ -107,6 +107,22 @@ An **Azure Virtual Network (VNet)** is the fundamental building block for your p
 └─────────────────────────────────────────────────────────────┘
 ```
 
+#### On-Premises Equivalent
+
+An **Azure Virtual Network** is the cloud equivalent of a **corporate data center LAN**. Think of it as a virtualized version of your office building's network:
+
+| Aspect | On-Premises | Azure VNet |
+|--------|------------|-----------|
+| **Concept** | Physical local area network (switches, routers, cables) | Logically isolated private cloud network |
+| **Network Segmentation** | VLANs on physical switches | Subnets within the VNet |
+| **Default Communication** | Devices in same VLAN communicate automatically | Resources in same VNet communicate automatically |
+| **Traffic Control** | Firewalls and network ACLs | Network Security Groups (NSGs) |
+| **Isolation** | Physical separation + VLAN tagging | Logical isolation (no physical hardware needed) |
+
+The key difference: In Azure, you create a **logical** network without managing physical infrastructure. You define subnets for organization and apply NSGs for security—Azure handles the underlying hardware automatically.
+
+**Real-World Analogy**: If your office building has different departments on different floors, Azure VNet is like designing those floors virtually. Subnets are the departments, NSGs are the security checkpoints, and everything else is managed by Azure.
+
 ### 2.2 Key Concepts
 
 | Concept | Description |
