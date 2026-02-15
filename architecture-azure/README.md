@@ -26,7 +26,8 @@ architecture-azure/
 ├── networking/                # Networking services
 │   ├── virtual-wan/           # Azure Virtual WAN
 │   ├── firewall/              # Azure Firewall
-│   └── load-balancing/        # Load balancing solutions
+│   ├── load-balancing/        # Load balancing solutions
+│   └── azure-vpn-gateway.md   # VPN Gateway documentation
 ├── security/                  # Security services
 │   ├── entra-id/              # Microsoft Entra ID
 │   ├── key-vault/             # Azure Key Vault
@@ -55,7 +56,7 @@ architecture-azure/
 
 - **Compute**: VMs, AKS, Container Apps, Functions, App Service
 - **Data**: SQL, Cosmos DB, Storage, Redis, Data Factory
-- **Networking**: Virtual WAN, Firewall, Load Balancing, CDN
+- **Networking**: VPN Gateway, Virtual WAN, Firewall, Load Balancing, CDN
 - **Security**: Entra ID, Key Vault, RBAC, Bastion
 - **Integration**: Logic Apps, Event Grid, Event Hubs, Service Bus
 - **Observability**: Application Insights, Azure Monitor
