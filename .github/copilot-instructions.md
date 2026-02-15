@@ -1,52 +1,135 @@
 # GitHub Copilot Instructions - Azure Learning Repository
 
-## Repository Overview
+> **Repository Type**: Technical documentation (NOT a code repository)  
+> **Focus**: Cloud architecture, software engineering patterns, and .NET multithreading
 
-This is a **technical documentation repository** focused on cloud architecture and software engineering concepts. It contains detailed markdown documentation, NOT executable code.
+## Quick Start for AI Agents
 
-## Repository Structure
+### Repository Structure
 
 ```
 azure_learning/
-├── architecture-azure/      # Azure-specific architecture documentation
-├── architecture-general/    # Cloud-agnostic architecture patterns
-└── dotNet_multi_threading/  # .NET multithreading concepts
+├── architecture-azure/      # Azure-specific (Physical/Implementation layer)
+├── architecture-general/    # Cloud-agnostic patterns (Conceptual/Logical layer)
+├── dotNet_multi_threading/  # .NET concurrency patterns
+└── scripts/                 # Taxonomy sync automation
 ```
 
-## Content Guidelines
+### Where to Add Content (Decision Tree)
 
-### When Assisting with This Repository
+```
+Is it Azure-specific?
+  ├─ YES → architecture-azure/
+  │   └─ Which category? compute/, data/, networking/, security/, integration/, etc.
+  │
+  └─ NO → Is it .NET multithreading?
+      ├─ YES → dotNet_multi_threading/
+      └─ NO → architecture-general/
+          └─ Reference taxonomy: See section below
+```
 
-1. **Documentation Focus**: This is a knowledge base, not a code repository. Assist with:
-   - Writing clear, technical documentation
-   - Creating comprehensive markdown files
-   - Organizing content hierarchically
-   - Adding diagrams using Mermaid syntax
+### Subdirectory-Specific Instructions
 
-2. **Technical Accuracy**: Ensure all information is:
-   - Technically accurate and up-to-date
-   - Well-structured with proper headings
-   - Include practical examples where applicable
-   - Reference official documentation when relevant
+**IMPORTANT**: Each major section has detailed instructions:
+- [`architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) - Azure service documentation
+- [`architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) - Taxonomy alignment rules
 
-3. **Markdown Best Practices**:
-   - Use proper heading hierarchy (H1 → H2 → H3)
-   - Include table of contents for long documents
-   - Use tables for comparisons
-   - Use code blocks with appropriate language tags
-   - Use Mermaid diagrams for architecture visualizations
+## Core Principles
 
-### Cross-Reference Patterns
+### 1. Documentation Focus
 
-- Azure-specific implementations should reference general patterns in `architecture-general/`
-- General patterns can link to Azure implementations in `architecture-azure/`
-- Use relative links for cross-repository references: `../architecture-azure/`
+This is a **knowledge base**, not executable code. Assist with:
+- Writing clear, technical documentation
+- Creating comprehensive markdown files
+- Organizing content hierarchically
+- Adding Mermaid diagrams for architecture visualizations
+
+### 2. Taxonomy Alignment
+
+**All content MUST align with the Architecture Taxonomy**:
+- 📖 [`architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md`](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
+- Use `§X.X` format when referencing taxonomy sections
+- Example: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
+
+### 3. Content Quality Standards
+
+- ✅ Technically accurate and current
+- ✅ Proper heading hierarchy (H1 → H2 → H3)
+- ✅ Include TOC for documents >200 lines
+- ✅ Use comparison tables for alternatives
+- ✅ Code blocks with language tags
+- ✅ Reference official documentation
+- ✅ Include practical examples and case studies
+
+## Cross-Reference Patterns
+
+Link between general patterns and Azure implementations:
+
+### From general → Azure
+```markdown
+> **Azure Implementation**: See [Azure Event Hubs](../architecture-azure/integration/event-hubs/) for Azure-specific details.
+```
+
+### From Azure → general
+```markdown
+> **General Pattern**: [Event-Driven Architecture](../architecture-general/03-integration-communication-architecture/)
+> **Taxonomy**: [§3.3 Event-Driven & Messaging](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
+```
+
+### Taxonomy Section References
+```markdown
+> **Taxonomy Reference**: §2 Application & Software Architecture (see [architecture_taxonomy_reference.md](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
+```
+
+**Real example**: See [`architecture-general/02-application-software-architecture/07-language-selection/01-uber-go-vs-rust-case-study.md`](../architecture-general/02-application-software-architecture/07-language-selection/01-uber-go-vs-rust-case-study.md)
+
+## Developer Workflows
+
+### Adding New Content
+
+1. **Determine location** using decision tree above
+2. **Check taxonomy alignment** - Which §X.X section?
+3. **Use appropriate template** (see below)
+4. **Add cross-references** to related content
+5. **Update parent README.md** with link to new doc
+6. **Run taxonomy sync** if you modified `architecture-general/**/README.md`
+
+### Taxonomy Synchronization
+
+The taxonomy reference is **auto-generated** from README.md files:
+
+```bash
+# Regenerate from all README.md files
+python scripts/sync_taxonomy_reference.py
+
+# Check if sync is needed (for CI/CD)
+python scripts/sync_taxonomy_reference.py --check
+
+# Preview without writing
+python scripts/sync_taxonomy_reference.py --dry-run
+```
+
+**When to sync**:
+- ✅ After editing any `architecture-general/**/README.md`
+- ✅ Before committing changes to README files
+- ⚠️ GitHub Actions auto-checks on PRs (`.github/workflows/sync-taxonomy.yml`)
+
+### Pre-commit Hook (Optional)
+
+Install to automatically check taxonomy sync:
+
+```bash
+cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+This prevents commits with out-of-sync taxonomy references.
 
 ### Language and Technology Selection
 
 When discussing language or technology choices:
 1. **Consider organizational factors**: Team size, hiring constraints, velocity requirements
-2. **Reference case studies**: See `architecture-general/02-application-software-architecture/07-language-selection/`
+2. **Reference case studies**: See [`architecture-general/02-application-software-architecture/07-language-selection/`](../architecture-general/02-application-software-architecture/07-language-selection/)
 3. **Balance trade-offs**: Raw performance vs team productivity vs operational simplicity
 4. **Document decisions**: Create ADRs (Architecture Decision Records) for significant choices
 5. **Learn from real-world examples**: Uber, Netflix, Amazon case studies provide valuable insights
@@ -142,17 +225,3 @@ Links to related concepts
 ## Key Reference Documents
 
 - **Architecture Taxonomy**: See `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` for comprehensive architecture type definitions, naming conventions, and classification standards
-
-### Taxonomy Sync Script
-
-The taxonomy reference file is automatically generated from README.md files. To keep it in sync:
-
-```bash
-# Regenerate from all README.md files
-python scripts/sync_taxonomy_reference.py
-
-# Check if sync is needed (for CI/CD)
-python scripts/sync_taxonomy_reference.py --check
-```
-
-A GitHub Action (`.github/workflows/sync-taxonomy.yml`) automatically checks sync status on PRs affecting README.md files.
