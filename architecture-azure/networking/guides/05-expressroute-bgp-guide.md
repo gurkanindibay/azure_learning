@@ -25,17 +25,29 @@ See [Index](./01-index.md) for overview.
 - Microsoft maintains one end; you manage the other
 
 **Architecture:**
-```
-On-Premises
-    │ Private Link
-    │ (Dedicated circuit)
-    ├─ Service Provider Edge
-    │
-    └─ Microsoft Edge
-           │
-        Azure Region
-           │
-        Azure VNet/Services
+```mermaid
+graph LR
+    subgraph On-Premises
+        A[Customer Router]
+        B[Local Network]
+        A --> B
+    end
+    subgraph Provider Network
+        C[Carrier / NSP]
+    end
+    subgraph Azure Edge
+        D[ExpressRoute Location]
+    end
+    subgraph Azure
+        E[VNet1]
+        F[VNet2]
+        G[Microsoft Backbone]
+        E ---|Private Peering| G
+        F ---|Private Peering| G
+    end
+    A ---|MPLS / Layer-2| C
+    C ---|Circuit| D
+    D ---|ExpressRoute Circuit| G
 ```
 
 ---
