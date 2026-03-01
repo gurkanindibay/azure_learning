@@ -318,11 +318,13 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Key Management (HSM / KMS)
 - Confidential Computing
 - Privacy-by-Design Architecture
-- 6.1-security-architecture.md - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
-- 6.2-identity-architecture.md - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
-- 6.3-network-security-architecture.md - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
-- 6.4-data-security-architecture.md - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
-- authentication-methods-overview.md - Authentication methods and patterns
+- 6.1-security-foundations/README.md - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
+- 6.2-identity/README.md - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
+- 6.2-identity/6.2.1-authentication-methods.md - Authentication methods and patterns
+- 6.2-identity/6.2.2-authentication-protocols.md - Authentication protocol deep dives (OAuth2, OIDC, JWT)
+- 6.3-network-security/README.md - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
+- 6.3-network-security/6.3.1-dmz-architecture.md - DMZ Architecture patterns
+- 6.4-data-security/README.md - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
 - Architecture Taxonomy Reference
 - Azure Security - Azure-specific security implementations
 

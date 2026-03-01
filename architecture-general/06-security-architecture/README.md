@@ -32,13 +32,17 @@ This section covers security principles, identity management, and data protectio
 
 ## Contents
 
-- [6.1-security-architecture.md](./6.1-security-architecture.md) - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
-- [6.2-identity-architecture.md](./6.2-identity-architecture.md) - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
-- [6.3-network-security-architecture.md](./6.3-network-security-architecture.md) - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
-- **[6.3.1-demilitarized-zone-dmz-architecture.md](./6.3.1-demilitarized-zone-dmz-architecture.md)** - Comprehensive DMZ design, topologies, and implementation guide
-- [6.4-data-security-architecture.md](./6.4-data-security-architecture.md) - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
-- [authentication-methods-overview.md](./authentication-methods-overview.md) - Quick authentication method comparison and decision guide
-- [authentication/authentication_methods.md](./authentication/authentication_methods.md) - Detailed authentication methods, protocol flows, and implementation examples
+- **[6.1-security-foundations/](./6.1-security-foundations/)** - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
+  - [README.md](./6.1-security-foundations/README.md) - Security Architecture foundations
+- **[6.2-identity/](./6.2-identity/)** - Identity, Authentication & Authorization
+  - [README.md](./6.2-identity/README.md) - Identity Architecture — governance, federation, lifecycle, authorization models
+  - [6.2.1-authentication-methods.md](./6.2-identity/6.2.1-authentication-methods.md) - Authentication method catalog, decision matrices, security comparisons
+  - [6.2.2-authentication-protocols.md](./6.2-identity/6.2.2-authentication-protocols.md) - Protocol deep dives — sequence diagrams, React + .NET code, token handling
+- **[6.3-network-security/](./6.3-network-security/)** - Network Security
+  - [README.md](./6.3-network-security/README.md) - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
+  - [6.3.1-dmz-architecture.md](./6.3-network-security/6.3.1-dmz-architecture.md) - Comprehensive DMZ design, topologies, and implementation guide
+- **[6.4-data-security/](./6.4-data-security/)** - Data Security
+  - [README.md](./6.4-data-security/README.md) - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
 
 ## Related
 

@@ -1,6 +1,6 @@
 # 6.2 Identity Architecture
 
-> **Taxonomy Reference**: §6 Security Architecture (see [architecture_taxonomy_reference.md](../10-practicality-taxonomy/architecture_taxonomy_reference.md))
+> **Taxonomy Reference**: §6 Security Architecture (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
 ## Overview
 
@@ -8,22 +8,28 @@ Identity Architecture defines the framework for managing digital identities, aut
 
 Modern identity architecture is the cornerstone of security, enabling organizations to implement Zero Trust principles while providing seamless user experiences.
 
-## Document Navigation
+## Document Reading Path & Navigation
 
-Use this document for identity architecture decisions, operating model, and governance.
+This is **Level 3** in the authentication and identity reference — architecture, governance, and lifecycle.
 
-Use the detailed authentication reference for protocol-level sequence diagrams and implementation examples:
+| Level | Document | Focus |
+|-------|----------|-------|
+| **1** | [6.2.1 Authentication Methods](./6.2.1-authentication-methods.md) | Method catalog, selection criteria, decision matrices |
+| **2** | [6.2.2 Authentication Protocols](./6.2.2-authentication-protocols.md) | Protocol flows, sequence diagrams, React + .NET code |
+| **3** | **6.2 Identity Architecture (README)** ← You are here | Identity governance, federation, lifecycle, authorization models |
 
-- [Authentication Methods Overview (Quick Guide)](./authentication-methods-overview.md)
-- [Authentication Methods](./authentication/authentication_methods.md)
-- [OAuth 2.0](./authentication/authentication_methods.md#oauth2-authorization-framework)
-- [OAuth 2.0 + PKCE](./authentication/authentication_methods.md#oauth-20--pkce-public-client-mode)
-- [OpenID Connect (OIDC)](./authentication/authentication_methods.md#openid-connect-oidc)
-- [Single Sign-On (SSO)](./authentication/authentication_methods.md#6-single-sign-on-sso--identity-protocols)
+**Prerequisites**: Levels 1–2 cover *which* method to use and *how* protocols work. This document covers *how to architect identity* across an organization.
+
+**Quick links to protocol details** (Level 2):
+
+- [OAuth 2.0](./6.2.2-authentication-protocols.md#oauth2-authorization-framework)
+- [OAuth 2.0 + PKCE](./6.2.2-authentication-protocols.md#oauth-20--pkce-public-client-mode)
+- [OpenID Connect (OIDC)](./6.2.2-authentication-protocols.md#openid-connect-oidc)
+- [Single Sign-On (SSO)](./6.2.2-authentication-protocols.md#6-single-sign-on-sso--identity-protocols)
 
 ## Table of Contents
 
-- [Document Navigation](#document-navigation)
+- [Document Reading Path & Navigation](#document-reading-path--navigation)
 - [Core Identity Concepts](#core-identity-concepts)
 - [Identity Providers (IdP)](#identity-providers-idp)
 - [Authentication Architecture](#authentication-architecture)
@@ -230,8 +236,8 @@ Use these decision rules at architecture level:
 
 For full sequence diagrams, protocol examples, and implementation snippets, use the dedicated reference:
 
-- [OAuth 2.0 + PKCE (detailed)](./authentication/authentication_methods.md#oauth-20--pkce-public-client-mode)
-- [OAuth 2.0 vs OIDC vs SSO comparison](./authentication/authentication_methods.md#comparison-table)
+- [OAuth 2.0 + PKCE (detailed)](./6.2.2-authentication-protocols.md#oauth-20--pkce-public-client-mode)
+- [OAuth 2.0 vs OIDC vs SSO comparison](./6.2.2-authentication-protocols.md#comparison-table)
 
 ### Passwordless Authentication Architecture
 
@@ -822,10 +828,11 @@ flowchart TD
 
 ### Internal Documentation
 
-- [6.1 Security Architecture](6.1-security-architecture.md)
-- [Authentication Methods (Detailed Reference)](./authentication/authentication_methods.md)
-- [Azure Identity Overview](../../architecture-azure/security/azure_identity_overview.md)
-- [Azure Identity Principal Objects](../../architecture-azure/security/azure-identity-principal-objects.md)
+- [6.1 Security Architecture](../6.1-security-foundations/)
+- [6.2.1 Authentication Methods](./6.2.1-authentication-methods.md)
+- [6.2.2 Authentication Protocols](./6.2.2-authentication-protocols.md)
+- [Azure Identity Overview](../../../architecture-azure/security/azure_identity_overview.md)
+- [Azure Identity Principal Objects](../../../architecture-azure/security/azure-identity-principal-objects.md)
 
 ### External References
 

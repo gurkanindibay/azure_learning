@@ -756,9 +756,9 @@ graph TB
 
 ### Internal References
 
-- [6.1 Security Architecture](./6.1-security-architecture.md) - Zero Trust, Defense in Depth
-- [6.2 Identity Architecture](./6.2-identity-architecture.md) - Identity Management, Authentication
-- [6.3 Network Security Architecture](./6.3-network-security-architecture.md) - Network Security Controls
+- [6.1 Security Architecture](../6.1-security-foundations/) - Zero Trust, Defense in Depth
+- [6.2 Identity Architecture](../6.2-identity/) - Identity Management, Authentication
+- [6.3 Network Security Architecture](../6.3-network-security/) - Network Security Controls
 
 ### External Resources
 
@@ -770,6 +770,6 @@ graph TB
 
 ### Azure Implementation
 
-- [Azure Key Vault](../../architecture-azure/security/)
-- [Azure Confidential Computing](../../architecture-azure/security/)
-- [Azure Information Protection](../../architecture-azure/security/)
+- [Azure Key Vault](../../../architecture-azure/security/)
+- [Azure Confidential Computing](../../../architecture-azure/security/)
+- [Azure Information Protection](../../../architecture-azure/security/)

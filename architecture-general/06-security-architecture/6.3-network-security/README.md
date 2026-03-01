@@ -13,7 +13,7 @@
 
 ### Detailed Sub-Topics
 
-- **[6.3.1 Demilitarized Zone (DMZ) Architecture](./6.3.1-demilitarized-zone-dmz-architecture.md)** - Comprehensive guide to DMZ design, implementation, and best practices
+- **[6.3.1 Demilitarized Zone (DMZ) Architecture](./6.3.1-dmz-architecture.md)** - Comprehensive guide to DMZ design, implementation, and best practices
 
 ---
 
@@ -118,7 +118,7 @@ Internet → [External FW] → DMZ → [Internal FW] → Internal Network
 - **Pros**: Better segmentation, defense in depth
 - **Cons**: More complex, higher cost
 
-> **📖 Detailed Coverage**: For comprehensive DMZ design patterns, implementation strategies, and cloud architectures, see [6.3.1 Demilitarized Zone (DMZ) Architecture](./6.3.1-demilitarized-zone-dmz-architecture.md)
+> **📖 Detailed Coverage**: For comprehensive DMZ design patterns, implementation strategies, and cloud architectures, see [6.3.1 Demilitarized Zone (DMZ) Architecture](./6.3.1-dmz-architecture.md)
 
 #### 3. Multi-tier Firewall Architecture
 
@@ -532,16 +532,16 @@ graph TB
 
 ### Internal References
 
-- [6.1 Security Architecture](./6.1-security-architecture.md) - Zero Trust, Defense in Depth
-- [6.2 Identity Architecture](./6.2-identity-architecture.md) - Identity and Access Management
-- [6.4 Data Security Architecture](./6.4-data-security-architecture.md) - Encryption, Key Management
+- [6.1 Security Architecture](../6.1-security-foundations/) - Zero Trust, Defense in Depth
+- [6.2 Identity Architecture](../6.2-identity/) - Identity and Access Management
+- [6.4 Data Security Architecture](../6.4-data-security/) - Encryption, Key Management
 
 ### Azure Implementations
 
-- [Azure Firewall](../../architecture-azure/networking/firewall/) - Azure native firewall service
-- [Azure WAF](../../architecture-azure/networking/) - Web Application Firewall on Azure
-- [Azure DDoS Protection](../../architecture-azure/networking/) - Azure DDoS mitigation
-- [Azure Virtual Network](../../architecture-azure/networking/) - Network segmentation in Azure
+- [Azure Firewall](../../../architecture-azure/networking/firewall/) - Azure native firewall service
+- [Azure WAF](../../../architecture-azure/networking/) - Web Application Firewall on Azure
+- [Azure DDoS Protection](../../../architecture-azure/networking/) - Azure DDoS mitigation
+- [Azure Virtual Network](../../../architecture-azure/networking/) - Network segmentation in Azure
 
 ### External References
 

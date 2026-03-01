@@ -863,4 +863,4 @@ graph TB
 - [Proxy and Load Balancing Architecture](./proxy-load-balancing-architecture.md) - Complete proxy and LB patterns
 - [Hub-Spoke Network Architecture](./hub_spoke_network_architecture.md) - Network topology patterns
 - [API Architecture Overview](../../03-integration-communication-architecture/api-architecture/api-architecture-overview.md) - API design and gateway patterns
-- [Network Security Architecture](../../06-security-architecture/6.3-network-security-architecture.md) - Security controls
+- [Network Security Architecture](../../06-security-architecture/6.3-network-security/) - Security controls

@@ -1295,5 +1295,5 @@ Common architecture combinations:
 - [Service Mesh Architecture](./service-mesh-architecture.md) - Detailed service mesh patterns and Kubernetes comparison
 - [Hub-Spoke Network Architecture](./hub_spoke_network_architecture.md) - Network topology patterns
 - [API Architecture Overview](../../03-integration-communication-architecture/api-architecture/api-architecture-overview.md) - API design and gateway patterns
-- [Network Security Architecture](../../06-security-architecture/6.3-network-security-architecture.md) - Security controls and WAF
+- [Network Security Architecture](../../06-security-architecture/6.3-network-security/) - Security controls and WAF
 - [Azure Load Balancing Comparison](../../../architecture-azure/networking/load-balancing/azure-load-balancing-services-comparison.md) - Azure-specific service comparison

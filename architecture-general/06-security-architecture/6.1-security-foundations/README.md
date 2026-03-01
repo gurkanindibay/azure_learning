@@ -416,16 +416,16 @@ Security gates are checkpoints that must be passed before code moves to the next
 
 ### Internal References
 
-- [Authentication Methods Overview](./authentication-methods-overview.md)
-- [Authentication Methods](./authentication/authentication_methods.md)
-- [Identity Architecture](./6.2-identity-architecture.md)
-- [Network Security Architecture](./6.3-network-security-architecture.md)
-- [Data Security Architecture](./6.4-data-security-architecture.md)
+- [6.2.1 Authentication Methods](../6.2-identity/6.2.1-authentication-methods.md)
+- [6.2.2 Authentication Protocols](../6.2-identity/6.2.2-authentication-protocols.md)
+- [6.2 Identity Architecture](../6.2-identity/)
+- [6.3 Network Security Architecture](../6.3-network-security/)
+- [6.4 Data Security Architecture](../6.4-data-security/)
 
 ### Azure-Specific Implementation
 
-- [Azure Security Overview](../../architecture-azure/security/)
-- [Azure Identity](../../architecture-azure/security/azure_identity_overview.md)
+- [Azure Security Overview](../../../architecture-azure/security/)
+- [Azure Identity](../../../architecture-azure/security/azure_identity_overview.md)
 
 ### External References
 
