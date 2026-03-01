@@ -1,50 +1,57 @@
 # 6. Security Architecture (Cross-Cutting)
 
-This section covers security principles, identity management, and data protection.
+> **Taxonomy Reference**: §6 Security Architecture (see [architecture_taxonomy_reference.md](../10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
-## Subsections
+This section covers security principles, identity management, network protection, and data security — cross-cutting concerns that apply across all other architecture domains.
 
-### 6.1 Security Architecture
-- Zero Trust Architecture
-- Defense in Depth
-- Threat Modeling Architecture
-- Secure SDLC Architecture
-
-### 6.2 Identity Architecture
-- Identity and Access Management (IAM)
-- Federated Identity Architecture
-- Single Sign-On (SSO)
-- Managed Identity Architecture
-- OAuth 2.0 with PKCE
-
-### 6.3 Network Security Architecture
-- Perimeter Security Architecture
-- **Demilitarized Zone (DMZ) Architecture**
-- Micro-Segmentation
-- Web Application Firewall (WAF)
-- DDoS Protection Architecture
-
-### 6.4 Data Security Architecture
-- Encryption Architecture
-- Key Management (HSM / KMS)
-- Confidential Computing
-- Privacy-by-Design Architecture
+---
 
 ## Contents
 
-- **[6.1-security-foundations/](./6.1-security-foundations/)** - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
-  - [README.md](./6.1-security-foundations/README.md) - Security Architecture foundations
-- **[6.2-identity/](./6.2-identity/)** - Identity, Authentication & Authorization
-  - [README.md](./6.2-identity/README.md) - Identity Architecture — governance, federation, lifecycle, authorization models
-  - [6.2.1-authentication-methods.md](./6.2-identity/6.2.1-authentication-methods.md) - Authentication method catalog, decision matrices, security comparisons
-  - [6.2.2-authentication-protocols.md](./6.2-identity/6.2.2-authentication-protocols.md) - Protocol deep dives — sequence diagrams, React + .NET code, token handling
-- **[6.3-network-security/](./6.3-network-security/)** - Network Security
-  - [README.md](./6.3-network-security/README.md) - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
-  - [6.3.1-dmz-architecture.md](./6.3-network-security/6.3.1-dmz-architecture.md) - Comprehensive DMZ design, topologies, and implementation guide
-- **[6.4-data-security/](./6.4-data-security/)** - Data Security
-  - [README.md](./6.4-data-security/README.md) - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
+### [6.1 Security Foundations](./6.1-security-foundations/)
+
+Core security principles and methodologies that underpin all other security topics.
+
+| Topic | Description |
+|-------|-------------|
+| Zero Trust Architecture | "Never trust, always verify" security model |
+| Defense in Depth | Layered security controls strategy |
+| Threat Modeling | Systematic identification and mitigation of threats |
+| Secure SDLC | Security integrated into software development lifecycle |
+
+### [6.2 Identity Architecture](./6.2-identity/)
+
+Identity and access management, authentication protocols, and authorization models.
+
+| Document | Description |
+|----------|-------------|
+| [README.md](./6.2-identity/README.md) | Identity governance, federation, lifecycle, authorization models |
+| [6.2.1 Authentication Methods](./6.2-identity/6.2.1-authentication-methods.md) | Method catalog, decision matrices, security comparisons |
+| [6.2.2 Authentication Protocols](./6.2-identity/6.2.2-authentication-protocols.md) | Protocol deep dives — sequence diagrams, React + .NET code, token handling |
+
+### [6.3 Network Security](./6.3-network-security/)
+
+Network-level security controls from perimeter to micro-segmentation.
+
+| Document | Description |
+|----------|-------------|
+| [README.md](./6.3-network-security/README.md) | Perimeter security, micro-segmentation, WAF, DDoS protection |
+| [6.3.1 DMZ Architecture](./6.3-network-security/6.3.1-dmz-architecture.md) | DMZ design, topologies, and implementation guide |
+
+### [6.4 Data Security](./6.4-data-security/)
+
+Data protection at rest, in transit, and in use.
+
+| Topic | Description |
+|-------|-------------|
+| Encryption Architecture | Symmetric/asymmetric, TLS, at-rest encryption |
+| Key Management (HSM/KMS) | Hardware security modules, key lifecycle |
+| Confidential Computing | TEEs, secure enclaves, in-use encryption |
+| Privacy-by-Design | GDPR, CCPA, data minimization patterns |
+
+---
 
 ## Related
 
 - [Architecture Taxonomy Reference](../10-practicality-taxonomy/architecture_taxonomy_reference.md)
-- [Azure Security](../../architecture-azure/security/) - Azure-specific security implementations
+- [Azure Security](../../architecture-azure/security/) — Azure-specific security implementations
