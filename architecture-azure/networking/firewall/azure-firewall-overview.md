@@ -174,12 +174,64 @@ Azure Firewall and Azure Web Application Firewall (WAF) serve different purposes
 
 > **Reference**: [What is Azure Firewall? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/firewall/overview)
 
+## Azure Firewall vs NSG (Network Security Groups)
+
+Azure Firewall and Network Security Groups (NSGs) are both network security tools, but they operate at different levels and have fundamentally different capabilities:
+
+| Feature | Azure Firewall | NSG |
+|---------|---------------|-----|
+| **Type** | Managed, cloud-based network security service | Stateful packet filter |
+| **OSI Layer** | L3, L4, and L7 | L3 and L4 |
+| **FQDN-based filtering** | **Yes** — supports FQDN in application and network rules | **No** — cannot create rules based on domain names |
+| **Threat intelligence** | Built-in threat intelligence filtering | No |
+| **NAT support** | DNAT and SNAT | No |
+| **Scope** | Centralized, VNet-level | Subnet or NIC level |
+| **Rule basis** | IP, port, protocol, FQDN, URL, service tags | IP, port, protocol, service tags |
+| **Cost** | Paid service (per hour + per GB processed) | Free |
+| **Use case** | Centralized network security, internet edge protection | Micro-segmentation, subnet/NIC-level filtering |
+
+> **Key Distinction**: NSGs filter traffic based on IP addresses, ports, and protocols only. Azure Firewall adds **FQDN-based filtering** (domain name resolution), **threat intelligence**, and **centralized policy management** — making it the right choice when you need to allow or block traffic based on domain names.
+
+### Practice question: FQDN-based domain filtering — NSG or Azure Firewall?
+
+**Scenario**: A system administrator at a large enterprise needs to block all data traffic to websites from their network, **except for specific domains** such as `www.getcloudskills.com` and `www.udemy.com`. He wants to know if he should use Network Security Groups (NSGs) to accomplish this.
+
+**Question**: Should the administrator use NSGs to block all website traffic except for specific allowed domains?
+
+- A) Yes
+- B) No ✅
+
+**Answer**: **No** ✅
+
+**Explanation**:
+
+A fully qualified domain name (FQDN) refers to the complete domain name of a host or IP address (e.g., `www.getcloudskills.com`). **Azure NSGs do not support creating rules based on FQDNs** — they can only filter traffic using IP addresses, ports, protocols, and service tags.
+
+In this scenario, **Azure Firewall** is the correct solution because:
+
+| Requirement | NSG | Azure Firewall |
+|-------------|-----|----------------|
+| Block all outbound web traffic | ✅ Can block by port (80/443) | ✅ Can block by port |
+| Allow specific domains (FQDNs) | ❌ Cannot filter by domain name | ✅ **Application rules support FQDN filtering** |
+| DNS-based resolution | ❌ Not supported | ✅ Resolves FQDNs using DNS |
+
+**How Azure Firewall solves this:**
+1. Create a **deny-all** application rule for outbound HTTP/HTTPS traffic
+2. Create a higher-priority **allow** application rule with the specific FQDNs:
+   - `www.getcloudskills.com`
+   - `www.udemy.com`
+3. Azure Firewall resolves these FQDNs via DNS and allows only matching traffic
+
+> **Reference**: [Azure Firewall FQDN filtering](https://learn.microsoft.com/en-us/azure/firewall/fqdn-filtering-network-rules)
+> **See also**: [NSG overview](../../azure-networking-fundamentals.md#26-network-security-groups-nsg) for NSG capabilities and limitations
+
 ## References
 
 - [Azure Firewall Policy rule sets](https://learn.microsoft.com/en-us/azure/firewall/policy-rule-sets)
 - [Azure Firewall Policy overview](https://learn.microsoft.com/en-us/azure/firewall-manager/policy-overview)
 - [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
 - [What is Azure Firewall?](https://learn.microsoft.com/en-us/azure/firewall/overview)
+- [Azure Firewall FQDN filtering in network rules](https://learn.microsoft.com/en-us/azure/firewall/fqdn-filtering-network-rules)
 
 ---
 
