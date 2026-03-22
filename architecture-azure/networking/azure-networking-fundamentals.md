@@ -327,6 +327,13 @@ Consider the following requirements:
 - Non-transitive by default (A↔B and B↔C doesn't mean A↔C)
 - Can peer across subscriptions and tenants
 
+**Requirements and Limitations:**
+- VNets involved in peering must have **non-overlapping IP address spaces**
+- Once peered, you **cannot** add or delete address ranges from a VNet's address space
+- In a globally peered VNet, resources cannot communicate with the front-end IP of a **Basic** internal load balancer (use **Standard** Load Balancer for global peering)
+- Default Azure name resolution does **not** work across peered VNets — use Azure Private DNS zones or custom DNS
+- Peering is **not transitive**: if VNet A is peered with VNet B, and VNet B with VNet C, VNet A and C cannot communicate unless explicitly peered
+
 #### 2.5.1 Connecting Virtual Networks Across Subscriptions
 
 **Important**: Virtual networks cannot span subscriptions. Each VNet belongs to a single subscription. To connect VNets in different subscriptions (e.g., Sub1 and Sub2), you have two options:

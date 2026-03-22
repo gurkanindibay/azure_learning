@@ -356,9 +356,87 @@ Question: Single VNet or Multi-VNet?
 
 ---
 
+## Exam-Style Questions
+
+### VNet Peering Requirements and Limitations
+
+**Question:** Virtual network peering lets you connect Azure VNets using the Azure backbone network. However, there are specific requirements and limitations associated with VNet peering. Select the appropriate requirements and limitations from the list below. (Select all that apply)
+
+- **A)** It is only possible to peer VNets present in the same region using VNet peering. Peering VNets from different regions is not allowed.
+- **B)** In a globally peered VNet, resources in one VNet cannot communicate with the front-end IP addresses of a Basic internal load balancer.
+- **C)** The VNets involved in peering must have non-overlapping IP address spaces.
+- **D)** You can modify a VNet's address space by adding or deleting address ranges after it is peered with another VNet.
+- **E)** You can use default Azure name resolution to resolve names in VNets that are peered with each other.
+
+**Correct Answers: B, C**
+
+**Explanation:**
+
+Virtual network peering connects VNets in the same or different regions using the Azure backbone network. Even after peering, the VNets are still regarded as separate resources.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **Global VNet Peering** enables you to peer virtual networks from different regions. |
+| **B** | ✅ Correct | In a globally peered VNet, resources in one VNet cannot communicate with the front-end IP addresses of a **Basic** internal load balancer. Basic Load Balancer is only supported within the same region. **Standard Load Balancer** is supported in both Global VNet Peering and regional VNet Peering. |
+| **C** | ✅ Correct | The VNets that participate in peering must have **non-overlapping IP address spaces**. |
+| **D** | ❌ Incorrect | Once two VNets are peered, you **cannot** modify their address space by adding or deleting address ranges. |
+| **E** | ❌ Incorrect | You **cannot** use the default Azure name resolution to resolve names in peered VNets. You need Azure Private DNS zones or custom DNS. |
+
+> **Reference**: [Create, change, or delete an Azure virtual network peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+
+### P2S VPN Authentication with Active Directory Domain
+
+**Question:** What server type is required to authenticate a user who connects via a Point-to-Site (P2S) connection using an Active Directory Domain Server?
+
+- **A)** DNS Server
+- **B)** Active Directory Domain Controller only
+- **C)** DIAMETER Server
+- **D)** RADIUS Server
+- **E)** None of these
+
+**Correct Answer: D**
+
+**Explanation:**
+
+AD Domain authentication allows users to connect to Azure using their company or organization's domain credentials. To integrate with the AD server for P2S VPN authentication, a **RADIUS server** is needed.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | A DNS server is used for name resolution, not authentication. |
+| **B** | ❌ Incorrect | An AD Domain Controller alone is not sufficient for P2S authentication; a RADIUS server is required as an intermediary. |
+| **C** | ❌ Incorrect | DIAMETER is a different AAA protocol not used in Azure P2S VPN scenarios. |
+| **D** | ✅ Correct | A **RADIUS server** (e.g., Windows NPS) is required to authenticate P2S VPN users against Active Directory domain credentials. The authentication flow is: `VPN Client → Azure VPN Gateway → RADIUS Server → AD Domain Controller`. |
+| **E** | ❌ Incorrect | A RADIUS server is the correct answer. |
+
+**Authentication Flow:**
+```
+Remote User (P2S VPN Client)
+    │
+    │ Domain credentials (username/password)
+    ▼
+Azure VPN Gateway
+    │
+    │ RADIUS protocol (UDP 1812/1813)
+    ▼
+RADIUS Server (e.g., Windows NPS)
+    │
+    │ LDAP / Kerberos
+    ▼
+Active Directory Domain Controller
+    │
+    └─ Validates credentials → Returns accept/reject
+```
+
+> **Domain**: Design, implement, and manage connectivity services (20–25%)
+>
+> **Reference**: [About Azure Point-to-Site VPN connections - Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
+
+---
+
 ## References
 
 - [Hub-Spoke VNet Architecture](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke)
 - [Virtual Network Peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
 - [ExpressRoute + VPN Failover](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-howto-coexist-resource-manager)
 - [Private Link Architecture](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview)
+- [About Point-to-Site VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)

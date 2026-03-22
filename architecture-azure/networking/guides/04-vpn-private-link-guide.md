@@ -34,6 +34,13 @@ Azure VNet (10.0.0.0/16)
     VMs, databases, services
 ```
 
+### P2S Authentication Methods
+- **Azure Certificate**: Client certificates validated by the gateway
+- **Azure Active Directory**: Azure AD credentials (OpenVPN only)
+- **RADIUS Server**: Integrates with on-premises Active Directory domain credentials
+
+> **Key Exam Point:** To authenticate P2S users with AD domain credentials, a **RADIUS server** is required. The VPN Gateway delegates authentication to the RADIUS server, which validates against the AD Domain Controller.
+
 ### Use Cases
 - Remote workers accessing Azure VMs
 - Migrating on-premises systems to Azure

@@ -237,6 +237,23 @@ Remote Worker Laptop ←→ VPN Client ←→ Internet ←→ Azure VPN Gateway 
 - Azure Active Directory (OpenVPN only)
 - RADIUS authentication
 
+**Authentication Method Details:**
+
+| Method | How It Works | Use Case |
+|--------|-------------|----------|
+| **Azure Certificate** | Client certificates installed on each device; validated by the gateway | Small teams, dev/test environments |
+| **Azure Active Directory** | Users authenticate with Azure AD credentials (OpenVPN only) | Cloud-native organizations using Azure AD |
+| **RADIUS Server** | Gateway delegates authentication to a RADIUS server, which can integrate with AD Domain Services | Enterprises using on-premises Active Directory domain credentials |
+
+> **Important — RADIUS + Active Directory Integration:**
+> When users need to authenticate to a P2S VPN using their **Active Directory domain credentials**, a **RADIUS server** is required. The Azure VPN Gateway does not communicate directly with an AD Domain Controller for P2S authentication. Instead, the flow is:
+>
+> ```
+> VPN Client → Azure VPN Gateway → RADIUS Server → AD Domain Controller
+> ```
+>
+> The RADIUS server (e.g., Windows NPS — Network Policy Server) acts as the intermediary that validates credentials against Active Directory. An AD Domain Controller alone is **not sufficient** — the RADIUS server is the required component that bridges P2S VPN authentication with AD domain authentication.
+
 **Use Cases:**
 - Remote workers accessing Azure VMs
 - Development/testing access
