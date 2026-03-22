@@ -9,6 +9,10 @@
   - [4.1 What is ExpressRoute?](#41-what-is-expressroute)
   - [4.2 ExpressRoute Global Reach](#42-expressroute-global-reach)
 - [5. Cost Optimization Considerations](#5-cost-optimization-considerations)
+- [6. Virtual Hub Routing](#6-virtual-hub-routing)
+  - [6.1 Route Tables and Connections](#61-route-tables-and-connections)
+- [7. Network Virtual Appliances (NVA) in Virtual WAN Hub](#7-network-virtual-appliances-nva-in-virtual-wan-hub)
+  - [7.1 NVA Resource Groups](#71-nva-resource-groups)
 
 ---
 
@@ -378,10 +382,119 @@ You have an Azure subscription that contains:
 
 ---
 
+## 6. Virtual Hub Routing
+
+### 6.1 Route Tables and Connections
+
+In Azure Virtual WAN, connections to a virtual hub (VNet connections, VPN connections, ExpressRoute connections) are associated with **route tables**. These connections with routing configuration are called **Connection Manager resources**. Each connection is associated with a specific route table that determines how traffic is forwarded.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Default Route Table** | Every hub has a default route table that contains system routes |
+| **Custom Route Tables** | User-created route tables for traffic segmentation and isolation |
+| **Association** | Links a connection to a route table — determines which route table the connection uses to forward traffic |
+| **Propagation** | Determines which route tables learn routes from a connection |
+
+**How It Works:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    VIRTUAL HUB ROUTING - CONNECTION ASSOCIATION                   │
+│                                                                                  │
+│   ┌──────────────┐         ┌─────────────────┐         ┌──────────────────┐     │
+│   │  VNet        │         │  Virtual Hub    │         │  VNet            │     │
+│   │  Connection  │────────►│  Route Table    │────────►│  Destination     │     │
+│   │  (Spoke A)   │  assoc  │  ┌───────────┐  │  route  │  (Spoke B)       │     │
+│   └──────────────┘         │  │10.1.0.0/16│  │         └──────────────────┘     │
+│                            │  │10.2.0.0/16│  │                                  │
+│   ┌──────────────┐         │  │10.3.0.0/16│  │         ┌──────────────────┐     │
+│   │  VPN         │────────►│  └───────────┘  │────────►│  On-Premises     │     │
+│   │  Connection  │  assoc  │                 │  route  │  Network         │     │
+│   └──────────────┘         └─────────────────┘         └──────────────────┘     │
+│                                                                                  │
+│   Association = "Use THIS route table to decide where to send traffic"          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 📝 Exam Scenario: Connection Association with Route Tables
+
+**Question:**
+Connections with routing configuration are called Connection Manager resources. Each connection is associated with a specific route table. Why is it important to associate a connection with a route table?
+
+- A. It allows traffic to be directed to specified destinations in the route table. ✅
+- B. This feature allows the automatic dissemination of routes from one route table to another, ensuring seamless connectivity.
+- C. It authenticates the users.
+- D. It encrypts the traffic that is being sent to the intended destination.
+
+**Correct Answer: A. It allows traffic to be directed to specified destinations in the route table.**
+
+**Explanation:**
+Associating a connection with a route table enables the traffic originating from that connection to be forwarded to the destinations specified in the routing table. The routing configuration of the connection will show the associated route table, and all traffic from that connection will use those routes for forwarding decisions.
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B. Automatic route dissemination between route tables** | Connections do not dynamically propagate routes from one route table to another. Route **propagation** is a separate concept — it determines which route tables *learn* routes from a connection, not automatic copying between tables. |
+| **C. User authentication** | Neither connections nor routing tables authenticate users. Authentication is handled by separate identity and access management services (Azure AD, certificates, etc.). |
+| **D. Traffic encryption** | Associating a connection with a route table has nothing to do with encryption. Encryption is handled at the connection level (e.g., IPsec for VPN, MACsec for ExpressRoute Direct). |
+
+**Key Takeaway:**
+> **Association** determines *which route table* a connection uses to make forwarding decisions. **Propagation** determines *which route tables* learn routes from that connection. These are two distinct concepts in Virtual Hub routing.
+
+---
+
+## 7. Network Virtual Appliances (NVA) in Virtual WAN Hub
+
+A **Network Virtual Appliance (NVA)** can be deployed directly into a Virtual WAN hub, enabling integrated third-party network functions such as firewalls, SD-WAN, and WAN optimization within the hub infrastructure.
+
+### 7.1 NVA Resource Groups
+
+When an NVA is created in the Virtual WAN hub, **two resource groups** are automatically created in the customer's subscription:
+
+| Resource Group | Description |
+|----------------|-------------|
+| **Customer Resource Group** | Contains the customer-facing resources associated with the NVA deployment |
+| **Managed Resource Group** | Contains resources managed by Azure on behalf of the NVA partner, used for the internal operation of the appliance |
+
+> ⚠️ **Note:** No "Partner Resource Group", "Virtual Resource Group", or "Controlled Resource Group" is created during this process.
+
+### 📝 Exam Scenario: NVA Resource Groups in Virtual WAN Hub
+
+**Question:**
+When a Network Virtual Appliance (NVA) is created in the Virtual WAN hub, which resource groups will be created in the customer's subscription? (Select all that apply)
+
+- A) Customer Resource Group
+- B) Partner Resource Group
+- C) Managed Resource Group
+- D) Virtual Resource Group
+- E) Controlled Resource Group
+
+**Correct Answers: A and C**
+
+| Option | Correct/Incorrect | Reason |
+|--------|-------------------|--------|
+| **A) Customer Resource Group** | ✅ **Correct** | One of the two resource groups created during NVA deployment in the Virtual WAN hub |
+| **B) Partner Resource Group** | ❌ Incorrect | Not created during the NVA deployment process |
+| **C) Managed Resource Group** | ✅ **Correct** | The second resource group created during NVA deployment, managed by Azure for the appliance's internal operations |
+| **D) Virtual Resource Group** | ❌ Incorrect | Not created during the NVA deployment process |
+| **E) Controlled Resource Group** | ❌ Incorrect | Not created during the NVA deployment process |
+
+**Key Takeaway:**
+> When deploying an NVA in a Virtual WAN hub, exactly **two resource groups** are created: the **Customer Resource Group** and the **Managed Resource Group**.
+
+**Reference:** [About Network Virtual Appliances in a Virtual WAN hub](https://learn.microsoft.com/en-us/azure/virtual-wan/about-nva-hub)
+
+---
+
 ## Related Resources
 
 - [Azure Virtual WAN Overview](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about)
 - [Virtual WAN FAQ](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-faq)
 - [ExpressRoute Global Reach](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-global-reach)
 - [Virtual WAN Global Transit Network Architecture](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-global-transit-network-architecture)
+- [About Virtual Hub Routing](https://learn.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing)
+- [Connect Remote Resources by Using Azure Virtual WANs - Training](https://learn.microsoft.com/en-us/training/modules/connect-remote-resources-by-using-azure-virtual-wans/)
 - [Azure Networking Fundamentals](./azure-networking-fundamentals.md)
