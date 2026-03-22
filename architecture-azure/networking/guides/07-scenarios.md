@@ -565,6 +565,47 @@ Azure DNS is the built-in DNS service (at `168.63.129.16`) that automatically re
 >
 > **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
 
+### NSG Default Rules
+
+**Question:** Azure automatically generates default rules in each user-created NSG. Choose the non-default rule from the options provided.
+
+- **A)** AllowVNetInBound
+- **B)** AllowAzureLoadBalancerInBound
+- **C)** DenyAllInBound
+- **D)** AllowInternetOutBound
+- **E)** AllowAllInBound
+
+**Correct Answer: E**
+
+**Explanation:**
+
+Azure creates a set of default rules for every Network Security Group (NSG). These default rules cannot be deleted but can be overridden by higher-priority rules. **AllowAllInBound** is not a default rule — allowing all inbound traffic by default would be a significant security risk.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **AllowVNetInBound** is a default inbound rule that allows all incoming traffic originating from within the virtual network (and peered VNets). Priority: 65000. |
+| **B** | ❌ Incorrect | **AllowAzureLoadBalancerInBound** is a default inbound rule that allows health probe traffic from the Azure Load Balancer. Priority: 65001. |
+| **C** | ❌ Incorrect | **DenyAllInBound** is a default inbound rule that blocks all remaining inbound traffic not matched by higher-priority rules. Priority: 65500. |
+| **D** | ❌ Incorrect | **AllowInternetOutBound** is a default outbound rule that allows all outbound traffic destined for the internet. Priority: 65001. |
+| **E** | ✅ Correct | **AllowAllInBound** is **not** a default NSG rule. There is no default rule that allows all inbound traffic. By default, inbound traffic is denied unless it comes from the VNet or the Azure Load Balancer. |
+
+**Default NSG rules summary:**
+
+| Direction | Rule Name | Priority | Action |
+|-----------|-----------|----------|--------|
+| **Inbound** | AllowVNetInBound | 65000 | Allow traffic from VNet |
+| **Inbound** | AllowAzureLoadBalancerInBound | 65001 | Allow Azure LB probes |
+| **Inbound** | DenyAllInBound | 65500 | Deny all other inbound |
+| **Outbound** | AllowVNetOutBound | 65000 | Allow traffic to VNet |
+| **Outbound** | AllowInternetOutBound | 65001 | Allow outbound to internet |
+| **Outbound** | DenyAllOutBound | 65500 | Deny all other outbound |
+
+> **Exam Tip**: Remember that NSGs follow a "deny by default" model for inbound traffic. The only inbound traffic allowed by default is from the VNet itself and from the Azure Load Balancer. There is no **AllowAllInBound** rule.
+>
+> **Domain**: Design, implement, and manage security for virtual networking (10–15%)
+>
+> **Reference**: [Azure network security groups overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
+
 ---
 
 ## References
@@ -574,3 +615,4 @@ Azure DNS is the built-in DNS service (at `168.63.129.16`) that automatically re
 - [ExpressRoute + VPN Failover](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-howto-coexist-resource-manager)
 - [Private Link Architecture](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview)
 - [About Point-to-Site VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
+- [Azure Network Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
