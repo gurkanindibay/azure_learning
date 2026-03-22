@@ -688,6 +688,22 @@ How would you group virtual machines into Web Servers and Management Servers?
 - [Application Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
 - [Filter network traffic with NSGs](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic)
 
+**Practice Question: ASG Virtual Network Constraint**
+
+**Question:**
+
+If the initial network interface assigned to an Application Security Group (ASG) named GetCloudSkillsWeb is located in the virtual network named VNet1, then all successive network interfaces associated with GetCloudSkillsWeb must also be present in VNet1. Is this statement accurate?
+
+- A) Yes ✅
+- B) No
+
+**Answer: A) Yes**
+
+All network interfaces assigned to an application security group must exist in the same virtual network as the first network interface assigned to that ASG. If the first network interface assigned to GetCloudSkillsWeb is in VNet1, all subsequent network interfaces assigned to GetCloudSkillsWeb must also exist in VNet1. You cannot add network interfaces from different virtual networks to the same application security group.
+
+**Reference:**
+- [Application Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
+
 ---
 
 ### 2.8 Network Interfaces (NICs)
