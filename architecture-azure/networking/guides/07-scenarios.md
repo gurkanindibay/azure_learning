@@ -431,6 +431,40 @@ Active Directory Domain Controller
 >
 > **Reference**: [About Azure Point-to-Site VPN connections - Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
 
+### P2S VPN Supported Protocols
+
+**Question:** You create a Point-to-Site (P2S) VPN gateway connection to connect an individual client computer to your virtual network securely. Which of the following protocols can be used by the Point-to-Site VPN?
+
+- **A)** OpenVPN protocol
+- **B)** Secure Socket Tunneling Protocol (SSTP)
+- **C)** IKEv2 VPN
+- **D)** Any of the above
+
+**Correct Answer: D**
+
+**Explanation:**
+
+Azure Point-to-Site VPN supports **all three** of these protocols. Each serves different platforms and use cases:
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ✅ Valid (but incomplete) | **OpenVPN** is an SSL/TLS-based protocol supported on Windows, macOS, Linux, Android, and iOS. It is the recommended protocol for P2S VPN connections due to its broad platform support and flexibility. |
+| **B** | ✅ Valid (but incomplete) | **SSTP (Secure Socket Tunneling Protocol)** is a Microsoft proprietary SSL-based VPN protocol. It is supported **only on Windows** client devices. SSTP can traverse most firewalls since it uses TCP port 443 (HTTPS). |
+| **C** | ✅ Valid (but incomplete) | **IKEv2 VPN** is an IPsec-based VPN protocol with native support on **macOS and iOS**. It also works on Windows. It is a standards-based solution that provides strong security. |
+| **D** | ✅ Correct | **All three protocols** — OpenVPN, SSTP, and IKEv2 — are supported by Azure P2S VPN Gateway. The choice depends on client platform requirements and organizational needs. |
+
+**Protocol comparison:**
+
+| Protocol | Base Technology | Supported Platforms | Key Advantage |
+|----------|----------------|---------------------|---------------|
+| **OpenVPN** | SSL/TLS | Windows, macOS, Linux, Android, iOS | Broadest platform support |
+| **SSTP** | SSL/TLS | Windows only | Firewall-friendly (TCP 443) |
+| **IKEv2** | IPsec | Windows, macOS, iOS | Native macOS/iOS support |
+
+> **Domain**: Design, implement, and manage connectivity services (20–25%)
+>
+> **Reference**: [About Azure Point-to-Site VPN connections - Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
+
 ### Restricting Azure Storage Access to a Specific Virtual Network
 
 **Question:** You want to ensure that an Azure Storage account is only accessible from a specific Azure virtual network without exposing the storage account to the public internet. Which Azure feature should you use to accomplish this?
