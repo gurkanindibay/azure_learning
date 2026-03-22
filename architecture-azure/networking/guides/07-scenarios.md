@@ -431,6 +431,78 @@ Active Directory Domain Controller
 >
 > **Reference**: [About Azure Point-to-Site VPN connections - Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
 
+### Restricting Azure Storage Access to a Specific Virtual Network
+
+**Question:** You want to ensure that an Azure Storage account is only accessible from a specific Azure virtual network without exposing the storage account to the public internet. Which Azure feature should you use to accomplish this?
+
+- **A)** ExpressRoute Peering
+- **B)** ExpressRoute Private Link
+- **C)** Azure Service Endpoint
+- **D)** Azure Private Link Service
+- **E)** Network Security Groups
+
+**Correct Answer: D**
+
+**Explanation:**
+
+Azure Private Link Service allows you to access Azure services, such as Azure Storage, privately from your virtual network. It creates a private endpoint in your virtual network, enabling you to access the storage account without exposing it to the public internet.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **ExpressRoute Peering** is used to connect your on-premises network to Azure over a private connection. It does not provide a way to restrict access to an Azure Storage account from a specific virtual network without exposing it to the public internet. |
+| **B** | ❌ Incorrect | **ExpressRoute Private Link** allows you to access Azure PaaS services over a private connection. While it provides a private connection, it does not specifically address the requirement of restricting access to an Azure Storage account from a specific virtual network without exposing it to the public internet. |
+| **C** | ❌ Incorrect | **Azure Service Endpoint** enables you to secure your Azure Storage account by restricting access to specific virtual networks. However, it does not provide a way to completely isolate the storage account from the public internet — the service still uses its public IP address. |
+| **D** | ✅ Correct | **Azure Private Link Service** creates a private endpoint in your virtual network with a private IP address, enabling you to access the storage account without exposing it to the public internet. This is the correct choice when you need complete isolation from the public internet. |
+| **E** | ❌ Incorrect | **Network Security Groups (NSGs)** are used to filter network traffic to and from Azure resources. While NSGs can help control access to resources, they do not provide a way to restrict access to an Azure Storage account from a specific virtual network without exposing it to the public internet. |
+
+**Key Distinction — Service Endpoint vs Private Link:**
+
+| Feature | Service Endpoint | Private Link |
+|---------|------------------|--------------|
+| **Public IP** | Service still uses public IP | Private IP assigned in your VNet |
+| **Internet Exposure** | Public endpoint still exists | Can fully disable public access |
+| **On-premises Access** | Not supported | Supported via VPN/ExpressRoute |
+| **Data Exfiltration** | Limited protection | Strong protection (specific resource) |
+
+> **Exam Tip**: When the question specifically mentions "without exposing to the public internet", **Azure Private Link** is the correct answer. Service Endpoints secure the route but do not eliminate public IP exposure.
+>
+> **Domain**: Design, implement, and manage connectivity services (20–25%)
+>
+> **Reference**: [Azure Private Link overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview)
+
+### Public IP Address SKU for Dynamic IP Allocation
+
+**Question:** You are the owner of an application and must use dynamic IP addresses for specific resources on your virtual network (VNet). What SKU should you use?
+
+- **A)** Standard SKU
+- **B)** Basic SKU
+- **C)** Hybrid SKU
+- **D)** Compiled SKU
+
+**Correct Answer: B**
+
+**Explanation:**
+
+Public IP addresses can be created using a **Basic** or **Standard** SKU. A Basic SKU can assign the public IP address through **dynamic or static** allocation. However, when using a Standard SKU, the public IP always uses the **static allocation** method. It's important to note that Hybrid SKU and Compiled SKU are not valid options for Azure public IP addresses.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **Standard SKU** public IPs always use the static allocation method. They do not support dynamic IP address assignment. |
+| **B** | ✅ Correct | **Basic SKU** public IP addresses can be assigned through dynamic or static allocation methods, making it the correct choice when you need dynamic IP addresses on your VNet. |
+| **C** | ❌ Incorrect | **Hybrid SKU** is not a valid SKU type for Azure public IP addresses. Only Basic and Standard SKUs exist. |
+| **D** | ❌ Incorrect | **Compiled SKU** is not a valid SKU type for Azure public IP addresses. |
+
+**Key Concept — Public IP Allocation Methods:**
+
+| SKU | Dynamic Allocation | Static Allocation |
+|-----|-------------------|-------------------|
+| **Basic** | ✅ Supported | ✅ Supported |
+| **Standard** | ❌ Not supported | ✅ Always static |
+
+> **Exam Tip**: When a question asks about **dynamic IP allocation**, the answer is always **Basic SKU**. Standard SKU only supports static allocation.
+>
+> **Reference**: [Public IP addresses in Azure | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
+
 ---
 
 ## References

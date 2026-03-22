@@ -36,6 +36,7 @@
   - [4.1 Service Endpoints](#41-service-endpoints)
   - [4.2 Comparison Table](#42-comparison-table)
   - [4.3 When to Use Each](#43-when-to-use-each)
+  - [4.4 Practice Question: Restricting Storage Account Access to a Specific VNet](#44-practice-question-restricting-storage-account-access-to-a-specific-vnet)
 - [5. VPN vs Private Link](#5-vpn-vs-private-link)
   - [5.1 Understanding the Fundamental Difference](#51-understanding-the-fundamental-difference)
   - [5.2 Azure VPN Gateway](#52-azure-vpn-gateway)
@@ -1803,6 +1804,28 @@ Your on-premises network contains a VPN gateway. You have an Azure subscription 
 - Cross-region private connectivity is needed
 - Data exfiltration protection is critical
 - Compliance requires no public IP exposure
+
+### 4.4 Practice Question: Restricting Storage Account Access to a Specific VNet
+
+**Question:** You want to ensure that an Azure Storage account is only accessible from a specific Azure virtual network without exposing the storage account to the public internet. Which Azure feature should you use?
+
+- **A)** ExpressRoute Peering
+- **B)** ExpressRoute Private Link
+- **C)** Azure Service Endpoint
+- **D)** Azure Private Link Service
+- **E)** Network Security Groups
+
+**Correct Answer: D — Azure Private Link Service**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | ExpressRoute Peering connects on-premises to Azure over a private connection. It does not restrict storage access from a specific VNet. |
+| **B** | ❌ Incorrect | ExpressRoute Private Link provides private PaaS access over ExpressRoute, but does not address VNet-only storage isolation. |
+| **C** | ❌ Incorrect | Service Endpoints restrict access to specific VNets but the storage account still uses its **public IP address** — it is not fully isolated from the public internet. |
+| **D** | ✅ Correct | Azure Private Link creates a **private endpoint** with a private IP in your VNet. You can then disable public access entirely, ensuring the storage account is never exposed to the public internet. |
+| **E** | ❌ Incorrect | NSGs filter traffic to/from Azure resources but cannot restrict PaaS service access to a specific VNet. |
+
+> **Exam Tip**: When the question says "without exposing to the public internet", the answer is **Private Link / Private Endpoint**, not Service Endpoint. Service Endpoints secure the route but do not eliminate public IP exposure.
 
 ---
 
