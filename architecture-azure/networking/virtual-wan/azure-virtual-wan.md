@@ -4,6 +4,7 @@
 
 - [1. Overview](#1-overview)
 - [2. Key Components](#2-key-components)
+  - [📝 Exam Scenario: Available configurations for Basic Virtual WAN](#-exam-scenario-available-configurations-for-basic-virtual-wan)
 - [3. Virtual WAN Hub Planning](#3-virtual-wan-hub-planning)
 - [4. ExpressRoute and Global Reach](#4-expressroute-and-global-reach)
   - [4.1 What is ExpressRoute?](#41-what-is-expressroute)
@@ -75,6 +76,47 @@
 |------|----------|----------|
 | **Basic** | Site-to-Site VPN only | Simple branch connectivity |
 | **Standard** | ExpressRoute, User VPN, VNet connections, Hub-to-hub transit | Enterprise global transit network |
+
+### 📝 Exam Scenario: Available configurations for Basic Virtual WAN
+
+**Question:**
+There are two types of virtual WANs: Basic and Standard. Basic virtual WAN supports different configurations. Choose the available configurations for Basic virtual WAN from the given options.
+
+- A) User VPN (P2S)
+- B) ExpressRoute
+- C) Azure Firewall
+- D) Site-to-site VPN
+- E) All the Above
+
+**Answer: D) Site-to-site VPN**
+
+**Explanation:**
+
+Basic Virtual WAN supports **only** Site-to-Site VPN configuration. All other features require Standard Virtual WAN.
+
+| Option | Correct/Incorrect | Reason |
+|--------|-------------------|--------|
+| **A) User VPN (P2S)** | ❌ Incorrect | User VPN (Point-to-Site) is only available in Standard Virtual WAN |
+| **B) ExpressRoute** | ❌ Incorrect | ExpressRoute is not available in Basic Virtual WAN |
+| **C) Azure Firewall** | ❌ Incorrect | Azure Firewall integration is not available in Basic Virtual WAN |
+| **D) Site-to-site VPN** | ✅ **Correct** | Basic Virtual WAN supports only Site-to-Site VPN configuration |
+| **E) All the Above** | ❌ Incorrect | Only Site-to-Site VPN is supported in Basic Virtual WAN |
+
+**Feature comparison by Virtual WAN type:**
+
+| Feature | Basic | Standard |
+|---------|:-----:|:--------:|
+| Site-to-Site VPN | ✅ | ✅ |
+| User VPN (P2S) | ❌ | ✅ |
+| ExpressRoute | ❌ | ✅ |
+| Azure Firewall | ❌ | ✅ |
+| Hub-to-hub transit | ❌ | ✅ |
+| VNet-to-VNet through hub | ❌ | ✅ |
+
+**Key Takeaway:**
+> **Basic Virtual WAN** supports only **Site-to-Site VPN**. For any other feature (ExpressRoute, User VPN, Azure Firewall, hub-to-hub transit), you must use **Standard Virtual WAN**.
+
+**Reference:** [Azure Virtual WAN Overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about)
 
 ---
 
