@@ -135,11 +135,51 @@ Azure Firewall includes a threat intelligence-based filtering feature that can a
 
 > **Reference**: [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
 
+## Azure Firewall vs Azure WAF
+
+Azure Firewall and Azure Web Application Firewall (WAF) serve different purposes and protect against different types of threats:
+
+| Feature | Azure Firewall | Azure WAF |
+|---------|---------------|-----------|
+| **Type** | Network security service (L3/L4/L7) | Web application security (L7) |
+| **Statefulness** | Fully stateful | N/A |
+| **High availability** | Built-in | Depends on deployment |
+| **Scalability** | Unrestricted cloud scalability | Depends on SKU |
+| **Threat intelligence** | Identifies/blocks known malicious IPs and domains | N/A |
+| **OWASP CRS** | No | Yes — based on OWASP Core Rule Set |
+| **SQL injection protection** | No | Yes |
+| **Cross-site scripting (XSS) protection** | No | Yes |
+
+### Practice Question: Describing Azure Firewall
+
+**Scenario**: "Wheeler Car Dealership" is a company based in Sydney, Australia, that specializes in buying and selling automobiles. They have hired you as an experienced consultant to lead a team session where you will explain the Azure Firewall concept. During the session, you'll need to describe Azure Firewall clearly.
+
+**Question**: Select **two** statements that correctly describe Azure Firewall.
+
+- A) Azure Firewall is a fully stateful service with built-in high availability and unrestricted cloud scalability.
+- B) Azure Firewall utilizes the Core Rule Set (CRS) the Open Web Application Security Project (OWASP) developed.
+- C) Azure Firewall can identify and block traffic from or to known malicious IP addresses and domains. Additionally, it can generate alerts to notify you of such activities.
+- D) Azure Firewall is a security feature that safeguards against SQL injection and cross-site scripting attacks, two common web application security vulnerabilities.
+
+**Answer**: **A and C** ✅
+
+**Explanation**:
+
+- **Option A is correct.** ✅ Azure Firewall is a fully stateful firewall service with built-in high availability and unrestricted cloud scalability.
+- **Option B is incorrect.** Azure Firewall is not based on the Core Rule Set (CRS) from the Open Web Application Security Project (OWASP). The OWASP CRS is used by **Azure WAF (Web Application Firewall)**.
+- **Option C is correct.** ✅ Azure Firewall can alert and deny traffic from or to known malicious IP addresses and domains through its threat intelligence feature.
+- **Option D is incorrect.** Protection against common web vulnerabilities such as SQL injection and cross-site scripting is a feature of **Azure WAF**, not Azure Firewall.
+
+> **Key Distinction**: Azure Firewall is a cloud-native **network security** service that provides intelligent threat protection for cloud workloads. Azure WAF provides centralized protection against common **web application** exploits and vulnerabilities.
+
+> **Reference**: [What is Azure Firewall? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/firewall/overview)
+
 ## References
 
 - [Azure Firewall Policy rule sets](https://learn.microsoft.com/en-us/azure/firewall/policy-rule-sets)
 - [Azure Firewall Policy overview](https://learn.microsoft.com/en-us/azure/firewall-manager/policy-overview)
 - [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
+- [What is Azure Firewall?](https://learn.microsoft.com/en-us/azure/firewall/overview)
 
 ---
 
