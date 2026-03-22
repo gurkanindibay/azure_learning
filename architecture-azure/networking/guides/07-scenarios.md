@@ -780,6 +780,48 @@ Example:
 
 ---
 
+## Q: Azure virtual public IP address for platform resources
+
+Which virtual public IP address facilitates a communication channel to Azure platform resources?
+
+- **A)** 168.63.129
+- **B)** 168.63.129.16
+- **C)** 164.63.129.16
+- **D)** 168.0.0.16
+- **E)** 255.0.0.0
+
+**Correct Answer: B**
+
+**Explanation:**
+
+`168.63.129.16` is a virtual public IP address that creates a communication channel for Azure platform resources. Customers can define any address space for their private VNet in Azure, so representing Azure platform resources with a unique public IP address is essential. This IP address is also known as the Azure **wireserver** and is used by all VMs in Azure to communicate with platform services.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A (168.63.129)** | ❌ Incorrect | This is not a valid IPv4 address — it is missing the fourth octet. |
+| **B (168.63.129.16)** | ✅ Correct | This is the virtual public IP address used as a communication channel to Azure platform resources (wireserver). |
+| **C (164.63.129.16)** | ❌ Incorrect | The first octet is wrong — it should be **168**, not 164. |
+| **D (168.0.0.16)** | ❌ Incorrect | The second and third octets are wrong — the correct address is 168.**63.129**.16. |
+| **E (255.0.0.0)** | ❌ Incorrect | This is a subnet mask, not an Azure platform IP address. |
+
+**What does 168.63.129.16 do?**
+```
+168.63.129.16 provides:
+├─ Health probe source for Azure Load Balancer
+├─ DNS resolution (Azure-provided DNS)
+├─ DHCP relay for obtaining a dynamic IP
+├─ VM agent heartbeat (guest agent communication)
+└─ Platform metadata and licensing (e.g., IMDS, KMS activation)
+```
+
+> **Exam Tip**: `168.63.129.16` is a well-known Azure IP that appears in multiple exam contexts — DNS resolution, health probes, and platform communication. It is accessible only from within Azure VMs and is non-routable from the public internet or on-premises.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [What is IP address 168.63.129.16? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16)
+
+---
+
 ## References
 
 - [Hub-Spoke VNet Architecture](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke)
@@ -792,3 +834,4 @@ Example:
 - [Get-AzExpressRouteCircuit PowerShell Reference](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
 - [Azure Application Gateway Configuration Overview](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-overview)
 - [Azure Traffic Manager Routing Methods](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods)
+- [What is IP address 168.63.129.16?](https://learn.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16)
