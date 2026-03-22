@@ -27,6 +27,7 @@ See [Index](./01-index.md) for overview.
   - [10.3 Benefits and Use Cases](#103-benefits-and-use-cases)
   - [10.4 Configuration and Best Practices](#104-configuration-and-best-practices)
   - [10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association](#105-practice-question-nat-gateway-ip-addresses-and-subnet-association)
+  - [10.6 Practice Question: NAT Characteristics and Limitations](#106-practice-question-nat-characteristics-and-limitations)
 
 ---
 
@@ -1613,6 +1614,7 @@ Option D (Default Outbound):
 | **Max 16 public IPs** | Should support up to ~1M concurrent connections |
 | **Not for inbound** | Cannot use NAT Gateway for incoming traffic |
 | **One NAT gateway per subnet** | A subnet can only have one NAT gateway; use separate subnets if different outbound IPs needed |
+| **Cannot span multiple VNets** | A NAT gateway operates within a single virtual network; use separate NAT gateways per VNet |
 | **Costs apply** | ~$44/month + bandwidth; evaluate if traffic is minimal |
 
 ### 10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association
@@ -1665,6 +1667,48 @@ NAT Gateway Resource Limits:
 └─ 64,000 SNAT ports per IP address
     └─ Max capacity: 16 IPs × 64,000 = 1,024,000 ports
 ```
+
+> **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
+
+### 10.6 Practice Question: NAT Characteristics and Limitations
+
+**Question:**
+
+Please read the following statements regarding Network Address Translation (NAT):
+
+1. NAT allows you to share a single public IPv4 address among multiple internal resources.
+2. NAT enables you to assign multiple private IPv4 addresses to a single virtual machine.
+3. NAT allows you to configure an external IPv4 address on each virtual machine.
+4. NAT cannot be used across multiple virtual networks.
+
+Which of the above statements are true?
+
+**Options:**
+- A) Only 1 and 2
+- B) Only 1 and 3
+- C) Only 3 and 4
+- D) Only 1 and 4
+
+**Answer: D) Only 1 and 4**
+
+**Explanation:**
+
+To avoid the need to buy an IPv4 address for each resource that requires internet access, a NAT (Network Address Translation) service can be used. This service maps outgoing requests from internal sources to an external IP address, enabling communication. However, one limitation of NAT is that it cannot span across multiple virtual networks.
+
+| Statement | Correct? | Details |
+|-----------|----------|----------|
+| **Statement 1** | ✅ Yes | NAT allows sharing a single public IPv4 address among multiple internal resources. This is the core purpose of NAT — it performs SNAT to map multiple private IPs to one (or few) public IPs. |
+| **Statement 2** | ❌ No | NAT does not assign multiple private IPv4 addresses to a single VM. Assigning multiple private IPs is a NIC-level feature, not a NAT function. |
+| **Statement 3** | ❌ No | NAT does not configure an external IPv4 address on each VM. The whole point of NAT is that VMs remain on private IPs and share an external IP at the gateway level. |
+| **Statement 4** | ✅ Yes | A NAT gateway is associated with subnets within a single virtual network. It cannot span across multiple virtual networks. |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A) Only 1 and 2** | Statement 2 is incorrect — NAT does not assign multiple private IPs to VMs |
+| **B) Only 1 and 3** | Statement 3 is incorrect — NAT does not give each VM an external IP |
+| **C) Only 3 and 4** | Statement 3 is incorrect — NAT does not give each VM an external IP |
 
 > **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
 
