@@ -737,6 +737,49 @@ Backend has Private IP:
 
 ---
 
+## Q: Traffic Manager — Weighted routing priority
+
+When distributing traffic across a set of endpoints using the **Weighted Routing** method, you may want to prioritize a certain resource. What weight value should be assigned to this particular resource?
+
+- **A)** 0
+- **B)** 1
+- **C)** 10
+- **D)** 100
+- **E)** 1000
+
+**Correct Answer: E**
+
+**Explanation:**
+
+In the **Weighted routing method** of Traffic Manager, each endpoint is assigned a weight value between **1 and 1000**. This weight value is optional — if not provided, Traffic Manager uses a default weight of **1**. The higher the weight value, the higher the priority of the endpoint. Therefore, assigning a weight of **1000** gives an endpoint the highest possible priority.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A (0)** | ❌ Incorrect | Only weights between 1 and 1000 are valid. 0 is outside the allowed range. |
+| **B (1)** | ❌ Incorrect | 1 is the lowest possible weight and represents the lowest priority. |
+| **C (10)** | ❌ Incorrect | 10 is a valid weight but does not ensure the highest priority. |
+| **D (100)** | ❌ Incorrect | 100 is a valid weight but does not guarantee the highest priority for the endpoint. |
+| **E (1000)** | ✅ Correct | 1000 is the maximum weight value, giving the endpoint the highest possible priority. |
+
+**Weight distribution formula:**
+```
+Traffic % for endpoint = (Endpoint Weight / Sum of All Weights) × 100
+
+Example:
+  Endpoint A: Weight 1000
+  Endpoint B: Weight 1
+  Endpoint C: Weight 1
+  → Endpoint A receives: 1000/1002 ≈ 99.8% of traffic
+```
+
+> **Exam Tip**: Traffic Manager weighted routing supports weights from 1 to 1000. Default is 1. To give an endpoint the highest priority, assign weight 1000.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Azure Traffic Manager routing methods | Microsoft Learn](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods#weighted-traffic-routing-method)
+
+---
+
 ## References
 
 - [Hub-Spoke VNet Architecture](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke)
@@ -748,3 +791,4 @@ Backend has Private IP:
 - [Azure Bastion NSG Access](https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg)
 - [Get-AzExpressRouteCircuit PowerShell Reference](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
 - [Azure Application Gateway Configuration Overview](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-overview)
+- [Azure Traffic Manager Routing Methods](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods)

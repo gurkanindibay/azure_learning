@@ -60,10 +60,13 @@ Secondary region: West US (Priority 2)
 
 Distribute traffic across endpoints based on assigned weights.
 
+**Weight range:** Each endpoint is assigned a weight between **1 and 1000**. If no weight is specified, Traffic Manager uses a default weight of **1**. The higher the weight, the higher the priority — assigning a weight of **1000** gives an endpoint the highest possible priority.
+
 **Use Case:** 
 - A/B testing
 - Gradual migration
 - Load distribution across regions
+- Prioritizing a specific endpoint (assign weight 1000)
 
 **Configuration:**
 - Endpoint 1: Weight 70 (70% of traffic)
@@ -74,6 +77,12 @@ Distribute traffic across endpoints based on assigned weights.
 ```
 Region A: Weight 80 → 80% of users
 Region B: Weight 20 → 20% of users (testing new features)
+```
+
+**Prioritizing a resource:**
+```
+Endpoint A: Weight 1000 → Highest priority (receives most traffic)
+Endpoint B: Weight 1   → Lowest priority (receives minimal traffic)
 ```
 
 ### 3. Performance
