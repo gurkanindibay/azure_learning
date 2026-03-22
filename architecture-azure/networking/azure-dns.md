@@ -129,6 +129,8 @@ Once delegation is complete, you can create various record types:
 | **SRV** | Service location records | Service discovery |
 | **PTR** | Reverse DNS lookup | IP to domain mapping |
 
+> **Exam Note**: Watch out for trick record types like **AA** or **AAA** — these do not exist in the DNS standard. The IPv6 record type is **AAAA** (four A's), not AAA (three A's).
+
 ### Subdomain Delegation
 
 Subdomain delegation allows you to assign responsibility for a portion of your DNS namespace to different DNS servers. This is useful when different teams or departments need to manage their own DNS records independently.
