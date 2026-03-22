@@ -16,6 +16,7 @@ See [Index](./01-index.md) for overview.
   - [6.1 Service Tags in NSG Rules](#61-service-tags-in-nsg-rules)
 - [7. Application Security Groups (ASG)](#7-application-security-groups-asg)
 - [8. Network Interfaces (NICs)](#8-network-interfaces-nics)
+  - [8.1 Public IP Address SKUs](#81-public-ip-address-skus)
 - [9. Virtual Network Traffic Routing](#9-virtual-network-traffic-routing)
   - [9.1 User-Defined Routes (UDR)](#91-user-defined-routes-udr)
   - [9.2 Effective Routes](#92-effective-routes)
@@ -882,6 +883,39 @@ You are deploying a network virtual appliance (NVA) in Azure to act as a firewal
 - [IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
 - [Multiple NICs in Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/multiple-nics)
 - [Network Virtual Appliances in Azure](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
+
+### 8.1 Public IP Address SKUs
+
+Azure public IP addresses are created using either a **Basic** or **Standard** SKU. The SKU determines the allocation method, security features, availability, and supported scenarios.
+
+**SKU Comparison:**
+
+| Feature | Basic SKU | Standard SKU |
+|---------|-----------|--------------|
+| **Allocation Method** | Dynamic or Static | **Static only** |
+| **Security** | Open by default (NSG optional) | Secure by default (NSG required) |
+| **Availability Zones** | Not supported | Zone-redundant or zonal |
+| **Routing Preference** | Not supported | Supported (Internet or Microsoft Network) |
+| **Global Tier** | Not supported | Supported |
+| **SLA** | No SLA | 99.99% SLA |
+
+**Key Distinction — Allocation Methods:**
+
+| SKU | Dynamic Allocation | Static Allocation |
+|-----|-------------------|-------------------|
+| **Basic** | ✅ Supported | ✅ Supported |
+| **Standard** | ❌ Not supported | ✅ Supported (always static) |
+
+- **Dynamic allocation**: IP address is assigned when the public IP is associated with a resource (e.g., VM start). The IP may change when the resource is stopped/deallocated.
+- **Static allocation**: IP address is assigned immediately upon creation and remains fixed until the public IP resource is deleted.
+
+> 🔑 **Key Takeaway**: If you need **dynamic IP addresses** for resources on your VNet, you must use a **Basic SKU** public IP. Standard SKU always uses static allocation.
+
+> ⚠️ **Note**: Basic SKU public IPs are planned for retirement. Microsoft recommends using Standard SKU for new deployments. However, for exam purposes, understanding the allocation method differences remains important.
+
+**References:**
+- [Public IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
+- [Create a public IP address - Azure Portal](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/create-public-ip-portal)
 
 ---
 
