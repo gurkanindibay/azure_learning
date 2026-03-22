@@ -19,7 +19,8 @@ See [Index](./01-index.md) for overview. See also [ExpressRoute Connectivity Mod
 - [10. Common Architecture Patterns](#10-common-architecture-patterns)
 - [11. Routing Configuration Options](#11-routing-configuration-options)
 - [12. Key Takeaways](#12-key-takeaways)
-- [13. References](#13-references)
+- [13. ExpressRoute PowerShell Management](#13-expressroute-powershell-management)
+- [14. References](#14-references)
 
 ---
 
@@ -395,7 +396,45 @@ Site A (NY) ──ExpressRoute Circuit A──→ Microsoft Backbone ←──Ex
 
 ---
 
-## 13. References
+## 13. ExpressRoute PowerShell Management
+
+Azure PowerShell provides cmdlets to manage ExpressRoute circuits programmatically.
+
+### Common commands
+
+| Command | Purpose |
+|---------|---------|
+| `Get-AzExpressRouteCircuit -ResourceGroupName <RG>` | List all circuits in a Resource Group |
+| `Get-AzExpressRouteCircuit -Name <name> -ResourceGroupName <RG>` | Get a specific circuit |
+| `Get-AzExpressRouteCircuitStats -ResourceGroupName <RG> -ExpressRouteCircuitName <name> -PeeringType <type>` | Get traffic statistics |
+| `New-AzExpressRouteCircuit` | Create a new circuit |
+| `Set-AzExpressRouteCircuit` | Update an existing circuit |
+| `Remove-AzExpressRouteCircuit` | Delete a circuit |
+
+### Listing circuits in a Resource Group
+
+```powershell
+# List all ExpressRoute circuits in a Resource Group
+Get-AzExpressRouteCircuit -ResourceGroupName "MyResourceGroup"
+
+# Get a specific circuit by name
+Get-AzExpressRouteCircuit -Name "MyCircuit" -ResourceGroupName "MyResourceGroup"
+```
+
+> **Important**: The correct parameter name is `-ResourceGroupName`, not `-ResourceGroup`. PowerShell cmdlets are strict about parameter names.
+
+### Getting circuit statistics
+
+```powershell
+# Get traffic statistics for primary and secondary paths
+Get-AzExpressRouteCircuitStats -ResourceGroupName "MyResourceGroup" `
+  -ExpressRouteCircuitName "MyCircuit" `
+  -PeeringType "AzurePrivatePeering"
+```
+
+---
+
+## 14. References
 
 - [Azure ExpressRoute Documentation](https://learn.microsoft.com/en-us/azure/expressroute/)
 - [ExpressRoute Global Reach](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-global-reach)

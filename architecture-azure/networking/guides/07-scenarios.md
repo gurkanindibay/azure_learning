@@ -606,6 +606,91 @@ Azure creates a set of default rules for every Network Security Group (NSG). The
 >
 > **Reference**: [Azure network security groups overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
 
+### NSG Rules for Azure Bastion Remote Administration
+
+**Question:** As an Azure system administrator, you are responsible for migrating your company's on-premises servers to Azure. Your manager has asked you to configure an NSG (Network Security Group) to enable remote server administration from Azure Bastion and a VPN connection. The company's subnet range is 10.0.0.0/16, and you have been allocated a subnet range of 10.0.1.0/24 for the servers. The NSG has been assigned to the subnet. What rules should be configured in the NSG to allow remote server administration?
+
+- **A)** Allow inbound traffic on port 3389 from any source IP address to any destination IP address in the 10.0.0.0/16 subnet.
+- **B)** Allow inbound traffic on port 22 from any source IP address to any destination IP address in the 10.0.1.0/24 subnet.
+- **C)** Allow inbound traffic from the AzureBastionSubnet to any destination IP address in the 10.0.1.0/24 subnet.
+- **D)** Allow inbound traffic on port 22 from the public IP address of the VPN gateway to any destination IP address in the 10.0.0.0/16 subnet.
+
+**Correct Answer: C**
+
+**Explanation:**
+
+Azure Bastion provides secure, managed RDP/SSH connectivity to VMs without exposing them to the public internet. NSG rules should be scoped to the **AzureBastionSubnet** as the source and limited to the specific server subnet (10.0.1.0/24), following the principle of least privilege.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | Allowing port 3389 from **any** source to the entire 10.0.0.0/16 subnet opens RDP access far too broadly. This violates the principle of least privilege and exposes all servers in the VNet — not just those in the allocated 10.0.1.0/24 range. |
+| **B** | ❌ Incorrect | Allowing port 22 from **any** source to the 10.0.1.0/24 subnet restricts the destination correctly but still allows SSH from any source IP, which is insecure. It also only covers SSH and does not account for RDP-based administration. |
+| **C** | ✅ Correct | Allowing inbound traffic from the **AzureBastionSubnet** to the 10.0.1.0/24 subnet is the correct approach. Azure Bastion acts as a secure jump box — traffic originates from the AzureBastionSubnet, so scoping the source to that subnet ensures only Bastion-initiated sessions reach the servers. This covers both RDP (3389) and SSH (22) through Bastion. |
+| **D** | ❌ Incorrect | Allowing port 22 from the VPN gateway's public IP to the entire 10.0.0.0/16 subnet is overly broad. The destination should be scoped to 10.0.1.0/24 (the allocated server subnet), not the entire VNet. Additionally, using the public IP of the VPN gateway as source is not the typical pattern — VPN traffic arrives from the on-premises address space, not the gateway's public IP. |
+
+**Azure Bastion traffic flow:**
+```
+Admin (Browser)
+    │
+    │ HTTPS (port 443)
+    ▼
+Azure Bastion (AzureBastionSubnet)
+    │
+    │ RDP (3389) or SSH (22) — private network
+    ▼
+Target VM (10.0.1.0/24)
+    └─ NSG allows inbound from AzureBastionSubnet
+```
+
+**Key security principles:**
+- **Least privilege**: Only allow traffic from AzureBastionSubnet, not from "any" source
+- **Subnet scoping**: Restrict destination to the allocated 10.0.1.0/24 subnet, not the entire 10.0.0.0/16 VNet
+- **Bastion model**: Azure Bastion eliminates the need to expose RDP/SSH ports to the public internet
+
+> **Exam Tip**: When a question involves Azure Bastion, the NSG source should be the **AzureBastionSubnet** service tag. Azure Bastion handles both RDP and SSH, so you do not need separate port-specific rules from external sources.
+>
+> **Domain**: Design, implement, and manage security for virtual networking (10–15%)
+>
+> **Reference**: [Azure Bastion NSG access | Microsoft Learn](https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg)
+
+### Listing ExpressRoute Circuits in a Resource Group
+
+**Question:** You have been tasked with configuring the ExpressRoute circuits. Additionally, you need to retrieve a list of all ExpressRoute circuits in a Resource Group. Which command would you use?
+
+- **A)** `Get-AzExpressRouteCircuit -ResourceGroup`
+- **B)** `Get-AzExpressRouteCircuit -ResourceGroupName`
+- **C)** `Get-AzAllExpressRouteCircuit`
+- **D)** `Get-AzExpressRouteCircuitStats`
+
+**Correct Answer: B**
+
+**Explanation:**
+
+The `Get-AzExpressRouteCircuit` cmdlet retrieves ExpressRoute circuit information from your Azure subscription. When used with the `-ResourceGroupName` parameter, it lists all circuits within that specific Resource Group.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | The parameter `-ResourceGroup` is **not valid** for the `Get-AzExpressRouteCircuit` cmdlet. The correct parameter name is `-ResourceGroupName`. PowerShell cmdlets are strict about parameter names. |
+| **B** | ✅ Correct | `Get-AzExpressRouteCircuit -ResourceGroupName <name>` is the correct command to list all ExpressRoute circuits within a specific Resource Group. |
+| **C** | ❌ Incorrect | `Get-AzAllExpressRouteCircuit` is **not a valid Azure PowerShell cmdlet**. There is no such command in the Az module. |
+| **D** | ❌ Incorrect | `Get-AzExpressRouteCircuitStats` is used to get the **combined primary and secondary path traffic statistics** of an ExpressRoute circuit, not to list circuits. |
+
+**Common ExpressRoute PowerShell commands:**
+
+| Command | Purpose |
+|---------|---------|
+| `Get-AzExpressRouteCircuit -ResourceGroupName <RG>` | List all circuits in a Resource Group |
+| `Get-AzExpressRouteCircuit -Name <name> -ResourceGroupName <RG>` | Get a specific circuit |
+| `Get-AzExpressRouteCircuitStats` | Get traffic statistics for a circuit |
+| `New-AzExpressRouteCircuit` | Create a new ExpressRoute circuit |
+| `Remove-AzExpressRouteCircuit` | Delete an ExpressRoute circuit |
+
+> **Exam Tip**: Pay close attention to the exact parameter names in PowerShell cmdlets. `-ResourceGroup` and `-ResourceGroupName` are different — only the latter is valid for `Get-AzExpressRouteCircuit`.
+>
+> **Domain**: Design, implement, and manage connectivity services (20–25%)
+>
+> **Reference**: [Get-AzExpressRouteCircuit | Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
+
 ---
 
 ## References
@@ -616,3 +701,5 @@ Azure creates a set of default rules for every Network Security Group (NSG). The
 - [Private Link Architecture](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview)
 - [About Point-to-Site VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
 - [Azure Network Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
+- [Azure Bastion NSG Access](https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg)
+- [Get-AzExpressRouteCircuit PowerShell Reference](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
