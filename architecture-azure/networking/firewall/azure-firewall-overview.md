@@ -99,10 +99,47 @@ Rule processing follows this priority order:
 
 Within each rule type, rules are processed by priority (lower number = higher priority).
 
+## Threat Intelligence
+
+Azure Firewall includes a threat intelligence-based filtering feature that can alert and/or deny traffic from/to known malicious IP addresses and domains.
+
+### Threat Intelligence Modes
+
+| Mode | Behavior |
+|------|----------|
+| **Off** | Threat intelligence is disabled |
+| **Alert only** (default) | High-confidence alerts for malicious traffic |
+| **Alert and Deny** | Traffic is alerted and blocked |
+
+### Practice Question: Masking of Threat Intelligence Alerts
+
+**Question**: You have safeguarded your Azure Virtual Network resources with Azure Firewall. You encounter an issue related to **masking of threat intelligence alerts**. Which of the following options can help you resolve this issue? (Select all that apply)
+
+- A) When specifying a port, use "HTTPS" as the value for the "protocol" field.
+- B) Set up outbound filtering for ports 80 and 443 by using application rules.
+- C) Switch the threat intelligence mode to "Alert and Deny."
+- D) Utilize authenticated SMTP relay services.
+- E) Utilize IPv4 addresses exclusively.
+
+**Answer**: **B and C** ✅
+
+**Explanation**:
+
+"Masking of threat intelligence alerts" can be resolved by implementing a mitigation strategy:
+
+- **Option A is incorrect.** Using HTTPS as the port protocol value is not the correct mitigation strategy for this issue.
+- **Option B is correct.** ✅ Creating outbound filtering for ports 80/443 using application rules resolves the masking of threat intelligence alerts.
+- **Option C is correct.** ✅ Changing the threat intelligence mode to "Alert and Deny" can mitigate the issue by ensuring malicious traffic is both alerted and blocked.
+- **Option D is incorrect.** Using authenticated SMTP relay services addresses a different Azure Firewall known issue (SMTP relay), not threat intelligence alert masking.
+- **Option E is incorrect.** Using only IPv4 addresses addresses the "IPv6 not currently supported" known issue, not threat intelligence alert masking.
+
+> **Reference**: [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
+
 ## References
 
 - [Azure Firewall Policy rule sets](https://learn.microsoft.com/en-us/azure/firewall/policy-rule-sets)
 - [Azure Firewall Policy overview](https://learn.microsoft.com/en-us/azure/firewall-manager/policy-overview)
+- [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
 
 ---
 
