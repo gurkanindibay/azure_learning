@@ -353,6 +353,58 @@ Modifying the SOA record does **not facilitate subdomain delegation**. It only c
 | **Domain → Azure DNS** | At domain registrar | Make Azure DNS authoritative for entire domain |
 | **Subdomain → Different DNS** | In parent Azure DNS zone | Delegate subdomain to different name servers |
 
+## Exam Scenario: VNet Name Resolution Without Custom DNS
+
+### Question
+
+You are tasked with designing name resolution for resources within an Azure Virtual Network (VNet). Which Azure service allows VMs within a VNet to resolve domain names without specifying custom DNS settings?
+
+A. Azure Private DNS  
+B. Azure Public DNS  
+C. Azure DNS Private Link Service  
+D. **Azure DNS** ✅
+
+### Answer: D - Azure DNS
+
+### Explanation
+
+**Azure DNS** (also known as Azure-provided DNS) is the built-in DNS service that Azure automatically provides to all VMs within a VNet. It uses the special IP address `168.63.129.16` and requires **no custom configuration** — it works out of the box.
+
+**Why each option is correct or incorrect:**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **Azure Private DNS** allows you to create custom private DNS zones for name resolution within VNets. However, it requires explicit configuration — you must create a Private DNS Zone and link it to the VNet. It does not work automatically without custom settings. |
+| **B** | ❌ Incorrect | **Azure Public DNS** is a recursive DNS resolver service for public domain names on the internet. It does not automatically enable VMs within a VNet to resolve internal domain names. |
+| **C** | ❌ Incorrect | **Azure DNS Private Link Service** allows you to access Azure DNS from a virtual network using a private endpoint. It is used for specific scenarios like private endpoint DNS resolution and requires explicit setup. |
+| **D** | ✅ Correct | **Azure DNS** (Azure-provided DNS at `168.63.129.16`) is the built-in DNS service that automatically resolves domain names for VMs within a VNet without any custom DNS configuration. It provides name resolution for VM-to-VM communication within the same VNet and resolution of Azure service endpoints. |
+
+### Key Concepts
+
+**Azure-provided DNS (`168.63.129.16`):**
+- Automatically available to all VMs in a VNet
+- No configuration required
+- Resolves VM names within the same VNet
+- Resolves Azure service FQDNs
+- Resolves names in linked Private DNS Zones
+- Only accessible from within Azure VNets (not from on-premises)
+
+**When You Need More Than Azure-provided DNS:**
+
+| Scenario | Solution |
+|----------|----------|
+| Default name resolution within a VNet | Azure DNS (built-in, no config needed) |
+| Custom domain names within a VNet | Azure Private DNS Zones |
+| Cross-VNet name resolution | Azure Private DNS Zones linked to multiple VNets |
+| On-premises to Azure name resolution | DNS forwarder VM + Private DNS Zones |
+| Advanced hybrid DNS resolution | Azure DNS Private Resolver |
+
+> **Exam Tip**: When a question asks about DNS resolution that works "without specifying custom DNS settings" or "automatically", the answer is **Azure DNS** (the built-in Azure-provided DNS). Azure Private DNS requires explicit zone creation and VNet linking.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
+
 ## Best Practices
 
 1. **Use alias records** when pointing to Azure resources to avoid stale DNS records

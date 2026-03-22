@@ -503,6 +503,34 @@ Public IP addresses can be created using a **Basic** or **Standard** SKU. A Basi
 >
 > **Reference**: [Public IP addresses in Azure | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
 
+### Azure VNet Name Resolution Without Custom DNS Settings
+
+**Question:** You are tasked with designing name resolution for resources within an Azure Virtual Network (VNet). Which Azure service allows VMs within a VNet to resolve domain names without specifying custom DNS settings?
+
+- **A)** Azure Private DNS
+- **B)** Azure Public DNS
+- **C)** Azure DNS Private Link Service
+- **D)** Azure DNS
+
+**Correct Answer: D**
+
+**Explanation:**
+
+Azure DNS is the built-in DNS service (at `168.63.129.16`) that automatically resolves domain names for VMs within a VNet without any custom DNS configuration.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **Azure Private DNS** requires explicit configuration — you must create a Private DNS Zone and link it to the VNet. It does not work automatically without custom settings. |
+| **B** | ❌ Incorrect | **Azure Public DNS** is a recursive DNS resolver for public domain names on the internet. It does not automatically enable internal VNet name resolution. |
+| **C** | ❌ Incorrect | **Azure DNS Private Link Service** allows access to Azure DNS via a private endpoint. It requires explicit setup and is not the default name resolution mechanism. |
+| **D** | ✅ Correct | **Azure DNS** (Azure-provided DNS at `168.63.129.16`) is the built-in DNS service that automatically resolves domain names for VMs within a VNet. No custom settings are needed — it works out of the box for VM-to-VM name resolution within the same VNet. |
+
+> **Exam Tip**: When the question asks about DNS resolution that works "without specifying custom DNS settings" or "automatically", the answer is **Azure DNS** (the built-in Azure-provided DNS). Azure Private DNS requires explicit zone creation and VNet linking.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
+
 ---
 
 ## References
