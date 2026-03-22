@@ -691,6 +691,50 @@ The `Get-AzExpressRouteCircuit` cmdlet retrieves ExpressRoute circuit informatio
 >
 > **Reference**: [Get-AzExpressRouteCircuit | Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
 
+### Application Gateway Health Probe Source IP Address
+
+**Question:** When using Azure Application Gateway Probes, which IP address is used by the Application Gateway as the source IP for health probes if you have a group of backend servers with public IP addresses?
+
+- **A)** Application Gateway's backend public IP address
+- **B)** Application Gateway's backend private IP address
+- **C)** Application Gateway's frontend public IP address
+- **D)** Application Gateway's frontend private IP address
+
+**Correct Answer: C**
+
+**Explanation:**
+
+Azure Application Gateway maintains the health of all resources in its backend pool by performing regular health checks. If any resource is found to be unhealthy, it is automatically removed from the pool. The **source IP address** used for health probes depends on the type of endpoint in the backend pool.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | The Application Gateway does not use a backend IP address as the source for health probes. The probe originates from the Application Gateway itself, not from backend resources. |
+| **B** | ❌ Incorrect | Similar to Option A, the Application Gateway does not use a backend IP address as the source for health probes. |
+| **C** | ✅ Correct | When the backend server address has a **public endpoint**, the Application Gateway uses its **frontend public IP address** as the source IP for health probes. |
+| **D** | ❌ Incorrect | The frontend private IP address is not used as the source for probes to public backend endpoints. However, if the backend server has a **private endpoint**, the source IP comes from the Application Gateway subnet's private IP address space. |
+
+**Health probe source IP rules:**
+
+| Backend Endpoint Type | Probe Source IP |
+|-----------------------|-----------------|
+| **Public IP** | Application Gateway's **frontend public IP** |
+| **Private IP** | Private IP from the **Application Gateway subnet** |
+
+**Key concept:**
+```
+Backend has Public IP:
+  Health Probe Source → Application Gateway Frontend Public IP
+
+Backend has Private IP:
+  Health Probe Source → Private IP from Application Gateway Subnet
+```
+
+> **Exam Tip**: The source IP of health probes matches the endpoint type of the backend — public backends get probed from the frontend public IP, private backends get probed from the Application Gateway subnet's private IP space.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Azure Application Gateway configuration overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-overview)
+
 ---
 
 ## References
@@ -703,3 +747,4 @@ The `Get-AzExpressRouteCircuit` cmdlet retrieves ExpressRoute circuit informatio
 - [Azure Network Security Groups Overview](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
 - [Azure Bastion NSG Access](https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg)
 - [Get-AzExpressRouteCircuit PowerShell Reference](https://learn.microsoft.com/en-us/powershell/module/az.network/get-azexpressroutecircuit)
+- [Azure Application Gateway Configuration Overview](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-overview)

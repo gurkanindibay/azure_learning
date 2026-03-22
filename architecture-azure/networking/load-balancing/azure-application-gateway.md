@@ -232,6 +232,17 @@ Configure custom health probes:
 - **Timeout**: Response timeout
 - **Unhealthy threshold**: Failures before marking unhealthy
 
+**Health probe source IP address:**
+
+The source IP used by the Application Gateway for health probes depends on the backend endpoint type:
+
+| Backend Endpoint Type | Probe Source IP |
+|-----------------------|-----------------|
+| **Public IP** | Application Gateway's **frontend public IP** |
+| **Private IP** | Private IP from the **Application Gateway subnet** |
+
+> **Important**: If a backend server has a public endpoint, the Application Gateway uses its frontend public IP as the source. If the backend has a private endpoint, the source IP comes from the Application Gateway subnet's private address space. Unhealthy backends are automatically removed from the pool.
+
 ## Autoscaling Configuration
 
 ### Capacity Units
