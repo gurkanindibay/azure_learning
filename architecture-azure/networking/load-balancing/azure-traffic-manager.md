@@ -447,6 +447,30 @@ Use weighted routing for zero-downtime deployments:
 4. Gradually shift: 90/10, 70/30, 50/50, 0/100
 5. Rollback by reversing weights if issues detected
 
+## Practice Questions
+
+### Q: Primary endpoint with backup failover routing
+
+**Scenario:** You have multiple instances of Azure App Service located in various Azure Regions, all hosting the same web app. You need to configure Azure Traffic Manager to ensure there is a primary service instance/endpoint for all traffic, with backup endpoints available in case the primary or backup instances become unavailable. Which routing method would you use?
+
+- A) Weighted
+- B) Geographic
+- C) Priority ✅
+- D) Subnet
+
+**Answer:** C – Priority routing.
+
+**Explanation:**
+
+- **A) Weighted** – Incorrect. Weighted routing distributes traffic across endpoints based on assigned weights. It does not designate a single primary endpoint with ordered failover backups.
+- **B) Geographic** – Incorrect. Geographic routing directs users to specific endpoints based on the geographic location of their DNS query origin, not based on primary/backup priority.
+- **C) Priority** – Correct. Priority routing lets you define a primary endpoint (Priority 1) that receives all traffic, with secondary (Priority 2) and tertiary (Priority 3) endpoints serving as ordered backups. Traffic Manager automatically fails over to the next-priority endpoint when a higher-priority one becomes unhealthy.
+- **D) Subnet** – Incorrect. Subnet routing maps specific end-user IP address ranges to specific endpoints. It does not provide primary/backup failover behavior.
+
+> **Reference:** [Azure Traffic Manager - traffic routing methods](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods)
+
+---
+
 ## References
 
 - [Azure Traffic Manager documentation](https://learn.microsoft.com/en-us/azure/traffic-manager/)
