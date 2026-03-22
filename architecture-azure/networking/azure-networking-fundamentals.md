@@ -15,6 +15,7 @@
   - [2.6 Network Security Groups (NSG)](#26-network-security-groups-nsg)
   - [2.7 Application Security Groups (ASG)](#27-application-security-groups-asg)
   - [2.8 Network Interfaces (NICs)](#28-network-interfaces-nics)
+    - [2.8.1 Public IP Address SKUs](#281-public-ip-address-skus)
   - [2.9 Virtual Network Traffic Routing](#29-virtual-network-traffic-routing)
     - [2.9.1 User-Defined Routes (UDR)](#291-user-defined-routes-udr)
     - [2.9.2 Effective Routes](#292-effective-routes)
@@ -952,6 +953,29 @@ You are deploying a network virtual appliance (NVA) in Azure to act as a firewal
 - [IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
 - [Multiple NICs in Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/multiple-nics)
 - [Network Virtual Appliances in Azure](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/dmz/nva-ha)
+
+#### 2.8.1 Public IP Address SKUs
+
+Azure public IP addresses are created using either a **Basic** or **Standard** SKU. The SKU determines the allocation method, security features, and availability.
+
+| Feature | Basic SKU | Standard SKU |
+|---------|-----------|--------------|
+| **Allocation Method** | Dynamic or Static | **Static only** |
+| **Security** | Open by default (NSG optional) | Secure by default (NSG required) |
+| **Availability Zones** | Not supported | Zone-redundant or zonal |
+| **SLA** | No SLA | 99.99% SLA |
+
+**Key Distinction — Allocation Methods:**
+
+| SKU | Dynamic Allocation | Static Allocation |
+|-----|-------------------|-------------------|
+| **Basic** | ✅ Supported | ✅ Supported |
+| **Standard** | ❌ Not supported | ✅ Supported (always static) |
+
+> 🔑 **Key Takeaway**: If you need **dynamic IP addresses** for resources on your VNet, you must use a **Basic SKU** public IP. Standard SKU always uses static allocation.
+
+**References:**
+- [Public IP addresses in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses)
 
 ---
 
