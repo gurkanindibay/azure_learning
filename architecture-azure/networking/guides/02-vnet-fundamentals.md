@@ -26,6 +26,7 @@ See [Index](./01-index.md) for overview.
   - [10.2 How NAT Gateway Works](#102-how-nat-gateway-works)
   - [10.3 Benefits and Use Cases](#103-benefits-and-use-cases)
   - [10.4 Configuration and Best Practices](#104-configuration-and-best-practices)
+  - [10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association](#105-practice-question-nat-gateway-ip-addresses-and-subnet-association)
 
 ---
 
@@ -1284,6 +1285,8 @@ Currently, whenever a new branch is added, you manually create UDRs and associat
 | **No Management** | Fully managed service, no VMs to maintain |
 | **SNAT Port Scale** | Up to 64,000 simultaneous outbound connections per IP |
 | **Subnet Association** | Attached to subnet(s), applies to all resources in subnet |
+| **One Gateway per Subnet** | A single subnet can only have one NAT gateway attached to it |
+| **Up to 16 IP Addresses** | Can use up to 16 public IP addresses (any combination of public IPs and public IP prefixes) |
 
 ### 10.2 How NAT Gateway Works
 
@@ -1609,7 +1612,61 @@ Option D (Default Outbound):
 | **Outbound only** | Use Load Balancer or Application Gateway for inbound |
 | **Max 16 public IPs** | Should support up to ~1M concurrent connections |
 | **Not for inbound** | Cannot use NAT Gateway for incoming traffic |
+| **One NAT gateway per subnet** | A subnet can only have one NAT gateway; use separate subnets if different outbound IPs needed |
 | **Costs apply** | ~$44/month + bandwidth; evaluate if traffic is minimal |
+
+### 10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association
+
+**Question:**
+
+Here are two statements about NAT (Network Address Translation):
+
+1. A NAT gateway resource can use up to sixteen IP addresses.
+2. Only one NAT gateway can be attached to a subnet.
+
+Which of the above statement(s) is correct?
+
+**Options:**
+- A) Only 1
+- B) Only 2
+- C) Both 1 and 2
+- D) None of them
+
+**Answer: C) Both 1 and 2**
+
+**Explanation:**
+
+Both statements are correct:
+
+| Statement | Correct? | Details |
+|-----------|----------|----------|
+| **Statement 1** | ✅ Yes | A NAT gateway resource can use up to **16 IP addresses**. These can be any combination of public IP addresses, public IP prefixes, and public IP addresses & prefixes derived from custom IP prefixes (BYOIP). |
+| **Statement 2** | ✅ Yes | A single subnet **cannot** have multiple NAT gateways attached to it. Only one NAT gateway can be associated with a subnet at any time. |
+
+**Why Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A) Only 1** | Statement 2 is also correct |
+| **B) Only 2** | Statement 1 is also correct |
+| **D) None of them** | Both statements are correct |
+
+**Key Takeaways:**
+
+```
+NAT Gateway Resource Limits:
+├─ Max 16 IP addresses per NAT gateway
+│   ├─ Public IP addresses
+│   ├─ Public IP prefixes
+│   └─ Custom IP prefixes (BYOIP)
+│
+├─ 1 NAT gateway per subnet (cannot attach multiple)
+│
+└─ 64,000 SNAT ports per IP address
+    └─ Max capacity: 16 IPs × 64,000 = 1,024,000 ports
+```
+
+> **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
 
 ---
 
