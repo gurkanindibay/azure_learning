@@ -235,6 +235,50 @@ For comprehensive connection monitoring, combine:
 - **Connection Monitor**: Proactively test specific connectivity paths
 - **Log Analytics**: Store and query flow log data for long-term analysis
 
+### Scenario: Viewing Network Resource Dependencies in Azure Monitor
+
+**Context:**
+You are managing a complex Azure network environment with multiple virtual networks, subnets, network security groups, and connected resources. You want to visualize how your network resources are interconnected and understand their dependencies.
+
+**Question:**
+Which feature in Azure Monitor Network Insights should you use to see the topology and interdependencies between your network resources?
+
+- A. Alerts
+- B. Connectivity tab
+- C. Dependency view ✅
+- D. Traffic tab
+- E. Diagnostic Toolkit
+
+**Correct Answer: C. Dependency view**
+
+**Explanation:**
+The **Dependency view** in Azure Monitor Network Insights provides a visual topology diagram that shows the relationships and interdependencies between network resources such as virtual networks, subnets, NICs, NSGs, and connected services. It allows you to drill down into specific resources and understand how they relate to each other.
+
+**Why Other Options Are Incorrect:**
+
+❌ **A. Alerts** - Alerts are used for notification and monitoring of specific conditions or thresholds, not for visualizing resource dependencies.
+
+❌ **B. Connectivity tab** - The Connectivity tab in Network Insights shows connection monitor results and connectivity status between endpoints. It focuses on reachability testing rather than resource dependency visualization.
+
+❌ **D. Traffic tab** - The Traffic tab provides insights into network traffic patterns using NSG flow logs and Traffic Analytics. It shows traffic volume, flow patterns, and security insights — not resource dependency mapping.
+
+❌ **E. Diagnostic Toolkit** - The Diagnostic Toolkit provides access to Network Watcher diagnostic tools such as IP Flow Verify, Next Hop, Connection Troubleshoot, and Packet Capture. These are troubleshooting tools, not dependency visualization features.
+
+**Key Distinction:**
+Azure Monitor Network Insights has four main tabs plus additional views:
+| Tab/View | Purpose |
+|----------|---------|
+| **Network health & metrics** | Overview of resource health and performance metrics |
+| **Connectivity** | Connection monitoring results between endpoints |
+| **Traffic** | Traffic analysis based on NSG flow logs |
+| **Diagnostic Toolkit** | Access to Network Watcher diagnostic tools |
+| **Dependency view** | Visual topology showing resource relationships and dependencies |
+
+**Related Feature:**
+The Dependency view in Network Insights is conceptually similar to the **Topology** feature in Azure Network Watcher, which also generates a visual diagram of resources in a virtual network. However, Network Insights provides a more comprehensive, cross-resource view integrated into Azure Monitor.
+
+---
+
 ## References
 
 - [IP Flow Verify Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-ip-flow-verify-overview)
@@ -245,3 +289,4 @@ For comprehensive connection monitoring, combine:
 - [VM Insights Dependency Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-dependency-agent)
 - [Connection Monitor](https://learn.microsoft.com/en-us/azure/network-watcher/connection-monitor-overview)
 - [Resource Providers Registration](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-providers-and-types)
+- [Azure Monitor Network Insights](https://learn.microsoft.com/en-us/azure/network-watcher/network-insights-overview)
