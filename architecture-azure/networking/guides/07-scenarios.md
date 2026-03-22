@@ -822,6 +822,50 @@ Which virtual public IP address facilitates a communication channel to Azure pla
 
 ---
 
+## Q: Centralized policy enforcement across VNets and subscriptions
+
+When managing your task, it's important to centrally create, enforce, and log policies for applications and network connectivity across virtual networks and subscriptions. Which service would be best suited for this purpose?
+
+- **A)** Azure Front Door
+- **B)** Azure Firewall
+- **C)** Azure Private Link
+- **D)** Azure DNS
+- **E)** Azure DDoS Protection
+
+**Correct Answer: B**
+
+**Explanation:**
+
+**Azure Firewall** is a managed, cloud-based network security service that can be centrally used to create, enforce, and log application and network connectivity policies across virtual networks and subscriptions. It is fully stateful, with built-in high availability and unrestricted cloud scalability. Combined with Azure Firewall Manager, it enables centralized policy management across hub-spoke architectures.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A (Azure Front Door)** | ❌ Incorrect | Azure Front Door is an application delivery network that provides global load balancing and site acceleration for web applications. It does not create or enforce network connectivity policies across VNets. |
+| **B (Azure Firewall)** | ✅ Correct | Azure Firewall can centrally create, enforce, and log application and network connectivity policies across virtual networks and subscriptions. It supports DNAT, network, and application rules with hierarchical policy inheritance. |
+| **C (Azure Private Link)** | ❌ Incorrect | Azure Private Link allows access to Azure PaaS services (e.g., Azure Storage, SQL Database) and partner services over a private endpoint in your virtual network. It is not a policy enforcement tool. |
+| **D (Azure DNS)** | ❌ Incorrect | Azure DNS provides name resolution using Microsoft Azure infrastructure. It does not enforce application or network connectivity policies. |
+| **E (Azure DDoS Protection)** | ❌ Incorrect | Azure DDoS Protection offers protection against distributed denial-of-service threats. It does not provide centralized policy creation or enforcement for network connectivity. |
+
+**Azure Firewall centralized policy capabilities:**
+```
+Azure Firewall Manager
+├─ Centralized policy management
+├─ Hierarchical policy inheritance (parent → child)
+├─ Application rules (Layer 7 FQDN filtering)
+├─ Network rules (Layer 3/4 filtering)
+├─ DNAT rules (inbound traffic translation)
+├─ Threat intelligence-based filtering
+└─ Logging and analytics via Azure Monitor
+```
+
+> **Exam Tip**: When a question mentions "centrally create, enforce, and log policies" for network connectivity across VNets and subscriptions, the answer is **Azure Firewall**. It is the only service in this list that provides centralized network policy enforcement.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Azure networking services overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/networking/fundamentals/networking-overview)
+
+---
+
 ## References
 
 - [Hub-Spoke VNet Architecture](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke)
@@ -835,3 +879,4 @@ Which virtual public IP address facilitates a communication channel to Azure pla
 - [Azure Application Gateway Configuration Overview](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-overview)
 - [Azure Traffic Manager Routing Methods](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods)
 - [What is IP address 168.63.129.16?](https://learn.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16)
+- [Azure Networking Services Overview](https://learn.microsoft.com/en-us/azure/networking/fundamentals/networking-overview)
