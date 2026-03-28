@@ -28,6 +28,7 @@ See [Index](./01-index.md) for overview.
   - [10.4 Configuration and Best Practices](#104-configuration-and-best-practices)
   - [10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association](#105-practice-question-nat-gateway-ip-addresses-and-subnet-association)
   - [10.6 Practice Question: NAT Characteristics and Limitations](#106-practice-question-nat-characteristics-and-limitations)
+  - [10.7 Practice Question: NAT Compatibility and Protocol Support](#107-practice-question-nat-compatibility-and-protocol-support)
 
 ---
 
@@ -1611,10 +1612,12 @@ Option D (Default Outbound):
 | Limitation | Workaround |
 |------------|------------|
 | **Outbound only** | Use Load Balancer or Application Gateway for inbound |
+| **IPv4 only** | Does not support IPv6; cannot be deployed on a subnet with an IPv6 prefix |
 | **Max 16 public IPs** | Should support up to ~1M concurrent connections |
 | **Not for inbound** | Cannot use NAT Gateway for incoming traffic |
 | **One NAT gateway per subnet** | A subnet can only have one NAT gateway; use separate subnets if different outbound IPs needed |
 | **Cannot span multiple VNets** | A NAT gateway operates within a single virtual network; use separate NAT gateways per VNet |
+| **Compatible with Standard LB** | Works alongside Standard SKU Load Balancer, public IP, and public IP prefix resources |
 | **Costs apply** | ~$44/month + bandwidth; evaluate if traffic is minimal |
 
 ### 10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association
@@ -1709,6 +1712,51 @@ To avoid the need to buy an IPv4 address for each resource that requires interne
 | **A) Only 1 and 2** | Statement 2 is incorrect — NAT does not assign multiple private IPs to VMs |
 | **B) Only 1 and 3** | Statement 3 is incorrect — NAT does not give each VM an external IP |
 | **C) Only 3 and 4** | Statement 3 is incorrect — NAT does not give each VM an external IP |
+
+> **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
+
+### 10.7 Practice Question: NAT Compatibility and Protocol Support
+
+**Question:**
+
+Virtual Network NAT (Network Address Translation) enables virtual networks to have outbound-only Internet connectivity. Select all applicable statements about NAT.
+
+**Options:**
+- A) NAT is compatible with standard SKU public IP and public IP prefixes but not with load balancer resources.
+- B) NAT can support both IPv4 and IPv6 addresses regardless of which one you are using.
+- C) NAT is capable of supporting only IPv4 protocol and not IPv6.
+- D) A network address translation (NAT) can cover several virtual networks at once.
+- E) Network Address Translation (NAT) cannot extend across multiple virtual networks.
+
+**Answer: C and E**
+
+**Explanation:**
+
+| Option | Correct? | Details |
+|--------|----------|----------|
+| **A** | ❌ No | NAT is compatible with standard SKU public IP, public IP prefix, **and** load balancer resources. It works alongside Standard Load Balancer for inbound/outbound scenarios. |
+| **B** | ❌ No | NAT only supports the **IPv4** address family. It cannot be deployed on a subnet with an IPv6 prefix. |
+| **C** | ✅ Yes | NAT only supports IPv4. IPv6 traffic is not supported by NAT Gateway. |
+| **D** | ❌ No | NAT cannot span across multiple virtual networks. A NAT gateway is scoped to a single virtual network. |
+| **E** | ✅ Yes | NAT cannot extend across multiple virtual networks. Each VNet requires its own NAT gateway if outbound NAT is needed. |
+
+**Key Takeaways:**
+
+```
+NAT Gateway Compatibility & Protocol Support:
+├─ Compatible with:
+│   ├─ Standard SKU public IP addresses
+│   ├─ Public IP prefixes
+│   └─ Standard Load Balancer resources
+│
+├─ Protocol support:
+│   ├─ ✅ IPv4 only
+│   └─ ❌ IPv6 not supported
+│
+└─ Scope:
+    ├─ Single virtual network only
+    └─ Cannot span multiple VNets
+```
 
 > **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
 
