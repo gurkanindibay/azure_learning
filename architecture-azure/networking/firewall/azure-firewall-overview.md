@@ -88,7 +88,7 @@ This ensures each child policy can inherit mandatory rules from a parent policy 
 
 Azure Firewall Policy rule collections are organized into:
 
-1. **DNAT Rules** - Destination Network Address Translation rules
+1. **DNAT Rules** - Destination Network Address Translation rules. DNAT translates and filters inbound internet traffic to your private subnet IP addresses. When a DNAT rule is configured, the firewall's public IP address receives the inbound traffic and translates it to the target private IP address, allowing external clients to reach internal resources without exposing them directly.
 2. **Network Rules** - Layer 3/4 filtering rules
 3. **Application Rules** - Layer 7 (FQDN-based) filtering rules
 
@@ -98,6 +98,30 @@ Rule processing follows this priority order:
 3. Application rules are processed last
 
 Within each rule type, rules are processed by priority (lower number = higher priority).
+
+### Practice Question: Rule Processing Order
+
+**Question**: Clarify the order in which rules/operations are executed in Azure Firewall, regardless of their collection priority, collection group, and policy inheritance. What is the correct sequence of application, network, and DNAT rules?
+
+- A) Application Rules > Network Rules > DNAT Rules
+- B) Application Rules > DNAT Rules > Network Rules
+- C) DNAT Rules > Application Rules > Network Rules
+- D) DNAT Rules > Network Rules > Application Rules ✅
+- E) Network Rules > Application Rules > DNAT Rules
+
+**Answer**: **D** ✅
+
+**Explanation**:
+
+In Azure Firewall, the order of processing rules is as follows: **DNAT rules** are processed first, followed by **Network rules**, and then **Application rules**. The processing order is **not affected** by the rule collection priority, rule collection group, or policy inheritance.
+
+- **Option A is incorrect.** The correct order is not Application Rules > Network Rules > DNAT Rules. Application rules are processed last, not first.
+- **Option B is incorrect.** The correct order is not Application Rules > DNAT Rules > Network Rules. Application rules are processed last.
+- **Option C is incorrect.** The correct order is not DNAT Rules > Application Rules > Network Rules. Application rules are processed after network rules, not before.
+- **Option D is correct.** ✅ DNAT Rules > Network Rules > Application Rules is the correct processing sequence.
+- **Option E is incorrect.** The correct order is not Network Rules > Application Rules > DNAT Rules. DNAT rules are processed first.
+
+> **Reference**: [Azure Firewall rule processing](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
 
 ## Threat Intelligence
 
