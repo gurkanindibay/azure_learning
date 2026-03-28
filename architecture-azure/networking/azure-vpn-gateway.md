@@ -254,6 +254,15 @@ Remote Worker Laptop ←→ VPN Client ←→ Internet ←→ Azure VPN Gateway 
 >
 > The RADIUS server (e.g., Windows NPS — Network Policy Server) acts as the intermediary that validates credentials against Active Directory. An AD Domain Controller alone is **not sufficient** — the RADIUS server is the required component that bridges P2S VPN authentication with AD domain authentication.
 
+**P2S Routing and Topology Changes:**
+
+> **Critical — VPN Client Re-download After Topology Changes:**
+> P2S VPN routing depends on the client OS, the VPN protocol (SSTP or IKEv2), and the network topology. If you make **any changes to your network topology** — such as adding VNet peering, modifying address spaces, or changing gateway configurations — **Windows P2S VPN clients must re-download and reinstall the VPN client configuration package**. The routes embedded in the client configuration are static and do **not** update automatically.
+>
+> This applies to both SSTP (Windows only) and IKEv2 clients. S2S VPN connections are not affected because their routing is handled at the gateway level.
+>
+> See: [About P2S VPN routing](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing)
+
 **Use Cases:**
 - Remote workers accessing Azure VMs
 - Development/testing access
@@ -1109,6 +1118,34 @@ Test scenarios:
    - Allow OpenVPN/SSTP/IKEv2 traffic
 ```
 
+#### Issue 6: P2S Client Can't Reach Peered VNets (But S2S Can)
+
+**Symptoms:**
+- P2S VPN client connects to the gateway VNet successfully
+- S2S VPN can reach peered VNets from on-premises
+- P2S client **cannot** reach resources in peered VNets
+
+**Root Cause:**
+After topology changes (e.g., adding VNet peering), Windows P2S VPN clients retain stale routing tables from the previously downloaded client configuration. The VPN client configuration package contains static routes that are not automatically updated.
+
+**Resolution:**
+```
+1. On the P2S client machine (e.g., Windows 11):
+   - Download the latest VPN client configuration package from the Azure portal
+   - Reinstall the VPN client configuration
+   - Reconnect to the P2S VPN
+
+2. Verify in Azure Portal:
+   - VPN Gateway → Point-to-site configuration → Download VPN client
+
+3. This applies to:
+   - Any topology change (peering, address spaces, gateway config)
+   - Windows clients using SSTP or IKEv2
+   - All P2S-connected clients need the updated package
+```
+
+> **Key takeaway:** Enabling BGP or changing peering transit settings will **not** fix this — the issue is that the P2S client has outdated routes. Always re-download the VPN client package after topology changes.
+
 ### Diagnostic Tools
 
 **Azure Portal:**
@@ -1252,6 +1289,7 @@ Total:                        ~$482/month
 - [VPN Gateway Design](https://learn.microsoft.com/en-us/azure/vpn-gateway/design)
 - [Validated VPN Devices](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices)
 - [VPN Gateway FAQ](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq)
+- [About P2S VPN Routing](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing)
 
 ### Azure Learning Resources
 - [VPN Gateway Learning Path](https://learn.microsoft.com/en-us/training/modules/connect-on-premises-network-with-vpn-gateway/)
@@ -1262,6 +1300,7 @@ Total:                        ~$482/month
 - [VPN vs Private Link Guide](./guides/04-vpn-private-link-guide.md)
 - [ExpressRoute & BGP Guide](./guides/05-expressroute-bgp-guide.md)
 - [Azure Load Balancer](./load-balancing/azure-load-balancer.md)
+- [Practice Questions: VPN Gateway](./practice-questions-vpn-gateway.md)
 
 ---
 

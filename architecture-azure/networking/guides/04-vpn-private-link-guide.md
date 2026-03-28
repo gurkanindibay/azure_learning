@@ -41,6 +41,8 @@ Azure VNet (10.0.0.0/16)
 
 > **Key Exam Point:** To authenticate P2S users with AD domain credentials, a **RADIUS server** is required. The VPN Gateway delegates authentication to the RADIUS server, which validates against the AD Domain Controller.
 
+> **Key Exam Point:** After any network topology change (VNet peering, address space modification), **Windows P2S VPN clients must re-download and reinstall the VPN client configuration package**. Routes in the P2S client are static and do not auto-update. S2S connections are not affected. See [About P2S routing](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing).
+
 ### Use Cases
 - Remote workers accessing Azure VMs
 - Migrating on-premises systems to Azure

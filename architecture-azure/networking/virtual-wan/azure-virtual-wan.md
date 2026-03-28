@@ -12,6 +12,8 @@
 - [5. Cost Optimization Considerations](#5-cost-optimization-considerations)
 - [6. Virtual Hub Routing](#6-virtual-hub-routing)
   - [6.1 Route Tables and Connections](#61-route-tables-and-connections)
+  - [📝 Exam Scenario: Connection Association with Route Tables](#-exam-scenario-connection-association-with-route-tables)
+  - [📝 Exam Scenario: Route Table and Connection Relationships](#-exam-scenario-route-table-and-connection-relationships)
 - [7. Network Virtual Appliances (NVA) in Virtual WAN Hub](#7-network-virtual-appliances-nva-in-virtual-wan-hub)
   - [7.1 NVA Resource Groups](#71-nva-resource-groups)
 
@@ -485,6 +487,62 @@ Associating a connection with a route table enables the traffic originating from
 
 **Key Takeaway:**
 > **Association** determines *which route table* a connection uses to make forwarding decisions. **Propagation** determines *which route tables* learn routes from that connection. These are two distinct concepts in Virtual Hub routing.
+
+### 📝 Exam Scenario: Route Table and Connection Relationships
+
+**Question:**
+Azure Virtual WAN is a comprehensive networking solution that integrates various networking, routing, and security features, providing a unified operational interface. Which of the following statements accurately describe Azure Virtual WAN routing?
+
+- A) Every network connection has an association with a particular route table.
+- B) Multiple route tables can be linked to a single connection.
+- C) Multiple connections can be linked to a single route table.
+- D) It is not possible to associate two connections with the same route table.
+- E) To establish a connection, two route tables must be linked together.
+
+**Correct Answers: A and C**
+
+**Explanation:**
+
+Every connection in Azure Virtual WAN is tied to a particular route table, enabling the forwarding of traffic to designated destinations outlined in the associated route table. The routing configuration of a connection indicates its association with a specific route table, and it is possible for multiple connections to be linked to the same route table.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│              ROUTE TABLE ↔ CONNECTION RELATIONSHIP                               │
+│                                                                                  │
+│   ┌──────────────┐                                                              │
+│   │  VNet        │──────┐                                                       │
+│   │  Connection 1│      │                                                       │
+│   └──────────────┘      │    ┌─────────────────┐                                │
+│                         ├───►│  Route Table A   │   ✅ Multiple connections      │
+│   ┌──────────────┐      │    │  ┌───────────┐   │      can share ONE route table │
+│   │  VPN         │──────┘    │  │10.1.0.0/16│   │                                │
+│   │  Connection 2│           │  │10.2.0.0/16│   │                                │
+│   └──────────────┘           │  └───────────┘   │                                │
+│                              └─────────────────┘                                │
+│                                                                                  │
+│   ┌──────────────┐           ┌─────────────────┐                                │
+│   │  ExpressRoute│──────────►│  Route Table B   │   ✅ Each connection has       │
+│   │  Connection 3│           │  ┌───────────┐   │      exactly ONE route table   │
+│   └──────────────┘           │  │10.3.0.0/16│   │                                │
+│                              │  └───────────┘   │                                │
+│                              └─────────────────┘                                │
+│                                                                                  │
+│   Rule: One connection → One route table (many-to-one relationship)             │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Option | Correct/Incorrect | Reason |
+|--------|-------------------|--------|
+| **A) Every connection has an association with a particular route table** | ✅ **Correct** | Each connection is affiliated with a distinct route table that determines traffic forwarding |
+| **B) Multiple route tables can be linked to a single connection** | ❌ Incorrect | A connection can only be associated with **one** route table at a time |
+| **C) Multiple connections can be linked to a single route table** | ✅ **Correct** | Multiple connections can share the same route table (many-to-one relationship) |
+| **D) It is not possible to associate two connections with the same route table** | ❌ Incorrect | Multiple connections **can** be associated with the same route table |
+| **E) Two route tables must be linked together to establish a connection** | ❌ Incorrect | Each connection is associated with a single specific route table; linking two route tables is not required |
+
+**Key Takeaway:**
+> The relationship between connections and route tables is **many-to-one**: each connection is associated with exactly **one** route table, but **multiple connections** can share the same route table.
+
+**Reference:** [About virtual hub routing — Azure Virtual WAN | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing)
 
 ---
 
