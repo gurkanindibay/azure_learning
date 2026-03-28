@@ -173,6 +173,9 @@ Azure Firewall and Azure Web Application Firewall (WAF) serve different purposes
 | **OWASP CRS** | No | Yes — based on OWASP Core Rule Set |
 | **SQL injection protection** | No | Yes |
 | **Cross-site scripting (XSS) protection** | No | Yes |
+| **Custom rules** | N/A | Match rules and Rate limit rules |
+
+> **See also**: [WAF custom rules](../azure-network-security-services-comparison.md#23-azure-web-application-firewall-waf) for details on WAF custom rule types (match rules and rate limit rules).
 
 ### Practice Question: Describing Azure Firewall
 

@@ -71,6 +71,44 @@ Azure WAF provides centralized protection for web applications against common ex
 - Can operate in Detection or Prevention mode
 - Deployed as part of Application Gateway (regional) or Front Door (global)
 
+#### WAF custom rules
+
+A WAF policy supports two types of custom rules for access control. Each custom rule contains a **priority number**, **match conditions**, **rule type**, and an **action**.
+
+| Custom Rule Type | Description |
+|-----------------|-------------|
+| **Match rules** | Access is controlled based on a set of matching conditions (e.g., IP address, geo-location, request URI, request headers) |
+| **Rate limit rules** | Access is controlled based on matching conditions **and** the rate of incoming requests (e.g., block a source IP if it exceeds 100 requests per minute) |
+
+> **Reference**: [Web application firewall custom rule for Azure Front Door | Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/waf-front-door-custom-rules)
+
+#### Practice question: WAF custom rule types
+
+**Question**: A custom Web Application Firewall (WAF) rule contains a priority number, match conditions, rule type, and an action. What kinds of custom rules can you create while creating a WAF policy?
+
+- A) Rate limit rules and Match rules ✅
+- B) Match rules and priority rules
+- C) Match rules and String rules
+- D) Rate limit rules and Last limit rules
+- E) Rate limit rules and priority rules
+
+**Answer**: **A** ✅
+
+**Explanation**:
+
+There are two types of custom rules that can be used for access control in a WAF:
+
+- **Match rules** — Access is controlled based on a set of matching conditions. For example, you can match on IP addresses, geo-locations, or string patterns in the request.
+- **Rate limit rules** — Access is controlled based on both matching conditions and the rate of incoming requests. For example, you can limit a source IP to a certain number of requests per time window.
+
+- **Option A is correct.** ✅ Rate limit rules and match rules are the two types of WAF custom rules.
+- **Option B is incorrect.** "Priority rules" is not a WAF custom rule type. Priority is an attribute of any custom rule, not a rule type itself.
+- **Option C is incorrect.** "String rules" is not a WAF custom rule type.
+- **Option D is incorrect.** "Last limit rules" is not a valid WAF custom rule type.
+- **Option E is incorrect.** "Priority rules" is not a WAF custom rule type.
+
+> **Reference**: [Web application firewall custom rule for Azure Front Door | Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/waf-front-door-custom-rules)
+
 ### 2.4 Azure Private Endpoint / Private Link
 
 Azure Private Link enables private access to Azure PaaS services (Storage, SQL Database, Cosmos DB, etc.) over a private endpoint in your VNet. Traffic never traverses the public internet.
