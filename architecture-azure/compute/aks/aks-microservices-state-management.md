@@ -214,4 +214,4 @@ await client.DeleteStateAsync("statestore", "key1");
 
 - [Azure Container Apps Overview](../azure_container_apps/azure-container-apps-overview.md)
 - [Azure Container Registry](../../azure_container_registry/azure-container-registry-acr.md)
-- [Azure Networking Fundamentals](../../azure_networking/azure-networking-fundamentals.md)
+- [Azure Networking Fundamentals](../../networking/guides/00-networking-fundamentals.md)

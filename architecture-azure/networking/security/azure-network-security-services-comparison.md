@@ -1,7 +1,7 @@
 # Azure Network Security Services Comparison
 
-> **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
-> **General Pattern**: [Security Architecture](../../architecture-general/06-security-architecture/)
+> **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
+> **General Pattern**: [Security Architecture](../../../architecture-general/06-security-architecture/)
 
 ## Table of Contents
 
@@ -270,6 +270,6 @@ Do you need all of the above?
 ---
 
 > **Related documentation**:
-> - [Azure Firewall Overview](firewall/azure-firewall-overview.md)
-> - [Azure Networking Fundamentals — NSG section](azure-networking-fundamentals.md#26-network-security-groups-nsg)
-> - [Private Endpoints Guide](guides/03-private-endpoints-guide.md)
+> - [Azure Firewall Overview](./azure-firewall-overview.md)
+> - [Azure Networking Fundamentals — NSG section](../guides/00-networking-fundamentals.md#26-network-security-groups-nsg)
+> - [Private Endpoints Guide](../guides/03-private-endpoints-guide.md)

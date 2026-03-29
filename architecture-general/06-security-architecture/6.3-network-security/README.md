@@ -538,7 +538,7 @@ graph TB
 
 ### Azure Implementations
 
-- [Azure Firewall](../../../architecture-azure/networking/firewall/) - Azure native firewall service
+- [Azure Firewall](../../../architecture-azure/networking/security/) - Azure native firewall service
 - [Azure WAF](../../../architecture-azure/networking/) - Web Application Firewall on Azure
 - [Azure DDoS Protection](../../../architecture-azure/networking/) - Azure DDoS mitigation
 - [Azure Virtual Network](../../../architecture-azure/networking/) - Network segmentation in Azure

@@ -274,7 +274,7 @@ Network restrictions provide an additional security layer:
 ## Related Topics
 
 - [Azure Storage Security](azure-storage-security-overview.md)
-- [Azure VNet Service Endpoints](../../networking/azure-networking-fundamentals.md)
+- [Azure VNet Service Endpoints](../../networking/guides/00-networking-fundamentals.md)
 - [Azure Private Link for Storage](azure-storage-private-endpoints.md)
 - [Azure Backup Overview](../../governance/azure-site-recovery-backup.md)
 

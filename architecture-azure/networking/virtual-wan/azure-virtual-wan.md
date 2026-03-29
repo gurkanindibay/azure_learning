@@ -597,4 +597,4 @@ When a Network Virtual Appliance (NVA) is created in the Virtual WAN hub, which 
 - [Virtual WAN Global Transit Network Architecture](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-global-transit-network-architecture)
 - [About Virtual Hub Routing](https://learn.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing)
 - [Connect Remote Resources by Using Azure Virtual WANs - Training](https://learn.microsoft.com/en-us/training/modules/connect-remote-resources-by-using-azure-virtual-wans/)
-- [Azure Networking Fundamentals](./azure-networking-fundamentals.md)
+- [Azure Networking Fundamentals](../guides/00-networking-fundamentals.md)

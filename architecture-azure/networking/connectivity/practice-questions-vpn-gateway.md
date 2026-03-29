@@ -2,7 +2,7 @@
 
 > **Certification Domain**: Design, implement, and manage connectivity services (20–25%)
 > **Certification**: Microsoft Certified: Azure Network Engineer Associate (AZ-700)
-> **General Pattern**: [VPN Gateway](../networking/azure-vpn-gateway.md)
+> **General Pattern**: [VPN Gateway](./azure-vpn-gateway.md)
 > **Taxonomy**: [§5 Cloud & Infrastructure / Platform Architecture](../../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
 
 ---
@@ -58,5 +58,5 @@ Azure currently supports two protocols for remote access: **SSTP** and **IKEv2**
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
-- [VPN vs Private Link Guide](./guides/04-vpn-private-link-guide.md)
-- [Azure Networking Scenarios](./guides/07-scenarios.md)
+- [VPN vs Private Link Guide](../guides/04-vpn-private-link-guide.md)
+- [Azure Networking Scenarios](../guides/07-scenarios.md)

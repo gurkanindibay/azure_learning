@@ -207,10 +207,10 @@ Azure networking services provide the foundation for connecting and securing Azu
 
 ## Related Azure Services
 
-- [Azure Virtual WAN](../azure-virtual-wan.md) - Hub-based global transit network
-- [Azure Network Watcher](../azure-network-watcher.md) - Network monitoring and troubleshooting
-- [Azure Firewall](../azure-firewall.md) - Managed network security
-- [Azure DDoS Protection](../azure-ddos-protection.md) - DDoS mitigation
+- [Azure Virtual WAN](../virtual-wan/azure-virtual-wan.md) - Hub-based global transit network
+- [Azure Network Watcher](../monitoring/azure-network-watcher.md) - Network monitoring and troubleshooting
+- [Azure Firewall](../security/azure-firewall-overview.md) - Managed network security
+- [Azure DDoS Protection](../security/azure-network-security-services-comparison.md) - DDoS mitigation
 
 ---
 

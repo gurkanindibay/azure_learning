@@ -175,7 +175,7 @@ Azure Firewall and Azure Web Application Firewall (WAF) serve different purposes
 | **Cross-site scripting (XSS) protection** | No | Yes |
 | **Custom rules** | N/A | Match rules and Rate limit rules |
 
-> **See also**: [WAF custom rules](../azure-network-security-services-comparison.md#23-azure-web-application-firewall-waf) for details on WAF custom rule types (match rules and rate limit rules).
+> **See also**: [WAF custom rules](./azure-network-security-services-comparison.md#23-azure-web-application-firewall-waf) for details on WAF custom rule types (match rules and rate limit rules).
 
 ### Practice Question: Describing Azure Firewall
 
@@ -250,7 +250,7 @@ In this scenario, **Azure Firewall** is the correct solution because:
 3. Azure Firewall resolves these FQDNs via DNS and allows only matching traffic
 
 > **Reference**: [Azure Firewall FQDN filtering](https://learn.microsoft.com/en-us/azure/firewall/fqdn-filtering-network-rules)
-> **See also**: [NSG overview](../../azure-networking-fundamentals.md#26-network-security-groups-nsg) for NSG capabilities and limitations
+> **See also**: [NSG overview](../guides/00-networking-fundamentals.md#26-network-security-groups-nsg) for NSG capabilities and limitations
 
 ## References
 

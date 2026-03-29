@@ -445,6 +445,6 @@ Get-AzExpressRouteCircuitStats -ResourceGroupName "MyResourceGroup" `
 - [ExpressRoute Pricing](https://azure.microsoft.com/en-us/pricing/details/expressroute/)
 
 > **Related Documentation**:
-> - [VPN Gateway](../../azure-vpn-gateway.md) — for VPN-based connectivity
+> - [VPN Gateway](../connectivity/azure-vpn-gateway.md) — for VPN-based connectivity
 > - [ExpressRoute Connectivity Models](./09-express-route-models.md) — for physical connection options
 > - [VPN & Private Link Guide](./04-vpn-private-link-guide.md) — for private endpoint patterns
