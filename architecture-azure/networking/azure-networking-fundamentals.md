@@ -27,6 +27,7 @@
     - [3.3.1 When to Use Private Link Service](#331-when-to-use-private-link-service)
     - [3.3.2 Private Link Service vs Alternative Solutions](#332-private-link-service-vs-alternative-solutions)
     - [3.3.3 Private Link Service Requirements](#333-private-link-service-requirements)
+    - [📝 Exam Scenario: Exposing services privately to customers via Microsoft backbone](#-exam-scenario-exposing-services-privately-to-customers-via-microsoft-backbone)
   - [3.4 DNS Configuration](#34-dns-configuration)
     - [3.4.1 DNS Resolution for Hybrid/On-Premises Connectivity](#341-dns-resolution-for-hybridon-premises-connectivity)
   - [3.5 Supported Services](#35-supported-services)
@@ -1466,6 +1467,42 @@ When designing networking for cross-tenant or multi-customer access to your appl
 **References:**
 - [What is Azure Private Link Service? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/private-link/private-link-service-overview)
 - [Recommend a network architecture solution based on workload requirements | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/design-network-solutions/)
+
+#### 📝 Exam Scenario: Exposing services privately to customers via Microsoft backbone
+
+**Question:**
+You want your customers to use Microsoft's backbone to connect from their virtual network to the services in your virtual network. Which Azure service supports this?
+
+- A) ExpressRoute Peering
+- B) ExpressRoute Private Link
+- C) Azure Service Endpoint
+- D) Azure Private Link Service
+- E) Network Security Groups
+
+**Correct Answer: D) Azure Private Link Service**
+
+**Explanation:**
+
+Azure Private Link Service allows you to expose your own services (behind an Azure Standard Load Balancer) to consumers as private endpoints within their virtual networks. All traffic flows over the Microsoft backbone network, never traversing the public internet. Consumers create a private endpoint in their VNet and map it to your Private Link Service.
+
+| Option | Correct/Incorrect | Reason |
+|--------|-------------------|--------|
+| **A) ExpressRoute Peering** | ❌ Incorrect | ExpressRoute provides private connectivity between on-premises networks and Azure, not VNet-to-VNet service exposure to customers |
+| **B) ExpressRoute Private Link** | ❌ Incorrect | This is not a valid Azure service name |
+| **C) Azure Service Endpoint** | ❌ Incorrect | Service Endpoints enable VNet resources to use private IP addresses to connect to the **public endpoint** of an Azure PaaS service. They do not expose your own services to customers |
+| **D) Azure Private Link Service** | ✅ **Correct** | Enables you to expose your service behind a Standard Load Balancer so consumers can create private endpoints in their VNets to connect privately over the Microsoft backbone |
+| **E) Network Security Groups** | ❌ Incorrect | NSGs filter network traffic to/from Azure resources but do not provide private connectivity or service exposure |
+
+**Key Distinction — Service Endpoint vs Private Link Service:**
+
+| Aspect | Azure Service Endpoint | Azure Private Link Service |
+|--------|----------------------|---------------------------|
+| **Direction** | You consume Azure PaaS services | You expose your own services to consumers |
+| **Endpoint type** | Routes traffic to PaaS public endpoint via backbone | Creates a private endpoint in consumer's VNet |
+| **Cross-tenant** | No | Yes — consumers in any tenant can connect |
+| **IP address** | PaaS service keeps its public IP | Consumer gets a private IP in their VNet |
+
+**Reference:** [What is Azure Private Link service? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/private-link/private-link-service-overview)
 
 ### 3.4 DNS Configuration
 
