@@ -3,225 +3,86 @@
 > **Repository Type**: Technical documentation (NOT a code repository)  
 > **Focus**: Cloud architecture, software engineering patterns, and .NET multithreading
 
-## Quick Start for AI Agents
-
-### Repository Structure
+## Repository Structure
 
 ```
 azure_learning/
 ├── architecture-azure/      # Azure-specific (Physical/Implementation layer)
 ├── architecture-general/    # Cloud-agnostic patterns (Conceptual/Logical layer)
 ├── dotNet_multi_threading/  # .NET concurrency patterns
-└── scripts/                 # Taxonomy sync automation
+├── site-reliability-engineering/  # SRE resources and infographics
+├── unstructured-resources/  # Articles and evolving architecture notes
+└── scripts/                 # Taxonomy sync automation (Python, no deps)
 ```
 
-### Where to Add Content (Decision Tree)
+### Subdirectory Instructions
+
+Each major section has detailed guidance — **read these before contributing**:
+- [`architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) — Azure service docs, tier comparisons, templates
+- [`architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) — Taxonomy alignment rules, pattern templates
+
+## Content Placement
 
 ```
 Is it Azure-specific?
-  ├─ YES → architecture-azure/
-  │   └─ Which category? compute/, data/, networking/, security/, integration/, etc.
-  │
+  ├─ YES → architecture-azure/  (compute/, data/, networking/, security/, integration/, etc.)
   └─ NO → Is it .NET multithreading?
       ├─ YES → dotNet_multi_threading/
-      └─ NO → architecture-general/
-          └─ Reference taxonomy: See section below
+      └─ NO → architecture-general/  (align with taxonomy §X.X section)
 ```
 
-### Subdirectory-Specific Instructions
+## Taxonomy Alignment
 
-**IMPORTANT**: Each major section has detailed instructions:
-- [`architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) - Azure service documentation
-- [`architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) - Taxonomy alignment rules
+**All content MUST align with the [Architecture Taxonomy](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)**.
 
-## Core Principles
+- Reference taxonomy sections using `§X.X` format: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
+- The taxonomy file is **auto-generated** — never edit it directly
 
-### 1. Documentation Focus
+## Automation
 
-This is a **knowledge base**, not executable code. Assist with:
-- Writing clear, technical documentation
-- Creating comprehensive markdown files
-- Organizing content hierarchically
-- Adding Mermaid diagrams for architecture visualizations
+### Taxonomy Sync (run after editing any `architecture-general/**/README.md`)
 
-### 2. Taxonomy Alignment
+```bash
+python scripts/sync_taxonomy_reference.py          # Regenerate
+python scripts/sync_taxonomy_reference.py --check   # CI check (exit 1 if stale)
+python scripts/sync_taxonomy_reference.py --dry-run  # Preview
+```
 
-**All content MUST align with the Architecture Taxonomy**:
-- 📖 [`architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md`](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
-- Use `§X.X` format when referencing taxonomy sections
-- Example: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
+- GitHub Actions validates sync on PRs (`.github/workflows/sync-taxonomy.yml`)
+- Optional pre-commit hook: `cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit`
 
-### 3. Content Quality Standards
+## Content Standards
 
-- ✅ Technically accurate and current
-- ✅ Proper heading hierarchy (H1 → H2 → H3)
-- ✅ Include TOC for documents >200 lines
-- ✅ Use comparison tables for alternatives
-- ✅ Code blocks with language tags
-- ✅ Reference official documentation
-- ✅ Include practical examples and case studies
+- Proper heading hierarchy (H1 → H2 → H3)
+- TOC for documents >200 lines
+- Comparison tables for alternatives
+- Code blocks with language tags
+- Mermaid diagrams for architecture visualizations
+- Reference official Microsoft/vendor documentation
+- Include practical examples and case studies
 
-## Cross-Reference Patterns
+## Cross-References
 
 Link between general patterns and Azure implementations:
 
-### From general → Azure
-```markdown
-> **Azure Implementation**: See [Azure Event Hubs](../architecture-azure/integration/event-hubs/) for Azure-specific details.
-```
+| Direction | Pattern |
+|-----------|---------|
+| General → Azure | `> **Azure Implementation**: See [Service Name](../architecture-azure/category/service/)` |
+| Azure → General | `> **General Pattern**: [Pattern Name](../architecture-general/section/)`<br>`> **Taxonomy**: §X.X Section Name` |
 
-### From Azure → general
-```markdown
-> **General Pattern**: [Event-Driven Architecture](../architecture-general/03-integration-communication-architecture/)
-> **Taxonomy**: [§3.3 Event-Driven & Messaging](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
-```
-
-### Taxonomy Section References
-```markdown
-> **Taxonomy Reference**: §2 Application & Software Architecture (see [architecture_taxonomy_reference.md](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
-```
-
-**Real example**: See [`architecture-general/02-application-software-architecture/07-language-selection/01-uber-go-vs-rust-case-study.md`](../architecture-general/02-application-software-architecture/07-language-selection/01-uber-go-vs-rust-case-study.md)
-
-## Developer Workflows
-
-### Adding New Content
-
-1. **Determine location** using decision tree above
-2. **Check taxonomy alignment** - Which §X.X section?
-3. **Use appropriate template** (see below)
-4. **Add cross-references** to related content
-5. **Update parent README.md** with link to new doc
-6. **Run taxonomy sync** if you modified `architecture-general/**/README.md`
-
-### Taxonomy Synchronization
-
-The taxonomy reference is **auto-generated** from README.md files:
-
-```bash
-# Regenerate from all README.md files
-python scripts/sync_taxonomy_reference.py
-
-# Check if sync is needed (for CI/CD)
-python scripts/sync_taxonomy_reference.py --check
-
-# Preview without writing
-python scripts/sync_taxonomy_reference.py --dry-run
-```
-
-**When to sync**:
-- ✅ After editing any `architecture-general/**/README.md`
-- ✅ Before committing changes to README files
-- ⚠️ GitHub Actions auto-checks on PRs (`.github/workflows/sync-taxonomy.yml`)
-
-### Pre-commit Hook (Optional)
-
-Install to automatically check taxonomy sync:
-
-```bash
-cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
-This prevents commits with out-of-sync taxonomy references.
-
-### Language and Technology Selection
-
-When discussing language or technology choices:
-1. **Consider organizational factors**: Team size, hiring constraints, velocity requirements
-2. **Reference case studies**: See [`architecture-general/02-application-software-architecture/07-language-selection/`](../architecture-general/02-application-software-architecture/07-language-selection/)
-3. **Balance trade-offs**: Raw performance vs team productivity vs operational simplicity
-4. **Document decisions**: Create ADRs (Architecture Decision Records) for significant choices
-5. **Learn from real-world examples**: Uber, Netflix, Amazon case studies provide valuable insights
+Example: [`01-uber-go-vs-rust-case-study.md`](../architecture-general/02-application-software-architecture/07-language-selection/01-uber-go-vs-rust-case-study.md)
 
 ## Naming Conventions
 
-- **Files**: Use kebab-case: `azure-event-hubs-tiers.md`
-- **Directories**: Use kebab-case: `event-hubs/`, `service-bus/`
-- **Headings**: Use Title Case for H1, Sentence case for others
+- **Files**: kebab-case — `azure-event-hubs-tiers.md`
+- **Directories**: kebab-case — `event-hubs/`, `service-bus/`
+- **Headings**: Title Case for H1, Sentence case for others
 
-## Documentation Templates
+## Adding New Content
 
-### Service Documentation Structure
-```markdown
-# Service Name
-
-## Overview
-Brief description of the service
-
-## Key Features
-- Feature 1
-- Feature 2
-
-## Architecture
-[Mermaid diagram]
-
-## Use Cases
-When to use this service
-
-## Pricing Tiers (if applicable)
-Comparison table
-
-## Best Practices
-Recommendations
-
-## Related Services
-Links to related documentation
-```
-
-### Comparison Documentation Structure
-```markdown
-# Service A vs Service B
-
-## Overview
-Brief comparison summary
-
-## Feature Comparison
-| Feature | Service A | Service B |
-|---------|-----------|-----------|
-
-## When to Use Each
-Decision criteria
-
-## Migration Considerations
-If applicable
-```
-
-### Case Study Documentation Structure
-```markdown
-# Case Study: Organization Name - Decision Title
-
-> **Source**: [Origin]
-> **Timeframe**: When this decision was made
-> **Relevance**: Current applicability
-
-## Overview
-Brief summary of the decision
-
-## The Context
-What problem was being solved
-
-## The Decision Matrix
-Comparison table of options
-
-## Real-World Implementation
-How it was actually implemented
-
-## Key Lessons Learned
-Actionable takeaways
-
-## Modern Context
-Is this still relevant today?
-
-## Related Documentation
-Links to related concepts
-```
-
-## Related Instructions
-
-- See `architecture-azure/.copilot-instructions.md` for Azure-specific guidance
-- See `architecture-general/.copilot-instructions.md` for general architecture guidance
-
-## Key Reference Documents
-
-- **Architecture Taxonomy**: See `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` for comprehensive architecture type definitions, naming conventions, and classification standards
+1. **Determine location** using content placement tree above
+2. **Check taxonomy alignment** — which `§X.X` section?
+3. **Use templates** from subdirectory `.copilot-instructions.md` files (service doc, comparison, case study)
+4. **Add cross-references** to related content
+5. **Update parent README.md** with link to new doc
+6. **Run taxonomy sync** if you modified any `architecture-general/**/README.md`
