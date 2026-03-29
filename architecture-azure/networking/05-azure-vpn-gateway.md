@@ -1296,11 +1296,11 @@ Total:                        ~$482/month
 - [Azure Network Engineer Associate Certification](https://learn.microsoft.com/en-us/certifications/azure-network-engineer-associate/)
 
 ### Related Documentation in This Repository
-- [Azure Networking Fundamentals](../guides/00-networking-fundamentals.md)
-- [VPN vs Private Link Guide](../guides/04-vpn-private-link-guide.md)
-- [ExpressRoute & BGP Guide](../guides/05-expressroute-bgp-guide.md)
-- [Azure Load Balancer](../load-balancing/azure-load-balancer.md)
-- [Practice Questions: VPN Gateway](./practice-questions-vpn-gateway.md)
+- [Azure Networking Fundamentals](./01-networking-fundamentals.md)
+- [VPN vs Private Link Guide](./06-vpn-private-link-guide.md)
+- [ExpressRoute & BGP Guide](./07-expressroute-bgp-guide.md)
+- [Azure Load Balancer](./16-azure-load-balancer.md)
+- [Practice Questions: VPN Gateway](./25-practice-questions-vpn-gateway.md)
 
 ---
 

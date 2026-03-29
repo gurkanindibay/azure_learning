@@ -1,9 +1,9 @@
 # Azure ExpressRoute & BGP Routing Guide
 
-> **General Pattern**: [Hybrid Cloud Architecture](../../../architecture-general/05-cloud-infrastructure-platform-architecture/)
-> **Taxonomy Reference**: §5 Cloud, Infrastructure & Platform Architecture (see [architecture_taxonomy_reference.md](../../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
+> **General Pattern**: [Hybrid Cloud Architecture](../../architecture-general/05-cloud-infrastructure-platform-architecture/)
+> **Taxonomy Reference**: §5 Cloud, Infrastructure & Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
-See [Index](./01-index.md) for overview. See also [ExpressRoute Connectivity Models](./09-express-route-models.md).
+See [README](./README.md) for overview. See also [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md).
 
 ## Table of Contents
 
@@ -445,6 +445,6 @@ Get-AzExpressRouteCircuitStats -ResourceGroupName "MyResourceGroup" `
 - [ExpressRoute Pricing](https://azure.microsoft.com/en-us/pricing/details/expressroute/)
 
 > **Related Documentation**:
-> - [VPN Gateway](../connectivity/azure-vpn-gateway.md) — for VPN-based connectivity
-> - [ExpressRoute Connectivity Models](./09-express-route-models.md) — for physical connection options
-> - [VPN & Private Link Guide](./04-vpn-private-link-guide.md) — for private endpoint patterns
+> - [VPN Gateway](./05-azure-vpn-gateway.md) — for VPN-based connectivity
+> - [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md) — for physical connection options
+> - [VPN & Private Link Guide](./06-vpn-private-link-guide.md) — for private endpoint patterns

@@ -2,8 +2,8 @@
 
 > **Certification Domain**: Design, implement, and manage connectivity services (20–25%)
 > **Certification**: Microsoft Certified: Azure Network Engineer Associate (AZ-700)
-> **General Pattern**: [VPN Gateway](./azure-vpn-gateway.md)
-> **Taxonomy**: [§5 Cloud & Infrastructure / Platform Architecture](../../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
+> **General Pattern**: [VPN Gateway](./05-azure-vpn-gateway.md)
+> **Taxonomy**: [§5 Cloud & Infrastructure / Platform Architecture](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)
 
 ---
 
@@ -51,12 +51,12 @@ Azure currently supports two protocols for remote access: **SSTP** and **IKEv2**
 ### Reference
 
 - [About P2S VPN routing — Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing)
-- [Azure VPN Gateway - P2S VPN](./azure-vpn-gateway.md#42-point-to-site-p2s-vpn)
+- [Azure VPN Gateway - P2S VPN](./05-azure-vpn-gateway.md#42-point-to-site-p2s-vpn)
 
 ---
 
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
-- [VPN vs Private Link Guide](../guides/04-vpn-private-link-guide.md)
-- [Azure Networking Scenarios](../guides/07-scenarios.md)
+- [VPN vs Private Link Guide](./06-vpn-private-link-guide.md)
+- [Azure Networking Scenarios](./23-networking-scenarios.md)

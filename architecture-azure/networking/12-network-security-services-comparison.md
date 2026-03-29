@@ -1,7 +1,7 @@
 # Azure Network Security Services Comparison
 
-> **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
-> **General Pattern**: [Security Architecture](../../../architecture-general/06-security-architecture/)
+> **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
+> **General Pattern**: [Security Architecture](../../architecture-general/06-security-architecture/)
 
 ## Table of Contents
 
@@ -135,7 +135,7 @@ Application Security Groups (ASGs) enable you to group virtual machines by appli
 - Works only with VMs/NICs — cannot group Azure PaaS services
 - Multiple ASGs can be assigned to a single NIC
 
-> **Deep Dive**: [ASG concepts, exam scenarios & implementation](../guides/00-networking-fundamentals.md#27-application-security-groups-asg)
+> **Deep Dive**: [ASG concepts, exam scenarios & implementation](./01-networking-fundamentals.md#27-application-security-groups-asg)
 
 ## 3. Comparison table
 
@@ -293,6 +293,6 @@ Do you need all of the above?
 ---
 
 > **Related documentation**:
-> - [Azure Firewall Overview](./azure-firewall-overview.md)
-> - [Azure Networking Fundamentals — NSG section](../guides/00-networking-fundamentals.md#26-network-security-groups-nsg)
-> - [Private Endpoints Guide](../guides/03-private-endpoints-guide.md)
+> - [Azure Firewall Overview](./13-azure-firewall-overview.md)
+> - [Azure Networking Fundamentals — NSG section](./01-networking-fundamentals.md#26-network-security-groups-nsg)
+> - [Private Endpoints Guide](./03-private-endpoints-guide.md)

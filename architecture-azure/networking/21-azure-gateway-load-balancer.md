@@ -666,9 +666,9 @@ Traffic Manager
 - [Network Security Architecture](https://learn.microsoft.com/azure/architecture/framework/security/design-network)
 
 ### Related Documentation
-- [Main Load Balancing Overview](./azure_load_balancing_options.md)
-- [Azure Load Balancer](./azure-load-balancer.md)
-- [Azure Application Gateway](./azure-application-gateway.md)
+- [Main Load Balancing Overview](./15-load-balancing-services-comparison.md)
+- [Azure Load Balancer](./16-azure-load-balancer.md)
+- [Azure Application Gateway](./17-azure-application-gateway.md)
 
 ---
 

@@ -1,6 +1,6 @@
 # Azure Networking Best Practices Guide
 
-See [Index](./01-index.md) for overview.
+See [README](./README.md) for overview.
 
 ## Design Principles
 

@@ -437,10 +437,10 @@ Note: First 25 hosted DNS zones and first billion queries per month are included
 
 ## Related Services
 
-- [Azure Traffic Manager](../load-balancing/): DNS-based traffic routing
-- [Azure Private Link](../guides/00-networking-fundamentals.md): Requires Private DNS zones for resolution
-- [Azure Front Door](../load-balancing/): Global HTTP(S) load balancer with DNS integration
-- [Azure CDN](../load-balancing/azure-cdn.md): Content delivery with DNS configuration
+- [Azure Traffic Manager](./19-azure-traffic-manager.md): DNS-based traffic routing
+- [Azure Private Link](./01-networking-fundamentals.md): Requires Private DNS zones for resolution
+- [Azure Front Door](./18-azure-front-door.md): Global HTTP(S) load balancer with DNS integration
+- [Azure CDN](./20-azure-cdn.md): Content delivery with DNS configuration
 
 ## References
 

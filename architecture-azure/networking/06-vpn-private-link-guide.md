@@ -1,6 +1,6 @@
 # VPN vs Private Link Guide
 
-See [Index](./01-index.md) for overview.
+See [README](./README.md) for overview.
 
 ## Quick Summary
 

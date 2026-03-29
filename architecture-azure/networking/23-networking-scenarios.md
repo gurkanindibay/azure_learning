@@ -1,6 +1,6 @@
 # Azure Networking Scenarios Guide
 
-See [Index](./01-index.md) for overview.
+See [README](./README.md) for overview.
 
 ## Hub-and-Spoke VNet Architecture
 

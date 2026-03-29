@@ -559,7 +559,7 @@ az network nsg rule create \
 - ✅ Follows least privilege: only Key Vault access allowed, internet still blocked
 - ⚠️ Application Security Groups only work for grouping VMs, not Azure services
 - ⚠️ Manual IP ranges require constant maintenance as Azure IPs change
-- ⚠️ **NSGs do not support FQDN-based rules** — if you need to allow/block traffic based on domain names (e.g., allow only `www.udemy.com`), use [Azure Firewall](../security/azure-firewall-overview.md) which supports FQDN filtering in application and network rules
+- ⚠️ **NSGs do not support FQDN-based rules** — if you need to allow/block traffic based on domain names (e.g., allow only `www.udemy.com`), use [Azure Firewall](./13-azure-firewall-overview.md) which supports FQDN filtering in application and network rules
 
 ---
 

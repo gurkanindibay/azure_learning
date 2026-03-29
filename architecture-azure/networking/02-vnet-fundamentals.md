@@ -1,6 +1,6 @@
 # Azure Virtual Network (VNet) Fundamentals
 
-See [Index](./01-index.md) for overview.
+See [README](./README.md) for overview.
 
 ## Table of Contents
 

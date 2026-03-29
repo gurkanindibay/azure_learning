@@ -2,62 +2,96 @@
 
 > **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
-## Quick Navigation
+## Learning Path
 
-| Category | Description | Key Documents |
-|----------|-------------|---------------|
-| **[Guides](guides/01-index.md)** | Comprehensive modular study guides | [Index & Decision Tree](guides/01-index.md), [VNet Fundamentals](guides/00-networking-fundamentals.md), [Scenarios](guides/07-scenarios.md) |
-| **[Connectivity](connectivity/)** | VPN, DNS, hybrid connections | [VPN Gateway](connectivity/azure-vpn-gateway.md), [DNS](connectivity/azure-dns.md) |
-| **[Load Balancing](load-balancing/)** | Traffic distribution & CDN | [Comparison](load-balancing/azure-load-balancing-services-comparison.md), [Front Door](load-balancing/azure-front-door.md) |
-| **[Security](security/)** | Firewalls & network security | [Firewall](security/azure-firewall-overview.md), [Security Comparison](security/azure-network-security-services-comparison.md) |
-| **[Monitoring](monitoring/)** | Diagnostics & observability | [Network Watcher](monitoring/azure-network-watcher.md) |
-| **[Virtual WAN](virtual-wan/)** | Hub-based global transit | [Virtual WAN](virtual-wan/azure-virtual-wan.md), [When to Use](virtual-wan/when_to_use_azure_virtual_wan.md) |
+Follow the numbered guides in order, or jump to a specific topic.
 
-## Directory Structure
+### Core Concepts
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 01 | [Networking Fundamentals](01-networking-fundamentals.md) | VNets, subnets, NSGs, peering, private endpoints, service endpoints |
+| 02 | [VNet Fundamentals](02-vnet-fundamentals.md) | Address spaces, peering, ASGs, NICs, UDRs, Route Server |
+| 03 | [Private Endpoints Guide](03-private-endpoints-guide.md) | Private connectivity to Azure PaaS, DNS config, hybrid scenarios |
+
+### Connectivity
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 04 | [Azure DNS](04-azure-dns.md) | Public/private DNS zones, delegation, hybrid DNS |
+| 05 | [Azure VPN Gateway](05-azure-vpn-gateway.md) | S2S, P2S, VNet-to-VNet VPN, SKUs, protocols |
+| 06 | [VPN vs Private Link](06-vpn-private-link-guide.md) | Decision guide: when to use VPN vs Private Link |
+| 07 | [ExpressRoute & BGP](07-expressroute-bgp-guide.md) | Dedicated connections, peering types, dynamic routing |
+| 08 | [ExpressRoute Connectivity Models](08-expressroute-connectivity-models.md) | CloudExchange, point-to-point, IPVPN, ExpressRoute Direct |
+| 09 | [Relay & Hybrid Connections](09-relay-hybrid-connections-guide.md) | Azure Relay, Hybrid Connections, firewall-free connectivity |
+
+### WAN & Global Transit
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 10 | [Azure Virtual WAN](10-azure-virtual-wan.md) | Hub components, routing, ExpressRoute Global Reach, NVAs |
+| 11 | [When to Use Virtual WAN](11-when-to-use-virtual-wan.md) | Decision guide: vWAN vs traditional hub-spoke |
+
+### Network Security
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 12 | [Security Services Comparison](12-network-security-services-comparison.md) | NSG vs ASG vs Firewall vs WAF vs Private Link |
+| 13 | [Azure Firewall](13-azure-firewall-overview.md) | Policy hierarchy, rule processing, FQDN filtering |
+
+### Monitoring
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 14 | [Azure Network Watcher](14-azure-network-watcher.md) | IP Flow Verify, packet capture, connection troubleshoot |
+
+### Load Balancing & Traffic Management
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 15 | [Load Balancing Comparison](15-load-balancing-services-comparison.md) | Decision flowchart for all Azure load balancing services |
+| 16 | [Azure Load Balancer](16-azure-load-balancer.md) | Layer 4, health probes, SKUs, SNAT, zone redundancy |
+| 17 | [Azure Application Gateway](17-azure-application-gateway.md) | Layer 7 proxy, WAF, URL routing, TLS termination |
+| 18 | [Azure Front Door](18-azure-front-door.md) | Global Layer 7, anycast, WAF, caching, multi-region |
+| 19 | [Azure Traffic Manager](19-azure-traffic-manager.md) | DNS-based global routing methods |
+| 20 | [Azure CDN](20-azure-cdn.md) | Content delivery, edge caching, HTTPS for Blob Storage |
+| 21 | [Azure Gateway Load Balancer](21-azure-gateway-load-balancer.md) | Transparent NVA insertion, VXLAN, security appliances |
+| 22 | [API Management Policies](22-azure-api-management-policy-inheritance.md) | APIM policy hierarchy and `<base />` inheritance |
+
+### Scenarios & Exam Prep
+
+| # | Topic | Description |
+|---|-------|-------------|
+| 23 | [Networking Scenarios](23-networking-scenarios.md) | Hub-spoke, multi-region, practical architecture patterns |
+| 24 | [Best Practices](24-best-practices.md) | Zero Trust, defense-in-depth, segmentation, cost tips |
+| 25 | [Practice Questions: VPN Gateway](25-practice-questions-vpn-gateway.md) | AZ-700 exam prep — P2S, gateway transit, topology changes |
+
+## Technology Decision Tree
 
 ```
-networking/
-├── guides/               # Modular study guides (start here)
-│   ├── 00-networking-fundamentals.md   # VNets, subnets, NSGs, peering
-│   ├── 01-index.md                     # Master index & decision tree
-│   ├── 02-vnet-fundamentals.md         # VNet core concepts & routing
-│   ├── 03-private-endpoints-guide.md   # Private connectivity to PaaS
-│   ├── 04-vpn-private-link-guide.md    # VPN vs Private Link decision
-│   ├── 05-expressroute-bgp-guide.md    # ExpressRoute & BGP routing
-│   ├── 06-relay-hybrid-connections-guide.md  # Relay & hybrid connections
-│   ├── 07-scenarios.md                 # Practical architecture patterns
-│   ├── 08-best-practices.md            # Design guidelines
-│   └── 09-express-route-models.md      # ExpressRoute connectivity models
-├── connectivity/         # VPN, DNS, hybrid connections
-│   ├── azure-vpn-gateway.md            # VPN types, SKUs, protocols
-│   ├── azure-dns.md                    # Public/private DNS zones
-│   └── practice-questions-vpn-gateway.md  # AZ-700 exam prep
-├── load-balancing/       # Traffic distribution services
-│   ├── azure-load-balancing-services-comparison.md  # Master comparison
-│   ├── azure-load-balancer.md          # Layer 4
-│   ├── azure-application-gateway.md    # Layer 7 + WAF
-│   ├── azure-front-door.md             # Global Layer 7 + CDN
-│   ├── azure-traffic-manager.md        # DNS-based routing
-│   ├── azure-cdn.md                    # Content delivery
-│   ├── azure-gateway-load-balancer.md  # NVA chaining
-│   └── azure-api-management-policy-inheritance.md  # APIM policies
-├── security/             # Network security services
-│   ├── azure-firewall-overview.md      # Managed firewall, policy hierarchy
-│   └── azure-network-security-services-comparison.md  # NSG vs Firewall vs WAF
-├── monitoring/           # Diagnostics & observability
-│   └── azure-network-watcher.md        # IP Flow, packet capture, diagnostics
-└── virtual-wan/          # Global transit networking
-    ├── azure-virtual-wan.md            # Components, routing, costs
-    └── when_to_use_azure_virtual_wan.md  # Decision guide
+What are you trying to connect?
+
+  On-premises → Azure VNet
+  └─▶ VPN Gateway (S2S) (#05) or ExpressRoute (#07)
+
+  Individual users → Azure VNet
+  └─▶ VPN Gateway (P2S) (#05)
+
+  Azure VNet → Azure PaaS service
+  └─▶ Private Endpoint (#03)
+
+  On-premises → Azure PaaS service
+  └─▶ VPN + Private Endpoint (#05 + #03)
+
+  Two Azure VNets together
+  └─▶ VNet Peering (#02)
+
+  Azure ↔ on-premises (no firewall changes)
+  └─▶ Hybrid Connections (#09)
+
+  Choosing a load balancer?
+  └─▶ Load Balancing Comparison (#15)
 ```
-
-## Where to Start
-
-1. **New to Azure networking?** Start with [Networking Fundamentals](guides/00-networking-fundamentals.md)
-2. **Choosing a service?** Use the [Decision Tree in the Index](guides/01-index.md)
-3. **Load balancing decision?** See the [Load Balancing Comparison](load-balancing/azure-load-balancing-services-comparison.md)
-4. **Hybrid connectivity?** Read [ExpressRoute & BGP](guides/05-expressroute-bgp-guide.md) and [VPN Gateway](connectivity/azure-vpn-gateway.md)
-5. **Exam prep (AZ-700)?** Check [Practice Questions](connectivity/practice-questions-vpn-gateway.md) and scenario sections in each guide
 
 ## Cross-References
 
