@@ -11,6 +11,7 @@
   - [2.2 Azure Firewall](#22-azure-firewall)
   - [2.3 Azure Web Application Firewall (WAF)](#23-azure-web-application-firewall-waf)
   - [2.4 Azure Private Endpoint / Private Link](#24-azure-private-endpoint--private-link)
+  - [2.5 Application Security Groups (ASG)](#25-application-security-groups-asg)
 - [3. Comparison table](#3-comparison-table)
 - [4. OSI layer coverage](#4-osi-layer-coverage)
 - [5. When to use each](#5-when-to-use-each)
@@ -25,10 +26,10 @@
 
 Azure provides multiple network security services that operate at different layers and serve complementary purposes. Understanding their differences is critical for designing a defense-in-depth architecture.
 
-| Aspect | NSG | Azure Firewall | WAF | Private Endpoint / Private Link |
-|--------|-----|----------------|-----|-------------------------------|
-| **Primary purpose** | Subnet/NIC-level traffic filtering | Centralized network security & threat intelligence | Web application attack protection | Private connectivity to PaaS services |
-| **Security model** | Allow/deny IP & port rules | Stateful inspection, FQDN filtering, threat intel | OWASP rule-based inspection | Network isolation (eliminate public exposure) |
+| Aspect | NSG | ASG | Azure Firewall | WAF | Private Endpoint / Private Link |
+|--------|-----|-----|----------------|-----|-------------------------------|
+| **Primary purpose** | Subnet/NIC-level traffic filtering | Application-centric VM grouping for NSG rules | Centralized network security & threat intelligence | Web application attack protection | Private connectivity to PaaS services |
+| **Security model** | Allow/deny IP & port rules | Logical grouping by role (used within NSG rules) | Stateful inspection, FQDN filtering, threat intel | OWASP rule-based inspection | Network isolation (eliminate public exposure) |
 
 ## 2. Service summaries
 
@@ -121,28 +122,43 @@ Azure Private Link enables private access to Azure PaaS services (Storage, SQL D
 - Requires DNS configuration (private DNS zones recommended)
 - Private Link Service enables exposing your own services privately to consumers
 
+### 2.5 Application Security Groups (ASG)
+
+Application Security Groups (ASGs) enable you to group virtual machines by application role or function and use those groups as source/destination in NSG rules — instead of managing explicit IP addresses.
+
+**Key characteristics:**
+- Used as source or destination in NSG security rules (not a standalone filtering service)
+- Groups VMs by role (e.g., Web-Servers, DB-Servers) regardless of IP address
+- Dynamic membership — add/remove VMs without modifying NSG rules
+- All NICs in an ASG must belong to the same VNet
+- Free to use (no additional cost)
+- Works only with VMs/NICs — cannot group Azure PaaS services
+- Multiple ASGs can be assigned to a single NIC
+
+> **Deep Dive**: [ASG concepts, exam scenarios & implementation](../guides/00-networking-fundamentals.md#27-application-security-groups-asg)
+
 ## 3. Comparison table
 
-| Feature | NSG | Azure Firewall | WAF | Private Endpoint / Private Link |
-|---------|-----|----------------|-----|-------------------------------|
-| **OSI layer** | L3/L4 | L3/L4/L7 | L7 | L3 (network-level isolation) |
-| **Scope** | Subnet / NIC | VNet / cross-VNet (hub) | Per Application Gateway or Front Door | Per PaaS resource instance |
-| **Statefulness** | Stateful | Fully stateful | N/A (proxy-based) | N/A |
-| **FQDN filtering** | No | Yes (application rules) | N/A | N/A |
-| **Threat intelligence** | No | Yes (known malicious IPs/domains) | No | No |
-| **OWASP CRS protection** | No | No | Yes | No |
-| **SQL injection / XSS protection** | No | No | Yes | No |
-| **Bot protection** | No | No | Yes | No |
-| **TLS inspection** | No | Yes (Premium SKU) | Yes (terminates TLS) | No |
-| **IDPS** | No | Yes (Premium SKU) | No | No |
-| **DNAT / SNAT** | No | Yes | No | No |
-| **DNS-based filtering** | No | Yes (DNS proxy) | No | N/A |
-| **Private connectivity to PaaS** | No | No | No | Yes |
-| **Prevents data exfiltration** | Partially (IP-based) | Yes (FQDN + threat intel) | No | Yes (eliminates public exposure) |
-| **Centralized management** | Per resource | Yes (Azure Firewall Manager) | Per WAF policy | Per resource |
-| **High availability** | Built-in | Built-in | Depends on host service | Built-in |
-| **Cost** | Free | ~$1.25/hr + data processing (Standard) | Included with App GW / Front Door WAF SKU | ~$7.30/month per endpoint + data processing |
-| **Deployment model** | Declarative rules on subnet/NIC | Dedicated subnet in hub VNet | Attached to App GW / Front Door | NIC in consumer VNet |
+| Feature | NSG | ASG | Azure Firewall | WAF | Private Endpoint / Private Link |
+|---------|-----|-----|----------------|-----|-------------------------------|
+| **OSI layer** | L3/L4 | L3/L4 (via NSG) | L3/L4/L7 | L7 | L3 (network-level isolation) |
+| **Scope** | Subnet / NIC | VMs within a single VNet | VNet / cross-VNet (hub) | Per Application Gateway or Front Door | Per PaaS resource instance |
+| **Statefulness** | Stateful | Stateful (inherits from NSG) | Fully stateful | N/A (proxy-based) | N/A |
+| **FQDN filtering** | No | No | Yes (application rules) | N/A | N/A |
+| **Threat intelligence** | No | No | Yes (known malicious IPs/domains) | No | No |
+| **OWASP CRS protection** | No | No | No | Yes | No |
+| **SQL injection / XSS protection** | No | No | No | Yes | No |
+| **Bot protection** | No | No | No | Yes | No |
+| **TLS inspection** | No | No | Yes (Premium SKU) | Yes (terminates TLS) | No |
+| **IDPS** | No | No | Yes (Premium SKU) | No | No |
+| **DNAT / SNAT** | No | No | Yes | No | No |
+| **DNS-based filtering** | No | No | Yes (DNS proxy) | No | N/A |
+| **Private connectivity to PaaS** | No | No | No | No | Yes |
+| **Prevents data exfiltration** | Partially (IP-based) | No (grouping only) | Yes (FQDN + threat intel) | No | Yes (eliminates public exposure) |
+| **Centralized management** | Per resource | Per ASG (logical group) | Yes (Azure Firewall Manager) | Per WAF policy | Per resource |
+| **High availability** | Built-in | Built-in | Built-in | Depends on host service | Built-in |
+| **Cost** | Free | Free | ~$1.25/hr + data processing (Standard) | Included with App GW / Front Door WAF SKU | ~$7.30/month per endpoint + data processing |
+| **Deployment model** | Declarative rules on subnet/NIC | Logical grouping referenced in NSG rules | Dedicated subnet in hub VNet | Attached to App GW / Front Door | NIC in consumer VNet |
 
 ## 4. OSI layer coverage
 
@@ -156,14 +172,14 @@ Azure Private Link enables private access to Azure PaaS services (Storage, SQL D
 ├─────────────────────────────────────────────────────┤
 │  Layer 4 (Transport)                                │
 │  ┌───────────────┐  ┌───────────────────────────┐   │
-│  │      NSG      │  │  Azure Firewall (Net Rules)│  │
+│  │   NSG + ASG   │  │  Azure Firewall (Net Rules)│  │
 │  │  (TCP/UDP)    │  │     (TCP/UDP/ICMP)         │  │
 │  └───────────────┘  └───────────────────────────┘   │
 ├─────────────────────────────────────────────────────┤
 │  Layer 3 (Network)                                  │
 │  ┌───────────────┐  ┌───────────────────────────┐   │
-│  │      NSG      │  │    Private Endpoint        │  │
-│  │  (IP-based)   │  │  (Network isolation)       │  │
+│  │   NSG + ASG   │  │    Private Endpoint        │  │
+│  │  (IP/group)   │  │  (Network isolation)       │  │
 │  └───────────────┘  └───────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
 ```
@@ -173,6 +189,8 @@ Azure Private Link enables private access to Azure PaaS services (Storage, SQL D
 | Scenario | Recommended Service(s) |
 |----------|----------------------|
 | Basic subnet/NIC traffic filtering | **NSG** |
+| Group VMs by application role for NSG rules | **ASG** (used with NSG) |
+| Manage rules when VM IPs change frequently | **ASG** (IP-independent grouping) |
 | Centralized outbound traffic control across VNets | **Azure Firewall** |
 | Block traffic to/from known malicious IPs | **Azure Firewall** (threat intelligence) |
 | Protect web apps from SQL injection, XSS | **WAF** |
@@ -182,7 +200,7 @@ Azure Private Link enables private access to Azure PaaS services (Storage, SQL D
 | TLS inspection and IDPS | **Azure Firewall Premium** |
 | Bot protection for web applications | **WAF** |
 | Geo-filtering for web traffic | **WAF** |
-| Micro-segmentation within a VNet | **NSG** + **ASG** |
+| Micro-segmentation within a VNet | **NSG** + **ASG** (group by role) |
 | Hub-and-spoke network architecture | **Azure Firewall** (hub) + **NSG** (spokes) |
 | Secure access to Azure SQL from on-premises | **Private Endpoint** + VPN/ExpressRoute |
 
@@ -220,7 +238,7 @@ graph TB
 
 1. **WAF** — Inspects inbound HTTP/HTTPS traffic for web application attacks
 2. **Azure Firewall** — Centralized L3–L7 filtering, threat intelligence, FQDN filtering in a hub VNet
-3. **NSG** — Micro-segmentation at each subnet/NIC, acts as a last line of defense
+3. **NSG + ASG** — Micro-segmentation at each subnet/NIC; ASGs group VMs by role (Web, App, DB) so rules stay readable and IP-independent
 4. **Private Endpoint** — Ensures backend PaaS services (databases, storage) are only reachable via private network
 
 ## 7. Cost considerations
@@ -228,6 +246,7 @@ graph TB
 | Service | Pricing model | Approximate cost |
 |---------|--------------|-----------------|
 | **NSG** | Free | $0 |
+| **ASG** | Free | $0 |
 | **Azure Firewall Standard** | Per hour + per GB processed | ~$912/month fixed + $0.016/GB |
 | **Azure Firewall Premium** | Per hour + per GB processed | ~$1,314/month fixed + $0.016/GB |
 | **WAF on App Gateway v2** | Per hour + per capacity unit | ~$246/month fixed + capacity |
@@ -241,6 +260,9 @@ graph TB
 ```
 Do you need to filter traffic at subnet/NIC level?
   └─ YES → Use NSG (free, always recommended as baseline)
+
+Do you need to group VMs by application role in NSG rules?
+  └─ YES → Use ASG (free, avoids IP-based rule management)
 
 Do you need centralized outbound/inbound filtering across VNets?
   └─ YES → Use Azure Firewall
@@ -265,6 +287,7 @@ Do you need all of the above?
 - [What is Azure Web Application Firewall?](https://learn.microsoft.com/en-us/azure/web-application-firewall/overview)
 - [What is Azure Private Link?](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview)
 - [What is a private endpoint?](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview)
+- [Application Security Groups overview](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
 - [Azure network security overview](https://learn.microsoft.com/en-us/azure/security/fundamentals/network-overview)
 
 ---
