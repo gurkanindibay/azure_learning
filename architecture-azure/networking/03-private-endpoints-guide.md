@@ -15,7 +15,9 @@ See [README](./README.md) for overview.
 
 ### 1.1 What is a Private Endpoint?
 
-A **Private Endpoint** is a network interface that connects you privately and securely to a service powered by Azure Private Link. The private endpoint uses a private IP address from your VNet, effectively bringing the service into your VNet.
+A **Private Endpoint** is a **consumer-side** network interface that connects you privately and securely to a service powered by Azure Private Link. The private endpoint uses a private IP address from your VNet, effectively bringing the service into your VNet.
+
+> **Key Concept**: Private Endpoints are always created and owned by the **consumer** (the party accessing the service). The consumer deploys the Private Endpoint in their own VNet and receives a private IP address. The **provider** side exposes its service via a Private Link Service or is a supported Azure PaaS service. This consumer/provider separation is fundamental to Private Link architecture.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -302,16 +304,36 @@ Your on-premises network has a VPN gateway. You have:
 
 ## 3. Comparison
 
-| Feature | Service Endpoint | Private Endpoint |
-|---------|------------------|------------------|
-| **IP Address Used** | Service's public IP | Private IP from VNet |
+> **Important**: A **Private Endpoint is a consumer-side resource**. It is created in the **consumer's VNet** and represents the consumer's private connection to a service. The consumer owns and manages the Private Endpoint, while the provider exposes its service via Private Link. This means:
+> - The **consumer** decides where to place the Private Endpoint and which subnet/IP to use
+> - The **provider** has no access to the consumer's VNet — only the Private Link connection is shared
+> - The **provider** can approve or reject Private Endpoint connection requests
+> - Multiple consumers can each create their own Private Endpoints to the same provider service, fully isolated from each other
+
+**Consumer vs Provider Model:**
+```
+┌─────────────────────────────────┐     ┌─────────────────────────────────┐
+│         CONSUMER SIDE           │     │          PROVIDER SIDE          │
+│                                 │     │                                 │
+│  Private Endpoint (10.0.1.5)   │────▶│  Private Link Service / PaaS   │
+│  - Created by consumer          │     │  - Exposes the service          │
+│  - Lives in consumer's VNet     │     │  - Approves connections         │
+│  - Consumer manages DNS         │     │  - Provider manages backend     │
+└─────────────────────────────────┘     └─────────────────────────────────┘
+```
+
+| Feature | Service Endpoint | Private Endpoint (Consumer-Side) |
+|---------|------------------|----------------------------------|
+| **Ownership** | Configured on consumer's subnet | Created in consumer's VNet as a consumer-owned resource |
+| **IP Address Used** | Service's public IP | Private IP from consumer's VNet |
 | **Traffic Path** | Azure backbone (optimized) | Azure backbone (Private Link) |
 | **On-premises Access** | Not supported | Supported via VPN/ExpressRoute |
 | **Cross-region** | Limited | Fully supported |
-| **DNS Changes** | Not required | Required |
+| **DNS Changes** | Not required | Required (consumer must configure) |
 | **Cost** | Free | Per hour + data processing |
 | **Data Exfiltration Protection** | Limited (entire service) | Strong (specific resource) |
 | **Disable Public Access** | No (public IP still used) | Yes (can fully disable) |
+| **Multi-tenant isolation** | N/A | Each consumer gets isolated connection |
 
 ---
 
