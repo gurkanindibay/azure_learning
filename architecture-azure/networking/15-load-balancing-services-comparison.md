@@ -9,7 +9,7 @@ This document provides a comprehensive feature-based comparison of Azure's load 
 - [Common Features Across Services](#common-features-across-services)
   - [Shared by All Services](#shared-by-all-services)
   - [Shared by Layer 7 Services (App Gateway, API Management, Front Door)](#shared-by-layer-7-services-app-gateway-api-management-front-door)
-  - [Shared by Global Services (API Management, Traffic Manager, Front Door)](#shared-by-global-services-api-management-traffic-manager-front-door)
+  - [Shared by Natively Global Services (Traffic Manager, Front Door)](#shared-by-natively-global-services-traffic-manager-front-door)
 - [Unique Features](#unique-features)
   - [Azure Load Balancer (Unique)](#azure-load-balancer-unique)
   - [Application Gateway (Unique)](#application-gateway-unique)
@@ -36,7 +36,7 @@ This document provides a comprehensive feature-based comparison of Azure's load 
 |---------|--------------|---------------------|----------------|-----------------|------------|
 | **OSI Layer** | Layer 4 (Transport) | Layer 7 (Application) | Layer 7 (Application) | DNS-based | Layer 7 (Application) |
 | **Protocol Support** | TCP, UDP | HTTP, HTTPS, WebSocket | HTTP, HTTPS, WebSocket, SOAP | All protocols | HTTP, HTTPS |
-| **Global vs Regional** | Regional | Regional | Global/Regional | Global | Global |
+| **Global vs Regional** | Regional | Regional | Regional (multi-region with Premium tier) | Global | Global |
 | **Load Balancing Algorithms** | Hash-based, Source IP affinity | Round robin, Weighted, Cookie-based | Various policies | Priority, Weighted, Performance, Geographic | Priority, Weighted, Latency, Session affinity |
 | **SSL/TLS Termination** | ❌ No | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes |
 | **SSL/TLS Offloading** | ❌ No | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes |
@@ -101,11 +101,13 @@ This document provides a comprehensive feature-based comparison of Azure's load 
 - WebSocket support
 - HTTP/2 support
 
-### Shared by Global Services (API Management, Traffic Manager, Front Door)
+### Shared by Natively Global Services (Traffic Manager, Front Door)
 - Cross-region load balancing
 - Global traffic distribution
 - Geographic routing capabilities
 - Multi-region failover support
+
+> **Note:** API Management is **regional by default**. The Premium tier supports multi-region gateway deployment, but it is not natively global — it typically requires Traffic Manager or Front Door in front for global traffic routing.
 
 ## Unique Features
 
