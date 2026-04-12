@@ -60,6 +60,40 @@ Use vWAN Secure Hub when:
 - East–West and North–South traffic inspection is required
 - Compliance or Zero Trust is mandatory
 
+> **Traffic Direction Reference**
+> ```
+>  ╔══════════════════════════════════════════╗
+>  ║           EXTERNAL ZONE                  ║
+>  ║                                          ║
+>  ║          Internet / Users                ║
+>  ║                                          ║
+>  ╚════════════════╤═════════════════════════╝
+>                   ↕         ← North-South (in/out of the network)
+>  ╔════════════════╧═════════════════════════╗
+>  ║           PERIMETER / DMZ                ║
+>  ║        ┌──────────────┐                  ║
+>  ║        │   Firewall   │                  ║
+>  ║        └──────┬───────┘                  ║
+>  ╚═══════════════╤══════════════════════════╝
+>                   ↕         ← North-South (perimeter → internal)
+>  ╔═══════════════╧══════════════════════════╗
+>  ║           INTERNAL ZONE                  ║
+>  ║                                          ║
+>  ║    ┌───────┐  ↔  ┌───────┐              ║
+>  ║    │  Web  │     │  App  │ ← East-West  ║
+>  ║    │ Tier  │     │ Tier  │   (lateral)   ║
+>  ║    └───────┘     └───────┘              ║
+>  ║                  ↔                       ║
+>  ║             ┌───────┐                    ║
+>  ║             │  DB   │    ← East-West     ║
+>  ║             │ Tier  │      (lateral)     ║
+>  ║             └───────┘                    ║
+>  ║                                          ║
+>  ╚══════════════════════════════════════════╝
+> ```
+> - **North-South**: Traffic crossing the network perimeter (external ↔ internal)
+> - **East-West**: Lateral traffic between internal resources (service ↔ service)
+
 **Why vWAN works well**
 - Native integration with Azure Firewall Manager
 - Forced tunneling support
