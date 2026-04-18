@@ -14,6 +14,7 @@ See [README](./README.md) for overview.
   - [5.2 Gateway Transit and Connectivity](#52-gateway-transit-and-connectivity)
   - [5.4 VNet Peering Limits and Scalability](#54-vnet-peering-limits-and-scalability)
   - [5.5 Practice Question: Gateway Transit Direction in Hub-and-Spoke](#55-practice-question-gateway-transit-direction-in-hub-and-spoke)
+  - [5.6 Practice Question: Configuring Gateway Traffic from Spoke to Remote Networks](#56-practice-question-configuring-gateway-traffic-from-spoke-to-remote-networks)
 - [6. Network Security Groups (NSG)](#6-network-security-groups-nsg)
   - [6.1 Service Tags in NSG Rules](#61-service-tags-in-nsg-rules)
 - [7. Application Security Groups (ASG)](#7-application-security-groups-asg)
@@ -367,6 +368,16 @@ Spoke VNet (no gateway)
 
 **Why it matters:** Gateway transit enables centralized connectivity (single gateway, centralized routing and security) while keeping spokes lightweight and cost-effective.
 
+**Step-by-step checklist — Enabling spoke-to-remote-network connectivity via hub gateway:**
+
+| Step | Where | Setting | Purpose |
+|------|-------|---------|---------|
+| 1 | Hub peering connection (hub → spoke) | **Allow Gateway Transit** = Enabled | Hub shares its VPN/ExpressRoute gateway with the spoke |
+| 2 | Spoke peering connection (spoke → hub) | **Use Remote Gateways** = Enabled | Spoke routes external traffic through the hub's gateway |
+| 3 | Both sides of each peering connection | **Allow Forwarded Traffic** = Enabled | Permits non-originating traffic to traverse the peering link |
+
+> **Why all three steps?** Steps 1 and 2 establish the gateway sharing relationship (hub offers, spoke accepts). Step 3 is required so that traffic originating in one spoke or from on-premises can be forwarded through the hub to other spokes — without it, the hub drops forwarded packets at the peering boundary.
+
 ### 5.3 Allow Forwarded Traffic (Traffic Forwarding in Peering)
 
 **Allow forwarded traffic** is a separate VNet peering setting that controls whether traffic **not originating in the directly peered VNet** can traverse the peering link.
@@ -558,6 +569,47 @@ Which VNet peering connections should be configured to **allow gateway transit**
 | **Only peering connections to spokes** | The spokes don't own the gateway — they use **Use Remote Gateways** instead. "Allow Gateway Transit" only makes sense on the gateway-owning VNet. |
 
 > **Key takeaway**: "Allow Gateway Transit" is always a **hub-side** (gateway-owning VNet) setting. The complementary spoke-side setting is "Use Remote Gateways". These two settings work as a pair — the hub offers its gateway, and the spoke accepts it.
+
+### 5.6 Practice Question: Configuring Gateway Traffic from Spoke to Remote Networks
+
+**Question:**
+
+You have a hub-and-spoke network topology. The hub VNet contains a VPN gateway connected to your on-premises network. Two spoke VNets are peered with the hub. You need to configure the gateway traffic to flow from the spokes through the hub and connect to remote networks.
+
+What steps are required?
+
+**Options:**
+
+- A) Configure the hub and spokes to allow for all peering connections.
+- B) Do not permit any peering connections.
+- C) Enable gateway transit in the hub peering connection and configure remote gateways in each spoke peering connection.
+- D) Configure peering connections in the hub to allow gateway transit; in each spoke, use remote gateways and allow all peering connections to forward traffic. ✅
+
+**Answer: D)**
+
+**Explanation:**
+
+To enable communication between remote networks and spokes using the hub gateway, you need **all three** of the following:
+
+| Step | Configuration | Side | Purpose |
+|------|--------------|------|---------|
+| 1 | **Allow Gateway Transit** | Hub peering | Hub advertises its VPN/ExpressRoute gateway to spokes |
+| 2 | **Use Remote Gateways** | Spoke peering | Spoke opts in to route external traffic via the hub's gateway |
+| 3 | **Allow Forwarded Traffic** | All peering connections | Permits traffic not originating in the directly connected VNet to traverse the peering |
+
+**Why other options are wrong:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **A) Allow for all peering connections** | Too vague — "all peering connections" does not specify the required gateway transit and remote gateway settings. Simply peering VNets does not enable gateway sharing. |
+| **B) Do not permit any peering connections** | Without peering, there is no connectivity between hub and spokes at all. |
+| **C) Enable gateway transit + remote gateways only** | This covers steps 1 and 2 but **misses step 3** — Allow Forwarded Traffic. Without forwarded traffic enabled, spoke-to-spoke communication through the hub is dropped, and traffic from on-premises arriving at the hub cannot be forwarded to spokes. |
+
+> **Exam tip**: Option C is a common trap. Gateway transit and remote gateways alone handle the gateway sharing, but **Allow Forwarded Traffic** is the third critical piece that ensures non-originating traffic (from on-premises or other spokes) can actually traverse the hub's peering links.
+
+**Reference:** [Hub-spoke network topology in Azure - Azure Architecture Center](https://learn.microsoft.com/azure/architecture/networking/architecture/hub-spoke)
+
+> **Taxonomy Reference**: §5.2 Networking & Connectivity
 
 ## 6. Network Security Groups (NSG)
 
