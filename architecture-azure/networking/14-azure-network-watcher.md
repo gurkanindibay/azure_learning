@@ -334,6 +334,75 @@ az network nic list-effective-nsg \
 
 ---
 
+### Scenario: Monitoring ExpressRoute Connection Health
+
+**Context:**
+You are migrating applications from on-premises servers to resources on an Azure Virtual Network. The on-premises network and Azure are connected via **Azure ExpressRoute**. It is critical that this connection remains healthy at all times.
+
+**Question:**
+Which Azure Network Watcher service should you use to continuously monitor the health of the ExpressRoute connection?
+
+- A. Connection Monitor ✅
+- B. Traffic Analytics
+- C. VPN Troubleshoot
+- D. Connection Monitor (Classic)
+
+**Correct Answer: A. Connection Monitor**
+
+**Explanation:**
+**Connection Monitor** is a cloud-based hybrid network monitoring tool inside Azure Network Watcher. It provides continuous, end-to-end connectivity monitoring between endpoints — including on-premises to Azure paths traversing ExpressRoute — and can alert on failures, latency degradation, and reachability issues.
+
+Key capabilities relevant to this scenario:
+- Monitors network performance across **hybrid connections**, including ExpressRoute circuits
+- Performs **periodic probing** (TCP, ICMP, HTTP) and tracks latency and packet loss over time
+- Surfaces **health alerts** when the monitored connection degrades or fails
+- Provides a unified view across multiple monitoring agents (Azure VMs and on-premises Log Analytics agents)
+- Supports monitoring of **service and application endpoints**, not just raw IP connectivity
+
+**Why the Other Options Are Incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Traffic Analytics** | Aggregates NSG flow log data for traffic-pattern visualization (top talkers, protocol distribution, security insights). It does **not** proactively test or monitor whether an ExpressRoute circuit is healthy. |
+| **VPN Troubleshoot** | Diagnoses issues with **VPN Gateway** connections (site-to-site VPN, point-to-site VPN). ExpressRoute is a private dedicated circuit — it is **not** a VPN gateway connection, so this tool is not applicable. |
+| **Connection Monitor (Classic)** | The legacy predecessor to Connection Monitor, previously known as **Network Performance Monitor (NPM)**. Microsoft recommends migrating to the newer Connection Monitor, which offers more features (multi-protocol support, more granular topology, broader endpoint coverage). For a new setup, Connection Monitor should always be chosen over the Classic version. |
+
+**Connection Monitor vs. Connection Monitor (Classic):**
+
+| Feature | Connection Monitor | Connection Monitor (Classic) |
+|---------|-------------------|------------------------------|
+| Protocol support | TCP, ICMP, HTTP | TCP only |
+| Endpoint types | Azure VMs, on-premises agents, URLs | Azure VMs, on-premises agents |
+| ExpressRoute monitoring | ✅ Yes | ✅ Yes (via NPM) |
+| Topology view | Hop-by-hop path visualization | Limited |
+| Recommended for new setups | ✅ Yes | ❌ No (legacy) |
+| Migration support | Migrate Classic → Connection Monitor | — |
+
+**Key Distinction — Reactive vs. Proactive:**
+
+| Tool | Approach |
+|------|----------|
+| **Connection Monitor** | **Proactive** — continuously probes endpoints and reports health metrics over time |
+| **Connection Troubleshoot** | **Reactive** — one-time on-demand connectivity test between two endpoints |
+| **VPN Troubleshoot** | **Reactive** — on-demand diagnostics for a specific VPN gateway or connection |
+
+> For persistent monitoring of an ExpressRoute link (or any hybrid path), **Connection Monitor** is the correct choice because it provides **ongoing** health visibility rather than a point-in-time check.
+
+**Implementation Overview:**
+
+1. Deploy a **Log Analytics agent** on the on-premises servers participating in the connection.
+2. In **Azure Network Watcher → Connection Monitor**, create a new monitor.
+3. Define a **Test Group**: set the on-premises agent as the source and an Azure VM (or endpoint) across the ExpressRoute link as the destination.
+4. Configure **test configurations** (protocol: TCP/ICMP, port, frequency).
+5. Set up **alerts** on check failures or latency thresholds.
+
+**References:**
+- [Connection Monitor overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/network-watcher/connection-monitor-overview)
+- [Network Performance Monitor solution in Azure - Azure Monitor | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-monitor/insights/network-performance-monitor)
+- [Monitor ExpressRoute connectivity with Connection Monitor | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/how-to-configure-connection-monitor)
+
+---
+
 ## References
 
 - [IP Flow Verify Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-ip-flow-verify-overview)
