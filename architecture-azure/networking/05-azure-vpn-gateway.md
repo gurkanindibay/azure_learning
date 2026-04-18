@@ -732,12 +732,35 @@ Backup Path: VPN Gateway (failover, cost-effective)
 | Aspect | VPN Gateway (VNet-to-VNet) | VNet Peering |
 |--------|----------------------------|--------------|
 | **Purpose** | Connect VNets with encryption | Connect VNets directly |
-| **Encryption** | Yes (IPsec) | No |
+| **Encryption** | Yes (IPsec) | No (traffic stays on Azure backbone) |
 | **Latency** | Higher (encryption overhead) | Very low (Azure backbone) |
-| **Bandwidth** | Limited by gateway SKU | High (no gateway) |
+| **Bandwidth** | Limited by gateway SKU | High (no gateway bottleneck) |
 | **Cost** | Gateway hours + data transfer | Data transfer only |
-| **Global** | Yes | Yes (Global VNet Peering) |
-| **When to Use** | Encryption required | Most scenarios (faster, cheaper) |
+| **Cross-Region** | Yes (natively) | Yes (requires **Global VNet Peering**) |
+| **Cross-Subscription** | Yes (same Azure AD tenant) | Yes (same or different Azure AD tenants) |
+| **Cross-Tenant** | No (VNets must be in subscriptions linked to the same Azure AD tenant) | Yes (VNets can be in subscriptions associated with separate Azure AD tenants) |
+| **Name Resolution** | Default Azure name resolution works across VPN Gateway connections | Default Azure name resolution does **not** work across peered VNets — requires Azure DNS Private Zones or custom DNS |
+| **Hub-and-Spoke Routing** | Spoke-to-spoke routing works through the gateway without additional appliances | Requires a **router/NVA** (e.g., Azure Firewall) in the hub VNet for spoke-to-spoke traffic forwarding |
+| **Transitivity** | Can route between connected VNets via the gateway | **Not transitive** — requires explicit peering between each pair or hub-based routing with NVA + UDRs |
+| **When to Use** | Encryption required, cross-tenant not needed, or name resolution needed without custom DNS | Most scenarios (faster, cheaper); preferred when cross-tenant support is needed |
+
+#### Hub-and-Spoke: VNet Peering vs VPN Gateway
+
+When building a hub-and-spoke topology, the choice between VNet peering and VPN Gateways affects several design decisions:
+
+| Design Consideration | VPN Gateway | VNet Peering |
+|---------------------|-------------|--------------|
+| **Spoke-to-spoke communication** | Traffic routes through the hub gateway automatically | Requires NVA/Azure Firewall in hub + UDRs on spoke subnets |
+| **External connectivity (on-premises)** | Hub gateway handles both VNet-to-VNet and on-prem tunnels | Separate VPN/ExpressRoute gateway needed in hub; spokes use **gateway transit** |
+| **DNS/Name resolution** | Works natively across VPN-connected VNets | Must deploy Azure DNS Private Zones or custom DNS server in hub |
+| **Cross-region spokes** | Supported natively | Requires **Global VNet Peering** (additional cost, Basic ILB not supported) |
+| **Cross-subscription spokes** | Supported (same Azure AD tenant only) | Supported (same or different Azure AD tenants) |
+| **Scalability** | Limited by gateway SKU tunnel count (e.g., 30 S2S for VpnGw1) | Up to 500 peerings per VNet (default limit) |
+| **Performance** | Bounded by gateway SKU throughput | Near line-rate (no gateway bottleneck) |
+
+> **Exam Tip**: A common question pattern asks whether VNets in a hub-and-spoke model must be in the same region. The answer: VPN Gateways support cross-region natively; VNet peering also supports cross-region but only through **Global VNet Peering**. The statement "VNet peering VNets must be in the same region" is **incorrect** — it was true before Global VNet Peering was introduced.
+
+> **Reference**: [Azure Virtual Network peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
 
 ### 10.3 VPN Gateway vs Azure Bastion
 
