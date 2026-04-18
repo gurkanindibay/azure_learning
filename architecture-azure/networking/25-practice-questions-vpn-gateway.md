@@ -55,6 +55,60 @@ Azure currently supports two protocols for remote access: **SSTP** and **IKEv2**
 
 ---
 
+## Question 2: ExpressRoute primary + VPN failover for 500+ employees
+
+### Scenario
+
+A company wants to connect its on-premises data center to Azure and desires a dedicated and failover connection. They are not concerned about having a brief latency drop during the failover connection. Additionally, the company has more than 500 employees who will require access to this connection.
+
+**Which type of connection would you recommend to the company?**
+
+- A) A Site-to-Site for the primary and failover connection.
+- B) A Site-to-Site for the primary, and a Point-to-Site for the failover connection.
+- C) An ExpressRoute for the primary connection, and a Site-to-Site for the failover connection.
+- D) A Site-to-Site for the primary, and an ExpressRoute for the failover connection.
+
+### Answer
+
+**Correct Answer: C**
+
+An ExpressRoute for the primary connection, and a Site-to-Site for the failover connection.
+
+### Explanation
+
+The question has three key requirements that drive the answer:
+
+1. **"Dedicated" connection** → ExpressRoute provides a private, dedicated link between on-premises and Azure (not over the public internet). S2S VPN uses the internet, so it is not "dedicated."
+2. **"Acceptable brief latency drop during failover"** → S2S VPN runs over the internet with variable latency (higher than ExpressRoute). The company accepts this trade-off for the failover path.
+3. **"500+ employees"** → This eliminates P2S VPN as a viable failover option.
+
+**Why each option is correct or incorrect:**
+
+| Option | Verdict | Reason |
+|--------|---------|--------|
+| **A) S2S primary + S2S failover** | ❌ | S2S VPN is internet-based, not a "dedicated" connection. Does not satisfy the primary connection requirement. |
+| **B) S2S primary + P2S failover** | ❌ | S2S is not dedicated (same as A). P2S requires individual VPN client on every device — impractical for 500+ users. P2S max connections are 250–1000 depending on SKU. |
+| **C) ExpressRoute primary + S2S failover** | ✅ | ExpressRoute = dedicated private circuit. S2S VPN = cost-effective failover with acceptable latency increase. All 500+ users route through S2S automatically (site-wide tunnel). |
+| **D) S2S primary + ExpressRoute failover** | ❌ | Reversed priority — the dedicated (more expensive, higher quality) connection should be the primary, not the failover. ExpressRoute takes weeks to provision, making it impractical as a standby failover. |
+
+**Coexisting configuration requirements:**
+- VPN gateway must be **route-based** (policy-based does not support coexistence)
+- GatewaySubnet must be `/27` or larger (recommended `/26`)
+- Both gateways reside in the same VNet, sharing the GatewaySubnet
+- BGP recommended for automatic failover (lower metric assigned to ExpressRoute routes)
+
+### Key concept
+
+> **ExpressRoute + S2S VPN coexistence** is a common pattern for enterprise hybrid connectivity. ExpressRoute serves as the high-bandwidth, low-latency primary path, while S2S VPN provides a cost-effective internet-based failover. BGP handles automatic route switching when the ExpressRoute circuit fails. This is distinct from P2S VPN, which is designed for individual remote users — not site-wide failover.
+
+### Reference
+
+- [Configure ExpressRoute and S2S VPN coexisting connections | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-howto-coexist-resource-manager)
+- [ExpressRoute + VPN failover scenario](./23-networking-scenarios.md#hybrid-cloud-with-expressroute--vpn-failover)
+- [VPN Gateway SKU comparison](./05-azure-vpn-gateway.md)
+
+---
+
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
