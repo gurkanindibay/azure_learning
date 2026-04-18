@@ -378,6 +378,62 @@ VNet1 → [peering: VNet1↔VNet3] → VNet3 (Hub, VPN Gateway) → [peering: VN
 
 From VNet3's perspective, when forwarding VNet1's traffic toward VNet2, that traffic was **not originated by VNet3**. Without **Allow Forwarded Traffic** enabled on the VNet3↔VNet2 peering, Azure drops it.
 
+**Topology — Hub without VM or NVA:**
+
+The key point of this pattern is that **VNet3 contains only a VPN Gateway** — no virtual machines, no Network Virtual Appliance (NVA), no firewall. The gateway itself is the routing device. Azure's built-in routing forwards traffic between peered spokes entirely at the platform level.
+
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                          East US Region                                        │
+│                                                                                │
+│   ┌──────────────────────────────────────────────┐                            │
+│   │              VNet3 — Hub (10.3.0.0/16)       │                            │
+│   │                                              │                            │
+│   │   GatewaySubnet (10.3.255.0/27)              │                            │
+│   │   ┌──────────────────────────────────────┐   │                            │
+│   │   │       VPN Virtual Network Gateway    │   │                            │
+│   │   │       (Platform-managed resource)    │   │                            │
+│   │   │                                      │   │                            │
+│   │   │  ✅ No VMs                           │   │                            │
+│   │   │  ✅ No NVA / firewall appliance      │   │                            │
+│   │   │  ✅ Routing done by Azure platform   │   │                            │
+│   │   └──────────────────────────────────────┘   │                            │
+│   └──────────────┬──────────────────┬────────────┘                            │
+│                  │                  │                                          │
+│     Peering A    │                  │   Peering B                             │
+│  AllowFwdTraffic │                  │ AllowFwdTraffic                         │
+│  AllowGWTransit  │                  │ AllowGWTransit                          │
+│                  │                  │                                          │
+│   ┌──────────────┴───┐          ┌───┴──────────────┐                          │
+│   │  VNet1 — Spoke   │          │  VNet2 — Spoke   │                          │
+│   │  (10.1.0.0/16)   │          │  (10.2.0.0/16)   │                          │
+│   │                  │          │                  │                          │
+│   │  ┌────┐ ┌────┐   │          │   ┌────┐ ┌────┐  │                          │
+│   │  │VM-A│ │VM-B│   │          │   │VM-C│ │VM-D│  │                          │
+│   │  └────┘ └────┘   │          │   └────┘ └────┘  │                          │
+│   │                  │          │                  │                          │
+│   │ UseRemoteGW ✅   │          │ UseRemoteGW ✅   │                          │
+│   │ AllowFwdTraf ✅  │          │ AllowFwdTraf ✅  │                          │
+│   └──────────────────┘          └──────────────────┘                          │
+│                                                                                │
+│   VM-A ──► VPN Gateway (VNet3) ──► VM-C  (no NVA involved)                   │
+│                                                                                │
+│   ✗  VNet1 ↔ VNet2 direct peering  (does NOT exist)                          │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why no VM or NVA is needed here:**
+
+| Routing role | Without NVA (this pattern) | With NVA |
+|---|---|---|
+| **Who routes traffic** | Azure VPN Gateway (platform resource) | A VM running a firewall/router OS |
+| **Traffic inspection** | ❌ Not inspected — forwarded as-is | ✅ Can deep-inspect, filter, log |
+| **Configuration** | Peering settings only | UDRs pointing to NVA private IP |
+| **Cost** | Gateway SKU cost only | Gateway + VM/NVA license cost |
+| **Use when** | Connectivity is the goal, not inspection | Security inspection of east-west traffic is required |
+
+> **Note:** If you need to inspect spoke-to-spoke traffic (e.g., with Azure Firewall or a third-party NVA), replace the VPN Gateway-only hub with a hub that also contains the firewall, and add User-Defined Routes (UDRs) on each spoke subnet to send `0.0.0.0/0` to the firewall's private IP. This is the full hub-and-spoke with Azure Firewall pattern.
+
 **Full peering configuration matrix for hub-and-spoke via VPN Gateway:**
 
 | Peering Link | Direction | Setting | Value | Purpose |
