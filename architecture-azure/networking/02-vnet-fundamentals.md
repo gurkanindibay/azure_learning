@@ -271,6 +271,8 @@ Consider the following requirements:
 - In a globally peered VNet, resources cannot communicate with the front-end IP of a **Basic** internal load balancer (use **Standard** Load Balancer for global peering)
 - Default Azure name resolution does **not** work across peered VNets — use Azure Private DNS zones or custom DNS
 - Peering is **not transitive**: if VNet A is peered with VNet B, and VNet B with VNet C, VNet A and C cannot communicate unless explicitly peered
+- Creating or modifying a peering causes **no downtime** for resources in either VNet
+- Cross-deployment model peering is supported: a VNet created via **Azure Resource Manager** can be peered with a VNet created via the **classic deployment model**
 
 ### 5.1 Connecting Virtual Networks Across Subscriptions
 

@@ -448,6 +448,46 @@ Virtual network peering connects VNets in the same or different regions using th
 
 > **Reference**: [Create, change, or delete an Azure virtual network peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
 
+### VNet Peering — Meeting All Connectivity Requirements
+
+**Question:** Your team needs to connect virtual networks with the following requirements:
+- Transfer data between VNets across **Azure AD tenants**, **subscriptions**, **Azure regions**, and **deployment models**
+- Resources in one VNet can communicate with resources in another VNet
+- **No downtime** for resources during or after peering setup
+- **Low-latency, high-bandwidth** connection between resources in different VNets
+
+Will **Virtual Network Peering** meet all of the above requirements?
+
+- **A)** Yes
+- **B)** No
+
+**Correct Answer: A — Yes**
+
+**Explanation:**
+
+Azure VNet Peering (both local and global) satisfies every requirement listed:
+
+| Requirement | Met? | How |
+|-------------|------|-----|
+| Transfer data across **Azure AD tenants** | ✅ | Cross-tenant peering is supported with appropriate RBAC in both tenants |
+| Transfer data across **subscriptions** | ✅ | VNet peering works across different Azure subscriptions |
+| Transfer data across **Azure regions** | ✅ | **Global VNet Peering** connects VNets in different Azure regions over the Microsoft backbone |
+| Transfer data across **deployment models** | ✅ | A VNet created via **Azure Resource Manager** can be peered with a VNet created via the **classic deployment model** |
+| Resources communicate across VNets | ✅ | Peered VNets route traffic using private IPs over the Azure backbone |
+| **No downtime** when creating peering | ✅ | Creating or modifying a peering causes **no downtime** for resources in either VNet |
+| Low-latency, high-bandwidth | ✅ | Traffic travels over the Azure backbone network, never the public internet |
+
+**VNet Peering Types:**
+
+| Type | Scope | Latency |
+|------|-------|---------|
+| **Local (Regional) VNet Peering** | VNets in the **same** Azure region | Lowest |
+| **Global VNet Peering** | VNets in **different** Azure regions | Low (backbone, no internet) |
+
+> **Exam Tip**: The key differentiators vs. other options — VPN Gateway adds encryption overhead and requires gateway deployment; ExpressRoute is for on-premises connectivity; Private Link is for PaaS service access, not VNet-to-VNet. Only VNet Peering satisfies **all four** requirements simultaneously with zero downtime.
+
+> **Reference**: [Virtual network peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+
 ### P2S VPN Authentication with Active Directory Domain
 
 **Question:** What server type is required to authenticate a user who connects via a Point-to-Site (P2S) connection using an Active Directory Domain Server?
