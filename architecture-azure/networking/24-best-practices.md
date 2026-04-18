@@ -389,6 +389,34 @@ OPTIMIZED:
   → Only occasional sync traffic
 ```
 
+### 4. Cost-Saving Policies vs. High Availability Trade-offs
+
+When designing for resilience against a **complete data center outage**, the most directly conflicting cost-saving policy is VNet peering restriction. Understanding which policies to relax — and which to keep — is an important design decision.
+
+| Cost-Saving Policy | Default Rationale | Must Override for Datacenter HA? | Why |
+|--------------------|-------------------|----------------------------------|-----|
+| **Only establish VNet peering when necessary** | Reduces unnecessary network traffic and peering costs | ✅ **Yes — primary conflict** | Cross-region peering connections may be required to keep resources reachable when a primary data center fails. This networking policy directly conflicts with the HA requirement. |
+| **Keep all resources within a single region** | Reduces data transfer costs and simplifies management | ⚠️ Consider | Concentrating resources in one region is cost-efficient but eliminates datacenter redundancy. Should be weighed against RTO/RPO requirements, but is a broader architecture decision rather than a networking policy. |
+| **Design multi-region deployments independent of any specific region** | Increases portability and avoids region lock-in | ❌ **Keep — do not override** | This policy actually supports HA — region-agnostic design improves recovery flexibility. Overriding it would reduce resilience, not improve it. |
+| **Deploy resources in availability sets rather than availability zones** | Availability sets are cheaper than zone-redundant deployments | ⚠️ Consider | Availability sets protect against rack-level failures **within** a data center but do **not** protect against a full datacenter outage. Availability zones should be preferred for datacenter-level resilience, but this is a compute-layer concern rather than a networking cost policy. |
+
+**Availability Sets vs. Availability Zones — Key Distinction:**
+
+```
+Availability Set
+  └─ Spreads VMs across fault/update domains WITHIN one data center
+  └─ Protects against: rack failure, planned maintenance
+  └─ Does NOT protect against: full data center outage
+  └─ SLA: 99.95% | Cost: Lower
+
+Availability Zones
+  └─ Each zone = physically separate data center within a region
+  └─ Protects against: full data center outage
+  └─ SLA: 99.99% | Cost: Higher (zone-redundant resources billed separately)
+```
+
+> **Design Principle**: The **networking** cost policy most directly in conflict with datacenter-outage resilience is **"only establish VNet peering when necessary"** — since cross-region peering is often the mechanism that keeps traffic flowing after a datacenter failure. Other cost policies (single-region, availability sets) are trade-offs to weigh by workload criticality.
+
 ---
 
 ## Compliance & Governance

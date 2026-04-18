@@ -422,6 +422,44 @@ Question: Single VNet or Multi-VNet?
 
 ## Exam-Style Questions
 
+### Cost Policies vs. High Availability — Datacenter Outage
+
+**Question:** You are designing virtual networks with a focus on **cost control** and **high availability**. General cost-saving policies are in place, but the design must ensure resource availability in the event of a **complete data center outage**.
+
+Which cost-saving policies would need to be **overridden** to meet this requirement? (Select all that apply)
+
+- **A)** Only establish peering connections between virtual networks when it is necessary.
+- **B)** Whenever possible, try to keep all resources within a single region.
+- **C)** When designing multi-regional deployments, ensuring they are independent of any specific region is important.
+- **D)** It is better to deploy resources in availability sets rather than deploying them in multiple availability zones to ensure high availability and fault tolerance.
+
+**Correct Answer: A**
+
+**Explanation:**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ✅ Correct | Establishing VNet peering only when necessary is a cost-saving rule that reduces unnecessary traffic and costs. However, in a complete datacenter outage, **cross-region peering connections** may be required to keep resources reachable and available. This policy must be overridden to ensure resilience. |
+| **B** | ❌ Incorrect | Keeping all resources in a single region is a cost-saving rule that also needs consideration, but the scenario specifically targets the policy most directly in conflict with cross-datacenter availability — which is VNet peering restriction. |
+| **C** | ❌ Incorrect (user trap) | Designing multi-regional deployments to be **independent of any specific region** is actually an HA-supportive policy — it improves portability and recovery. This policy should be **maintained**, not overridden. |
+| **D** | ❌ Incorrect | Deploying in availability sets rather than availability zones is a cost-saving trade-off, but availability zones/sets are a compute-layer concern, not directly a networking cost-saving policy being overridden in this context. |
+
+**Availability Sets vs. Availability Zones:**
+
+| | Availability Set | Availability Zone |
+|---|---|---|
+| **Scope** | Within one data center (fault/update domains) | Separate physical data center within a region |
+| **Protects against** | Rack failures, planned maintenance | Full data center outage |
+| **SLA** | 99.95% | 99.99% |
+| **Cost** | Lower | Higher |
+| **Use when** | Budget-constrained, rack-level HA sufficient | Data center-level resilience required |
+
+> **Exam Tip**: Availability Sets ≠ data center redundancy. Only **Availability Zones** and **multi-region deployments** protect against a complete data center outage. Questions about "complete data center outage" always point toward zones and multi-region, not availability sets.
+>
+> **Reference**: [Availability options for Azure Virtual Machines | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-machines/availability)
+
+---
+
 ### Custom DNS Settings Auto-Propagation in VNets
 
 **Question:** Is the following statement **True or False**?
@@ -787,6 +825,76 @@ Virtual Machines in vNet1
 > - [Azure Application Gateway overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/application-gateway/overview)
 > - [What is Azure Front Door? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview)
 > - [Load-balancing options — Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
+
+---
+
+### Hub-and-Spoke VNet Peering — Traffic Forwarding Configuration
+
+**Question:** You want to establish a Hub-and-Spoke VNet peering connection between two existing VNets (VNet1 and VNet2) in the East US region. Your objective is to allow resources in both VNets to communicate with each other **without using a network virtual appliance**. You have deployed VNet3 in the same region to serve as a hub between the other VNets. You plan to use a **VPN virtual network gateway** to allow VNet1 and VNet2 to communicate with each other through VNet3.
+
+Which VNet peering connections should be configured to allow all forwarded traffic? (Select two)
+
+- **A)** A connection between VNet1 and VNet3 with peering enabled and traffic forwarding enabled.
+- **B)** A peering connection between VNet2 and VNet3, with traffic forwarding enabled.
+- **C)** Peering connections should be directed only to VNet3, which serves as the hub.
+- **D)** Only peering connections that are directed to VNet1 and VNet2 are allowed as spokes.
+
+**Correct Answers: A, B**
+
+**Explanation:**
+
+In a hub-and-spoke topology, spoke VNets (VNet1 and VNet2) do **not** peer with each other directly. All traffic routes through the hub (VNet3) via its VPN gateway. For this to work, **Allow Forwarded Traffic** must be enabled on each spoke↔hub peering so that traffic originating in one spoke can be forwarded by the hub to the other spoke.
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ✅ Correct | A peering connection between VNet1 (spoke) and VNet3 (hub) with **Allow Forwarded Traffic** enabled allows VNet1's traffic to be forwarded through VNet3 toward VNet2, and vice versa. |
+| **B** | ✅ Correct | A peering connection between VNet2 (spoke) and VNet3 (hub) with **Allow Forwarded Traffic** enabled allows VNet2's traffic to be forwarded through VNet3 toward VNet1, and vice versa. |
+| **C** | ❌ Incorrect | This describes the direction correctly (spokes peer to the hub only), but it is not a complete answer — it does not specify that forwarded traffic must be explicitly enabled. Direction alone is insufficient. |
+| **D** | ❌ Incorrect | VNet1 and VNet2 are spokes; they do not accept peering connections *to themselves as hubs*. This statement confuses the hub and spoke roles. |
+
+**Architecture — Peering Configuration:**
+
+```
+                    VNet3 (Hub — East US)
+                    VPN Gateway
+                   /            \
+     ┌────────────┴──┐          ┌──┴────────────┐
+     │ Peering A     │          │ Peering B     │
+     │ Allow Forward │          │ Allow Forward │
+     │ Allow GW Trans│          │ Allow GW Trans│
+     └──────┬────────┘          └────────┬──────┘
+            │                            │
+       VNet1 (Spoke)               VNet2 (Spoke)
+       Use Remote GW               Use Remote GW
+       Allow Forward               Allow Forward
+```
+
+**Complete peering settings required:**
+
+| Peering Link | Side | Setting | Value |
+|---|---|---|---|
+| VNet1 ↔ VNet3 | Hub (VNet3) | Allow Gateway Transit | ✅ Enabled |
+| VNet1 ↔ VNet3 | Hub (VNet3) | Allow Forwarded Traffic | ✅ Enabled |
+| VNet1 ↔ VNet3 | Spoke (VNet1) | Use Remote Gateways | ✅ Enabled |
+| VNet1 ↔ VNet3 | Spoke (VNet1) | Allow Forwarded Traffic | ✅ Enabled |
+| VNet2 ↔ VNet3 | Hub (VNet3) | Allow Gateway Transit | ✅ Enabled |
+| VNet2 ↔ VNet3 | Hub (VNet3) | Allow Forwarded Traffic | ✅ Enabled |
+| VNet2 ↔ VNet3 | Spoke (VNet2) | Use Remote Gateways | ✅ Enabled |
+| VNet2 ↔ VNet3 | Spoke (VNet2) | Allow Forwarded Traffic | ✅ Enabled |
+
+**Key distinction — Allow Forwarded Traffic vs. Allow Gateway Transit:**
+
+| Setting | Purpose | Without It |
+|---|---|---|
+| **Allow Forwarded Traffic** | Permits traffic that did **not originate** in the directly connected VNet to traverse the peering | Spoke-to-spoke traffic is **dropped** at the hub peering boundary |
+| **Allow Gateway Transit** | Shares the hub VPN/ExpressRoute gateway with the spoke | Spoke cannot reach external/on-premises networks via hub gateway |
+| **Use Remote Gateways** | Instructs the spoke to route external traffic via the hub's gateway | Spoke must have its own gateway (extra cost, extra complexity) |
+
+> **Exam Tip**: "Allow Forwarded Traffic" and "Allow Gateway Transit" serve **different purposes** and are both needed in a hub-and-spoke topology with VPN gateway. Gateway transit covers external connectivity (on-premises or VNet-to-VNet via gateway); forwarded traffic covers spoke-to-spoke routing **through** the hub.
+>
+> **Domain**: Design, implement, and manage connectivity services (20–25%)
+>
+> **Reference**: [Hub-spoke network topology in Azure — Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/en-us/azure/architecture/networking/architecture/hub-spoke)
 
 ---
 

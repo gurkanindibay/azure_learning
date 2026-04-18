@@ -364,6 +364,45 @@ Spoke VNet (no gateway)
 
 **Why it matters:** Gateway transit enables centralized connectivity (single gateway, centralized routing and security) while keeping spokes lightweight and cost-effective.
 
+### 5.3 Allow Forwarded Traffic (Traffic Forwarding in Peering)
+
+**Allow forwarded traffic** is a separate VNet peering setting that controls whether traffic **not originating in the directly peered VNet** can traverse the peering link.
+
+**Why it is needed in hub-and-spoke:**
+
+In a hub-and-spoke topology, spoke VNets communicate with each other *through* the hub. Traffic from VNet1 (Spoke 1) that needs to reach VNet2 (Spoke 2) travels like this:
+
+```
+VNet1 → [peering: VNet1↔VNet3] → VNet3 (Hub, VPN Gateway) → [peering: VNet3↔VNet2] → VNet2
+```
+
+From VNet3's perspective, when forwarding VNet1's traffic toward VNet2, that traffic was **not originated by VNet3**. Without **Allow Forwarded Traffic** enabled on the VNet3↔VNet2 peering, Azure drops it.
+
+**Full peering configuration matrix for hub-and-spoke via VPN Gateway:**
+
+| Peering Link | Direction | Setting | Value | Purpose |
+|---|---|---|---|---|
+| VNet1 ↔ VNet3 | VNet1 → VNet3 (spoke side) | Allow Forwarded Traffic | **Enabled** | Allow hub to forward VNet1's traffic onward |
+| VNet1 ↔ VNet3 | VNet1 → VNet3 (spoke side) | Use Remote Gateways | Enabled | Spoke uses hub's VPN gateway |
+| VNet1 ↔ VNet3 | VNet3 → VNet1 (hub side) | Allow Gateway Transit | Enabled | Hub shares its gateway with spoke |
+| VNet1 ↔ VNet3 | VNet3 → VNet1 (hub side) | Allow Forwarded Traffic | **Enabled** | Allow forwarded traffic from other spokes |
+| VNet2 ↔ VNet3 | VNet2 → VNet3 (spoke side) | Allow Forwarded Traffic | **Enabled** | Allow hub to forward VNet2's traffic onward |
+| VNet2 ↔ VNet3 | VNet2 → VNet3 (spoke side) | Use Remote Gateways | Enabled | Spoke uses hub's VPN gateway |
+| VNet2 ↔ VNet3 | VNet3 → VNet2 (hub side) | Allow Gateway Transit | Enabled | Hub shares its gateway with spoke |
+| VNet2 ↔ VNet3 | VNet3 → VNet2 (hub side) | Allow Forwarded Traffic | **Enabled** | Allow forwarded traffic from other spokes |
+
+> **No direct peering between VNet1 and VNet2** — all traffic is routed through VNet3 (the hub).
+
+**Comparison: Allow Forwarded Traffic vs. Allow Gateway Transit**
+
+| Setting | Controls | Where Configured | Required For |
+|---|---|---|---|
+| **Allow Forwarded Traffic** | Traffic that did **not originate** in the directly connected VNet | Both sides of the peering | Spoke-to-spoke communication through hub |
+| **Allow Gateway Transit** | Sharing the hub's VPN/ExpressRoute gateway | Hub side of the peering | Spoke VNets reaching on-premises/external networks via hub |
+| **Use Remote Gateways** | Using the remote (hub) gateway | Spoke side of the peering | Required when Allow Gateway Transit is enabled on hub |
+
+**Common mistake:** Enabling only gateway transit without enabling forwarded traffic. Gateway transit allows spokes to reach **external/on-premises** networks via the hub gateway, but it does **not** automatically allow spoke-to-spoke traffic to be forwarded through the hub.
+
 ## 6. Network Security Groups (NSG)
 
 **Network Security Groups** contain security rules that filter network traffic to and from Azure resources.
