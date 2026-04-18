@@ -12,6 +12,8 @@ See [README](./README.md) for overview.
 - [5. VNet Peering](#5-vnet-peering)
   - [5.1 Connecting Virtual Networks Across Subscriptions](#51-connecting-virtual-networks-across-subscriptions)
   - [5.2 Gateway Transit and Connectivity](#52-gateway-transit-and-connectivity)
+  - [5.4 VNet Peering Limits and Scalability](#54-vnet-peering-limits-and-scalability)
+  - [5.5 Practice Question: Gateway Transit Direction in Hub-and-Spoke](#55-practice-question-gateway-transit-direction-in-hub-and-spoke)
 - [6. Network Security Groups (NSG)](#6-network-security-groups-nsg)
   - [6.1 Service Tags in NSG Rules](#61-service-tags-in-nsg-rules)
 - [7. Application Security Groups (ASG)](#7-application-security-groups-asg)
@@ -459,6 +461,103 @@ The key point of this pattern is that **VNet3 contains only a VPN Gateway** — 
 | **Use Remote Gateways** | Using the remote (hub) gateway | Spoke side of the peering | Required when Allow Gateway Transit is enabled on hub |
 
 **Common mistake:** Enabling only gateway transit without enabling forwarded traffic. Gateway transit allows spokes to reach **external/on-premises** networks via the hub gateway, but it does **not** automatically allow spoke-to-spoke traffic to be forwarded through the hub.
+
+### 5.4 VNet Peering Limits and Scalability
+
+Each virtual network has a **limit on the number of peering connections** (default: 500 peerings per VNet). In a hub-and-spoke topology with many spokes, you may quickly exhaust the hub's peering limit.
+
+**Workaround — UDRs with Azure Firewall or NVA:**
+
+When the number of spokes grows beyond peering limits, or when you need spoke-to-spoke routing without direct peering between every pair, use **User-Defined Routes (UDRs)** on each spoke subnet to force traffic destined for other spokes through **Azure Firewall** or a **Network Virtual Appliance (NVA)** acting as a router at the hub.
+
+```
+Spoke1 (UDR: 0.0.0.0/0 → Hub Firewall IP)
+    │
+    ▼
+Hub VNet
+├── Azure Firewall / NVA (10.0.0.10)  ←── Routes traffic between spokes
+├── VPN Gateway (optional, for on-prem)
+    │
+    ▼
+Spoke2 (UDR: 0.0.0.0/0 → Hub Firewall IP)
+```
+
+| Approach | Peering Needed | Spoke-to-Spoke | Scalability | Traffic Inspection |
+|----------|---------------|----------------|-------------|-------------------|
+| **Direct peering (all pairs)** | N×(N-1)/2 | Direct | Limited by peering cap | ❌ No |
+| **Hub gateway transit** | N (hub↔each spoke) | Via hub gateway | Moderate | ❌ No |
+| **Hub with Firewall/NVA + UDRs** | N (hub↔each spoke) | Via firewall/NVA | High | ✅ Yes |
+
+> **Exam tip**: When a question mentions connecting many spokes and asks about scalability, UDRs with Azure Firewall or NVA is the recommended pattern — not adding more peering connections between spokes.
+
+**References:**
+- [Hub-spoke network topology in Azure - Azure Architecture Center](https://learn.microsoft.com/azure/architecture/networking/architecture/hub-spoke)
+- [Virtual network peering limits](https://learn.microsoft.com/azure/azure-resource-manager/management/azure-subscription-service-limits#networking-limits)
+
+### 5.5 Practice Question: Gateway Transit Direction in Hub-and-Spoke
+
+**Question:**
+
+You must establish a Hub-and-Spoke network in the US East region between two existing virtual networks, VNet1 and VNet2. This is necessary to facilitate communication between resources in the two networks. However, you cannot use a network virtual appliance for this purpose.
+
+To achieve this, you deploy a new virtual network, VNet3, in the East US region. VNet3 will act as the network hub, enabling VNet1 and VNet2 to communicate with each other through virtual network gateways.
+
+Which VNet peering connections should be configured to **allow gateway transit**?
+
+**Options:**
+
+- A) All peering connections between the hub and spokes
+- B) No peering connections
+- C) Only peering connections directed to VNet3 as the hub ✅
+- D) Only peering connections directed to VNet1 and VNet2 as the spokes
+
+**Answer: C) Only peering connections directed to VNet3 as the hub**
+
+**Explanation:**
+
+"Allow Gateway Transit" is a setting configured **only on the hub side** of each peering connection. It tells Azure that the hub VNet is willing to share its VPN/ExpressRoute gateway with the peered spoke VNet.
+
+| Setting | Where Configured | What It Does |
+|---|---|---|
+| **Allow Gateway Transit** | Hub side (VNet3 → VNet1, VNet3 → VNet2) | Hub advertises its gateway to spoke |
+| **Use Remote Gateways** | Spoke side (VNet1 → VNet3, VNet2 → VNet3) | Spoke opts in to use the hub's gateway |
+
+```
+                    VNet3 (Hub)
+                   ┌──────────────────┐
+                   │  VPN Gateway     │
+                   │                  │
+                   │ Peering → VNet1: │
+                   │  ✅ Allow GW     │
+                   │     Transit      │
+                   │                  │
+                   │ Peering → VNet2: │
+                   │  ✅ Allow GW     │
+                   │     Transit      │
+                   └────┬────────┬────┘
+                        │        │
+              ┌─────────┘        └─────────┐
+              ▼                            ▼
+   VNet1 (Spoke)                 VNet2 (Spoke)
+  ┌──────────────┐              ┌──────────────┐
+  │ Peering →    │              │ Peering →    │
+  │ VNet3:       │              │ VNet3:       │
+  │ ✅ Use Remote│              │ ✅ Use Remote│
+  │    Gateways  │              │    Gateways  │
+  │ ❌ NOT Allow │              │ ❌ NOT Allow │
+  │    GW Transit│              │    GW Transit│
+  └──────────────┘              └──────────────┘
+```
+
+**Why other options are wrong:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **All peering connections** | "Allow Gateway Transit" is only valid on the VNet that **has** the gateway (the hub). Enabling it on spokes that don't have a gateway is not applicable. |
+| **No peering connections** | Without gateway transit, spokes cannot use the hub's gateway for inter-spoke or external communication. |
+| **Only peering connections to spokes** | The spokes don't own the gateway — they use **Use Remote Gateways** instead. "Allow Gateway Transit" only makes sense on the gateway-owning VNet. |
+
+> **Key takeaway**: "Allow Gateway Transit" is always a **hub-side** (gateway-owning VNet) setting. The complementary spoke-side setting is "Use Remote Gateways". These two settings work as a pair — the hub offers its gateway, and the spoke accepts it.
 
 ## 6. Network Security Groups (NSG)
 
