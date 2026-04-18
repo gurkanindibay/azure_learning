@@ -430,6 +430,136 @@ Azure-provided DNS (168.63.129.16)  ← Default fallback
 
 > **Exam Tip**: Changing the VNet's DNS settings requires existing VMs to be **stopped (deallocated) and restarted** to pick up the new configuration. This is a common exam trap — Azure does NOT push DNS changes to running VMs automatically.
 
+## Split-Horizon DNS
+
+### Overview
+
+**Split-Horizon DNS** (also known as **split-brain DNS** or **split-view DNS**) is a DNS configuration where the **same domain name resolves to different IP addresses** depending on whether the query originates from inside a private network (intranet) or from the public internet.
+
+In Azure, this is achieved by creating **both** a Public DNS zone and a Private DNS zone with the **same domain name**:
+
+- **Internet users** → query the **Public DNS zone** → receive the public IP address
+- **VNet users** → query the **Private DNS zone** → receive the private IP address
+
+### How It Works in Azure
+
+```mermaid
+graph TD
+    subgraph Internet
+        A[Internet Client]
+    end
+    subgraph Azure
+        B[Public DNS Zone<br/>contoso.com<br/>A: 20.30.40.50]
+        C[Private DNS Zone<br/>contoso.com<br/>A: 10.0.1.5]
+        D[VM in VNet]
+    end
+
+    A -->|Resolves contoso.com| B
+    B -->|Returns 20.30.40.50| A
+    D -->|Resolves contoso.com| C
+    C -->|Returns 10.0.1.5| D
+```
+
+**Setup Steps:**
+
+1. **Create a Public DNS zone** for `contoso.com` — delegates the domain on the internet
+2. **Create a Private DNS zone** with the same name `contoso.com`
+3. **Link the Private DNS zone** to the target VNet(s)
+4. **Add records** to each zone with different values:
+   - Public zone: `app.contoso.com` → `20.30.40.50` (public IP / load balancer)
+   - Private zone: `app.contoso.com` → `10.0.1.5` (private IP of the backend)
+
+```bash
+# Create public zone
+az network dns zone create \
+  --resource-group MyResourceGroup \
+  --name contoso.com
+
+# Create private zone with the same name
+az network private-dns zone create \
+  --resource-group MyResourceGroup \
+  --name contoso.com
+
+# Link private zone to VNet
+az network private-dns link vnet create \
+  --resource-group MyResourceGroup \
+  --zone-name contoso.com \
+  --name myVNetLink \
+  --virtual-network myVNet \
+  --registration-enabled false
+
+# Public zone record (internet-facing IP)
+az network dns record-set a add-record \
+  --resource-group MyResourceGroup \
+  --zone-name contoso.com \
+  --record-set-name app \
+  --ipv4-address 20.30.40.50
+
+# Private zone record (internal IP)
+az network private-dns record-set a add-record \
+  --resource-group MyResourceGroup \
+  --zone-name contoso.com \
+  --record-set-name app \
+  --ipv4-address 10.0.1.5
+```
+
+### Common Use Cases
+
+| Use Case | Description |
+|----------|-------------|
+| **Private endpoints** | Public clients resolve to public IP; VNet clients resolve to private endpoint IP |
+| **Internal applications** | Same FQDN serves both external users (via public LB) and internal users (via private IP) |
+| **Hybrid cloud** | On-premises and Azure VNet users get internal IPs; internet users get public IPs |
+| **Development/testing** | Internal users hit staging; external users hit production |
+
+### Split-Horizon vs Other DNS Approaches
+
+| Approach | Same Zone Name? | Different Responses? | Use Case |
+|----------|----------------|---------------------|----------|
+| **Split-Horizon DNS** | ✅ Yes — public + private zone with same name | ✅ Yes — internal vs external | Different resolutions for the same domain |
+| **Reverse DNS** | ❌ No — maps IP → name | ❌ No — single mapping | IP-to-name lookups (PTR records) |
+| **CNAME** | ❌ No — alias to another name | ❌ No — single target | Aliasing one name to another |
+| **Private DNS only** | N/A — no public zone | N/A — internal only | Internal-only name resolution |
+
+### Key Points
+
+- The **Private DNS zone takes precedence** for VMs in linked VNets — Azure DNS resolver checks private zones first
+- Both zones operate independently; records do not need to match
+- Split-Horizon is commonly used alongside **Azure Private Link / Private Endpoints** where internal traffic should bypass public endpoints
+- This approach does **not** require any custom DNS servers — it uses Azure's built-in DNS infrastructure
+
+## Exam Scenario: Split-Horizon DNS
+
+### Question
+
+As an Azure Administrator, you are responsible for configuring Azure DNS zones for your Microsoft Entra tenant. Your objective is to ensure that Internet and Intranet users can perform different resolutions for the same domain name. What can you use to achieve this?
+
+A. Reverse DNS  
+B. Private DNS  
+C. CNAME  
+D. **Split-Horizon** ✅
+
+### Answer: D - Split-Horizon
+
+### Explanation
+
+**Split-Horizon DNS** serves different resolutions for the same DNS zone, depending on whether the client is inside Azure's virtual networks or outside on the internet.
+
+**Why each option is correct or incorrect:**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ❌ Incorrect | **Reverse DNS** maps IP addresses to domain names (PTR records). It does not provide different resolutions for the same domain name based on client location. |
+| **B** | ❌ Incorrect | **Private DNS** alone only provides name resolution within Azure virtual networks. It does not serve different resolutions to internet users — it only resolves internally. Split-Horizon uses Private DNS **combined** with Public DNS to achieve the dual-resolution behavior. |
+| **C** | ❌ Incorrect | **CNAME** (Canonical Name) creates an alias from one domain name to another. It always resolves to the same target regardless of where the query originates. |
+| **D** | ✅ Correct | **Split-Horizon DNS** is the technique of serving different DNS responses for the same domain depending on the source of the query. In Azure, this is implemented by having both a Public DNS zone and a Private DNS zone with the same domain name. Internet clients resolve via the public zone; VNet clients resolve via the private zone. |
+
+> **Exam Tip**: The key phrase is "different resolutions for the **same domain name**" — this immediately points to Split-Horizon DNS. Don't confuse this with Private DNS alone (which only handles internal resolution) or Reverse DNS (which is IP-to-name, not name-to-IP).
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [Azure DNS Private Zones overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/dns/private-dns-overview)
+
 ## Best Practices
 
 1. **Use alias records** when pointing to Azure resources to avoid stale DNS records
