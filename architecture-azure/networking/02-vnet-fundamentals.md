@@ -29,6 +29,7 @@ See [README](./README.md) for overview.
   - [10.5 Practice Question: NAT Gateway IP Addresses and Subnet Association](#105-practice-question-nat-gateway-ip-addresses-and-subnet-association)
   - [10.6 Practice Question: NAT Characteristics and Limitations](#106-practice-question-nat-characteristics-and-limitations)
   - [10.7 Practice Question: NAT Compatibility and Protocol Support](#107-practice-question-nat-compatibility-and-protocol-support)
+  - [10.8 Practice Question: Secure Outbound Access with IP Masking and Inbound Blocking](#108-practice-question-secure-outbound-access-with-ip-masking-and-inbound-blocking)
 
 ---
 
@@ -1856,6 +1857,103 @@ NAT Gateway Compatibility & Protocol Support:
 ```
 
 > **Reference**: [Virtual Network NAT - Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview)
+
+### 10.8 Practice Question: Secure Outbound Access with IP Masking and Inbound Blocking
+
+**Question:**
+
+You have a resource group in Azure that contains **VNet-01** and **Subnet-01**. Subnet-01 has a routing table and a network security group named **NSG-01**. An ARM virtual machine named **VM1** is deployed in Subnet-01 with a **private IP address only**.
+
+You must allow VM1 to connect to an on-premises static IP address (**216.3.128.12**) for software updates, **without revealing VM1's private IP address**. You also want to **block all inbound traffic** except for the return traffic from the software update connection.
+
+**What are the two steps you should take?** (Select two)
+
+- A) Create a private load balancer that is linked to VM1.
+- B) Create a NAT gateway associated with Subnet-01.
+- C) Modify NSG-01 to permit outbound traffic to 216.3.128.12 via port 443. Do not add any additional rules.
+- D) Add an inbound NSG rule to allow traffic from 216.3.128.12 on port 443.
+
+**Answer: B and C**
+
+**Explanation:**
+
+| Step | Action | Why It Works |
+|------|--------|--------------|
+| **Step 1** | Create a NAT gateway on Subnet-01 | NAT Gateway performs **SNAT** (Source Network Address Translation): all outbound traffic from VM1 is translated to the NAT Gateway's static public IP, hiding VM1's private IP from the destination |
+| **Step 2** | Add an NSG-01 outbound rule allowing traffic to 216.3.128.12 on port 443, with no other allow rules | Because NSG is **stateful**, return traffic from allowed outbound connections is automatically permitted. The implicit deny-all inbound rule blocks all unsolicited incoming traffic |
+
+**Why option A (private load balancer) is incorrect:**
+
+A private (internal) load balancer distributes **inbound** traffic from within the virtual network to backend VMs. It **cannot** perform SNAT for outbound connections to external destinations. A private load balancer has no public IP and is not connected to the internet, so it cannot mask the VM's source IP or enable outbound internet access.
+
+| Feature | Private Load Balancer | NAT Gateway |
+|---------|-----------------------|-------------|
+| **Direction** | Inbound only (internal) | Outbound only |
+| **Public IP** | No (internal IP only) | Yes (static public IP) |
+| **SNAT for internet** | ❌ No | ✅ Yes |
+| **Hides private IP** | ❌ No | ✅ Yes |
+
+**Why option D (inbound NSG rule) is incorrect:**
+
+Adding a separate inbound NSG rule from 216.3.128.12:443 is **not needed** because NSGs are stateful. When an outbound connection is established by the VM, the NSG automatically tracks the connection state and permits the corresponding return traffic — without requiring a matching inbound rule.
+
+**NSG statefulness — how it applies here:**
+
+NSG rules use **5-tuple information** (source IP, source port, destination IP, destination port, protocol) to create a flow record when a connection is initiated. The connection state in the flow record then governs whether subsequent packets for that connection are allowed, even if no matching inbound rule exists.
+
+```
+Flow: VM1 → NAT Gateway (SNAT) → 216.3.128.12:443
+
+  NSG outbound rule:  Allow TCP → 216.3.128.12:443  ✅
+  NSG creates flow record for this connection
+
+  Return traffic:     216.3.128.12:443 → NAT Gateway → VM1
+  NSG checks flow record → connection is established → Allowed ✅
+
+  Unsolicited inbound from internet → No flow record → Deny-All applies ❌
+```
+
+**Complete solution diagram:**
+
+```
+                        Internet
+                           │
+                    216.3.128.12 (on-premises)
+                           │
+                    Port 443 (HTTPS)
+                           │
+                ┌──────────▼───────────┐
+                │   NAT Gateway        │
+                │   Public IP: static  │  ← VM1's real IP is hidden
+                │   Performs SNAT      │
+                └──────────┬───────────┘
+                           │
+  ┌────────────────────────▼──────────────────────────────┐
+  │  VNet-01                                              │
+  │  ┌────────────────────────────────────────────────┐  │
+  │  │  Subnet-01                                     │  │
+  │  │                                                │  │
+  │  │  ┌───────────┐    NSG-01 (on Subnet-01)        │  │
+  │  │  │   VM1     │    Outbound: Allow TCP          │  │
+  │  │  │ private   │     → 216.3.128.12:443          │  │
+  │  │  │ IP only   │    Inbound: Deny All (default)  │  │
+  │  │  └───────────┘    Return traffic: auto-allowed  │  │
+  │  │                   (stateful NSG)               │  │
+  │  └────────────────────────────────────────────────┘  │
+  └───────────────────────────────────────────────────────┘
+```
+
+**Key Takeaways:**
+
+- ✅ **NAT Gateway** is required to provide SNAT — it masks the VM's private IP with a static public IP for outbound connections
+- ✅ **NSG outbound rule** to the specific IP/port restricts which external hosts the VM can reach
+- ✅ **NSG statefulness** means return traffic for allowed outbound flows is automatically permitted — no inbound rule needed
+- ✅ The **implicit deny-all inbound** default rule (priority 65500) blocks all unsolicited inbound traffic
+- ❌ **Private load balancer** cannot substitute for NAT Gateway — it is internal-only and does not perform SNAT for internet-bound traffic
+- ❌ An **explicit inbound NSG rule** from the update server is redundant and unnecessary when the flow is initiated outbound
+
+> **Certification Domain**: Design and implement core networking infrastructure (20–25%)  
+> **Reference**: [Azure NAT Gateway resource | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-gateway-resource)
 
 ---
 
