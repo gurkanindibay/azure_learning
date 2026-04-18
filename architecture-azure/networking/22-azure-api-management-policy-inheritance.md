@@ -82,6 +82,9 @@ The `<base />` element:
 
 ## 5. Operation-Level Policy Using `<base />`
 
+> **How does APIM resolve `<base />`?**
+> The `<base />` element does **not** explicitly reference the Global, Product, or API policies. Instead, APIM's runtime already knows the scope hierarchy from its **resource model**: every Operation belongs to an API, every API can belong to a Product, and a single Global scope always exists. When a request arrives, APIM resolves the target Operation → API → Product → Global chain from its configuration, collects all policies at each scope, and injects them wherever `<base />` appears. The inheritance is **implicit and automatic** — driven by resource relationships, not by XML declarations.
+
 ```xml
 <policies>
   <inbound>
