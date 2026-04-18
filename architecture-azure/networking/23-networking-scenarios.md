@@ -696,6 +696,100 @@ Azure DNS is the built-in DNS service (at `168.63.129.16`) that automatically re
 
 ---
 
+### Scalable and Robust Application on VMs — Choosing the Right Load Balancing Services
+
+**Question:** Your company is planning to deploy a new application on a fleet of Azure virtual machines (VMs) in the virtual network called "vNet1". Your boss wants you to ensure that the application is scalable and robust, and has provided the following requirements:
+
+- Path-based routing at the **global** level
+- Traffic should be load-balanced **within vNet1**
+- **100% TLS/SSL offload**
+- HTTP requests must be routed **within vNet1**
+- **Session affinity** should be supported
+
+To meet these requirements, what actions should you take? (Choose two answers.)
+
+- **A)** Deploy an Application Gateway in front of the virtual machines (VMs) in vNet1
+- **B)** Enable Azure Front Door
+- **C)** Enable Azure Firewall
+- **D)** Enable global load balancing (Azure Load Balancer cross-region)
+
+**Correct Answers: A, B**
+
+**Explanation:**
+
+Both **Application Gateway** and **Azure Front Door** together address every requirement. No single service alone covers the full list — the combination is needed because some requirements are regional (within vNet1) and some are global.
+
+| Requirement | Service | How |
+|-------------|---------|-----|
+| Path-based routing at the **global** level | **Azure Front Door** | Front Door is a global Layer 7 load balancer with URL/path-based routing, routing traffic to the nearest healthy backend across regions |
+| Traffic load-balanced **within vNet1** | **Application Gateway** | Application Gateway is a regional Layer 7 load balancer that deploys inside (or in front of) a VNet and distributes HTTP traffic across the VM backend pool |
+| 100% TLS/SSL offload | **Both** | Both Application Gateway and Front Door terminate TLS at the edge, so backend VMs receive plain HTTP — true 100% SSL offload |
+| HTTP requests routed **within vNet1** | **Application Gateway** | After TLS is terminated by Application Gateway, it forwards plain HTTP requests to VMs inside vNet1 using path-based or host-based routing rules |
+| Session affinity | **Both** | Application Gateway supports **cookie-based session affinity**; Front Door also supports session affinity via its routing rules |
+
+**Why the other options are wrong:**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **C — Azure Firewall** | ❌ Incorrect | Azure Firewall is a **security** service (Layer 4/7 threat inspection, FQDN filtering). It does **not** provide load balancing, TLS offload, path-based routing, or session affinity. It cannot replace a load balancer in this scenario. |
+| **D — Global load balancing (cross-region Azure Load Balancer)** | ❌ Incorrect | Azure Load Balancer operates at **Layer 4 (TCP/UDP)** only. It has no understanding of HTTP paths, cannot perform TLS/SSL offload, and does **not** support session affinity (only source IP affinity). It also does not balance traffic evenly within vNet1 for HTTP workloads. |
+
+**Traffic Manager** (another common distractor) is DNS-based and does **not** support session affinity or SSL offload either — DNS-level routing has no awareness of HTTP sessions.
+
+**Combined Architecture:**
+
+```
+Internet Users
+      │
+      ▼
+Azure Front Door (Global)
+  ├─ Global path-based routing (e.g., /api/* → East US, /static/* → CDN)
+  ├─ TLS termination (SSL offload — edge POP)
+  ├─ Session affinity (optional, Front Door level)
+  └─ Health probes to regional backends
+      │
+      ▼
+Application Gateway (Regional — inside / in front of vNet1)
+  ├─ TLS termination (SSL offload — regional, for any backend re-encryption)
+  ├─ URL/path-based routing to VM backend pools
+  ├─ Cookie-based session affinity
+  ├─ WAF (optional — WAF v2 SKU)
+  └─ Backend pool: VMs in vNet1
+      │
+      ▼
+Virtual Machines in vNet1
+  (receive plain HTTP traffic — fully offloaded)
+```
+
+**Key Design Principles:**
+
+- **Front Door** sits at the global edge — closest to the user, routes across regions, and terminates TLS at the CDN/POP level.
+- **Application Gateway** sits at the regional edge — within or peered to vNet1 — and handles intra-VNet routing, WAF, and further TLS offload before traffic reaches the VMs.
+- Together they provide **two tiers of TLS offload**: at the global edge (Front Door) and at the regional boundary (Application Gateway). The VM backend sees only plain HTTP — achieving the "100% TLS offload" requirement.
+- **Session affinity** is available at both tiers, ensuring sticky routing works whether the session is tracked at the global or regional level.
+
+**Quick Reference — Feature Support by Service:**
+
+| Feature | App Gateway | Front Door | Azure Firewall | Cross-Region LB |
+|---------|:-----------:|:----------:|:--------------:|:---------------:|
+| Path-based routing | ✅ Regional | ✅ Global | ❌ | ❌ |
+| TLS/SSL offload | ✅ | ✅ | ❌ | ❌ |
+| HTTP routing within VNet | ✅ | ❌ (global only) | ❌ | ❌ |
+| Session affinity | ✅ Cookie-based | ✅ | ❌ | ❌ |
+| Layer | 7 (HTTP) | 7 (HTTP) | 4/7 (security) | 4 (TCP/UDP) |
+| Scope | Regional | Global | Regional | Cross-region |
+
+> **Exam Tip**: When a scenario combines **global** requirements (path-based routing across regions) with **regional/VNet** requirements (intra-VNet routing, TLS offload, session affinity), the answer almost always involves **Azure Front Door + Application Gateway** as a tandem. Azure Firewall is a security service — never a load balancer. Azure Load Balancer (even cross-region) is Layer 4 and cannot offload TLS or route by HTTP path.
+>
+> **Domain**: Design, implement, and manage load balancing (20–25%)
+>
+> **References**:
+> - [Azure Application Gateway overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/application-gateway/overview)
+> - [What is Azure Front Door? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview)
+> - [Load-balancing options — Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
+
+---
+
 ## References
 
 - [Hub-Spoke VNet Architecture](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke)
