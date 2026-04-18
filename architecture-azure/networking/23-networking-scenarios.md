@@ -422,6 +422,50 @@ Question: Single VNet or Multi-VNet?
 
 ## Exam-Style Questions
 
+### Custom DNS Settings Auto-Propagation in VNets
+
+**Question:** Is the following statement **True or False**?
+
+> "Azure automatically updates DNS server settings for all virtual machines and role instances within the VNet when configuring custom DNS settings."
+
+- **A)** True
+- **B)** False
+
+**Correct Answer: B — False**
+
+**Explanation:**
+
+When you configure custom DNS settings on a VNet in Azure, the settings are **not** automatically pushed to existing virtual machines or role instances. Each VM/NIC must be updated individually.
+
+| Aspect | Behaviour |
+|--------|-----------|
+| **VNet-level custom DNS config** | Applies to **new** VMs/NICs added after the change; existing ones are **not** automatically updated |
+| **Existing VMs** | Must be **restarted** (deallocated and reallocated) or have their NIC DNS settings manually updated to pick up the new VNet DNS settings |
+| **Per-NIC DNS override** | Each NIC can have its own DNS server settings that override the VNet-level settings — these must also be configured manually |
+| **Role instances (Cloud Services)** | Must be redeployed or the DNS settings configured individually |
+
+**Common Misconception:**
+
+> ❌ "Changing DNS servers on the VNet immediately affects all running VMs."
+
+> ✅ Correct behaviour: The DHCP lease must be renewed on the VM for the new DNS setting to take effect. For VMs, this typically requires a **stop (deallocate) and restart**.
+
+**DNS Setting Precedence (highest to lowest):**
+
+```
+NIC-level DNS setting  (overrides everything)
+        ↓
+VNet-level DNS setting  (used if NIC has no override)
+        ↓
+Azure-provided DNS (168.63.129.16)  (default fallback)
+```
+
+> **Exam Tip**: Questions about "automatic" DNS propagation are traps. Azure does **not** push DNS changes to existing VMs/NICs automatically. A restart or manual NIC update is required.
+>
+> **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
+
+---
+
 ### VNet Peering Requirements and Limitations
 
 **Question:** Virtual network peering lets you connect Azure VNets using the Azure backbone network. However, there are specific requirements and limitations associated with VNet peering. Select the appropriate requirements and limitations from the list below. (Select all that apply)

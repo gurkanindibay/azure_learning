@@ -407,6 +407,29 @@ D. **Azure DNS** ✅
 >
 > **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
 
+### Custom DNS Settings — No Automatic Propagation
+
+> **Key Concept**: Configuring custom DNS servers at the **VNet level** does **not** automatically update DNS settings on existing virtual machines, role instances, or NICs.
+
+| Action | Result |
+|--------|--------|
+| Set custom DNS on VNet | New VMs/NICs created after the change will use it |
+| Existing running VMs | **Not updated** — must be stopped (deallocated) and restarted |
+| Per-NIC DNS override | Takes precedence over VNet-level DNS; must be configured manually per NIC |
+| Role instances | Must be redeployed to pick up new DNS settings |
+
+**DNS Setting Precedence (highest to lowest):**
+
+```
+NIC-level DNS setting        ← Overrides everything
+        ↓
+VNet-level DNS setting       ← Used if NIC has no override
+        ↓
+Azure-provided DNS (168.63.129.16)  ← Default fallback
+```
+
+> **Exam Tip**: Changing the VNet's DNS settings requires existing VMs to be **stopped (deallocated) and restarted** to pick up the new configuration. This is a common exam trap — Azure does NOT push DNS changes to running VMs automatically.
+
 ## Best Practices
 
 1. **Use alias records** when pointing to Azure resources to avoid stale DNS records
