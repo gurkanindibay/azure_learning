@@ -279,6 +279,61 @@ The Dependency view in Network Insights is conceptually similar to the **Topolog
 
 ---
 
+### Scenario: Diagnosing NSG Rules Applied to a Network Interface Card (NIC)
+
+**Context:**
+You are diagnosing a network connectivity issue for a virtual machine. You suspect that a Network Security Group (NSG) rule is blocking traffic. You need to retrieve all effective NSG rules applied to a specific Network Interface Card (NIC) named **NIC1** in resource group **ResourceGroup1**.
+
+**Question:**
+Which Azure PowerShell command retrieves all NSG rules that are implemented on a Network Interface Card (NIC)?
+
+- A) `Get-AzNsg`
+- B) `Get-AzNicNetworkSecurityGroup`
+- C) `Get-AzEffectiveNicNsg`
+- D) `Get-AzEffectiveNetworkSecurityGroup` ✅
+
+**Correct Answer: D**
+
+```powershell
+Get-AzEffectiveNetworkSecurityGroup -NetworkInterfaceName NIC1 -ResourceGroupName ResourceGroup1
+```
+
+**Explanation:**
+
+`Get-AzEffectiveNetworkSecurityGroup` retrieves the **effective** NSG rules applied to a NIC. "Effective" means the aggregated result of all NSG rules from both the **subnet-level NSG** and the **NIC-level NSG** — exactly what you need when diagnosing which rules are actually enforced on a specific interface.
+
+**Why the Other Options Are Incorrect:**
+
+| Command | Why Incorrect |
+|---------|---------------|
+| `Get-AzNsg` | Not a valid Azure PowerShell cmdlet. NSG objects are retrieved with `Get-AzNetworkSecurityGroup`, which returns the NSG definition, not the effective rules on a NIC. |
+| `Get-AzNicNetworkSecurityGroup` | Not a valid Azure PowerShell cmdlet. No such command exists in the `Az.Network` module. |
+| `Get-AzEffectiveNicNsg` | Not a valid Azure PowerShell cmdlet. The correct verb-noun pairing is `Get-AzEffectiveNetworkSecurityGroup`. |
+
+**Key Distinction — Definition vs. Effective Rules:**
+
+| Cmdlet | What It Returns |
+|--------|----------------|
+| `Get-AzNetworkSecurityGroup` | The NSG resource definition — rules configured directly on the NSG object |
+| `Get-AzEffectiveNetworkSecurityGroup` | The **effective** (merged) rules applied to a NIC — combines subnet-level and NIC-level NSG rules with default rules |
+
+> **When to use**: Use `Get-AzEffectiveNetworkSecurityGroup` whenever you need to understand exactly which rules are being enforced at the NIC level. This is the PowerShell equivalent of the **Effective Security Rules** view in Azure Network Watcher.
+
+**Portal Equivalent:**
+In the Azure Portal, navigate to: **Network Watcher → Effective Security Rules** (or VM → Networking → Effective security rules). This view mirrors what the cmdlet returns.
+
+**Related Azure CLI Command:**
+
+```bash
+az network nic list-effective-nsg \
+  --name NIC1 \
+  --resource-group ResourceGroup1
+```
+
+**Reference:** [Diagnose a virtual machine network traffic filter problem | Microsoft Learn](https://learn.microsoft.com/en-us/azure/network-watcher/diagnose-vm-network-traffic-filtering-problem)
+
+---
+
 ## References
 
 - [IP Flow Verify Overview](https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-ip-flow-verify-overview)
