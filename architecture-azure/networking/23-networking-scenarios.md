@@ -138,9 +138,42 @@ VPN route:          Weight 100 (failover)
 **Scenario:**
 - SaaS platform serving multiple customers
 - Each customer gets dedicated Private Endpoint
+- Provider exposes service via **Azure Private Link Service**
 - Traffic never leaves Microsoft network
 
-**Architecture:**
+**Architecture (Custom SaaS with Private Link Service):**
+
+```
+Consumer Side (Per Customer)                    Provider Side (SaaS Provider)
+┌──────────────────────┐                       ┌──────────────────────────────┐
+│ Customer A - VNet A  │                       │ Provider VNet                │
+│ (10.1.0.0/24)        │                       │                              │
+│  ┌────────────────┐  │                       │  ┌────────────────────────┐  │
+│  │ Private        │  │── Private Link ──────▶│  │ Private Link Service   │  │
+│  │ Endpoint       │  │                       │  │ (NAT IP: 10.100.0.x)  │  │
+│  └────────────────┘  │                       │  └──────────┬───────────┘  │
+└──────────────────────┘                       │             │              │
+                                               │             ▼              │
+┌──────────────────────┐                       │  ┌────────────────────────┐  │
+│ Customer B - VNet B  │                       │  │ Standard Load Balancer │  │
+│ (10.2.0.0/24)        │                       │  │ (Frontend: 10.100.1.4) │  │
+│  ┌────────────────┐  │                       │  └──────────┬───────────┘  │
+│  │ Private        │  │── Private Link ──────▶│             │              │
+│  │ Endpoint       │  │                       │             ▼              │
+│  └────────────────┘  │                       │  ┌────────────────────────┐  │
+└──────────────────────┘                       │  │ Backend Pool           │  │
+                                               │  │ ┌────┐ ┌────┐ ┌────┐ │  │
+┌──────────────────────┐                       │  │ │VM1 │ │VM2 │ │VM3 │ │  │
+│ Customer C - VNet C  │                       │  │ └────┘ └────┘ └────┘ │  │
+│ (10.3.0.0/24)        │                       │  └────────────────────────┘  │
+│  ┌────────────────┐  │                       │                              │
+│  │ Private        │  │── Private Link ──────▶│                              │
+│  │ Endpoint       │  │                       └──────────────────────────────┘
+│  └────────────────┘  │
+└──────────────────────┘
+```
+
+**Architecture (Azure PaaS-Only SaaS — no Private Link Service needed):**
 
 ```
 Customer A          Customer B          Customer C
@@ -151,16 +184,47 @@ Customer A          Customer B          Customer C
     │  Endpoint         │  Endpoint         │  Endpoint
     └───────────────────┼───────────────────┘
                         │
-                   SaaS Service
-                        │
-              (Azure SQL / Storage / etc)
+              Azure PaaS Service
+           (Azure SQL / Storage / etc)
+         (Built-in Private Link support)
 ```
+
+**Key Components:**
+
+| Component | Role | Required When |
+|-----------|------|---------------|
+| **Private Link Service** | Provider-side resource that exposes your custom service behind a Standard Load Balancer | SaaS runs custom workloads (VMs, containers behind LB) |
+| **Private Endpoint** | Consumer-side NIC with private IP in customer's VNet | Always — this is how customers connect |
+| **Standard Load Balancer** | Routes traffic to backend pool on provider side | Custom SaaS with Private Link Service |
+| **NAT IP Configuration** | Source NAT for consumer traffic on provider side | Custom SaaS with Private Link Service |
+
+**Private Link Service Workflow:**
+1. **Provider** deploys application behind a **Standard Load Balancer**
+2. **Provider** creates a **Private Link Service** referencing the load balancer frontend IP
+3. **Provider** shares the service **alias** (e.g., `myservice.{guid}.region.azure.privatelinkservice`) with customers
+4. **Customer** creates a **Private Endpoint** in their VNet using the alias
+5. **Provider** approves (or auto-approves) the connection request
+6. Customer traffic flows privately over the Microsoft backbone
+
+**Visibility & Access Control:**
+- **RBAC only**: Restrict to subscriptions in the same Microsoft Entra tenant
+- **Restricted by subscription**: Limit to a trusted set of subscriptions (cross-tenant)
+- **Anyone with alias**: Public exposure, any consumer can request a connection
 
 **Benefits:**
 - ✅ No internet exposure
 - ✅ Per-customer access control
 - ✅ Private DNS per customer
 - ✅ Compliance-friendly (no data crosses public internet)
+- ✅ Cross-tenant connectivity without VNet peering or VPNs
+- ✅ Each consumer's traffic is isolated; consumers cannot see each other
+- ✅ Auto-approval for trusted subscriptions
+
+**Limitations:**
+- Private Link Service supported only on **Standard Load Balancer** (not Basic)
+- IPv4 traffic only; TCP and UDP only
+- Idle timeout of ~5 minutes (use TCP keepalives)
+- Up to 8 NAT IP addresses per Private Link Service
 
 ---
 
@@ -530,6 +594,21 @@ Azure DNS is the built-in DNS service (at `168.63.129.16`) that automatically re
 > **Domain**: Design and implement core networking infrastructure (20–25%)
 >
 > **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
+
+**Comparison: Azure DNS vs Azure Private DNS vs Public DNS**
+
+| Feature | Azure DNS (Built-in) | Azure Private DNS | Public DNS |
+|---------|---------------------|-------------------|------------|
+| **What it is** | Azure-provided resolver at `168.63.129.16` | Private DNS zones linked to VNets | Internet-facing DNS (e.g., Azure DNS public zones, or external providers) |
+| **Setup required** | None — automatic | Yes — create zone + link to VNet | Yes — register domain, create zone |
+| **Scope** | Within a single VNet | Any linked VNet (cross-VNet possible) | Globally accessible on the internet |
+| **Resolves** | Azure resource hostnames (VM, PaaS FQDNs) | Custom private domain names (e.g., `app.internal.contoso.com`) | Public domain names (e.g., `contoso.com`) |
+| **Use case** | Default VM-to-VM resolution inside a VNet | Custom internal naming, private endpoint DNS, split-horizon DNS | Hosting public-facing domains |
+| **Private endpoint DNS** | ❌ Does not resolve PE private IPs automatically | ✅ Required to resolve private endpoint FQDNs to private IPs | ❌ Resolves to public IP (bypasses private endpoint) |
+| **Custom domain names** | ❌ No | ✅ Yes | ✅ Yes |
+| **Cross-VNet resolution** | ❌ No | ✅ Yes (via VNet links) | ✅ Yes (internet-routable) |
+| **Costs** | Free | Charged per zone + queries | Charged per zone + queries |
+| **Split-horizon DNS** | ❌ No | ✅ Yes — same name resolves differently inside vs outside VNet | ❌ No |
 
 ---
 
