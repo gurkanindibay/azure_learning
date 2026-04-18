@@ -136,6 +136,30 @@ Create custom rules based on:
 
 ## Routing Capabilities
 
+### Request Routing Rule Types
+
+Application Gateway supports two fundamental routing rule types:
+
+| Rule Type | Behavior | Use Case |
+|-----------|----------|----------|
+| **Basic** | All requests for the associated listener are forwarded to a **single backend pool** | Single-site hosting, simple forwarding, site migration with same FQDN |
+| **Path-based** | Requests are routed to **different backend pools** based on URL path patterns | Multi-tier apps, separating static/dynamic content, microservices routing |
+
+#### Basic Routing
+
+Basic routing forwards **all traffic** from a listener to a single backend pool, regardless of the URL path. This is the simplest and most common routing configuration.
+
+**When to use Basic routing:**
+- You have a single backend pool serving all requests
+- You migrated or updated a website (e.g., after an acquisition) and want all traffic directed to the new backend while keeping the same FQDN
+- You don't need to differentiate routing based on URL paths
+
+```
+www.contoso.com/* → Single backend pool (all requests)
+```
+
+> **Exam Tip**: If the scenario involves keeping the same FQDN and simply directing all traffic to a new/updated backend (e.g., after an acquisition or migration), the answer is **Basic routing** — not path-based routing or multi-site listeners. Basic routing ensures every request hitting the listener goes to one backend pool.
+
 ### URL Path-Based Routing
 
 Route requests to different backend pools based on URL path:
@@ -595,6 +619,48 @@ To fully secure all traffic with SSL, you need:
 - **Application Gateway v2:** Uses trusted root certificates (recommended)
 - Authentication certificates alone don't provide complete SSL configuration
 - They're just one piece of the backend authentication puzzle
+
+### Question 3: Directing Old Customers to New URL After Acquisition (Same FQDN)
+
+**Scenario:**  
+You updated your company's website after an acquisition while retaining the same FQDN. You need to ensure that old customers are directed to the new URL.
+
+**Question:**  
+Which Application Gateway routing feature should you use?
+
+- A) Multi-site listeners
+- B) Basic routing
+- C) SSL termination
+- D) URL path-based routing
+
+---
+
+#### ✅ Answer: B) Basic routing
+
+**Explanation:**
+
+**Basic routing** is the correct answer because the scenario involves a single FQDN that now needs to point all traffic to the updated backend. With basic routing, all requests hitting the Application Gateway listener are forwarded to a single backend pool — the new website servers.
+
+**Why each option is right or wrong:**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A — Multi-site listeners** | ❌ Incorrect | Multi-site listeners allow you to configure **multiple websites** (different hostnames) on the same Application Gateway port. Since the scenario uses a **single FQDN**, multi-site hosting is unnecessary. |
+| **B — Basic routing** | ✅ Correct | Basic routing forwards **all requests** from a listener to a single backend pool. After the acquisition, you update the backend pool to the new servers. The FQDN stays the same, and all old customers are automatically directed to the new backend. |
+| **C — SSL termination** | ❌ Incorrect | SSL termination decrypts encrypted HTTPS traffic at the gateway before forwarding to backends. This is a **security/performance feature**, not a routing mechanism. It doesn't control where traffic is directed. |
+| **D — URL path-based routing** | ❌ Incorrect | URL path-based routing directs traffic to **different backend pools based on URL paths** (e.g., `/images/*` → image servers, `/api/*` → API servers). This is used when you need to split traffic across multiple backends by path — not when all traffic goes to one new backend. |
+
+**Key Concept:**
+
+Application Gateway has two request routing rule types:
+1. **Basic** — All traffic → one backend pool (simple forwarding)
+2. **Path-based** — Different URL paths → different backend pools
+
+When the FQDN stays the same and you simply need to redirect all traffic to an updated backend (migration, acquisition, replatforming), **basic routing** is the correct choice.
+
+> **References:**
+> - [Azure Application Gateway URL-based content routing overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/application-gateway/url-route-overview)
+> - [Azure Application Gateway request routing rules | Microsoft Learn](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-request-routing-rules)
 
 ## References
 
