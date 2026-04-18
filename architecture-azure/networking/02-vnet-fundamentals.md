@@ -486,6 +486,41 @@ The key point of this pattern is that **VNet3 contains only a VPN Gateway** — 
 - **Port Range**: Single port or range
 - **Action**: Allow or Deny
 
+**Default Inbound Rules:**
+
+Every NSG includes three immutable default inbound rules (cannot be deleted, but can be overridden with higher-priority rules):
+
+| Priority | Name | Source | Destination | Action |
+|----------|------|--------|-------------|--------|
+| 65000 | AllowVnetInBound | VirtualNetwork | VirtualNetwork | Allow |
+| 65001 | AllowAzureLoadBalancerInBound | AzureLoadBalancer | Any | Allow |
+| 65500 | DenyAllInBound | Any | Any | Deny |
+
+**Default Outbound Rules:**
+
+Every NSG also includes three immutable default outbound rules:
+
+| Priority | Name | Source | Destination | Action |
+|----------|------|--------|-------------|--------|
+| 65000 | AllowVnetOutBound | VirtualNetwork | VirtualNetwork | Allow |
+| 65001 | AllowInternetOutBound | Any | Internet | Allow |
+| 65500 | DenyAllOutBound | Any | Any | Deny |
+
+> **Key insight**: By default, all VMs can access the internet outbound (AllowInternetOutBound at priority 65001). To restrict outbound access, you must add custom deny rules with a lower priority number (higher priority) that override this default.
+
+**Azure platform IP address (168.63.129.16):**
+
+The IP address `168.63.129.16` is a virtual public IP that serves as a communication channel to Azure platform resources. It is used for:
+- **Azure-provided DNS** — default name resolution for VMs in a VNet
+- **Azure Instance Metadata Service (IMDS)** — VM metadata and identity
+- **Health probes** — Azure Load Balancer and Application Gateway health checks
+- **VM Agent communication** — guest agent heartbeat and extensions
+- **DHCP** — dynamic IP assignment to VMs
+
+The broader range `168.63.129.0/24` covers Azure infrastructure services. In security-hardened environments, you may need to explicitly **deny** outbound access to `168.63.129.0/24` to prevent VMs from communicating with Azure platform services they don't need (e.g., preventing metadata exfiltration). However, be careful — blocking `168.63.129.16` entirely will break DNS resolution, health probes, and VM extensions.
+
+> **Security review tip**: When locking down a VNet to only allow access to specific Azure services (e.g., Azure SQL), consider that VMs by default can also reach Azure infrastructure at `168.63.129.0/24`. A deny rule targeting this range may be required for full isolation.
+
 ### 6.1 Service Tags in NSG Rules
 
 **Service Tags** represent groups of IP address prefixes from specific Azure services, managed automatically by Azure. They simplify NSG rule creation and maintenance without requiring manual IP address management.
@@ -507,8 +542,12 @@ The key point of this pattern is that **VNet3 contains only a VPN Gateway** — 
 | `AzureKeyVault` | Azure Key Vault service |
 | `Storage` | Azure Storage (all regions) |
 | `Storage.EastUS` | Azure Storage in specific region |
-| `Sql` | Azure SQL Database, SQL Managed Instance |
+| `Sql` | Azure SQL Database, SQL Managed Instance (all regions) |
+| `Sql.EastUS` | Azure SQL Database in East US region only |
+| `Sql.<Region>` | Azure SQL in a specific region (e.g., `Sql.WestEurope`, `Sql.WestUS2`) |
 | `AzureActiveDirectory` | Microsoft Entra ID |
+| `AzurePlatformDNS` | Azure DNS infrastructure (168.63.129.16) |
+| `AzurePlatformIMDS` | Azure Instance Metadata Service (IMDS) |
 | `AzureLoadBalancer` | Azure infrastructure load balancer |
 | `Internet` | Internet-accessible IP space |
 | `VirtualNetwork` | All VNet address spaces |
@@ -592,6 +631,67 @@ az network nsg rule create \
 - ✅ Follows least privilege: only Key Vault access allowed, internet still blocked
 - ⚠️ Application Security Groups only work for grouping VMs, not Azure services
 - ⚠️ Manual IP ranges require constant maintenance as Azure IPs change
+
+**Exam Scenario: Security Review — Restricting VMs to Azure SQL in a Specific Region**
+
+**Question:**
+
+You are assigned to conduct a security review on a recently launched Azure application. This application is hosted on virtual machines in a virtual network called VNetApp01. The goal is to confirm that the application can only access Azure SQL resources in the East US Azure region. Which outbound rules for the network security group (NSG) must be in place to ensure the application has the correct access? (Select three)
+
+**Options:**
+
+- A) An allow rule with the source IP address range of VNetApp01 and the destination as `Sql.EastUS` ✅
+- B) A deny rule with VirtualNetwork as the source, 0.0.0.0/0 as the destination ✅
+- C) A deny rule with the VNetApp01 IP address range as the source and 168.63.129.0/24 as the destination ✅
+- D) An allow rule with 0.0.0.0/0 as the source and `Sql` as the destination
+- E) A deny rule with `Sql` as the source and VirtualNetwork as the destination
+
+**Answer: A, B, C**
+
+**Explanation:**
+
+Three rules are needed to ensure VMs in VNetApp01 can **only** access Azure SQL in East US:
+
+| Rule | Source | Destination | Action | Purpose |
+|------|--------|-------------|--------|---------|
+| **Allow SQL East US** | VNetApp01 IP range | `Sql.EastUS` (service tag) | Allow | Permits outbound traffic to Azure SQL Database endpoints in East US only |
+| **Deny Internet** | VirtualNetwork | 0.0.0.0/0 | Deny | Blocks all outbound internet access — the VMs should not reach any internet resources |
+| **Deny Azure Platform** | VNetApp01 IP range | 168.63.129.0/24 | Deny | Blocks access to Azure infrastructure services (IMDS, Wire Server) to prevent communication with other Azure resources |
+
+> **Rule ordering matters**: The allow rule for `Sql.EastUS` must have a **lower priority number** (higher priority) than the deny rules, so SQL traffic is permitted before the broad deny rules block it.
+
+**Why each correct answer is needed:**
+
+| Requirement | Rule | Rationale |
+|-------------|------|-----------|
+| Access Azure SQL in East US | Allow → `Sql.EastUS` | The regional service tag includes only SQL endpoints in the East US region, not other regions |
+| No internet access | Deny → 0.0.0.0/0 | Since the app only needs SQL access, all other internet-bound traffic must be denied |
+| No Azure platform access | Deny → 168.63.129.0/24 | Azure infrastructure IP range is always reachable by default; denying it prevents access to other Azure resources via the platform channel |
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **Allow 0.0.0.0/0 → Sql** | Uses global `Sql` tag (all regions) and `0.0.0.0/0` as source, which is overly permissive |
+| **Deny Sql → VirtualNetwork** | This is an inbound-style rule (blocking SQL from reaching VNet); the question asks about outbound rules |
+
+**Example NSG configuration:**
+
+```
+Outbound Security Rules:
+┌──────────┬──────────────────────┬──────────────────────┬──────────────────┬────────┐
+│ Priority │ Name                 │ Source               │ Destination      │ Action │
+├──────────┼──────────────────────┼──────────────────────┼──────────────────┼────────┤
+│ 100      │ AllowSqlEastUS       │ VNetApp01 IP range   │ Sql.EastUS       │ Allow  │
+│ 200      │ DenyAzurePlatform    │ VNetApp01 IP range   │ 168.63.129.0/24  │ Deny   │
+│ 300      │ DenyAllInternet      │ VirtualNetwork       │ 0.0.0.0/0        │ Deny   │
+│ 65000    │ AllowVnetOutBound    │ VirtualNetwork       │ VirtualNetwork   │ Allow  │
+│ 65001    │ AllowInternetOutBound│ Any                  │ Internet         │ Deny   │
+│ 65500    │ DenyAllOutBound      │ Any                  │ Any              │ Deny   │
+└──────────┴──────────────────────┴──────────────────────┴──────────────────┴────────┘
+```
+
+> **Key takeaway**: When restricting a VNet to access only specific Azure services, you need (1) an allow rule for the specific service using a regional service tag, (2) a deny rule for general internet (0.0.0.0/0), and (3) a deny rule for Azure platform infrastructure (168.63.129.0/24).
 
 ---
 
