@@ -252,6 +252,104 @@ In this scenario, **Azure Firewall** is the correct solution because:
 > **Reference**: [Azure Firewall FQDN filtering](https://learn.microsoft.com/en-us/azure/firewall/fqdn-filtering-network-rules)
 > **See also**: [NSG overview](./01-networking-fundamentals.md#26-network-security-groups-nsg) for NSG capabilities and limitations
 
+## Azure Firewall Manager
+
+**Azure Firewall Manager** is a centralized security management service that provides policy and route management for cloud-based security perimeters. It enables you to manage multiple Azure Firewall instances across regions and subscriptions from a single pane of glass.
+
+### Key capabilities
+
+| Capability | Description |
+|-----------|-------------|
+| **Centralized policy management** | Create and apply Azure Firewall policies across multiple firewalls |
+| **Hierarchical policies** | Author global base (parent) policies and region-specific (child) policies |
+| **Secured Virtual Hub** | Deploy Azure Firewall inside a Virtual WAN hub for traffic inspection |
+| **Hub Virtual Network** | Deploy Azure Firewall in a standard hub VNet with user-managed routing |
+| **Third-party SECaaS** | Integrate third-party Security-as-a-Service providers for internet traffic filtering |
+| **Route management** | Centrally manage routes to secured hubs without manually setting up UDRs on spoke VNets |
+
+### Deployment architectures
+
+Azure Firewall Manager supports two network architecture types:
+
+| Architecture | Description | Use case |
+|-------------|-------------|----------|
+| **Hub Virtual Network** | A standard Azure VNet with Azure Firewall deployed in it. Spoke VNets are peered to the hub. User-defined routes (UDRs) direct traffic through the firewall. | Traditional hub-spoke topology where you manage your own routing and connectivity |
+| **Secured Virtual Hub** | An Azure Virtual WAN hub with Azure Firewall deployed inside it. Routing is automatically configured by Virtual WAN. | Large-scale, multi-region deployments where centralized security and simplified routing are needed |
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│             AZURE FIREWALL MANAGER — DEPLOYMENT ARCHITECTURES                    │
+│                                                                                  │
+│   Hub Virtual Network                    Secured Virtual Hub                     │
+│   ┌─────────────────────┐               ┌─────────────────────┐                 │
+│   │   Standard VNet     │               │  Virtual WAN Hub    │                 │
+│   │  ┌───────────────┐  │               │  ┌───────────────┐  │                 │
+│   │  │ Azure Firewall│  │               │  │ Azure Firewall│  │                 │
+│   │  └───────┬───────┘  │               │  └───────┬───────┘  │                 │
+│   │          │           │               │          │           │                 │
+│   │  User-managed UDRs  │               │  Auto-managed routes │                 │
+│   └──────────┼──────────┘               └──────────┼──────────┘                 │
+│        ┌─────┴─────┐                         ┌─────┴─────┐                      │
+│        │  VNet     │                         │  VNet     │                      │
+│        │  Peering  │                         │  Conns    │                      │
+│   ┌────┴──┐  ┌──┴────┐                 ┌────┴──┐  ┌──┴────┐                   │
+│   │Spoke 1│  │Spoke 2│                 │Spoke 1│  │Spoke 2│                   │
+│   └───────┘  └───────┘                 └───────┘  └───────┘                   │
+│                                                                                  │
+│   ✓ Full routing control                ✓ Simplified routing                    │
+│   ✓ Any VNet topology                   ✓ Integrated VPN/ER                     │
+│   ✗ Manual UDR management               ✓ Azure Firewall Manager native         │
+│   ✗ No built-in branch connectivity     ✓ Branch connectivity built-in          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### How Firewall Manager works with policies
+
+Azure Firewall Manager uses **Azure Firewall Policies** (not classic rules) to configure firewalls. A single policy can be applied to multiple firewalls, enabling consistent security across regions.
+
+| Concept | Relationship |
+|---------|-------------|
+| **Firewall Manager** | Management plane — creates, assigns, and monitors policies |
+| **Firewall Policy** | Configuration artifact — contains rule collections (DNAT, Network, Application) |
+| **Azure Firewall** | Enforcement point — evaluates traffic against assigned policy |
+| **Secured Virtual Hub** | Deployment model — Firewall inside a Virtual WAN hub |
+
+> **Key distinction**: Azure Firewall Manager is the **management service**; Azure Firewall Policy is the **configuration object**. You use Firewall Manager to create and assign policies, but the policy itself is what contains the rules.
+
+### Centralized management across regions
+
+Firewall Manager enables centralized governance for organizations with Azure Firewalls in multiple regions:
+
+1. **Create a base (parent) policy** with mandatory rules (e.g., deny known malicious IPs)
+2. **Create region-specific (child) policies** that inherit from the parent and add local rules
+3. **Assign policies** to firewalls in each region via Firewall Manager
+4. **Monitor compliance** — Firewall Manager shows which firewalls have policies applied
+
+> **Note**: Parent-child policy inheritance requires the parent and child policies to be in the **same region**. See [Policy Hierarchy and Parent-Child Inheritance](#policy-hierarchy-and-parent-child-inheritance) above.
+
+### Practice question: Centralized firewall management and secure hub
+
+**Question**: Your organization wants to centralize the management of multiple Azure Firewalls across different regions. Additionally, there is a need to deploy an Azure Firewall inside a Virtual WAN hub for traffic inspection. Which of the following actions should you take to meet these requirements? (Select two)
+
+- A) Implement Azure Firewall Manager policies. ✅
+- B) Deploy Azure Firewall in a Virtual Network.
+- C) Configure Azure Firewall with Premium SKU.
+- D) Create a secure hub by deploying an Azure Firewall inside an Azure Virtual WAN hub. ✅
+
+**Answer**: **A and D** ✅
+
+**Explanation**:
+
+- **Option A is correct.** ✅ Azure Firewall Manager allows centralized management of Azure Firewall instances across multiple regions and subscriptions. It provides a single point for creating and applying firewall policies to all managed firewalls.
+- **Option B is incorrect.** Deploying Azure Firewall in a standard Virtual Network creates a hub virtual network deployment, but this does **not** address traffic inspection inside a Virtual WAN hub. This option addresses neither centralized management nor secure hub requirements.
+- **Option C is incorrect.** Azure Firewall Premium SKU provides enhanced features (TLS inspection, IDPS, URL filtering, Web categories), but it does not address centralized management or secure hub deployment. SKU selection is independent of management approach.
+- **Option D is correct.** ✅ For traffic inspection in a Virtual WAN hub, deploying Azure Firewall inside the hub creates a **Secured Virtual Hub**. This enables centralized traffic inspection for all traffic flowing through the hub (branch-to-internet, branch-to-VNet, VNet-to-internet, VNet-to-VNet).
+
+> **See also**: [Secured Virtual Hub — Azure Virtual WAN](./10-azure-virtual-wan.md#8-secured-virtual-hub-azure-firewall-in-virtual-wan)
+
+> **Reference**: [What is Azure Firewall Manager?](https://learn.microsoft.com/en-us/azure/firewall-manager/overview)
+> **Reference**: [Azure Firewall Manager architecture options](https://learn.microsoft.com/en-us/azure/firewall-manager/vhubs-and-vnets)
+
 ## References
 
 - [Azure Firewall Policy rule sets](https://learn.microsoft.com/en-us/azure/firewall/policy-rule-sets)
@@ -259,6 +357,8 @@ In this scenario, **Azure Firewall** is the correct solution because:
 - [Azure Firewall known issues](https://learn.microsoft.com/en-us/azure/firewall/firewall-known-issues)
 - [What is Azure Firewall?](https://learn.microsoft.com/en-us/azure/firewall/overview)
 - [Azure Firewall FQDN filtering in network rules](https://learn.microsoft.com/en-us/azure/firewall/fqdn-filtering-network-rules)
+- [What is Azure Firewall Manager?](https://learn.microsoft.com/en-us/azure/firewall-manager/overview)
+- [Azure Firewall Manager architecture options](https://learn.microsoft.com/en-us/azure/firewall-manager/vhubs-and-vnets)
 
 ---
 

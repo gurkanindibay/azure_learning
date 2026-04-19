@@ -16,6 +16,10 @@
   - [📝 Exam Scenario: Route Table and Connection Relationships](#-exam-scenario-route-table-and-connection-relationships)
 - [7. Network Virtual Appliances (NVA) in Virtual WAN Hub](#7-network-virtual-appliances-nva-in-virtual-wan-hub)
   - [7.1 NVA Resource Groups](#71-nva-resource-groups)
+- [8. Secured Virtual Hub — Azure Firewall in Virtual WAN](#8-secured-virtual-hub--azure-firewall-in-virtual-wan)
+  - [8.1 What is a Secured Virtual Hub?](#81-what-is-a-secured-virtual-hub)
+  - [8.2 Traffic inspection scenarios](#82-traffic-inspection-scenarios)
+  - [8.3 Secured Hub vs Hub Virtual Network](#83-secured-hub-vs-hub-virtual-network)
 
 ---
 
@@ -589,6 +593,84 @@ When a Network Virtual Appliance (NVA) is created in the Virtual WAN hub, which 
 
 ---
 
+## 8. Secured Virtual Hub — Azure Firewall in Virtual WAN
+
+### 8.1 What is a Secured Virtual Hub?
+
+A **Secured Virtual Hub** is an Azure Virtual WAN hub with Azure Firewall deployed inside it. When you deploy Azure Firewall into a Virtual WAN hub through **Azure Firewall Manager**, the hub becomes a secured virtual hub — enabling centralized traffic inspection and security policy enforcement for all traffic flowing through the hub.
+
+> **Key requirement**: Secured Virtual Hubs require **Standard** Virtual WAN. Basic Virtual WAN does not support Azure Firewall integration.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        SECURED VIRTUAL HUB                                       │
+│                                                                                  │
+│   ┌─────────────────────────────────────────────────────────┐                   │
+│   │              Virtual WAN Hub (Standard)                  │                   │
+│   │                                                          │                   │
+│   │   ┌────────────────────────────────────────────┐        │                   │
+│   │   │           Azure Firewall                    │        │                   │
+│   │   │  ┌──────────┐  ┌───────────┐  ┌─────────┐ │        │                   │
+│   │   │  │  DNAT    │  │  Network  │  │  App    │ │        │                   │
+│   │   │  │  Rules   │  │  Rules    │  │  Rules  │ │        │                   │
+│   │   │  └──────────┘  └───────────┘  └─────────┘ │        │                   │
+│   │   └────────────────────────────────────────────┘        │                   │
+│   │                         │                                │                   │
+│   │   ┌─────────┐   ┌─────┴─────┐   ┌──────────────┐       │                   │
+│   │   │VPN GW   │   │Route Mgmt │   │ExpressRoute  │       │                   │
+│   │   │         │   │(Auto)     │   │Gateway       │       │                   │
+│   │   └─────────┘   └───────────┘   └──────────────┘       │                   │
+│   └──────────────────────┬──────────────────────────────────┘                   │
+│                          │                                                       │
+│              ┌───────────┼───────────┐                                          │
+│              │           │           │                                           │
+│         ┌────┴───┐  ┌───┴────┐  ┌───┴─────┐                                   │
+│         │Spoke   │  │Spoke   │  │Branch   │                                    │
+│         │VNet 1  │  │VNet 2  │  │Office   │                                    │
+│         └────────┘  └────────┘  └─────────┘                                    │
+│                                                                                  │
+│   All traffic is inspected by Azure Firewall before forwarding                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**How to create a Secured Virtual Hub:**
+1. Create or use an existing **Standard** Virtual WAN
+2. Open **Azure Firewall Manager** in the Azure portal
+3. Select the Virtual WAN hub to secure
+4. Deploy Azure Firewall into the hub (Firewall Manager handles provisioning)
+5. Create and assign an **Azure Firewall Policy** with desired rules
+6. Configure **security configuration** to route traffic through the firewall
+
+### 8.2 Traffic inspection scenarios
+
+A Secured Virtual Hub can inspect multiple traffic flows:
+
+| Traffic flow | Description | Example |
+|-------------|-------------|---------|
+| **Branch-to-Internet** | Inspect outbound internet traffic from branch offices | Branch office accessing SaaS apps |
+| **VNet-to-Internet** | Inspect outbound internet traffic from spoke VNets | VMs in spoke VNets accessing external APIs |
+| **Branch-to-VNet** | Inspect traffic between branches and Azure VNets | On-premises users accessing Azure-hosted applications |
+| **VNet-to-VNet** | Inspect east-west traffic between spoke VNets | App tier in VNet-A communicating with DB tier in VNet-B |
+| **Inter-hub** | Inspect traffic between hubs in different regions | Cross-region workload communication |
+
+> **Routing advantage**: Virtual WAN automatically configures routes to direct traffic through the firewall. With a hub virtual network (standard VNet), you must manually create and maintain UDRs.
+
+### 8.3 Secured Hub vs Hub Virtual Network
+
+| Aspect | Secured Virtual Hub | Hub Virtual Network |
+|--------|-------------------|-------------------|
+| **Underlying infrastructure** | Virtual WAN hub | Standard Azure VNet |
+| **Routing** | Automatic (managed by Virtual WAN) | Manual UDRs required |
+| **Branch connectivity** | Built-in VPN and ExpressRoute gateways | Separate VPN/ER gateway deployment |
+| **Hub-to-hub** | Automatic full mesh | Manual peering or NVA routing |
+| **Management** | Azure Firewall Manager (native) | Azure Firewall Manager or manual |
+| **Best for** | Large-scale, multi-region, branch-heavy | Smaller environments, custom routing needs |
+| **Third-party SECaaS** | Supported via Firewall Manager | Not supported |
+
+> **See also**: [Azure Firewall Manager](./13-azure-firewall-overview.md#azure-firewall-manager) for centralized policy management details.
+
+---
+
 ## Related Resources
 
 - [Azure Virtual WAN Overview](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about)
@@ -597,4 +679,6 @@ When a Network Virtual Appliance (NVA) is created in the Virtual WAN hub, which 
 - [Virtual WAN Global Transit Network Architecture](https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-global-transit-network-architecture)
 - [About Virtual Hub Routing](https://learn.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing)
 - [Connect Remote Resources by Using Azure Virtual WANs - Training](https://learn.microsoft.com/en-us/training/modules/connect-remote-resources-by-using-azure-virtual-wans/)
+- [What is Azure Firewall Manager?](https://learn.microsoft.com/en-us/azure/firewall-manager/overview)
+- [Secure traffic destined to private endpoints in Azure Virtual WAN](https://learn.microsoft.com/en-us/azure/firewall-manager/private-link-inspection-secure-virtual-hub)
 - [Azure Networking Fundamentals](./01-networking-fundamentals.md)
