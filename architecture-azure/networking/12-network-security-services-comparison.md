@@ -18,6 +18,7 @@
 - [6. How they work together](#6-how-they-work-together)
 - [7. Cost considerations](#7-cost-considerations)
 - [8. Decision matrix](#8-decision-matrix)
+  - [8.1 Practice question: NSG and ASG task identification](#81-practice-question-nsg-and-asg-task-identification)
 - [9. Security monitoring and SIEM — complementary services](#9-security-monitoring-and-siem--complementary-services)
   - [9.1 Microsoft Sentinel (SIEM + SOAR)](#91-microsoft-sentinel-siem--soar)
   - [9.2 Microsoft Defender for Cloud](#92-microsoft-defender-for-cloud)
@@ -182,6 +183,7 @@ Application Security Groups (ASGs) enable you to group virtual machines by appli
 
 **Key characteristics:**
 - Used as source or destination in NSG security rules (not a standalone filtering service)
+- **Associated at the NIC level** — you assign an ASG to a VM's network interface, effectively categorizing that NIC for security policy purposes
 - Groups VMs by role (e.g., Web-Servers, DB-Servers) regardless of IP address
 - Dynamic membership — add/remove VMs without modifying NSG rules
 - All NICs in an ASG must belong to the same VNet
@@ -334,6 +336,34 @@ Do you need all of the above?
   └─ YES → Layer them together (defense-in-depth)
 ```
 
+### 8.1 Practice question: NSG and ASG task identification
+
+**Question**: You're configuring network security for a set of Azure virtual machines. Which tasks would you perform using Azure Network Security Groups (NSG) and Application Security Groups (ASG)? *(Select three)*
+
+- A) Create granular traffic filtering rules for a subnet. ✅
+- B) Associate a specific VM's NIC with a security categorization. ✅
+- C) Establish site-to-site VPN connectivity.
+- D) Group multiple VMs based on their application layer function for simplified NSG rule management. ✅
+
+**Answer**: **A, B, D** ✅
+
+**Explanation**:
+
+| Option | Correct? | Service | Reasoning |
+|--------|----------|---------|----------|
+| **A** | ✅ | **NSG** | NSGs create inbound/outbound security rules that filter traffic at the subnet or NIC level. Rules are based on 5-tuple (source/dest IP, source/dest port, protocol) and evaluated by priority. |
+| **B** | ✅ | **ASG** | ASGs are associated with a VM's network interface (NIC), effectively categorizing that NIC into a security group (e.g., "Web-Servers", "DB-Servers"). NSG rules then reference the ASG instead of individual IPs. |
+| **C** | ❌ | **VPN Gateway** | Site-to-site VPN connectivity is established using Azure VPN Gateway, not NSGs or ASGs. VPN Gateway creates encrypted IPsec/IKE tunnels between on-premises networks and Azure VNets. |
+| **D** | ✅ | **ASG** | ASGs group VMs by their application layer function (web tier, app tier, database tier). NSG rules reference these ASG groups, simplifying rule management — especially when VMs are added/removed or IPs change. |
+
+**Key distinctions tested**:
+- **NSG** = traffic filtering (allow/deny rules at subnet or NIC level)
+- **ASG** = logical grouping of VM NICs by role/function (used within NSG rules)
+- **VPN Gateway** = network-to-network encrypted connectivity (not a security filtering service)
+
+> **Reference**: [Azure network security groups overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
+> **Reference**: [Application Security Groups overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
+
 ## 9. Security monitoring and SIEM — complementary services
 
 The network security services above (NSG, Firewall, WAF, Private Endpoint) **prevent and filter** threats. A complete security posture also requires services that **detect, investigate, and respond** to threats. These complementary services integrate tightly with network security logs.
@@ -423,6 +453,34 @@ Microsoft Sentinel is a cloud-native SIEM + SOAR solution. It provides threat in
 > - [What is Microsoft Sentinel?](https://learn.microsoft.com/en-us/azure/sentinel/overview)
 > - [What is Microsoft Defender for Cloud?](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction)
 > - [What is Azure Web Application Firewall on Azure Application Gateway?](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview)
+
+---
+
+### 9.6 Practice question: NSG and ASG task identification
+
+**Question**: You're configuring network security for a set of Azure virtual machines. Which tasks would you perform using Azure Network Security Groups (NSG) and Application Security Groups (ASG)? *(Select all that apply)*
+
+- A) Create granular traffic filtering rules for a subnet. ✅
+- B) Associate a specific VM's NIC with a security categorization. ✅
+- C) Establish site-to-site VPN connectivity.
+- D) Group multiple VMs based on their application layer function for simplified NSG rule management. ✅
+
+**Answer**: **A, B, D** ✅
+
+**Explanation**:
+
+NSGs and ASGs work together to provide application-centric, IP-independent network security at the subnet and NIC level. They do **not** handle connectivity tasks like VPN tunnels — that is the domain of Azure VPN Gateway.
+
+- **Option A is correct.** ✅ NSGs can be applied at the subnet level and contain inbound/outbound security rules that filter traffic based on source/destination IP, port, and protocol — enabling granular traffic filtering for an entire subnet.
+- **Option B is correct.** ✅ ASGs are associated at the **NIC level** of a VM. Assigning a VM's NIC to an ASG effectively categorizes that VM for security purposes (e.g., "Web-Server", "DB-Server"), allowing NSG rules to reference the ASG instead of explicit IP addresses.
+- **Option C is incorrect.** Site-to-site VPN connectivity is established using **Azure VPN Gateway**, not NSGs or ASGs. NSGs/ASGs are traffic filtering constructs, not connectivity services.
+- **Option D is correct.** ✅ ASGs group VMs by application-layer function (e.g., web tier, app tier, database tier), and NSG rules can reference these groups as source or destination — simplifying rule management without tracking individual IP addresses.
+
+> **Key distinction**: NSGs and ASGs are **security filtering** tools (what traffic is allowed/denied). VPN Gateway, ExpressRoute, and VNet Peering are **connectivity** tools (how networks are connected). Don't confuse the two domains.
+
+> **References**:
+> - [Network security groups overview | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
+> - [Application security groups | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups)
 
 ---
 
