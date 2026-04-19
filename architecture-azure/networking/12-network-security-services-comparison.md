@@ -18,7 +18,13 @@
 - [6. How they work together](#6-how-they-work-together)
 - [7. Cost considerations](#7-cost-considerations)
 - [8. Decision matrix](#8-decision-matrix)
-- [9. References](#9-references)
+- [9. Security monitoring and SIEM — complementary services](#9-security-monitoring-and-siem--complementary-services)
+  - [9.1 Microsoft Sentinel (SIEM + SOAR)](#91-microsoft-sentinel-siem--soar)
+  - [9.2 Microsoft Defender for Cloud](#92-microsoft-defender-for-cloud)
+  - [9.3 Azure Monitor (WAF diagnostics)](#93-azure-monitor-waf-diagnostics)
+  - [9.4 Distinguishing security services — comparison](#94-distinguishing-security-services--comparison)
+  - [9.5 Practice question: Microsoft Sentinel](#95-practice-question-microsoft-sentinel)
+- [10. References](#10-references)
 
 ---
 
@@ -280,7 +286,99 @@ Do you need all of the above?
   └─ YES → Layer them together (defense-in-depth)
 ```
 
-## 9. References
+## 9. Security monitoring and SIEM — complementary services
+
+The network security services above (NSG, Firewall, WAF, Private Endpoint) **prevent and filter** threats. A complete security posture also requires services that **detect, investigate, and respond** to threats. These complementary services integrate tightly with network security logs.
+
+### 9.1 Microsoft Sentinel (SIEM + SOAR)
+
+Microsoft Sentinel is a **cloud-native, scalable** solution that provides both **Security Information and Event Management (SIEM)** and **Security Orchestration, Automation, and Response (SOAR)** capabilities.
+
+**Key characteristics:**
+- Collects security data at cloud scale across users, devices, applications, and infrastructure
+- Detects previously undetected threats using Microsoft's analytics and threat intelligence
+- Investigates threats with AI and hunts suspicious activities at scale
+- Responds to incidents rapidly with built-in orchestration and automation of common tasks (playbooks)
+- Uses **KQL (Kusto Query Language)** for querying and analyzing security data
+- Ingests data via **data connectors** — including Azure Firewall logs, NSG flow logs, WAF logs, Azure AD sign-in logs, and third-party sources
+- Provides **workbooks** for visualization and **hunting queries** for proactive threat hunting
+
+**Network security integration:**
+
+| Data Source | What Sentinel ingests |
+|-------------|----------------------|
+| Azure Firewall | Threat intelligence hits, application/network rule logs, DNS proxy logs |
+| NSG flow logs | Traffic flow records (allowed/denied) for anomaly detection |
+| WAF logs | Web attack detection events, blocked requests |
+| Azure DDoS Protection | DDoS mitigation reports and flow logs |
+| Azure AD / Entra ID | Sign-in and audit logs for identity-based threats |
+
+> **Important**: Microsoft Sentinel is **not** the same as Azure Monitor. Azure Monitor tracks operational diagnostics (metrics, logs, alerts). Sentinel focuses on **security analytics, threat detection, and automated response**.
+
+### 9.2 Microsoft Defender for Cloud
+
+Microsoft Defender for Cloud is a **Cloud Security Posture Management (CSPM)** and **Cloud Workload Protection Platform (CWPP)** that proactively prevents, identifies, and helps address potential security risks.
+
+**Key characteristics:**
+- Continuous security assessment and recommendations (Secure Score)
+- Protects workloads across Azure, on-premises, and multi-cloud (AWS, GCP)
+- Provides regulatory compliance dashboards (PCI-DSS, ISO 27001, etc.)
+- Integrates with Microsoft Sentinel for advanced threat investigation
+- **Not** a SIEM/SOAR — focuses on posture management and workload protection
+
+### 9.3 Azure Monitor (WAF diagnostics)
+
+Azure Monitor collects and analyzes operational telemetry, including **WAF diagnostic logs and alerts**.
+
+**Key characteristics:**
+- Monitors WAF alerts, blocked/allowed requests, and rule hit counts
+- Provides Log Analytics workspace for querying WAF diagnostic data
+- Sends alerts based on WAF metrics (e.g., blocked request spikes)
+- Feeds data into Microsoft Sentinel for security correlation
+- **Not** a security tool — it is an operational monitoring and diagnostics platform
+
+### 9.4 Distinguishing security services — comparison
+
+| Service | Primary role | Category | Key differentiator |
+|---------|-------------|----------|--------------------|
+| **Microsoft Sentinel** | Threat detection, investigation, and automated response | SIEM + SOAR | Cloud-native security analytics at scale with playbook automation |
+| **Microsoft Defender for Cloud** | Security posture management and workload protection | CSPM + CWPP | Proactive prevention and compliance — not SIEM |
+| **Azure Monitor** | Operational monitoring and diagnostics | Observability | Tracks metrics, logs, alerts — not security-specific |
+| **Azure Firewall** | Network traffic filtering and threat intelligence | Network security | Prevents threats at L3–L7 — does not investigate or correlate |
+| **Azure WAF** | Web application attack protection | Network security (L7) | OWASP rule-based inspection — does not correlate across sources |
+| **Azure DNS** | Name resolution (service name → IP address) | Networking | Resolves DNS queries — not a security or monitoring tool |
+| **Azure Traffic Manager** | DNS-based global traffic load balancing | Traffic management | Routes traffic across regions — not a security tool |
+
+### 9.5 Practice question: Microsoft Sentinel
+
+**Question**: You have been hired as an expert advisor by a well-known Azure company to help with their Azure projects. After analyzing their work, you have noticed that the team is not using Microsoft Sentinel effectively. You need to brief them on the importance of Microsoft Sentinel. Which of the following statements best describes Microsoft Sentinel?
+
+- A) This feature assists you in monitoring diagnostic information related to WAF alerts and logs.
+- B) It assists you in proactively preventing, identifying, and addressing potential security risks.
+- C) This function is accountable for converting a service name into an IP address, also known as resolving or translating the service name.
+- D) It is a DNS-based traffic load balancing solution that enables optimal distribution of traffic to services across global Azure regions, offering high responsiveness and availability.
+- E) It is a solution for security information and event management that is cloud-native and scalable and can automate security orchestration responses. ✅
+
+**Answer**: **E** ✅
+
+**Explanation**:
+
+Microsoft Sentinel is a cloud-native SIEM + SOAR solution. It provides threat intelligence and intelligent security analytics across the organization — enabling visibility into threats, alert detection, threat response, and proactive hunting.
+
+- **Option A is incorrect** — Azure Monitor tracks diagnostic information related to WAF alerts and logs, not Sentinel.
+- **Option B is incorrect** — Microsoft Defender for Cloud proactively prevents, identifies, and addresses security risks (CSPM/CWPP), not Sentinel.
+- **Option C is incorrect** — Azure DNS resolves service names to IP addresses.
+- **Option D is incorrect** — Azure Traffic Manager is a DNS-based traffic load balancing solution.
+- **Option E is correct** — This accurately describes Microsoft Sentinel as a cloud-native, scalable SIEM + SOAR solution.
+
+> **References**:
+> - [What is Microsoft Sentinel?](https://learn.microsoft.com/en-us/azure/sentinel/overview)
+> - [What is Microsoft Defender for Cloud?](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction)
+> - [What is Azure Web Application Firewall on Azure Application Gateway?](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview)
+
+---
+
+## 10. References
 
 - [What is Azure Firewall?](https://learn.microsoft.com/en-us/azure/firewall/overview)
 - [Network security groups overview](https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview)
