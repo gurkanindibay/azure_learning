@@ -299,6 +299,17 @@ Remote Worker Laptop ←→ VPN Client ←→ Internet ←→ Azure VPN Gateway 
 - **SSTP** (SSL-based, Windows only)
 - **IKEv2** (IPsec, macOS/iOS native support)
 
+#### P2S Tunnel Type Comparison
+
+| Tunnel Type | Protocol | OS Support | Azure AD Auth | Certificate Auth | RADIUS Auth |
+|------------|----------|------------|---------------|-----------------|-------------|
+| **OpenVPN (SSL)** | TLS-based (port 443) | Windows, macOS, Linux, iOS, Android | ✅ **Yes** (only option) | ✅ Yes | ✅ Yes |
+| **SSTP (SSL)** | SSL/TLS (port 443) | Windows only | ❌ No | ✅ Yes | ✅ Yes |
+| **IKEv2** | IPsec (UDP 500/4500) | Windows, macOS, iOS (native) | ❌ No | ✅ Yes | ✅ Yes |
+| **IKEv2 and SSTP** | Both protocols combined | Windows (SSTP) + macOS/iOS (IKEv2) | ❌ No | ✅ Yes | ✅ Yes |
+
+> **Key Exam Point — Tunnel Type for Azure AD Authentication:** If the requirement is Azure AD (Entra ID) authentication for P2S VPN, you **must** select **OpenVPN (SSL)** as the tunnel type. IKEv2, SSTP, and the combined "IKEv2 and SSTP" option all do **not** support Azure AD authentication. This is the only tunnel type that enables the OAuth 2.0-based Azure AD authentication flow.
+
 **Authentication Methods:**
 - Azure certificate authentication
 - Azure Active Directory (OpenVPN only)

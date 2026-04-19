@@ -43,6 +43,8 @@ Azure VNet (10.0.0.0/16)
 
 > **Key Exam Point:** Azure AD authentication for P2S requires an **enterprise application** registered in Azure AD — not an access package, conditional access policy, or VPN certificate. See [VPN Gateway — P2S Azure AD Authentication](./05-azure-vpn-gateway.md#42-point-to-site-p2s-vpn) for full details.
 
+> **Key Exam Point — P2S Tunnel Type for Azure AD:** When Azure AD authentication is required for P2S VPN, the tunnel type **must** be **OpenVPN (SSL)**. IKEv2, SSTP, and the combined "IKEv2 and SSTP" option do **not** support Azure AD authentication. See [P2S Tunnel Type Comparison](./05-azure-vpn-gateway.md#p2s-tunnel-type-comparison) for the full matrix.
+
 > **Key Exam Point:** After any network topology change (VNet peering, address space modification), **Windows P2S VPN clients must re-download and reinstall the VPN client configuration package**. Routes in the P2S client are static and do not auto-update. S2S connections are not affected. See [About P2S routing](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing).
 
 ### Use Cases

@@ -309,6 +309,60 @@ If the tunnel **fails to establish**, the failure is happening during one of the
 
 ---
 
+## Question 7: P2S VPN tunnel type for Azure AD authentication
+
+### Scenario
+
+You need to ensure that administrators can use Point-to-Site (P2S) VPN connections to access resources in the virtual network.
+
+The connections must be authenticated by Azure Active Directory (Azure AD).
+
+**What should you configure for the P2S VPN tunnel type?**
+
+- A) IKEv2
+- B) IKEv2 and SSTP (SSL)
+- C) OpenVPN (SSL)
+- D) SSTP (SSL)
+
+### Answer
+
+**Correct Answer: C**
+
+OpenVPN (SSL)
+
+### Explanation
+
+Azure AD (Entra ID) authentication for P2S VPN connections is supported **only** with the OpenVPN protocol. OpenVPN uses TLS-based tunneling (port 443), which enables the OAuth 2.0 / OpenID Connect authentication flow required by Azure AD.
+
+None of the other tunnel types support Azure AD authentication:
+
+| Tunnel Type | Azure AD Auth | Why |
+|-------------|---------------|-----|
+| **C) OpenVPN (SSL)** ✅ | **Supported** | TLS-based protocol that supports the OAuth 2.0 authentication flow required by Azure AD. The only tunnel type compatible with Azure AD authentication. |
+| **A) IKEv2** ❌ | Not supported | IPsec-based protocol (UDP 500/4500). Uses certificate or RADIUS authentication — no Azure AD integration. |
+| **B) IKEv2 and SSTP (SSL)** ❌ | Not supported | Combines two protocols, but neither supports Azure AD authentication. This option provides broader OS support (Windows via SSTP, macOS/iOS via IKEv2) but cannot use Azure AD. |
+| **D) SSTP (SSL)** ❌ | Not supported | Windows-only SSL protocol. Supports certificate and RADIUS authentication but not Azure AD. |
+
+**Complete P2S authentication method × tunnel type matrix:**
+
+| Authentication Method | OpenVPN | SSTP | IKEv2 |
+|----------------------|---------|------|-------|
+| **Azure AD (Entra ID)** | ✅ | ❌ | ❌ |
+| **Azure certificate** | ✅ | ✅ | ✅ |
+| **RADIUS** | ✅ | ✅ | ✅ |
+
+### Key concept
+
+> **Azure AD + P2S = OpenVPN only**: Whenever a question requires Azure AD (Entra ID) authentication for P2S VPN, the answer is always **OpenVPN (SSL)**. This is because Azure AD relies on an OAuth 2.0-based flow through the Azure VPN enterprise application (App ID: `41b23e61-6c1e-4545-b367-cd054e0ed4b4`), which is only supported over the OpenVPN protocol. Additionally, setting up Azure AD authentication requires registering the Azure VPN enterprise application in your tenant and configuring Tenant, Audience, and Issuer parameters on the gateway.
+
+### Reference
+
+- [Configure P2S VPN gateway for Azure AD authentication | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/openvpn-azure-ad-tenant)
+- [About Point-to-Site VPN | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about)
+- [Azure VPN Gateway — P2S Tunnel Type Comparison](./05-azure-vpn-gateway.md#p2s-tunnel-type-comparison)
+
+---
+
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
