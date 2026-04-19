@@ -37,6 +37,7 @@
 - [11. Common Use Cases](#11-common-use-cases)
 - [12. Configuration Best Practices](#12-configuration-best-practices)
 - [13. Troubleshooting](#13-troubleshooting)
+  - [VPN Gateway Diagnostic Logs](#vpn-gateway-diagnostic-logs)
 - [14. Pricing Considerations](#14-pricing-considerations)
 - [15. Related Services](#15-related-services)
 - [16. References](#16-references)
@@ -709,33 +710,101 @@ Set-AzVirtualNetworkGatewayConnection `
 **Border Gateway Protocol (BGP)** enables dynamic routing between Azure and on-premises networks.
 
 **Benefits:**
-- Automatic route updates
+- Automatic route updates (no manual static route maintenance)
 - Multi-site failover
 - Active-active gateway support
 - ExpressRoute + VPN coexistence
+- Transit routing between on-premises networks via Azure
 
-**BGP Configuration:**
+#### Azure Resources Required for BGP on S2S VPN
+
+Configuring BGP for a Site-to-Site VPN connection requires BGP settings on **two** Azure resources:
+
+| Azure Resource | Role | BGP Settings to Configure |
+|----------------|------|---------------------------|
+| **Virtual Network Gateway** | Azure-side VPN endpoint | BGP ASN (default 65515), BGP peer IP address (auto-assigned from GatewaySubnet) |
+| **Local Network Gateway** | Represents the on-premises VPN device in Azure | On-premises BGP peer IP address, on-premises ASN |
+
+> **Key Insight:** The **virtual network gateway** is the Azure side of the VPN tunnel, and the **local network gateway** represents the on-premises side. Both must have BGP settings configured for BGP peering to establish. Without BGP settings on the local network gateway, Azure does not know the on-premises ASN or BGP peer IP to initiate/accept BGP sessions.
+
+**What about other Azure services?**
+- **Azure Application Gateway** — A Layer 7 web traffic load balancer. Not involved in VPN or BGP.
+- **Azure Firewall** — A network security service. Not involved in VPN tunnel or BGP configuration.
+- **Azure Front Door** — A global CDN/load balancer. Not involved in VPN or BGP.
+
+#### BGP Configuration Architecture
+
 ```
 ┌─────────────────────────────────────┐
-│ Azure VPN Gateway                   │
-│ BGP ASN: 65515 (Azure)             │
+│ Azure Virtual Network Gateway       │
+│ (VPN Gateway)                       │
+│                                     │
+│ BGP ASN: 65515 (Azure default)     │
 │ BGP Peer IP: 10.0.255.254          │
+│ (auto-assigned from GatewaySubnet) │
 └─────────────────────────────────────┘
          │ BGP Peering
-         │ (Route Exchange)
+         │ (Route Exchange via IPsec tunnel)
+         │
+┌─────────────────────────────────────┐
+│ Azure Local Network Gateway         │
+│ (represents on-premises device)     │
+│                                     │
+│ Gateway IP: 203.0.113.10           │
+│ BGP Peer IP: 192.168.255.1         │
+│ BGP ASN: 65001 (on-premises)       │
+└─────────────────────────────────────┘
+         │ Maps to
          │
 ┌─────────────────────────────────────┐
 │ On-Premises VPN Device              │
-│ BGP ASN: 65001 (Customer)          │
+│ BGP ASN: 65001                     │
 │ BGP Peer IP: 192.168.255.1         │
 └─────────────────────────────────────┘
 ```
 
+#### BGP Configuration — Azure CLI Example
+
+```bash
+# Step 1: Create the Virtual Network Gateway with BGP enabled
+az network vnet-gateway create \
+  --name MyVpnGateway \
+  --resource-group MyRG \
+  --vnet MyVNet \
+  --gateway-type Vpn \
+  --vpn-type RouteBased \
+  --sku VpnGw1 \
+  --asn 65515 \                    # ← BGP ASN for Azure side
+  --public-ip-address MyGatewayPIP
+
+# Step 2: Create the Local Network Gateway with BGP settings
+az network local-gateway create \
+  --name OnPremGateway \
+  --resource-group MyRG \
+  --gateway-ip-address 203.0.113.10 \
+  --bgp-peering-address 192.168.255.1 \  # ← On-premises BGP peer IP
+  --asn 65001                              # ← On-premises BGP ASN
+
+# Step 3: Create the S2S connection with BGP enabled
+az network vpn-connection create \
+  --name MyS2SConnection \
+  --resource-group MyRG \
+  --vnet-gateway1 MyVpnGateway \
+  --local-gateway2 OnPremGateway \
+  --shared-key "YourPreSharedKey123!" \
+  --enable-bgp                          # ← Enable BGP on the connection
+```
+
+> **Important:** BGP requires a **RouteBased** VPN type and a SKU of **VpnGw1 or higher** (Basic SKU does not support BGP). You must also enable BGP on the **connection** resource itself (`--enable-bgp`), not just on the gateways.
+
 **When to Use BGP:**
-- Multiple on-premises locations
-- Active-active gateway configuration
-- Dynamic routing requirements
-- Integration with ExpressRoute
+- Multiple on-premises locations (multi-site VPN)
+- Active-active gateway configuration (BGP is mandatory)
+- Dynamic routing requirements (avoid managing static routes)
+- ExpressRoute + VPN coexistence (automatic failover)
+- Transit routing between on-premises sites through Azure
+
+**Reference:** [Configure BGP for Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/bgp-howto)
 
 ---
 
@@ -1320,7 +1389,93 @@ After topology changes (e.g., adding VNet peering), Windows P2S VPN clients reta
 
 > **Key takeaway:** Enabling BGP or changing peering transit settings will **not** fix this — the issue is that the P2S client has outdated routes. Always re-download the VPN client package after topology changes.
 
-### Diagnostic Tools
+### VPN Gateway Diagnostic Logs
+
+Azure VPN Gateway provides several diagnostic log categories through Azure Monitor. These logs are critical for troubleshooting different types of VPN issues. You enable them via **Diagnostic settings** on the VPN Gateway resource, sending logs to a Log Analytics workspace, Storage Account, or Event Hub.
+
+#### Diagnostic Log Categories
+
+| Log Category | Purpose | When to Use |
+|-------------|---------|-------------|
+| **IKEDiagnosticLog** | Logs IKE (Internet Key Exchange) protocol negotiation messages and errors | Troubleshooting **IPsec tunnel establishment** failures — this is the primary log for S2S VPN connection issues |
+| **GatewayDiagnosticLog** | Logs gateway health events, configuration changes, and maintenance activities | Monitoring gateway health and status, investigating gateway-level outages |
+| **RouteDiagnosticLog** | Logs route changes including BGP route additions, removals, and updates | Troubleshooting **routing issues**, BGP route propagation problems |
+| **P2SDiagnosticLog** | Logs Point-to-Site connection and disconnection events | Troubleshooting P2S VPN client connectivity issues |
+
+> **Exam Tip:** When the question asks about troubleshooting **IPsec tunnel establishment** for a Site-to-Site VPN, the answer is **IKEDiagnosticLog**. IKE (Internet Key Exchange) is the protocol that negotiates the security association (SA) for IPsec — if the tunnel can't be established, the IKE negotiation is failing, and IKEDiagnosticLog captures exactly this. **TunnelDiagnosticLog** does **not** exist in Azure VPN Gateway.
+
+#### How IKE Relates to IPsec Tunnel Establishment
+
+IPsec tunnel setup follows a two-phase IKE negotiation:
+
+```
+Phase 1 (IKE SA):
+  ├── Negotiate encryption, integrity, DH group
+  ├── Authenticate peers (pre-shared key or certificate)
+  └── Establish IKE Security Association
+
+Phase 2 (IPsec SA):
+  ├── Negotiate IPsec parameters (ESP encryption, integrity)
+  ├── Establish IPsec Security Associations
+  └── Tunnel is UP — traffic flows
+```
+
+If either phase fails, the tunnel will not be established. **IKEDiagnosticLog** records the details of both phases, including:
+- Proposal mismatches (encryption algorithm, DH group, etc.)
+- Authentication failures (wrong pre-shared key)
+- Timeout and retransmission events
+- Phase transitions and error codes
+
+#### Querying VPN Diagnostic Logs (Kusto/KQL)
+
+```kql
+// Query IKE diagnostic logs for connection failures
+AzureDiagnostics
+| where Category == "IKEDiagnosticLog"
+| where TimeGenerated > ago(1h)
+| project TimeGenerated, Message, remoteIP_s, localIP_s
+| order by TimeGenerated desc
+
+// Query gateway health events
+AzureDiagnostics
+| where Category == "GatewayDiagnosticLog"
+| where TimeGenerated > ago(24h)
+| project TimeGenerated, Message, instance_s
+| order by TimeGenerated desc
+
+// Query route changes (BGP route troubleshooting)
+AzureDiagnostics
+| where Category == "RouteDiagnosticLog"
+| project TimeGenerated, Message, routeOrigin_s, network_s
+| order by TimeGenerated desc
+```
+
+#### Enabling Diagnostic Logs
+
+**Azure Portal:**
+1. Navigate to VPN Gateway → **Diagnostic settings** → **Add diagnostic setting**
+2. Select the log categories (IKEDiagnosticLog, GatewayDiagnosticLog, RouteDiagnosticLog, P2SDiagnosticLog)
+3. Choose a destination (Log Analytics workspace recommended for KQL queries)
+
+**Azure CLI:**
+```bash
+az monitor diagnostic-settings create \
+  --name "vpn-diagnostics" \
+  --resource "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworkGateways/{gw-name}" \
+  --workspace "/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.OperationalInsights/workspaces/{workspace}" \
+  --logs '[
+    {"category": "IKEDiagnosticLog", "enabled": true},
+    {"category": "GatewayDiagnosticLog", "enabled": true},
+    {"category": "RouteDiagnosticLog", "enabled": true},
+    {"category": "P2SDiagnosticLog", "enabled": true}
+  ]'
+```
+
+**Reference:**
+- [VPN Gateway diagnostic log queries | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-diagnostic-log-query)
+- [Troubleshoot Azure VPN Gateway using diagnostic logs | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/troubleshoot-vpn-with-azure-diagnostics)
+
+### Other Diagnostic Tools
 
 **Azure Portal:**
 - Connection Resource -> Diagnose & solve problems
@@ -1355,7 +1510,7 @@ Get-AzVirtualNetworkGatewayLearnedRoute -VirtualNetworkGatewayName MyVpnGateway 
 
 **Azure Monitor:**
 - Metrics: Gateway Bandwidth, Tunnel Bandwidth, P2S Connection Count
-- Logs: Gateway Diagnostic Logs, IKE Diagnostics
+- Logs: IKEDiagnosticLog, GatewayDiagnosticLog, RouteDiagnosticLog, P2SDiagnosticLog (see [VPN Gateway Diagnostic Logs](#vpn-gateway-diagnostic-logs) above)
 
 ---
 
