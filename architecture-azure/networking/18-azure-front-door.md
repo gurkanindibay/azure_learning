@@ -184,6 +184,53 @@ Deploy an Azure App Service web app with multiple instances across multiple Azur
 ### Key Takeaway
 For multi-region web applications requiring high availability, security (WAF), and advanced Layer 7 features (session affinity, URL routing), **Azure Front Door** is the only service that meets all requirements.
 
+## Web Application Firewall (WAF) Policy on Front Door
+
+Azure Web Application Firewall (WAF) on Front Door provides centralized protection for web applications against common vulnerabilities and exploits (SQL injection, XSS, OWASP Top 10, bot attacks, etc.).
+
+### Stages of Creating a WAF Policy via Azure Portal
+
+| Stage | Required? | Description |
+|-------|-----------|-------------|
+| **1. Create WAF policy** | ✅ Mandatory | Create a new Web Application Firewall policy resource in the Azure Portal |
+| **2. Associate with Front Door profile** | ✅ Mandatory | Link the WAF policy to a Front Door profile (domain or endpoint) so traffic is inspected |
+| **3. Configure policy settings and rules** | ⚠️ Optional | Configure policy settings (mode, response body, etc.), managed rules, and custom rules |
+
+### Stage 1: Create the WAF Policy (Mandatory)
+
+You must first create a WAF policy resource. During creation you select:
+- **Subscription and Resource Group**
+- **Policy name**
+- **Policy state**: Enabled or Disabled
+- **Policy mode**: Detection (log only) or Prevention (block matching traffic)
+
+### Stage 2: Associate with Front Door Profile (Mandatory)
+
+A WAF policy has no effect until it is associated with at least one Front Door profile domain or endpoint. You can associate the same WAF policy with multiple Front Door domains.
+
+### Stage 3: Configure Policy Settings and Rules (Optional)
+
+This stage is **optional** — a WAF policy can function with default settings. Configuration options include:
+
+- **Policy settings**: Customize the WAF response body, status code, and request body inspection limits
+- **Managed rules**: Enable Microsoft-managed rule sets (OWASP, Bot Protection, default rule set) that provide out-of-the-box protection
+- **Custom rules**: Define your own rules for IP restrictions, rate limiting, geo-filtering, or header-based matching
+- **Exclusions**: Define request attributes (headers, cookies, query strings) that should be excluded from rule evaluation
+
+### WAF Policy Modes
+
+| Mode | Behavior |
+|------|----------|
+| **Detection** | Logs all requests that match WAF rules but does **not** block them. Useful for testing and tuning before enforcement. |
+| **Prevention** | Blocks requests that match WAF rules and returns a 403 Forbidden response (customizable). Use for production enforcement. |
+
+> **Best Practice**: Start with **Detection** mode to understand traffic patterns and identify false positives, then switch to **Prevention** mode once rules are tuned.
+
+### References
+
+- [Implement a Web Application Firewall on Azure Front Door](https://learn.microsoft.com/en-us/training/modules/introduction-azure-web-application-firewall/)
+- [Azure WAF on Front Door documentation](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/afds-overview)
+
 ## Securing Backend VMs to Accept Only Front Door Traffic
 
 ### Scenario
