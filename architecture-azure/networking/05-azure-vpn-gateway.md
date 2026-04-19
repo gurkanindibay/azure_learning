@@ -6,6 +6,7 @@
 - [2. VPN Gateway vs Virtual Network Gateway](#2-vpn-gateway-vs-virtual-network-gateway)
   - [2.1 The Terminology Clarification](#21-the-terminology-clarification)
   - [2.2 Virtual Network Gateway Types](#22-virtual-network-gateway-types)
+  - [2.3 VPN Types: PolicyBased vs RouteBased](#23-vpn-types-policybased-vs-routebased)
 - [3. What is Azure VPN Gateway?](#3-what-is-azure-vpn-gateway)
   - [3.1 Definition](#31-definition)
   - [3.2 Key Characteristics](#32-key-characteristics)
@@ -105,6 +106,71 @@ az network vnet-gateway create \
   --vnet MyVNet \
   --public-ip-address MyGatewayIP
 ```
+
+### 2.3 VPN Types: PolicyBased vs RouteBased
+
+When creating a Virtual Network Gateway with gateway type **Vpn**, you must also specify a **VPN type**. There are exactly **two valid VPN types**: **PolicyBased** and **RouteBased**.
+
+> **Exam Tip:** The only valid VPN types are **PolicyBased** and **RouteBased**. Values like "IntervalBased", "LinkBased", or "StatusBased" do not exist.
+
+#### PolicyBased VPN
+
+PolicyBased VPNs (previously called **static routing** gateways) encrypt and direct packets through IPsec tunnels based on **traffic selectors** (combinations of source/destination address prefixes).
+
+| Aspect | Detail |
+|--------|--------|
+| **Routing method** | Policy-based (static) — traffic selectors define which traffic goes through the tunnel |
+| **IKE version** | IKEv1 only |
+| **S2S tunnels** | Supports only **1** S2S connection |
+| **P2S support** | ❌ Not supported |
+| **Active-active** | ❌ Not supported |
+| **BGP** | ❌ Not supported |
+| **VNet-to-VNet** | ❌ Not supported |
+| **SKU** | Basic only |
+| **Use case** | Legacy on-premises VPN devices that require policy-based routing |
+
+#### RouteBased VPN
+
+RouteBased VPNs (previously called **dynamic routing** gateways) use routes in the IP forwarding or routing table to direct packets into their corresponding tunnel interfaces. Each tunnel interface encrypts/decrypts packets.
+
+| Aspect | Detail |
+|--------|--------|
+| **Routing method** | Route-based (dynamic) — any-to-any traffic selectors; routes/forwarding table directs traffic |
+| **IKE version** | IKEv1 and IKEv2 |
+| **S2S tunnels** | Up to 30 (depending on SKU) |
+| **P2S support** | ✅ Supported |
+| **Active-active** | ✅ Supported |
+| **BGP** | ✅ Supported |
+| **VNet-to-VNet** | ✅ Supported |
+| **SKU** | All SKUs (Basic through VpnGw5AZ) |
+| **Use case** | Recommended for most scenarios |
+
+#### Comparison Summary
+
+| Feature | PolicyBased | RouteBased |
+|---------|-------------|------------|
+| **S2S connections** | 1 | Up to 30 |
+| **P2S** | ❌ | ✅ |
+| **IKEv2** | ❌ | ✅ |
+| **Active-active** | ❌ | ✅ |
+| **BGP** | ❌ | ✅ |
+| **ExpressRoute coexistence** | ❌ | ✅ |
+| **VNet-to-VNet** | ❌ | ✅ |
+| **Multiple on-premises sites** | ❌ | ✅ |
+| **Transit routing** | ❌ | ✅ |
+
+> **Best Practice:** Always choose **RouteBased** unless you have a specific legacy device that only supports PolicyBased. RouteBased is required for P2S, VNet-to-VNet, multi-site connections, active-active configuration, BGP, and coexistence with ExpressRoute.
+
+**Azure CLI — specifying VPN type:**
+```bash
+# RouteBased (recommended)
+az network vnet-gateway create --vpn-type RouteBased ...
+
+# PolicyBased (legacy only)
+az network vnet-gateway create --vpn-type PolicyBased ...
+```
+
+**Reference:** [VPN Gateway configuration settings — VPN type | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#vpntype)
 
 ---
 
