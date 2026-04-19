@@ -22,8 +22,9 @@ See [README](./README.md) for overview.
   - [8.1 Public IP Address SKUs](#81-public-ip-address-skus)
 - [9. Virtual Network Traffic Routing](#9-virtual-network-traffic-routing)
   - [9.1 User-Defined Routes (UDR)](#91-user-defined-routes-udr)
-  - [9.2 Effective Routes](#92-effective-routes)
-  - [9.3 Azure Route Server](#93-azure-route-server)
+  - [9.2 Route Table Management (PowerShell)](#92-route-table-management-powershell)
+  - [9.3 Effective Routes](#93-effective-routes)
+  - [9.4 Azure Route Server](#94-azure-route-server)
 - [10. Azure Virtual NAT (NAT Gateway)](#10-azure-virtual-nat-nat-gateway)
   - [10.1 What is Azure NAT Gateway?](#101-what-is-azure-nat-gateway)
   - [10.2 How NAT Gateway Works](#102-how-nat-gateway-works)
@@ -1377,7 +1378,86 @@ Route Table: RT-Spoke (associated with Spoke1 subnet 10.1.1.0/24)
 - ✅ **Traffic control**: Prioritize or redirect traffic to specific paths
 - ✅ **Compliance**: Ensure all traffic meets organizational policies
 
-### 9.2 Effective Routes
+### 9.2 Route Table Management (PowerShell)
+
+Azure provides PowerShell cmdlets for creating, configuring, and managing route tables and their association with subnets.
+
+**Key PowerShell Cmdlets:**
+
+| Cmdlet | Purpose |
+|--------|---------|
+| `New-AzRouteTable` | Creates a new route table |
+| `Get-AzRouteTable` | Gets a route table |
+| `Set-AzRouteTable` | Updates a route table resource (saves changes) |
+| `New-AzRouteConfig` | Creates a new route entry for a route table |
+| `Get-AzRouteConfig` | Gets routes from a route table |
+| `Set-AzRouteConfig` | Updates a route configuration within a route table |
+| `Set-AzVirtualNetworkSubnetConfig` | Updates a subnet configuration, including route table association |
+| `Set-AzVirtualNetwork` | Persists changes made to a virtual network |
+
+**Associating a Route Table with a Subnet:**
+
+A subnet can be associated with zero or more route tables. To associate (or dissociate) a route table with a subnet, use `Set-AzVirtualNetworkSubnetConfig`:
+
+```powershell
+# Step 1: Get the virtual network
+$vnet = Get-AzVirtualNetwork -Name "myVNet" -ResourceGroupName "myRG"
+
+# Step 2: Get the route table
+$routeTable = Get-AzRouteTable -Name "myRouteTable" -ResourceGroupName "myRG"
+
+# Step 3: Associate the route table with a subnet
+Set-AzVirtualNetworkSubnetConfig `
+  -VirtualNetwork $vnet `
+  -Name "mySubnet" `
+  -AddressPrefix "10.0.1.0/24" `
+  -RouteTableId $routeTable.Id
+
+# Step 4: Save the changes to the virtual network
+$vnet | Set-AzVirtualNetwork
+```
+
+> **⚠️ Exam Tip**: The cmdlet that **associates a route table to a subnet** is `Set-AzVirtualNetworkSubnetConfig`, NOT `Set-AzRouteTable`. This is because the route table association is a **property of the subnet**, not of the route table itself. `Set-AzRouteTable` only updates the route table resource (e.g., adding/removing routes), while `Set-AzVirtualNetworkSubnetConfig` updates the subnet's configuration including which route table it points to.
+
+**Creating a Route Table with Routes (End-to-End Example):**
+
+```powershell
+# Step 1: Create a route configuration
+$route = New-AzRouteConfig `
+  -Name "ToFirewall" `
+  -DestinationPrefix "0.0.0.0/0" `
+  -NextHopType "VirtualAppliance" `
+  -NextHopIpAddress "10.0.1.10"
+
+# Step 2: Create the route table with the route
+$routeTable = New-AzRouteTable `
+  -Name "RT-Spoke" `
+  -ResourceGroupName "myRG" `
+  -Location "eastus" `
+  -Route $route
+
+# Step 3: Associate with a subnet
+$vnet = Get-AzVirtualNetwork -Name "myVNet" -ResourceGroupName "myRG"
+Set-AzVirtualNetworkSubnetConfig `
+  -VirtualNetwork $vnet `
+  -Name "SpokeSubnet" `
+  -AddressPrefix "10.1.0.0/24" `
+  -RouteTableId $routeTable.Id
+$vnet | Set-AzVirtualNetwork
+```
+
+**Cmdlet Comparison (Common Confusion Points):**
+
+| Task | Correct Cmdlet | Wrong Choice |
+|------|---------------|---------------|
+| Associate route table to subnet | `Set-AzVirtualNetworkSubnetConfig` | ~~`Set-AzRouteTable`~~ |
+| Add a route to a route table | `Add-AzRouteConfig` + `Set-AzRouteTable` | ~~`Set-AzVirtualNetworkSubnetConfig`~~ |
+| Create a new route entry | `New-AzRouteConfig` | ~~`New-AzRouteTable`~~ |
+| View routes in a route table | `Get-AzRouteConfig` | ~~`Get-AzVirtualNetworkSubnetConfig`~~ |
+
+> **Reference**: [Create, change, or delete an Azure route table | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/manage-route-table)
+
+### 9.3 Effective Routes
 
 **Effective Routes** show the actual routes that apply to a specific network interface (NIC), combining system routes, route tables, and route priorities.
 
@@ -1473,7 +1553,7 @@ The custom route table was not properly associated to Subnet A, so only system r
 5. Re-check effective routes
 ```
 
-### 9.3 Azure Route Server
+### 9.4 Azure Route Server
 
 **Azure Route Server** is a fully managed service that simplifies dynamic routing in your Azure Virtual Network. It acts as a central hub that exchanges routes with **Network Virtual Appliances (NVAs)** and **VPN/ExpressRoute gateways** using **BGP (Border Gateway Protocol)**.
 
