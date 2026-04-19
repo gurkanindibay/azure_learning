@@ -165,6 +165,13 @@ Each peering type is **independent** — enabling one does not enable the other.
 | Access only Azure VNet resources (VMs, private IPs) | Private Peering only |
 | Access only Microsoft 365 / Azure PaaS public endpoints | Microsoft Peering only |
 | Access both Azure VNet resources **and** Microsoft 365 | **Both** Private Peering **and** Microsoft Peering |
+| Route data between on-premises sites via ExpressRoute (Global Reach) | Private Peering on **both** circuits |
+
+> **Important for Global Reach**: When using ExpressRoute Global Reach to route traffic between on-premises datacenters through the Microsoft backbone, **Private Peering** must be configured on both ExpressRoute circuits. Global Reach operates over Private Peering — Microsoft Peering and the deprecated Public Peering are not used for site-to-site inter-datacenter traffic.
+
+### Public Peering deprecation — exam trap
+
+> **Exam warning**: Azure Public Peering was **deprecated in March 2018** and is no longer available for new circuits. Any exam question that lists "Public Peering" as an option is a distractor. Microsoft Peering replaced Public Peering for accessing Azure public services. Do **not** confuse "Public Peering" with "Microsoft Peering" — they are different, and Public Peering should never be selected in current exam scenarios.
 
 > **Key insight**: A single ExpressRoute circuit supports both peering types simultaneously. You do **not** need two separate circuits — you configure both peerings on the same circuit.
 
@@ -599,6 +606,31 @@ graph LR
 - **Simplified topology** — no need for a separate WAN between sites
 - **Leverages existing circuits** — just enable Global Reach as an add-on
 - **Supplements provider WAN** — works alongside (or replaces) your service provider's WAN for branch-to-branch traffic
+
+### Practice question: ExpressRoute peering for inter-datacenter routing
+
+**Question**: You have on-premises datacenters in New York and Seattle. You have an Azure subscription that contains ExpressRoute circuits connecting each datacenter. You need to ensure that all the data sent between the datacenters is routed via the ExpressRoute circuits. The solution must minimize costs. Which peering should you configure?
+
+- A) Microsoft Peering
+- B) Private Peering ✅
+- C) Public Peering
+
+**Answer**: **B** ✅
+
+**Explanation**:
+
+- **Option B is correct.** ✅ Private Peering is the correct choice because ExpressRoute Global Reach — which interconnects on-premises sites through the Microsoft backbone — operates exclusively over Private Peering. When you configure Private Peering on both ExpressRoute circuits and enable Global Reach, traffic between the New York and Seattle datacenters flows through the Microsoft global network without ever traversing the public internet. This is a direct, private connection that meets the requirement to route all inter-datacenter data via the ExpressRoute circuits.
+
+- **Option A is incorrect.** Microsoft Peering is used for connectivity to Microsoft cloud services such as Microsoft 365, Dynamics 365, and Azure PaaS public endpoints. It does not facilitate site-to-site communication between on-premises datacenters. Global Reach requires Private Peering, not Microsoft Peering.
+
+- **Option C is incorrect.** Public Peering was **deprecated in March 2018** and replaced by Microsoft Peering for accessing Azure public-facing services. It is no longer available for new ExpressRoute circuits and should not be selected in any current scenario. Even when it existed, Public Peering was for accessing Azure public services — not for routing data between on-premises sites.
+
+> **Key takeaway**: Routing data between on-premises sites via ExpressRoute requires **Global Reach** with **Private Peering** configured on both circuits. Microsoft Peering serves a different purpose (SaaS/PaaS access), and Public Peering is deprecated.
+
+> **References**:
+> - [ExpressRoute Global Reach | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-global-reach)
+> - [ExpressRoute circuits and peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-circuit-peerings)
+> - [ExpressRoute FAQ — What is Private Peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-faqs#what-is-private-peering)
 
 ---
 
