@@ -155,6 +155,49 @@ graph TD
 - **Private Peering** uses private IP addresses (RFC 1918 ranges like 10.x.x.x, 172.16.x.x) — your on-prem network and Azure VNets share routing information via BGP
 - **Microsoft Peering** uses public IP addresses — requires NAT and route filters to control which Microsoft services are reachable
 
+### Choosing the right peering combination
+
+Each peering type is **independent** — enabling one does not enable the other. You must configure each peering type separately on the same circuit based on what services you need to reach:
+
+| Scenario | Required Peering |
+|----------|-----------------|
+| Access only Azure VNet resources (VMs, private IPs) | Private Peering only |
+| Access only Microsoft 365 / Azure PaaS public endpoints | Microsoft Peering only |
+| Access both Azure VNet resources **and** Microsoft 365 | **Both** Private Peering **and** Microsoft Peering |
+
+> **Key insight**: A single ExpressRoute circuit supports both peering types simultaneously. You do **not** need two separate circuits — you configure both peerings on the same circuit.
+
+### Microsoft 365 over ExpressRoute — additional requirements
+
+Using Microsoft Peering for Microsoft 365 has specific requirements beyond standard ExpressRoute setup:
+
+- **Authorization required**: Microsoft 365 over ExpressRoute requires explicit approval from Microsoft. You must submit a request through the Azure portal or support.
+- **Route filters**: You must configure **route filters** to select which Microsoft 365 service communities (BGP communities) are advertised over the circuit (e.g., Exchange Online, SharePoint Online, Skype for Business).
+- **NAT requirement**: Microsoft Peering requires **source NAT** with public IP addresses that you own or are allocated by your provider. Traffic from your on-premises must be NATted to these public IPs before reaching Microsoft.
+- **Redundancy**: Microsoft requires redundant BGP sessions for Microsoft Peering to meet SLA requirements.
+
+> **Reference**: [Azure ExpressRoute for Microsoft 365 | Microsoft Learn](https://learn.microsoft.com/en-us/microsoft-365/enterprise/azure-expressroute)
+
+### Practice question: ExpressRoute peering selection
+
+**Question**: You're setting up an ExpressRoute circuit and need to enable connectivity to both Microsoft Azure services (VMs in VNets) and Microsoft 365. Which peering configuration(s) should you select?
+
+- A) Private peering only
+- B) Microsoft peering only
+- C) Both private peering and Microsoft peering ✅
+- D) None of the above
+
+**Answer**: **C** ✅
+
+**Explanation**:
+
+- **Option A is incorrect.** Private peering only provides access to resources inside your Azure VNets (VMs, databases, internal load balancers). It does not provide connectivity to Microsoft 365 or other Microsoft SaaS services.
+- **Option B is incorrect.** Microsoft peering provides access to Microsoft 365, Dynamics 365, and Azure PaaS public endpoints. However, it does not provide access to Azure VNet resources (VMs, private IPs).
+- **Option C is correct.** ✅ To reach both Azure IaaS resources in VNets (via Private Peering) and Microsoft 365 services (via Microsoft Peering), you must configure both peering types on the ExpressRoute circuit. Each peering type serves a different set of services, and they are configured independently on the same circuit.
+- **Option D is incorrect.** ExpressRoute peering is required to route traffic over the circuit.
+
+> **Reference**: [Azure ExpressRoute: circuits and peering | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-circuit-peerings)
+
 ---
 
 ## 5. Connectivity Models
