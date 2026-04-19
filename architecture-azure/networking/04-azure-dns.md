@@ -407,6 +407,121 @@ D. **Azure DNS** ✅
 >
 > **Reference**: [Name resolution for resources in Azure virtual networks | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances)
 
+## Private DNS Zone Virtual Network Links and Autoregistration
+
+### Overview
+
+When you link an Azure Private DNS Zone to a Virtual Network, you create a **virtual network link**. This link determines how VMs in the VNet interact with the Private DNS Zone. There are two types of virtual network links:
+
+| Link Type | Autoregistration | Behavior |
+|-----------|-----------------|----------|
+| **Resolution VNet** | Disabled (`--registration-enabled false`) | VMs can **resolve** records in the zone, but DNS records are NOT automatically created |
+| **Registration VNet** | Enabled (`--registration-enabled true`) | VMs automatically get DNS A records created in the zone; also serves as a resolution VNet |
+
+### Autoregistration
+
+When you enable **autoregistration** on a virtual network link, the VNet becomes a **registration virtual network** for that Private DNS Zone. This means:
+
+- **New VMs** deployed in the VNet will automatically have a DNS A record created in the Private DNS Zone
+- **Existing VMs** already deployed in the VNet will also get DNS records created automatically
+- DNS records are **automatically removed** when VMs are deleted or deallocated
+- Records are created using the VM's hostname and private IP address (e.g., `myvm.contoso.com` → `10.0.1.4`)
+
+```bash
+# Create a virtual network link WITH autoregistration enabled
+az network private-dns link vnet create \
+  --resource-group MyResourceGroup \
+  --zone-name contoso.com \
+  --name myRegistrationLink \
+  --virtual-network myVNet \
+  --registration-enabled true
+
+# Create a virtual network link WITHOUT autoregistration (resolution only)
+az network private-dns link vnet create \
+  --resource-group MyResourceGroup \
+  --zone-name contoso.com \
+  --name myResolutionLink \
+  --virtual-network myOtherVNet \
+  --registration-enabled false
+```
+
+### Autoregistration Constraints
+
+| Constraint | Detail |
+|-----------|--------|
+| **One registration zone per VNet** | A virtual network can be linked as a registration VNet to **only one** Private DNS Zone |
+| **Multiple resolution zones per VNet** | A virtual network can be linked as a resolution VNet to **multiple** Private DNS Zones |
+| **Multiple VNets per zone** | A Private DNS Zone can have multiple registration and resolution VNets linked to it |
+| **Record format** | Autoregistered records use the VM name as the hostname (e.g., `vmname.privatezone.com`) |
+| **IPv4 only** | Autoregistration creates A records (IPv4). AAAA records (IPv6) are not autoregistered |
+
+### How It Works
+
+```mermaid
+graph TD
+    subgraph Private DNS Zone: contoso.com
+        R1["myvm1.contoso.com → 10.0.1.4"]
+        R2["myvm2.contoso.com → 10.0.1.5"]
+        R3["myvm3.contoso.com → 10.0.2.4"]
+    end
+
+    subgraph "VNet A (Registration VNet)"
+        VM1["myvm1 (10.0.1.4)"]
+        VM2["myvm2 (10.0.1.5)"]
+    end
+
+    subgraph "VNet B (Resolution VNet)"
+        VM3["myvm3 (10.0.2.4)"]
+    end
+
+    VM1 -.->|Auto-registered| R1
+    VM2 -.->|Auto-registered| R2
+    VM3 -.->|Can resolve records| R3
+    VM3 -.-x|NOT auto-registered| R3
+
+    style R3 fill:#555,stroke:#999,color:#fff,stroke-dasharray: 5 5
+```
+
+> **Note**: In the diagram above, VNet B is a resolution VNet — VM3 can resolve records in the zone but does NOT get an autoregistered record. Only VMs in VNet A (the registration VNet) get automatic DNS records.
+
+## Exam Scenario: Autoregistration with Private DNS Zone
+
+### Question
+
+Is it possible to automatically create DNS records for all VMs deployed in a VNet while linking a Private DNS Zone and a virtual network?
+
+A. Yes  
+B. No
+
+### Answer: A - Yes
+
+### Explanation
+
+When you create a link between a Private DNS Zone and a VNet, there is an option to **enable autoregistration**. If you enable this setting, the VNet becomes a **registration VNet** for the Private DNS Zone. This means:
+
+- Any **new virtual machines** deployed in the VNet will automatically have a DNS record created in the zone
+- Any **existing virtual machines** already in the VNet will also get DNS records created
+- Records are automatically removed when VMs are deleted
+
+**In the Azure Portal**, the autoregistration option appears as the **"Enable auto registration"** checkbox when creating a virtual network link.
+
+**In Azure CLI**, it is controlled by the `--registration-enabled` parameter:
+
+```bash
+az network private-dns link vnet create \
+  --resource-group MyResourceGroup \
+  --zone-name private.contoso.com \
+  --name myAutoRegLink \
+  --virtual-network myVNet \
+  --registration-enabled true
+```
+
+> **Key Point**: Without enabling autoregistration, the virtual network link only provides **resolution** capability — VMs can look up records in the zone, but no records are automatically created for them.
+>
+> **Domain**: Design and implement core networking infrastructure (20–25%)
+>
+> **Reference**: [What is a virtual network link subresource of Azure DNS private zones | Microsoft Learn](https://learn.microsoft.com/en-us/azure/dns/private-dns-virtual-network-links)
+
 ### Custom DNS Settings — No Automatic Propagation
 
 > **Key Concept**: Configuring custom DNS servers at the **VNet level** does **not** automatically update DNS settings on existing virtual machines, role instances, or NICs.
