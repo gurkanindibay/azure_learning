@@ -155,23 +155,51 @@ All others → Public endpoint
 
 ## Endpoint Types
 
-Traffic Manager supports multiple endpoint types:
+Traffic Manager supports **three** endpoint types. Choosing the correct type depends on where the target service is hosted.
+
+| Endpoint Type | Target | Identified By | Use Case |
+|---------------|--------|---------------|----------|
+| **Azure** | Services hosted inside Azure | Azure Resource ID | App Service, Cloud Service, Public IP |
+| **External** | Services hosted outside Azure (on-premises, other clouds) | IPv4/IPv6 address **or FQDN** | On-prem web apps, third-party SaaS, multi-cloud |
+| **Nested** | Another Traffic Manager profile | Traffic Manager profile resource ID | Complex/hierarchical routing schemes |
 
 ### Azure Endpoints
-- Azure App Service
+
+Used for services hosted **within Azure**. The endpoint is identified by its Azure Resource ID.
+
+- Azure App Service (Web Apps, API Apps)
+- Azure App Service Slots (staging/production)
 - Azure Cloud Services
-- Azure Public IP (VMs, Load Balancers)
-- Azure App Service Slots
+- Azure Public IP addresses (attached to VMs, Load Balancers)
+
+> **Key point**: Azure endpoints can only reference resources inside the same or a different Azure subscription. They cannot point to on-premises or non-Azure services.
 
 ### External Endpoints
-- Any public IP outside Azure
-- On-premises services with public IPs
-- Services in other clouds
+
+Used for services hosted **outside of Azure** — on-premises datacenters, other cloud providers, or any internet-facing service.
+
+- Identified by **IPv4/IPv6 address** or **FQDN**
+- On-premises web applications accessible via their public FQDN
+- Services in AWS, GCP, or other hosting providers
+- Any internet-reachable endpoint
+
+> **Key point**: If your on-premises web app is internet-accessible via its FQDN, you add it to Traffic Manager as an **External endpoint**. This is the correct choice for hybrid scenarios mixing Azure and on-prem services.
+
+**Example — adding an on-prem web app:**
+```
+Endpoint type: External
+FQDN: myonpremapp.contoso.com
+```
 
 ### Nested Endpoints
-- Other Traffic Manager profiles
-- Complex routing scenarios
-- Combine routing methods
+
+Used to **combine multiple Traffic Manager profiles** into hierarchical routing topologies.
+
+- Points to another Traffic Manager profile (child profile)
+- Enables combining different routing methods (e.g., geographic at the top level, performance within each region)
+- Supports complex, multi-tier deployments
+
+> **Key point**: Nested endpoints do not point directly to application services — they point to other Traffic Manager profiles.
 
 ## Health Monitoring
 
@@ -468,6 +496,32 @@ Use weighted routing for zero-downtime deployments:
 - **D) Subnet** – Incorrect. Subnet routing maps specific end-user IP address ranges to specific endpoints. It does not provide primary/backup failover behavior.
 
 > **Reference:** [Azure Traffic Manager - traffic routing methods](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods)
+
+---
+
+### Q: Endpoint type for on-premises web app in Traffic Manager
+
+**Scenario:** You are setting up an Azure solution that includes Azure App Services and on-premises hosted web apps. These web apps are accessible through the internet using their FQDN. You have chosen Azure Traffic Manager as the load balancing option and have created a profile named 'MyNewProfile'. Which endpoint type do you need to configure to add your on-premises web app to the Traffic Manager profile?
+
+- A) Azure Endpoints
+- B) Nested Endpoints
+- C) External Endpoints ✅
+- D) Staggered Endpoints
+- E) None of the above
+
+**Answer:** C – External Endpoints.
+
+**Explanation:**
+
+Traffic Manager supports exactly **three** endpoint types: Azure, External, and Nested.
+
+- **A) Azure Endpoints** – Incorrect. Azure endpoints are intended for services hosted within Azure only (App Service, Cloud Services, Public IPs). They cannot reference on-premises services.
+- **B) Nested Endpoints** – Incorrect. Nested endpoints are used to combine distinct Traffic Manager profiles into hierarchical routing schemes, not to point at individual application services.
+- **C) External Endpoints** – Correct. External endpoints accommodate IPv4/IPv6 addresses, FQDNs, or services hosted outside Azure — whether on-premises or with another hosting provider. An on-prem web app accessible via its FQDN is added as an External endpoint.
+- **D) Staggered Endpoints** – Incorrect. "Staggered Endpoint" is not a valid Traffic Manager endpoint type.
+- **E) None of the above** – Incorrect. External Endpoints is the correct answer.
+
+> **Reference:** [Traffic Manager Endpoint Types | Microsoft Learn](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-endpoint-types)
 
 ---
 
