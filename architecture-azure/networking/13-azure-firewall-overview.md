@@ -123,6 +123,47 @@ In Azure Firewall, the order of processing rules is as follows: **DNAT rules** a
 
 > **Reference**: [Azure Firewall rule processing](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
 
+### Application rules do not apply to inbound connections
+
+A critical detail of Azure Firewall rule processing is that **application rules apply only to outbound traffic**. They do not filter inbound connections. This means:
+
+- **Outbound HTTP/HTTPS filtering** → Use Azure Firewall **application rules** (FQDN-based, Layer 7)
+- **Inbound HTTP/HTTPS filtering** → Application rules **cannot** help; use **Web Application Firewall (WAF)** instead
+
+For inbound traffic, Azure Firewall only supports **DNAT rules** (to translate and forward inbound traffic to backend resources) and **network rules** (Layer 3/4 filtering). If you need to inspect and filter inbound HTTP(s) traffic at Layer 7 (e.g., block SQL injection, XSS, or enforce URL-based policies), you must deploy a **WAF** using one of the following services:
+
+| Service | WAF Capability |
+|---------|---------------|
+| **Azure Application Gateway** | Regional WAF with OWASP CRS, deployed per-VNet |
+| **Azure Front Door** | Global WAF at the edge, with DDoS protection and geo-filtering |
+| **Azure CDN** (Premium from Edgio) | WAF integrated with CDN for content delivery scenarios |
+
+> **Key takeaway**: Azure Firewall application rules are designed for **outbound** FQDN-based filtering. For **inbound** HTTP(s) protection, always pair Azure Firewall with a WAF solution (Application Gateway or Front Door).
+
+> **Reference**: [Azure Firewall rule processing logic](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
+> **Reference**: [Introduction to Azure Web Application Firewall](https://learn.microsoft.com/en-us/azure/web-application-firewall/overview)
+
+### Practice question: Inbound HTTP(s) filtering
+
+**Question**: Application rules do not apply to inbound connections. Therefore, if you need to filter inbound HTTP(s) traffic, you should implement a Web Application Firewall (WAF). Is this correct?
+
+- A) Yes ✅
+- B) No
+
+**Answer**: **A — Yes** ✅
+
+**Explanation**:
+
+Azure Firewall application rules are processed only for **outbound** connections. Inbound connections are not evaluated against application rules. If you want to filter inbound HTTP(s) traffic at Layer 7 (e.g., protect against SQL injection, cross-site scripting, or enforce URL-based rules), you must use a **Web Application Firewall (WAF)**.
+
+WAF can be deployed with:
+- **Azure Front Door** — global WAF at the edge
+- **Azure Application Gateway** — regional WAF within your VNet
+- **Azure CDN** (Premium from Edgio) — WAF integrated with content delivery
+
+> **Reference**: [Azure Firewall rule processing logic](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
+> **Reference**: [Introduction to Azure Web Application Firewall](https://learn.microsoft.com/en-us/azure/web-application-firewall/overview)
+
 ## Threat Intelligence
 
 Azure Firewall includes a threat intelligence-based filtering feature that can alert and/or deny traffic from/to known malicious IP addresses and domains.
