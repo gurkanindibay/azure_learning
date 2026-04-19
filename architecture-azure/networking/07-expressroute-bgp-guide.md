@@ -12,7 +12,7 @@ See [README](./README.md) for overview. See also [ExpressRoute Connectivity Mode
 - [3. How ExpressRoute Works (Step by Step)](#3-how-expressroute-works-step-by-step)
 - [4. ExpressRoute Circuit and Peering Types](#4-expressroute-circuit-and-peering-types)
 - [5. Connectivity Models](#5-connectivity-models)
-- [6. ExpressRoute SKUs](#6-expressroute-skus)
+- [6. ExpressRoute Circuit Types and SKUs](#6-expressroute-circuit-types-and-skus)
 - [7. BGP: The Routing Engine Behind ExpressRoute](#7-bgp-the-routing-engine-behind-expressroute)
 - [8. ExpressRoute Global Reach](#8-expressroute-global-reach)
 - [9. Multi-Site Failover with BGP](#9-multi-site-failover-with-bgp)
@@ -215,29 +215,125 @@ There are four ways to physically connect to an ExpressRoute peering location:
 
 ---
 
-## 6. ExpressRoute SKUs
+## 6. ExpressRoute Circuit Types and SKUs
 
-| SKU | Geographic Scope | Use Case |
-|-----|-----------------|----------|
-| **Local** | Access only to Azure regions near the peering location | Cost-efficient if your workloads are in nearby regions; **free egress** |
-| **Standard** | Access to all Azure regions within the **same geopolitical region** (e.g., all of North America or all of Europe) | Most common choice for single-region enterprises |
-| **Premium** | Access to all Azure regions **globally** + increased route limits (10,000 vs 4,000) | Multi-region enterprises, global deployments |
+There are four ExpressRoute circuit types to choose from, each with different geographic scope, capacity, and cost implications:
+
+| Circuit Type | Geographic Scope | Bandwidth Range | Use Case |
+|-------------|-----------------|-----------------|----------|
+| **ExpressRoute Local** | Access **only** to one or two Azure regions at/near the peering location | 1 Gbps, 2 Gbps, 5 Gbps, 10 Gbps | Cost-efficient when all workloads are in a nearby Azure region; **includes free unlimited egress** |
+| **ExpressRoute Standard** | Access to all Azure regions within the **same geopolitical region** (e.g., all of North America or all of Europe) | 50 Mbps – 10 Gbps | Connectivity to multiple regions within a geopolitical boundary |
+| **ExpressRoute Premium** | Access to all Azure regions **globally** + increased route limits (10,000 vs 4,000 for private peering) | 50 Mbps – 10 Gbps | Multi-region enterprises, global deployments, cross-geopolitical connectivity |
+| **ExpressRoute Direct** | Depends on SKU configured on port (Local, Standard, or Premium) | 10 Gbps or 100 Gbps port pairs | Massive data ingestion, strict physical isolation, or need for >10 Gbps from a single provider |
+
+### ExpressRoute Local — key requirements
+
+ExpressRoute Local is the most cost-effective option when your scenario meets specific constraints:
+
+- **Peering location proximity**: The ExpressRoute peering location must be **at or near** the Azure region where your resources reside. Each peering location maps to one or two "local" Azure regions.
+- **Limited regional access**: Unlike Standard/Premium, Local circuits provide connectivity **only** to the one or two nearby Azure regions — not to all regions in the geopolitical area.
+- **Free unlimited egress**: Data transfer out of Azure over a Local circuit has **no egress charges**, regardless of volume. This is a significant cost saving compared to Standard/Premium where egress is either metered or requires an Unlimited plan.
+- **Minimum bandwidth**: Local circuits start at **1 Gbps** (Standard/Premium start at 50 Mbps).
+- **Unlimited data plan only**: Local circuits always include unlimited data — there is no Metered data plan option for Local.
+
+> **Example**: The East US Azure region has a peering location in Washington DC. If all your Azure resources are in East US and your on-premises datacenter connects through the Washington DC peering location, ExpressRoute Local gives you full connectivity at the lowest cost.
+
+### ExpressRoute Direct — when to use
+
+ExpressRoute Direct provides **direct physical port connectivity** (bypassing third-party service providers) to Microsoft's global network at peering locations worldwide:
+
+- **Port pairs**: Available as 10 Gbps or 100 Gbps dual port pairs (Active/Active)
+- **No service provider needed**: You connect directly to Microsoft Edge routers
+- **Supports all SKUs**: You can create Local, Standard, or Premium circuits on top of Direct ports
+- **Massive scale**: Designed for scenarios requiring >10 Gbps or multiple circuits from a single connection point
+- **Not cost-effective for low bandwidth**: If you only need 1 Gbps, provisioning a 10 Gbps Direct port is wasteful and expensive
+
+### Data plans: Metered vs Unlimited
+
+Standard and Premium circuits offer two data plan options that affect how egress (outbound data transfer from Azure) is billed:
+
+| Data Plan | How Egress is Billed | Best For |
+|-----------|---------------------|----------|
+| **Metered** | Pay per GB of outbound data transferred over the circuit (inbound is free) | Workloads with low or unpredictable egress volumes |
+| **Unlimited** | Flat monthly fee — no per-GB egress charges | Workloads with high or consistent egress volumes |
+
+> **Note**: ExpressRoute Local circuits always include unlimited data (free egress) — there is no Metered option for Local.
+
+| Circuit Type | Metered Plan Available | Unlimited Plan Available |
+|-------------|----------------------|------------------------|
+| **Local** | ❌ No (always unlimited egress) | ✅ Included by default |
+| **Standard** | ✅ Yes | ✅ Yes |
+| **Premium** | ✅ Yes | ✅ Yes |
 
 ### Billing components
 
 ExpressRoute billing has two parts:
 
-1. **Circuit fee** (paid to Microsoft): Monthly charge based on bandwidth (50 Mbps to 10 Gbps) and SKU
+1. **Circuit fee** (paid to Microsoft): Monthly charge based on bandwidth, SKU, and data plan
 2. **Provider fee** (paid to your connectivity provider): Varies by provider and location
 
-| Bandwidth | Approximate Monthly Circuit Fee (Standard) |
-|-----------|---------------------------------------------|
-| 50 Mbps | ~$55 |
-| 200 Mbps | ~$220 |
-| 1 Gbps | ~$436 |
-| 10 Gbps | ~$3,480 |
+| Bandwidth | Approx. Monthly (Standard Metered) | Approx. Monthly (Standard Unlimited) | Approx. Monthly (Local) |
+|-----------|-------------------------------------|--------------------------------------|------------------------|
+| 50 Mbps | ~$55 | ~$110 | N/A (min 1 Gbps) |
+| 200 Mbps | ~$220 | ~$440 | N/A (min 1 Gbps) |
+| 1 Gbps | ~$436 | ~$814 | ~$436 (free egress) |
+| 10 Gbps | ~$3,480 | ~$8,140 | ~$3,480 (free egress) |
 
-> **Cost tip**: The **Local SKU** has no data egress charges. If your workloads and peering location are in the same Azure region, this can save significantly on data transfer costs.
+> **Cost tip**: The **Local SKU** offers the lowest total cost when your peering location is at/near the target Azure region — it has no egress charges and a lower circuit fee than Standard/Premium Unlimited. If you only need connectivity to a single nearby Azure region, Local is almost always the cheapest option.
+
+### Decision guide: choosing the right circuit type
+
+```
+Do you need >10 Gbps or direct physical port access?
+  ├─ YES → ExpressRoute Direct (10 Gbps or 100 Gbps ports)
+  └─ NO → Is the peering location at/near the Azure region with your resources?
+      ├─ YES → Do you ONLY need access to that nearby Azure region?
+      │   ├─ YES → ExpressRoute Local (lowest cost, free egress)
+      │   └─ NO → Do you need access across geopolitical regions?
+      │       ├─ YES → ExpressRoute Premium
+      │       └─ NO → ExpressRoute Standard
+      └─ NO → Do you need access across geopolitical regions?
+          ├─ YES → ExpressRoute Premium
+          └─ NO → ExpressRoute Standard
+```
+
+### Geopolitical regions
+
+ExpressRoute Standard provides access to all Azure regions within the **same geopolitical region**. The geopolitical regions are:
+
+| Geopolitical Region | Includes |
+|--------------------|----------|
+| **North America** | East US, West US, Central US, Canada, etc. |
+| **Europe** | West Europe, North Europe, UK, France, Germany, etc. |
+| **Asia Pacific** | Southeast Asia, East Asia, Australia, Japan, Korea, India, etc. |
+| **Other** | South America, Middle East, Africa, Government regions |
+
+> **Key distinction**: ExpressRoute Standard with the East US peering location gives access to **all** North America Azure regions (East US, West US, Canada Central, etc.). ExpressRoute Local with the same peering location gives access to **only** East US (and potentially a second nearby region). If you only need East US, Local is cheaper.
+
+### Practice question: choosing an ExpressRoute circuit type
+
+**Question**: Your company has a single on-premises datacenter in Washington DC. The East US Azure region has a peering location in Washington DC. The company only has Azure resources in the East US region. You need to implement ExpressRoute to support up to 1 Gbps. You must use only ExpressRoute Unlimited data plans. The solution must minimize costs. Which type of ExpressRoute circuit should you create?
+
+- A) ExpressRoute Local ✅
+- B) ExpressRoute Direct
+- C) ExpressRoute Premium
+- D) ExpressRoute Standard
+
+**Answer**: **A** ✅
+
+**Explanation**:
+
+- **Option A is correct.** ✅ ExpressRoute Local provides connectivity only to the Azure region(s) near the peering location. Since the company only has resources in East US and the peering location is in Washington DC (which maps to East US), Local meets all connectivity requirements. Local circuits support 1 Gbps bandwidth, include unlimited egress data by default (satisfying the Unlimited data plan requirement), and cost less than Standard or Premium circuits. This is the most cost-effective choice.
+- **Option B is incorrect.** ExpressRoute Direct provides direct 10 Gbps or 100 Gbps port pairs to Microsoft's network. Since the requirement is only 1 Gbps, Direct is overkill and far more expensive than necessary.
+- **Option C is incorrect.** ExpressRoute Premium provides global connectivity across all Azure regions worldwide with increased route limits. Since the company only needs connectivity to East US, the premium features are unnecessary and add cost.
+- **Option D is incorrect.** ExpressRoute Standard provides connectivity to all Azure regions within the same geopolitical region (all of North America in this case). While Standard supports Unlimited data plans, it provides broader geographic access than needed (all of North America vs just East US), and its circuit fee + Unlimited plan cost is higher than the equivalent Local circuit which includes free egress by default.
+
+> **Key takeaway**: When the peering location is near the target Azure region and you only need access to that region, ExpressRoute Local is always the cheapest option — it has a lower circuit fee and includes unlimited egress at no extra cost.
+
+> **References**:
+> - [ExpressRoute pricing](https://azure.microsoft.com/en-us/pricing/details/expressroute/)
+> - [ExpressRoute FAQ](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-faqs)
+> - [ExpressRoute circuits and peering](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-circuit-peerings)
 
 ---
 
