@@ -99,6 +99,47 @@ Rule processing follows this priority order:
 
 Within each rule type, rules are processed by priority (lower number = higher priority).
 
+### Rule Collection Group and Collection Priority Range
+
+Azure Firewall rule collection groups and rule collections use a **numeric priority system** ranging from **100 to 65,000**:
+
+| Priority Value | Meaning |
+|---------------|---------|
+| **100** | Highest priority (processed first) |
+| **65,000** | Lowest priority (processed last) |
+
+- Priority values **must** be within the range of 100 to 65,000 (inclusive)
+- Values outside this range (e.g., 0, 1, or values above 65,000) are **not valid**
+- Lower numbers indicate higher priority — a rule collection group with priority 100 is evaluated before one with priority 200
+- Each rule collection group must have a **unique** priority value
+- Each rule collection within a group must also have a unique priority value
+
+> **Reference**: [Azure Firewall rule processing logic](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
+
+### Practice Question: Rule Collection Priority Range
+
+**Question**: Firewall rules are processed based on Collection Group and Collection priority. What priority level specifies the highest priority for a security rule?
+
+- A) 0
+- B) 1
+- C) 10000
+- D) 65000
+- E) 100 ✅
+
+**Answer**: **E** ✅
+
+**Explanation**:
+
+It is possible to set priority for security rules within a range of **100 to 65,000**. The number 100 represents the highest priority, while the number 65,000 represents the lowest priority.
+
+- **Option A is incorrect.** The priority level cannot be 0 — it must be within the valid range of 100 to 65,000.
+- **Option B is incorrect.** The priority level cannot be 1 — it must be within the valid range of 100 to 65,000.
+- **Option C is incorrect.** While 10,000 is a valid priority value, it does not represent the highest priority. 100 is the highest.
+- **Option D is incorrect.** 65,000 indicates the **lowest** priority, not the highest.
+- **Option E is correct.** ✅ 100 specifies the highest priority for a security rule.
+
+> **Reference**: [Azure Firewall rule processing logic](https://learn.microsoft.com/en-us/azure/firewall/rule-processing)
+
 ### Practice Question: Rule Processing Order
 
 **Question**: Clarify the order in which rules/operations are executed in Azure Firewall, regardless of their collection priority, collection group, and policy inheritance. What is the correct sequence of application, network, and DNAT rules?
