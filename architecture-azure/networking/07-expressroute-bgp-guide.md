@@ -11,16 +11,17 @@ See [README](./README.md) for overview. See also [ExpressRoute Connectivity Mode
 - [2. ExpressRoute vs VPN Gateway](#2-expressroute-vs-vpn-gateway)
 - [3. How ExpressRoute Works (Step by Step)](#3-how-expressroute-works-step-by-step)
 - [4. ExpressRoute Circuit and Peering Types](#4-expressroute-circuit-and-peering-types)
-- [5. Connectivity Models](#5-connectivity-models)
-- [6. ExpressRoute Circuit Types and SKUs](#6-expressroute-circuit-types-and-skus)
-- [7. BGP: The Routing Engine Behind ExpressRoute](#7-bgp-the-routing-engine-behind-expressroute)
-- [8. ExpressRoute Global Reach](#8-expressroute-global-reach)
-- [9. Multi-Site Failover with BGP](#9-multi-site-failover-with-bgp)
-- [10. Common Architecture Patterns](#10-common-architecture-patterns)
-- [11. Routing Configuration Options](#11-routing-configuration-options)
-- [12. Key Takeaways](#12-key-takeaways)
-- [13. ExpressRoute PowerShell Management](#13-expressroute-powershell-management)
-- [14. References](#14-references)
+- [5. Multi-Subscription Circuit Sharing](#5-multi-subscription-circuit-sharing)
+- [6. Connectivity Models](#6-connectivity-models)
+- [7. ExpressRoute Circuit Types and SKUs](#7-expressroute-circuit-types-and-skus)
+- [8. BGP: The Routing Engine Behind ExpressRoute](#8-bgp-the-routing-engine-behind-expressroute)
+- [9. ExpressRoute Global Reach](#9-expressroute-global-reach)
+- [10. Multi-Site Failover with BGP](#10-multi-site-failover-with-bgp)
+- [11. Common Architecture Patterns](#11-common-architecture-patterns)
+- [12. Routing Configuration Options](#12-routing-configuration-options)
+- [13. Key Takeaways](#13-key-takeaways)
+- [14. ExpressRoute PowerShell Management](#14-expressroute-powershell-management)
+- [15. References](#15-references)
 
 ---
 
@@ -200,7 +201,114 @@ Using Microsoft Peering for Microsoft 365 has specific requirements beyond stand
 
 ---
 
-## 5. Connectivity Models
+## 5. Multi-Subscription Circuit Sharing
+
+A single ExpressRoute circuit can be shared across **multiple Azure subscriptions**. This is one of the most commonly tested concepts and is critical for enterprise environments where different departments or teams use separate subscriptions.
+
+### How it works
+
+An ExpressRoute circuit is provisioned in one subscription (the **circuit owner** subscription). Virtual networks (VNets) in **other subscriptions** can then be linked to that same circuit. The key factor is the **Azure Active Directory (Entra ID) tenant** — not the number of subscriptions, departments, or Azure regions.
+
+```mermaid
+graph TD
+    A[On-Premises Network] -- Single ExpressRoute Circuit --> B[Microsoft Edge]
+    B --> C[VNet in Subscription1<br/>IT & Research - West US]
+    B --> D[VNet in Subscription2<br/>Development & Testing - West US 2]
+    B --> E[VNet in Subscription3<br/>Distribution - West US]
+```
+
+### Same tenant vs cross-tenant linking
+
+| Scenario | Requirement | How |
+|----------|------------|-----|
+| **Same Azure AD tenant** | Subscriptions share the same tenant | Circuit owner grants the other subscriptions access; VNet owners link their VNets to the circuit directly |
+| **Cross-tenant** (different Azure AD tenants) | Subscriptions are in different tenants | Circuit owner generates an **authorization key**; VNet owner in the other tenant redeems the key to link their VNet |
+
+### What does NOT require additional circuits
+
+The following factors **do not** increase the number of ExpressRoute circuits required:
+
+| Factor | Requires additional circuit? |
+|--------|----------------------------|
+| Multiple Azure subscriptions (same tenant) | **No** — one circuit serves all |
+| Resources in different Azure regions (within SKU scope) | **No** — Standard/Premium circuits reach multiple regions |
+| Different departments using different subscriptions | **No** — organizational structure is irrelevant |
+| VNets in different resource groups | **No** — resource group doesn't affect connectivity |
+
+### What DOES require additional circuits
+
+| Factor | Requires additional circuit? |
+|--------|----------------------------|
+| Different on-premises locations needing local connectivity | **Yes** — each site needs its own circuit (use Global Reach to interconnect) |
+| Bandwidth exceeding a single circuit's capacity | **Yes** — provision additional circuits for more throughput |
+| Isolation requirements (regulatory/compliance) | **Possibly** — separate circuits for network isolation |
+
+### Circuit authorization process (cross-subscription)
+
+```
+Step 1: Circuit owner creates the ExpressRoute circuit in Subscription A
+
+Step 2: Circuit owner creates an authorization for the circuit
+         → Generates an authorization key
+
+Step 3: VNet owner in Subscription B uses the authorization key
+         to link their VNet gateway to the circuit
+
+Step 4: Both VNets (in Sub A and Sub B) now use the same circuit
+         to communicate with on-premises
+```
+
+### Limits
+
+| Circuit Bandwidth | Max VNet Links (Standard) | Max VNet Links (Premium) |
+|-------------------|--------------------------|-------------------------|
+| 50 Mbps | 10 | 10 |
+| 100 Mbps | 10 | 25 |
+| 200 Mbps | 10 | 25 |
+| 500 Mbps | 10 | 40 |
+| 1 Gbps | 10 | 50 |
+| 2 Gbps | 10 | 60 |
+| 5 Gbps | 10 | 75 |
+| 10 Gbps | 10 | 100 |
+
+> **Note**: The linked VNets can be in different subscriptions, different resource groups, and different Azure regions (with Standard or Premium SKU), as long as the circuit's SKU scope allows access to those regions.
+
+### Practice question: minimum ExpressRoute circuits for multiple subscriptions
+
+**Question**: Your company has an on-premises network and three Azure subscriptions: Subscription1, Subscription2, and Subscription3. The departments use the subscriptions as follows:
+
+| Department | Subscription |
+|------------|-------------|
+| IT | Subscription1 |
+| Research | Subscription1 |
+| Development | Subscription2 |
+| Testing | Subscription2 |
+| Distribution | Subscription3 |
+
+All resources are in either West US or West US 2 Azure regions. All subscriptions are under the same Azure AD tenant. You plan to connect all subscriptions to the on-premises network using ExpressRoute. What is the minimum number of ExpressRoute circuits required?
+
+- A) 1 ✅
+- B) 2
+- C) 3
+- D) 4
+- E) 5
+
+**Answer**: **A** ✅
+
+**Explanation**:
+
+- **Option A is correct.** ✅ A single ExpressRoute circuit can be shared across multiple Azure subscriptions as long as they are part of the same Azure Active Directory tenant. The number of subscriptions, departments, or Azure regions does not determine the number of circuits. VNets in Subscription1, Subscription2, and Subscription3 can all be linked to one circuit. West US and West US 2 are both in the North America geopolitical region, so even a Standard SKU circuit provides access to both regions.
+- **Options B, C, D, and E are incorrect.** The number of subscriptions (3), departments (5), or regions (2) does not require additional circuits. A single circuit with VNet links to each subscription is sufficient.
+
+> **Key takeaway**: The determining factor for ExpressRoute circuit count is **not** the number of subscriptions or regions — it is the Azure AD tenant boundary, bandwidth requirements, and physical on-premises locations.
+
+> **References**:
+> - [Link a VNet to an ExpressRoute circuit | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-howto-linkvnet-portal-resource-manager)
+> - [ExpressRoute FAQ | Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-faqs)
+
+---
+
+## 6. Connectivity Models
 
 There are four ways to physically connect to an ExpressRoute peering location:
 
@@ -215,7 +323,7 @@ There are four ways to physically connect to an ExpressRoute peering location:
 
 ---
 
-## 6. ExpressRoute Circuit Types and SKUs
+## 7. ExpressRoute Circuit Types and SKUs
 
 There are four ExpressRoute circuit types to choose from, each with different geographic scope, capacity, and cost implications:
 
@@ -337,7 +445,7 @@ ExpressRoute Standard provides access to all Azure regions within the **same geo
 
 ---
 
-## 7. BGP: The Routing Engine Behind ExpressRoute
+## 8. BGP: The Routing Engine Behind ExpressRoute
 
 ### What is BGP?
 
@@ -382,7 +490,7 @@ Your On-Premises Router              Microsoft Edge Router
 
 ---
 
-## 8. ExpressRoute Global Reach
+## 9. ExpressRoute Global Reach
 
 ### The problem
 
@@ -494,7 +602,7 @@ graph LR
 
 ---
 
-## 9. Multi-Site Failover with BGP
+## 10. Multi-Site Failover with BGP
 
 ### The scenario
 
@@ -530,7 +638,7 @@ HSRP and VRRP solve a different problem (making sure your LAN devices have a bac
 
 ---
 
-## 10. Common Architecture Patterns
+## 11. Common Architecture Patterns
 
 ### Pattern 1: Hub-and-Spoke with ExpressRoute
 
@@ -575,7 +683,7 @@ Site A (NY) ──ExpressRoute Circuit A──→ Microsoft Backbone ←──Ex
 
 ---
 
-## 11. Routing Configuration Options
+## 12. Routing Configuration Options
 
 | Method | Dynamic? | Auto Failover? | Best For |
 |--------|----------|----------------|----------|
@@ -587,18 +695,19 @@ Site A (NY) ──ExpressRoute Circuit A──→ Microsoft Backbone ←──Ex
 
 ---
 
-## 12. Key Takeaways
+## 13. Key Takeaways
 
 1. **ExpressRoute** provides a private, dedicated connection to Azure that bypasses the public internet — offering higher bandwidth, lower latency, and better reliability than VPN
 2. **Peering types** determine what you can reach: Private Peering for VNets, Microsoft Peering for Microsoft 365/Azure PaaS
 3. **BGP** is the required routing protocol — it enables dynamic route exchange and automatic failover
 4. **Global Reach** lets your on-premises sites communicate through the Microsoft backbone without needing a separate WAN
 5. **SKU choice matters**: Local for nearby regions (free egress), Standard for same geo, Premium for worldwide
-6. **Common pattern**: ExpressRoute as primary + VPN Gateway as failover, with BGP managing both paths
+6. **One circuit, many subscriptions**: A single ExpressRoute circuit can connect multiple Azure subscriptions under the same Azure AD tenant — the number of subscriptions, departments, or regions does not determine circuit count
+7. **Common pattern**: ExpressRoute as primary + VPN Gateway as failover, with BGP managing both paths
 
 ---
 
-## 13. ExpressRoute PowerShell Management
+## 14. ExpressRoute PowerShell Management
 
 Azure PowerShell provides cmdlets to manage ExpressRoute circuits programmatically.
 
@@ -636,7 +745,7 @@ Get-AzExpressRouteCircuitStats -ResourceGroupName "MyResourceGroup" `
 
 ---
 
-## 14. References
+## 15. References
 
 - [Azure ExpressRoute Documentation](https://learn.microsoft.com/en-us/azure/expressroute/)
 - [ExpressRoute Global Reach](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-global-reach)
