@@ -312,6 +312,27 @@ Remote Worker Laptop ←→ VPN Client ←→ Internet ←→ Azure VPN Gateway 
 | **Azure Active Directory** | Users authenticate with Azure AD credentials (OpenVPN only) | Cloud-native organizations using Azure AD |
 | **RADIUS Server** | Gateway delegates authentication to a RADIUS server, which can integrate with AD Domain Services | Enterprises using on-premises Active Directory domain credentials |
 
+> **Important — Azure AD Authentication Setup for P2S VPN:**
+> When configuring Azure AD (Entra ID) authentication for P2S VPN, you must register the **Azure VPN enterprise application** in your Azure AD tenant. This is the critical component that enables Azure AD-based authentication. The setup requires:
+>
+> 1. **Register the Azure VPN enterprise application** in your Azure AD tenant (App ID: `41b23e61-6c1e-4545-b367-cd054e0ed4b4`)
+> 2. **Grant admin consent** to the Azure VPN application so it can read user profiles and sign in users
+> 3. **Configure the VPN gateway** for P2S with OpenVPN tunnel type and Azure AD authentication (specifying Tenant, Audience, and Issuer)
+> 4. **Download and configure the Azure VPN Client** on user devices
+>
+> The enterprise application acts as the authorization and authentication gateway — it is **not** an access package, conditional access policy, or VPN certificate. Those serve different purposes:
+>
+> | Azure AD Component | Purpose | Used for P2S Azure AD Auth? |
+> |-------------------|---------|----------------------------|
+> | **Enterprise application** | Manages app registration, user/group assignment, and OAuth-based authentication for the VPN gateway | **Yes — required** |
+> | **Access package** | Part of Entitlement Management; manages access to groups, apps, and SharePoint sites | No |
+> | **Conditional access policy** | Enforces access controls based on conditions (location, device, risk) | Optional add-on, not the auth mechanism itself |
+> | **VPN certificate** | Used for certificate-based P2S authentication (different method) | No — separate authentication method |
+>
+> **Protocol requirement**: Azure AD authentication for P2S VPN works **only with OpenVPN protocol**. SSTP and IKEv2 do not support Azure AD authentication.
+>
+> See: [Configure an Azure AD tenant for P2S OpenVPN connections](https://learn.microsoft.com/en-us/azure/vpn-gateway/openvpn-azure-ad-tenant) | [Azure AD authorization for P2S](https://learn.microsoft.com/en-us/azure/vpn-gateway/openvpn-azure-ad-tenant-multi-app)
+
 > **Important — RADIUS + Active Directory Integration:**
 > When users need to authenticate to a P2S VPN using their **Active Directory domain credentials**, a **RADIUS server** is required. The Azure VPN Gateway does not communicate directly with an AD Domain Controller for P2S authentication. Instead, the flow is:
 >

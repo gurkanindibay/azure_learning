@@ -36,10 +36,12 @@ Azure VNet (10.0.0.0/16)
 
 ### P2S Authentication Methods
 - **Azure Certificate**: Client certificates validated by the gateway
-- **Azure Active Directory**: Azure AD credentials (OpenVPN only)
+- **Azure Active Directory**: Azure AD credentials (OpenVPN only) — requires registering the **Azure VPN enterprise application** in your Azure AD tenant
 - **RADIUS Server**: Integrates with on-premises Active Directory domain credentials
 
 > **Key Exam Point:** To authenticate P2S users with AD domain credentials, a **RADIUS server** is required. The VPN Gateway delegates authentication to the RADIUS server, which validates against the AD Domain Controller.
+
+> **Key Exam Point:** Azure AD authentication for P2S requires an **enterprise application** registered in Azure AD — not an access package, conditional access policy, or VPN certificate. See [VPN Gateway — P2S Azure AD Authentication](./05-azure-vpn-gateway.md#42-point-to-site-p2s-vpn) for full details.
 
 > **Key Exam Point:** After any network topology change (VNet peering, address space modification), **Windows P2S VPN clients must re-download and reinstall the VPN client configuration package**. Routes in the P2S client are static and do not auto-update. S2S connections are not affected. See [About P2S routing](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing).
 
