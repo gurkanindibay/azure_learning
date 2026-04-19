@@ -120,7 +120,91 @@ Provider VNet (Tenant A)              Consumer VNet (Tenant B)
 - Automatic Isolation: Each consumer's traffic is isolated; consumers cannot see each other
 - Approval Workflow: You can auto-approve or require manual approval
 
-### 1.5 DNS Configuration
+### 1.5 Private Endpoint Connection Management (Provider / Resource Owner)
+
+When a consumer creates a Private Endpoint to your resource (Azure PaaS service or your own Private Link Service), the **Private Link resource owner** has full control over the connection lifecycle. The resource owner can perform the following actions:
+
+| Action | Description |
+|--------|-------------|
+| **Review** | View all private endpoint connection details — connection name, state, consumer subscription, and the private endpoint resource ID |
+| **Approve** | Accept a pending private endpoint connection. Once approved, traffic can flow from the consumer's private endpoint to the provider's resource |
+| **Reject** | Deny a pending or even an already-approved private endpoint connection. A rejected connection prevents any data exchange |
+| **Delete** | Remove a private endpoint connection from **any state** (Pending, Approved, or Rejected). Deleting the connection on the provider side causes the consumer's private endpoint to enter a disconnected state |
+
+> **Exam Tip:** The Private Link resource owner can perform **all four actions** on private endpoint connections: review, approve, reject, and delete (from any state). This is a distinct set of capabilities from the consumer, who can only create or delete their own Private Endpoint resource.
+
+**Connection States:**
+
+```
+Consumer creates          Resource owner
+Private Endpoint          reviews request
+       │                        │
+       ▼                        ▼
+  ┌──────────┐    ┌───────────────────────────┐
+  │ Pending  │───▶│  Approve  │  Reject       │
+  └──────────┘    └─────┬─────────────┬───────┘
+                        │             │
+                        ▼             ▼
+                  ┌──────────┐  ┌──────────┐
+                  │ Approved │  │ Rejected │
+                  └────┬─────┘  └────┬─────┘
+                       │             │
+                       ▼             ▼
+                 ┌──────────────────────┐
+                 │  Delete (any state)  │
+                 └──────────────────────┘
+```
+
+**Connection State Transitions:**
+
+| State | Consumer Can | Resource Owner Can |
+|-------|-------------|-------------------|
+| **Pending** | Delete their PE | Approve, Reject, or Delete |
+| **Approved** | Delete their PE, send traffic | Reject or Delete |
+| **Rejected** | Delete their PE | Delete |
+| **Disconnected** | Delete their PE | — (connection removed on provider side) |
+
+**Approval Modes:**
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| **Auto-Approval** | Connections from specified subscriptions are automatically approved | Trusted internal subscriptions, same-organization consumers |
+| **Manual Approval** | Resource owner must explicitly approve each connection | Cross-tenant or external consumers, stricter security requirements |
+
+**Azure CLI — Managing Private Endpoint Connections:**
+
+```bash
+# List all private endpoint connections on a resource
+az network private-endpoint-connection list \
+  --resource-group MyRG \
+  --name MyStorageAccount \
+  --type Microsoft.Storage/storageAccounts
+
+# Approve a pending connection
+az network private-endpoint-connection approve \
+  --resource-group MyRG \
+  --resource-name MyStorageAccount \
+  --name MyPEConnection \
+  --type Microsoft.Storage/storageAccounts
+
+# Reject a connection
+az network private-endpoint-connection reject \
+  --resource-group MyRG \
+  --resource-name MyStorageAccount \
+  --name MyPEConnection \
+  --type Microsoft.Storage/storageAccounts
+
+# Delete a connection (works from any state)
+az network private-endpoint-connection delete \
+  --resource-group MyRG \
+  --resource-name MyStorageAccount \
+  --name MyPEConnection \
+  --type Microsoft.Storage/storageAccounts
+```
+
+**Reference:** [Manage Private Endpoint connections | Microsoft Learn](https://learn.microsoft.com/en-us/azure/private-link/manage-private-endpoint)
+
+### 1.6 DNS Configuration
 
 Proper DNS configuration is **critical** for private endpoints. The service FQDN must resolve to the private IP address.
 
@@ -154,7 +238,7 @@ CNAME: mystorageaccount.privatelink.blob.core.windows.net
 Private DNS Zone resolves to: 10.0.1.5 (private endpoint IP)
 ```
 
-### 1.6 DNS for Hybrid/On-Premises Access
+### 1.7 DNS for Hybrid/On-Premises Access
 
 When on-premises clients need to access Azure PaaS services through Private Endpoints, DNS resolution requires special configuration.
 
@@ -205,7 +289,7 @@ On-Premises DNS Server
 - Not required when both resources are in the same VNet
 - Adds complexity for pure Azure-to-Azure scenarios
 
-### 1.7 Supported Services
+### 1.8 Supported Services
 
 Private Endpoints are supported for:
 
@@ -220,7 +304,7 @@ Private Endpoints are supported for:
 | **Integration** | App Configuration, Event Grid |
 | **Compute** | App Service, Functions (Premium plan) |
 
-### 1.8 Benefits
+### 1.9 Benefits
 
 | Benefit | Description |
 |---------|-------------|
@@ -230,7 +314,7 @@ Private Endpoints are supported for:
 | **Cross-region** | Access services in different regions privately |
 | **No Public IP Required** | Resources don't need public IPs to access PaaS services |
 
-### 1.9 Common Scenarios
+### 1.10 Common Scenarios
 
 **Securing with Private Endpoint:**
 
