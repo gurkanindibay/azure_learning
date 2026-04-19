@@ -36,9 +36,12 @@
     - [3.7.1 Ensuring Traffic Stays on Microsoft Backbone Network](#371-ensuring-traffic-stays-on-microsoft-backbone-network)
 - [4. Service Endpoints vs Private Endpoints](#4-service-endpoints-vs-private-endpoints)
   - [4.1 Service Endpoints](#41-service-endpoints)
-  - [4.2 Comparison Table](#42-comparison-table)
-  - [4.3 When to Use Each](#43-when-to-use-each)
-  - [4.4 Practice Question: Restricting Storage Account Access to a Specific VNet](#44-practice-question-restricting-storage-account-access-to-a-specific-vnet)
+  - [4.2 Service Endpoint Policies](#42-service-endpoint-policies)
+  - [4.3 What Service Endpoints Do NOT Provide](#43-what-service-endpoints-do-not-provide)
+  - [4.4 Comparison Table](#44-comparison-table)
+  - [4.5 When to Use Each](#45-when-to-use-each)
+  - [4.6 Practice Question: Restricting Storage Account Access to a Specific VNet](#46-practice-question-restricting-storage-account-access-to-a-specific-vnet)
+  - [4.7 Practice Question: Scenarios That Benefit from Service Endpoints](#47-practice-question-scenarios-that-benefit-from-service-endpoints)
 - [5. VPN vs Private Link](#5-vpn-vs-private-link)
   - [5.1 Understanding the Fundamental Difference](#51-understanding-the-fundamental-difference)
   - [5.2 Azure VPN Gateway](#52-azure-vpn-gateway)
@@ -1855,7 +1858,60 @@ Your on-premises network contains a VPN gateway. You have an Azure subscription 
 **Key Takeaway:**
 > Service endpoints ensure that traffic between Azure resources (VM1) and Azure services (storage1) stays on the Microsoft backbone network, providing better security and performance. This is the correct solution when you need to optimize and secure traffic between Azure VMs and Azure PaaS services.
 
-### 4.2 Comparison Table
+### 4.2 Service Endpoint Policies
+
+**Service Endpoint Policies** allow you to filter virtual network traffic to Azure services, restricting access to only specific Azure service resources.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Your VNet (10.0.0.0/16)                      │
+│  ┌─────────────────────────────┐                                │
+│  │   Subnet                    │                                │
+│  │   Service Endpoint:         │                                │
+│  │   Microsoft.Storage         │                                │
+│  │                             │     ┌────────────────────┐     │
+│  │   Service Endpoint Policy:  │────▶│ storageAccountA ✅  │     │
+│  │   Allow only storageAccountA│  ✗  │ storageAccountB ❌  │     │
+│  │                             │     └────────────────────┘     │
+│  └─────────────────────────────┘                                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Characteristics:**
+- Provide **granular control** over which specific Azure service resources are accessible from your VNet
+- Help prevent **data exfiltration** by restricting outbound access to only approved Azure resources
+- Currently supported for **Azure Storage** (with expanding service support)
+- Applied at the **subnet level** alongside service endpoints
+- Can filter by specific resource instances, not just service type
+
+**How Service Endpoint Policies Work:**
+
+1. A service endpoint is enabled on the subnet (e.g., `Microsoft.Storage`)
+2. A service endpoint policy is created and associated with the subnet
+3. The policy defines which specific Azure resources (e.g., specific storage accounts) are allowed
+4. Traffic to any other resources of that service type is denied
+
+**Use Cases:**
+- Restrict a subnet to only access **approved storage accounts**, preventing users from exfiltrating data to unauthorized storage accounts
+- Enforce organizational policies on which Azure service instances can be reached from specific subnets
+- Complement NSGs by adding service-level filtering that NSGs cannot provide
+
+> **Important**: Service Endpoint Policies provide data exfiltration protection at the service resource level, which is a significant improvement over basic Service Endpoints that only secure access at the service type level.
+
+### 4.3 What Service Endpoints Do NOT Provide
+
+Understanding what Service Endpoints **cannot** do is equally important for exam preparation:
+
+| Misconception | Reality |
+|---------------|---------|
+| **End-to-end encryption** | Service Endpoints optimize the routing path over the Azure backbone but do **not** provide encryption. Encryption in transit depends on the protocol used (e.g., HTTPS/TLS) and is configured at the service level, not by Service Endpoints. |
+| **Custom routing** | Service Endpoints do **not** allow you to apply custom routing to traffic destined for Azure services. In fact, enabling a Service Endpoint adds a system route with the service's public IP prefixes that **overrides** any custom (UDR) routes for that traffic. |
+| **On-premises access** | Service Endpoints only work for traffic originating from within the VNet. On-premises traffic cannot use Service Endpoints (use Private Endpoints instead). |
+| **Disabling public access** | Service Endpoints still use the service's public IP address. They restrict **who** can access the service, not the endpoint itself. |
+
+> **Exam Tip**: If a question mentions "custom routing to Azure services" or "end-to-end encryption", Service Endpoints are **not** the correct answer.
+
+### 4.4 Comparison Table
 
 | Feature | Service Endpoint | Private Endpoint |
 |---------|------------------|------------------|
@@ -1868,7 +1924,7 @@ Your on-premises network contains a VPN gateway. You have an Azure subscription 
 | **Data Exfiltration Protection** | Limited (entire service) | Strong (specific resource) |
 | **Disable Public Access** | No (public IP still used) | Yes (can fully disable) |
 
-### 4.3 When to Use Each
+### 4.5 When to Use Each
 
 **Use Service Endpoints when:**
 - Simple setup is needed
@@ -1883,7 +1939,7 @@ Your on-premises network contains a VPN gateway. You have an Azure subscription 
 - Data exfiltration protection is critical
 - Compliance requires no public IP exposure
 
-### 4.4 Practice Question: Restricting Storage Account Access to a Specific VNet
+### 4.6 Practice Question: Restricting Storage Account Access to a Specific VNet
 
 **Question:** You want to ensure that an Azure Storage account is only accessible from a specific Azure virtual network without exposing the storage account to the public internet. Which Azure feature should you use?
 
@@ -1904,6 +1960,26 @@ Your on-premises network contains a VPN gateway. You have an Azure subscription 
 | **E** | ❌ Incorrect | NSGs filter traffic to/from Azure resources but cannot restrict PaaS service access to a specific VNet. |
 
 > **Exam Tip**: When the question says "without exposing to the public internet", the answer is **Private Link / Private Endpoint**, not Service Endpoint. Service Endpoints secure the route but do not eliminate public IP exposure.
+
+### 4.7 Practice Question: Scenarios That Benefit from Service Endpoints
+
+**Question:** You are designing a secure Azure architecture. Which of the following scenarios would benefit from the implementation of Azure Service Endpoints?
+
+- **A)** Restricting access to Azure Storage accounts only from a specific subnet within your VNet
+- **B)** Enabling end-to-end encryption for data in transit to Azure services
+- **C)** Applying custom routing to network traffic destined for Azure services
+- **D)** Implementing a policy that filters outbound traffic from a subnet to an Azure service based on attributes like target service, region, etc.
+
+**Correct Answers: A and D**
+
+| Option | Verdict | Explanation |
+|--------|---------|-------------|
+| **A** | ✅ Correct | Service Endpoints allow you to secure Azure service resources to only a specific subnet or set of subnets within your virtual network. By enabling a service endpoint on a subnet and configuring the storage account firewall to allow only that VNet/subnet, you restrict access to that specific subnet. |
+| **B** | ❌ Incorrect | Service Endpoints do **not** provide end-to-end encryption. They optimize the routing path to use the Azure backbone network, but encryption in transit is handled by the application-layer protocol (e.g., HTTPS/TLS), not by Service Endpoints. |
+| **C** | ❌ Incorrect | Service Endpoints do **not** enable custom routing. In fact, enabling a Service Endpoint creates a **system route** with the Azure service's public IP prefixes that takes priority over any custom User-Defined Routes (UDRs). This means Service Endpoints actually **override** custom routing for traffic destined to the service. |
+| **D** | ✅ Correct | **Service Endpoint Policies** extend Service Endpoints by providing granular filtering of outbound VNet traffic to Azure services. They allow you to restrict which specific Azure resources (e.g., specific storage accounts) can be accessed from a subnet, filtering based on attributes like the target service resource. |
+
+> **Key Takeaway**: Service Endpoints secure access (who can reach the service) and optimize routing (Azure backbone). They do **not** encrypt traffic or provide custom routing. Service Endpoint Policies add granular resource-level filtering on top of Service Endpoints.
 
 ---
 
