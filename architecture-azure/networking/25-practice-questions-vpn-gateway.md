@@ -109,6 +109,50 @@ The question has three key requirements that drive the answer:
 
 ---
 
+## Question 3: Valid VPN types for virtual network gateway
+
+### Scenario
+
+While creating the virtual network gateway for a VPN configuration, you need to specify a VPN type. Which of the following are valid VPN types that you can choose? (Select all applicable options)
+
+- A) PolicyBased
+- B) IntervalBased
+- C) RouteBased
+- D) LinkBased
+- E) StatusBased
+
+### Answer
+
+**Correct Answers: A, C**
+
+PolicyBased and RouteBased are the only two valid VPN types.
+
+### Explanation
+
+When creating a Virtual Network Gateway with gateway type **Vpn**, you must specify a **VPN type**. Azure supports exactly two VPN types:
+
+- **PolicyBased** — Encrypts and directs packets through IPsec tunnels based on traffic selectors (combinations of source/destination address prefixes). Uses IKEv1 only. Limited to 1 S2S tunnel, Basic SKU only, and does not support P2S, VNet-to-VNet, BGP, or active-active configurations. Previously called "static routing."
+- **RouteBased** — Uses IP forwarding/routing table to direct packets into tunnel interfaces. Supports IKEv1 and IKEv2, multiple S2S tunnels, P2S, VNet-to-VNet, BGP, active-active, and ExpressRoute coexistence. Previously called "dynamic routing." **Recommended for most scenarios.**
+
+**Why the other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B) IntervalBased** | Not a valid VPN type. Does not exist in Azure. |
+| **D) LinkBased** | Not a valid VPN type. Does not exist in Azure. |
+| **E) StatusBased** | Not a valid VPN type. Does not exist in Azure. |
+
+### Key concept
+
+> **VPN type selection rule**: The only valid values for the `--vpn-type` parameter (or the "VPN type" portal setting) are **PolicyBased** and **RouteBased**. RouteBased is recommended unless a legacy on-premises VPN device requires PolicyBased. The choice impacts which features are available (P2S, multi-site, BGP, active-active, etc.).
+
+### Reference
+
+- [VPN Gateway configuration settings — VPN type | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#vpntype)
+- [Azure VPN Gateway — VPN Types](./05-azure-vpn-gateway.md#23-vpn-types-policybased-vs-routebased)
+
+---
+
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
