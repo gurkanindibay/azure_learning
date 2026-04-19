@@ -318,6 +318,68 @@ graph LR
     B -- ExpressRoute --> D
 ```
 
+### How Global Reach works (step by step)
+
+To connect two geographically distributed offices (e.g., Amsterdam and California):
+
+1. **Each location needs a local connectivity/service provider** — e.g., a provider in Amsterdam (like Equinix Amsterdam) and a different provider in California (like Megaport or Equinix Silicon Valley)
+2. **Each location establishes its own ExpressRoute circuit** through its local service provider to a nearby Microsoft Enterprise Edge (MSEE) peering location
+3. **Enable Global Reach** to cross-connect the two ExpressRoute circuits over the Microsoft global backbone network
+4. Traffic between the two offices now flows: `Amsterdam → Local Provider → MSEE → Microsoft Backbone → MSEE → Local Provider → California`
+
+```mermaid
+graph LR
+    subgraph Amsterdam Office
+        A[On-Prem Network]
+    end
+
+    subgraph California Office
+        B[On-Prem Network]
+    end
+
+    subgraph "Local Provider (Amsterdam)"
+        C[Service Provider<br/>e.g., Equinix Amsterdam]
+    end
+
+    subgraph "Local Provider (California)"
+        D[Service Provider<br/>e.g., Megaport West US]
+    end
+
+    subgraph Microsoft Global Backbone
+        E[ExpressRoute Circuit 1<br/>West Europe MSEE]
+        F[ExpressRoute Circuit 2<br/>West US MSEE]
+        G[Global Reach<br/>Cross-connects circuits]
+        E --- G
+        G --- F
+    end
+
+    A --> C --> E
+    B --> D --> F
+```
+
+> **Key insight**: Each branch office must use its own local service provider to establish a separate ExpressRoute circuit. Global Reach then connects these circuits over the Microsoft backbone — it does **not** replace the need for local providers.
+
+### Prerequisites and requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **ExpressRoute circuits** | Each site must have its own ExpressRoute circuit |
+| **Local service provider** | A connectivity provider at each location (can be different providers) |
+| **ExpressRoute Premium** | Required if circuits are in different geopolitical regions (e.g., Europe ↔ North America) |
+| **Circuit SKU** | Supported on Standard and Premium SKUs (not Local SKU) |
+| **Private peering** | Both circuits must have Azure Private Peering configured |
+| **/29 subnet** | A /29 address space for Global Reach link (provided by you, not overlapping with VNet or on-premises ranges) |
+| **Regional availability** | Not available in all Azure regions — check [Microsoft docs](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-global-reach#availability) for current list |
+
+### Common misconceptions
+
+| Misconception | Reality |
+|---------------|---------|
+| "Just enable Global Reach on local providers" | Global Reach connects **ExpressRoute circuits**, not providers directly. Each site needs its own circuit first. |
+| "Use VPN with Global Reach for site-to-site" | Global Reach does **not** use VPN. It cross-connects ExpressRoute circuits over the Microsoft backbone — no encryption needed because traffic never leaves the private network. |
+| "One ExpressRoute circuit can serve all offices" | Each office location needs its own circuit through a **local** service provider. Global Reach then bridges them. |
+| "Global Reach replaces the need for local providers" | No — local providers are still required at each location to establish the ExpressRoute circuits that Global Reach connects. |
+
 ### What Global Reach enables
 
 | Without Global Reach | With Global Reach |
@@ -332,6 +394,7 @@ graph LR
 - **Lower latency** than internet routing between offices
 - **Simplified topology** — no need for a separate WAN between sites
 - **Leverages existing circuits** — just enable Global Reach as an add-on
+- **Supplements provider WAN** — works alongside (or replaces) your service provider's WAN for branch-to-branch traffic
 
 ---
 
