@@ -153,6 +153,64 @@ When creating a Virtual Network Gateway with gateway type **Vpn**, you must spec
 
 ---
 
+## Question 4: Correct sequence for IPsec/IKE policy configuration on S2S VPN
+
+### Scenario
+
+As the system administrator, you are responsible for creating and configuring the IPsec/IKE policy for a site-to-site VPN connection. You will need to follow the steps outlined below (not necessarily in the correct sequence) to develop and update the policy:
+
+a. Create a local network gateway for the cross-premises connection.
+b. Create a virtual network and a VPN gateway.
+c. Create an IPsec/IKE policy by selecting appropriate algorithms and parameters.
+d. Set up an IPsec connection using the IPsec/IKE policy.
+e. Add, update, or remove an IPsec/IKE policy for an existing connection.
+
+**Place the above steps in the correct sequence.**
+
+- A) b-a-c-d-e
+- B) a-b-c-d-e
+- C) a-b-d-c-e
+- D) a-c-d-e-b
+- E) b-a-d-c-e
+
+### Answer
+
+**Correct Answer: A**
+
+b-a-c-d-e
+
+### Explanation
+
+The correct sequence follows a logical dependency chain — each step requires the resources from previous steps to exist:
+
+| Step | Action | Why This Order |
+|------|--------|----------------|
+| **1 (b)** | Create a virtual network and a VPN gateway | The VNet and VPN gateway must exist first. The VPN gateway is deployed in the GatewaySubnet and requires a public IP — it is the Azure-side anchor for any VPN connection. |
+| **2 (a)** | Create a local network gateway | The local network gateway represents the on-premises VPN device in Azure. It stores the on-premises public IP and address ranges. It must exist before a connection can reference it. |
+| **3 (c)** | Create an IPsec/IKE policy | The policy object (encryption algorithms, integrity algorithms, DH groups, PFS groups, SA lifetimes) must be defined before it can be attached to a connection. |
+| **4 (d)** | Create the S2S VPN connection with the policy | The connection resource links the VPN gateway and local network gateway together. The pre-defined IPsec/IKE policy is attached at creation time. |
+| **5 (e)** | Add, update, or remove an IPsec/IKE policy | Policy modifications happen on an already-existing connection. You can update the algorithms/parameters or remove the custom policy entirely (reverting to Azure defaults). |
+
+**Why the other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B) a-b-c-d-e** | Creates the local network gateway before the VNet/VPN gateway. While technically possible, the standard workflow creates the VNet and VPN gateway first since they form the Azure-side foundation. |
+| **C) a-b-d-c-e** | Creates the connection (d) before defining the IPsec/IKE policy (c). You cannot attach a policy to a connection if the policy hasn't been created yet. |
+| **D) a-c-d-e-b** | Creates the VPN gateway last (b), which is impossible — you need the VPN gateway to create the connection (d). |
+| **E) b-a-d-c-e** | Creates the connection (d) before the IPsec/IKE policy (c). The policy must exist before it can be referenced during connection creation. |
+
+### Key concept
+
+> **IPsec/IKE policy configuration workflow**: The dependency chain is VNet/VPN Gateway → Local Network Gateway → IPsec/IKE Policy → S2S Connection → Policy Updates. Each step depends on the output of the previous step. The VPN gateway and local network gateway are the two endpoints of a connection, the policy defines the encryption parameters, and policy updates are lifecycle operations on existing connections.
+
+### Reference
+
+- [Configure IPsec/IKE policy for S2S VPN or VNet-to-VNet connections | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/ipsec-ike-policy-howto)
+- [Azure VPN Gateway — IPsec/IKE Protocols](./05-azure-vpn-gateway.md#81-ipsecike-protocols)
+
+---
+
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)

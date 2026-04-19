@@ -599,10 +599,67 @@ IKE Phase 2 (Quick Mode):
 
 **Custom IPsec/IKE Policies:**
 
-You can configure custom policies for specific security requirements:
+Azure VPN Gateway allows you to configure **custom IPsec/IKE policies** on S2S VPN and VNet-to-VNet connections, rather than using Azure's default policy sets. This gives you precise control over the cryptographic algorithms and key strengths used for a connection.
+
+#### Supported Algorithms and Parameters
+
+| Parameter | Supported Values |
+|-----------|-----------------|
+| **IKE Encryption** | GCMAES256, GCMAES128, AES256, AES192, AES128, DES3, DES |
+| **IKE Integrity** | SHA384, SHA256, SHA1, MD5 |
+| **DH Group** | DHGroup24, ECP384, ECP256, DHGroup14, DHGroup2048, DHGroup2, DHGroup1 |
+| **IPsec Encryption** | GCMAES256, GCMAES192, GCMAES128, AES256, AES192, AES128, DES3, DES, None |
+| **IPsec Integrity** | GCMAES256, GCMAES192, GCMAES128, SHA256, SHA1, MD5 |
+| **PFS Group** | PFS24, ECP384, ECP256, PFS2048, PFS2, PFS1, None |
+| **SA Lifetime** | Minimum 300 seconds / maximum 102,400,000 KB |
+
+> **Important:** When using GCMAES for IPsec Encryption, you must select the same GCMAES algorithm and key length for IPsec Integrity (e.g., GCMAES256 for both). You cannot mix GCMAES with non-GCMAES integrity algorithms.
+
+#### Step-by-Step Workflow: Configure IPsec/IKE Policy for S2S VPN
+
+The correct sequence for creating and configuring a custom IPsec/IKE policy on a site-to-site VPN connection is:
+
+```
+Step 1: Create a VNet and a VPN Gateway
+     ↓
+Step 2: Create a Local Network Gateway (represents on-premises)
+     ↓
+Step 3: Create an IPsec/IKE policy (select algorithms & parameters)
+     ↓
+Step 4: Create the S2S VPN connection with the IPsec/IKE policy attached
+     ↓
+Step 5: Add, update, or remove IPsec/IKE policy on an existing connection
+```
+
+> **Key Insight:** You must create the VNet and VPN gateway **before** the local network gateway because the gateway deployment establishes the GatewaySubnet and public IP. The IPsec/IKE policy object must be created **before** the connection so it can be referenced during connection creation. Policy updates happen **after** the connection exists.
+
+**Full PowerShell workflow:**
 
 ```powershell
-# Example: Configure custom IPsec policy
+# ── Step 1: Create VNet and VPN Gateway ──
+$subnet = New-AzVirtualNetworkSubnetConfig -Name "Subnet1" -AddressPrefix "10.0.1.0/24"
+$gwSubnet = New-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -AddressPrefix "10.0.255.0/27"
+
+$vnet = New-AzVirtualNetwork -Name "MyVNet" -ResourceGroupName "MyRG" `
+  -Location "EastUS" -AddressPrefix "10.0.0.0/16" -Subnet $subnet, $gwSubnet
+
+$gwSubnetRef = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet
+$gwPip = New-AzPublicIpAddress -Name "VpnGatewayPIP" -ResourceGroupName "MyRG" `
+  -Location "EastUS" -AllocationMethod Dynamic
+
+$gwIpConfig = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig" `
+  -SubnetId $gwSubnetRef.Id -PublicIpAddressId $gwPip.Id
+
+$vpnGateway = New-AzVirtualNetworkGateway -Name "MyVpnGateway" -ResourceGroupName "MyRG" `
+  -Location "EastUS" -IpConfigurations $gwIpConfig -GatewayType Vpn `
+  -VpnType RouteBased -GatewaySku VpnGw1
+
+# ── Step 2: Create Local Network Gateway ──
+$localGateway = New-AzLocalNetworkGateway -Name "OnPremGateway" -ResourceGroupName "MyRG" `
+  -Location "EastUS" -GatewayIpAddress "203.0.113.10" `
+  -AddressPrefix "192.168.0.0/16"
+
+# ── Step 3: Create Custom IPsec/IKE Policy ──
 $ipsecPolicy = New-AzIpsecPolicy `
   -IkeEncryption AES256 `
   -IkeIntegrity SHA384 `
@@ -613,11 +670,39 @@ $ipsecPolicy = New-AzIpsecPolicy `
   -SALifeTimeSeconds 27000 `
   -SADataSizeKilobytes 102400000
 
-Set-AzVirtualNetworkGatewayConnection `
-  -Name "MyS2SConnection" `
-  -ResourceGroupName "MyRG" `
+# ── Step 4: Create S2S Connection with IPsec/IKE Policy ──
+$connection = New-AzVirtualNetworkGatewayConnection -Name "MyS2SConnection" `
+  -ResourceGroupName "MyRG" -Location "EastUS" `
+  -VirtualNetworkGateway1 $vpnGateway `
+  -LocalNetworkGateway2 $localGateway `
+  -ConnectionType IPsec `
+  -SharedKey "YourPreSharedKey123!" `
   -IpsecPolicies $ipsecPolicy
+
+# ── Step 5: Update IPsec/IKE Policy on Existing Connection ──
+$updatedPolicy = New-AzIpsecPolicy `
+  -IkeEncryption AES256 `
+  -IkeIntegrity SHA256 `
+  -DhGroup DHGroup14 `
+  -IpsecEncryption GCMAES256 `
+  -IpsecIntegrity GCMAES256 `
+  -PfsGroup PFS2048 `
+  -SALifeTimeSeconds 14400 `
+  -SADataSizeKilobytes 102400000
+
+Set-AzVirtualNetworkGatewayConnection `
+  -VirtualNetworkGatewayConnection $connection `
+  -IpsecPolicies $updatedPolicy
+
+# ── Remove IPsec/IKE Policy (revert to Azure defaults) ──
+Set-AzVirtualNetworkGatewayConnection `
+  -VirtualNetworkGatewayConnection $connection `
+  -IpsecPolicies @()
 ```
+
+> **Exam Tip:** The correct step sequence is **b → a → c → d → e** (VNet/VPN Gateway → Local Network Gateway → Create IPsec/IKE Policy → Create S2S Connection with Policy → Update/Remove Policy). You cannot create a connection before both gateways exist, and you cannot attach a policy that hasn't been defined yet.
+
+**Reference:** [Configure IPsec/IKE policy for S2S VPN or VNet-to-VNet connections | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/ipsec-ike-policy-howto)
 
 ### 8.2 BGP Support
 
