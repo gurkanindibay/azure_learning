@@ -36,7 +36,7 @@ Follow the numbered guides in order, or jump to a specific topic.
 
 | # | Topic | Description |
 |---|-------|-------------|
-| 12 | [Security Services Comparison](12-network-security-services-comparison.md) | NSG vs ASG vs Firewall vs WAF vs Private Link |
+| 12 | [Security Services Comparison](12-network-security-services-comparison.md) | NSG vs ASG vs Firewall vs WAF vs Private Link + Sentinel/SIEM |
 | 13 | [Azure Firewall](13-azure-firewall-overview.md) | Policy hierarchy, rule processing, FQDN filtering |
 
 ### Monitoring
