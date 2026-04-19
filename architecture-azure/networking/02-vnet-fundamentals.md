@@ -1467,6 +1467,9 @@ Effective routes are the **consolidated set of routes** Azure evaluates when det
 - System routes (automatically created)
 - Custom routes from associated route tables
 - Routes from BGP (if using ExpressRoute/VPN)
+- Routes propagated from on-premises networks through an Azure VPN gateway via BGP (Border Gateway Protocol)
+
+> **💡 Key Insight**: Viewing effective routes for each NIC is the **recommended first step** when diagnosing VM routing problems. It gives you a complete picture of all active routes — system, custom, and BGP-propagated — that determine how traffic flows from that VM.
 
 **Why Check Effective Routes?**
 
@@ -1492,6 +1495,14 @@ az network nic show-effective-route-table \
   --resource-group myResourceGroup \
   --name myNIC \
   --output table
+```
+
+**Azure PowerShell Method:**
+```powershell
+# Get effective routes for a NIC
+Get-AzEffectiveRouteTable `
+  -ResourceGroupName myResourceGroup `
+  -NetworkInterfaceName myNIC
 ```
 
 **Route Matching and Precedence:**
@@ -1552,6 +1563,41 @@ The custom route table was not properly associated to Subnet A, so only system r
 4. Verify NSG rules allow traffic to NVA
 5. Re-check effective routes
 ```
+
+**Practice Question: Initial Step to Diagnose VM Connectivity**
+
+**Question:**
+
+One of your colleagues is having trouble connecting to a specific virtual machine in their Azure virtual network. They have approached you for help, and you want to diagnose the issue. What would be your initial step to start the diagnosis?
+
+- A. For each resource, set up a static IP address
+- B. Configure each resource to have a dynamic IP address
+- C. To control the traffic flow, you can use forced tunneling
+- D. To see the active network interface card routes, you can view the effective routes for each NIC ✅
+
+**Answer: D**
+
+**Explanation:**
+
+To diagnose a routing problem in a virtual machine, the first step is to check the **effective routes** for all network interfaces within a subnet. Effective routes comprise:
+- Routes you create (user-defined routes)
+- Azure default/system routes
+- Routes propagated from your on-premises network through an Azure VPN gateway via **BGP (Border Gateway Protocol)**
+
+You can view the effective routes for each NIC using:
+- **Azure Portal**: VM → Networking → NIC → Support + Troubleshooting → Effective Routes
+- **Azure PowerShell**: `Get-AzEffectiveRouteTable`
+- **Azure CLI**: `az network nic show-effective-route-table`
+
+**Why other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|--------------|
+| A. Set up static IPs | Changing IP addressing does not help diagnose connectivity issues |
+| B. Configure dynamic IPs | Changing IP addressing does not help diagnose connectivity issues |
+| C. Use forced tunneling | Forced tunneling controls traffic flow by redirecting internet-bound traffic to on-premises; it is a configuration action, not a diagnostic step |
+
+> **Reference**: [Diagnose a virtual machine routing problem | Microsoft Learn](https://learn.microsoft.com/en-us/azure/virtual-network/diagnose-network-routing-problem)
 
 ### 9.4 Azure Route Server
 
