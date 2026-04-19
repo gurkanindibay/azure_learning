@@ -116,6 +116,54 @@ There are two types of custom rules that can be used for access control in a WAF
 
 > **Reference**: [Web application firewall custom rule for Azure Front Door | Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/waf-front-door-custom-rules)
 
+#### WAF integration with Azure services
+
+A key strength of Azure WAF is its ability to integrate with other Azure services to provide a **comprehensive, layered security approach**. This is especially important for workloads handling sensitive data (healthcare, financial, government).
+
+| Integration | What it provides |
+|-------------|-----------------|
+| **Azure Application Gateway** | Regional Layer 7 proxy — WAF inspects HTTP/HTTPS traffic before it reaches backend services. Supports URL-based routing, TLS termination, and session affinity alongside WAF rules. |
+| **Azure Front Door** | Global Layer 7 entry point — WAF policies protect against attacks at the edge, closest to the attacker, before traffic reaches the origin region. |
+| **Microsoft Defender for Cloud** | Provides security posture management and threat protection. Monitors WAF logs for anomalies, generates security alerts, and maps findings to compliance frameworks (HIPAA, PCI DSS, SOC 2). |
+| **Azure Monitor / Log Analytics** | Centralized logging of WAF events (blocked requests, rule matches, bot detections). Enables custom alerts, dashboards, and long-term retention for audit trails. |
+| **Microsoft Sentinel** | Ingests WAF logs as a data source for SIEM correlation — links web attack patterns with identity, network, and endpoint signals for advanced threat hunting. |
+| **Azure DDoS Protection** | Works alongside WAF — DDoS Protection handles volumetric L3/L4 attacks while WAF handles L7 application-layer attacks. |
+
+> **Why integration matters**: No single security feature (custom rules, autoscaling, etc.) is sufficient on its own. For workloads with regulatory requirements — such as healthcare systems subject to **HIPAA** — integrating WAF with Defender for Cloud, Sentinel, and monitoring services creates the holistic security posture required for compliance.
+
+#### WAF and compliance frameworks
+
+WAF itself does not certify compliance, but it is a critical building block in architectures that must meet regulatory standards:
+
+| Compliance Framework | Scope | WAF role |
+|---------------------|-------|----------|
+| **HIPAA** (Health Insurance Portability and Accountability Act) | Protects the privacy and security of health information (PHI) | WAF protects web-facing healthcare applications from exploits that could expose patient data. Integration with Defender for Cloud helps demonstrate compliance controls. |
+| **PCI DSS** (Payment Card Industry Data Security Standard) | Protects cardholder data in payment processing | WAF satisfies PCI DSS Requirement 6.6 (protect public-facing web applications). Relevant for payment portals, not healthcare-specific scenarios. |
+| **SOC 2** | Trust service criteria for service organizations | WAF logging and monitoring contribute to the Security and Availability criteria. |
+
+> **Key distinction**: HIPAA applies to healthcare / patient data. PCI DSS applies to payment card data. When a scenario involves sensitive **patient data**, HIPAA compliance is the relevant framework — not PCI DSS.
+
+#### Practice question: WAF for healthcare — most crucial feature
+
+**Question**: A company is building a healthcare management system on Azure that processes sensitive patient data. They deploy a Web Application Firewall (WAF) to protect the application. Which WAF feature is the **most crucial** for this scenario?
+
+- A) Customizable rule sets
+- B) Autoscaling
+- C) Integrating with other Azure services ✅
+- D) PCI DSS compliance
+
+**Answer**: **C** ✅
+
+**Explanation**:
+
+- **Option A is incorrect.** Customizable rule sets protect against common web exploits (SQL injection, XSS), but alone they do not provide the comprehensive security posture required for a healthcare system handling sensitive patient data.
+- **Option B is incorrect.** Autoscaling ensures the WAF can handle traffic spikes, maintaining high availability. While important for operations, it is not directly related to protecting sensitive patient data.
+- **Option C is correct.** ✅ Integration with other Azure services — such as Azure Application Gateway, Azure Front Door, and Microsoft Defender for Cloud — provides a **comprehensive security approach** essential for healthcare systems. This layered integration supports achieving **HIPAA compliance** (Health Insurance Portability and Accountability Act of 1996), which mandates privacy and security controls for protected health information (PHI).
+- **Option D is incorrect.** PCI DSS (Payment Card Industry Data Security Standard) is designed to protect **cardholder/payment data**, not patient health data. The relevant compliance framework for a healthcare scenario is HIPAA, not PCI DSS.
+
+> **Reference**: [What is Azure Web Application Firewall? | Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/overview)
+> **Reference**: [Azure Web Application Firewall monitoring and logging | Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-waf-metrics)
+
 ### 2.4 Azure Private Endpoint / Private Link
 
 Azure Private Link enables private access to Azure PaaS services (Storage, SQL Database, Cosmos DB, etc.) over a private endpoint in your VNet. Traffic never traverses the public internet.
