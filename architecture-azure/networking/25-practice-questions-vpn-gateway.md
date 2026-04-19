@@ -211,6 +211,104 @@ The correct sequence follows a logical dependency chain — each step requires t
 
 ---
 
+## Question 5: Azure resources required for BGP on Site-to-Site VPN
+
+### Scenario
+
+You plan to configure BGP for a Site-to-Site VPN connection between a datacenter and Azure.
+
+**Which two Azure resources should you configure?** (Select two)
+
+- A) A virtual network gateway
+- B) Azure Application Gateway
+- C) Azure Firewall
+- D) A local network gateway
+- E) Azure Front Door
+
+### Answer
+
+**Correct Answers: A, D**
+
+A virtual network gateway and a local network gateway.
+
+### Explanation
+
+Configuring BGP for a Site-to-Site VPN requires BGP settings on **two** Azure resources that represent the two endpoints of the VPN tunnel:
+
+| Resource | Role in BGP Configuration |
+|----------|---------------------------|
+| **A) Virtual network gateway** ✅ | The Azure-side VPN endpoint. You configure the Azure BGP ASN (default 65515) and it is auto-assigned a BGP peer IP from the GatewaySubnet. Must be RouteBased with a SKU of VpnGw1 or higher. |
+| **D) Local network gateway** ✅ | Represents the on-premises VPN device in Azure. You configure the on-premises BGP peer IP address and Autonomous System Number (ASN) here so Azure knows how to establish the BGP session with the on-premises router. |
+
+**Why the other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B) Azure Application Gateway** | A Layer 7 web traffic load balancer for managing HTTP/HTTPS traffic to web applications. It has no role in VPN connectivity or BGP routing. |
+| **C) Azure Firewall** | A managed cloud-based network security service that protects Azure Virtual Network resources with stateful firewall rules. It is not involved in VPN tunnel establishment or BGP route exchange. |
+| **E) Azure Front Door** | A global entry point for web applications providing CDN, SSL offloading, and WAF capabilities. It operates at the application layer and has no involvement in Site-to-Site VPN or BGP configuration. |
+
+### Key concept
+
+> **BGP for S2S VPN requires two gateway resources**: The **virtual network gateway** (Azure-side endpoint with Azure BGP ASN) and the **local network gateway** (on-premises representation with the on-premises BGP peer IP and ASN). BGP is then enabled on the **connection** resource that links these two gateways. This is distinct from ExpressRoute, where BGP is mandatory and configured at the circuit/peering level.
+
+### Reference
+
+- [Configure BGP for Azure VPN Gateway | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/bgp-howto)
+- [Azure VPN Gateway — BGP Support](./05-azure-vpn-gateway.md#82-bgp-support)
+
+---
+
+## Question 6: Troubleshooting IPsec tunnel establishment failure
+
+### Scenario
+
+You fail to establish a Site-to-Site VPN connection between your company's main office and an Azure virtual network.
+
+You need to troubleshoot what prevents you from establishing the IPsec tunnel.
+
+**Which diagnostic log should you review?**
+
+- A) IKEDiagnosticLog
+- B) RouteDiagnosticLog
+- C) GatewayDiagnosticLog
+- D) TunnelDiagnosticLog
+
+### Answer
+
+**Correct Answer: A**
+
+IKEDiagnosticLog
+
+### Explanation
+
+IPsec tunnel establishment is handled by the **IKE (Internet Key Exchange)** protocol. IKE negotiates the security associations (SAs) required before an IPsec tunnel can be created. The negotiation follows two phases:
+
+1. **Phase 1 (IKE SA)**: Peers negotiate encryption, integrity, and DH group parameters, then authenticate each other (pre-shared key or certificate)
+2. **Phase 2 (IPsec SA)**: Peers negotiate the IPsec parameters and establish the tunnel for data traffic
+
+If the tunnel **fails to establish**, the failure is happening during one of these IKE phases. The **IKEDiagnosticLog** captures all IKE negotiation messages, proposal mismatches, authentication failures, timeouts, and error codes — making it the correct log to review.
+
+**Why the other options are incorrect:**
+
+| Option | Why Incorrect |
+|--------|---------------|
+| **B) RouteDiagnosticLog** | Logs route changes and BGP route updates. Useful for troubleshooting routing problems **after** a tunnel is already established, not for tunnel establishment failures. |
+| **C) GatewayDiagnosticLog** | Logs gateway health events, configuration changes, and maintenance activities. Provides general gateway status but not the granular IKE negotiation details needed to diagnose IPsec tunnel failures. |
+| **D) TunnelDiagnosticLog** | This log category **does not exist** in Azure VPN Gateway. The valid diagnostic log categories are: IKEDiagnosticLog, GatewayDiagnosticLog, RouteDiagnosticLog, and P2SDiagnosticLog. |
+
+### Key concept
+
+> **IKE is the gatekeeper of IPsec**: No IPsec tunnel can be established without a successful IKE negotiation. When troubleshooting tunnel establishment failures, always start with the **IKEDiagnosticLog**. Common issues found in IKE logs include mismatched encryption algorithms, incorrect pre-shared keys, DH group incompatibilities, and IKE version mismatches (IKEv1 vs IKEv2).
+
+### Reference
+
+- [VPN Gateway diagnostic log queries | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-diagnostic-log-query)
+- [Troubleshoot Azure VPN Gateway using diagnostic logs | Microsoft Learn](https://learn.microsoft.com/en-us/azure/vpn-gateway/troubleshoot-vpn-with-azure-diagnostics)
+- [Azure VPN Gateway — VPN Gateway Diagnostic Logs](./05-azure-vpn-gateway.md#vpn-gateway-diagnostic-logs)
+
+---
+
 ## Related documentation
 
 - [Azure VPN Gateway overview](./azure-vpn-gateway.md)
