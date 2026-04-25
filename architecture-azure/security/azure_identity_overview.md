@@ -87,6 +87,9 @@ This document explains the foundational Azure identity concepts required for sec
 - **User-Assigned Managed Identity (UAMI)**
 - **Certificate lifecycle and renewal flow**
 
+Related identity topic:
+- **Microsoft Entra Verified ID and verifiable credentials (VCs)**: [microsoft-entra-verified-id.md](./entra-id/microsoft-entra-verified-id.md)
+
 Diagrams are included in ASCII format.
 
 ---
