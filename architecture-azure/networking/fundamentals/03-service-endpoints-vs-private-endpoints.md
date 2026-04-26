@@ -34,6 +34,24 @@ Virtual Network (VNet) service endpoints provide secure and direct connectivity 
 
 Service Endpoints enables private IP addresses in the VNet to reach the endpoint of an Azure service without needing a public IP address on the VNet.
 
+#### 4.1.1 Critical Clarification: Who Gets the Private IP?
+
+This is a commonly misunderstood concept. When we say "Service Endpoints enables private IP addresses in the VNet," we mean:
+
+- **Your VMs (source)** use their **private IP addresses** when connecting to the Azure service
+- **NOT** that the Azure service itself gets a private IP address inside your VNet
+
+Compare this with **Private Endpoints**, which is the opposite:
+
+| | **Service Endpoint** | **Private Endpoint** |
+|---|---|---|
+| **Who uses private IP?** | Your VMs (source IPs) | Azure service (destination IP) |
+| **Azure service has...** | **Public IP** (but firewall-restricted) | **Private IP inside your VNet** |
+| **DNS resolution** | Resolves to Azure service's **public IP** | Resolves to the **private IP** in your VNet |
+| **Example** | Traffic from `10.0.1.5` (private) → `storage.blob.core.windows.net` (public IP, but only accepts from your VNet) | Traffic from `10.0.1.5` (private) → `storageXXXX.privatelink.blob.core.windows.net` (resolves to private IP) |
+
+> **Key Takeaway**: Both involve "private IPs," but they apply to different directions. Service Endpoints make your VMs appear to come from private IPs. Private Endpoints make the Azure service appear as a private resource inside your VNet.
+
 **Practical Scenario: Ensuring Traffic Travels via Microsoft Backbone**
 
 **Scenario:**
@@ -114,14 +132,15 @@ Understanding what Service Endpoints **cannot** do is equally important for exam
 
 | Feature | Service Endpoint | Private Endpoint |
 |---------|------------------|------------------|
-| **IP Address Used** | Service's public IP | Private IP from VNet |
+| **Destination IP** | Service's **public IP** (firewall-restricted) | **Private IP** inside your VNet |
+| **Source IP** | Your VNet's **private IPs** | Your VNet's **private IPs** |
 | **Traffic Path** | Azure backbone (optimized) | Azure backbone (Private Link) |
 | **On-premises Access** | Not supported | Supported via VPN/ExpressRoute |
 | **Cross-region** | Limited | Fully supported |
-| **DNS Changes** | Not required | Required |
+| **DNS Changes** | Not required | Required (resolves to private IP) |
 | **Cost** | Free | Per hour + data processing |
 | **Data Exfiltration Protection** | Limited (entire service) | Strong (specific resource) |
-| **Disable Public Access** | No (public IP still used) | Yes (can fully disable) |
+| **Disable Public Access** | No (public IP still exists) | Yes (can fully disable) |
 
 ### 4.5 When to Use Each
 
