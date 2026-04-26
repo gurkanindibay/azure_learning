@@ -39,6 +39,8 @@ Follow the numbered guides in order, or jump to a specific topic.
 |---|-------|-------------|
 | 12 | [Security Services Comparison](12-network-security-services-comparison.md) | NSG vs ASG vs Firewall vs WAF vs Private Link + Sentinel/SIEM |
 | 13 | [Azure Firewall](13-azure-firewall-overview.md) | Policy hierarchy, rule processing, FQDN filtering |
+| 27 | [Azure Encryption in Networking](27-azure-encryption-in-networking.md) | At-rest and in-transit encryption models, VPN/VM encryption, Key Vault guidance |
+| 28 | [Azure DMZ Implementation](28-azure-dmz-implementation.md) | DMZ concepts, all four topologies in Azure, Bastion/Reverse-Proxy/Service-Mesh patterns, NSG reference |
 
 ### Monitoring
 
