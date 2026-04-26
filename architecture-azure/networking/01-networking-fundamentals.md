@@ -1049,6 +1049,37 @@ Route Table: RT-Production
 | **Virtual Network** | Route within VNet (rarely used - automatic) | Intra-VNet routing |
 | **None** | Drop the traffic | Block specific destinations |
 
+#### UDR Design Rules (Important for Real Deployments and Exams)
+
+1. **Route selection uses longest prefix first**
+   - Azure always picks the most specific matching destination prefix.
+   - Example: `/24` beats `/16`, and `/16` beats `0.0.0.0/0`.
+
+2. **If prefix length is equal, source priority applies**
+   - **User-defined route (UDR)** wins over **BGP route**.
+   - **BGP route** wins over **system route**.
+
+3. **Service endpoint routes are special**
+   - When you enable a Service Endpoint, Azure adds service-specific system routes.
+   - These routes are preferred for that service traffic and commonly bypass a broad `0.0.0.0/0` forced-tunnel route.
+
+4. **You can use Service Tags in UDR destinations**
+   - Instead of hard-coding IP ranges, use tags like `Storage`.
+   - Azure maintains the underlying IP prefixes automatically, reducing route maintenance.
+
+5. **`0.0.0.0/0` UDR means forced tunneling**
+   - A UDR with destination `0.0.0.0/0` sends all unmatched outbound traffic to the chosen next hop (NVA or gateway).
+   - If this next hop is misconfigured, internet and Azure public endpoint access from that subnet can fail.
+
+6. **Gateway and BGP caveats**
+   - For **ExpressRoute** gateways, custom route advertisement is BGP-driven.
+   - VPN gateways can use UDRs and/or BGP depending on architecture.
+   - Do not disable gateway route propagation on `GatewaySubnet`, or gateway behavior can break.
+
+7. **Next hop limitations in UDRs**
+   - You can't set `Virtual network peering` or `VirtualNetworkServiceEndpoint` as a UDR next hop type.
+   - Those route types are Azure-managed and appear automatically when those features are enabled.
+
 **Practical Example: Hub-and-Spoke with NVA Routing**
 
 ```
