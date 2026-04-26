@@ -10,7 +10,7 @@ Follow the numbered guides in order, or jump to a specific topic.
 
 | # | Topic | Description |
 |---|-------|-------------|
-| 01 | [Networking Fundamentals](01-networking-fundamentals.md) | VNets, subnets, NSGs, peering, private endpoints, service endpoints |
+| 01 | [Networking Fundamentals](fundamentals/README.md) | VNets, subnets, NSGs, peering, private endpoints, service endpoints |
 | 02 | [VNet Fundamentals](02-vnet-fundamentals.md) | Address spaces, peering, ASGs, NICs, UDRs, Route Server |
 | 03 | [Private Endpoints Guide](03-private-endpoints-guide.md) | Private connectivity to Azure PaaS, DNS config, hybrid scenarios |
 | 26 | [Inbound vs Outbound Traffic](26-inbound-vs-outbound-traffic.md) | Mental model, Azure rule mapping, and common mistakes |
