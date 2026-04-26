@@ -199,5 +199,94 @@ Understanding what Service Endpoints **cannot** do is equally important for exam
 
 > **Key Takeaway**: Service Endpoints secure access (who can reach the service) and optimize routing (Azure backbone). They do **not** encrypt traffic or provide custom routing. Service Endpoint Policies add granular resource-level filtering on top of Service Endpoints.
 
+### 4.8 ASCII Diagrams (Quick Visual Guide)
+
+These diagrams summarize the key concepts in exam-friendly form.
+
+#### 4.8.1 App Service VNet Integration (Outbound Only)
+
+```text
+								(Public Internet)
+											 |
+								 [ App Service ]
+								 [  Web App     ]
+											 |
+					Outbound via VNet Integration
+											 v
+				+----------------------------------+
+				| VNet                             |
+				|  Delegated Subnet (integration)  |
+				|   - private IP per instance      |
+				+----------------------------------+
+						|                 |            \
+						v                 v             v
+				[VM/DB]      [Private Endpoint]   [On-prem]
+																				 (VPN/ExpressRoute)
+```
+
+Key point: VNet Integration provides private **outbound** reachability from the app. It does not by itself provide private inbound access to the app.
+
+#### 4.8.2 Inbound Private Access Uses Private Endpoint
+
+```text
+Clients in VNet --> [Private Endpoint] --> [App Service]
+												 (private IP)
+```
+
+#### 4.8.3 Routing Modes
+
+```text
+Option A: Private-only routing
+------------------------------
+App -> RFC1918/private targets -> VNet
+App -> Internet targets         -> Direct Internet egress
+
+Option B: Route-all
+-------------------
+App -> All outbound traffic -> VNet -> (Firewall/NAT/UDR) -> Destinations
+```
+
+#### 4.8.4 Service Endpoint vs Private Endpoint (Traffic Path)
+
+```text
+SERVICE ENDPOINT
+----------------
+Subnet identity allowed by PaaS firewall.
+No private IP for the service in your subnet.
+
+[App in VNet] ---> Azure backbone ---> [PaaS public endpoint]
+			|
+			+-- subnet is trusted/allowed
+
+
+PRIVATE ENDPOINT
+----------------
+Private NIC/IP inside your VNet for the PaaS service.
+
+[App in VNet] ---> [Private IP in your subnet] ---> [PaaS service]
+												 ^
+										DNS must resolve here
+```
+
+#### 4.8.5 DNS Requirement for Private Endpoint
+
+```text
+Without private DNS:
+App -> service FQDN resolves to public IP -> blocked/wrong path
+
+With private DNS zone link:
+App -> service FQDN resolves to private IP -> Private Endpoint path works
+```
+
+#### 4.8.6 NSG and UDR Scope
+
+```text
+NSG/UDR on integration subnet affect:
+	- traffic routed into VNet Integration
+
+They do NOT control:
+	- inbound HTTP(S) traffic to App Service itself
+```
+
 ---
 
