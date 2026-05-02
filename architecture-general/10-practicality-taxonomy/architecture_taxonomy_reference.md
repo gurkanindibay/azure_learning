@@ -4,7 +4,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 > **Auto-generated**: This file is automatically synchronized with README.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-01-04 02:25:00
+> **Last updated**: 2026-05-02 22:52:21
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 
@@ -66,10 +66,10 @@ This document is a **canonical markdown reference** for commonly recognized arch
 <details>
 <summary><a href="#6-security-architecture-cross-cutting">6. Security Architecture (Cross-Cutting)</a></summary>
 
-  - [6.1 Security Architecture](#61-security-architecture)
-  - [6.2 Identity Architecture](#62-identity-architecture)
-  - [6.3 Network Security Architecture](#63-network-security-architecture)
-  - [6.4 Data Security Architecture](#64-data-security-architecture)
+  - [[6.1 Security Foundations](./6.1-security-foundations/)](#61-security-foundations61-security-foundations)
+  - [[6.2 Identity Architecture](./6.2-identity/)](#62-identity-architecture62-identity)
+  - [[6.3 Network Security](./6.3-network-security/)](#63-network-security63-network-security)
+  - [[6.4 Data Security](./6.4-data-security/)](#64-data-security64-data-security)
 </details>
 
 <details>
@@ -284,6 +284,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Internal Developer Platform (IDP)
 - Platform Engineering Architecture
 - networking/ - Network topology, proxy, and load balancing patterns
+- Network Architecture Base Elements
 - Hub-Spoke Network Architecture
 - Proxy and Load Balancing Architecture
 - Service Mesh Architecture
@@ -294,39 +295,15 @@ This document is a **canonical markdown reference** for commonly recognized arch
 ---
 ## 6. Security Architecture (Cross-Cutting)
 
-### 6.1 Security Architecture
-- Zero Trust Architecture
-- Defense in Depth
-- Threat Modeling Architecture
-- Secure SDLC Architecture
+### [6.1 Security Foundations](./6.1-security-foundations/)
 
-### 6.2 Identity Architecture
-- Identity and Access Management (IAM)
-- Federated Identity Architecture
-- Single Sign-On (SSO)
-- Managed Identity Architecture
-- OAuth 2.0 with PKCE
+### [6.2 Identity Architecture](./6.2-identity/)
 
-### 6.3 Network Security Architecture
-- Perimeter Security Architecture
-- Micro-Segmentation
-- Web Application Firewall (WAF)
-- DDoS Protection Architecture
+### [6.3 Network Security](./6.3-network-security/)
 
-### 6.4 Data Security Architecture
-- Encryption Architecture
-- Key Management (HSM / KMS)
-- Confidential Computing
-- Privacy-by-Design Architecture
-- 6.1-security-foundations/README.md - Zero Trust, Defense in Depth, Threat Modeling, Secure SDLC
-- 6.2-identity/README.md - Identity Management, Authentication, Authorization, Federation, OAuth 2.0 + PKCE
-- 6.2-identity/6.2.1-authentication-methods.md - Authentication methods and patterns
-- 6.2-identity/6.2.2-authentication-protocols.md - Authentication protocol deep dives (OAuth2, OIDC, JWT)
-- 6.3-network-security/README.md - Perimeter Security, Micro-Segmentation, WAF, DDoS Protection
-- 6.3-network-security/6.3.1-dmz-architecture.md - DMZ Architecture patterns
-- 6.4-data-security/README.md - Encryption Architecture, Key Management (HSM/KMS), Confidential Computing, Privacy-by-Design
+### [6.4 Data Security](./6.4-data-security/)
 - Architecture Taxonomy Reference
-- Azure Security - Azure-specific security implementations
+- Azure Security — Azure-specific security implementations
 
 ---
 ## 7. Reliability, Performance & Operations

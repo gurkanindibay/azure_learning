@@ -26,6 +26,7 @@ This section covers cloud deployment models, infrastructure patterns, and platfo
 ## Contents
 
 - [networking/](./networking/) - Network topology, proxy, and load balancing patterns
+  - [Network Architecture Base Elements](./networking/network-architecture-base-elements.md)
   - [Hub-Spoke Network Architecture](./networking/hub_spoke_network_architecture.md)
   - [Proxy and Load Balancing Architecture](./networking/proxy-load-balancing-architecture.md)
   - [Service Mesh Architecture](./networking/service-mesh-architecture.md)
