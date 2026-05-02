@@ -37,6 +37,7 @@ Network-level security controls from perimeter to micro-segmentation.
 |----------|-------------|
 | [README.md](./6.3-network-security/README.md) | Perimeter security, micro-segmentation, WAF, DDoS protection |
 | [6.3.1 DMZ Architecture](./6.3-network-security/6.3.1-dmz-architecture.md) | DMZ design, topologies, and implementation guide |
+| [6.3.2 Network Segmentation](./6.3-network-security/6.3.2-network-segmentation.md) | Zone models, VLAN design, micro-segmentation, Zero Trust segmentation |
 
 ### [6.4 Data Security](./6.4-data-security/)
 

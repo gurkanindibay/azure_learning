@@ -14,6 +14,7 @@
 ### Detailed Sub-Topics
 
 - **[6.3.1 Demilitarized Zone (DMZ) Architecture](./6.3.1-dmz-architecture.md)** - Comprehensive guide to DMZ design, implementation, and best practices
+- **[6.3.2 Network Segmentation](./6.3.2-network-segmentation.md)** - Zone models, VLAN design, micro-segmentation, Zero Trust segmentation, and cloud controls
 
 ---
 
