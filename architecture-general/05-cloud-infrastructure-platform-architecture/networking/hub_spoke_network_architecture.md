@@ -169,6 +169,48 @@ If most answers are yes, hub-spoke is a good fit.
 
 ---
 
+## Secure Admin Access: Azure Bastion and Equivalents
+
+Azure Bastion provides browser-based RDP/SSH access to VMs without exposing public IP addresses. The same pattern exists across all major cloud providers and in several third-party products.
+
+### Cloud Provider Equivalents
+
+| Provider | Service | Mechanism | Notes |
+|----------|---------|-----------|-------|
+| **Azure** | Azure Bastion | Managed PaaS, HTML5 browser or native client | Deployed in hub VNet subnet (`AzureBastionSubnet`) |
+| **AWS** | EC2 Instance Connect Endpoint / SSM Session Manager | SSM agent-based tunnel; no inbound ports needed | Session Manager preferred — no SSH key management |
+| **GCP** | Identity-Aware Proxy (IAP) TCP Forwarding | IAP proxies SSH/RDP over HTTPS | Uses Google's BeyondCorp zero-trust model |
+| **OCI** | Bastion Service | Managed bastion, session-scoped tunnels | Similar model to Azure Bastion |
+
+### Third-Party / Open-Source Alternatives
+
+| Tool | Type | Key Feature |
+|------|------|-------------|
+| **HashiCorp Boundary** | Open-source / Enterprise | Identity-based access, dynamic host catalogs, Vault integration |
+| **Teleport** | Open-source / Enterprise | SSH, RDP, Kubernetes, DB access via a single proxy; full audit trail |
+| **Apache Guacamole** | Open-source | Clientless HTML5 gateway for SSH, RDP, VNC |
+| **Cloudflare Access + Tunnel** | SaaS / Zero Trust | Zero-trust access without VPN; works with any origin |
+| **CyberArk PAM** | Enterprise | Privileged session management, credential vaulting, session recording |
+| **BeyondTrust Remote Support** | Enterprise | Vendor and privileged access management with session recording |
+| **Palo Alto Prisma Access** | SASE | Cloud-delivered ZTNA, replaces traditional VPN + bastion pattern |
+
+### Pattern Comparison
+
+| Characteristic | Managed Bastion (Azure/AWS/GCP) | Self-Managed Bastion VM | Zero-Trust Tool (Boundary/Teleport) |
+|----------------|--------------------------------|------------------------|-------------------------------------|
+| Ops overhead | Low | High | Medium |
+| Session auditing | Basic | Manual | Rich (full session recording) |
+| Protocol support | RDP, SSH | Any | SSH, RDP, K8s, DB, HTTP |
+| Identity integration | Cloud IAM | Custom | OIDC, SAML, Vault, LDAP |
+| Cost model | Per-hour + data | VM cost | Open-source or per-user licensing |
+| Zero-trust alignment | Partial | No | Yes |
+
+### Key Takeaway
+
+All major clouds provide a **managed bastion** equivalent that eliminates public IP exposure for admin access. For enterprises requiring richer session recording, identity federation, or multi-protocol support across hybrid or multi-cloud environments, zero-trust access tools like **Teleport** or **HashiCorp Boundary** are increasingly preferred over traditional bastion patterns.
+
+---
+
 ## Related Azure Exams
 
 - AZ-305: Designing Microsoft Azure Infrastructure Solutions
