@@ -42,12 +42,10 @@ Network-level security controls from perimeter to micro-segmentation.
 
 Data protection at rest, in transit, and in use.
 
-| Topic | Description |
-|-------|-------------|
-| Encryption Architecture | Symmetric/asymmetric, TLS, at-rest encryption |
-| Key Management (HSM/KMS) | Hardware security modules, key lifecycle |
-| Confidential Computing | TEEs, secure enclaves, in-use encryption |
-| Privacy-by-Design | GDPR, CCPA, data minimization patterns |
+| Document | Description |
+|----------|-------------|
+| [6.4.0 Data Security Architecture](./6.4-data-security/6.4.0-data-security-architecture.md) | Encryption, key management, confidential computing, privacy-by-design |
+| [6.4.1 PCI DSS Encryption Guide](./6.4-data-security/6.4.1-pci-dss-encryption-guide.md) | DEK/KEK hierarchy, HSM tokenization, PCI DSS operational controls |
 
 ---
 
