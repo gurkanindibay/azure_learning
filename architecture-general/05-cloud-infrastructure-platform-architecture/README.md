@@ -31,6 +31,8 @@ This section covers cloud deployment models, infrastructure patterns, and platfo
   - [Proxy and Load Balancing Architecture](./networking/proxy-load-balancing-architecture.md)
   - [Service Mesh Architecture](./networking/service-mesh-architecture.md)
 - [scaling/](./scaling/) - System design evolution and scaling patterns
+- [storage/](./storage/) - Storage architecture patterns
+  - [SAN and NAS: Storage Architecture Guide](./storage/san-nas-storage-architecture.md)
 
 ## Related
 

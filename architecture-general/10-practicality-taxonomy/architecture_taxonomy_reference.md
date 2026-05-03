@@ -4,7 +4,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 > **Auto-generated**: This file is automatically synchronized with README.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-05-02 22:52:21
+> **Last updated**: 2026-05-03 16:46:31
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 
@@ -289,6 +289,8 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Proxy and Load Balancing Architecture
 - Service Mesh Architecture
 - scaling/ - System design evolution and scaling patterns
+- storage/ - Storage architecture patterns
+- SAN and NAS: Storage Architecture Guide
 - Architecture Taxonomy Reference
 - Azure Architecture - Azure-specific implementations
 
