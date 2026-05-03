@@ -15,6 +15,16 @@
   - [6. Circuit Breaker](#6-circuit-breaker)
   - [7. Saga Pattern](#7-saga-pattern)
 - [Pattern Selection Guide](#pattern-selection-guide)
+- [Handling Non-Idempotent Services](#handling-non-idempotent-services)
+  - [Why It Matters Across All Patterns](#why-it-matters-across-all-patterns)
+  - [Risk by Pattern](#risk-by-pattern)
+  - [Strategy 1: Idempotency Keys](#strategy-1-idempotency-keys-preferred)
+  - [Strategy 2: Pre-check / Read-before-write](#strategy-2-pre-check--read-before-write)
+  - [Strategy 3: Async Submission + Confirmation Polling](#strategy-3-async-submission--confirmation-polling)
+  - [Strategy 4: Outbox + At-Least-Once with Deduplication](#strategy-4-outbox--at-least-once-with-deduplication)
+  - [Strategy 5: Compensate Instead of Retry](#strategy-5-compensate-instead-of-retry)
+  - [Strategy 6: State Guard in Orchestrator](#strategy-6-state-guard-in-orchestrator)
+  - [Strategy Selection Guide](#strategy-selection-guide)
 
 ## Introduction
 
@@ -472,6 +482,61 @@ Each forward step must have a defined compensating action that semantically undo
 | **State tracking** | Saga state stored in DB or dedicated service |
 | **Azure tooling** | Durable Functions, Logic Apps, Service Bus sessions |
 
+#### DLQ in the Saga Pattern
+
+A DLQ still exists at the **message broker level** for each queue in the saga flow. However, the saga layer introduces an additional failure dimension on top of standard DLQ semantics.
+
+**Two distinct failure layers:**
+
+| Layer | Failure Type | Handled By |
+|---|---|---|
+| Message broker | Undeliverable / unparseable message | Standard DLQ |
+| Saga step | Expected business failure (e.g. payment declined) | Compensating transactions |
+| Saga orchestrator | Step exceeds max retries / compensation fails | Saga-level dead letter store |
+
+**Why a saga-level dead letter store is necessary:**
+
+Compensating transactions handle *expected* business failures by design. But if a **compensating transaction itself fails** (e.g. the refund service is down during rollback), the saga enters an **inconsistent/stuck state** that neither the broker DLQ nor normal compensation can resolve. A saga-level dead letter store captures these stuck sagas for manual intervention or a dedicated recovery process.
+
+```mermaid
+graph TD
+    S[Saga Step] -->|Success| N[Next Step]
+    S -->|Business Failure| C[Compensating Transaction]
+    S -->|Transient Failure| RS[Retry with Backoff]
+    RS -->|Retries Exhausted| DLQ[Broker DLQ]
+    RS -->|Success| N
+    C -->|Success| R[Saga Rolled Back]
+    C -->|Transient Failure| RC[Retry Compensation with Backoff]
+    RC -->|Success| R
+    RC -->|Retries Exhausted| SDL[Saga Dead Letter Store]
+    S -->|Message Undeliverable| DLQ
+    SDL --> M[Manual Intervention / Recovery Process]
+    DLQ --> M
+```
+
+**Choreography vs Orchestration — DLQ detectability:**
+
+| Aspect | Choreography | Orchestration |
+|---|---|---|
+| Detecting stuck saga | Hard — must correlate events across services | Easy — orchestrator holds saga state |
+| Saga dead letter store | Harder to implement consistently | Natural fit — orchestrator writes failed sagas to store |
+| Broker DLQ | Per-service, independent | Per-service, independent |
+
+**Retry is required at every layer — moving to DLQ or the saga dead letter store should always be the last resort after retries are exhausted:**
+
+| Layer | Retry Strategy | When to Stop Retrying |
+|---|---|---|
+| Broker (step message) | Exponential backoff + jitter | Max delivery count reached → Broker DLQ |
+| Saga step execution | Exponential backoff (orchestrator or consumer) | Timeout / max attempts → trigger compensation |
+| Compensating transaction | Exponential backoff | Max attempts exhausted → Saga dead letter store |
+
+Skipping retry — especially on compensating transactions — risks sending a saga to the dead letter store for what is a transient network or availability blip. Since compensating transactions are the safety net for rollback, they must be as resilient as possible.
+
+- Monitor broker DLQs on all queues participating in the saga
+- Track saga state transitions; alert when a saga remains in an intermediate state beyond a timeout threshold
+- Store stuck sagas with full context (current step, attempted compensations, error details) to enable replay or manual resolution
+- Consider a **saga recovery service** that periodically scans for stuck sagas and retries or escalates
+
 ## Pattern Selection Guide
 
 ### By Use Case
@@ -508,6 +573,204 @@ graph TD
     G -->|Yes| H[Content-Based Router]
     G -->|No| I[Simple Topic]
 ```
+
+## Handling Non-Idempotent Services
+
+Retries, redeliveries, and at-least-once delivery guarantees are fundamental to reliable messaging. When a called service is **not idempotent**, any retry — regardless of which pattern triggered it — risks executing the operation more than once, leading to duplicate charges, double bookings, duplicate notifications, or corrupted state.
+
+This section covers the risks per pattern and the strategies to mitigate them.
+
+### Why It Matters Across All Patterns
+
+Every reliability mechanism in messaging can cause duplicate calls:
+
+| Mechanism | How Duplicates Arise |
+|---|---|
+| Retry Pattern | Transient failure after successful execution but before acknowledgment |
+| At-least-once delivery | Broker redelivers message if consumer crashes before ack |
+| Competing Consumers | Two consumers pick up the same message during a visibility timeout race |
+| Fan-Out | Each subscriber receives and processes a copy; if one retries, it re-executes |
+| Saga (step retry) | Step retried after timeout; original call may have succeeded |
+| Saga (compensation retry) | Compensating transaction retried; may execute the undo twice |
+| Circuit Breaker half-open | Test request may duplicate an in-flight operation |
+| Transactional Outbox | Message published twice if outbox relay crashes mid-publish |
+
+### Risk by Pattern
+
+| Pattern | Idempotency Risk | Severity |
+|---|---|---|
+| Point-to-Point Queue | At-least-once redelivery | Medium |
+| Pub/Sub | Each subscriber independently retries | Medium |
+| Competing Consumers | Visibility timeout race → double processing | High |
+| Request-Reply | Caller retries request; service executes twice | High |
+| Fan-Out / Fan-In | Each worker may retry its slice | Medium |
+| Retry Pattern | Core source of duplicate execution | High |
+| Transactional Outbox | Relay may publish same message twice | Medium |
+| Saga (step) | Step retried after ambiguous outcome | High |
+| Saga (compensation) | Undo applied twice → over-refund, etc. | Critical |
+
+### Strategy 1: Idempotency Keys (preferred)
+
+Pass a stable, deterministic key with every request. The called service uses it to detect and skip duplicate executions.
+
+```
+POST /payments
+X-Idempotency-Key: saga-id:step-payment:order-12345
+
+{ "amount": 99.99, "account": "ACC001" }
+```
+
+The service stores `(idempotency-key → result)`. On retry with the same key, it returns the stored result without re-executing.
+
+**Key design rules:**
+
+| Rule | Detail |
+|---|---|
+| Stable across retries | Must not change between attempts for the same logical operation |
+| Unique per operation | Different operations must have different keys |
+| Never reused | A key retired after TTL must never be reassigned |
+| Recommended pattern | `{saga-or-correlation-id}:{step-name}:{entity-id}` |
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant S as Service
+    participant DB as Idempotency Store
+
+    C->>S: POST /payments (Key: K1)
+    S->>DB: Lookup K1
+    DB->>S: Not found
+    S->>S: Execute payment
+    S->>DB: Store K1 → success
+    S->>C: 200 OK
+
+    Note over C,S: Network drop — caller retries
+
+    C->>S: POST /payments (Key: K1)
+    S->>DB: Lookup K1
+    DB->>S: Found → success
+    S->>C: 200 OK (no re-execution)
+```
+
+**Applicability:** Any pattern. Mandate as a contract requirement for all services participating in retried or saga-driven flows.
+
+---
+
+### Strategy 2: Pre-check / Read-before-write
+
+Query the target service for existing state before issuing a mutating call.
+
+```
+GET /payments?correlationId=order-12345
+→ 404 Not Found   → proceed with POST
+→ 200 Completed   → treat as success, skip POST
+```
+
+**Limitation:** Check-then-act is not atomic. A concurrent request between GET and POST can still cause a duplicate. Use only when the service exposes a reliable query API and concurrency risk is low.
+
+**Applicability:** Saga steps, Request-Reply, any flow where mutation can be queried independently.
+
+---
+
+### Strategy 3: Async Submission + Confirmation Polling
+
+Separate the submission of an operation from its confirmation. Retry only the idempotent GET poll, never the POST.
+
+```
+POST /payments → 202 Accepted { "jobId": "JOB-001" }
+GET  /payments/JOB-001 → poll until COMPLETED or FAILED
+```
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant S as Service
+
+    C->>S: POST /payments → 202 Accepted
+    loop Poll until terminal state
+        C->>S: GET /payments/JOB-001
+        S->>C: 200 { status: IN_PROGRESS }
+    end
+    S->>C: 200 { status: COMPLETED }
+```
+
+**Applicability:** Any pattern where the service supports async semantics. Eliminates duplicate execution risk entirely on retry.
+
+---
+
+### Strategy 4: Outbox + At-Least-Once with Deduplication
+
+When using the [Transactional Outbox](#5-transactional-outbox), the relay may publish the same message more than once if it crashes mid-publish. Combine with a **deduplication store** at the consumer.
+
+```mermaid
+sequenceDiagram
+    participant R as Outbox Relay
+    participant B as Broker
+    participant C as Consumer
+    participant D as Dedup Store
+
+    R->>B: Publish message (msgId: M1)
+    B->>C: Deliver M1
+    C->>D: Seen M1?
+    D->>C: No
+    C->>C: Process
+    C->>D: Mark M1 seen
+
+    Note over R,B: Relay crashes and republishes
+    B->>C: Deliver M1 again
+    C->>D: Seen M1?
+    D->>C: Yes → skip
+```
+
+**Applicability:** Transactional Outbox, Pub/Sub, Competing Consumers — any at-least-once delivery scenario.
+
+---
+
+### Strategy 5: Compensate Instead of Retry
+
+If a service is non-idempotent, cannot be changed, and has no query API, avoid retrying on ambiguous outcomes entirely. Treat the uncertainty as a failure and trigger the compensating transaction.
+
+**Only safe when:**
+- The compensating transaction is itself idempotent
+- The business cost of rolling back is lower than the risk of a duplicate forward execution
+
+**Not recommended as a primary strategy** — it converts a transient fault into a full rollback unnecessarily. Use only as a last resort for unmodifiable third-party services.
+
+---
+
+### Strategy 6: State Guard in Orchestrator
+
+For orchestration-based Sagas (and similar stateful workflows), track the confirmed outcome of each step in the orchestrator's own state store. Before retrying, check whether a previous attempt reached a confirmed terminal state.
+
+```python
+if saga.steps["payment"].status == "CONFIRMED":
+    # Skip — already succeeded
+    advance_to_next_step()
+else:
+    retry_step("payment")
+```
+
+**Requires:** The service must return a reliably queryable and durable outcome. Combine with Strategy 1 or Strategy 3 for full coverage.
+
+**Applicability:** Orchestration-based Saga, Durable Functions, stateful workflow engines.
+
+---
+
+### Strategy Selection Guide
+
+| Scenario | Recommended Strategy |
+|---|---|
+| You control the called service API | Idempotency Keys (Strategy 1) |
+| Third-party service, no idempotency key support | Async polling (Strategy 3) or Pre-check (Strategy 2) |
+| Unmodifiable service, no query API | Compensate instead of retry (Strategy 5) — last resort |
+| At-least-once broker delivery | Consumer-side deduplication store (Strategy 4) |
+| Orchestration-based saga | State guard (Strategy 6) + Idempotency Keys |
+| Choreography-based saga | Idempotency Keys on every step — no central guard available |
+| High-concurrency competing consumers | Idempotency Keys + deduplication store (Strategies 1 + 4) |
+
+> **Design principle**: Idempotency is a **contract requirement** for any service that participates in a retried, at-least-once, or saga-driven flow. Treating it as optional leads to data inconsistencies that are difficult to detect and expensive to remediate.
+
+---
 
 ## Related Topics
 
