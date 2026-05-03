@@ -674,7 +674,7 @@ GET /payments?correlationId=order-12345
 
 ### Strategy 3: Async Submission + Confirmation Polling
 
-Separate the submission of an operation from its confirmation. Retry only the idempotent GET poll, never the POST.
+Separate submission from confirmation and treat submission as a one-time command. In this strategy, the caller does not rely on client-supplied idempotency keys. Instead, duplicate risk is controlled by never re-submitting the command after an ambiguous submission result.
 
 ```
 POST /payments → 202 Accepted { "jobId": "JOB-001" }
@@ -694,7 +694,51 @@ sequenceDiagram
     S->>C: 200 { status: COMPLETED }
 ```
 
-**Applicability:** Any pattern where the service supports async semantics. Eliminates duplicate execution risk entirely on retry.
+**Failure handling and retry policy:**
+
+| Failure Case | What To Do | Why |
+|---|---|---|
+| POST returns `202` with `jobId` | Start polling with retry/backoff on `GET /status` | Polling is idempotent and safe to retry |
+| POST times out / connection drops before response | Do not retry POST automatically; mark operation as `SUBMISSION_UNKNOWN` and start reconciliation workflow | Avoids accidental duplicate execution |
+| Status endpoint temporarily unavailable (`5xx` / timeout) | Retry polling with exponential backoff + jitter until overall timeout | Handles transient outages safely |
+| Status remains `IN_PROGRESS` beyond SLA | Mark as `PENDING_MANUAL_REVIEW` or trigger compensating path per policy | Avoids infinite polling and stuck workflows |
+| Status becomes `FAILED` | Apply bounded retries if failure is transient; otherwise trigger compensation and mark step failed | Keeps rollback deterministic |
+
+**Safe submission rule (distinct from Strategy 1):**
+
+- Submit once.
+- If acknowledgment is ambiguous, do not re-submit from the saga step.
+- Use a reconciliation channel to determine eventual outcome before continuing the workflow.
+
+**Typical reconciliation options:**
+
+| Option | How It Works | Trade-off |
+|---|---|---|
+| Provider callback/webhook | Service emits completion event to callback endpoint | Requires reliable callback handling |
+| Provider operation ledger | Operations team or reconciliation job queries provider-side audit/ledger by time/window/account | Slower, but safe without duplicate submit |
+| Settlement reconciliation | Downstream settlement/report confirms whether action was applied | Highest latency, strongest financial correctness |
+
+```mermaid
+flowchart TD
+    A[Submit command once] --> B{Ack with jobId?}
+    B -->|Yes| C[Poll status with backoff]
+    C --> D{Final status?}
+    D -->|Success| H1[Status success]
+    D -->|Failed| J1[Status failed]
+    D -->|Still pending| C
+    B -->|No or timeout| E[Mark submission unknown]
+    E --> F[Run reconciliation]
+    F --> G{Confirmed?}
+    G -->|Success| H2[Reconcile success]
+    G -->|Failure| J2[Reconcile failed]
+    G -->|Unknown| K[Manual review hold]
+    H1 --> H[Continue saga]
+    H2 --> H
+    J1 --> J[Compensate or fail step]
+    J2 --> J
+```
+
+**Applicability:** Any pattern where the service supports async semantics and business correctness is more important than immediate completion. This strategy prioritizes no-duplicate execution over fast automatic recovery.
 
 ---
 
