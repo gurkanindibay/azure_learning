@@ -7,6 +7,13 @@
 - [Message Routing Patterns](#message-routing-patterns)
 - [Message Transformation Patterns](#message-transformation-patterns)
 - [Reliability Patterns](#reliability-patterns)
+  - [1. Guaranteed Delivery](#1-guaranteed-delivery)
+  - [2. Dead Letter Queue (DLQ)](#2-dead-letter-queue-dlq)
+  - [3. Retry Pattern](#3-retry-pattern)
+  - [4. Idempotent Receiver](#4-idempotent-receiver)
+  - [5. Transactional Outbox](#5-transactional-outbox)
+  - [6. Circuit Breaker](#6-circuit-breaker)
+  - [7. Saga Pattern](#7-saga-pattern)
 - [Pattern Selection Guide](#pattern-selection-guide)
 
 ## Introduction
@@ -391,6 +398,79 @@ stateDiagram-v2
 | **Closed** | Normal operation |
 | **Open** | Fail fast, don't attempt |
 | **Half-Open** | Test with limited requests |
+
+### 7. Saga Pattern
+
+Manage long-running distributed transactions without a global lock by breaking them into a sequence of local transactions, each publishing events or messages to trigger the next step. On failure, compensating transactions undo completed steps.
+
+#### Choreography-based Saga
+
+Each service listens for events and decides what to do next. No central coordinator.
+
+```mermaid
+sequenceDiagram
+    participant OS as Order Service
+    participant PS as Payment Service
+    participant IS as Inventory Service
+    participant SS as Shipping Service
+
+    OS->>PS: OrderCreated
+    PS->>IS: PaymentCompleted
+    IS->>SS: InventoryReserved
+    SS->>OS: ShipmentScheduled
+
+    Note over PS,IS: On failure: emit compensating events
+    IS-->>PS: InventoryFailed → PaymentRefunded
+    PS-->>OS: PaymentRefunded → OrderCancelled
+```
+
+#### Orchestration-based Saga
+
+A central saga orchestrator tells each service what to do and handles compensation on failure.
+
+```mermaid
+sequenceDiagram
+    participant O as Saga Orchestrator
+    participant PS as Payment Service
+    participant IS as Inventory Service
+    participant SS as Shipping Service
+
+    O->>PS: Reserve Payment
+    PS->>O: Payment Reserved
+    O->>IS: Reserve Inventory
+    IS->>O: Inventory Failed
+    O->>PS: Refund Payment  (compensating transaction)
+    O->>O: Mark Saga Failed
+```
+
+#### Compensating Transactions
+
+Each forward step must have a defined compensating action that semantically undoes it.
+
+| Step | Forward Action | Compensating Action |
+|------|---------------|--------------------|
+| 1 | Create Order | Cancel Order |
+| 2 | Reserve Payment | Refund Payment |
+| 3 | Reserve Inventory | Release Inventory |
+| 4 | Schedule Shipment | Cancel Shipment |
+
+#### Choreography vs Orchestration
+
+| Aspect | Choreography | Orchestration |
+|--------|-------------|---------------|
+| **Coordination** | Distributed (event-driven) | Centralised (orchestrator) |
+| **Coupling** | Low between services | Services coupled to orchestrator |
+| **Visibility** | Hard to trace end-to-end | Easy to track in one place |
+| **Complexity** | Grows with number of steps | Orchestrator can become complex |
+| **Failure handling** | Each service emits compensating events | Orchestrator drives compensation |
+| **Best for** | Simple, few-step workflows | Complex, long-running workflows |
+
+| Consideration | Details |
+|---|---|
+| **Atomicity** | No global ACID; eventual consistency |
+| **Idempotency** | Each step must be idempotent (combine with [Idempotent Receiver](#4-idempotent-receiver)) |
+| **State tracking** | Saga state stored in DB or dedicated service |
+| **Azure tooling** | Durable Functions, Logic Apps, Service Bus sessions |
 
 ## Pattern Selection Guide
 
