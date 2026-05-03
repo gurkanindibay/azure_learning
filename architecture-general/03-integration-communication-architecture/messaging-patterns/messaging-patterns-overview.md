@@ -712,6 +712,14 @@ sequenceDiagram
 
 **Typical reconciliation options:**
 
+Reconciliation means determining what actually happened after an ambiguous submit result (for example, request timeout before acknowledgment). The goal is to establish a reliable final truth without sending the same command again.
+
+In practice, reconciliation asks three questions:
+
+- Was the operation applied successfully?
+- Did it fail and require compensation?
+- Is the outcome still unknown and needs manual review?
+
 | Option | How It Works | Trade-off |
 |---|---|---|
 | Provider callback/webhook | Service emits completion event to callback endpoint | Requires reliable callback handling |
@@ -727,7 +735,7 @@ flowchart TD
     D -->|Failed| J1[Status failed]
     D -->|Still pending| C
     B -->|No or timeout| E[Mark submission unknown]
-    E --> F[Run reconciliation]
+    E --> F[Reconcile actual outcome]
     F --> G{Confirmed?}
     G -->|Success| H2[Reconcile success]
     G -->|Failure| J2[Reconcile failed]
