@@ -78,6 +78,11 @@
   - [PowerShell Examples](#powershell-examples)
   - [Architecture: Attribute Authority in Hybrid Deployments](#architecture-attribute-authority-in-hybrid-deployments)
   - [Key Takeaways](#key-takeaways)
+- [17. On-Premises Equivalents of Managed Identity](#17-on-premises-equivalents-of-managed-identity)
+  - [Windows / Active Directory](#windows--active-directory)
+  - [Linux / Generic / Cross-Platform](#linux--generic--cross-platform)
+  - [Comparison Table](#comparison-table)
+  - [Choosing the Right Approach](#choosing-the-right-approach)
 
 
 ## 1. Introduction
@@ -1172,6 +1177,48 @@ Set-AzureADUser -ObjectId user3@contoso.com -UsageLocation "US"
 5. **Writeback Scenarios**: Some attributes can be configured for **writeback** (cloud to on-premises), but this requires specific configuration and is limited to certain attributes like password writeback.
 
 ---
+
+## 17. On-Premises Equivalents of Managed Identity
+
+Azure Managed Identity lets a service authenticate as itself without storing credentials. On-premises environments offer similar concepts under different names and protocols.
+
+### Windows / Active Directory
+
+- **Group Managed Service Accounts (gMSA)** — the closest on-premises equivalent. Passwords are auto-rotated by Active Directory; no human ever knows them. Services run under a gMSA identity and authenticate to other AD-integrated resources automatically via Kerberos. Supported on Windows Server 2012+.
+- **Computer Accounts** — machines authenticate to AD as themselves; services can leverage the machine's identity for resource access without a separate credential.
+
+### Linux / Generic / Cross-Platform
+
+- **Kerberos Service Principals** — a service holds a keytab file tied to a principal. Widely used in Hadoop ecosystems, databases (PostgreSQL, SQL Server on Linux), and enterprise Linux environments.
+- **SPIFFE/SPIRE** — open standard (CNCF project) for workload identity using short-lived X.509 SVIDs (SPIFFE Verifiable Identity Documents). Platform-agnostic and suitable for hybrid and multi-cloud environments. This is the closest conceptual match to managed identity for non-Windows workloads.
+- **HashiCorp Vault (AppRole / Kubernetes auth)** — applications authenticate via a role bound to their runtime environment; Vault issues short-lived secrets/tokens dynamically. No stored long-lived credentials.
+- **CyberArk Conjur** — similar to Vault; injects credentials at runtime using workload attestation.
+
+### Comparison Table
+
+| Feature | Azure Managed Identity | gMSA (Windows AD) | SPIFFE/SPIRE | HashiCorp Vault |
+|---|---|---|---|---|
+| No stored secrets | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| Auto-rotation | ✅ Yes | ✅ AD-managed | ✅ Short-lived certs | ✅ Dynamic leases |
+| Platform | Azure | Windows only | Any | Any |
+| Protocol | OAuth 2.0 / OIDC | Kerberos | mTLS / OIDC | Vault API / OIDC |
+| Cross-platform | Limited | ❌ No | ✅ Yes | ✅ Yes |
+| Standards-based | OIDC | Kerberos (RFC 4120) | SPIFFE (CNCF) | Proprietary API |
+| Cloud-native integration | ✅ Native Azure | ❌ Requires hybrid | ✅ Yes | ✅ Yes |
+
+### Choosing the Right Approach
+
+| Scenario | Recommended |  
+|---|---|
+| Pure Windows / AD environment | gMSA |
+| Hybrid Windows + cloud | gMSA + Azure AD Connect or Entra Workload ID |
+| Linux workloads on-premises | Kerberos service principal or SPIFFE/SPIRE |
+| Kubernetes (any cloud/on-prem) | SPIFFE/SPIRE or Vault with Kubernetes auth |
+| Multi-cloud or cloud-agnostic | SPIFFE/SPIRE |
+| Secrets management complement | HashiCorp Vault or CyberArk Conjur |
+
+> **General Pattern**: [Workload Identity](../../architecture-general/06-security-architecture/)  
+> **Taxonomy**: §6.2 Identity & Access Management
 
 End of Document
 
