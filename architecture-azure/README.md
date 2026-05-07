@@ -46,7 +46,8 @@ architecture-azure/
 ├── governance/                # Governance services
 │   ├── policy/                # Azure Policy
 │   ├── lighthouse/            # Azure Lighthouse
-│   └── resource-management/   # Resource management
+│   ├── resource-management/   # Resource management
+│   └── landing-zones/         # Azure Landing Zones
 ├── migration/                 # Migration services
 ├── cost-management/           # Cost optimization
 └── devops/                    # DevOps and IaC
@@ -60,7 +61,7 @@ architecture-azure/
 - **Security**: Entra ID, Key Vault, RBAC, Bastion
 - **Integration**: Logic Apps, Event Grid, Event Hubs, Service Bus
 - **Observability**: Application Insights, Azure Monitor
-- **Governance**: Policy, Lighthouse, Resource Management
+- **Governance**: Policy, Lighthouse, Resource Management, Landing Zones
 - **Migration**: Azure Migrate, Resource Mover
 - **Cost Management**: Cost optimization and Hybrid Benefit
 
