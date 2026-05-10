@@ -86,6 +86,8 @@ API design styles and patterns:
 │   └── api-architecture-overview.md         # REST, GraphQL, gRPC
 ├── messaging-patterns/
 │   ├── messaging-patterns-overview.md       # Core patterns
+│   ├── outbox-pattern.md                    # Transactional Outbox deep-dive
+│   ├── saga-pattern.md                      # Saga distributed transactions
 │   └── enterprise-integration-patterns.md   # Classic EIP
 └── event-driven-messaging/
     ├── patterns/

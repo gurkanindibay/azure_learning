@@ -373,6 +373,8 @@ def process_message(message):
 
 Ensure atomicity of database and message operations.
 
+> 📄 **[Full Guide: Transactional Outbox Pattern](./outbox-pattern.md)** — detailed schema, CDC vs polling, failure scenarios, Azure implementation
+
 ```mermaid
 sequenceDiagram
     participant S as Service

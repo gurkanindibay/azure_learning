@@ -661,4 +661,4 @@ graph TD
 
 - [ACID Properties](acid-properties.md) - Transaction guarantees
 - [Event-Driven Architecture](../../03-integration-communication-architecture/event-driven-messaging/patterns/event-driven-architecture.md) - Handling distributed data
-- [Saga Pattern](../../02-application-software-architecture/design-patterns/saga-pattern.md) - Distributed transactions
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md) - Distributed transactions

@@ -284,10 +284,10 @@ sequenceDiagram
 
 ### Saga Pattern (for distributed transactions)
 
-When ACID is needed across microservices, consider the [Saga Pattern](../../02-application-software-architecture/design-patterns/saga-pattern.md).
+When ACID is needed across microservices, consider the [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md).
 
 ## Related Concepts
 
 - [CAP Theorem](cap-theorem.md) - Understanding distributed system trade-offs
-- [Saga Pattern](../../02-application-software-architecture/design-patterns/saga-pattern.md) - Distributed transaction management
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md) - Distributed transaction management
 - [Event Sourcing](../../02-application-software-architecture/design-patterns/event-sourcing-pattern.md) - Alternative consistency approach

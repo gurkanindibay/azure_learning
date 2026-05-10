@@ -635,7 +635,7 @@ public async Task HandleAsync(OrderCreatedEvent @event, CancellationToken ct)
 ## Related Patterns
 
 - [Event Sourcing Pattern](./event-sourcing-pattern.md)
-- [Saga Pattern](./saga-pattern.md)
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
 - [Mediator Pattern](./mediator-pattern.md)
 
 ---

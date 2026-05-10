@@ -77,6 +77,6 @@ graph TD
 
 ## Related Topics
 
-- [Saga Pattern](../../02-application-software-architecture/design-patterns/saga-pattern.md) - Managing distributed transactions
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md) - Managing distributed transactions
 - [Event Sourcing](../../02-application-software-architecture/design-patterns/event-sourcing-pattern.md) - Alternative data persistence model
 - [CQRS Pattern](../../02-application-software-architecture/design-patterns/cqrs-pattern.md) - Separating read and write models

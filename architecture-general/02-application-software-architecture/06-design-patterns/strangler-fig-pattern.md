@@ -961,7 +961,7 @@ Track during migration:
 
 ## Related Patterns
 
-- [Saga Pattern](./saga-pattern.md) - Managing distributed transactions
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md) - Managing distributed transactions
 - [Anti-Corruption Layer](./anti-corruption-layer.md) - Protecting new code from legacy
 - [Event Sourcing](./event-sourcing-pattern.md) - Data synchronization strategy
 

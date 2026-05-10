@@ -803,8 +803,8 @@ Always persist saga state between steps:
 
 ## Related Patterns
 
-- [Event Sourcing Pattern](./event-sourcing-pattern.md)
-- [CQRS Pattern](./cqrs-pattern.md)
+- [Event Sourcing Pattern](../../02-application-software-architecture/06-design-patterns/event-sourcing-pattern.md)
+- [CQRS Pattern](../../02-application-software-architecture/06-design-patterns/cqrs-pattern.md)
 - [Outbox Pattern](./outbox-pattern.md)
 
 ---

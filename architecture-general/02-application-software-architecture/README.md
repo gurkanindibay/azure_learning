@@ -40,7 +40,7 @@ This section covers application design patterns, architectural styles, and softw
 ### 2.6 Design Patterns
 - Event Sourcing → [event-sourcing-pattern.md](./06-design-patterns/event-sourcing-pattern.md)
 - CQRS → [cqrs-pattern.md](./06-design-patterns/cqrs-pattern.md)
-- Saga Pattern → [saga-pattern.md](./06-design-patterns/saga-pattern.md)
+- Saga Pattern → [saga-pattern.md](../03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
 - Strangler Fig Pattern → [strangler-fig-pattern.md](./06-design-patterns/strangler-fig-pattern.md)
 
 ### 2.7 Language Selection & Technology Choice

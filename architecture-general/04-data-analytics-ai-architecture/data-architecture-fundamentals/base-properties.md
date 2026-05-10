@@ -369,5 +369,5 @@ graph TD
 
 - [ACID Properties](acid-properties.md) - The traditional transaction guarantees
 - [CAP Theorem](cap-theorem.md) - Understanding why BASE exists
-- [Saga Pattern](../../02-application-software-architecture/design-patterns/saga-pattern.md) - Distributed transaction management
+- [Saga Pattern](../../03-integration-communication-architecture/messaging-patterns/saga-pattern.md) - Distributed transaction management
 - [Event Sourcing](../../02-application-software-architecture/design-patterns/event-sourcing-pattern.md) - Alternative data persistence model
