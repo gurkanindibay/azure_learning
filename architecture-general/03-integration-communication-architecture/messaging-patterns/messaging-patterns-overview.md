@@ -344,6 +344,8 @@ graph TD
 
 Handle duplicate messages safely.
 
+> 📄 **[Full Guide: Idempotency Store Pattern](./idempotency-store-pattern.md)** — key design, Redis vs DB vs broker-native, TTL strategy, atomic patterns
+
 ```mermaid
 graph TD
     M[Receive Message] --> C{Already Processed?}

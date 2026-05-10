@@ -87,6 +87,7 @@ API design styles and patterns:
 ├── messaging-patterns/
 │   ├── messaging-patterns-overview.md       # Core patterns
 │   ├── outbox-pattern.md                    # Transactional Outbox deep-dive
+│   ├── idempotency-store-pattern.md         # Idempotency Store deep-dive
 │   ├── saga-pattern.md                      # Saga distributed transactions
 │   └── enterprise-integration-patterns.md   # Classic EIP
 └── event-driven-messaging/

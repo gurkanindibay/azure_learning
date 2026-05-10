@@ -327,6 +327,8 @@ sequenceDiagram
 
 Pair outbox (at-least-once delivery) with an **idempotency key store** at the consumer side:
 
+> 📄 **[Full Guide: Idempotency Store Pattern](./idempotency-store-pattern.md)** — key design, Redis vs DB vs broker-native, TTL strategy, atomic patterns
+
 ```mermaid
 graph LR
     R[Relay] -->|idempotency_key in header| B[Broker]
@@ -360,6 +362,7 @@ Write the outbox event in the command handler's transaction. The relay publishes
 | Pattern | Relationship | Section |
 |---------|-------------|---------|
 | [Idempotent Receiver](./messaging-patterns-overview.md#4-idempotent-receiver) | Required complement — consumers must deduplicate | §3.3 |
+| [Idempotency Store](./idempotency-store-pattern.md) | Implementation mechanism for consumer-side deduplication | §3.3 |
 | [Saga Pattern](./messaging-patterns-overview.md#7-saga-pattern) | Outbox reliably emits saga step events | §3.3 |
 | [Event-Driven Architecture](../event-driven-messaging/01-patterns/event-driven-architecture.md) | Outbox is a reliable event emission mechanism for EDA | §3.3 |
 | [Dead Letter Queue](./messaging-patterns-overview.md#2-dead-letter-queue-dlq) | Handles messages that exceed relay retry limits | §3.3 |
