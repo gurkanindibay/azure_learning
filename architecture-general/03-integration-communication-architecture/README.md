@@ -53,6 +53,7 @@ API design styles and patterns:
 | **Saga Pattern** | Distributed transaction management |
 
 📄 **[Event-Driven Architecture](./event-driven-messaging/patterns/event-driven-architecture.md)** - Complete EDA guide
+📄 **[Event Consumer Patterns](./event-driven-messaging/01-patterns/event-consumer-patterns.md)** - Tiered retry topics, log compaction for state, consumer worker pools
 
 ### Messaging Patterns
 
@@ -90,9 +91,10 @@ API design styles and patterns:
 │   ├── idempotency-store-pattern.md         # Idempotency Store deep-dive
 │   ├── saga-pattern.md                      # Saga distributed transactions
 │   └── enterprise-integration-patterns.md   # Classic EIP
-└── event-driven-messaging/
-    ├── patterns/
+    ├── event-driven-messaging/
+    ├── 01-patterns/
     │   ├── event-driven-architecture.md     # EDA, CQRS, Saga
+    │   ├── event-consumer-patterns.md       # Tiered retry, log compaction, worker pools
     │   └── hybrid-messaging-patterns.md     # Hybrid approaches
     ├── comparisons/
     │   ├── queue_vs_pubsub.md              # Pattern comparison
