@@ -93,6 +93,39 @@ Azure Key Vault manages three types of objects:
 2. **Keys**: Cryptographic keys for encryption operations (RSA, EC keys)
 3. **Certificates**: X.509 certificates for SSL/TLS, with optional private key management
 
+#### Keys vs Secrets vs Certificates — Detailed Comparison
+
+| | Key | Secret | Certificate |
+|---|---|---|---|
+| **Structure** | Cryptographic key (RSA, EC, AES) | Arbitrary string/bytes | X.509 cert + key pair + trust chain |
+| **Primary use** | Crypto operations (encrypt, sign, wrap) | Store credentials/opaque data | TLS/mTLS, code signing, auth |
+| **Auto-rotation** | Manual | Manual | Built-in via CA integration policy |
+| **Exportable** | Optional (policy-controlled) | Yes | Yes (if policy allows) |
+| **HSM-backed** | Yes (Premium/Managed HSM) | No | Key portion yes |
+| **Max size** | Key-type dependent | 25 KB | Cert size limits apply |
+
+**Key** — A cryptographic key used for mathematical operations.
+
+- Used for encryption/decryption, signing/verification, key wrapping
+- Operations happen *inside* the vault — the key never leaves in plaintext (unless marked exportable)
+- Types: RSA (2048, 3072, 4096-bit), EC (P-256, P-384, P-521), symmetric AES (Managed HSM only)
+- Example: encrypt a database column, sign a JWT, wrap a data encryption key (DEK)
+
+**Secret** — An arbitrary piece of sensitive string data with no cryptographic structure.
+
+- Key Vault stores it and protects it at rest; no operations are performed on the value
+- Example use cases: database connection strings, API keys, passwords, SAS tokens
+- Accessed by name + version; supports versioning and expiry
+
+**Certificate** — A public key certificate (X.509) bundling a key pair, certificate metadata, and trust chain.
+
+- Combines a **Key** (private key managed by Key Vault) + public cert + optional issuer chain
+- Key Vault can auto-renew certificates via integrated CAs (DigiCert, GlobalSign) or self-signed
+- The private key is addressable as a **Key** object; the full PFX/PEM bundle is also accessible as a **Secret**
+- Example use cases: TLS termination, mutual TLS (mTLS), code signing, service identity
+
+> **Important:** Creating a certificate in Key Vault also creates an addressable key and secret with the **same name**. The key holds the private key; the secret exposes the full PFX bundle (cert + chain + private key) for consumption by services that need it.
+
 ### Access Control
 
 Key Vault supports two permission models:
