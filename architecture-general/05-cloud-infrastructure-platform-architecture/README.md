@@ -30,6 +30,7 @@ This section covers cloud deployment models, infrastructure patterns, and platfo
   - [Hub-Spoke Network Architecture](./networking/hub_spoke_network_architecture.md)
   - [Proxy and Load Balancing Architecture](./networking/proxy-load-balancing-architecture.md)
   - [Service Mesh Architecture](./networking/service-mesh-architecture.md)
+  - [eBPF Architecture](./networking/ebpf-architecture.md)
 - [scaling/](./scaling/) - System design evolution and scaling patterns
 - [storage/](./storage/) - Storage architecture patterns
   - [SAN and NAS: Storage Architecture Guide](./storage/san-nas-storage-architecture.md)
