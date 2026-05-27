@@ -332,28 +332,255 @@ Everyone knows caching makes things faster. Interviewers want to know if you und
 
 ### 9. What causes a cache stampede and how do you prevent it?
 
-When a highly requested cache key expires, thousands of requests miss the cache simultaneously and hit the database at the exact same moment. The database falls over. You need to know how to prevent this using **probabilistic early expiration** or a **lock** to ensure only one thread regenerates the cache.
+A **cache stampede** (also called "thundering herd" or "dog-piling") happens when a heavily requested cache key expires, and **all concurrent requests** discover the cache miss at the same time. They all rush to the database to regenerate the value, overwhelming it.
+
+**The scenario**: Imagine a popular product page cached for 5 minutes. At second 301, the cache TTL expires. 200 concurrent users request the product. All 200 requests:
+1. Check cache → miss
+2. Hit the database with the same expensive query
+3. 200 database connections consumed, CPU spikes to 100%, latencies skyrocket
+4. Database becomes unresponsive → cascading failures to other services
+
+This is especially dangerous because it's a **positive feedback loop**: as the DB slows down, requests pile up, more connections open, making the DB even slower.
+
+**Prevention strategies**:
+
+#### 1. Probabilistic Early Expiration (PER / "XFetch")
+
+Instead of expiring at a fixed TTL, each read computes a probability of early refresh. The closer to expiry, the higher the probability. In Redis pseudocode:
+
+```python
+def should_refresh(ttl_ms, delta=1000, beta=1.0):
+    if ttl_ms < 0:
+        return True  # already expired
+    # As time-to-live shrinks, probability of refresh increases
+    return random.random() < delta / (beta * ttl_ms + delta)
+```
+
+When the computed probability triggers, **only that one request** recomputes the value while others continue using the stale (but still valid) cached data. This spreads out the refresh load stochastically.
+
+#### 2. Lock-on-Miss (Mutex on Cache Miss)
+
+When a cache miss occurs, only **one request** is allowed to regenerate the value. All other concurrent requests wait for it:
+
+```
+Request 1: cache MISS → acquire lock "lock:product:42" → query DB → populate cache → release lock
+Request 2: cache MISS → try lock "lock:product:42" → blocked → retry cache → HIT (populated by R1)
+Request 3: cache MISS → try lock → blocked → retry → HIT
+...
+Request 200: same as above → HIT
+```
+
+The database only receives **one query** instead of 200. Implementation: `SET lock:product:42 client1 NX EX 5` in Redis.
+
+**Caveat**: If request 1 crashes, the lock must have a TTL so it auto-releases. Also, this adds latency for waiting requests — they block until the value is populated.
+
+#### 3. External Refresh / "Cache Warming"
+
+A background job refreshes the cache **before** it expires, ensuring there's never a gap:
+- Cron job runs every 4 minutes to refresh the 5-minute cache
+- The cache never truly expires under normal operation
+- Downside: increased complexity, and you're computing values that may never be requested
+
+#### 4. Redis `GETEX` (Atomic Get + Expire)
+
+Redis 6.2+ supports `GETEX` which atomically returns a value and updates its TTL. For read-heavy keys, you can extend the TTL on every access so popular keys never expire during traffic:
+
+```
+GETEX product:42 EX 300  -- returns value AND resets TTL to 300s
+```
+
+**Which to choose?**:
+
+| Strategy | Complexity | Staleness Risk | DB Protection | Best For |
+|:---|:---:|:---:|:---:|:---|
+| PER (probabilistic) | Low | Low | Good (stochastic) | Most cases |
+| Lock-on-miss | Low | None during lock | Excellent | Expensive queries |
+| External refresh | High | None | Excellent | Predictably hot keys |
+| GETEX sliding TTL | Minimal | None | Good (no expiry) | Perennially hot keys |
+
+> **Interview tip**: Ask whether the data can tolerate brief staleness. If yes → PER is often the simplest. If no → lock-on-miss. If you're already on Redis 6.2+, mention `GETEX`. Also connect this to the broader concept: cache stampedes are a special case of **thundering herd**, which also applies to process scheduling, connection pools, and distributed systems in general.
 
 ### 10. If you cache a user profile, how do you invalidate it when they update their email?
 
-Cache invalidation is a genuinely hard problem. You need to explain the difference between a **write-through cache** and a **cache-aside** pattern, and discuss the tradeoffs of setting a short **TTL (Time-To-Live)** versus explicitly deleting the key on every update.
+Cache invalidation is famously one of the **two hard problems in computer science** (along with naming things and off-by-one errors). The core tension: you want cached data to be **fresh**, but you also want to **avoid database load**. Every invalidation strategy is a tradeoff between these two goals.
+
+**The four cache write patterns**:
+
+#### 1. Cache-Aside (Lazy Loading) — Most Common
+
+The application manages the cache explicitly. On reads, check cache first; on writes, update the database and delete the cache entry.
+
+```
+READ:  app → cache (miss) → DB → populate cache → return
+WRITE: app → DB (UPDATE users SET email=?) → app → cache (DEL user:42)
+```
+
+- ✅ Simple, cache only contains what's actually read
+- ❌ First read after write is always a cache miss (cold start per key)
+- ❌ Race condition: if read and delete happen in wrong order, stale data can re-enter the cache
+
+#### 2. Write-Through
+
+The cache sits between the app and the database. Every write goes to the cache first, then synchronously to the database.
+
+```
+WRITE: app → cache (SET user:42) → DB (UPDATE users...)
+READ:  app → cache (always fresh)
+```
+
+- ✅ Cache is always consistent with DB
+- ❌ Every write touches the cache, even for data nobody reads
+- ❌ Higher write latency (two synchronous writes)
+
+#### 3. Write-Behind (Write-Back)
+
+Writes go to the cache first and are **asynchronously** flushed to the database.
+
+```
+WRITE: app → cache (SET user:42) → return (fast!)
+       cache → DB (async flush, batched)
+```
+
+- ✅ Lowest write latency
+- ❌ Risk of data loss if cache crashes before flush
+- ❌ Hard to implement correctly (needs a persistent cache like Redis with AOF)
+
+#### 4. Refresh-Ahead
+
+The cache proactively refreshes entries before they expire, based on access patterns. If a key is frequently accessed and close to expiry, the cache asynchronously reloads it.
+
+- ✅ Near-zero cache miss latency for hot data
+- ❌ Complex to tune; may preload data nobody ultimately requests
+
+**TTL vs explicit invalidation — the tradeoff**:
+
+| Strategy | Freshness | Complexity | DB Load |
+|:---|:---|:---|:---|
+| **Short TTL only** (e.g., 60s) | At most 60s stale | Minimal | Higher (frequent reloads) |
+| **Explicit delete on write** | Immediate | Moderate (must catch all write paths) | Lower |
+| **TTL + explicit delete** | Immediate, with safety net | Moderate | Lower (TTL catches missed deletes) |
+
+**The recommended approach**: Use **cache-aside with explicit deletion on writes PLUS a fallback TTL**. The explicit delete handles the happy path; the TTL is a safety net for missed invalidation events, bugs, or operations done outside the application (DB migrations, admin panels).
+
+#### Modern alternative: Change Data Capture (CDC)
+
+Instead of the application managing invalidation, use the database's own change log:
+
+1. **Debezium** (or similar CDC tool) tails the database WAL
+2. When a `users` row changes, it emits an event to Kafka
+3. A cache-invalidation consumer listens and deletes/updates the relevant cache key
+
+This decouples cache invalidation from application code entirely — the cache stays in sync regardless of which service or tool modified the database.
+
+> **Interview tip**: Quote Phil Karlton: *"There are only two hard things in Computer Science: cache invalidation and naming things."* Then explain that the pragmatic answer is usually cache-aside + explicit delete + TTL safety net. Mention CDC if the interviewer seems interested in scale — it's the approach used by large-scale systems where multiple services write to the same database.
 
 ### 11. Why might putting Redis in front of your database actually slow your system down?
 
-Adding a network hop to check a cache takes a few milliseconds. If your cache hit rate is terrible, you are paying the network penalty on every request just to find out the data is not there, and then hitting the database anyway. You should know how to monitor and calculate **cache hit ratios**.
+Adding a cache seems like a guaranteed win, but it introduces a **network hop** and a **new failure mode**. If your cache hit rate is poor, you are paying the cost of the cache check on every request while still hitting the database.
+
+**The math**: A Redis lookup costs ~0.5–2ms (network + command processing) in the same datacenter. A database query for a simple indexed lookup costs ~1–5ms. So:
+
+| Scenario | Cache Hit Rate | Latency | Net Effect |
+|:---|:---:|:---|:---|
+| No cache | N/A | DB: 3ms | Baseline: 3ms |
+| Cache, 90% hit | 90% | Cache: 1ms (90%) or Cache+DB: 4ms (10%) | **Avg: 1.3ms** ✅ |
+| Cache, 50% hit | 50% | Cache: 1ms (50%) or Cache+DB: 4ms (50%) | **Avg: 2.5ms** ⚠️ marginal |
+| Cache, 10% hit | 10% | Cache: 1ms (10%) or Cache+DB: 4ms (90%) | **Avg: 3.7ms** ❌ slower! |
+
+At a 10% hit rate, you are adding 1ms to 90% of requests for the privilege of checking an empty cache, then still hitting the database. You've made the system **slower and more complex**.
+
+**When caching hurts more than it helps**:
+
+1. **Low hit rate** — If your access pattern is uniformly distributed (every key is equally likely), caching provides no benefit. The cache just becomes a slower, smaller copy of your database.
+2. **Highly volatile data** — If data changes faster than your TTL, you are serving stale data to most users and still hitting the database for writes plus cache updates.
+3. **Cache as a SPOF** — If Redis goes down and your application cannot gracefully degrade to the database, you've added a dependency that **reduces** overall availability. Your system is now only as available as Redis × the database.
+4. **Serialization overhead** — Complex objects take CPU to serialize/deserialize. For large payloads, the serialization cost may exceed the database query cost.
+5. **Operational complexity** — You now have to monitor, scale, patch, and alarm on Redis. That's a non-trivial operational burden for marginal gain.
+
+**How to decide if caching is worth it**:
+
+1. **Measure first** — Profile your database queries. Identify the top 5 slowest/most frequent queries. Only cache those.
+2. **Calculate the break-even hit rate** — If `cache_latency + (1 - hit_rate) × db_latency < db_latency`, caching helps. Solve for your numbers.
+3. **Monitor cache hit ratio** — Track `hits / (hits + misses)`. In Redis: `INFO stats` shows `keyspace_hits` and `keyspace_misses`. Alert if the ratio drops below your threshold.
+4. **Design for cache failure** — Always have a fallback path. Use circuit breakers (e.g., Polly in .NET, resilience4j in Java) so a Redis outage doesn't cascade.
+
+```python
+# Anti-pattern: cache or die
+value = redis.get(key)
+if value:
+    return value
+return db.query(...)  # what if Redis is down? Connection refused → crash
+
+# Resilient pattern: cache optionally
+try:
+    value = redis.get(key)
+    if value:
+        return value
+except RedisError:
+    metrics.increment("cache.error")  # log and proceed
+return db.query(...)  # always works, with or without cache
+```
+
+> **Interview tip**: Use the phrase **"don't cache prematurely"** — just like premature optimization. Cache when you have evidence (query logs, APM data) that a specific query is a bottleneck. Also mention that sometimes the right answer is **database query optimization** (adding an index, materializing a view) rather than adding a cache layer.
 
 ### 12. What eviction policy makes sense for a session store versus a content feed?
 
-Caches run out of memory. When they do, they have to delete something to make room.
+Caches have finite memory. When they fill up, they must **evict** (delete) some entries to make room for new ones. The eviction policy determines **which** entries get removed — and choosing wrong can break your application in subtle ways.
 
-| Eviction Policy | Best For | Worst For |
+**The core policies**:
+
+| Policy | How it chooses | Algorithmic complexity |
 |:---|:---|:---|
-| **LRU** (Least Recently Used) | Content feeds, timelines | Session stores |
-| **LFU** (Least Frequently Used) | Frequently accessed static data | Real-time data |
-| **TTL-only** | Session stores | General-purpose caching |
-| **FIFO** (First In, First Out) | Simple queues | Varied-access patterns |
+| **LRU** (Least Recently Used) | Evicts keys not accessed for the longest time | O(1) with doubly-linked list + hashmap |
+| **LFU** (Least Frequently Used) | Evicts keys with the lowest access count | O(log N) with a min-heap (or O(1) with Redis's probabilistic LFU) |
+| **FIFO** (First In, First Out) | Evicts the oldest-inserted key regardless of access | O(1) with a queue |
+| **TTL-only** | Only evicts keys whose TTL has expired | O(1) per key, but requires scanning |
+| **Random** | Evicts a random key | O(1) — surprisingly effective in practice |
 
-**LRU** makes sense for a content feed. It is a terrible choice for a session store where you might log active users out randomly.
+#### Redis-specific policies
+
+Redis splits eviction into two dimensions — **which keys** (all keys vs. only keys with TTL) and **how to choose**:
+
+| Redis `maxmemory-policy` | Scope | Eviction Rule |
+|:---|:---|:---|
+| `noeviction` | — | Error on write when full (default) |
+| `allkeys-lru` | All keys | Approximated LRU |
+| `allkeys-lfu` | All keys | Approximated LFU (Redis 4.0+) |
+| `volatile-lru` | Only keys with TTL | Approximated LRU |
+| `volatile-lfu` | Only keys with TTL | Approximated LFU |
+| `allkeys-random` | All keys | Random |
+| `volatile-random` | Only keys with TTL | Random |
+| `volatile-ttl` | Only keys with TTL | Shortest remaining TTL first |
+
+Redis uses **approximate** LRU/LFU — it samples N keys (default 5) and evicts the best candidate from the sample. This is O(N) per eviction rather than maintaining perfect ordering, which is fast enough for practical use.
+
+#### The session store vs. content feed distinction
+
+**Session store** (e.g., `user:session:abc123`):
+
+- Each session key is **tied to one user**. If a user's session is evicted, they are suddenly logged out — a **high-impact, confusing failure**.
+- Sessions have a **natural TTL** (e.g., 2 hours of inactivity). You want to respect that TTL, not evict early based on access patterns.
+- An active user might have long gaps between requests (reading a long article), so LRU could evict them even though they are still active.
+- **Best policy**: `volatile-ttl` or `volatile-lru` with a safety margin. Let TTL govern eviction — sessions expire naturally. If you must evict under memory pressure, evict the session closest to its TTL anyway.
+
+**Content feed** (e.g., `feed:user:42`, `trending:posts`):
+
+- These are **shared, recomputable** values. Evicting them means one user gets a slightly slower request, not a broken experience.
+- Access patterns are **highly skewed** (power-law distribution) — 5% of content gets 95% of reads. LFU or LRU naturally retains the hot content.
+- **Best policy**: `allkeys-lru` or `allkeys-lfu`. Hot items stay; cold items get evicted. Nobody notices the difference.
+
+**A concrete failure scenario**: A team uses `allkeys-lru` for their Redis session store. During a traffic spike, new sessions push old ones out of memory. A user who logged in 30 minutes ago refreshes the page and gets logged out because their session was evicted — despite being well within the 2-hour TTL. They log in again, creating a new session, further exacerbating memory pressure. The ops team sees a spike in login errors and cannot figure out why.
+
+| Use Case | Recommended Policy | Why |
+|:---|:---|:---|
+| **User sessions** | `volatile-ttl` | Respect natural expiry; evict near-expiry keys first |
+| **Content feeds / timelines** | `allkeys-lru` or `allkeys-lfu` | Hot content stays, cold content goes |
+| **Rate limiting counters** | `volatile-ttl` | Each counter has a window TTL — evict expired ones |
+| **API response cache** | `allkeys-lru` | Frequently hit endpoints stay cached |
+| **Leaderboards** | `noeviction` | You need all data; scale memory instead |
+| **Distributed locks** | `noeviction` | Never evict a lock — safety risk |
+
+> **Interview tip**: Don't just name the policies — explain **why** the wrong policy causes a specific, real-world failure. The session-store-vs-content-feed distinction is a classic interview scenario. Also mention that `noeviction` with alerting is underrated: sometimes it's better to fail loudly (and get paged) than silently evict critical data.
 
 ---
 
