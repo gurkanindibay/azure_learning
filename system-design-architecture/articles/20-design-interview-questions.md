@@ -155,7 +155,59 @@ The index stores entries sorted by `A` first, and within matching `A` values, so
 > **Interview tip**: Use `EXPLAIN` (PostgreSQL) or `EXPLAIN PLAN` (Oracle) to verify which index the planner actually uses. Mention covering indexes — if all columns in your `SELECT` are in the composite index, the database can answer the query from the index alone (an "index-only scan"), never touching the table.
 
 ### 4. What is the N+1 query problem and how do you fix it?
-This is the most common performance bug in modern applications that use ORMs. You query a list of users, and then as you loop through the users, the ORM fires a separate query to fetch each user’s profile. You need to be able to explain how to fix it using **explicit joins** or **eager loading**.
+
+This is the most common performance bug in modern applications that use ORMs. It happens when your code executes **one query to fetch a list, then N additional queries — one for each item in that list**.
+
+**Concrete example**: Imagine a blog where you want to display 20 posts along with each post's author name:
+
+```
+1. SELECT * FROM posts LIMIT 20;                    -- 1 query
+2. SELECT * FROM users WHERE id = 7;                -- query for post 1's author
+3. SELECT * FROM users WHERE id = 12;               -- query for post 2's author
+4. SELECT * FROM users WHERE id = 7;                -- query for post 3's author (same author!)
+   ... 17 more queries ...
+```
+
+That is **21 queries** (1 + 20) when 2 would have sufficed. If you have 100 posts on the page, you get 101 queries. If the author is the same across multiple posts, you still re-fetch them — no caching.
+
+**Why it happens**: ORMs use **lazy loading** by default. When you access `post.author.name`, the ORM checks if the author is already loaded. If not, it issues a separate query. This is convenient during development but catastrophic at scale because:
+
+- **Network round-trips**: Each query is a separate TCP round-trip to the database (0.5–5ms each in the same datacenter, 50–200ms across regions).
+- **Connection pool exhaustion**: Each query consumes a database connection. With 100 concurrent requests each firing 101 queries, you need 10,100 connections.
+- **Database CPU waste**: The database parses, plans, and executes virtually identical queries repeatedly.
+
+**The impact at scale**: A page that should load in 10ms with a single JOIN takes 500ms+ with N+1. Under load, this cascades into timeouts, connection pool saturation, and cascading failures.
+
+**Solutions**:
+
+| Approach | How it works | Best for |
+|:---|:---|:---|
+| **Eager Loading** | `Post.includes(:author)` in ActiveRecord / `Post.objects.select_related('author')` in Django — tells the ORM to fetch related data in the same query via JOIN | Simple one-level associations |
+| **Batch Loading** | Collect all foreign keys from the parent list, then `SELECT * FROM users WHERE id IN (7, 12, 15, ...)` — one query fetches all authors | When you need fine-grained control |
+| **JOINs** | Write a raw `SELECT posts.*, users.name FROM posts JOIN users ON posts.author_id = users.id` | Complex queries where ORM abstraction hurts more than helps |
+| **DataLoader Pattern** | A per-request cache that deduplicates and batches database calls (popularized by Facebook's DataLoader for GraphQL) | GraphQL APIs, microservices with many downstream calls |
+| **GraphQL `@defer` / DataLoader** | GraphQL resolvers naturally create N+1; DataLoader batches them within a single tick of the event loop | GraphQL backends |
+
+**In practice**: Most ORMs make eager loading a one-liner:
+
+```ruby
+# ❌ N+1 — lazy loading
+posts = Post.limit(20)
+posts.each { |p| puts p.author.name }
+
+# ✅ Eager loading — single JOIN
+posts = Post.includes(:author).limit(20)
+posts.each { |p| puts p.author.name }
+```
+
+**How to detect it in production**:
+
+- **Development**: Rails' `bullet` gem, Django's `nplusone`, Laravel's `barryvdh/laravel-debugbar` log N+1 warnings
+- **APM tools**: Datadog, New Relic, and Sentry flag query spikes and repeated similar queries
+- **Database logs**: If you see hundreds of identical-looking queries with different IDs in a single request trace, you have N+1
+- **Slow query log**: Set `log_min_duration_statement` in PostgreSQL to catch queries taking longer than expected
+
+> **Interview tip**: Don't just say "use eager loading." Explain that the root cause is lazy loading being the ORM default, and that the fix needs to happen at the **data-access layer** — not by sprinkling caching on top. Also mention that over-eager-loading (loading associations you don't need) wastes memory and bandwidth, so you should only load what the view actually renders.
 
 ---
 
@@ -180,7 +232,93 @@ You do not need a PhD in database theory. But you do need to know that the defau
 
 ### 7. How do you implement a distributed lock without creating a single point of failure?
 
-If multiple workers need exclusive access to a resource, they need a distributed lock. Using a single Redis instance works until that instance goes down. You should be familiar with algorithms like **Redlock** or systems like **ZooKeeper** / **etcd** that handle distributed consensus.
+If multiple workers need exclusive access to a shared resource (e.g., only one worker should process a given file, or only one scheduler should trigger a daily report), they need a **distributed lock**. A simple `SETNX` on a single Redis instance works — until that Redis instance goes down. Then every worker is locked out, or worse, the lock is lost and two workers act simultaneously.
+
+The challenge is building a lock that survives individual node failures while maintaining **safety** (only one holder at a time) and **liveness** (someone eventually acquires it).
+
+---
+
+#### Approach 1: Redlock (Redis-based)
+
+The **Redlock algorithm** (proposed by Redis's creator) uses **N independent Redis instances** (typically 5) with no replication between them. To acquire a lock:
+
+1. Generate a **random token** (a unique value to identify this lock holder)
+2. Try to `SET lock_name {token} NX PX {ttl}` on **all N instances** in sequence, with a short timeout per attempt
+3. If you succeed on a **majority** (at least N/2 + 1, e.g., 3 out of 5) within the total time budget, you hold the lock
+4. The **effective lock duration** = TTL − time spent acquiring
+5. To release, send `DEL lock_name` to all instances, but only if the value still matches your token (Lua script to make it atomic)
+
+```
+Client tries SET NX PX on 5 independent Redis nodes:
+
+  Redis-1: ✅  Redis-2: ✅  Redis-3: ✅  Redis-4: ❌  Redis-5: ✅
+                ↑ Majority (4/5): lock acquired
+```
+
+**Why this works**: If a minority of Redis instances fail, the quorum still exists. The random token prevents a client from releasing another client's lock.
+
+**Redlock controversy**: Martin Kleppmann (author of *Designing Data-Intensive Applications*) famously argued that Redlock is **unsafe** in certain scenarios — specifically, if a client is paused (GC pause, network delay) longer than the lock TTL, another client can acquire the lock and both operate simultaneously. The counter-argument is that **fencing tokens** solve this (see below).
+
+---
+
+#### Approach 2: ZooKeeper / etcd (Consensus-based)
+
+Systems like **ZooKeeper** and **etcd** use consensus (ZAB / Raft) to maintain a consistent, ordered log. Locking patterns:
+
+**Ephemeral Sequential ZNodes** (ZooKeeper):
+
+1. Every contender creates an **ephemeral, sequential** node under a lock path: `/lock/request-0000000001`, `/lock/request-0000000002`, etc.
+2. The client with the **lowest sequence number** holds the lock
+3. All other clients set a **watch** on the node just before theirs
+4. When the lock holder disconnects or crashes, its ephemeral node is automatically deleted, and the next client in line is notified
+
+```
+/lock/request-0000000001  ← Lock holder (ephemeral)
+/lock/request-0000000002  ← Watching 0000000001
+/lock/request-0000000003  ← Watching 0000000002
+```
+
+**Why this is safer**: The lock is tied to a **session**. If the client's TCP connection drops or its heartbeat times out, the session expires and ZooKeeper automatically deletes the ephemeral node. No TTL guessing. No clock drift concerns.
+
+---
+
+#### Comparison
+
+| Aspect | Redlock (Redis) | ZooKeeper / etcd |
+|:---|:---|:---|
+| **Consistency model** | Best-effort (no consensus) | Strong (Raft/ZAB consensus) |
+| **Failure tolerance** | Tolerates minority Redis failures | Tolerates minority node failures |
+| **Lock release** | TTL-based (time-bounded) | Session-based (heartbeat) |
+| **Complexity** | Moderate (client-side quorum) | Higher (running a ZK/etcd cluster) |
+| **Performance** | Lower latency (~1ms) | Higher latency (~5-10ms per operation) |
+| **Clock sensitivity** | Yes (TTL depends on clock sync) | No (session heartbeats, not wall clock) |
+| **Best for** | High-throughput, short-lived locks | Correctness-critical, longer-lived locks |
+
+---
+
+#### The Fencing Token — the detail most people miss
+
+A distributed lock alone is **not enough** for safety. Consider this scenario:
+
+1. Client A acquires the lock (TTL: 30s)
+2. Client A encounters a **long GC pause** (45 seconds)
+3. The lock expires on Redis/ZK
+4. Client B acquires the lock
+5. Client A **resumes** — still thinks it holds the lock
+6. Both A and B now write to the shared resource → **corruption**
+
+The fix: every lock acquisition returns a **monotonically increasing fencing token**. The shared resource (e.g., the database or storage system) checks the token on every write and rejects any write with a token lower than the highest it has seen:
+
+```
+Client A acquires lock → token 17
+Client A is paused (GC) → lock expires
+Client B acquires lock → token 18
+Client A resumes → tries to write with token 17 → REJECTED (18 > 17)
+```
+
+This pushes the safety check to the resource level, where even a "confused" client cannot cause damage.
+
+> **Interview tip**: If you mention Redlock, acknowledge the Kleppmann critique. If the interviewer pushes on safety, bring up fencing tokens — it shows you understand the difference between locking (mutual exclusion) and protecting the resource (write validation). Also mention that in practice, many teams use a simple single-Redis lock with short TTLs for non-critical use cases (cache refresh coordination, job deduplication) because the operational simplicity is worth the risk.
 
 ### 8. How do you implement idempotency for a payment retry endpoint?
 
