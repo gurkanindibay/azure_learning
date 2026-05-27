@@ -1,0 +1,311 @@
+# 4. APIs & Network Design
+
+> **Parent**: [System Design Interview Reference](README.md)  
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16
+
+---
+
+## P13: API Versioning
+
+| | |
+|:---|:---|
+| **Problem** | API change breaks old mobile clients that haven't been updated in years |
+| **Root cause** | Removing or renaming fields — mobile apps live on devices far longer than web apps |
+
+**Strategy — the "only add" principle**:
+
+```
+Versioning approach:
+  PATH:    /api/v1/users  →  /api/v2/users
+  HEADER:  Accept: application/vnd.api+v2+json
+  QUERY:   /api/users?version=2
+
+Payload evolution:
+  1. Add new fields (never remove old ones)
+  2. Mark old fields @Deprecated in docs
+  3. Monitor usage of deprecated fields
+  4. Remove only when usage = 0 for N months
+```
+
+| Approach | Pros | Cons |
+|:---|:---|:---|
+| **URL path** (`/v1/`, `/v2/`) | Explicit, easy to route, CDN-friendly | URL pollution, duplicate routes |
+| **Accept header** | Clean URLs, REST-purist | Harder to test in browser, CDN caching complications |
+| **Query param** | Simple | Not RESTful, pollutes query namespace |
+
+> **Azure**: API Management versioning policies | **General**: §8.3 API Design
+
+---
+
+## P14: Rate Limiting
+
+| | |
+|:---|:---|
+| **Problem** | Client bursts 2× the allowed rate at the boundary between windows; one noisy tenant starves others |
+| **Root cause** | Fixed window counter resets at `00:00` — requests at `23:59:59` and `00:00:01` are in different windows |
+
+### Algorithm Comparison
+
+| Algorithm | Mechanism | Boundary burst? | Memory | Fairness | Best for |
+|:---|:---|:---:|:---:|:---:|:---|
+| **Fixed window** | `INCR counter` per time bucket | ❌ 2× at boundary | $O(1)$ | Low | Simple API quotas |
+| **Sliding window log** | Log every timestamp, evict old | ✅ None | $O(N)$ | High | Strict enforcement |
+| **Sliding window counter** | Weighted avg of current + previous window | ✅ ~smooth | $O(1)$ | High | **Default choice** |
+| **Token bucket** | Tokens refill at steady rate; burst = bucket size | ✅ Controlled burst | $O(1)$ | Medium | Burst-friendly APIs |
+| **Leaky bucket** | Fixed output rate; queue → reject on overflow | ✅ No burst | $O(1)$ | High | Traffic shaping |
+
+### How Each Algorithm Works
+
+#### 1. Fixed Window
+
+```
+Window: [12:00:00 – 12:01:00)  limit=100
+  12:00:05 → counter=1  ✅
+  12:00:59 → counter=99 ✅
+  12:00:59 → counter=100 ✅  ← last allowed
+  ── window resets ──
+  12:01:00 → counter=1  ✅  ← new window
+```
+
+**The double-burst problem**: 100 requests at `12:00:59` + 100 requests at `12:01:00` = 200 in 2 seconds — 2× the limit.
+
+**Redis**:
+```bash
+INCR rate:user:42:{minute_timestamp}
+EXPIRE rate:user:42:{minute_timestamp} 60
+```
+
+#### 2. Sliding Window Log
+
+For every request, append timestamp to a sorted set. Count entries in the last window. Perfect accuracy, unbounded memory.
+
+```
+Current time: 12:01:05, window=60s
+  ZSET: [12:00:10, 12:00:45, 12:00:58, 12:01:02]
+  Remove entries < 12:00:05 → [12:00:10, 12:00:45, 12:00:58, 12:01:02]
+  Count = 4 → check against limit
+```
+
+**Redis**:
+```bash
+ZADD rate:user:42 {now_ms} {now_ms}:{random}
+ZREMRANGEBYSCORE rate:user:42 0 {now_ms - window_ms}
+ZCARD rate:user:42
+```
+
+**Downside**: If a user hits 1000 req/s, the sorted set stores 60,000 entries. Use with caution.
+
+#### 3. Sliding Window Counter ⭐ (Recommended)
+
+Weighted interpolation between the current and previous fixed windows. Same $O(1)$ memory as fixed window, but smooths out the boundary burst.
+
+$$\text{rate} = \text{count}\_{prev} \cdot \left(1 - \frac{t}{W}\right) + \text{count}\_{current}$$
+
+Where $t$ = elapsed time in current window, $W$ = window size.
+
+```
+Window=60s, limit=100, t=15s into current window (25% elapsed)
+  prev_count = 84, current_count = 18
+  rate = 84 × (1 - 0.25) + 18 = 84 × 0.75 + 18 = 81
+  81 < 100 → ALLOW ✅
+```
+
+**Redis (single atomic Lua script)**:
+```lua
+-- KEYS[1]: rate limit key (e.g. "rate:user:42")
+-- ARGV[1]: max requests per window
+-- ARGV[2]: window size in seconds
+-- ARGV[3]: current timestamp in seconds
+
+local current_window = math.floor(ARGV[3] / ARGV[2])
+local prev_window = current_window - 1
+local key_prev = KEYS[1] .. ":" .. prev_window
+local key_curr = KEYS[1] .. ":" .. current_window
+local elapsed = ARGV[3] % ARGV[2]
+local weight = 1 - (elapsed / ARGV[2])
+
+local prev_count = redis.call("GET", key_prev) or 0
+local curr_count = redis.call("GET", key_curr) or 0
+local rate = prev_count * weight + curr_count
+
+if rate < tonumber(ARGV[1]) then
+    redis.call("INCR", key_curr)
+    redis.call("EXPIRE", key_curr, ARGV[2] * 2)
+    return {1, rate + 1}  -- allowed
+else
+    return {0, rate}       -- denied
+end
+```
+
+#### 4. Token Bucket
+
+Tokens refill at a constant rate into a bucket of fixed capacity. Each request consumes 1 token. If bucket is empty, reject. Burst = bucket size.
+
+```
+Bucket capacity = 100 tokens, refill = 10 tokens/sec
+  t=0: 100 tokens
+  t=1: 1 req → 99 tokens  (10 tokens added, capped at 100 = no change)
+  …
+  Sudden burst: 50 req at t=5 → 50 tokens consumed → 50 left
+  Gradual refill: 10 tokens/sec replenishes the bucket
+```
+
+**Redis Lua (token bucket)**:
+```lua
+-- KEYS[1]: bucket key
+-- ARGV[1]: capacity (max tokens)
+-- ARGV[2]: refill rate (tokens/second)
+-- ARGV[3]: tokens requested (usually 1)
+-- ARGV[4]: current timestamp in seconds
+
+local bucket = redis.call("HMGET", KEYS[1], "tokens", "last_refill")
+local tokens = tonumber(bucket[1]) or tonumber(ARGV[1])
+local last_refill = tonumber(bucket[2]) or ARGV[4]
+
+local elapsed = math.max(ARGV[4] - last_refill, 0)
+local new_tokens = math.min(ARGV[1], tokens + elapsed * ARGV[2])
+
+if new_tokens >= tonumber(ARGV[3]) then
+    redis.call("HMSET", KEYS[1], "tokens", new_tokens - ARGV[3], "last_refill", ARGV[4])
+    redis.call("EXPIRE", KEYS[1], 60)
+    return {1, new_tokens - ARGV[3]}  -- allowed
+else
+    return {0, new_tokens}             -- denied
+end
+```
+
+#### 5. Leaky Bucket
+
+Think of a FIFO queue processed at a constant rate. If the queue is full, new requests are rejected. Guarantees smooth, constant output — but allows **zero** burst.
+
+```
+Queue capacity = 50, process rate = 10 req/sec
+  Requests arrive: [12 R/s burst]
+  → Queue fills at +2 R/s (12 in, 10 out)
+  → After 25s: queue full → REJECT
+  → Steady state: 10 processed/sec regardless of input rate
+```
+
+Rarely used for API rate limiting (too inflexible). More common for **traffic shaping** at the network/ingress layer.
+
+### Choosing an Algorithm
+
+```mermaid
+flowchart TD
+    Q1{"Need to allow bursts?"} -->|Yes| Q2{"Strict burst ceiling?"}
+    Q1 -->|No| Q3{"Strict accuracy needed?"}
+    Q2 -->|Yes| TB["Token Bucket"]
+    Q2 -->|No| LB["Leaky Bucket"]
+    Q3 -->|"Yes, no tolerance"| SWL["Sliding Window Log"]
+    Q3 -->|"Approximate OK"| SWC["Sliding Window Counter ⭐"]
+```
+
+### Response Headers
+
+Always include these so clients can self-regulate:
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100         # Max requests per window
+X-RateLimit-Remaining: 82      # Requests left in current window
+X-RateLimit-Reset: 1715281200  # Unix timestamp when window resets
+Retry-After: 15                # Seconds until next window (only on 429)
+
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1715281260
+Retry-After: 15
+```
+
+### Distributed Rate Limiting
+
+When your API runs on N instances, local counters are useless — a single user can hit all N instances for N× the limit.
+
+| Approach | How | Tradeoff |
+|:---|:---|:---|
+| **Centralized Redis** | All instances read/write the same Redis counters | Adds ~1ms latency; Redis becomes SPOF |
+| **Sticky sessions** | Route same user to same instance (hash on API key) | Breaks if instance dies; load imbalance |
+| **Consistent hashing** | Partition rate-limit state across Redis cluster | Complex; partial accuracy on failover |
+| **Local + async sync** | Count locally, periodically sync to peers (gossip) | Eventual consistency; ~10% over-limit |
+
+**The pragmatic answer**: Centralized Redis with Lua scripts (atomic check-and-increment). Accept the ~1ms overhead — it's negligible compared to the actual API latency. For multi-region, replicate Redis with a slight accuracy tradeoff (CRDT-based counters).
+
+### Tiered Rate Limiting (Defense in Depth)
+
+| Tier | Key | Limit example | Purpose |
+|:---|:---|:---|:---|
+| **Global** | — | 10,000 req/s | Protect infrastructure |
+| **Per IP** | `rate:ip:{ip}` | 100 req/min | Block scrapers/single-source floods |
+| **Per API Key** | `rate:key:{api_key}` | 1,000 req/min | Enforce customer plan |
+| **Per User** | `rate:user:{user_id}` | 50 req/min | Fairness across users |
+| **Per Endpoint** | `rate:key:{api_key}:{endpoint}` | 10 req/s | Protect expensive endpoints |
+| **Per Method + Endpoint** | `rate:key:{api_key}:POST:/upload` | 5 req/min | Granular control |
+
+Check in order: most-specific first. The first tier to reject returns `429`.
+
+### Real-World Reference
+
+| Service | Algorithm | Limits | Headers |
+|:---|:---|:---|:---|
+| **GitHub API** | Sliding window (per-user, per-endpoint) | 5,000/hr auth, 60/hr unauth | `X-RateLimit-*` |
+| **Stripe API** | Token bucket | 100 req/s (varies by endpoint) | `X-Stripe-RateLimit-*` |
+| **AWS API Gateway** | Token bucket (configurable) | Per-usage-plan | `X-Amzn-RateLimit-*` |
+| **Cloudflare** | Sliding window | Per-zone, configurable | `X-RateLimit-*` |
+
+> **Azure**: API Management `rate-limit` / `rate-limit-by-key` policies; Azure Front Door WAF rate limiting; Cosmos DB RU/s (built-in rate limiting at DB layer) | **General**: §8.3 API Design
+
+---
+
+## P15: Large File Uploads
+
+| | |
+|:---|:---|
+| **Problem** | 5 GB video upload consumes all app server memory, kills the process |
+| **Root cause** | Reading the entire file into memory before processing or forwarding |
+
+**Strategy**:
+
+| Approach | How | Best for |
+|:---|:---|:---|
+| **Presigned URL** | Client uploads directly to cloud storage (S3/Azure Blob) using a time-limited signed URL | >100MB, no transformation needed |
+| **Chunked upload** | Client splits file; server reassembles; resume from last successful chunk | Large files over unreliable connections |
+| **Streaming proxy** | Server streams chunks through without buffering entire file | Small-medium files where transformation is needed |
+
+```
+Presigned URL flow:
+  1. Client → Server: POST /upload/initiate {filename, size}
+  2. Server → Client: {upload_url: "https://storage/...?SAS=..."}
+  3. Client → Storage: PUT (direct upload, no server involvement)
+  4. Client → Server: POST /upload/complete {file_id}
+  5. Server: Verify, process metadata, trigger async pipeline
+```
+
+> **Azure**: Blob Storage SAS tokens (equivalent to presigned URLs) | **General**: §8.3 API Design
+
+---
+
+## P16: Long-Running Tasks
+
+| | |
+|:---|:---|
+| **Problem** | 40-second PDF generation holds TCP connection open → client or load balancer timeout |
+| **Root cause** | Synchronous processing of long-running work in the request thread |
+
+**Strategy — the 202 Accepted pattern**:
+
+```
+Sequence:
+  1. POST /reports → 202 Accepted { job_id: "abc-123", status_url: "/jobs/abc-123" }
+  2. GET /jobs/abc-123 → 200 { status: "processing", progress: 60% }
+  3. GET /jobs/abc-123 → 200 { status: "completed", result_url: "/reports/abc-123.pdf" }
+```
+
+| Notification method | Mechanism | When to use |
+|:---|:---|:---|
+| **Polling** | Client polls `GET /jobs/{id}` | Simple, client-driven |
+| **Webhook** | Server POSTs to client-registered URL on completion | Server-to-server, immediate |
+| **SSE** | Server pushes events over persistent connection | Browser clients, real-time progress |
+| **WebSocket** | Bidirectional channel | Interactive dashboards |
+
+> **Azure**: Durable Functions (long-running orchestrations), Logic Apps (workflow engine) | **General**: §8.3 API Design
