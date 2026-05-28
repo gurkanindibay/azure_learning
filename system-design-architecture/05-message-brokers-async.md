@@ -1,7 +1,8 @@
 # 5. Message Brokers & Asynchronous Processing
 
 > **Parent**: [System Design Interview Reference](README.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #17–20
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #17–20  
+> **Also see**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md) — Producer acks, offset modes, rebalances, EOS
 
 ---
 
@@ -10,13 +11,17 @@
 - [P17: Broker Selection](#p17-broker-selection) — Kafka vs RabbitMQ decision tree
   - [Quick Decision Flowchart](#quick-decision-flowchart)
 - [P18: Offset Commit Failure](#p18-offset-commit-failure) — At-least-once semantics & idempotency
+  - [Manual Commit: Sync vs Async](#manual-commit-sync-vs-async)
 - [P19: Poison Messages](#p19-poison-messages) — Dead letter queues & retry strategies
 - [P20: Message Ordering](#p20-message-ordering) — Partition-by-entity, global vs per-key ordering
 - [P21: Stream Processing](#p21-stream-processing) — Kafka internals, rebalancing, Kafka Streams, Flink
   - [Kafka: Consumer Groups & Partition Ordering](#kafka-consumer-groups--partition-ordering)
     - [Rebalance Side Effects](#rebalance-side-effects)
+    - [Idle Consumers — Scaling Beyond Partition Count](#idle-consumers--scaling-beyond-partition-count)
   - [Kafka Streams: A Library, Not a Platform](#kafka-streams-a-library-not-a-platform)
   - [Apache Flink: True Stream Processing Engine](#apache-flink-true-stream-processing-engine)
+- [P22: Producer Durability Tuning](#p22-producer-durability-tuning) — acks modes, idempotent producers, latency vs durability
+- [P23: Multi-Consumer-Group Duplicate Prevention](#p23-multi-consumer-group-duplicate-prevention) — Cross-group coordination, multi-region patterns, MirrorMaker 2
 
 ---
 
@@ -114,6 +119,39 @@ Consumer reads 3,4,5 → processes 3 ✅, 4 ✅, 5 ❌ (crash)
 | **Deduplication table** | `SELECT` for message_id → `INSERT` both in same transaction | Universal; works with any DB |
 | **Message UUID** | Producer embeds idempotency key; consumer skips if seen | Zero-dependency |
 | **Kafka transactions** | Read + write in atomic transaction | Within Kafka ecosystem only |
+
+### Manual Commit: Sync vs Async
+
+The choice between sync and async commits directly impacts throughput and safety — choosing wrong can silently lose data or throttle performance.
+
+```java
+// SYNC commit — blocks until broker acknowledges
+// ✅ Safer: ideal for at-least-once / exactly-once
+// ❌ Slower: round-trip per commit adds latency
+consumer.commitSync();
+
+// ASYNC commit — non-blocking, fire-and-forget
+// ✅ Faster: higher throughput, no blocking
+// ❌ Risk: if commit fails silently, offsets are lost → duplicates on restart
+consumer.commitAsync(new OffsetCommitCallback() {
+    @Override
+    public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception e) {
+        if (e != null) {
+            log.error("Offset commit failed for {}: retrying...", offsets.keySet(), e);
+            // Retry with backoff or fall back to sync commit
+        }
+    }
+});
+```
+
+| Strategy | When to use | Risk |
+|:---|:---|:---|
+| **Sync after each batch** | Critical data (payments, fraud detection) | Throughput capped by commit latency |
+| **Async with callback** | High-throughput analytics, logging | Failed commits → silent offset loss |
+| **Hybrid: async during processing, sync on shutdown** | Balance safety and throughput | Complex error handling |
+| **Disable auto-commit entirely** | Always — `enable.auto.commit=false` | Must manage commits manually |
+
+> **Architect's rule**: Always disable auto-commit. Use manual sync commits after **idempotent** processing (e.g., confirmed DB insert). Async is a performance optimization — only add it when sync becomes the bottleneck, and always handle commit failures.
 
 > **Azure**: Event Hubs uses offset/sequence number — same at-least-once semantics. Service Bus peek-lock provides at-least-once with built-in dead-lettering. | **General**: [Idempotency Store Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md)
 
@@ -261,6 +299,28 @@ Topic: orders (3 partitions)
 - **Partition key = ordering domain**: Messages with the same key go to the same partition → processed in order by one consumer
 - **Rebalance disrupts ordering briefly**: During rebalance, no consumer reads — but order within a partition is never violated once the new assignment settles
 - **Across groups = fan-out, not competition**: Group A and Group B both read partition 0 independently — like two bookmarks in the same book
+
+#### Idle Consumers — Scaling Beyond Partition Count
+
+A common architectural mistake: adding more consumer instances than partitions, expecting higher throughput.
+
+```
+Topic: orders (8 partitions)
+
+Consumer Group: order-processor (12 instances)
+  Consumer 1-8  → each gets 1 partition → ACTIVE  ✅
+  Consumer 9-12 → no partitions available → IDLE   ❌
+
+Result: 12 instances deployed, paying for 12, but only 8 do work.
+```
+
+| Situation | What happens | Fix |
+|:---|:---|:---|
+| Consumers > Partitions | Idle consumers — wasted compute | Increase partition count or reduce consumers |
+| Consumers = Partitions | Optimal — 1:1 mapping | — |
+| Consumers < Partitions | Some consumers handle multiple partitions — still works, just higher per-consumer load | Acceptable; add consumers up to partition count |
+
+> **Key insight**: Partitions are the **unit of parallelism** in Kafka. Consumer count beyond partition count adds zero throughput and wastes resources. If you need more parallelism, increase partitions first — but note that partitions cannot be decreased without recreating the topic.
 
 #### Rebalance Side Effects
 
@@ -587,6 +647,131 @@ Use Kafka Streams when:                 Use Apache Flink when:
 > **Azure mapping**: **Azure Stream Analytics** (managed SQL-based) covers simpler Flink use cases. **HDInsight / AKS-hosted Flink** for full Flink capabilities. Kafka Streams maps to running your Java app on AKS/Container Apps with a Kafka-compatible broker (Event Hubs).
 
 > **Azure**: Service Bus Sessions for ordered delivery within a session | **General**: §3.3 Event-Driven & Messaging
+
+---
+
+## P22: Producer Durability Tuning
+
+| | |
+|:---|:---|
+| **Problem** | Payment events lost after broker crash — downstream services never saw the `PaymentInitiated` event |
+| **Root cause** | Producer used `acks=1` (default) — leader acknowledged before replication completed; leader died, replica had no copy |
+
+**The `acks` spectrum**:
+
+| `acks` | Behavior | Latency | Durability | When to use |
+|:---|:---|:---|:---|:---|
+| `acks=0` | Fire-and-forget — producer doesn't wait | Lowest | ❌ None — message can be lost before reaching broker | Metrics, logs where occasional loss is acceptable |
+| `acks=1` | Leader acknowledges (default) | Low | ⚠️ Lost if leader dies before replication | High-volume analytics, non-critical telemetry |
+| `acks=all` / `-1` | All in-sync replicas acknowledge | Highest | ✅ Survives `min.insync.replicas - 1` failures | Payments, orders, financial transactions |
+
+**Critical data configuration**:
+
+```java
+// For payments, orders, fraud detection — always use:
+props.put(ProducerConfig.ACKS_CONFIG, "all");
+props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+props.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+
+// Broker-side: ensure at least 2 in-sync replicas
+// min.insync.replicas=2  (set at topic or broker level)
+```
+
+**Why `acks=all` alone isn't enough**: If `min.insync.replicas=1` (default), `acks=all` degrades to `acks=1` — the leader alone is the ISR. Always pair `acks=all` with `min.insync.replicas ≥ 2`.
+
+**Idempotent producer**: When `enable.idempotence=true`, Kafka assigns each producer a PID and each message a sequence number. The broker deduplicates messages with the same PID+sequence, preventing duplicates from producer retries.
+
+```
+Without idempotence:                    With idempotence:
+  Producer sends msg-42                  Producer sends msg-42 (pid=7, seq=42)
+  → Network blip, no ack received        → Network blip, no ack received
+  → Producer retries msg-42              → Producer retries msg-42 (pid=7, seq=42)
+  → Broker has TWO copies of msg-42      → Broker sees duplicate seq → discards
+  
+  Result: DUPLICATE ❌                    Result: Exactly once ✅
+```
+
+| Scenario | acks | Idempotence | Rationale |
+|:---|:---|:---|:---|
+| Payment processing | `all` | ✅ Required | Cannot lose or duplicate payments |
+| Fraud detection | `all` | ✅ Required | Every event is a signal; loss/distortion = missed fraud |
+| Clickstream analytics | `1` | Optional | ~0.01% loss acceptable; prioritize throughput |
+| IoT sensor data | `1` or `0` | Optional | Aggregation windows smooth out occasional loss |
+| Audit logging | `all` | ✅ Required | Regulatory compliance; every record matters |
+
+> **Architect's rule**: `acks=all` + `enable.idempotence=true` + `min.insync.replicas ≥ 2` is the **minimum** for any data you cannot afford to lose or duplicate. The latency cost (~10-20ms extra round-trip) is negligible compared to debugging a silent data-loss bug in production.
+
+> **Azure**: Event Hubs supports idempotent publishing via `ProducerClient` with sequence numbers. Service Bus sessions provide duplicate detection with `DuplicateDetectionHistoryTimeWindow`.
+
+---
+
+## P23: Multi-Consumer-Group Duplicate Prevention
+
+| | |
+|:---|:---|
+| **Problem** | Two consumer groups (East & West regions) read the same topic and both write to a central DB → duplicate inserts, race conditions, integrity errors |
+| **Root cause** | Consumer groups operate independently — Kafka has no built-in cross-group coordination |
+
+**Why this happens**:
+
+```mermaid
+flowchart LR
+    subgraph Topic["Topic: orders"]
+        P0["P0: order-1, order-2, ..."]
+    end
+    subgraph East["Consumer Group: east-processors"]
+        CE["Consumer East"]
+    end
+    subgraph West["Consumer Group: west-processors"]
+        CW["Consumer West"]
+    end
+    DB["Central DB"]
+    Topic --> CE
+    Topic --> CW
+    CE -->|"INSERT order-1"| DB
+    CW -->|"INSERT order-1 (DUPLICATE!)"| DB
+```
+
+**Strategies by architecture pattern**:
+
+| Pattern | How it works | When to use |
+|:---|:---|:---|
+| **Single consumer group ID** | Both regions share `group.id=order-processor` — Kafka assigns each partition to only one region's consumer | Both regions are the same logical application; active-passive or coordinated |
+| **Partition by region** | Producer sets partition key = `region-id`; each region only reads its own partition subset | Regions process distinct data sets (e.g., `region=EU` vs `region=US`) |
+| **MirrorMaker 2** | Replicate topic per region (`orders.us`, `orders.eu`); each region consumes its own replica | Full regional independence; no cross-region consumer coordination |
+| **Application-level dedup** | Both groups process all messages; DB layer uses upsert or idempotency key to prevent duplicates | Simple but puts dedup burden on DB; works for low-throughput scenarios |
+| **Leader election** | Only one consumer group is "active"; standby group takes over on failure (e.g., via etcd/Consul lease) | Active-passive DR; avoids duplicates at the cost of standby resources |
+
+**MirrorMaker 2 deep dive**:
+
+```mermaid
+flowchart TB
+    subgraph Primary["Primary DC"]
+        KP["Kafka: orders"]
+        MM2["MirrorMaker 2"]
+    end
+    subgraph DR["DR DC"]
+        KR["Kafka: orders (replica)"]
+        CG["Consumer Group<br/>(reads replica)"]
+    end
+    KP -->|"replicate"| MM2
+    MM2 -->|"write"| KR
+    KR --> CG
+```
+
+MM2 auto-renames topics by prefixing with source cluster alias (`us-west.orders`), preserves offsets, and handles consumer group offset translation — so DR failover is seamless.
+
+| Approach | Duplicates? | Complexity | Latency |
+|:---|:---|:---|:---|
+| Single group ID | ❌ No duplicates | Low — just config | Minimal |
+| Partition by region | ❌ No duplicates | Medium — producer key logic | Minimal |
+| MirrorMaker 2 | ❌ No duplicates across regions | High — MM2 cluster to manage | Replication lag (ms-sec) |
+| App-level dedup | ⚠️ Possible under race conditions | Medium — dedup logic | DB round-trip |
+| Leader election | ❌ No duplicates (active only) | High — election infra | Failover lag (sec-min) |
+
+> **Architect's rule**: If two consumer groups write to the same downstream system, you have a design problem. Either (a) use one group, (b) partition the data so groups don't overlap, or (c) use MirrorMaker 2 for full regional independence. Application-level dedup is a last resort.
+
+> **Azure**: Event Hubs Capture + Geo-DR for cross-region replication. Service Bus Geo-DR pairs namespaces. MirrorMaker 2 runs on AKS/HDInsight for Kafka replication.
 
 ---
 
