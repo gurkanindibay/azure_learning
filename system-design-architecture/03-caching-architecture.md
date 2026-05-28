@@ -49,12 +49,12 @@ WRITE: DB UPDATE → cache DEL user:42
 READ:  cache GET → miss → DB SELECT → cache SET user:42 (TTL: 300s)
 ```
 
-| Write Pattern | How it works | Key risk |
-|:---|:---|:---|
-| **Cache-Aside** | App manages cache; delete on write | Race: stale data re-enters cache |
-| **Write-Through** | Write to cache → sync to DB | Every write touches cache |
-| **Write-Behind** | Write to cache → async flush to DB | Data loss if cache crashes |
-| **Refresh-Ahead** | Cache preloads before expiry | Complex tuning |
+| Write Pattern | Write path | How it works | Key risk |
+|:---|:---|:---|:---|
+| **Cache-Aside** | `App → DB → Cache` | App updates DB first, then deletes cache entry | Race: stale data re-enters cache |
+| **Write-Through** | `App → Cache → DB` | Write to cache, cache syncs to DB synchronously | Every write touches cache |
+| **Write-Behind** | `App → Cache ⇢ DB` | Write to cache, DB updated asynchronously later | Data loss if cache crashes |
+| **Refresh-Ahead** | `Cache ⇠ DB` | Cache pre-fetches from DB before key expires | Complex tuning |
 
 **Write pattern visualizations** — WRITE flow on the left, READ flow on the right.
 
