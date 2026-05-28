@@ -1,7 +1,8 @@
 # 1. Databases & Query Performance
 
 > **Parent**: [System Design Interview Reference](README.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #1–4
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #1–4  
+> **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
 
 ---
 
@@ -131,3 +132,119 @@ flowchart TD
     P -->|"Deep pages"| C["Keyset pagination"]
     P -->|Shallow| O["OFFSET okay"]
 ```
+
+---
+
+## P5: Hot Partition Problem
+
+| | |
+|:---|:---|
+| **Problem** | A single partition receives disproportionate traffic — latency spikes across the entire cluster even for unrelated queries |
+| **Root cause** | Partition key causes uneven data distribution; quorum consistency amplifies the damage because every query must wait for the slow node |
+
+**How quorum amplifies the problem**:
+
+```
+Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
+┌──────────┐    ┌──────────┐    ┌──────────┐
+│  Node A  │    │  Node B  │    │  Node C  │
+│          │◄───│ hot part │───►│          │
+│  normal  │    │ ●●●●●●●● │    │  normal  │
+│  latency │    │ OVERLOAD │    │  latency │
+│   <5ms   │    │  >125ms  │    │   <5ms   │
+└──────────┘    └──────────┘    └──────────┘
+        quorum = must wait for 2/3 nodes
+        → hot node poisons EVERY query, not just hot-channel queries
+```
+
+**Real-world example — Discord**: The partition key `(channel_id, bucket)` kept messages for a given channel and time window co-located. A popular server with hundreds of thousands of concurrent users sent a torrent of traffic to a single partition. Every query on any channel that touched that node waited >125ms.
+
+**Strategies**:
+
+| Strategy | Mechanism | When to use |
+|:---|:---|:---|
+| **Partition key redesign** | Add high-cardinality component to spread load (e.g., `(channel_id, bucket, shard_id)`) | Can change schema |
+| **Request coalescing** | Intercept duplicate reads before they reach DB — only first query hits DB | Read-heavy hot partitions (see [P13: Request Coalescing](../03-caching-architecture.md#p13-request-coalescing)) |
+| **Consistent hash routing** | Route same partition key to same service instance → maximize coalescing + isolate heat | Multi-instance service layer (see [P17: Consistent Hash Routing](../04-api-network-design.md#p17-consistent-hash-based-routing)) |
+| **Caching layer** | Cache hot partition results in Redis/Memcached | Read-heavy, can tolerate some staleness |
+| **Shard-per-core architecture** | Each CPU core owns its data slice independently — hot partition only burns one shard, not the whole node | Database engine selection (ScyllaDB vs Cassandra) |
+
+> **Architect's rule**: Hot partitions are the **universal scaling bottleneck** in distributed databases. The partition key is your most consequential design decision — get it wrong and no amount of hardware fixes it. Always benchmark with production-like data distribution, not uniform synthetic data.
+
+> **Azure**: Cosmos DB uses logical partition keys — same hot partition risk. Mitigate with synthetic partition keys (e.g., `userId_mod100`). Cosmos DB's RU/sec is provisioned per partition; a hot partition exhausts its RUs while other partitions sit idle. | **General**: §4.1 Data Partitioning
+
+---
+
+## P6: Database Migration at Scale
+
+| | |
+|:---|:---|
+| **Problem** | Migrating trillions of live records from one database to another without downtime or data loss |
+| **Root cause** | Naive migration tools are too slow (months); stop-the-world migration is unacceptable for live services |
+
+**Real-world example — Discord**: Migrated 4 trillion messages from Cassandra (177 nodes) to ScyllaDB (72 nodes). Initial plan using Spark migrator: **3 months**. Custom Rust migrator: **9 days**.
+
+**Strategy — the safe migration playbook**:
+
+```
+Phase 1: Dual-writes active
+  ┌──────────┐     ┌──────────┐
+  │  Source  │     │  Target  │
+  │ (Cassandra)│   │(ScyllaDB)│
+  └─────┬────┘     └────┬─────┘
+        │               │
+        └─── New writes go to BOTH ───┘
+
+Phase 2: Backfill historical data
+  Custom migrator reads source → writes target
+  Checkpoints progress locally (SQLite)
+
+Phase 3: Automated validation
+  Compare X% of reads across both clusters
+  Alert on divergence > threshold
+
+Phase 4: Cut-over
+  Flip traffic to target only
+  Keep source as read-only fallback for N days
+```
+
+| Technique | Purpose | Implementation |
+|:---|:---|:---|
+| **Dual-writes** | No data loss during migration window | Write to both databases simultaneously; wrap in idempotent producer |
+| **Checkpointing** | Restartable migration — survive crashes without losing progress | SQLite (portable, zero-dependency) or any local KV store |
+| **Automated read comparison** | Prove correctness, not just confidence | Sample X% of reads from both clusters; compare; alert on mismatch |
+| **Token-range parallelism** | Maximize throughput | Partition source data by token range; run N concurrent workers |
+| **Read-only fallback** | Safety net after cut-over | Keep source cluster online (read-only) for 7-30 days post-migration |
+
+**Why SQLite for checkpoints**:
+
+```sql
+-- Each migrator worker maintains a local SQLite DB
+CREATE TABLE checkpoint (
+    token_range_start  BIGINT PRIMARY KEY,
+    token_range_end    BIGINT,
+    last_processed_key BLOB,
+    rows_migrated      BIGINT,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- On restart: SELECT last_processed_key → resume from there
+-- No lost work. No external dependency.
+```
+
+**Database comparison — why ScyllaDB over Cassandra**:
+
+| | Cassandra | ScyllaDB |
+|:---|:---|:---|
+| Language | Java (JVM) | C++ |
+| GC pauses | Yes — frequent latency spikes | None |
+| Thread model | Shared thread pool | Shard-per-core (each core owns its data) |
+| p99 read latency | 40–125ms | ~15ms |
+| p99 write latency | 5–70ms | ~5ms |
+| Node count (Discord) | 177 | 72 (same workload, better perf) |
+
+> **Key insight**: API compatibility ≠ performance equivalence. ScyllaDB speaks Cassandra's CQL but executes fundamentally differently. Always benchmark your **actual workload** — the same schema on the same API can behave wildly differently.
+
+> **Architect's rule**: Never trust a migration without continuous automated validation. Dual-writes + sampled read comparison is the minimum for any migration where data loss is unacceptable. Gut feelings don't survive trillion-record datasets.
+
+> **Azure**: Azure Database Migration Service for SQL migrations. Cosmos DB change feed for live migrations between Cosmos containers. For Cassandra → Cosmos DB (Cassandra API), use the same dual-write + validation pattern with custom tooling.

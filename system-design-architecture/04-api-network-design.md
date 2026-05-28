@@ -1,7 +1,8 @@
 # 4. APIs & Network Design
 
 > **Parent**: [System Design Interview Reference](README.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16  
+> **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
 
 ---
 
@@ -309,3 +310,67 @@ Sequence:
 | **WebSocket** | Bidirectional channel | Interactive dashboards |
 
 > **Azure**: Durable Functions (long-running orchestrations), Logic Apps (workflow engine) | **General**: §8.3 API Design
+
+---
+
+## P17: Consistent Hash-Based Routing
+
+| | |
+|:---|:---|
+| **Problem** | Hot traffic for a specific entity (channel, user, product) fans out randomly across all service instances — no single instance sees enough requests to coalesce effectively, and hot traffic pollutes cold instances |
+| **Root cause** | Default round-robin or least-connections load balancing scatters related requests; no request affinity |
+
+**What it is**: Route requests by a business key (`channel_id`, `user_id`, `product_id`) so all traffic for a given entity always hits the **same** service instance.
+
+```
+hash(entity_id) % num_instances  →  which instance handles this entity
+
+  #general  → hash → Svc2    (all 500 requests for this channel land here)
+  #memes    → hash → Svc3    (isolated — unaffected by #general's load)
+  #random   → hash → Svc1    (isolated — unaffected by #general's load)
+```
+
+**Real-world example — Discord**: The Rust data service layer routes all requests by `channel_id`. This concentrates hot-channel traffic at one instance where coalescing ([P13: Request Coalescing](../03-caching-architecture.md#p13-request-coalescing)) can collapse 500 simultaneous reads into 1 DB query. Cold channels stay on separate instances — their latency is completely unaffected.
+
+**Why this matters — with and without routing**:
+
+```
+Without consistent hash routing:         With consistent hash routing:
+
+  500 requests for #general               500 requests for #general
+  scatter across 4 instances              all hash to Svc2
+       │                                        │
+  ┌────┼────┬────┐                              ▼
+  ▼    ▼    ▼    ▼                             Svc2
+ Svc1 Svc2 Svc3 Svc4                     (handles #general only)
+  │    │    │    │                             │
+  125  125  125  125                     ┌─────┴──────┐
+  │    │    │    │                       │  Coalesce  │
+  ▼    ▼    ▼    ▼                       │  500 → 1   │
+ ┌──────────────────┐                    └─────┬──────┘
+ │    DB: 4 queries  │                         │
+ │  (all instances   │                    1 DB query
+ │   slowed down)    │
+ └──────────────────┘
+```
+
+**Where to implement**:
+
+| Layer | Mechanism | Pros | Cons |
+|:---|:---|:---|:---|
+| **Client-side** | Client hashes key → picks instance URL directly | No extra hop; lowest latency | Client must know instance list; complex on instance changes |
+| **Sidecar proxy** | Envoy/Linkerd with consistent hash LB | Transparent to app; battle-tested | Operational complexity of service mesh |
+| **Application middleware** | Custom request router in service layer | Full control; can combine with coalescing | Custom code to maintain |
+| **API Gateway** | Route by header/cookie at gateway level | Centralized; no app changes | Gateway becomes bottleneck if not scaled |
+
+**Trade-offs**:
+
+| Pro | Con |
+|:---|:---|
+| Maximizes coalescing efficiency (all similar requests meet at one place) | Uneven load if entity distribution is skewed (one instance handles more hot entities) |
+| Isolates hot entities from cold ones (cold channels stay fast) | Instance failure → all entities on that instance are unavailable until rebalance |
+| Enables in-memory caching per entity at the instance level | Adding/removing instances requires rehashing → temporary cache invalidation |
+
+> **Architect's rule**: Consistent hash routing is the **enabler** for request coalescing and per-entity caching. Without it, a hot entity's traffic scatters, coalescing degrades, and cold entities suffer collateral damage. It's the difference between "500 requests = 1 DB query" and "500 requests = 500 DB queries spread across all your instances."
+
+> **Azure**: Application Gateway supports session affinity (cookie-based). For header/query-string-based routing, use Azure Front Door with custom rules, or implement at the application layer. AKS with Envoy/Istio service mesh can do consistent hash load balancing via `RingHash` or `Maglev` LB policies. | **General**: §8.2 Load Balancing Patterns

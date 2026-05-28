@@ -1,7 +1,8 @@
 # 3. Caching Architecture
 
 > **Parent**: [System Design Interview Reference](README.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #9–12
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #9–12  
+> **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Request coalescing (in-flight deduplication)
 
 ---
 
@@ -205,6 +206,90 @@ return db.query(...)
 | `allkeys-random` | All keys | Random eviction |
 
 > **Azure**: Azure Cache for Redis — set `maxmemory-policy` via Azure Portal or CLI | **General**: §7.3 Caching Strategies
+
+---
+
+## P13: Request Coalescing (In-Flight Deduplication)
+
+| | |
+|:---|:---|
+| **Problem** | 500 concurrent requests for the same data all hit the database simultaneously — even a cache won't help because all 500 miss at the same instant |
+| **Root cause** | Cache stampede solutions (PER, lock-on-miss) help when data is **already cached**. Coalescing helps when data is **not yet cached** — it prevents duplicate DB queries before they happen |
+
+**How it differs from cache stampede protection**:
+
+```
+Cache Stampede (P9):                    Request Coalescing (P13):
+
+  Key expired → 500 miss cache           No cache entry exists → 500 requests
+  PER: random early refresh              Coalescer: 1st requests DB,
+  Lock-on-miss: 1 regenerates              others subscribe to in-flight result
+
+  Protects cached data                  Protects uncached/expired data
+  from expiring under load              from launching duplicate DB queries
+```
+
+**Real-world example — Discord**: A popular channel (#general) gets 500 simultaneous read requests. Without coalescing, all 500 hit Cassandra. With coalescing, the Rust data service issues **only 1 DB query** — the other 499 subscribe to the in-flight result and receive it when it resolves.
+
+**Strategy**:
+
+```rust
+// In-flight request map — keyed by what's being fetched
+inflight: HashMap<PartitionKey, JoinHandle<Result>>
+
+async fn get_data(key: &str) -> Result<Data> {
+    if let Some(handle) = inflight.get(key) {
+        // Someone already fetching this — subscribe, don't query
+        return handle.subscribe().await;
+    }
+    // First request: fetch from DB, let others subscribe
+    let handle = spawn_db_query(key);
+    inflight.insert(key, handle.clone());
+    let result = handle.await;
+    inflight.remove(key);  // clean up for next batch
+    result
+}
+```
+
+**Timeline — 500 requests, 1 DB query**:
+
+```
+Time ──────────────────────────────────────────────────────►
+
+Req #1:   [map empty] [issues DB query] [stores handle] .... [DB responds]
+                                                             [wakes all 500]
+Req #2:        [found handle] [subscribes] ................. [wakes up]
+Req #3:             [found handle] [subscribes] ............ [wakes up]
+...
+Req #500:           [found handle] [subscribes] ............ [wakes up]
+
+DB:                                    [1 query executing] ... [1 response]
+```
+
+| Coalescing vs Cache | Cache (Redis) | Coalescing (in-flight map) |
+|:---|:---|:---|
+| **What it stores** | Completed results | In-flight promises/futures |
+| **Lifetime** | Minutes/hours (TTL) | Millseconds (duration of DB query) |
+| **Protects against** | Repeated reads over time | Simultaneous reads at the same instant |
+| **Storage** | External (Redis) | In-process memory (HashMap) |
+| **Pair with** | PER, lock-on-miss | Consistent hash routing (see [P17: Consistent Hash Routing](../04-api-network-design.md#p17-consistent-hash-based-routing)) |
+
+**Prerequisite — why this needs consistent hash routing**:
+
+```
+Without routing:                    With routing:
+  500 requests scatter               500 requests all go to Svc2
+  across 4 instances                 (hash(channel_id) → Svc2)
+  Svc1: 125 → coalesce to 1          Svc2: 500 → coalesce to 1
+  Svc2: 125 → coalesce to 1          DB: 1 query (not 4, not 500)
+  Svc3: 125 → coalesce to 1
+  Svc4: 125 → coalesce to 1
+  DB: 4 queries (better, but not 1)
+```
+
+> **Architect's rule**: Coalescing and caching solve different problems. Caching prevents **repeated** reads. Coalescing prevents **simultaneous** reads. For hot data that's read by many users at the same instant (social media feeds, popular channels, trending items), you need both.
+
+> **Azure**: No built-in Azure service provides in-flight request coalescing — implement at the application layer. Pair with consistent hash routing via Application Gateway or custom middleware. Cosmos DB's direct mode + gateway mode does internal connection coalescing but not request-level deduplication. | **General**: §7.3 Caching Strategies
 
 ---
 
