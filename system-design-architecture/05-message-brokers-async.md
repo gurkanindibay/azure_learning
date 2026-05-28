@@ -5,6 +5,21 @@
 
 ---
 
+## Contents
+
+- [P17: Broker Selection](#p17-broker-selection) — Kafka vs RabbitMQ decision tree
+  - [Quick Decision Flowchart](#quick-decision-flowchart)
+- [P18: Offset Commit Failure](#p18-offset-commit-failure) — At-least-once semantics & idempotency
+- [P19: Poison Messages](#p19-poison-messages) — Dead letter queues & retry strategies
+- [P20: Message Ordering](#p20-message-ordering) — Partition-by-entity, global vs per-key ordering
+- [P21: Stream Processing](#p21-stream-processing) — Kafka internals, rebalancing, Kafka Streams, Flink
+  - [Kafka: Consumer Groups & Partition Ordering](#kafka-consumer-groups--partition-ordering)
+    - [Rebalance Side Effects](#rebalance-side-effects)
+  - [Kafka Streams: A Library, Not a Platform](#kafka-streams-a-library-not-a-platform)
+  - [Apache Flink: True Stream Processing Engine](#apache-flink-true-stream-processing-engine)
+
+---
+
 ## P17: Broker Selection
 
 | | |
@@ -47,6 +62,21 @@ flowchart TD
 > **Full comparisons**: [Event Hubs vs Kafka](../../architecture-azure/integration/messaging-comparisons/eventhubs_vs_kafka_comparison.md) · [Service Bus vs Kafka](../../architecture-azure/integration/messaging-comparisons/servicebus_vs_kafka_comparison.md) · [Azure Event Services Full Doc](../../architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md)
 >
 > **General**: [Messaging Patterns Overview](../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md)
+
+### Quick Decision Flowchart
+
+```mermaid
+flowchart TD
+    A["Async messaging needed"] --> B{"Replay history?"}
+    B -->|Yes| C["Kafka / Event Hubs"]
+    B -->|No| D{"Complex routing?"}
+    D -->|Yes| E["RabbitMQ / Service Bus"]
+    D -->|No| F{">100K msg/s?"}
+    F -->|Yes| C
+    F -->|No| G{"Sub-ms latency?"}
+    G -->|Yes| E
+    G -->|No| H["Team expertise decides"]
+```
 
 ---
 
@@ -161,6 +191,28 @@ Entity-level ordering (scalable):
 | **RabbitMQ** | Consistent hash exchange plugin or manual sharding |
 | **AWS SQS FIFO** | `MessageGroupId` — messages in same group are FIFO |
 | **Azure Service Bus** | `SessionId` — session-aware consumer processes in FIFO |
+
+**When you TRULY need global order** (rare):
+1. Single partition / single FIFO queue — accept throughput ceiling (~300 TPS for SQS FIFO)
+2. Sequence numbers — producer assigns monotonically increasing number; consumer buffers and reorders
+3. Event sourcing + CQRS — write side ordered (single partition), read side eventually consistent
+
+**When order DOESN'T matter** (most cases):
+- Two users update their profiles (independent entities)
+- User adds then removes cart item (last-write-wins = same result)
+- IoT temperature reports (aggregate by time window)
+
+### Kafka: Consumer Groups & Partition Ordering
+
+> Moved to **[P21: Stream Processing](#p21-stream-processing)** — covers consumer groups, partition ordering, rebalance side effects, Kafka Streams, and Apache Flink.
+
+> For quick reference: within a consumer group, each partition has exactly **one consumer** — that 1:1 mapping is Kafka's ordering guarantee. To fan-out the same partition to multiple consumers, use **separate consumer groups**.
+
+---
+
+## P21: Stream Processing
+
+> Covers Kafka consumer internals, rebalancing, Kafka Streams, and Apache Flink — extracted from P20 for clarity.
 
 ### Kafka: Consumer Groups & Partition Ordering
 
@@ -399,33 +451,142 @@ signal.signal(signal.SIGINT, shutdown)
 
 > **Takeaway** — Rebalances are Kafka's mechanism for fault tolerance, but they come at a cost: stop-the-world pauses, duplicates, and state loss. Use **cooperative rebalancing + static membership** to minimize disruption, and always design consumers to survive a rebalance (idempotent processing, external state).
 
-**When you TRULY need global order** (rare):
-1. Single partition / single FIFO queue — accept throughput ceiling (~300 TPS for SQS FIFO)
-2. Sequence numbers — producer assigns monotonically increasing number; consumer buffers and reorders
-3. Event sourcing + CQRS — write side ordered (single partition), read side eventually consistent
+### Kafka Streams: A Library, Not a Platform
 
-**When order DOESN'T matter** (most cases):
-- Two users update their profiles (independent entities)
-- User adds then removes cart item (last-write-wins = same result)
-- IoT temperature reports (aggregate by time window)
+**What it is**: Kafka Streams is a **Java/Scala client library** (not a separate cluster or service) for building real-time stream processing applications. You add it as a dependency (`org.apache.kafka:kafka-streams`), write standard application code, and run it anywhere — no dedicated processing cluster required.
+
+```mermaid
+flowchart TB
+    subgraph App["Your Application (JVM)"]
+        direction LR
+        KS["Kafka Streams<br/>Library"]
+        BUSINESS["Business Logic<br/>(map, filter, join, aggregate)"]
+        STATE["Local State Store<br/>(RocksDB)"]
+    end
+    INPUT["Input Topic"] -->|"consume"| App
+    App -->|"produce"| OUTPUT["Output Topic"]
+    STATE <-->|"backup/restore"| CHANGELOG["Changelog Topic<br/>(compacted)"]
+```
+
+**Problems it solves**:
+
+| Without Kafka Streams | With Kafka Streams |
+|:---|:---|
+| Manual consumer/producer coordination | Single `KStream` / `KTable` abstraction |
+| State lost on rebalance → manual recovery | State auto-restored from changelog on rebalance |
+| At-least-once by default → manual idempotency | Exactly-once semantics via Kafka transactions |
+| Manual windowing, aggregation logic | Built-in tumbling/hopping/session windows |
+| No local state → every query hits remote DB | Local RocksDB store + changelog = fast, resilient |
+| Manual repartitioning for joins | Automatic repartitioning via `through()` / `repartition()` |
+
+**Core abstractions**:
+
+```java
+// Stream: infinite, immutable sequence of records
+KStream<String, Order> orders = builder.stream("orders-topic");
+
+// Table: changelog — latest value per key (upsert semantics)
+KTable<String, User> users = builder.table("users-topic");
+
+// Stateless: filter, map, flatMap, branch
+orders.filter((key, order) -> order.getAmount() > 100)
+      .mapValues(Order::applyDiscount);
+
+// Stateful: join, aggregate, reduce, window
+orders.join(users, Order::setUserDetails)       // stream-table join
+      .groupByKey()
+      .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
+      .aggregate(OrderAggregate::new, ...);     // windowed aggregation
+```
+
+**Key design principles**:
+
+| Principle | What it means |
+|:---|:---|
+| **Embedded library** | No cluster to manage — runs inside your app, scales with it |
+| **Partition-level parallelism** | Each partition → one stream task → one thread; scale by adding partitions |
+| **State is local + durable** | RocksDB on disk, changelog in Kafka; survives crash and rebalance |
+| **Event-time processing** | Timestamps from records (not wall-clock); handles out-of-order data |
+| **Exactly-once** | `processing.guarantee=exactly_once_v2` via idempotent producers + transactions |
+
+**When to use Kafka Streams vs plain Consumer/Producer**:
+
+| Scenario | Recommendation |
+|:---|:---|
+| Simple read → transform → write | Plain Consumer/Producer is fine |
+| Aggregation, windowing, joins across topics | **Kafka Streams** |
+| State that must survive rebalances | **Kafka Streams** |
+| Exactly-once semantics required | **Kafka Streams** |
+| Non-JVM language (Python, Go, Rust) | Plain Consumer/Producer or a managed service |
+| Already running on Spark/Flink | Stick with existing platform |
+
+### Apache Flink: True Stream Processing Engine
+
+**What it is**: Apache Flink is a **distributed stream processing engine** (not a library) that runs on its own cluster. Unlike Kafka Streams which is embedded in your app, Flink is a **platform** with its own resource management, job scheduling, and state backend infrastructure.
+
+```mermaid
+flowchart TB
+    subgraph FlinkCluster["Flink Cluster"]
+        JM["JobManager<br/>(scheduling, checkpointing)"]
+        subgraph TM1["TaskManager 1"]
+            S1["Task A<br/>(partition 0)"]
+            S2["Task B<br/>(partition 1)"]
+        end
+        subgraph TM2["TaskManager 2"]
+            S3["Task A<br/>(partition 2)"]
+        end
+    end
+    KAFKA["Kafka"] -->|"source"| FlinkCluster
+    FlinkCluster -->|"sink"| SINK["Kafka / S3 / DB / ..."]
+    FlinkCluster <-->|"checkpoint/savepoint"| CK["State Backend<br/>(RocksDB / S3 / HDFS)"]
+```
+
+**Problems it solves (vs Kafka Streams)**:
+
+| Problem | Kafka Streams | Apache Flink |
+|:---|:---|:---|
+| **Language support** | Java/Scala only | Java, Scala, Python (PyFlink), SQL |
+| **Non-Kafka sources** | Kafka only (input + output) | Kafka, files, databases, message queues, custom |
+| **Large state (TB-scale)** | RocksDB on local disk; limited by instance size | External state backend (RocksDB on disk or remote S3/HDFS) |
+| **Complex event processing** | Basic pattern matching | Full CEP library (pattern detection, temporal sequences) |
+| **Batch + stream unification** | Separate paradigm per mode | Unified — same code for batch and streaming |
+| **Backpressure handling** | Consumer lag; manual intervention | Automatic backpressure via credit-based flow control |
+| **Multi-tenancy** | One app per consumer group | Multiple jobs share one Flink cluster |
+| **SQL analytics** | KSQL (limited) | Full ANSI SQL with windowing, joins, UDFs |
+
+**Key differentiators**:
+
+| | Kafka Streams | Apache Flink |
+|:---|:---|:---|
+| **Architecture** | Embedded library in your app | Distributed cluster (JobManager + TaskManagers) |
+| **Deployment** | `java -jar myapp.jar` | Submit JAR to cluster; manage via CLI/REST/Dashboard |
+| **State storage** | RocksDB local + Kafka changelog | RocksDB/HDFS/S3 + distributed checkpointing |
+| **Scaling model** | Add app instances; bounded by partition count | Add TaskManagers; rescale jobs with savepoints |
+| **Delivery guarantee** | Exactly-once (via Kafka transactions) | Exactly-once (via distributed snapshots / Chandy-Lamport) |
+| **Event time** | Basic watermark support | Sophisticated watermarking, allowed lateness, side outputs |
+| **Fault tolerance** | State rebuilt from changelog on rebalance | Asynchronous barrier snapshotting; incremental checkpointing |
+| **SQL** | KSQL / ksqlDB (separate service) | Built-in SQL API (batch + streaming unified) |
+| **Operational complexity** | Low — just your app to manage | High — cluster to provision, monitor, tune |
+
+**When to choose which**:
+
+```
+Use Kafka Streams when:                 Use Apache Flink when:
+
+✅ Only Kafka as source/sink            ✅ Multiple data sources (Kafka + DB + S3)
+✅ Java/Scala team                      ✅ Python or SQL-heavy team
+✅ Simple stateless transforms          ✅ Complex event patterns (CEP)
+✅ Aggregations with small state        ✅ TB-scale state (session windows, ML models)
+✅ Low operational overhead priority    ✅ Multi-job sharing one cluster
+✅ App already runs on JVM              ✅ Need SQL analytics on streams
+✅ Tight Kafka integration needed       ✅ Batch + Streaming in one platform
+```
+
+**Common misconception**: Kafka Streams is NOT simply "lightweight Flink." They solve different problems. Kafka Streams is a **library** for Kafka-centric applications; Flink is a **platform** for heterogeneous data processing pipelines.
+
+> **Azure mapping**: **Azure Stream Analytics** (managed SQL-based) covers simpler Flink use cases. **HDInsight / AKS-hosted Flink** for full Flink capabilities. Kafka Streams maps to running your Java app on AKS/Container Apps with a Kafka-compatible broker (Event Hubs).
 
 > **Azure**: Service Bus Sessions for ordered delivery within a session | **General**: §3.3 Event-Driven & Messaging
 
 ---
 
-## Decision Flowchart: Broker Selection
-
-```mermaid
-flowchart TD
-    A["Async messaging needed"] --> B{"Replay history?"}
-    B -->|Yes| C["Kafka / Event Hubs"]
-    B -->|No| D{"Complex routing?"}
-    D -->|Yes| E["RabbitMQ / Service Bus"]
-    D -->|No| F{">100K msg/s?"}
-    F -->|Yes| C
-    F -->|No| G{"Sub-ms latency?"}
-    G -->|Yes| E
-    G -->|No| H["Team expertise decides"]
-```
-
-> See [P17: Broker Selection](#p17-broker-selection) for the detailed decision tree with tradeoffs.
