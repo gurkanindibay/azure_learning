@@ -6,7 +6,10 @@
 
 ---
 
-## P13: API Versioning
+## api-01: API Versioning
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#13
+
 
 | | |
 |:---|:---|
@@ -38,7 +41,10 @@ Payload evolution:
 
 ---
 
-## P14: Rate Limiting
+## api-02: Rate Limiting
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#14
+
 
 | | |
 |:---|:---|
@@ -258,7 +264,10 @@ Check in order: most-specific first. The first tier to reject returns `429`.
 
 ---
 
-## P15: Large File Uploads
+## api-03: Large File Uploads
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#15
+
 
 | | |
 |:---|:---|
@@ -286,7 +295,10 @@ Presigned URL flow:
 
 ---
 
-## P16: Long-Running Tasks
+## api-04: Long-Running Tasks
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#16
+
 
 | | |
 |:---|:---|
@@ -313,7 +325,10 @@ Sequence:
 
 ---
 
-## P17: Consistent Hash-Based Routing
+## api-05: Consistent Hash-Based Routing
+
+> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+
 
 | | |
 |:---|:---|
@@ -330,7 +345,7 @@ hash(entity_id) % num_instances  →  which instance handles this entity
   #random   → hash → Svc1    (isolated — unaffected by #general's load)
 ```
 
-**Real-world example — Discord**: The Rust data service layer routes all requests by `channel_id`. This concentrates hot-channel traffic at one instance where coalescing ([P13: Request Coalescing](../03-caching-architecture.md#p13-request-coalescing)) can collapse 500 simultaneous reads into 1 DB query. Cold channels stay on separate instances — their latency is completely unaffected.
+**Real-world example — Discord**: The Rust data service layer routes all requests by `channel_id`. This concentrates hot-channel traffic at one instance where coalescing ([cache-05: Request Coalescing](../03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) can collapse 500 simultaneous reads into 1 DB query. Cold channels stay on separate instances — their latency is completely unaffected.
 
 **Why this matters — with and without routing**:
 

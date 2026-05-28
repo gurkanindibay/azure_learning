@@ -6,7 +6,10 @@
 
 ---
 
-## P9: Cache Stampede
+## cache-01: Cache Stampede
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#9
+
 
 | | |
 |:---|:---|
@@ -34,7 +37,10 @@ def should_refresh(ttl_ms, delta=1000, beta=1.0):
 
 ---
 
-## P10: Cache Invalidation
+## cache-02: Cache Invalidation
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#10
+
 
 | | |
 |:---|:---|
@@ -132,7 +138,10 @@ READ:  cache GET → miss → DB SELECT → cache SET user:42 (TTL: 300s)
 
 ---
 
-## P11: Caching Anti-Patterns
+## cache-03: Caching Anti-Patterns
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#11
+
 
 | | |
 |:---|:---|
@@ -175,7 +184,10 @@ return db.query(...)
 
 ---
 
-## P12: Eviction Policies
+## cache-04: Eviction Policies
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#12
+
 
 | | |
 |:---|:---|
@@ -209,7 +221,10 @@ return db.query(...)
 
 ---
 
-## P13: Request Coalescing (In-Flight Deduplication)
+## cache-05: Request Coalescing (In-Flight Deduplication)
+
+> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+
 
 | | |
 |:---|:---|
@@ -272,7 +287,7 @@ DB:                                    [1 query executing] ... [1 response]
 | **Lifetime** | Minutes/hours (TTL) | Millseconds (duration of DB query) |
 | **Protects against** | Repeated reads over time | Simultaneous reads at the same instant |
 | **Storage** | External (Redis) | In-process memory (HashMap) |
-| **Pair with** | PER, lock-on-miss | Consistent hash routing (see [P17: Consistent Hash Routing](../04-api-network-design.md#p17-consistent-hash-based-routing)) |
+| **Pair with** | PER, lock-on-miss | Consistent hash routing (see [api-05: Consistent Hash Routing](../04-api-network-design.md#api-05-consistent-hash-based-routing)) |
 
 **Prerequisite — why this needs consistent hash routing**:
 

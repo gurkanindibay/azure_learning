@@ -6,7 +6,10 @@
 
 ---
 
-## P1: Random UUID Indexing
+## db-01: Random UUID Indexing
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#1
+
 
 | | |
 |:---|:---|
@@ -28,7 +31,10 @@
 
 ---
 
-## P2: Keyset Pagination
+## db-02: Keyset Pagination
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#2
+
 
 | | |
 |:---|:---|
@@ -64,7 +70,10 @@ Fetch `LIMIT page_size + 1` to detect whether a next page exists — no `COUNT(*
 
 ---
 
-## P3: Composite Index vs. Separate Indexes
+## db-03: Composite Index vs. Separate Indexes
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#3
+
 
 | | |
 |:---|:---|
@@ -92,7 +101,10 @@ Index on `(A, B)` can serve:
 
 ---
 
-## P4: N+1 Query Problem
+## db-04: N+1 Query Problem
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#4
+
 
 | | |
 |:---|:---|
@@ -135,7 +147,10 @@ flowchart TD
 
 ---
 
-## P5: Hot Partition Problem
+## db-05: Hot Partition Problem
+
+> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+
 
 | | |
 |:---|:---|
@@ -164,8 +179,8 @@ Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
 | Strategy | Mechanism | When to use |
 |:---|:---|:---|
 | **Partition key redesign** | Add high-cardinality component to spread load (e.g., `(channel_id, bucket, shard_id)`) | Can change schema |
-| **Request coalescing** | Intercept duplicate reads before they reach DB — only first query hits DB | Read-heavy hot partitions (see [P13: Request Coalescing](../03-caching-architecture.md#p13-request-coalescing)) |
-| **Consistent hash routing** | Route same partition key to same service instance → maximize coalescing + isolate heat | Multi-instance service layer (see [P17: Consistent Hash Routing](../04-api-network-design.md#p17-consistent-hash-based-routing)) |
+| **Request coalescing** | Intercept duplicate reads before they reach DB — only first query hits DB | Read-heavy hot partitions (see [cache-05: Request Coalescing](../03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) |
+| **Consistent hash routing** | Route same partition key to same service instance → maximize coalescing + isolate heat | Multi-instance service layer (see [api-05: Consistent Hash Routing](../04-api-network-design.md#api-05-consistent-hash-based-routing)) |
 | **Caching layer** | Cache hot partition results in Redis/Memcached | Read-heavy, can tolerate some staleness |
 | **Shard-per-core architecture** | Each CPU core owns its data slice independently — hot partition only burns one shard, not the whole node | Database engine selection (ScyllaDB vs Cassandra) |
 
@@ -175,7 +190,10 @@ Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
 
 ---
 
-## P6: Database Migration at Scale
+## db-06: Database Migration at Scale
+
+> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+
 
 | | |
 |:---|:---|

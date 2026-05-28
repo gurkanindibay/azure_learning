@@ -8,24 +8,27 @@
 
 ## Contents
 
-- [P17: Broker Selection](#p17-broker-selection) — Kafka vs RabbitMQ decision tree
+- [broker-01: Broker Selection](#broker-01-broker-selection) — Kafka vs RabbitMQ decision tree
   - [Quick Decision Flowchart](#quick-decision-flowchart)
-- [P18: Offset Commit Failure](#p18-offset-commit-failure) — At-least-once semantics & idempotency
+- [broker-02: Offset Commit Failure](#broker-02-offset-commit-failure) — At-least-once semantics & idempotency
   - [Manual Commit: Sync vs Async](#manual-commit-sync-vs-async)
-- [P19: Poison Messages](#p19-poison-messages) — Dead letter queues & retry strategies
-- [P20: Message Ordering](#p20-message-ordering) — Partition-by-entity, global vs per-key ordering
-- [P21: Stream Processing](#p21-stream-processing) — Kafka internals, rebalancing, Kafka Streams, Flink
+- [broker-03: Poison Messages](#broker-03-poison-messages) — Dead letter queues & retry strategies
+- [broker-04: Message Ordering](#broker-04-message-ordering) — Partition-by-entity, global vs per-key ordering
+- [broker-05: Stream Processing](#broker-05-stream-processing) — Kafka internals, rebalancing, Kafka Streams, Flink
   - [Kafka: Consumer Groups & Partition Ordering](#kafka-consumer-groups--partition-ordering)
     - [Rebalance Side Effects](#rebalance-side-effects)
     - [Idle Consumers — Scaling Beyond Partition Count](#idle-consumers--scaling-beyond-partition-count)
   - [Kafka Streams: A Library, Not a Platform](#kafka-streams-a-library-not-a-platform)
   - [Apache Flink: True Stream Processing Engine](#apache-flink-true-stream-processing-engine)
-- [P22: Producer Durability Tuning](#p22-producer-durability-tuning) — acks modes, idempotent producers, latency vs durability
-- [P23: Multi-Consumer-Group Duplicate Prevention](#p23-multi-consumer-group-duplicate-prevention) — Cross-group coordination, multi-region patterns, MirrorMaker 2
+- [broker-06: Producer Durability Tuning](#broker-06-producer-durability-tuning) — acks modes, idempotent producers, latency vs durability
+- [broker-07: Multi-Consumer-Group Duplicate Prevention](#broker-07-multi-consumer-group-duplicate-prevention) — Cross-group coordination, multi-region patterns, MirrorMaker 2
 
 ---
 
-## P17: Broker Selection
+## broker-01: Broker Selection
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#17
+
 
 | | |
 |:---|:---|
@@ -85,7 +88,11 @@ flowchart TD
 
 ---
 
-## P18: Offset Commit Failure
+## broker-02: Offset Commit Failure
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#18
+> **Also see**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+
 
 | | |
 |:---|:---|
@@ -157,7 +164,10 @@ consumer.commitAsync(new OffsetCommitCallback() {
 
 ---
 
-## P19: Poison Messages
+## broker-03: Poison Messages
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#19
+
 
 | | |
 |:---|:---|
@@ -203,7 +213,10 @@ Message processing decision tree:
 
 ---
 
-## P20: Message Ordering
+## broker-04: Message Ordering
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#20
+
 
 | | |
 |:---|:---|
@@ -242,13 +255,16 @@ Entity-level ordering (scalable):
 
 ### Kafka: Consumer Groups & Partition Ordering
 
-> Moved to **[P21: Stream Processing](#p21-stream-processing)** — covers consumer groups, partition ordering, rebalance side effects, Kafka Streams, and Apache Flink.
+> Moved to **[P21: Stream Processing](#broker-05-stream-processing)** — covers consumer groups, partition ordering, rebalance side effects, Kafka Streams, and Apache Flink.
 
 > For quick reference: within a consumer group, each partition has exactly **one consumer** — that 1:1 mapping is Kafka's ordering guarantee. To fan-out the same partition to multiple consumers, use **separate consumer groups**.
 
 ---
 
-## P21: Stream Processing
+## broker-05: Stream Processing
+
+> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+
 
 > Covers Kafka consumer internals, rebalancing, Kafka Streams, and Apache Flink — extracted from P20 for clarity.
 
@@ -650,7 +666,10 @@ Use Kafka Streams when:                 Use Apache Flink when:
 
 ---
 
-## P22: Producer Durability Tuning
+## broker-06: Producer Durability Tuning
+
+> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+
 
 | | |
 |:---|:---|
@@ -705,7 +724,10 @@ Without idempotence:                    With idempotence:
 
 ---
 
-## P23: Multi-Consumer-Group Duplicate Prevention
+## broker-07: Multi-Consumer-Group Duplicate Prevention
+
+> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+
 
 | | |
 |:---|:---|

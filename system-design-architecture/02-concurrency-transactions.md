@@ -5,7 +5,10 @@
 
 ---
 
-## P5: Double-Booking
+## tx-01: Double-Booking
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#5
+
 
 | | |
 |:---|:---|
@@ -25,7 +28,10 @@
 
 ---
 
-## P6: Isolation Levels
+## tx-02: Isolation Levels
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#6
+
 
 | | |
 |:---|:---|
@@ -52,7 +58,10 @@
 
 ---
 
-## P7: Distributed Locks
+## tx-03: Distributed Locks
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#7
+
 
 | | |
 |:---|:---|
@@ -94,7 +103,10 @@ Client A resumes → writes with token 17 → RESOURCE REJECTS (18 > 17)
 
 ---
 
-## P8: Idempotency
+## tx-04: Idempotency
+
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#8
+
 
 | | |
 |:---|:---|
