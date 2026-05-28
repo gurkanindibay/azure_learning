@@ -56,6 +56,75 @@ READ:  cache GET → miss → DB SELECT → cache SET user:42 (TTL: 300s)
 | **Write-Behind** | Write to cache → async flush to DB | Data loss if cache crashes |
 | **Refresh-Ahead** | Cache preloads before expiry | Complex tuning |
 
+**Write pattern visualizations** — WRITE flow on the left, READ flow on the right.
+
+**Cache-Aside** — App talks to DB first, then clears cache:
+
+```
+ WRITE: +-----+  1)UPDATE   +---+  2)DEL    +-------+
+        | App |------------>|DB |---------->| Cache |
+        +-----+             +---+           +-------+
+
+ READ:  +-----+  1)GET MISS  +-------+  2)SELECT    +---+  3)SET     +-------+
+        | App |------------->| Cache |------------->|DB |----------->| Cache |
+        +-----+              +-------+              +---+            +-------+
+```
+⚡ **Race**: read between 1) and 2) gets old data back into cache.
+
+**Write-Through** — Cache sits between App and DB:
+
+```
+ WRITE: +-----+  1)SET    +-------+  2)UPDATE   +---+
+        | App |---------->| Cache |------------>|DB |
+        +-----+           +-------+             +---+
+
+ READ:  +-----+  1)GET HIT   +-------+
+        | App |------------->| Cache |   (DB never touched)
+        +-----+              +-------+
+```
+⚡ Every write hits cache + DB. Best for: rare writes, frequent reads.
+
+**Write-Behind** — App writes cache only, DB updated later:
+
+```
+ WRITE: +-----+  1)SET    +-------+                 +-------+  flush   +---+
+        | App |---------->| Cache |   ...later...   | Cache |--------->|DB |
+        +-----+           +-------+                 +-------+          +---+
+
+ READ:  +-----+  1)GET HIT   +-------+
+        | App |------------->| Cache |   (always fast)
+        +-----+              +-------+
+```
+⚡ Cache crash = **data lost**. Best for: metrics, counters.
+
+**Refresh-Ahead** — Cache auto-refreshes before key expires:
+
+```
+ t=0s   +-----+  GET HIT   +-------+
+        | App |----------->| Cache |  (ttl=300s)
+        +-----+            +-------+
+
+ t=250s +-----+  GET HIT   +-------+  triggers    +---+
+        | App |----------->| Cache |---SELECT---->|DB |---row--> Cache refresh
+        +-----+            +-------+              +---+
+
+ t=310s +-----+  GET HIT   +-------+
+        | App |----------->| Cache |  <-- fresh, no stall
+        +-----+            +-------+
+```
+⚡ Hard to tune threshold. Best for: hot keys where cache miss is unacceptable.
+
+**Write pattern decision matrix**:
+
+| Decision factor | Cache-Aside | Write-Through | Write-Behind | Refresh-Ahead |
+|:---|:---:|:---:|:---:|:---:|
+| Write-heavy workload | ✅ | ❌ | ✅ | — |
+| Read-heavy workload | ✅ | ✅ | ✅ | ✅ |
+| Data loss tolerance | High | None | Low | None |
+| Staleness tolerance | Short TTL | None | Until flush | Configurable |
+| Operational complexity | Low | Low | Medium | High |
+| Best for | General purpose | Config/metadata | Metrics/counters | Hot keys, ML features |
+
 **CDC alternative** (for multi-service scenarios): Debezium tails DB WAL → emits change events to Kafka → cache invalidation consumer updates/deletes keys. Decouples invalidation from application code.
 
 > **Azure**: Azure Cache for Redis | **General**: §7.3 Caching Strategies
