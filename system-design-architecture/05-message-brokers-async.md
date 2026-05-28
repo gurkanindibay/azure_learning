@@ -162,6 +162,56 @@ Entity-level ordering (scalable):
 | **AWS SQS FIFO** | `MessageGroupId` — messages in same group are FIFO |
 | **Azure Service Bus** | `SessionId` — session-aware consumer processes in FIFO |
 
+### Kafka: Consumer Groups & Partition Ordering
+
+**Can multiple consumers listen to the same partition?**
+
+| Scenario | Same partition? | Ordering? |
+|:---|:---|:---|
+| **Same consumer group** | ❌ **No** — Kafka assigns each partition to exactly ONE consumer in the group | ✅ Guaranteed — single consumer reads sequentially |
+| **Different consumer groups** | ✅ **Yes** — each group maintains its own offset independently | ✅ Per-group — each group reads in order from its own offset |
+
+```mermaid
+flowchart LR
+    subgraph Partition["Partition 0: [m1][m2][m3][m4][m5]"]
+        direction LR
+    end
+    subgraph CG1["Consumer Group A (app-1)"]
+        C1["Consumer 1"]
+    end
+    subgraph CG2["Consumer Group B (analytics)"]
+        C2["Consumer 2"]
+    end
+    Partition --> C1
+    Partition --> C2
+```
+
+**Why this matters**: The "one consumer per partition within a group" rule is Kafka's **ordering guarantee mechanism**. If two consumers in the same group could read partition 0, they'd race and reorder messages. Kafka enforces this at the protocol level through the Group Coordinator — when a consumer joins/leaves, partitions are **rebalanced** to maintain the 1:1 mapping.
+
+**Scaling & ordering trade-off**:
+
+```
+Partitions = parallelism ceiling for your consumer group
+
+Topic: orders (3 partitions)
+  P0: [order-1] [order-4] [order-7]  → Consumer A (same group)
+  P1: [order-2] [order-5] [order-8]  → Consumer B (same group)
+  P2: [order-3] [order-6] [order-9]  → Consumer C (same group)
+
+  ✅ Per-partition ordering preserved (by user_id key)
+  ✅ Up to 3 consumers can work in parallel
+  ❌ Adding Consumer D → it stays idle (no unassigned partition)
+  ❌ No global ordering across P0, P1, P2
+```
+
+**Key rules**:
+- **Max parallelism = partition count**: A consumer group can have at most `N` active consumers for `N` partitions; extras sit idle
+- **Partition key = ordering domain**: Messages with the same key go to the same partition → processed in order by one consumer
+- **Rebalance disrupts ordering briefly**: During rebalance, no consumer reads — but order within a partition is never violated once the new assignment settles
+- **Across groups = fan-out, not competition**: Group A and Group B both read partition 0 independently — like two bookmarks in the same book
+
+> **TL;DR** — Within a consumer group, each partition has exactly **one consumer** — that 1:1 mapping is Kafka's ordering guarantee. To fan-out the same partition to multiple consumers, use **separate consumer groups**.
+
 **When you TRULY need global order** (rare):
 1. Single partition / single FIFO queue — accept throughput ceiling (~300 TPS for SQS FIFO)
 2. Sequence numbers — producer assigns monotonically increasing number; consumer buffers and reorders
