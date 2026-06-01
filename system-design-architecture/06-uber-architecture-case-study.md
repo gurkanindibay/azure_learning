@@ -106,6 +106,73 @@
 | `driver_id` | Distributed scatter-gather | O(N) — query all partitions | ❌ |
 | H3 cell ID | Local memory read | O(1) — single partition has all data | ✅ |
 
+### ⚠️ Clarification: Kafka doesn't query — the consumer does
+
+This is the most frequently misunderstood point. Kafka is a **log**, not a database. It doesn't answer queries. The "query" in the table above refers to what the **dispatch consumer instance** does — not what Kafka does.
+
+Here's the mechanism step by step:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  KAFKA (streaming log — no queries happen here)         │
+│                                                         │
+│  Partition "Koramangala"      Partition "Indiranagar"   │
+│  ┌─────────────────────┐     ┌─────────────────────┐    │
+│  │ Driver A (12.934,    │     │ Driver X (12.978,    │    │
+│  │           77.612)    │     │           77.641)    │    │
+│  │ Driver B (12.935,    │     │ Driver Y (12.977,    │    │
+│  │           77.614)    │     │           77.643)    │    │
+│  │ Driver C (12.933,    │     │ Driver Z (12.979,    │    │
+│  │           77.611)    │     │           77.640)    │    │
+│  └─────────┬───────────┘     └─────────┬───────────┘    │
+│            │                           │                │
+└────────────┼───────────────────────────┼────────────────┘
+             │ consumes                  │ consumes
+             ▼                           ▼
+┌─────────────────────────┐  ┌─────────────────────────┐
+│ Consumer Instance #1    │  │ Consumer Instance #2    │
+│ (owns Koramangala)      │  │ (owns Indiranagar)      │
+│                         │  │                         │
+│ IN-MEMORY STATE TABLE:  │  │ IN-MEMORY STATE TABLE:  │
+│ ┌─────────────────────┐ │  │ ┌─────────────────────┐ │
+│ │ Driver A → (lat,lng)│ │  │ │ Driver X → (lat,lng)│ │
+│ │ Driver B → (lat,lng)│ │  │ │ Driver Y → (lat,lng)│ │
+│ │ Driver C → (lat,lng)│ │  │ │ Driver Z → (lat,lng)│ │
+│ └─────────────────────┘ │  │ └─────────────────────┘ │
+│                         │  │                         │
+│ ← LOCAL lookup when     │  │ ← LOCAL lookup when     │
+│   dispatch query hits   │  │   dispatch query hits   │
+│   this neighborhood     │  │   this neighborhood     │
+└─────────────────────────┘  └─────────────────────────┘
+```
+
+**The dispatch consumer does three things continuously**:
+
+| Step | Action | Where |
+|------|--------|-------|
+| 1 | **Ingest** — Consume GPS events from its assigned Kafka partition | From Kafka |
+| 2 | **Build state** — Maintain an in-memory hashmap: `driver_id → (lat, lng, speed, heading, timestamp)` | In RAM (consumer process heap) |
+| 3 | **Answer queries** — When a dispatch request arrives for a pickup in this area, look up candidates from the in-memory state table | Local memory read |
+
+The geo-partitioning in Kafka is what makes Step 2 produce a **geographically coherent** state table. If Koramangala's drivers all land in one partition, consumer #1's hashmap contains **every driver in Koramangala and only Koramangala drivers**. No other consumer needs to be consulted for a Koramangala dispatch.
+
+**What happens if you partition by `driver_id` instead:**
+
+```
+Partition by driver_id → each consumer gets a RANDOM subset of drivers
+                         from EVERY neighborhood
+
+Consumer #1: Driver A (Koramangala), Driver X (Indiranagar), Driver M (Whitefield) ...
+Consumer #2: Driver B (Koramangala), Driver Y (Indiranagar), Driver N (Whitefield) ...
+Consumer #3: Driver C (Koramangala), Driver Z (Indiranagar), Driver O (Whitefield) ...
+
+Dispatch for Koramangala → must query ALL N consumers → scatter-gather → O(N) latency
+```
+
+No single consumer has a complete picture of any neighborhood. The spatial locality is destroyed at ingestion time and can never be recovered downstream.
+
+> **The geo-partitioning is not about making Kafka queryable. It's about making each consumer's in-memory state table a complete, self-contained spatial index for one geographic region.** Kafka is just the delivery mechanism that pre-sorts the data so the consumer doesn't have to.
+
 **H3 Hexagonal Grid** (Uber's open-source library):
 
 | Property | Square Grid | H3 Hex Grid |
@@ -123,7 +190,100 @@
 | **9** | ~0.1 km² (~few city blocks) | **Dispatch queries** |
 | 15 | < 1 m² | Hyper-precise location |
 
-H3 cell IDs are 64-bit integers. Parent/child containment checks are **bitwise operations** — no geometric math needed per ping.
+### How H3 Is Stored: The 64-Bit Integer Layout
+
+Every H3 cell is a single **64-bit unsigned integer** (`uint64`). The bits encode the entire hierarchy — resolution, base cell, and path through the tree — in a self-contained format. No external lookup table needed.
+
+```
+ H3 Index (64-bit integer)
+┌────┬──────┬──────────────────────────────────────────────┐
+│  0 │   1–4│  5–63                                         │
+│Res │ Res  │  Cell path (depends on resolution)            │
+│erved│Level│                                               │
+└────┴──────┴──────────────────────────────────────────────┘
+
+Detailed breakdown for resolution 9:
+┌──────┬──────┬──────────┬──────────────────────────────────┐
+│Bit 63│62–59 │  58–52   │  51–0                             │
+│  1b  │  4b  │   7b     │   52b                              │
+│ Mode │ Res  │ Base     │  Direction bits (3 bits × res)     │
+│(=1)  │(=9)  │ cell #   │  Dir₀ │ Dir₁ │ ... │ Dir₉          │
+└──────┴──────┴──────────┴──────────────────────────────────┘
+                                      ▲
+                         3 bits per resolution level
+                         (value 0–6, selecting which
+                          of 7 child hexagons)
+```
+
+| Field | Bits | What It Encodes |
+|-------|------|-----------------|
+| **Mode** | 63 | Always `1` for hexagon cells (mode 1) |
+| **Resolution** | 59–62 | 4 bits → values 0–15 |
+| **Base cell** | 52–58 | 7 bits → one of 122 base cells at resolution 0 |
+| **Direction digits** | 0–51 | 3 bits per resolution level → each digit (0–6) picks which of 7 children |
+
+Why 7 children per hexagon? A hexagon can be perfectly subdivided into 7 smaller hexagons — this is the unique geometric property that makes hex grids superior to squares (which subdivide into 4). At resolution 9, the cell ID contains the base cell number (7 bits) followed by 9 direction digits (9 × 3 = 27 bits), forming a **path** from the base cell down to the specific resolution-9 cell.
+
+### How Traversal Works: Pure Bit Manipulation
+
+This is the part that makes H3 extremely fast — every operation is integer arithmetic, never geometry.
+
+**Going UP (cell → parent)** — ask "which resolution-5 cell contains this resolution-9 cell?"
+
+```
+Child cell (res 9):  0x892830B20FFFFFF
+                     │  base  │ dir₀│ dir₁│ dir₂│ dir₃│ dir₄│ dir₅│ dir₆│ dir₇│ dir₈│ dir₉│
+                     └──7b────┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┘
+
+To get parent at res 5:
+  1. Zero out direction digits for levels 6–9 (dir₆ through dir₉) → set those 12 bits to 0
+  2. Set resolution field to 5
+
+Parent cell (res 5): 0x852830B2FFFFFFFF
+                     │  base  │ dir₀│ dir₁│ dir₂│ dir₃│ dir₄│ dir₅│  0   │  0   │  0   │  0   │
+                     └──7b────┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┴──3b──┘
+```
+
+Implementation: `parent = (child & mask) | (new_resolution << 59)`. The mask keeps bits above the target resolution; everything below is zeroed.
+
+**Going DOWN (parent → children)** — ask "what are the 7 resolution-10 children of this resolution-9 cell?"
+
+```
+Parent cell (res 9): 0x892830B20FFFFFF
+
+Children at res 10: append a 3-bit direction digit (0–6)
+  Child 0: 0x8A2830B20FFFFFF0   (append dir=0)
+  Child 1: 0x8A2830B20FFFFFF1   (append dir=1)
+  Child 2: 0x8A2830B20FFFFFF2   (append dir=2)
+  ...
+  Child 6: 0x8A2830B20FFFFFF6   (append dir=6)
+
+Implementation: child = (parent << 3) | direction | (new_resolution << 59)
+```
+
+**CONTAINMENT check** (is cell A inside cell B?) — the most common operation in Uber's pipeline:
+
+```
+Is resolution-9 cell contained in resolution-5 cell?
+  → parent_of(A) == B
+  → Bitwise mask + integer comparison → O(1), ~1 CPU cycle
+```
+
+All three operations — parent, children, containment — are **single-digit nanosecond** operations because they're just bit shifts, masks, and integer comparisons. At 83,000 pings per second, this means the total CPU cost of H3 operations across the entire fleet is negligible compared to network and I/O costs.
+
+### Why This Matters for Uber's Pipeline
+
+Uber uses multiple resolutions **simultaneously** on the same ping:
+
+| Resolution | Purpose | How |
+|-----------|---------|-----|
+| **9** | Kafka partition key (dispatch) | `h3.latlng_to_cell(lat, lng, 9)` → route to partition |
+| **5** | Supply-demand heatmap (surge) | `h3.cell_to_parent(cell9, 5)` → aggregate into neighborhood bucket |
+| **6** | Regional analytics | `h3.cell_to_parent(cell9, 6)` → city-district aggregation |
+
+All three are computed from a single `latlng_to_cell` call plus two `cell_to_parent` bitwise operations. No second geo-lookup. No spatial join. No database index. The same 64-bit integer that routes the ping through Kafka also tells you which neighborhood and which city the driver is in — **for free**.
+
+> **Analogy**: A full postal address like "Apartment 4B, 123 Main St, Koramangala, Bangalore, India" encodes multiple geographic levels in one string. You can extract "Koramangala" (resolution 5) or "Bangalore" (resolution 3) without a second lookup — it's already in the address itself. H3 does the same with bit fields.
 
 **Real-world nuance**: A single Kafka partition owns many H3 cells, grouped by expected driver density. Territory assignments are stored in a metadata service, enabling **rebalancing without changing the Kafka topic structure**.
 
