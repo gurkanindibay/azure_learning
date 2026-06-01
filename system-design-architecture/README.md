@@ -1,8 +1,8 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), and [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), and [Uber Architecture Series](../articles/medium/uber-architecture/)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
-> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`) for self-documenting cross-references.
+> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`) for self-documenting cross-references.
 
 ---
 
@@ -15,6 +15,7 @@
 | ⚡ **Caching Architecture** | [`03-caching-architecture.md`](03-caching-architecture.md) | `cache-01` – `cache-05` | Cache stampede, Invalidation, Anti-patterns, Eviction, Request coalescing |
 | 🌐 **APIs & Network Design** | [`04-api-network-design.md`](04-api-network-design.md) | `api-01` – `api-05` | Versioning, Rate limiting, Large uploads, Async tasks, Consistent hash routing |
 | 📨 **Message Brokers & Async** | [`05-message-brokers-async.md`](05-message-brokers-async.md) | `broker-01` – `broker-07` | Broker selection, Offset commits, Poison messages, Ordering, Stream processing, Producer durability, Multi-consumer-group dedup |
+| 🚗 **Uber Architecture Case Study** | [`06-uber-architecture-case-study.md`](06-uber-architecture-case-study.md) | `uber-01` – `uber-11` | Decomposition, Geo-partitioning (H3), Ring buffer, LSM vs B-Tree, Dispatch engine, Kalman filter, Map rendering |
 | ☁️ **Azure Service Mapping** | [`07-azure-service-mapping.md`](07-azure-service-mapping.md) | — | Problem domain → Azure service quick lookup |
 
 ---
@@ -49,6 +50,12 @@
 | "Messages processed out of order across consumers" | No partition key | Entity-level partitioning | [`broker-04`](05-message-brokers-async.md#broker-04-message-ordering) |
 | "Payment events lost after Kafka broker crash" | Producer `acks=1` without replication | `acks=all` + idempotent producer | [`broker-06`](05-message-brokers-async.md#broker-06-producer-durability-tuning) |
 | "Two consumer groups in different regions write duplicates to same DB" | Independent consumer groups | Single group ID, partition-by-region, or MirrorMaker 2 | [`broker-07`](05-message-brokers-async.md#broker-07-multi-consumer-group-duplicate-prevention) |
+| "83K writes/sec — Postgres buckles under sustained write load" | B-Tree random write overhead | LSM-Tree (Cassandra/Cosmos DB) for append-heavy time-series | [`uber-05`](06-uber-architecture-case-study.md#uber-05-b-tree-vs-lsm-tree--write-heavy-workloads) |
+| "Dispatch query scans all drivers globally — times out at scale" | No spatial pre-indexing | Partition by geography (H3), O(1) gridDisk + Redis MGET | [`uber-06`](06-uber-architecture-case-study.md#uber-06-dispatch-as-o1-spatial-lookup) |
+| "Partitioning by user_id scatters co-located entities across all partitions" | Indexing by identity instead of location | Geo-partition by H3 cell | [`uber-03`](06-uber-architecture-case-study.md#uber-03-geo-partitioning-vs-identity-partitioning) |
+| "Driver icon twitches and jumps on the map" | Raw GPS noise + discrete updates | Kalman filter + dead reckoning + map matching | [`uber-08`](06-uber-architecture-case-study.md#uber-08-map-rendering-as-signal-processing) |
+| "Need sub-ms reads for real-time data with 30-second useful lifetime" | Durable DB in critical path | Redis ring buffer (capped list) + TTL eviction | [`uber-04`](06-uber-architecture-case-study.md#uber-04-ring-buffer-for-real-time-serving) |
+| "Stationary clients flood the system with identical data" | Client-side fixed ping rate | Server-side adaptive sampling (closed-loop feedback) | [`uber-09`](06-uber-architecture-case-study.md#uber-09-adaptive-sampling--server-side-rate-control) |
 
 ---
 
@@ -59,6 +66,7 @@
 | Original 20 questions article | [`articles/medium/20-design-interview-questions.md`](../articles/medium/20-design-interview-questions.md) |
 | Discord data architecture masterclass | [`articles/medium/discord-data-architecture-master-class.md`](../articles/medium/discord-data-architecture-master-class.md) |
 | Kafka concepts every architect must master | [`articles/medium/kafka-concepts-that-every-architect-should-master.md`](../articles/medium/kafka-concepts-that-every-architect-should-master.md) |
+| Uber architecture 5-part series | [`articles/medium/uber-architecture/`](../articles/medium/uber-architecture/) |
 | Azure event services full comparison | [`architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md`](../architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md) |
 | Azure messaging transaction quick reference | [`architecture-azure/integration/messaging-comparisons/azure_messaging_transaction_quick_reference.md`](../architecture-azure/integration/messaging-comparisons/azure_messaging_transaction_quick_reference.md) |
 | Messaging patterns overview | [`architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md) |
