@@ -1,8 +1,8 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), and [Uber Architecture Series](../articles/medium/uber-architecture/)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), and [Async Concurrency Patterns](../articles/medium/async-patterns-java/)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
-> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`) for self-documenting cross-references.
+> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`) for self-documenting cross-references.
 
 ---
 
@@ -17,6 +17,7 @@
 | 📨 **Message Brokers & Async** | [`05-message-brokers-async.md`](05-message-brokers-async.md) | `broker-01` – `broker-07` | Broker selection, Offset commits, Poison messages, Ordering, Stream processing, Producer durability, Multi-consumer-group dedup |
 | 🚗 **Uber Architecture Case Study** | [`06-uber-architecture-case-study.md`](06-uber-architecture-case-study.md) | `uber-01` – `uber-11` | Decomposition, Geo-partitioning (H3), Ring buffer, LSM vs B-Tree, Dispatch engine, Kalman filter, Map rendering |
 | ☁️ **Azure Service Mapping** | [`07-azure-service-mapping.md`](07-azure-service-mapping.md) | — | Problem domain → Azure service quick lookup |
+| 🔄 **Async & Concurrency Patterns** | [`08-async-concurrency-patterns.md`](08-async-concurrency-patterns.md) | `async-01` – `async-04` | Thread pool exhaustion, Parallel I/O, Post-commit dispatch, Silent failures |
 
 ---
 
@@ -56,6 +57,10 @@
 | "Driver icon twitches and jumps on the map" | Raw GPS noise + discrete updates | Kalman filter + dead reckoning + map matching | [`uber-08`](06-uber-architecture-case-study.md#uber-08-map-rendering-as-signal-processing) |
 | "Need sub-ms reads for real-time data with 30-second useful lifetime" | Durable DB in critical path | Redis ring buffer (capped list) + TTL eviction | [`uber-04`](06-uber-architecture-case-study.md#uber-04-ring-buffer-for-real-time-serving) |
 | "Stationary clients flood the system with identical data" | Client-side fixed ping rate | Server-side adaptive sampling (closed-loop feedback) | [`uber-09`](06-uber-architecture-case-study.md#uber-09-adaptive-sampling--server-side-rate-control) |
+| "Thread pool exhausted under load, cascading failures" | Unbounded async thread pools | Named executors with explicit bounds + rejection policies | [`async-01`](08-async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion) |
+| "Response time = sum of all I/O calls instead of max" | Sequential independent I/O calls | Parallel execution with CompletableFuture.allOf() / Task.WhenAll() | [`async-02`](08-async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel) |
+| "Customer receives email for order that was rolled back" | Side effects before transaction commit | Post-commit dispatch with @TransactionalEventListener / SaveChangesInterceptor | [`async-03`](08-async-concurrency-patterns.md#async-03-side-effects-before-transaction-commit) |
+| "Fire-and-forget tasks fail silently, no logs or alerts" | Unobserved async exceptions | Global exception handlers + structured error handling + retry/DLQ | [`async-04`](08-async-concurrency-patterns.md#async-04-silent-async-failures) |
 
 ---
 
