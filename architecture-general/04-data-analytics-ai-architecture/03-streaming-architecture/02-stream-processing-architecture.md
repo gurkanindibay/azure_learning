@@ -311,6 +311,112 @@ graph TD
     style KSTREAMS fill:#45b7d1,color:#fff
 ```
 
+## Stream Processing vs Kappa Architecture
+
+### The Misconception
+
+**Stream processing** and **Kappa Architecture** are often conflated, but they address **different layers** of the architecture stack:
+
+| | Stream Processing | Kappa Architecture |
+|---|---|---|
+| **What it is** | A **processing paradigm** — how you transform data | An **architectural pattern** — how you organize your entire data platform |
+| **Answers** | "How do I process events as they arrive?" | "How do I build a complete data system without a separate batch layer?" |
+| **Scope** | One component (the processing engine) | End-to-end: ingestion → processing → serving → reprocessing |
+
+### The Relationship
+
+```
+Kappa Architecture
+┌─────────────────────────────────────────────────────────────┐
+│  ┌──────────────────┐     ┌──────────────────┐              │
+│  │   Ingestion       │────▶│ Stream Processing │────▶ Serving │
+│  │   (Kafka)         │     │  (Flink / KS)     │              │
+│  └──────────────────┘     └──────────────────┘              │
+│           │                        │                         │
+│           └────────────────────────┤                         │
+│                                    ▼                         │
+│                          ┌──────────────────┐               │
+│                          │ Immutable Event  │               │
+│                          │ Log (Kafka)      │               │
+│                          │ = Source of Truth │               │
+│                          └──────────────────┘               │
+│                                    │                         │
+│                          Reprocess entire history            │
+│                          when logic changes                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Stream processing is the engine. Kappa Architecture is the system design around it.**
+
+### Key Distinctions
+
+| Dimension | Stream Processing | Kappa Architecture |
+|-----------|------------------|-------------------|
+| **Core Idea** | Process events as they arrive | All data is a stream; batch = replay of the stream |
+| **Batch Jobs** | Not applicable (handles streams) | **No separate batch layer** — batch is just streaming over historical data |
+| **Historical Reprocessing** | Not natively supported | **Built-in** — replay the immutable log from $t_0$ to $t_{now}$ |
+| **Single Source of Truth** | Optional (varies by framework) | **Mandatory** — Kafka serves as the durable event log |
+| **State Evolution** | Framework-dependent (savepoints in Flink) | **Integral** — schema registry, event versioning, compatible evolution |
+| **Operational Complexity** | Lower (one component) | Higher (Kafka + processing + schema registry + monitoring) |
+
+### When They Align — And When They Don't
+
+```
+Stream Processing WITHOUT Kappa (common):
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Kafka   │────▶│  Flink   │────▶│  Redis   │   ← Real-time
+└──────────┘     └──────────┘     └──────────┘
+                                   
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│   S3     │────▶│  Spark   │────▶│  Hive    │   ← Batch
+└──────────┘     └──────────┘     └──────────┘
+              TWO SYSTEMS. TWO CODEBASES.
+
+Stream Processing WITH Kappa:
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Kafka   │────▶│  Flink   │────▶│  Serving │   ← Real-time & Batch
+│(immutable│     │(unified  │     │  Layer   │       (same codebase)
+│   log)   │     │ engine)  │     └──────────┘
+└──────────┘     └──────────┘
+     ▲                │
+     └──Reprocess─────┘  (replay log from any offset)
+         for historical jobs
+              ONE SYSTEM. ONE CODEBASE.
+```
+
+### Decision Table
+
+| Scenario | Stream Processing Alone | Kappa Architecture |
+|----------|------------------------|--------------------|
+| Real-time dashboard | ✅ Perfect fit | Overkill — just stream processing is enough |
+| Real-time + need to recompute last month's metrics when you fix a bug | ❌ No native mechanism | ✅ Replay Kafka log from target offset |
+| Model retraining on historical data | ❌ Requires separate batch system | ✅ Same Flink job, pointed at historical time window |
+| Simple 3-service notification pipeline | ✅ Simpler, lower ops cost | ❌ Adds complexity without benefit |
+| Multi-tenant SaaS with per-customer reprocessing | ❌ Manual per-customer batching | ✅ Per-partition replay from specific offsets |
+| Event sourcing + CQRS | ❌ Query side not addressed | ✅ Immutable log + stream processing = CQRS backbone |
+
+### The Framing from Flink's Creator
+
+> *"A bounded data set is a special case of an unbounded data stream that happens to end."* — Carbone et al., Apache Flink Paper (2015)
+
+This is the philosophical bridge between stream processing and Kappa Architecture:
+- **Stream processing** says: "I can handle unbounded data."
+- **Kappa Architecture** says: "Therefore I don't need a separate batch system — batch is just a bounded stream."
+
+Flink is the engine that makes Kappa practical. Without a unified engine that handles both pipelined (streaming) and blocked (batch) data exchange using the same code, Kappa Architecture would require you to fake batch by running a stream job over historical data — which is far less efficient than native batch execution.
+
+### When Kappa Isn't the Answer
+
+| Situation | Better Alternative |
+|-----------|-------------------|
+| Ad-hoc analytical queries (no streaming need) | Standard data warehouse (Snowflake, BigQuery) |
+| Small data volume, infrequent updates | Simple batch pipeline (cron + Python) |
+| Existing Lambda Architecture works well, team is small | Don't migrate — Kappa adds Kafka ops complexity |
+| ML training pipelines that don't need real-time | Spark/Databricks batch jobs — simpler to reason about |
+| Strict cost control (Kafka retention = ongoing storage cost) | Lambda with S3/ADLS for long-term retention |
+
+> **The Rule**: Stream processing is a tool. Kappa Architecture is a commitment. Use stream processing everywhere it makes sense. Adopt Kappa Architecture only when the **operational cost of maintaining two codebases exceeds the operational cost of maintaining Kafka as your source of truth.**
+
 ## Related Patterns
 
 - [Real-Time Analytics Architecture](01-real-time-analytics-architecture.md) — Windowing, watermarks, state
