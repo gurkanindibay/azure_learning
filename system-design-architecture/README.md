@@ -1,8 +1,8 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), and [Async Concurrency Patterns](../articles/medium/async-patterns-java/)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), and [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
-> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`) for self-documenting cross-references.
+> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`, `flink-`) for self-documenting cross-references.
 
 ---
 
@@ -18,6 +18,7 @@
 | 🚗 **Uber Architecture Case Study** | [`06-uber-architecture-case-study.md`](06-uber-architecture-case-study.md) | `uber-01` – `uber-11` | Decomposition, Geo-partitioning (H3), Ring buffer, LSM vs B-Tree, Dispatch engine, Kalman filter, Map rendering |
 | ☁️ **Azure Service Mapping** | [`07-azure-service-mapping.md`](07-azure-service-mapping.md) | — | Problem domain → Azure service quick lookup |
 | 🔄 **Async & Concurrency Patterns** | [`08-async-concurrency-patterns.md`](08-async-concurrency-patterns.md) | `async-01` – `async-04` | Thread pool exhaustion, Parallel I/O, Post-commit dispatch, Silent failures |
+| 🌊 **Stream Processing (Flink)** | [`09-stream-processing-flink.md`](09-stream-processing-flink.md) | `flink-01` – `flink-05` | Lambda vs Kappa, Batch as special case of streaming, Stateful exactly-once, Windowing, Barrier snapshots |
 
 ---
 
@@ -61,6 +62,11 @@
 | "Response time = sum of all I/O calls instead of max" | Sequential independent I/O calls | Parallel execution with CompletableFuture.allOf() / Task.WhenAll() | [`async-02`](08-async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel) |
 | "Customer receives email for order that was rolled back" | Side effects before transaction commit | Post-commit dispatch with @TransactionalEventListener / SaveChangesInterceptor | [`async-03`](08-async-concurrency-patterns.md#async-03-side-effects-before-transaction-commit) |
 | "Fire-and-forget tasks fail silently, no logs or alerts" | Unobserved async exceptions | Global exception handlers + structured error handling + retry/DLQ | [`async-04`](08-async-concurrency-patterns.md#async-04-silent-async-failures) |
+| "Two codebases — batch and streaming — for the same data, results always disagree" | Lambda Architecture duality | Unified engine (Flink): same operators, batch or streaming mode | [`flink-01`](09-stream-processing-flink.md#flink-01-lambda-architecture--two-systems-two-codebases) |
+| "How does a streaming engine also do batch processing?" | Confusion about unified execution | Blocked vs pipelined data exchange — same code, different execution timing | [`flink-02`](09-stream-processing-flink.md#flink-02-batch-as-a-special-case-of-streaming) |
+| "Can't detect patterns — each event processed in isolation, no memory" | Stateless stream processing | Managed state with exactly-once checkpointing (Asynchronous Barrier Snapshotting) | [`flink-03`](09-stream-processing-flink.md#flink-03-stateful-stream-processing-with-exactly-once-guarantees) |
+| "How do I emit results from a stream that never ends?" | Infinite stream aggregation | Windows: tumbling, sliding, session, global | [`flink-04`](09-stream-processing-flink.md#flink-04-windowing--aggregating-infinite-streams) |
+| "Checkpoints pause my pipeline, breaking latency SLAs" | Stop-the-world snapshots | Asynchronous Barrier Snapshotting — non-blocking distributed checkpoints | [`flink-05`](09-stream-processing-flink.md#flink-05-asynchronous-barrier-snapshotting-abs--fault-tolerance-without-pausing) |
 
 ---
 
