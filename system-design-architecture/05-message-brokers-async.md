@@ -22,6 +22,7 @@
   - [Apache Flink: True Stream Processing Engine](#apache-flink-true-stream-processing-engine)
 - [broker-06: Producer Durability Tuning](#broker-06-producer-durability-tuning) — acks modes, idempotent producers, latency vs durability
 - [broker-07: Multi-Consumer-Group Duplicate Prevention](#broker-07-multi-consumer-group-duplicate-prevention) — Cross-group coordination, multi-region patterns, MirrorMaker 2
+- [broker-08: Common Kafka Anti-Patterns](#broker-08-common-kafka-anti-patterns) — Queue-vs-log, partition keys, monolithic topics, schema management, consumer groups
 
 ---
 
@@ -796,4 +797,110 @@ MM2 auto-renames topics by prefixing with source cluster alias (`us-west.orders`
 > **Azure**: Event Hubs Capture + Geo-DR for cross-region replication. Service Bus Geo-DR pairs namespaces. MirrorMaker 2 runs on AKS/HDInsight for Kafka replication.
 
 ---
+
+## broker-08: Common Kafka Anti-Patterns
+
+> **Source**: [Kafka Mistakes Breaking Your System](../../articles/medium/kafka-anti-patterns/01-kafka-mistakes-breaking-your-system.md)
+
+### broker-08a: Kafka as a Queue (Auto-Commit + No Error Handling)
+
+| | |
+|:---|:---|
+| **Problem** | Messages silently dropped when processing fails — auto-commit removes offset before work completes |
+| **Root cause** | `enable-auto-commit: true` + no explicit error handling |
+| **Symptoms** | Customer orders lost; no replay possible; only evidence is an error stack trace |
+
+**Strategy**:
+
+| Approach | Mechanism | Kafka Config |
+|:---|:---|:---|
+| **Manual commit** | `ack.acknowledge()` only after successful processing | `enable-auto-commit: false`, `ack-mode: manual` |
+| **DLQ for non-retryable** | Send permanently failed messages to dead-letter topic | Separate producer + DLQ topic |
+| **Retry for transient** | Do NOT ack; let consumer retry or use `RetryTemplate` with backoff | Throw exception (no ack) |
+
+> **Key insight**: Kafka is a **distributed log**, not a queue. Messages persist until retention — use that property for fault tolerance. Manual commit + DLQ + idempotent processing = foundation for exactly-once semantics.
+
+### broker-08b: No Partition Key Strategy
+
+| | |
+|:---|:---|
+| **Problem** | Hot partitions, broken ordering, can't autoscale — all because messages scatter randomly |
+| **Root cause** | `kafkaTemplate.send(topic, value)` — no key, relying on default sticky partitioner |
+| **Symptoms** | `UserLoggedIn` arrives before `UserCreated`; one partition burns at 100% CPU while others are idle |
+
+**Strategy**:
+
+| Key Type | Example | Use Case |
+|:---|:---|:---|
+| **Business entity key** | `userId`, `orderId`, `sessionId` | Per-entity ordering (most common) |
+| **Custom partitioner** | TenantPartitioner (hash on tenant ID) | Multi-tenancy isolation |
+| **Random UUID** | `UUID.randomUUID().toString()` | No ordering needed, just want even spread |
+
+> **Key insight**: Kafka guarantees ordering **within a partition**. Without a key, related messages land on different partitions and can arrive out of order. With a key, same-ID messages always go to the same partition — ordered, predictable, scalable.
+
+### broker-08c: Monolithic Topic (Single Topic for All Domains)
+
+| | |
+|:---|:---|
+| **Problem** | One domain's traffic spike throttles all consumers; retention and schema become one-size-fits-none |
+| **Root cause** | All event types → `main-events` topic; consumers filter by `type` field |
+| **Symptoms** | Marketing signup blast slows payment processing; adding a field to `UserSignup` forces all consumers to update |
+
+**Strategy**:
+
+| Pattern | Convention | Example |
+|:---|:---|:---|
+| **Topic per aggregate** | `{domain}.events` | `order.events`, `user.events`, `payment.events` |
+| **Independent consumer groups** | `groupId = {service-name}` | `order-service`, `user-service` |
+| **Per-topic config** | Partition count, replication, retention per domain | `order.events`: 7 days; `user.events`: 1 day |
+
+> **Key insight**: The "log per aggregate" pattern isolates blast radius, enables independent schema evolution, and gives each domain its own retention, replication, and scaling parameters.
+
+### broker-08d: No Schema Management (Raw JSON)
+
+| | |
+|:---|:---|
+| **Problem** | Schema changes break consumers at deserialization; silent data loss when unknown fields are ignored |
+| **Root cause** | Producer/consumer share Java DTOs via library; no central schema authority |
+| **Symptoms** | `SerializationException` blocks entire partition; or `FAIL_ON_UNKNOWN_PROPERTIES=false` silently drops critical fields |
+
+**Strategy**:
+
+| Approach | Mechanism | Compatibility |
+|:---|:---|:---|
+| **Schema Registry + Avro** | Central registry validates compatibility before deploy | BACKWARD: old consumers read new messages |
+| **Protobuf** | Binary schema with explicit field numbers | FORWARD: new consumers read old messages |
+| **JSON Schema** | JSON with Registry validation | FULL: both directions |
+
+> **Key insight**: A schema registry is the **source of truth**. Without it, every deployment is a gamble on whether consumers can still deserialize. With it, contract violations are caught at build/deploy time, not at 3 AM.
+
+### broker-08e: Wrong Consumer Group Usage
+
+| | |
+|:---|:---|
+| **Problem** | Services that should both receive a message compete for it instead; restarts lose offset position |
+| **Root cause** | Multiple logical subscribers share one `group.id`, or no group is specified |
+| **Symptoms** | Email service gets the "password reset" but SMS service doesn't; every deploy creates a new anonymous group |
+
+**Strategy**:
+
+| Scenario | Group Design | Behavior |
+|:---|:---|:---|
+| **Two different services need same message** | **Different groups**: `email-notif-service`, `sms-notif-service` | **Broadcast**: both get every message |
+| **One service, 5 instances for scale** | **Same group**: `email-notif-service` | **Load-balance**: partitions split across 5 instances |
+| **No group specified** | ❌ Auto-generated `anonymous.xxxx` per restart | ❌ Can't resume from last offset |
+
+> **Key insight**: One group per logical subscriber = broadcast. Same group for same service = load balancing. A stable `group.id` ensures offset continuity across restarts.
+
+### Summary Table
+
+| # | Anti-Pattern | Root Cause | Fix |
+|---|-------------|------------|-----|
+| 1 | **Queue, not log** | Auto-commit + no error handling | Manual commit + DLQ + retry |
+| 2 | **No partition key** | Sending without a key | Consistent entity key (`userId`, `orderId`) |
+| 3 | **Monolithic topic** | All domains → one topic | Topic per bounded context |
+| 4 | **No schema registry** | Raw JSON + shared DTOs | Schema Registry + Avro/Protobuf |
+| 5 | **Wrong consumer groups** | Shared/auto-generated IDs | One stable group per logical subscriber |
+
+> **Azure**: Event Hubs supports manual offset checkpoint via `CheckpointStore`; Schema Registry for Avro; Service Bus topics for domain isolation; Consumer Groups for subscriber isolation.
 
