@@ -1,8 +1,8 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), and [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), and [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
-> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`, `flink-`) for self-documenting cross-references.
+> **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`, `flink-`, `resilience-`, `ai-`, `media-`) for self-documenting cross-references.
 
 ---
 
@@ -19,6 +19,9 @@
 | ☁️ **Azure Service Mapping** | [`07-azure-service-mapping.md`](07-azure-service-mapping.md) | — | Problem domain → Azure service quick lookup |
 | 🔄 **Async & Concurrency Patterns** | [`08-async-concurrency-patterns.md`](08-async-concurrency-patterns.md) | `async-01` – `async-04` | Thread pool exhaustion, Parallel I/O, Post-commit dispatch, Silent failures |
 | 🌊 **Stream Processing (Flink)** | [`09-stream-processing-flink.md`](09-stream-processing-flink.md) | `flink-01` – `flink-05` | Lambda vs Kappa, Batch as special case of streaming, Stateful exactly-once, Windowing, Barrier snapshots |
+| 🛡️ **Resilience Patterns** | [`10-resilience-patterns.md`](10-resilience-patterns.md) | `resilience-01` – `resilience-06` | Retry storms, Circuit breakers, Bulkheads, Timeouts, Gateway bottlenecks, Resilience stack |
+| 🤖 **AI/ML Infrastructure** | [`11-ai-ml-infrastructure.md`](11-ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
+| 🎬 **Media Processing Pipelines** | [`12-media-processing-pipelines.md`](12-media-processing-pipelines.md) | `media-01` | Chunk splitting, Parallel transcoding, Progressive availability |
 
 ---
 
@@ -67,6 +70,17 @@
 | "Can't detect patterns — each event processed in isolation, no memory" | Stateless stream processing | Managed state with exactly-once checkpointing (Asynchronous Barrier Snapshotting) | [`flink-03`](09-stream-processing-flink.md#flink-03-stateful-stream-processing-with-exactly-once-guarantees) |
 | "How do I emit results from a stream that never ends?" | Infinite stream aggregation | Windows: tumbling, sliding, session, global | [`flink-04`](09-stream-processing-flink.md#flink-04-windowing--aggregating-infinite-streams) |
 | "Checkpoints pause my pipeline, breaking latency SLAs" | Stop-the-world snapshots | Asynchronous Barrier Snapshotting — non-blocking distributed checkpoints | [`flink-05`](09-stream-processing-flink.md#flink-05-asynchronous-barrier-snapshotting-abs--fault-tolerance-without-pausing) |
+| "OTP service fails during login spikes — users hit resend repeatedly, provider melts" | Retry storm + no rate limiting | Client-side debouncing + token bucket + multi-provider failover | [`resilience-01`](10-resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic) |
+| "One slow microservice takes down the entire platform" | Cascading failure via shared thread pools | Circuit breaker + bulkhead + timeout | [`resilience-02`](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services) |
+| "API gateway slows ALL requests under load" | Auth/TLS bottleneck at single entry point | Token caching + TLS offload + gateway response cache | [`resilience-05`](10-resilience-patterns.md#resilience-05-api-gateway-becomes-a-bottleneck) |
+| "AI chatbot confidently returns completely wrong information" | LLM hallucination without grounding | RAG + chunking + validation guardrails | [`ai-01`](11-ai-ml-infrastructure.md#ai-01-rag-architecture--stopping-ai-hallucinations) |
+| "LLM bill exploded to $2.5M/month after launch" | No model routing or semantic caching | Model router + semantic cache + prompt compression | [`ai-02`](11-ai-ml-infrastructure.md#ai-02-llm-cost-optimization) |
+| "Semantic search takes 4+ seconds per query" | Exact KNN on millions of vectors | ANN indexing (HNSW) + hybrid search + streaming results | [`ai-03`](11-ai-ml-infrastructure.md#ai-03-vector-search-performance) |
+| "4K video takes hours to process, users can't watch" | Sequential encoding of chunks | GOP-aligned chunking + parallel transcoding + progressive availability | [`media-01`](12-media-processing-pipelines.md#media-01-video-processing-at-youtube-scale) |
+| "Money deducted but order creation failed — customer has no order" | Distributed transaction across Payment + Order services | Saga pattern with compensating transactions | [`tx-04`](02-concurrency-transactions.md#tx-04-idempotency) — see also [Saga Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
+| "Millions of notifications must go out for one celebrity post" | Naive fanout to all followers | Tiered fanout: push for close friends, pull for casual followers | [`broker-05`](05-message-brokers-async.md) — fanout-on-write vs fanout-on-read |
+| "URL shortener crashes during viral event — single short code gets millions of clicks" | Hot key saturation + cache expiry thundering herd | CDN edge caching (301 redirect) + Redis cluster with consistent hashing | [`cache-01`](03-caching-architecture.md#cache-01-cache-stampede) — CDN-level mitigation |
+| "Swiggy shows rider 3 km away when they're outside the customer's house" | Stale GPS + bad dead reckoning | Server-side interpolation with ETA constraints + adaptive polling | [`uber-08`](06-uber-architecture-case-study.md#uber-08-map-rendering-as-signal-processing) — Kalman filter approach |
 
 ---
 
@@ -75,6 +89,7 @@
 | Resource | Path |
 |:---|:---|
 | Original 20 questions article | [`articles/medium/20-design-interview-questions.md`](../articles/medium/20-design-interview-questions.md) |
+| 22 scenario-based system design questions | [`articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md`](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) |
 | Discord data architecture masterclass | [`articles/medium/discord-data-architecture-master-class.md`](../articles/medium/discord-data-architecture-master-class.md) |
 | Kafka concepts every architect must master | [`articles/medium/kafka-concepts-that-every-architect-should-master.md`](../articles/medium/kafka-concepts-that-every-architect-should-master.md) |
 | Uber architecture 5-part series | [`articles/medium/uber-architecture/`](../articles/medium/uber-architecture/) |
