@@ -25,7 +25,8 @@
 
 **Key insight**: Batch data is just a stream that stopped flowing. Your 6-month historical data and your 6-second real-time data are the same JSON events at different time windows. One engine can handle both.
 
-> **Azure**: Azure Stream Analytics (real-time) + Azure Data Lake Analytics (batch) → converging toward unified via Azure Synapse | **General**: [Lambda vs Kappa Architecture](../../architecture-general/04-data-analytics-ai-architecture/)
+> **Azure**: Azure Stream Analytics (real-time) + Azure Data Lake Analytics (batch) → converging toward unified via Azure Synapse | **General**: [Lambda vs Kappa Architecture](../../architecture-general/04-data-analytics-ai-architecture/)  
+> **Related**: [Single-Machine vs Distributed Framework Selection](13-large-data-processing-constraints.md#proc-05-single-machine-vs-distributed-framework-selection) — when NOT to use Kafka/Flink (the "right tool for the right scale" decision)
 
 ---
 

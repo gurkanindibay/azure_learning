@@ -348,4 +348,4 @@ Each pattern addresses a different failure mode. Together they form a defense-in
 5. **Degrade gracefully** — partial service > no service
 
 > **Taxonomy Reference**: §7.1 Reliability & Resilience  
-> **Related**: [Concurrency & Transactions](02-concurrency-transactions.md) | [Message Brokers](05-message-brokers-async.md) | [Caching Architecture](03-caching-architecture.md)
+> **Related**: [Concurrency & Transactions](02-concurrency-transactions.md) | [Message Brokers](05-message-brokers-async.md) | [Caching Architecture](03-caching-architecture.md) | [Checkpointing for Batch Jobs](13-large-data-processing-constraints.md#proc-02-checkpointing-for-fault-tolerant-batch-processing)

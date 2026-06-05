@@ -22,6 +22,7 @@
 | 🛡️ **Resilience Patterns** | [`10-resilience-patterns.md`](10-resilience-patterns.md) | `resilience-01` – `resilience-06` | Retry storms, Circuit breakers, Bulkheads, Timeouts, Gateway bottlenecks, Resilience stack |
 | 🤖 **AI/ML Infrastructure** | [`11-ai-ml-infrastructure.md`](11-ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
 | 🎬 **Media Processing Pipelines** | [`12-media-processing-pipelines.md`](12-media-processing-pipelines.md) | `media-01` | Chunk splitting, Parallel transcoding, Progressive availability |
+| 📦 **Large Data Processing Under Constraints** | [`13-large-data-processing-constraints.md`](13-large-data-processing-constraints.md) | `proc-01` – `proc-05` | Streaming/chunking, Checkpointing, Backpressure, Ordered merge, Framework selection |
 
 ---
 
@@ -81,6 +82,9 @@
 | "Millions of notifications must go out for one celebrity post" | Naive fanout to all followers | Tiered fanout: push for close friends, pull for casual followers | [`broker-05`](05-message-brokers-async.md) — fanout-on-write vs fanout-on-read |
 | "URL shortener crashes during viral event — single short code gets millions of clicks" | Hot key saturation + cache expiry thundering herd | CDN edge caching (301 redirect) + Redis cluster with consistent hashing | [`cache-01`](03-caching-architecture.md#cache-01-cache-stampede) — CDN-level mitigation |
 | "Swiggy shows rider 3 km away when they're outside the customer's house" | Stale GPS + bad dead reckoning | Server-side interpolation with ETA constraints + adaptive polling | [`uber-08`](06-uber-architecture-case-study.md#uber-08-map-rendering-as-signal-processing) — Kalman filter approach |
+| "10GB CSV, 512MB RAM — process crashes halfway through" | No checkpointing; must restart from row 0 | Byte-offset checkpointing: `.ckpt` file → `RandomAccessFile.seek()` → resume | [`proc-02`](13-large-data-processing-constraints.md#proc-02-checkpointing-for-fault-tolerant-batch-processing) |
+| "CSV transform is CPU-bound; single thread is too slow but order matters" | Sequential consumer bottleneck | N consumers → N temp files → K-way merge by sequence number | [`proc-04`](13-large-data-processing-constraints.md#proc-04-parallel-consumers-with-ordered-merge) |
+| "Deployed Kafka cluster for a one-time 10GB file processing job" | Framework over-engineering | Single-machine streaming: `BufferedReader` + checkpoint = zero dependencies | [`proc-05`](13-large-data-processing-constraints.md#proc-05-single-machine-vs-distributed-framework-selection) |
 
 ---
 
@@ -98,6 +102,7 @@
 | Messaging patterns overview | [`architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md) |
 | Idempotency store pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md) |
 | Saga pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
+| 10GB CSV / 512MB RAM interview question | [`articles/medium/10gb-csv-512mb-ram-interview-question.md`](../articles/medium/10gb-csv-512mb-ram-interview-question.md) |
 | Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
 | .NET concurrency patterns | [`dotNet_multi_threading/`](../dotNet_multi_threading/) |
 

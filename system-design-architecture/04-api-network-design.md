@@ -291,7 +291,8 @@ Presigned URL flow:
   5. Server: Verify, process metadata, trigger async pipeline
 ```
 
-> **Azure**: Blob Storage SAS tokens (equivalent to presigned URLs) | **General**: §8.3 API Design
+> **Azure**: Blob Storage SAS tokens (equivalent to presigned URLs) | **General**: §8.3 API Design  
+> **Related**: [Large Data Processing Under Constraints](13-large-data-processing-constraints.md#proc-01-streaming--chunking-for-memory-constrained-processing) — streaming & chunking for data files (not just uploads)
 
 ---
 

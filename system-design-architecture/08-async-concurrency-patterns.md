@@ -26,7 +26,8 @@
 **Simplest fix (Java)**: Configure a named `ThreadPoolTaskExecutor` bean with explicit pool limits.  
 **Simplest fix (.NET)**: Install Hangfire (3 lines of config). Replace `_ = Task.Run(...)` with `BackgroundJob.Enqueue(...)`.
 
-> **Azure**: Azure Functions host.json `maxConcurrentRequests` | **General**: [Bulkhead Pattern](../../architecture-general/07-reliability-performance-operations/bulkhead-pattern.md)
+> **Azure**: Azure Functions host.json `maxConcurrentRequests` | **General**: [Bulkhead Pattern](../../architecture-general/07-reliability-performance-operations/bulkhead-pattern.md)  
+> **Related**: [Producer-Consumer with Backpressure](13-large-data-processing-constraints.md#proc-03-producer-consumer-with-backpressure) — bounded queues prevent memory exhaustion in data pipelines
 
 ---
 
