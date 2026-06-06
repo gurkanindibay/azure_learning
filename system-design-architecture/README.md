@@ -25,6 +25,7 @@
 | 📦 **Large Data Processing Under Constraints** | [`13-large-data-processing-constraints.md`](13-large-data-processing-constraints.md) | `proc-01` – `proc-05` | Streaming/chunking, Checkpointing, Backpressure, Ordered merge, Framework selection |
 | 🔍 **SQL Query Optimization** | [`14-sql-query-optimization.md`](14-sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 | 🗺️ **System Design Interview Roadmap** | [`15-system-design-interview-roadmap.md`](15-system-design-interview-roadmap.md) | `sdi-01` – `sdi-15` | 7-phase interview structure, NFR quantification, API design checklist, Quorum vs Consensus, Idempotency, Failure handling, Trade-off maturity |
+| 🌐 **Reverse Proxy, LB & API Gateway** | [`16-reverse-proxy-lb-api-gateway.md`](16-reverse-proxy-lb-api-gateway.md) | `gw-01` – `gw-06` | Reverse proxy, Load balancer, API gateway, L4 vs L7, Production layering, Decision matrix |
 
 ---
 
@@ -38,6 +39,9 @@
 | "Query filters by `user_id` and sorts by `created_at` — slow" | Missing composite index | Composite index design | [`db-03`](01-databases-query-performance.md#db-03-composite-index-vs-separate-indexes) |
 | "One popular channel slows down the ENTIRE database cluster" | Hot partition + quorum amplification | Request coalescing + consistent hash routing | [`db-05`](01-databases-query-performance.md#db-05-hot-partition-problem) |
 | "Need to migrate 4 trillion records without downtime" | Naive migration tooling | Dual-writes + checkpointed custom migrator | [`db-06`](01-databases-query-performance.md#db-06-database-migration-at-scale) |
+| "Every server does its own TLS, wasting CPU" | No SSL termination point | Reverse Proxy at the edge | [`gw-01`](16-reverse-proxy-lb-api-gateway.md#gw-01-reverse-proxy--when-server-protection-is-the-priority) |
+| "One server melting while others are idle" | No traffic distribution | Load Balancer with health checks | [`gw-02`](16-reverse-proxy-lb-api-gateway.md#gw-02-load-balancer--when-traffic-distribution-is-the-priority) |
+| "30 services all validate JWTs independently" | Duplicated cross-cutting code | API Gateway for centralized auth | [`gw-03`](16-reverse-proxy-lb-api-gateway.md#gw-03-api-gateway--when-api-lifecycle-management-is-the-priority) |
 | "Query is correct but scans 4M rows — slow in production" | Never checked execution plan | EXPLAIN ANALYZE before shipping | [`sql-05`](14-sql-query-optimization.md#sql-05-explain-before-you-ship) |
 | "SELECT * works fine in dev, times out in prod" | Fetching unnecessary columns | Explicit columns + DTO projections | [`sql-02`](14-sql-query-optimization.md#sql-02-select-only-what-you-need) |
 | "Nested subqueries 3 levels deep — nobody understands the query" | Anonymous subqueries | CTEs (WITH clause) — name each step | [`sql-04`](14-sql-query-optimization.md#sql-04-ctes-over-nested-subqueries) |
