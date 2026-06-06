@@ -23,6 +23,7 @@
 | 🤖 **AI/ML Infrastructure** | [`11-ai-ml-infrastructure.md`](11-ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
 | 🎬 **Media Processing Pipelines** | [`12-media-processing-pipelines.md`](12-media-processing-pipelines.md) | `media-01` | Chunk splitting, Parallel transcoding, Progressive availability |
 | 📦 **Large Data Processing Under Constraints** | [`13-large-data-processing-constraints.md`](13-large-data-processing-constraints.md) | `proc-01` – `proc-05` | Streaming/chunking, Checkpointing, Backpressure, Ordered merge, Framework selection |
+| 🔍 **SQL Query Optimization** | [`14-sql-query-optimization.md`](14-sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 
 ---
 
@@ -36,6 +37,9 @@
 | "Query filters by `user_id` and sorts by `created_at` — slow" | Missing composite index | Composite index design | [`db-03`](01-databases-query-performance.md#db-03-composite-index-vs-separate-indexes) |
 | "One popular channel slows down the ENTIRE database cluster" | Hot partition + quorum amplification | Request coalescing + consistent hash routing | [`db-05`](01-databases-query-performance.md#db-05-hot-partition-problem) |
 | "Need to migrate 4 trillion records without downtime" | Naive migration tooling | Dual-writes + checkpointed custom migrator | [`db-06`](01-databases-query-performance.md#db-06-database-migration-at-scale) |
+| "Query is correct but scans 4M rows — slow in production" | Never checked execution plan | EXPLAIN ANALYZE before shipping | [`sql-05`](14-sql-query-optimization.md#sql-05-explain-before-you-ship) |
+| "SELECT * works fine in dev, times out in prod" | Fetching unnecessary columns | Explicit columns + DTO projections | [`sql-02`](14-sql-query-optimization.md#sql-02-select-only-what-you-need) |
+| "Nested subqueries 3 levels deep — nobody understands the query" | Anonymous subqueries | CTEs (WITH clause) — name each step | [`sql-04`](14-sql-query-optimization.md#sql-04-ctes-over-nested-subqueries) |
 | "Two users booked the same seat" | Race condition on check-then-act | DB-level locking or optimistic concurrency | [`tx-01`](02-concurrency-transactions.md#tx-01-double-booking) |
 | "Transaction anomalies under concurrent writes" | Wrong isolation level | Isolation level escalation | [`tx-02`](02-concurrency-transactions.md#tx-02-isolation-levels) |
 | "Lock expired during GC pause, two writers corrupted data" | Distributed lock without fencing | Fencing tokens | [`tx-03`](02-concurrency-transactions.md#tx-03-distributed-locks) |
