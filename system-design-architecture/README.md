@@ -26,6 +26,7 @@
 | 🔍 **SQL Query Optimization** | [`14-sql-query-optimization.md`](14-sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 | 🗺️ **System Design Interview Roadmap** | [`15-system-design-interview-roadmap.md`](15-system-design-interview-roadmap.md) | `sdi-01` – `sdi-15` | 7-phase interview structure, NFR quantification, API design checklist, Quorum vs Consensus, Idempotency, Failure handling, Trade-off maturity |
 | 🌐 **Reverse Proxy, LB & API Gateway** | [`16-reverse-proxy-lb-api-gateway.md`](16-reverse-proxy-lb-api-gateway.md) | `gw-01` – `gw-06` | Reverse proxy, Load balancer, API gateway, L4 vs L7, Production layering, Decision matrix |
+| 🧠 **Agentic AI — Enterprise Strategic Systems** | [`17-agentic-ai-enterprise-strategic-systems.md`](17-agentic-ai-enterprise-strategic-systems.md) | `agentic-01` – `agentic-06` | Multi-agent specialization, Hybrid intelligence, Contradiction detection, AI interpretation, Architecture-first design, Human-in-the-decision |
 
 ---
 
@@ -94,6 +95,12 @@
 | "10GB CSV, 512MB RAM — process crashes halfway through" | No checkpointing; must restart from row 0 | Byte-offset checkpointing: `.ckpt` file → `RandomAccessFile.seek()` → resume | [`proc-02`](13-large-data-processing-constraints.md#proc-02-checkpointing-for-fault-tolerant-batch-processing) |
 | "CSV transform is CPU-bound; single thread is too slow but order matters" | Sequential consumer bottleneck | N consumers → N temp files → K-way merge by sequence number | [`proc-04`](13-large-data-processing-constraints.md#proc-04-parallel-consumers-with-ordered-merge) |
 | "Deployed Kafka cluster for a one-time 10GB file processing job" | Framework over-engineering | Single-machine streaming: `BufferedReader` + checkpoint = zero dependencies | [`proc-05`](13-large-data-processing-constraints.md#proc-05-single-machine-vs-distributed-framework-selection) |
+| "One AI gives wrong answers for risk, sentiment, AND strategy" | Monolithic AI handling all reasoning steps | Multi-agent decomposition: specialize by intelligence role | [`agentic-01`](17-agentic-ai-enterprise-strategic-systems.md#agentic-01-multi-agent-specialization-over-monolithic-ai) |
+| "LLM calculated risk score wrong — but it sounded confident" | LLM used for deterministic calculation | Hybrid intelligence: deterministic layer for scores, AI for interpretation | [`agentic-02`](17-agentic-ai-enterprise-strategic-systems.md#agentic-02-hybrid-intelligence--deterministic--ai-reasoning) |
+| "Search interest down but market performance up — system says 'all good'" | Contradictory signals hidden from output | Explicit contradiction detection + confidence scoring | [`agentic-03`](17-agentic-ai-enterprise-strategic-systems.md#agentic-03-contradiction-detection--confidence-scoring) |
+| "Dashboard has 40 charts — analysts can't keep up with signal volume" | Visualization without interpretation | AI interpretation layer: what changed, why it matters, what to prioritize | [`agentic-04`](17-agentic-ai-enterprise-strategic-systems.md#agentic-04-ai-interpretation-layer--beyond-dashboards) |
+| "Team spent 3 months picking the perfect model — system still fails in prod" | Model-centric thinking; ignored system design | Architecture-first: agent coordination, validation, uncertainty handling | [`agentic-05`](17-agentic-ai-enterprise-strategic-systems.md#agentic-05-architecture-is-the-hard-problem-not-the-model) |
+| "AI made a strategic recommendation — nobody knows why or how confident" | Black-box autonomous decision | Human-in-the-decision: evidence, contradictions, confidence, options | [`agentic-06`](17-agentic-ai-enterprise-strategic-systems.md#agentic-06-human-in-the-decision--ai-as-reasoning-partner) |
 
 ---
 
@@ -114,6 +121,7 @@
 | 10GB CSV / 512MB RAM interview question | [`articles/medium/10gb-csv-512mb-ram-interview-question.md`](../articles/medium/10gb-csv-512mb-ram-interview-question.md) |
 | Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
 | .NET concurrency patterns | [`dotNet_multi_threading/`](../dotNet_multi_threading/) |
+| Agentic AI — Enterprise Strategic Systems | [`articles/linkedin/build-ai-for-enterprise-strategic-systems.md`](../articles/linkedin/build-ai-for-enterprise-strategic-systems.md) |
 
 ---
 
