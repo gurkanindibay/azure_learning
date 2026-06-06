@@ -2,7 +2,7 @@
 
 > **Source**: [Medium — HabibWahid](https://medium.com) · May 27, 2026 · 8 min read  
 > **Domain**: SQL, Query Optimization, Database Performance  
-> **Related**: [Databases & Query Performance](../system-design-architecture/01-databases-query-performance.md)
+> **Related**: [Databases & Query Performance](../../system-design-architecture/01-databases-query-performance.md)
 
 ---
 
