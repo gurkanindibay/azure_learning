@@ -1,6 +1,6 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), and [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/), and [System Design Interview Roadmap](../articles/medium/design-system-interviews.md)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
 > **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`, `flink-`, `resilience-`, `ai-`, `media-`) for self-documenting cross-references.
 
@@ -24,6 +24,7 @@
 | 🎬 **Media Processing Pipelines** | [`12-media-processing-pipelines.md`](12-media-processing-pipelines.md) | `media-01` | Chunk splitting, Parallel transcoding, Progressive availability |
 | 📦 **Large Data Processing Under Constraints** | [`13-large-data-processing-constraints.md`](13-large-data-processing-constraints.md) | `proc-01` – `proc-05` | Streaming/chunking, Checkpointing, Backpressure, Ordered merge, Framework selection |
 | 🔍 **SQL Query Optimization** | [`14-sql-query-optimization.md`](14-sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
+| 🗺️ **System Design Interview Roadmap** | [`15-system-design-interview-roadmap.md`](15-system-design-interview-roadmap.md) | `sdi-01` – `sdi-15` | 7-phase interview structure, NFR quantification, API design checklist, Quorum vs Consensus, Idempotency, Failure handling, Trade-off maturity |
 
 ---
 
