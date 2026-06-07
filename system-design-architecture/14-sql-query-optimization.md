@@ -2,7 +2,7 @@
 
 > **Parent**: [System Design Interview Reference](README.md)  
 > **Source**: [5 Query Optimization Patterns](../../articles/medium/sql-query-optimization-patterns.md) — HabibWahid, May 2026  
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — db-01 through db-06
+> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — db-01 through db-06, [SQL System Design](19-sql-system-design-takeaways.md) — sqld-01 (Scaling Ladder), sqld-08 (Performance Checklist)
 
 ---
 

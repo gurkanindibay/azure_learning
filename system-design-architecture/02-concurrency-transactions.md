@@ -54,7 +54,8 @@
 - Multiple rows/tables must stay consistent
 - You cannot redesign the access pattern to avoid the anomaly
 
-> **Azure**: Azure SQL supports all four isolation levels; Cosmos DB uses snapshot isolation by default
+> **Azure**: Azure SQL supports all four isolation levels; Cosmos DB uses snapshot isolation by default  
+> **Also see**: [`sqld-07`: Staff Engineer's 5 Questions](19-sql-system-design-takeaways.md#sqld-07-staff-engineers-5-questions) — consistency requirements, and [`sqld-02`: SQL vs NoSQL](19-sql-system-design-takeaways.md#sqld-02-sql-vs-nosql-decision-framework) — ACID as decision factor
 
 ---
 
