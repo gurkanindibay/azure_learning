@@ -184,6 +184,76 @@ WHERE product_id = 42 AND version = 5;
 
 ## 4. Scaling SQL: The Honest Sequence
 
+### The Scaling Ladder: Complexity vs. Necessity
+
+Every step increases operational complexity. The rule is simple: **don't climb until the current step breaks.** Most systems never reach Step 7.
+
+```mermaid
+flowchart TD
+    S1["<b>Step 1: Single Instance</b><br/>One DB, one connection<br/>⏱️ 0 operational overhead"]
+    S2["<b>Step 2: Connection Pooling</b><br/>PgBouncer / RDS Proxy<br/>⏱️ +1 config file"]
+    S3["<b>Step 3: Query Optimization</b><br/>Indexes, EXPLAIN, N+1 fixes<br/>⏱️ +0 ops, +big perf gains"]
+    S4["<b>Step 4: Caching Layer</b><br/>Redis / Memcached<br/>⏱️ +1 service to manage"]
+    S5["<b>Step 5: Read Replicas</b><br/>Async replication, read routing<br/>⏱️ +N servers, +lag monitoring"]
+    S6["<b>Step 6: Vertical Scaling</b><br/>Bigger instance, more RAM/IOPS<br/>⏱️ +downtime or live migration"]
+    S7["<b>Step 7: Partitioning</b><br/>Table splits within one DB<br/>⏱️ +schema complexity"]
+    S8["<b>Step 8: Sharding</b><br/>Hash/range across multiple DBs<br/>⏱️ +router, +cross-shard hell"]
+    S9["<b>Step 9: Multi-Region</b><br/>Geo-replication, failover<br/>⏱️ +consistency nightmares"]
+
+    S1 -->|"connections<br/>exhausted"| S2
+    S2 -->|"queries<br/>still slow"| S3
+    S3 -->|"indexes<br/>maxed out"| S4
+    S4 -->|"read volume<br/>saturates DB"| S5
+    S5 -->|"write volume<br/>too high"| S6
+    S6 -->|"single instance<br/>ceiling hit"| S7
+    S7 -->|"partitions<br/>not enough"| S8
+    S8 -->|"global<br/>latency reqs"| S9
+
+    style S1 fill:#2e7d32,color:#fff
+    style S2 fill:#388e3c,color:#fff
+    style S3 fill:#43a047,color:#fff
+    style S4 fill:#f9a825,color:#000
+    style S5 fill:#f57c00,color:#fff
+    style S6 fill:#ef6c00,color:#fff
+    style S7 fill:#e65100,color:#fff
+    style S8 fill:#c62828,color:#fff
+    style S9 fill:#b71c1c,color:#fff
+```
+
+> **Color key**: 🟢 Green = Low complexity, do early. 🟡 Yellow = Moderate, do when needed. 🟠 Orange = Significant complexity. 🔴 Red = Last resort, most systems never need.
+
+### When to Climb Each Step
+
+| Step | Trigger | Symptom | You Are Here If... |
+|:---|:---|:---|:---|
+| **1. Single Instance** | Project starts | — | One app, one DB. It works. |
+| **2. Connection Pooling** | `too many connections` errors | App servers exhaust DB connection slots | You have >10 app instances connecting to one DB |
+| **3. Query Optimization** | Queries take >100ms | Seq Scan on large tables, missing indexes | `EXPLAIN` shows `Seq Scan` where it shouldn't |
+| **4. Caching Layer** | Same queries hit DB repeatedly | DB CPU at 70%+ serving identical data | Hot data that changes infrequently (config, catalogs) |
+| **5. Read Replicas** | Read volume saturates primary | DB CPU at 80%+ with mostly SELECTs | Read:write ratio > 10:1, non-critical reads (reports, dashboards) |
+| **6. Vertical Scaling** | Write volume outgrows current instance | Write throughput ceiling, IOPS limit | Need 2-4× more power; horizontal isn't yet justified |
+| **7. Partitioning** | Large tables slowing queries | Multi-GB tables, time-based access patterns | Most queries filter on a partitionable column (date, tenant_id) |
+| **8. Sharding** | Write volume exceeds single instance | Single DB can't keep up with writes | Thousands of writes/sec; single instance ceiling reached after step 6 |
+| **9. Multi-Region** | Global user base, latency requirements | Users on another continent see 300ms+ p95 | Active users on 2+ continents; regulatory data-residency |
+
+### The Golden Rule
+
+```text
+BEFORE YOU ADD INFRASTRUCTURE, ASK:
+┌────────────────────────────────────────────────────────────┐
+│  "Can I fix this with better SQL instead of more servers?" │
+└────────────────────────────────────────────────────────────┘
+```
+
+A single well-tuned Postgres instance on modern hardware handles:
+- **~10 TB** of data
+- **~10,000 writes/sec**
+- **~100,000 reads/sec**
+
+Most applications never exceed these limits. Steps 1–3 solve 90% of problems. Steps 4–6 solve the next 9%. Steps 7–9 are for the remaining 1%.
+
+---
+
 ### Connection Pooling (Step Zero)
 
 Every new DB connection costs ~5–10ms and memory. Without pooling, you'll hit connection limits before you hit DB capacity.
@@ -258,7 +328,7 @@ SELECT * FROM orders WHERE user_id = 12345;    -- one shard
 SELECT * FROM orders WHERE status = 'PENDING'; -- all shards (scatter-gather, bad)
 ```
 
-> **Before sharding, exhaust in order:** query optimization → connection pooling → read replicas → vertical scaling → caching → partitioning. Most systems never need to shard.
+> **Before sharding, exhaust in order:** query optimization → connection pooling → caching → read replicas → vertical scaling → partitioning. Reference the [Scaling Ladder diagram](#the-scaling-ladder-complexity-vs-necessity) above. Most systems never need to shard.
 
 ---
 
