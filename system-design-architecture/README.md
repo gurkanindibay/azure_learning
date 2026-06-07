@@ -27,6 +27,7 @@
 | 🗺️ **System Design Interview Roadmap** | [`15-system-design-interview-roadmap.md`](15-system-design-interview-roadmap.md) | `sdi-01` – `sdi-15` | 7-phase interview structure, NFR quantification, API design checklist, Quorum vs Consensus, Idempotency, Failure handling, Trade-off maturity |
 | 🌐 **Reverse Proxy, LB & API Gateway** | [`16-reverse-proxy-lb-api-gateway.md`](16-reverse-proxy-lb-api-gateway.md) | `gw-01` – `gw-06` | Reverse proxy, Load balancer, API gateway, L4 vs L7, Production layering, Decision matrix |
 | 🧠 **Agentic AI — Enterprise Strategic Systems** | [`17-agentic-ai-enterprise-strategic-systems.md`](17-agentic-ai-enterprise-strategic-systems.md) | `agentic-01` – `agentic-06` | Multi-agent specialization, Hybrid intelligence, Contradiction detection, AI interpretation, Architecture-first design, Human-in-the-decision |
+| 🎯 **Pragmatic System Design** | [`18-pragmatic-system-design-takeaways.md`](18-pragmatic-system-design-takeaways.md) | `prag-01` – `prag-08` | User metrics first, UX > system metrics, Parallelize before re-architecting, Failure mode docs, Operational complexity ratio, Solve today's problems, Reversible decisions, Boring architecture |
 
 ---
 
@@ -101,6 +102,11 @@
 | "Dashboard has 40 charts — analysts can't keep up with signal volume" | Visualization without interpretation | AI interpretation layer: what changed, why it matters, what to prioritize | [`agentic-04`](17-agentic-ai-enterprise-strategic-systems.md#agentic-04-ai-interpretation-layer--beyond-dashboards) |
 | "Team spent 3 months picking the perfect model — system still fails in prod" | Model-centric thinking; ignored system design | Architecture-first: agent coordination, validation, uncertainty handling | [`agentic-05`](17-agentic-ai-enterprise-strategic-systems.md#agentic-05-architecture-is-the-hard-problem-not-the-model) |
 | "AI made a strategic recommendation — nobody knows why or how confident" | Black-box autonomous decision | Human-in-the-decision: evidence, contradictions, confidence, options | [`agentic-06`](17-agentic-ai-enterprise-strategic-systems.md#agentic-06-human-in-the-decision--ai-as-reasoning-partner) |
+| "Team proposed 12 microservices for 300 users — 0.3 req/sec" | Architecture theater — designing for imaginary scale | Measure actual metrics first; 1 engineer per 2–3 services | [`prag-01`](18-pragmatic-system-design-takeaways.md#prag-01-start-with-user-metrics-not-architecture-diagrams) |
+| "Payment API is 80ms but checkout takes 6.3 seconds" | Sequential I/O hidden by architecture diagram | Parallelize independent calls; defer non-blocking work | [`prag-02`](18-pragmatic-system-design-takeaways.md#prag-02-user-experience--system-metrics) |
+| "We'll document failure modes later" / "Graceful degradation — we'll figure it out" | No failure mode runbooks | Every component: Impact, Action, Alert, Recovery, Last tested | [`prag-04`](18-pragmatic-system-design-takeaways.md#prag-04-document-failure-modes-not-just-happy-paths) |
+| "Adding Kafka, Redis, and read replicas — current cost is $89/month" | Over-engineering for scale that doesn't exist | Solve today's problems; boring architecture wins | [`prag-06`](18-pragmatic-system-design-takeaways.md#prag-06-solve-todays-problems-not-tomorrows) |
+| "We'll hire more engineers to operate this" | Operational complexity exceeds team capacity | Count services ÷ team size; if > 3:1, simplify | [`prag-05`](18-pragmatic-system-design-takeaways.md#prag-05-operational-complexity--team-size) |
 
 ---
 
@@ -125,4 +131,4 @@
 
 ---
 
-> **Reminder**: Don't memorize the strategies — understand the pain points that make them necessary. Every answer is about scale, failure, and reality.
+> **Reminder**: Don't memorize the strategies — understand the pain points that make them necessary. Every answer is about scale, failure, and reality. Start with the user problem, not the architecture diagram.
