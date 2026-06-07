@@ -1,6 +1,6 @@
 # System Design Interview: Problem → Strategy Reference
 
-> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/), and [System Design Interview Roadmap](../articles/medium/design-system-interviews.md)  
+> **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/), [System Design Interview Roadmap](../articles/medium/design-system-interviews.md), and [API Design Patterns](../articles/medium/api-design-patterns-nobody-teaches-you.md)  
 > **Purpose**: Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation.  
 > **Reference scheme**: Each problem is identified by a **domain prefix** (`db-`, `tx-`, `cache-`, `api-`, `broker-`, `uber-`, `async-`, `flink-`, `resilience-`, `ai-`, `media-`) for self-documenting cross-references.
 
@@ -29,6 +29,7 @@
 | 🧠 **Agentic AI — Enterprise Strategic Systems** | [`17-agentic-ai-enterprise-strategic-systems.md`](17-agentic-ai-enterprise-strategic-systems.md) | `agentic-01` – `agentic-06` | Multi-agent specialization, Hybrid intelligence, Contradiction detection, AI interpretation, Architecture-first design, Human-in-the-decision |
 | 🎯 **Pragmatic System Design** | [`18-pragmatic-system-design-takeaways.md`](18-pragmatic-system-design-takeaways.md) | `prag-01` – `prag-08` | User metrics first, UX > system metrics, Parallelize before re-architecting, Failure mode docs, Operational complexity ratio, Solve today's problems, Reversible decisions, Boring architecture |
 | 🗄️ **SQL System Design** | [`19-sql-system-design-takeaways.md`](19-sql-system-design-takeaways.md) | `sqld-01` – `sqld-08` | Scaling ladder, SQL vs NoSQL, CQRS, Event Sourcing, Row-Level Security, DB per service + Saga, Staff Engineer's 5 questions, Performance checklist |
+| 🔌 **API Design Patterns** | [`20-api-design-patterns-key-takeaways.md`](20-api-design-patterns-key-takeaways.md) | `apipat-01` – `apipat-09` | Four pillars, Versioning, Idempotency, Cursor pagination, RFC 7807 errors, Rate limiting, Expand-Contract, Contract-first, HATEOAS, Health checks |
 
 ---
 
@@ -58,6 +59,11 @@
 | "Users randomly logged out under load" | Wrong eviction policy | volatile-ttl for sessions | [`cache-04`](03-caching-architecture.md#cache-04-eviction-policies) |
 | "500 users open the same page — DB crushed by 500 identical queries" | No request deduplication | In-flight request coalescing | [`cache-05`](03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication) |
 | "Old mobile app crashes after API change" | Breaking payload change | Add-only + versioning | [`api-01`](04-api-network-design.md#api-01-api-versioning) |
+| "Customer charged twice after network timeout on payment" | Non-idempotent POST | Idempotency-Key header + Redis dedup | [`apipat-03`](20-api-design-patterns-key-takeaways.md#apipat-03-idempotency--preventing-double-charges) |
+| "API errors give no clue what field failed or if retryable" | Bare error responses | RFC 7807: type, detail, request_id, error_code | [`apipat-05`](20-api-design-patterns-key-takeaways.md#apipat-05-error-design--rfc-7807) |
+| "Page 3 shows duplicates; new items shift pagination results" | OFFSET pagination on live data | Cursor/keyset pagination | [`apipat-04`](20-api-design-patterns-key-takeaways.md#apipat-04-pagination--cursor-vs-offset) |
+| "Renaming a response field broke 2 million mobile clients" | No backward compatibility plan | Expand-Contract: deprecate → migrate → remove | [`apipat-07`](20-api-design-patterns-key-takeaways.md#apipat-07-backward-compatibility--expand-contract) |
+| "Client hits rate limit and gets bare 429 — hammers harder" | No rate limit communication | X-RateLimit-* headers on every response + Retry-After | [`apipat-06`](20-api-design-patterns-key-takeaways.md#apipat-06-rate-limiting--communication-is-key) |
 | "Client sends 2× allowed requests at window boundary" | Fixed window rate limiting | Sliding window log | [`api-02`](04-api-network-design.md#api-02-rate-limiting) |
 | "5 GB upload kills the app server" | In-memory file handling | Presigned URLs or chunked upload | [`api-03`](04-api-network-design.md#api-03-large-file-uploads) |
 | "40-second PDF generation times out HTTP connection" | Synchronous long-running task | 202 Accepted + polling | [`api-04`](04-api-network-design.md#api-04-long-running-tasks) |
