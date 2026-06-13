@@ -1,6 +1,6 @@
 # GitHub Copilot Instructions - Azure Learning Repository
 
-> **Repository Type**: Technical documentation (NOT a code repository)  
+> **Repository Type**: Technical documentation repository with supporting automation tooling  
 > **Focus**: Cloud architecture, software engineering patterns, programming languages (.NET, C#), system design, and AI/agentic systems
 
 ## Repository Structure
@@ -76,7 +76,7 @@ azure_learning/
 
 ### Subdirectory Instructions
 
-Each major section has detailed guidance — **read these before contributing**:
+Before contributing to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `reference-dictionary/`, `programming-languages/`, `articles/`, `videos/`, `site-reliability-engineering/`, `unstructured-resources/`, or `scripts/`, read the corresponding `.copilot-instructions.md` file if one exists; otherwise use the directory-specific checklist in this file:
 - [`architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) — Azure service docs, tier comparisons, templates
 - [`architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) — Taxonomy alignment rules, pattern templates
 
@@ -87,15 +87,15 @@ Is it Azure-specific?
   ├─ YES → architecture-azure/  (compute/, data/, networking/, security/, integration/, etc.)
   └─ NO → Is it programming language specific (concurrency, patterns, ecosystem)?
       ├─ YES → programming-languages/<language>/  (e.g., csharp/dotnet-multi-threading/)
-      └─ NO → Is it a system design interview problem or strategy takeaway?
-          ├─ YES → system-design-architecture/  (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.)
+      └─ NO → Does it describe a concrete system-design problem with a solution strategy, trade-offs, and at least one source reference?
+          ├─ YES → system-design-architecture/  (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.); do not place general architecture notes or article summaries here
           └─ NO → Is it a term definition or glossary entry?
               ├─ YES → reference-dictionary/  (pick the right domain file, add anchor)
               └─ NO → Is it a source article or raw note?
                   ├─ Source article → articles/<platform>/
                   ├─ Video note → videos/
                   ├─ Raw/evolving note → unstructured-resources/
-                  └─ Formal pattern → architecture-general/  (align with taxonomy §X.X section)
+                  └─ Reusable architectural pattern, decision guide, or case study that maps to one primary taxonomy section (§X.X) → architecture-general/  (do not place drafts, notes, or raw ideas here)
 ```
 
 ## Taxonomy Alignment
@@ -104,6 +104,8 @@ Is it Azure-specific?
 
 - Reference taxonomy sections using `§X.X` format: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
 - The taxonomy file is **auto-generated** — never edit it directly
+- If the relevant taxonomy section cannot be identified from the taxonomy reference, stop and ask for clarification instead of guessing; do not invent a `§X.X` reference
+- When a taxonomy section is missing or the taxonomy reference is stale, do not invent a `§X.X` section; either use the closest existing section and state the assumption, or ask the user which section should be used
 
 ## Automation
 
@@ -172,11 +174,12 @@ graph TD
 1. **Determine location** using content placement tree above
 2. **Check taxonomy alignment** — which `§X.X` section? (required for `architecture-general/`)
 3. **Use templates** from subdirectory `.copilot-instructions.md` files (service doc, comparison, case study)
+   - If a referenced `.copilot-instructions.md` file or the taxonomy reference file is missing or unreadable, report the missing path and do not guess at the required format or placement
 4. **Add cross-references** to related content:
    - Link terms to `reference-dictionary/` definitions
    - Link patterns to Azure implementations (and vice versa)
    - Link system-design strategies to their source articles
-5. **Update parent README.md** with link to new doc
+5. **Update parent README.md** with link to new doc — if the target file already exists, update it in place rather than creating a duplicate; only add a new README entry when the file is newly created
 6. **Run taxonomy sync** if you modified any `architecture-general/**/README.md`
 
 ### Directory-Specific Checklist
