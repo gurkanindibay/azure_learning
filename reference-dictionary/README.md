@@ -1,0 +1,93 @@
+# Reference Dictionary
+
+> **Purpose**: Repo-root reference dictionary for all technical terms used across this repository — available to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `dotNet_multi_threading/`, `articles/`, and all other folders. Each file covers one domain; each term has a stable anchor ID for direct linking.
+
+---
+
+## How to Use
+
+### Linking to a Term
+
+From any file in the repo, use a relative path:
+
+```
+From system-design-architecture/:  [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
+From architecture-azure/:          [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
+From articles/medium/:              [Projection](../../reference-dictionary/cqrs-event-driven.md#projection)
+From repo root (README.md):         [Projection](reference-dictionary/cqrs-event-driven.md#projection)
+```
+
+### Adding a New Term
+
+1. Identify the correct domain file (or create a new one if needed)
+2. Add the term in alphabetical order under its domain file
+3. Use the format: `### term-name` (lowercase, hyphenated) for the anchor
+4. Follow the template: Definition → Key Characteristics → When to Use / When NOT → Also See
+5. Update this index if you add a new domain file
+
+### Anchor Convention
+
+- All anchors are lowercase, hyphenated: `#circuit-breaker`, `#rate-limiting`, `#acid-transactions`
+- Terms that appear in multiple domains are defined once in their primary domain and cross-referenced from others
+
+---
+
+## Domain Files
+
+| # | File | Domain | Key Terms |
+|:---|:---|:---|:---|
+| 1 | [`cqrs-event-driven.md`](cqrs-event-driven.md) | CQRS, Event Sourcing & Patterns | CQRS, Event Sourcing, Projection, Read Model, Ledger, Outbox Pattern, Idempotency, Dual-Write Problem, Event-Driven Architecture |
+| 2 | [`resilience.md`](resilience.md) | Resilience & Fault Tolerance | Circuit Breaker, Bulkhead, Retry Amplification, Fallback, Timeout, Resilience Stack, Graceful Degradation |
+| 3 | [`messaging.md`](messaging.md) | Message Brokers & Async | Kafka vs RabbitMQ, Partition, Consumer Group, Offset Commit, DLQ, Poison Message, Message Ordering, At-Least-Once, Exactly-Once |
+| 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations |
+| 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Isolation Levels, Double-Booking, Pessimistic/Optimistic Locking, Fencing Token, Saga, Sharding |
+| 6 | [`caching.md`](caching.md) | Caching Architecture | Cache Stampede, Cache-Aside, Invalidation, TTL, Eviction Policies, Request Coalescing, PER Algorithm |
+| 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry) |
+| 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |
+| 9 | [`dotnet-multithreading.md`](dotnet-multithreading.md) | .NET Multithreading & Async | TAP, Task, async/await, ThreadPool, ConfigureAwait, SemaphoreSlim, Mutex, lock, Barrier, Interlocked, Deadlock |
+| 10 | [`azure-services.md`](azure-services.md) | Azure Services (Networking, Identity, Compute, Data, Integration, Observability) | VNet, NSG, Entra ID, Managed Identity, AKS, Cosmos DB, Event Hubs, Service Bus, Azure Monitor, Application Insights |
+| 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework |
+| 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
+| 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography |
+
+---
+
+## Cross-Domain Terms
+
+Some terms span multiple domains. They are **defined once** in their primary domain and **cross-referenced** from others:
+
+| Term | Primary Definition | Cross-Referenced In |
+|:---|:---|:---|
+| Idempotency | [`cqrs-event-driven.md#idempotency`](cqrs-event-driven.md#idempotency) | resilience, messaging, api-design, data-concurrency, fintech |
+| CQRS | [`cqrs-event-driven.md#cqrs`](cqrs-event-driven.md#cqrs) | fintech, data-concurrency, architecture-patterns |
+| Circuit Breaker | [`resilience.md#circuit-breaker`](resilience.md#circuit-breaker) | messaging, api-design, azure-services |
+| Rate Limiting | [`api-design.md#rate-limiting`](api-design.md#rate-limiting) | resilience, azure-services |
+| Consistent Hashing | [`api-design.md#consistent-hashing`](api-design.md#consistent-hashing) | caching, messaging |
+| HSM | [`hsm-cryptography.md#hsm`](hsm-cryptography.md#hsm) | azure-services, fintech |
+| LLM | [`ai-ml-llm.md#llm`](ai-ml-llm.md#llm) | architecture-patterns |
+| Task / async-await | [`dotnet-multithreading.md#task`](dotnet-multithreading.md#task) | data-concurrency |
+
+---
+
+## Quick Lookup by Problem
+
+| I need to understand... | Go to... |
+|:---|:---|
+| "What's the difference between a projection and a read model?" | [`cqrs-event-driven.md#projection`](cqrs-event-driven.md#projection) |
+| "How does the outbox pattern prevent dual-writes?" | [`cqrs-event-driven.md#outbox-pattern`](cqrs-event-driven.md#outbox-pattern) |
+| "What's the right circuit breaker configuration?" | [`resilience.md#circuit-breaker`](resilience.md#circuit-breaker) |
+| "Kafka vs RabbitMQ — which one?" | [`messaging.md#kafka-vs-rabbitmq`](messaging.md#kafka-vs-rabbitmq) |
+| "How should I version my API?" | [`api-design.md#api-versioning`](api-design.md#api-versioning) |
+| "How do I prevent double-booking?" | [`data-concurrency.md#double-booking`](data-concurrency.md#double-booking) |
+| "How do I survive a cache stampede?" | [`caching.md#cache-stampede`](caching.md#cache-stampede) |
+| "What does 'reconciliation' mean in fintech?" | [`fintech.md#reconciliation`](fintech.md#reconciliation) |
+| "How does RAG reduce LLM hallucination?" | [`ai-ml-llm.md#rag`](ai-ml-llm.md#rag) |
+| "TAP vs EAP vs APM — which .NET async pattern?" | [`dotnet-multithreading.md#tap`](dotnet-multithreading.md#tap) |
+| "What's the difference between Event Hubs and Service Bus?" | [`azure-services.md#event-hubs`](azure-services.md#event-hubs) |
+| "What is a Bounded Context in DDD?" | [`architecture-patterns.md#bounded-context`](architecture-patterns.md#bounded-context) |
+| "Why can't HSMs scale horizontally?" | [`hsm-cryptography.md#hsm`](hsm-cryptography.md#hsm) |
+| "What's DASH/HLS adaptive streaming?" | [`media-processing.md#dash-hls`](media-processing.md#dash-hls) |
+
+---
+
+> **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.

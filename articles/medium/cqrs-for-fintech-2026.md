@@ -295,7 +295,7 @@ But they also need one final authority for financial history.
 That authority should not be Redis.
 It should not be Elasticsearch.
 It should not be a dashboard table.
-It should not be a [projection](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#projection) worker.
+It should not be a [projection](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#projection) worker.
 It should not be a customer timeline.
 
 It should not be an event sitting alone in a broker.
@@ -1136,4 +1136,4 @@ That is CQRS for fintech in 2026.
 
 ---
 
-> **📖 Reference Dictionary**: Key terms used in this article — [projection](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#projection), [read model](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#read-model), [ledger](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#ledger), [CQRS](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#cqrs), [idempotency](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#idempotency), [outbox pattern](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#outbox-pattern), [reconciliation](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md#reconciliation) — are defined in the [Reference Dictionary](https://github.com/gurkanindibay/azure_learning/blob/main/system-design-architecture/reference-dictionary.md).
+> **📖 Reference Dictionary**: Key terms used in this article — [projection](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#projection), [read model](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#read-model), [ledger](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#ledger), [CQRS](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#cqrs), [idempotency](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#idempotency), [outbox pattern](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/cqrs-event-driven.md#outbox-pattern), [reconciliation](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/fintech.md#reconciliation) — are defined in the [Reference Dictionary](https://github.com/gurkanindibay/azure_learning/blob/main/reference-dictionary/).

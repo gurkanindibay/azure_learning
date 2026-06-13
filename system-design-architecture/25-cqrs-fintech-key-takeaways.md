@@ -4,7 +4,7 @@
 > **Source**: [CQRS For Fintech In 2026: Ledgers, Limits, Risk, And The Fight Over Truth](https://medium.com/@the_atomic_architect/cqrs-fintech-2026-ledger-truth-bdbbcfeb65dc) — The Atomic Architect, Apr 2026 · [Local copy](../articles/medium/cqrs-for-fintech-2026.md)
 > **Purpose**: Extract practical CQRS boundaries for money-facing systems — separating command authority from query flexibility, protecting the ledger as the single source of financial truth, and preventing one model from becoming a junk drawer for the whole company.
 > **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [Message Brokers & Async](05-message-brokers-async.md), [Resilience Patterns](10-resilience-patterns.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md)
-> **Dictionary**: [Reference Dictionary](reference-dictionary.md) — definitions for [projection](reference-dictionary.md#projection), [read model](reference-dictionary.md#read-model), [ledger](reference-dictionary.md#ledger), [CQRS](reference-dictionary.md#cqrs), [idempotency](reference-dictionary.md#idempotency), [outbox pattern](reference-dictionary.md#outbox-pattern), and other key terms
+> **Dictionary**: [Reference Dictionary](../reference-dictionary/) — definitions for [projection](../reference-dictionary/cqrs-event-driven.md#projection), [read model](../reference-dictionary/cqrs-event-driven.md#read-model), [ledger](../reference-dictionary/cqrs-event-driven.md#ledger), [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [outbox pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), and other key terms
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging, §7.1 Reliability & Resilience
 
 ---
@@ -82,7 +82,7 @@ support search, operations investigation, risk analytics, finance reports
 | **Problem** | A balance table (`account_id`, `balance`, `updated_at`) is treated as the source of truth, but fintech doesn't live in simple updates — money moves. |
 | **Root cause** | Confusing "current state" with "financial history" — one is a snapshot, the other is evidence.
 
-> 📖 **Dictionary**: [Projection](reference-dictionary.md#projection) · [Ledger](reference-dictionary.md#ledger)
+> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) · [Ledger](../reference-dictionary/cqrs-event-driven.md#ledger)
 
 ### Balance Table vs Proper Ledger
 
@@ -261,7 +261,7 @@ SAFE:       Save ledger entries + Save outbox event  (same DB transaction)
 | **Problem** | Product changes (new dashboard, new support screen, new risk view, new mobile timeline) force changes to the ledger design or pollute financial records with display fields. |
 | **Root cause** | Treating read models as equally important as the ledger — they are not.
 
-> 📖 **Dictionary**: [Projection](reference-dictionary.md#projection) · [Read Model](reference-dictionary.md#read-model)
+> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) · [Read Model](../reference-dictionary/cqrs-event-driven.md#read-model)
 
 ### Sacred vs Replaceable
 
@@ -297,7 +297,7 @@ be rebuilt, be replaced, be optimized for one screen.
 | **Problem** | Teams build a fast read model → use it for display (good) → use it for support (still okay) → use it for limit checks (danger) → use it for final transfer approval (now the read side has become a hidden authority and CQRS collapses). |
 | **Root cause** | The boundary erodes incrementally — each step feels reasonable in isolation.
 
-> 📖 **Dictionary**: [Projection](reference-dictionary.md#projection) — a balance screen is a projection; the command side is the truth.
+> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) — a balance screen is a projection; the command side is the truth.
 
 ### The Erosion Path
 

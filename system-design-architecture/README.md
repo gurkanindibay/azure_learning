@@ -35,7 +35,7 @@
 | ⚡ **Circuit Breaker Honesty** | [`23-circuit-breaker-key-takeaways.md`](23-circuit-breaker-key-takeaways.md) | `cb-01` – `cb-07` | Slow-call rate, minimumNumberOfCalls, Breaker vs Bulkhead, Retry amplification, Honest resilience stack, Fallback ladder, UX metrics |
 | 🔐 **HSM Integration Bottlenecks** | [`24-hsm-bottleneck-key-takeaways.md`](24-hsm-bottleneck-key-takeaways.md) | `hsm-01` – `hsm-10` | Horizontal scaling impossibility, Sync crypto in critical path, Connection pool isolation, PCI-DSS caching constraints, LMK ceremony, Cloud vs on-prem latency, Tokenization load, Post-quantum migration |
 | 💰 **CQRS for Fintech** | [`25-cqrs-fintech-key-takeaways.md`](25-cqrs-fintech-key-takeaways.md) | `cqrs-01` – `cqrs-15` | Command/query boundary, Ledger vs balance, Idempotency guard, Limit decisions, Risk actions vs history, Outbox pattern, Projection replaceability, Reconciliation design |
-| 📖 **Reference Dictionary** | [`reference-dictionary.md`](reference-dictionary.md) | — | Definitions: projection, read model, CQRS, ledger, idempotency, outbox pattern, event sourcing, reconciliation |
+| 📖 **Reference Dictionary** | [`../reference-dictionary/`](../reference-dictionary/) | — | Repo-root: [CQRS/Events](../reference-dictionary/cqrs-event-driven.md), [Resilience](../reference-dictionary/resilience.md), [Messaging](../reference-dictionary/messaging.md), [API Design](../reference-dictionary/api-design.md), [Data/Concurrency](../reference-dictionary/data-concurrency.md), [Caching](../reference-dictionary/caching.md), [Fintech](../reference-dictionary/fintech.md) |
 
 ---
 
@@ -159,7 +159,7 @@
 | .NET concurrency patterns | [`dotNet_multi_threading/`](../dotNet_multi_threading/) |
 | Agentic AI — Enterprise Strategic Systems | [`articles/linkedin/build-ai-for-enterprise-strategic-systems.md`](../articles/linkedin/build-ai-for-enterprise-strategic-systems.md) |
 | CQRS for Fintech 2026 (original article) | [`articles/medium/cqrs-for-fintech-2026.md`](../articles/medium/cqrs-for-fintech-2026.md) |
-| Reference Dictionary (projection, ledger, CQRS, etc.) | [`system-design-architecture/reference-dictionary.md`](reference-dictionary.md) |
+| Reference Dictionary (repo-root) | [`reference-dictionary/`](../reference-dictionary/) |
 
 ---
 

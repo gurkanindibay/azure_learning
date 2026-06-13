@@ -1,0 +1,111 @@
+# HSM & Cryptographic Infrastructure
+
+> **Domain**: Hardware Security Modules, cryptographic key management, PCI-DSS compliance, and payment security.
+> **Parent**: [Reference Dictionary](README.md)
+
+---
+
+## Contents
+
+| Term | Anchor |
+|:---|:---|
+| HSM (Hardware Security Module) | [`#hsm`](#hsm) |
+| LMK (Local Master Key) | [`#lmk`](#lmk) |
+| LMK Ceremony | [`#lmk-ceremony`](#lmk-ceremony) |
+| PCI-DSS | [`#pci-dss`](#pci-dss) |
+| Payment HSM | [`#payment-hsm`](#payment-hsm) |
+| PIN Block Translation | [`#pin-block-translation`](#pin-block-translation) |
+| Tokenization (DPAN) | [`#tokenization-dpan`](#tokenization-dpan) |
+| 3D Secure (3DS) | [`#3d-secure`](#3d-secure) |
+| Post-Quantum Cryptography | [`#post-quantum-cryptography`](#post-quantum-cryptography) |
+| ARQC | [`#arqc`](#arqc) |
+
+---
+
+## HSM
+
+A **physically hardened, tamper-resistant device** for cryptographic key protection and operations. HSMs generate, store, and use keys without ever exposing them to the application or OS.
+
+| Type | FIPS Level | Scaling | Latency |
+|:---|:---|:---|:---|
+| **On-premises HSM** | 140-3 Level 3 | Cannot scale horizontally | µs |
+| **Cloud HSM (Managed)** | 140-3 Level 3 | Managed service | ms |
+| **Software HSM** | Lower | Scales easily | ns |
+
+> **Key constraint**: HSMs cannot scale horizontally (each device is a physical unit). This creates architectural bottlenecks for high-throughput payment systems.
+
+**Also see**: [LMK](#lmk), [Payment HSM](#payment-hsm) · [Azure Services: HSM](azure-services.md#hsm)
+
+---
+
+## LMK
+
+**Local Master Key** — the root key inside an HSM that encrypts all other keys stored within that HSM. If the LMK is compromised, every key protected by it is compromised.
+
+**Also see**: [HSM](#hsm), [LMK Ceremony](#lmk-ceremony)
+
+---
+
+## LMK Ceremony
+
+A **physical key ceremony** requiring multiple trusted holders to rotate the Local Master Key. Each holder has a portion of the key material. Ceremonies are audited, recorded, and compliance-mandated.
+
+**Also see**: [LMK](#lmk), [HSM](#hsm)
+
+---
+
+## PCI-DSS
+
+**Payment Card Industry Data Security Standard** — the compliance framework governing payment card data security. Sections 3.5 and 3.6 specifically govern cryptographic key storage and management, effectively requiring physical HSMs.
+
+**Also see**: [HSM](#hsm), [Payment HSM](#payment-hsm)
+
+---
+
+## Payment HSM
+
+A **specialized HSM** designed for financial and payment operations — PIN verification, card personalization, EMV cryptogram generation. Examples: Thales payShield, Utimaco Atalla.
+
+> Unlike general-purpose HSMs, payment HSMs understand payment-specific commands (e.g., PIN block translation, ARQC verification).
+
+**Also see**: [HSM](#hsm), [PIN Block Translation](#pin-block-translation), [ARQC](#arqc)
+
+---
+
+## PIN Block Translation
+
+Converting a PIN between **encryption zones** via HSM. The PIN arrives encrypted under the terminal zone key; the HSM decrypts and re-encrypts it under the issuer zone key — the PIN is never in the clear.
+
+**Also see**: [Payment HSM](#payment-hsm), [HSM](#hsm)
+
+---
+
+## Tokenization (DPAN)
+
+Replacing a real card number (PAN) with a **device-specific token (DPAN)** for mobile payments. The Token Vault maps DPAN ↔ PAN and interacts with the HSM for cryptographic validation. Tokens are worthless if stolen.
+
+**Also see**: [Payment HSM](#payment-hsm)
+
+---
+
+## 3D Secure
+
+**EMVCo authentication protocol** adding a security layer to card-not-present (CNP) transactions. The cardholder authenticates with their issuing bank (OTP, biometric) before the transaction proceeds.
+
+**Also see**: [PCI-DSS](#pci-dss)
+
+---
+
+## Post-Quantum Cryptography
+
+Cryptographic algorithms **resistant to quantum computer attacks**. NIST published the first PQC standards in 2024. Payment networks and HSMs are beginning migration planning — replacing algorithms takes years.
+
+**Also see**: [HSM](#hsm)
+
+---
+
+## ARQC
+
+**Authorization Request Cryptogram** — an EMV chip-generated cryptogram validated by the issuer HSM during a card-present transaction. The chip proves it is genuine by producing this cryptogram using keys securely stored on the card.
+
+**Also see**: [Payment HSM](#payment-hsm), [PIN Block Translation](#pin-block-translation)
