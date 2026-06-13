@@ -1,7 +1,7 @@
 # GitHub Copilot Instructions - Azure Learning Repository
 
 > **Repository Type**: Technical documentation (NOT a code repository)  
-> **Focus**: Cloud architecture, software engineering patterns, .NET multithreading, system design, and AI/agentic systems
+> **Focus**: Cloud architecture, software engineering patterns, programming languages (.NET, C#), system design, and AI/agentic systems
 
 ## Repository Structure
 
@@ -40,7 +40,9 @@ azure_learning/
 ├── reference-dictionary/         # Repo-root technical glossary (single source of truth for all terms)
 │                                  # Each file = one domain; each term = stable anchor for direct linking
 │
-├── dotNet_multi_threading/       # .NET concurrency patterns (TAP, EAP, APM, sync primitives)
+├── programming-languages/        # Programming languages and their ecosystems
+│   └── csharp/                   # C# language
+│       └── dotNet_multi_threading/  # .NET concurrency patterns (TAP, EAP, APM, sync primitives)
 │
 ├── articles/                     # Source articles organized by platform
 │   ├── medium/                   # Medium.com articles (primary source for system-design-architecture/)
@@ -65,7 +67,7 @@ azure_learning/
 | `architecture-general/` | Cloud-agnostic architectural patterns & taxonomy | Pattern docs, case studies, decision guides | `architecture-azure/` (implementations), `system-design-architecture/` (problems) |
 | `system-design-architecture/` | System design problems mapped to strategies with ID-based references | Problem→strategy docs, key takeaways | `articles/` (sources), `reference-dictionary/` (terms), `architecture-azure/` (services) |
 | `reference-dictionary/` | Single-source glossary for ALL technical terms across the repo | Domain-specific term definitions with anchors | Used by ALL other directories |
-| `dotNet_multi_threading/` | .NET concurrency & multithreading patterns | Tutorial-style docs with code examples | `reference-dictionary/dotnet-multithreading.md` |
+| `programming-languages/` | Programming language ecosystems, patterns & concurrency | Language-specific docs, best practices, concurrency patterns | `reference-dictionary/dotnet-multithreading.md` |
 | `articles/` | Original source material | Saved articles organized by platform | Upstream source for `system-design-architecture/` takeaways |
 | `videos/` | Video-based learning notes | Structured notes with timestamps & key points | `architecture-general/`, `system-design-architecture/` |
 | `site-reliability-engineering/` | SRE practices & infographics | Reference links, visual resources | `architecture-general/07-reliability-performance-operations/` |
@@ -83,8 +85,8 @@ Each major section has detailed guidance — **read these before contributing**:
 ```
 Is it Azure-specific?
   ├─ YES → architecture-azure/  (compute/, data/, networking/, security/, integration/, etc.)
-  └─ NO → Is it .NET multithreading/concurrency?
-      ├─ YES → dotNet_multi_threading/
+  └─ NO → Is it programming language specific (concurrency, patterns, ecosystem)?
+      ├─ YES → programming-languages/<language>/  (e.g., csharp/dotNet_multi_threading/)
       └─ NO → Is it a system design interview problem or strategy takeaway?
           ├─ YES → system-design-architecture/  (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.)
           └─ NO → Is it a term definition or glossary entry?
@@ -152,7 +154,7 @@ graph TD
     AG -->|"Azure implementations"| AA
     AA -->|"general patterns"| AG
     AA -->|"term definitions"| RD
-    DOTNET["dotNet_multi_threading/"] -->|"term definitions"| RD
+    PL["programming-languages/"] -->|"term definitions"| RD
     UNSTRUC["unstructured-resources/"] -->|"formalized into"| AG
     UNSTRUC -->|"formalized into"| SDA
 ```
@@ -185,6 +187,6 @@ graph TD
 | `architecture-general/` | Align with taxonomy §X.X → Cross-ref to Azure impl → Link terms to dictionary |
 | `system-design-architecture/` | Domain-prefixed ID → Problem → Strategy → Tradeoff → Source article → JSON summary block → Cross-ref to Azure services + dictionary |
 | `reference-dictionary/` | Term anchor → Definition → Key characteristics → When to use / When NOT → Also See |
-| `dotNet_multi_threading/` | Pattern overview → Code example → Best practices → Cross-ref to dictionary |
+| `programming-languages/` | Language overview → Code examples → Best practices → Cross-ref to dictionary |
 | `articles/` | Save original article → Later extracted into `system-design-architecture/` |
 | `videos/` | Source link → Timestamped notes → Key takeaways → Cross-ref to relevant patterns |

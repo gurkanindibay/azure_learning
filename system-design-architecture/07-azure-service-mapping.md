@@ -45,4 +45,4 @@
 | Idempotency store pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md) |
 | Saga pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
 | Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
-| .NET concurrency patterns | [`dotNet_multi_threading/`](../../dotNet_multi_threading/) |
+| .NET concurrency patterns | [`programming-languages/csharp/dotNet_multi_threading/`](../../programming-languages/csharp/dotNet_multi_threading/) |

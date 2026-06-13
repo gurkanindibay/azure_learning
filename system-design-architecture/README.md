@@ -156,7 +156,7 @@
 | Saga pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
 | 10GB CSV / 512MB RAM interview question | [`articles/medium/10gb-csv-512mb-ram-interview-question.md`](../articles/medium/10gb-csv-512mb-ram-interview-question.md) |
 | Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
-| .NET concurrency patterns | [`dotNet_multi_threading/`](../dotNet_multi_threading/) |
+| .NET concurrency patterns | [`programming-languages/csharp/dotNet_multi_threading/`](../programming-languages/csharp/dotNet_multi_threading/) |
 | Agentic AI — Enterprise Strategic Systems | [`articles/linkedin/build-ai-for-enterprise-strategic-systems.md`](../articles/linkedin/build-ai-for-enterprise-strategic-systems.md) |
 | CQRS for Fintech 2026 (original article) | [`articles/medium/cqrs-for-fintech-2026.md`](../articles/medium/cqrs-for-fintech-2026.md) |
 | Reference Dictionary (repo-root) | [`reference-dictionary/`](../reference-dictionary/) |

@@ -1,6 +1,6 @@
 # Reference Dictionary
 
-> **Purpose**: Repo-root reference dictionary for all technical terms used across this repository — available to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `dotNet_multi_threading/`, `articles/`, and all other folders. Each file covers one domain; each term has a stable anchor ID for direct linking.
+> **Purpose**: Repo-root reference dictionary for all technical terms used across this repository — available to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `programming-languages/`, `articles/`, and all other folders. Each file covers one domain; each term has a stable anchor ID for direct linking.
 
 ---
 
