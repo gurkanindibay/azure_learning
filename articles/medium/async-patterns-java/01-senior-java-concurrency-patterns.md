@@ -399,4 +399,4 @@ Don't refactor everything this week. One change at a time. Each fix makes your a
 > **Source URL**: [Junior Devs Use @Async. Senior Devs Use These 4 Concurrency Patterns Instead](https://medium.com/@habibwahid/junior-devs-use-async-senior-devs-use-these-4-concurrency-patterns-instead)
 >
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns (Concurrency & Threading), §8.2 Delivery & Runtime  
-> **Related**: [.NET Multithreading Patterns](../../../programming-languages/csharp/dotNet_multi_threading/) | [Java Concurrency Best Practices](https://docs.oracle.com/javase/tutorial/essential/concurrency/)
+> **Related**: [.NET Multithreading Patterns](../../../programming-languages/csharp/dotnet-multi-threading/) | [Java Concurrency Best Practices](https://docs.oracle.com/javase/tutorial/essential/concurrency/)

@@ -42,7 +42,7 @@ azure_learning/
 │
 ├── programming-languages/        # Programming languages and their ecosystems
 │   └── csharp/                   # C# language
-│       └── dotNet_multi_threading/  # .NET concurrency patterns (TAP, EAP, APM, sync primitives)
+│       └── dotnet-multi-threading/  # .NET concurrency patterns (TAP, EAP, APM, sync primitives)
 │
 ├── articles/                     # Source articles organized by platform
 │   ├── medium/                   # Medium.com articles (primary source for system-design-architecture/)
@@ -86,7 +86,7 @@ Each major section has detailed guidance — **read these before contributing**:
 Is it Azure-specific?
   ├─ YES → architecture-azure/  (compute/, data/, networking/, security/, integration/, etc.)
   └─ NO → Is it programming language specific (concurrency, patterns, ecosystem)?
-      ├─ YES → programming-languages/<language>/  (e.g., csharp/dotNet_multi_threading/)
+      ├─ YES → programming-languages/<language>/  (e.g., csharp/dotnet-multi-threading/)
       └─ NO → Is it a system design interview problem or strategy takeaway?
           ├─ YES → system-design-architecture/  (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.)
           └─ NO → Is it a term definition or glossary entry?

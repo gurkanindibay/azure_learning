@@ -304,4 +304,4 @@ BackgroundJob.Enqueue<SearchIndexJob>(j => j.SyncAsync(userId));
 *Companion to [Junior Devs Use @Async. Senior Devs Use These 4 Concurrency Patterns Instead](01-senior-java-concurrency-patterns.md) by HabibWahid.*
 
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns (Concurrency & Threading), §8.2 Delivery & Runtime  
-> **Related**: [.NET Multithreading Best Practices](../../../programming-languages/csharp/dotNet_multi_threading/12-Best-Practices.md) | [TAP Pattern](../../../programming-languages/csharp/dotNet_multi_threading/01-TAP-Pattern.md) | [Hangfire Docs](https://www.hangfire.io/)
+> **Related**: [.NET Multithreading Best Practices](../../../programming-languages/csharp/dotnet-multi-threading/12-Best-Practices.md) | [TAP Pattern](../../../programming-languages/csharp/dotnet-multi-threading/01-TAP-Pattern.md) | [Hangfire Docs](https://www.hangfire.io/)
