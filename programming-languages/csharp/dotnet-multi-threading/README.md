@@ -5,6 +5,7 @@
   - [Asynchronous Programming Patterns](#asynchronous-programming-patterns)
   - [Multithreading Fundamentals](#multithreading-fundamentals)
   - [Synchronization Primitives](#synchronization-primitives)
+  - [Data Flow & Channels](#data-flow--channels)
   - [Best Practices](#best-practices)
 - [🎯 Quick Reference](#quick-reference)
 - [🚀 Getting Started](#getting-started)
@@ -73,8 +74,15 @@ Welcome to the .NET Asynchronous and Multithreading Programming study guide. Thi
     - Dynamic task tracking
     - Batch processing
 
+### Data Flow & Channels
+12. **[System.Threading.Channels](./12-Channels.md)**
+    - Bounded and unbounded channels
+    - Producer/consumer patterns
+    - Backpressure and flow control
+    - Pipeline and broadcast patterns
+
 ### Best Practices
-12. **[Best Practices and Guidelines](./12-Best-Practices.md)**
+13. **[Best Practices and Guidelines](./13-Best-Practices.md)**
     - Async/await patterns
     - Common pitfalls
     - Performance tips
@@ -92,6 +100,9 @@ Welcome to the .NET Asynchronous and Multithreading Programming study guide. Thi
 | Signal between threads | ManualResetEvent | [09-Events.md](./09-Events.md) |
 | Coordinate phases | Barrier | [10-Barrier.md](./10-Barrier.md) |
 | Wait for multiple tasks | CountdownEvent | [11-CountdownEvent.md](./11-CountdownEvent.md) |
+| Producer/consumer pipeline | `System.Threading.Channels` | [12-Channels.md](./12-Channels.md) |
+| Backpressure control | Bounded channel (`Wait`) | [12-Channels.md](./12-Channels.md) |
+| Fire-and-forget queue | Unbounded channel | [12-Channels.md](./12-Channels.md) |
 
 ## 🚀 Getting Started
 
@@ -99,7 +110,7 @@ If you're new to async programming in .NET:
 1. Start with [TAP Pattern](./01-TAP-Pattern.md)
 2. Review [Multithreading Concepts](./04-Multithreading-Concepts.md)
 3. Learn about [Monitor and Lock](./07-Monitor-Lock.md)
-4. Read [Best Practices](./12-Best-Practices.md)
+4. Read [Best Practices](./13-Best-Practices.md)
 
 If you're dealing with legacy code:
 1. [APM Pattern](./03-APM-Pattern.md) for Begin/End methods

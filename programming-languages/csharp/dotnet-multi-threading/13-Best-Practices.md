@@ -6,6 +6,7 @@ Comprehensive best practices for .NET asynchronous and multithreading programmin
 - [Async/Await Best Practices](#asyncawait-best-practices)
 - [Thread Safety](#thread-safety)
 - [Choosing the Right Tool](#choosing-the-right-tool)
+- [Channels Best Practices](#channels-best-practices)
 - [Performance Tips](#performance-tips)
 - [Common Pitfalls](#common-pitfalls)
 - [Testing and Debugging](#testing-and-debugging)
@@ -409,6 +410,166 @@ countdown.Wait(); // Wait for all
 | Wait for any/all async operations | `Task.WhenAny` / `Task.WhenAll` |
 | Simple counter | `Interlocked` |
 | Thread-safe collection | `ConcurrentDictionary`, etc. |
+| Producer/consumer pipeline | `System.Threading.Channels` |
+| Backpressure on producers | Bounded channel (`BoundedChannelFullMode.Wait`) |
+| Latest-value-only stream | Bounded channel (`DropOldest`) |
+| Fire-and-forget queue | Unbounded channel |
+
+---
+
+## Channels Best Practices
+
+### 1. Always Complete the Writer
+
+```csharp
+// ✅ Good — Writer is completed when done
+var channel = Channel.CreateUnbounded<int>();
+
+var producer = Task.Run(async () =>
+{
+    for (int i = 0; i < 10; i++)
+        await channel.Writer.WriteAsync(i);
+    channel.Writer.Complete(); // Signals consumers to exit
+});
+
+var consumer = Task.Run(async () =>
+{
+    await foreach (var item in channel.Reader.ReadAllAsync())
+        Console.WriteLine(item);
+    // Loop exits cleanly when writer completes and channel is empty
+});
+
+await Task.WhenAll(producer, consumer);
+```
+
+```csharp
+// ❌ Bad — Forgetting Complete() means consumer hangs forever
+var channel = Channel.CreateUnbounded<int>();
+
+var producer = Task.Run(async () =>
+{
+    for (int i = 0; i < 10; i++)
+        await channel.Writer.WriteAsync(i);
+    // BUG: No call to channel.Writer.Complete()!
+    // Consumer's ReadAllAsync() will never exit — it waits indefinitely
+});
+
+// This Task.WhenAll will never complete:
+//   - producer finishes writing all items
+//   - consumer blocks forever waiting for more items that never come
+// await Task.WhenAll(producer, consumer); // DEADLOCK: consumer never exits
+```
+
+### 2. Use Bounded Channels for Backpressure
+
+```csharp
+// ✅ Good — Bounded channel provides natural backpressure
+var channel = Channel.CreateBounded<WorkItem>(new BoundedChannelOptions(100)
+{
+    FullMode = BoundedChannelFullMode.Wait
+});
+
+// Producer will asynchronously wait when channel is full
+// This prevents unbounded memory growth under load
+
+// ❌ Bad — Unbounded channel can grow infinitely under load
+var channel = Channel.CreateUnbounded<WorkItem>();
+```
+
+### 3. Pass Reader/Writer, Not the Channel
+
+```csharp
+// ✅ Good — Pass only the handle you need
+public async Task ProduceAsync(ChannelWriter<int> writer)
+{
+    for (int i = 0; i < 10; i++)
+        await writer.WriteAsync(i);
+    writer.Complete();
+}
+
+public async Task ConsumeAsync(ChannelReader<int> reader)
+{
+    await foreach (var item in reader.ReadAllAsync())
+        Console.WriteLine(item);
+}
+
+var channel = Channel.CreateUnbounded<int>();
+var producer = ProduceAsync(channel.Writer);
+var consumer = ConsumeAsync(channel.Reader);
+
+// ❌ Bad — Passing the whole Channel gives too much access
+public async Task ProcessAsync(Channel<int> channel) { /* can read AND write */ }
+```
+
+### 4. Don't Write to a Completed Channel
+
+```csharp
+// ✅ Good — Check completion or wrap in try/catch
+async Task SafeWriteAsync(ChannelWriter<int> writer, int item)
+{
+    try
+    {
+        if (!writer.TryComplete()) // Returns false if already completed
+            await writer.WriteAsync(item);
+    }
+    catch (ChannelClosedException)
+    {
+        // Channel was completed — handle gracefully
+        Console.WriteLine("Channel closed, item dropped");
+    }
+}
+
+// ❌ Bad — Writing to a completed channel throws
+await writer.WriteAsync(item); // ChannelClosedException!
+```
+
+### 5. Use TryWrite / TryRead for Hot Paths
+
+```csharp
+// ✅ Good — Non-blocking in performance-critical loops
+while (reader.TryRead(out var item))
+{
+    ProcessItem(item);
+}
+
+// Instead of async overhead per item:
+// await foreach (var item in reader.ReadAllAsync())
+```
+
+### 6. Enable Single-Reader/Single-Writer When Applicable
+
+```csharp
+// ✅ Good — Optimize when you know the access pattern
+var channel = Channel.CreateUnbounded<Message>(
+    new UnboundedChannelOptions
+    {
+        SingleReader = true,  // Only one consumer
+        SingleWriter = true   // Only one producer
+    });
+// ~30-50% throughput improvement by eliding internal locks
+
+// ❌ Bad — Don't set these if multiple threads access the channel
+```
+
+### 7. Don't Complete from the Consumer Side
+
+```csharp
+// ❌ Bad — Consumer completing writer is anti-pattern
+var consumer = Task.Run(async () =>
+{
+    await foreach (var item in channel.Reader.ReadAllAsync())
+    {
+        if (item == -1)
+        {
+            channel.Writer.Complete(); // Don't do this
+            break;
+        }
+    }
+});
+
+// ✅ Good — Use a sentinel value that the producer sends
+// Producer sends -1 when done, then calls Complete() itself
+```
 
 ---
 

@@ -22,6 +22,7 @@
 | ReaderWriterLockSlim | [`#readerwriterlockslim`](#readerwriterlockslim) |
 | Barrier | [`#barrier`](#barrier) |
 | CountdownEvent | [`#countdownevent`](#countdownevent) |
+| Channel\<T\> | [`#channel`](#channel) |
 | Interlocked | [`#interlocked`](#interlocked) |
 | Deadlock | [`#deadlock`](#deadlock) |
 | EAP / APM (Legacy) | [`#eap-apm`](#eap-apm) |
@@ -177,6 +178,16 @@ Allows **multiple concurrent readers OR one exclusive writer**. Writers wait unt
 Signals when a **counter reaches zero**. Threads call `Signal()` to decrement; waiters call `Wait()` which blocks until the count hits zero. Use when waiting for N parallel operations to complete.
 
 **Also see**: [Barrier](#barrier), [Task.WhenAll](#task)
+
+---
+
+## Channel\<T\>
+
+`System.Threading.Channels.Channel<T>` — a **high-performance, thread-safe producer/consumer data structure** for passing data between tasks and threads. Modern replacement for `BlockingCollection<T>`.
+
+Two modes: **Unbounded** (grows without limit, `WriteAsync` never blocks) and **Bounded** (fixed capacity with configurable backpressure — `Wait`, `DropOldest`, `DropNewest`, `DropWrite`). Supports `SingleReader`/`SingleWriter` optimizations that elide internal locks for ~30-50% throughput gain.
+
+**Also see**: [Task](#task), [SemaphoreSlim](#semaphoreslim)
 
 ---
 
