@@ -10,7 +10,9 @@
 | Term | Anchor |
 |:---|:---|
 | Circuit Breaker | [`#circuit-breaker`](#circuit-breaker) |
+| Half-Open State | [`#half-open-state`](#half-open-state) |
 | Bulkhead | [`#bulkhead`](#bulkhead) |
+| Aspect Order | [`#aspect-order`](#aspect-order) |
 | Retry Amplification | [`#retry-amplification`](#retry-amplification) |
 | Fallback | [`#fallback`](#fallback) |
 | Timeout | [`#timeout`](#timeout) |
@@ -38,7 +40,44 @@ A resilience pattern that **prevvents cascading failures** by detecting when a d
 
 > **Key insight**: Monitor slow-call rate as carefully as failure rate. A 6-second successful response is a failed user experience.
 
-**Also see**: [Bulkhead](#bulkhead), [Fallback](#fallback), [Resilience Stack](#resilience-stack) · [Messaging](messaging.md)
+**Also see**: [Bulkhead](#bulkhead), [Fallback](#fallback), [Half-Open State](#half-open-state), [Resilience Stack](#resilience-stack) · [Messaging](messaging.md)
+
+---
+
+## Half-Open State
+
+The **testing state** between OPEN and CLOSED in a circuit breaker. After `waitDurationInOpenState` expires, the breaker transitions to Half-Open and allows a **limited number of probe calls**. If probes succeed → CLOSED. If they fail → back to OPEN.
+
+| State | Behavior |
+|:---|:---|
+| **CLOSED** | Normal — all calls pass through |
+| **OPEN** | Failing — all calls blocked immediately |
+| **HALF-OPEN** | Testing — limited probe calls allowed |
+
+**Also see**: [Circuit Breaker](#circuit-breaker), [Resilience Stack](#resilience-stack)
+
+---
+
+## Aspect Order
+
+The **order in which resilience decorators are composed** matters critically. Wrong ordering creates dangerous behavior.
+
+```
+CORRECT:   TimeLimiter → CircuitBreaker → Bulkhead → Retry → Fallback
+WRONG:     Retry → Bulkhead → CircuitBreaker → TimeLimiter
+```
+
+| Correct Order | Why |
+|:---|:---|
+| **TimeLimiter first** | Time out before anything else — don't waste resources |
+| **CircuitBreaker second** | Stop calling if dependency is broken |
+| **Bulkhead third** | Limit concurrent calls to surviving dependencies |
+| **Retry fourth** | Retry within the bulkhead (not outside it) |
+| **Fallback last** | Return degraded response when all else fails |
+
+> **Key insight**: Retry must be INSIDE the CircuitBreaker — each retry counts toward the breaker's failure rate. If Retry is outside, the breaker never sees failures.
+
+**Also see**: [Resilience Stack](#resilience-stack), [Circuit Breaker](#circuit-breaker), [Retry Amplification](#retry-amplification)
 
 ---
 
