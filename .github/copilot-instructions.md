@@ -104,8 +104,7 @@ Is it Azure-specific?
 
 - Reference taxonomy sections using `§X.X` format: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
 - The taxonomy file is **auto-generated** — never edit it directly
-- If the relevant taxonomy section cannot be identified from the taxonomy reference, stop and ask for clarification instead of guessing; do not invent a `§X.X` reference
-- When a taxonomy section is missing or the taxonomy reference is stale, do not invent a `§X.X` section; either use the closest existing section and state the assumption, or ask the user which section should be used
+- When the relevant taxonomy section cannot be identified from the taxonomy reference (e.g., the section is missing or the reference is stale), do not invent a `§X.X` reference. Use the closest existing section that reasonably fits the content and explicitly state the assumption (e.g., "> **Taxonomy Reference**: §3.3 Event-Driven & Messaging — closest match; no exact section exists for X"). If no reasonable match exists, stop and ask the user for clarification
 
 ## Automation
 
