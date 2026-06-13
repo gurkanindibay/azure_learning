@@ -1,6 +1,6 @@
 # Predictive SRE: From Reactive to Proactive Reliability
 
-<img src="./images/predictive_sre.png" alt="Predictive SRE Infographic" width="600" />
+<img src="infographics/predictive_sre.png" alt="Predictive SRE Infographic" width="600" />
 
 How high-performing SRE teams are shifting from **reactive → predictive**.
 
