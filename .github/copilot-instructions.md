@@ -35,8 +35,8 @@ azure_learning/
 │   ├── 11-architectural-qualities/     # Non-functional requirements & qualities
 │   └── 12-ai-applications/             # AI application patterns
 │
-├── system-design-architecture/   # System design interview: problem → strategy reference
-│                                  # Structured key takeaways from articles, with ID-based cross-refs
+├── system-design-architecture/   # Concrete system-design problems with solution strategies,
+│                                  # trade-offs, and source references; not for raw notes or article summaries
 │
 ├── reference-dictionary/         # Repo-root technical glossary (single source of truth for all terms)
 │                                  # Each file = one domain; each term = stable anchor for direct linking
@@ -66,7 +66,7 @@ azure_learning/
 |:---|:---|:---|:---|
 | `architecture-azure/` | Azure service deep-dives, tier comparisons, implementation patterns | Service docs, comparison tables, how-tos | `architecture-general/` (patterns), `reference-dictionary/` (terms) |
 | `architecture-general/` | Cloud-agnostic architectural patterns & taxonomy | Pattern docs, case studies, decision guides | `architecture-azure/` (implementations), `system-design-architecture/` (problems) |
-| `system-design-architecture/` | System design problems mapped to strategies with ID-based references | Problem→strategy docs, key takeaways | `articles/` (sources), `reference-dictionary/` (terms), `architecture-azure/` (services) |
+| `system-design-architecture/` | System design problems mapped to strategies with ID-based references | Problem→strategy→tradeoff analyses with source references | `articles/` (sources), `reference-dictionary/` (terms), `architecture-azure/` (services) |
 | `reference-dictionary/` | Single-source glossary for ALL technical terms across the repo | Domain-specific term definitions with anchors | Used by ALL other directories |
 | `programming-languages/` | Programming language ecosystems, patterns & concurrency | Language-specific docs, best practices, concurrency patterns | `reference-dictionary/dotnet-multithreading.md` |
 | `articles/` | Original source material | Saved articles organized by platform | Upstream source for `system-design-architecture/` takeaways |
@@ -77,27 +77,48 @@ azure_learning/
 
 ### Subdirectory Instructions
 
-Before contributing to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `reference-dictionary/`, `programming-languages/`, `articles/`, `videos/`, `site-reliability-engineering/`, `unstructured-resources/`, or `scripts/`, read the corresponding `.copilot-instructions.md` file if one exists; otherwise use the directory-specific checklist in this file:
-- [`architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) — Azure service docs, tier comparisons, templates
-- [`architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) — Taxonomy alignment rules, pattern templates
+Before contributing to a directory, consult the table below for its specific instructions file or fallback checklist:
+
+| Directory | Instructions File | Fallback |
+|:---|:---|:---|
+| `architecture-azure/` | [`../architecture-azure/.copilot-instructions.md`](../architecture-azure/.copilot-instructions.md) | — |
+| `architecture-general/` | [`../architecture-general/.copilot-instructions.md`](../architecture-general/.copilot-instructions.md) | — |
+| `system-design-architecture/` | — | Use the directory-specific checklist in this file |
+| `reference-dictionary/` | — | Use the directory-specific checklist in this file |
+| `programming-languages/` | — | Use the directory-specific checklist in this file |
+| `articles/` | — | Use the directory-specific checklist in this file |
+| `videos/` | — | Use the directory-specific checklist in this file |
+| `site-reliability-engineering/` | — | Use the directory-specific checklist in this file |
+| `unstructured-resources/` | — | Use the directory-specific checklist in this file |
+| `scripts/` | — | Use the directory-specific checklist in this file |
 
 ## Content Placement
 
-```
-Is it Azure-specific?
-  ├─ YES → architecture-azure/  (compute/, data/, networking/, security/, integration/, etc.)
-  └─ NO → Is it programming language specific (concurrency, patterns, ecosystem)?
-      ├─ YES → programming-languages/<language>/  (e.g., csharp/dotnet-multi-threading/)
-      └─ NO → Does it describe a concrete system-design problem with a solution strategy, trade-offs, and at least one source reference?
-          ├─ YES → system-design-architecture/  (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.); do not place general architecture notes or article summaries here
-          └─ NO → Is it a term definition or glossary entry?
-              ├─ YES → reference-dictionary/  (pick the right domain file, add anchor)
-              └─ NO → Is it a source article or raw note?
-                  ├─ Source article → articles/<platform>/
-                  ├─ Video note → videos/
-                  ├─ Raw/evolving note → unstructured-resources/
-                  └─ Reusable architectural pattern, decision guide, or case study that maps to one primary taxonomy section (§X.X) → architecture-general/  (do not place drafts, notes, or raw ideas here)
-```
+Use this numbered decision algorithm in order. **If multiple rules match, apply the first matching rule.**
+
+1. **Is the content Azure-specific?** (services, tiers, implementation patterns tied to Azure)  
+   → `architecture-azure/` (compute/, data/, networking/, security/, integration/, etc.)
+
+2. **Is the primary topic a specific programming language's syntax, runtime, framework, or concurrency model?** (e.g., C# async/await, .NET TPL, Java streams)  
+   → `programming-languages/<language>/` (e.g., csharp/dotnet-multi-threading/)  
+   *Do not use this path for general cloud architecture or cross-language patterns that happen to include code examples.*
+
+3. **Does it describe a concrete system-design problem with a solution strategy, trade-offs, and at least one source reference?**  
+   → `system-design-architecture/` (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.)  
+   *If the user does not provide at least one source reference, or if the problem/solution/trade-offs are missing, stop and ask for the missing information before creating the document. Do not place general architecture notes or raw article summaries here.*
+
+4. **Is it a term definition or glossary entry?**  
+   → `reference-dictionary/` (pick the right domain file, add anchor)
+
+5. **Is it a source article, video note, or raw/evolving note?**  
+   - Source article → `articles/<platform>/`
+   - Video note → `videos/`
+   - Raw/evolving note → `unstructured-resources/`
+
+6. **Is it a reusable architectural pattern, decision guide, or case study that maps to one primary taxonomy section (§X.X)?**  
+   → `architecture-general/` (do not place drafts, notes, or raw ideas here)
+
+**Precedence rule**: If a document plausibly fits more than one destination, choose the destination based on the primary topic, not the secondary example. If the primary topic cannot be determined, stop and ask the user which category should take precedence.
 
 ## Taxonomy Alignment
 
@@ -105,7 +126,7 @@ Is it Azure-specific?
 
 - Reference taxonomy sections using `§X.X` format: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
 - The taxonomy file is **auto-generated** — never edit it directly
-- When the relevant taxonomy section cannot be identified from the taxonomy reference (e.g., the section is missing or the reference is stale), do not invent a `§X.X` reference. Use the closest existing section that reasonably fits the content and explicitly state the assumption (e.g., "> **Taxonomy Reference**: §3.3 Event-Driven & Messaging — closest match; no exact section exists for X"). If no reasonable match exists, stop and ask the user for clarification
+- When the relevant taxonomy section cannot be identified from the taxonomy reference (e.g., the section is missing or the reference is stale), do not invent a `§X.X` reference. Choose the single best matching section using the document's dominant topic only and explicitly state the assumption (e.g., "> **Taxonomy Reference**: §3.3 Event-Driven & Messaging — closest match; no exact section exists for X"). If two or more sections are equally plausible matches, stop and ask the user for clarification instead of guessing
 
 ## Automation
 
@@ -138,7 +159,7 @@ python3 agent_tools/okf_tools.py stats         # Bundle statistics (JSON)
 python3 agent_tools/okf_tools.py graph         # Export relationship graph (JSON)
 ```
 
-See [`agent_tools/README.md`](agent_tools/README.md) for the full OKF agent guide.
+See [`agent_tools/README.md`](../agent_tools/README.md) for the full OKF agent guide.
 
 ## Content Standards
 
@@ -201,6 +222,7 @@ graph TD
    - Link system-design strategies to their source articles
 5. **Update parent index.md** with link to new doc — if the target file already exists, update it in place rather than creating a duplicate; only add a new entry when the file is newly created
 6. **Run taxonomy sync** if you modified any `architecture-general/**/index.md`
+7. **Moving or renaming existing content**: If the user asks to move, rename, or reclassify an existing file, update the existing file in place, remove or redirect the old path, and do not create duplicate copies unless the user explicitly asks for a duplicate
 
 ### Directory-Specific Checklist
 
