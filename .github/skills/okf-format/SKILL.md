@@ -56,6 +56,6 @@ python3 agent_tools/format_agent.py validate <output-path>
 
 ## Tools
 
-- [Format Agent](../../agent_tools/format_agent.py) — Main executable
-- [Config](../../agent_tools/config.yaml) — Type mappings and placement signals
+- [Format Agent](../../../agent_tools/format_agent.py) — Main executable
+- [Config](../../../agent_tools/config.yaml) — Type mappings and placement signals
 - [OKF Spec](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
