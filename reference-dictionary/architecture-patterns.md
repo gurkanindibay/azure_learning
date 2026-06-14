@@ -31,6 +31,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Cloud Adoption Framework (CAF) | [`#caf`](#caf) |
 | Hub-and-Spoke Topology | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
+| Virtual Threads (Project Loom) | [`#virtual-threads`](#virtual-threads) |
+| Leyden AOT | [`#leyden-aot`](#leyden-aot) |
+| Helidon SE | [`#helidon-se`](#helidon-se) |
+| GOMAXPROCS | [`#gomaxprocs`](#gomaxprocs) |
 
 ---
 
@@ -159,3 +163,111 @@ A **network topology** where a central hub VNet hosts shared services (firewall,
 **Demilitarized Zone** — an isolated network segment between the untrusted internet and trusted internal network. Hosts internet-facing services that should not have direct access to internal systems.
 
 **Also see**: [Azure Services: Azure Firewall](azure-services.md#azure-firewall)
+
+---
+
+## Virtual Threads
+
+**Project Loom Virtual Threads** — lightweight JVM-managed threads introduced in Java 21. Unlike platform threads (1:1 mapped to OS threads, ~1 MB stack each), virtual threads are managed by the JVM and mapped many-to-few onto platform threads (~hundreds of bytes each). When a virtual thread blocks on I/O, the JVM unmounts it and reassigns the carrier platform thread to another virtual thread.
+
+### Key Characteristics
+- Available since Java 21 (JEP 444) as a standard feature
+- `Thread.ofVirtual().start(task)` or `Executors.newVirtualThreadPerTaskExecutor()`
+- No pool needed — virtual threads are cheap enough to create one-per-task
+- Automatic unmounting on blocking I/O (socket read/write, `Thread.sleep()`, `LockSupport.park()`)
+- **Pinning risk**: `synchronized` blocks and native calls (JNI) pin the virtual thread to its carrier, blocking the OS thread
+
+### When to Use
+- High-concurrency I/O-bound services (HTTP handlers, database calls, message consumers)
+- Replacing reactive/async programming models (callback hell) with synchronous-style code
+- When you need goroutine-level concurrency scale in Java without rearchitecting to reactive streams
+
+### When NOT to Use
+- CPU-bound workloads (virtual threads don't add CPU parallelism — use platform threads + ForkJoinPool)
+- Code with pervasive `synchronized` blocks (pinning degrades throughput)
+- Pre-Java 21 runtimes (not available; use reactive or CompletableFuture)
+
+### Also see
+- [Task / async-await](dotnet-multithreading.md#task) — .NET equivalent async pattern
+- [Leyden AOT](#leyden-aot) — complementary startup optimization
+- [Helidon SE](#helidon-se) — framework that uses virtual threads for request handling
+
+---
+
+## Leyden AOT
+
+**Project Leyden Ahead-of-Time Compilation** — a JVM feature that captures JIT-optimized native code during training runs and replays it on subsequent starts via an AOT cache. Reduces the JVM warmup penalty (interpreting bytecode, C1/C2 profiling) while retaining peak throughput.
+
+### Key Characteristics
+- Two-phase workflow: **training** (record) → **production** (replay from cache)
+- JVM flags: `-XX:AOTTraining` (record), `-XX:AOTCache` (replay)
+- Cache is version-specific: same JDK version, JVM flags, and classpath required
+- Complementary to GraalVM Native Image (Leyden improves JVM startup; GraalVM compiles ahead-of-time to a standalone binary)
+- Part of Project Leyden (JEP 483), targeting JDK 24+
+
+### When to Use
+- Serverless / containerized Java services with cold-start constraints
+- Auto-scaling scenarios where new instances must reach peak throughput quickly
+- Services with predictable code paths (training covers production behavior)
+
+### When NOT to Use
+- Long-running monolithic services with stable load (JIT eventually reaches similar peak)
+- Frequently changing codebases (cache invalidation overhead)
+- Environments where cache portability is required (cache is JDK-version-specific)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — complementary concurrency optimization
+- [Helidon SE](#helidon-se) — lightweight framework that benefits from AOT
+
+---
+
+## Helidon SE
+
+**Helidon SE** — Oracle's lightweight, reactive Java microservices framework. Helidon SE (Standard Edition) provides a minimal web server without dependency injection, designed for small footprint and fast startup. Helidon 4 uses Java virtual threads for request handling, making blocking code efficient at high concurrency.
+
+### Key Characteristics
+- Two editions: **SE** (minimal, no DI) and **MP** (MicroProfile, full Jakarta EE)
+- Helidon SE WebServer is a compact, programmatic API — no annotations, no classpath scanning
+- Built-in support for virtual threads (Helidon 4+)
+- ~5 MB hello-world JAR; fast startup even without AOT
+- Native integration with Oracle JDK and Leyden AOT
+
+### When to Use
+- Small, high-throughput HTTP services where framework overhead matters
+- When comparing Java microservice performance to Go (Helidon SE is the closest Java equivalent to Go's `net/http` in terms of framework weight)
+- Greenfield services that want virtual threads without Spring Boot's dependency graph
+
+### When NOT to Use
+- Teams invested in Spring Boot ecosystem (Spring Boot 3.2+ also supports virtual threads)
+- Applications requiring extensive middleware (Helidon MP is the fuller alternative)
+- When you need a large ecosystem of third-party integrations (Spring has more)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the concurrency model Helidon SE uses
+- [Leyden AOT](#leyden-aot) — complementary startup optimization
+- [Azure App Service](azure-services.md#app-service) — deployment target
+
+---
+
+## GOMAXPROCS
+
+**GOMAXPROCS** — a Go runtime environment variable that sets the maximum number of OS threads that can execute Go code simultaneously. Controls the parallelism of the Go scheduler's work-stealing across goroutines.
+
+### Key Characteristics
+- Default: `runtime.NumCPU()` (all available CPUs)
+- Set via `GOMAXPROCS=N` environment variable or `runtime.GOMAXPROCS(n)` in code
+- Does NOT limit goroutine count (goroutines are multiplexed onto GOMAXPROCS OS threads)
+- Critical for containerized environments where the container's CPU limit is less than the host's CPU count
+
+### When to Use
+- Explicit CPU affinity in benchmarks (matching Java's `ActiveProcessorCount`)
+- Containerized Go services where `runtime.NumCPU()` sees the host CPUs, not container limits
+- Performance tuning: reducing GOMAXPROCS can reduce GC pressure in CPU-saturated services
+
+### When NOT to Use
+- Default is usually correct for non-containerized deployments on dedicated hardware
+- Setting GOMAXPROCS > actual available CPUs provides no benefit and may increase scheduling overhead
+
+### Also see
+- [Virtual Threads](#virtual-threads) — Java's concurrency model counterpart
+- [Azure Container Apps](azure-services.md#container-apps) — containerized deployment target

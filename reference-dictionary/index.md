@@ -39,14 +39,14 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 1 | [`cqrs-event-driven.md`](cqrs-event-driven.md) | CQRS, Event Sourcing & Patterns | CQRS, Event Sourcing, Projection, Read Model, Ledger, Outbox Pattern, Idempotency, Dual-Write Problem, Event-Driven Architecture |
 | 2 | [`resilience.md`](resilience.md) | Resilience & Fault Tolerance | Circuit Breaker, Bulkhead, Retry Amplification, Fallback, Timeout, Resilience Stack, Graceful Degradation |
 | 3 | [`messaging.md`](messaging.md) | Message Brokers & Async | Kafka vs RabbitMQ, Partition, Consumer Group, Offset Commit, DLQ, Poison Message, Message Ordering, At-Least-Once, Exactly-Once |
-| 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations |
+| 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations, Consistent Hashing, Nagle's Algorithm / TCP_NODELAY |
 | 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Isolation Levels, Double-Booking, Pessimistic/Optimistic Locking, Fencing Token, Saga, Sharding |
 | 6 | [`caching.md`](caching.md) | Caching Architecture | Cache Stampede, Cache-Aside, Invalidation, TTL, Eviction Policies, Request Coalescing, PER Algorithm |
 | 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry) |
 | 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |
 | 9 | [`dotnet-multithreading.md`](dotnet-multithreading.md) | .NET Multithreading & Async | TAP, Task, async/await, ThreadPool, ConfigureAwait, SemaphoreSlim, Mutex, lock, Barrier, Interlocked, Deadlock |
 | 10 | [`azure-services.md`](azure-services.md) | Azure Services (Networking, Identity, Compute, Data, Integration, Observability) | VNet, NSG, Entra ID, Managed Identity, AKS, Cosmos DB, Event Hubs, Service Bus, Azure Monitor, Application Insights |
-| 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework |
+| 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework, Virtual Threads, Leyden AOT, Helidon SE, GOMAXPROCS |
 | 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
 | 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography |
 

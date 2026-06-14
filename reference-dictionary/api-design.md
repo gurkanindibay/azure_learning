@@ -26,6 +26,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Long-Running Operations | [`#long-running-operations`](#long-running-operations) |
 | Contract-First Design | [`#contract-first-design`](#contract-first-design) |
 | Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
+| Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm--tcp_nodelay`](#nagles-algorithm--tcp_nodelay) |
 
 ---
 
@@ -214,3 +215,29 @@ A distributed hashing technique that minimizes key redistribution when nodes are
 | **Virtual nodes** | Multiple points per physical node for even distribution |
 
 **Also see**: [Caching](caching.md) · [Messaging: Partition](messaging.md#partition)
+
+---
+
+## Nagle's Algorithm / TCP_NODELAY
+
+**Nagle's Algorithm** — a TCP optimization (RFC 896) that buffers small outgoing packets to coalesce them into larger segments before transmission. Disabled by setting the socket option `TCP_NODELAY=true`.
+
+### Key Characteristics
+- **Enabled by default** (`TCP_NODELAY=false`) on most platforms, including JVM sockets
+- Waits for ACK of previous packet OR until buffer fills to MSS (Maximum Segment Size) before sending
+- Reduces TCP header overhead for workloads that produce many small writes (e.g., telnet, character-by-character)
+- **Go's `net/http` disables Nagle by default** since Go 1.7 for HTTP servers
+- The interaction with HTTP/1.1 persistent connections and multi-write responses can add 40+ ms of artificial latency
+
+### When to Use (TCP_NODELAY=true)
+- HTTP services writing complete responses (headers + body) — the response is one logical unit; buffering adds latency
+- Latency-sensitive APIs where 40 ms is unacceptable
+- Services using persistent HTTP/1.1 connections with multi-write response patterns
+
+### When NOT to Use (TCP_NODELAY=false, Nagle enabled)
+- Workloads that produce many tiny writes where TCP header overhead dominates (rare for HTTP services)
+- Interactive terminal protocols (telnet, SSH) where the original optimization was designed
+
+### Also see
+- [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads) — concurrency model that interacts with socket I/O
+- [Azure Services: Application Gateway](../reference-dictionary/azure-services.md#application-gateway) — L7 proxy that terminates TCP connections
