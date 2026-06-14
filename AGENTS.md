@@ -141,8 +141,8 @@ File: `.github/workflows/sync-taxonomy.yml`
 | `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` | Auto-generated canonical taxonomy (do not edit directly) |
 | `scripts/sync_taxonomy_reference.py` | Taxonomy sync automation |
 | `scripts/okf_migrate.py` | OKF frontmatter migration and validation |
-| `agents/okf_tools.py` | OKF bundle utilities (validate, search, list, check-links, stats, graph) |
-| `agents/README.md` | OKF agent guide — enrichment & consumption patterns |
+| `agent_tools/okf_tools.py` | OKF bundle utilities (validate, search, list, check-links, stats, graph) |
+| `agent_tools/README.md` | OKF agent guide — enrichment & consumption patterns |
 | `reference-dictionary/index.md` | Glossary usage, term template, and anchor conventions |
 
 ---
@@ -152,16 +152,16 @@ File: `.github/workflows/sync-taxonomy.yml`
 This repository is an [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle. Use the bundled agent tools:
 
 ```bash
-python3 agents/okf_tools.py validate      # Validate OKF conformance
-python3 agents/okf_tools.py list          # List all concepts by type
-python3 agents/okf_tools.py search <kw>   # Search concepts by keyword
-python3 agents/okf_tools.py check-links   # Check cross-reference integrity
-python3 agents/okf_tools.py summary       # Generate bundle summary
-python3 agents/okf_tools.py stats         # JSON statistics
-python3 agents/okf_tools.py graph         # Export relationship graph (JSON)
+python3 agent_tools/okf_tools.py validate      # Validate OKF conformance
+python3 agent_tools/okf_tools.py list          # List all concepts by type
+python3 agent_tools/okf_tools.py search <kw>   # Search concepts by keyword
+python3 agent_tools/okf_tools.py check-links   # Check cross-reference integrity
+python3 agent_tools/okf_tools.py summary       # Generate bundle summary
+python3 agent_tools/okf_tools.py stats         # JSON statistics
+python3 agent_tools/okf_tools.py graph         # Export relationship graph (JSON)
 ```
 
-See [`agents/README.md`](agents/README.md) for the full OKF agent guide including enrichment agent templates.
+See [`agent_tools/README.md`](agent_tools/README.md) for the full OKF agent guide including enrichment agent templates.
 
 ---
 
@@ -172,7 +172,7 @@ See [`agents/README.md`](agents/README.md) for the full OKF agent guide includin
 - **New system design takeaway**: See `.github/copilot-instructions.md` for ID conventions and required sections.
 - **New term**: See `reference-dictionary/index.md`.
 - **Any `architecture-general/**/index.md` change**: Run `python scripts/sync_taxonomy_reference.py --check`.
-- **After any content change**: Run `python3 agents/okf_tools.py validate` to verify OKF conformance.
+- **After any content change**: Run `python3 agent_tools/okf_tools.py validate` to verify OKF conformance.
 
 ---
 

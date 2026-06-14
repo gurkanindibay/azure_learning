@@ -6,13 +6,13 @@ Designed for the azure_learning repository. No external dependencies beyond
 the Python 3.11+ standard library.
 
 Usage:
-    python3 agents/okf_tools.py validate      # Validate OKF conformance
-    python3 agents/okf_tools.py list          # List all concepts by type
-    python3 agents/okf_tools.py search <kw>   # Search concepts by keyword
-    python3 agents/okf_tools.py check-links   # Check cross-reference integrity
-    python3 agents/okf_tools.py summary       # Generate a bundle summary
-    python3 agents/okf_tools.py stats         # Statistics about the bundle
-    python3 agents/okf_tools.py graph         # Export a graph of relationships (JSON)
+    python3 agent_tools/okf_tools.py validate      # Validate OKF conformance
+    python3 agent_tools/okf_tools.py list          # List all concepts by type
+    python3 agent_tools/okf_tools.py search <kw>   # Search concepts by keyword
+    python3 agent_tools/okf_tools.py check-links   # Check cross-reference integrity
+    python3 agent_tools/okf_tools.py summary       # Generate a bundle summary
+    python3 agent_tools/okf_tools.py stats         # Statistics about the bundle
+    python3 agent_tools/okf_tools.py graph         # Export a graph of relationships (JSON)
 """
 
 from __future__ import annotations
@@ -451,7 +451,7 @@ COMMANDS = {
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("Usage: python3 agents/okf_tools.py <command> [args]")
+        print("Usage: python3 agent_tools/okf_tools.py <command> [args]")
         print("\nCommands:")
         for name, (_, desc) in COMMANDS.items():
             print(f"  {name:<15} {desc}")
@@ -466,7 +466,7 @@ def main() -> int:
     cmd_fn, _ = COMMANDS[cmd_name]
     if cmd_name == "search":
         if len(sys.argv) < 3:
-            print("Usage: python3 agents/okf_tools.py search <keyword>")
+            print("Usage: python3 agent_tools/okf_tools.py search <keyword>")
             return 1
         return cmd_fn(sys.argv[2])
     else:

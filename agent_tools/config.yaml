@@ -1,0 +1,428 @@
+# Agent Configuration — azure_learning OKF Bundle
+# ============================================================
+# This file defines domain registries for all 3 coordinated agents.
+# When you add new domains to the repository, update this file
+# OR rely on auto-discovery (agents scan the filesystem).
+#
+# Usage: Edit this file → agents pick up changes on next run.
+# Fields marked [auto] are discovered from the filesystem.
+# Fields marked [manual] must be set here.
+
+# ── Agent 1: Format Agent ───────────────────────────────────────────────────
+
+# Type mapping: directory prefix → OKF type value
+# [auto] New directories can be added here; agents also scan the filesystem.
+type_mapping:
+  # Core architecture
+  "architecture-azure/": "Azure Service"
+  "architecture-general/": "Architecture Pattern"
+
+  # System design
+  "system-design-architecture/": "System Design"
+
+  # Reference
+  "reference-dictionary/": "Reference"
+
+  # Programming languages
+  "programming-languages/": "Programming Guide"
+
+  # Source articles
+  "articles/medium/": "Article"
+  "articles/linkedin/": "Article"
+  "articles/personal-blogs/": "Article"
+  "articles/substack/": "Article"
+
+  # Other
+  "videos/": "Video Notes"
+  "site-reliability-engineering/": "SRE Guide"
+  "unstructured-resources/": "Unstructured Note"
+
+# Content placement signals — keywords that suggest a directory
+# [manual] Edit to improve placement heuristics
+placement_signals:
+  azure:
+    - azure
+    - aks
+    - event hub
+    - cosmos db
+    - key vault
+    - service bus
+    - event grid
+    - logic app
+    - app service
+    - azure functions
+    - azure sql
+    - entra id
+    - azure monitor
+  system_design:
+    - takeaway
+    - strategy
+    - tradeoff
+    - system design interview
+    - problem statement
+  reference:
+    - also see
+    - when to use
+    - when not
+    - key characteristics
+    - glossary
+    - "term:"
+  programming:
+    - c#
+    - dotnet
+    - async
+    - await
+    - thread
+    - task
+    - concurrency pattern
+    - semaphore
+    - mutex
+
+# ── Agent 2: Takeaways Agent ────────────────────────────────────────────────
+
+# Domain prefix registry: prefix → (file, description, keywords)
+# [auto] The agents scan system-design-architecture/ for *-key-takeaways.md
+#        files and extract prefix from filename (e.g., "29-foo-key-takeaways.md" → "foo")
+# [manual] Add entries here to provide descriptions and keyword hints.
+takeaway_domains:
+  db:
+    file: "01-databases-query-performance.md"
+    desc: "Databases & Query Performance"
+  tx:
+    file: "02-concurrency-transactions.md"
+    desc: "Concurrency & Transactions"
+  cache:
+    file: "03-caching-architecture.md"
+    desc: "Caching Architecture"
+  api:
+    file: "04-api-network-design.md"
+    desc: "API & Network Design"
+  broker:
+    file: "05-message-brokers-async.md"
+    desc: "Message Brokers & Async"
+  uber:
+    file: "06-uber-architecture-case-study.md"
+    desc: "Uber Architecture"
+  async:
+    file: "08-async-concurrency-patterns.md"
+    desc: "Async & Concurrency Patterns"
+  flink:
+    file: "09-stream-processing-flink.md"
+    desc: "Stream Processing (Flink)"
+  resilience:
+    file: "10-resilience-patterns.md"
+    desc: "Resilience Patterns"
+  ai:
+    file: "11-ai-ml-infrastructure.md"
+    desc: "AI/ML Infrastructure"
+  media:
+    file: "12-media-processing-pipelines.md"
+    desc: "Media Processing"
+  proc:
+    file: "13-large-data-processing-constraints.md"
+    desc: "Large Data Processing"
+  sql:
+    file: "14-sql-query-optimization.md"
+    desc: "SQL Query Optimization"
+  sdi:
+    file: "15-system-design-interview-roadmap.md"
+    desc: "System Design Interview"
+  gw:
+    file: "16-reverse-proxy-lb-api-gateway.md"
+    desc: "Reverse Proxy, LB & API Gateway"
+  agentic:
+    file: "17-agentic-ai-enterprise-strategic-systems.md"
+    desc: "Agentic AI"
+  prag:
+    file: "18-pragmatic-system-design-takeaways.md"
+    desc: "Pragmatic System Design"
+  sqld:
+    file: "19-sql-system-design-takeaways.md"
+    desc: "SQL System Design"
+  apipat:
+    file: "20-api-design-patterns-key-takeaways.md"
+    desc: "API Design Patterns"
+  agentarch:
+    file: "21-ai-agent-architecture-key-takeaways.md"
+    desc: "AI Agent Architecture"
+  aidev:
+    file: "22-ai-assisted-development-five-levels.md"
+    desc: "AI-Assisted Development"
+  cb:
+    file: "23-circuit-breaker-key-takeaways.md"
+    desc: "Circuit Breaker"
+  hsm:
+    file: "24-hsm-bottleneck-key-takeaways.md"
+    desc: "HSM Integration"
+  cqrs:
+    file: "25-cqrs-fintech-key-takeaways.md"
+    desc: "CQRS for Fintech"
+  docker:
+    file: "26-docker-file-art-key-takeaways.md"
+    desc: "Docker Optimization"
+  iggy:
+    file: "27-apache-iggy-key-takeaways.md"
+    desc: "Apache Iggy"
+  harness:
+    file: "28-agent-harness-key-takeaways.md"
+    desc: "Agent Harness"
+
+    file: "20-api-design-patterns-key-takeaways.md"
+    desc: "API Design Patterns"
+    keywords: [source, azure, problem, also see, users, query]
+
+    file: "21-ai-agent-architecture-key-takeaways.md"
+    desc: "AI Agent Architecture"
+    keywords: [azure, source, problem, agentarch-, agent, root cause]
+
+    file: "23-circuit-breaker-key-takeaways.md"
+    desc: "Circuit Breaker"
+    keywords: [breaker, source, problem, root cause, key insight, cross-reference]
+
+    file: "24-hsm-bottleneck-key-takeaways.md"
+    desc: "HSM Bottleneck"
+    keywords: [source, problem, key insight, root cause, hsm-, latency]
+
+    file: "25-cqrs-fintech-key-takeaways.md"
+    desc: "CQRS Fintech"
+    keywords: [source, problem, cross-reference, root cause, ledger, cqrs-]
+
+    file: "26-docker-file-art-key-takeaways.md"
+    desc: "Docker File Art"
+    keywords: [source, key insight, problem, cache, docker-, root cause]
+
+    file: "27-apache-iggy-key-takeaways.md"
+    desc: "Apache Iggy"
+    keywords: [source, problem, root cause, key insight, iggy-, iggy]
+
+    file: "28-agent-harness-key-takeaways.md"
+    desc: "Agent Harness"
+    keywords: [azure, harness, source, taxonomy, tradeoff, problem]
+
+    file: "29-mesh-key-takeaways.md"
+    desc: "Mesh"
+
+# Keyword → domain prefix suggestions for auto-detection
+# [manual] Add entries to improve prefix suggestion accuracy
+takeaway_keywords:
+  circuit breaker: cb
+  resilience: resilience
+  cqrs: cqrs
+  event sourcing: cqrs
+  kafka: broker
+  message broker: broker
+  cache: cache
+  redis: cache
+  sql: sql
+  database: db
+  index: db
+  query: db
+  transaction: tx
+  concurrency: tx
+  api: api
+  rest: api
+  graphql: api
+  reverse proxy: gw
+  load balancer: gw
+  api gateway: gw
+  streaming: flink
+  flink: flink
+  async: async
+  docker: docker
+  container: docker
+  uber: uber
+  agent: agentic
+  ai agent: agentarch
+  llm: agentic
+  ai: ai
+  machine learning: ai
+  ml: ai
+  hsm: hsm
+  payment: cqrs
+  fintech: cqrs
+  media: media
+  video: media
+  encoding: media
+
+# ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
+
+# Dictionary domain files → title and keywords for term routing
+# [auto] The agents scan reference-dictionary/ for *.md files (excluding index.md)
+#        and extract terms. Add entries here to provide keywords for routing.
+dictionary_domains:
+  ai-ml-llm.md:
+    title: "AI, ML & LLM"
+    keywords:
+      - ai
+      - ml
+      - llm
+      - transformer
+      - rag
+      - embedding
+      - vector
+      - prompt
+      - token
+      - neural
+      - model
+      - inference
+      - training
+      - langchain
+      - agent
+  api-design.md:
+    title: "API Design"
+    keywords:
+      - api
+      - rest
+      - graphql
+      - grpc
+      - endpoint
+      - versioning
+      - rate limit
+      - openapi
+      - swagger
+  architecture-patterns.md:
+    title: "Architecture Patterns"
+    keywords:
+      - microservice
+      - monolith
+      - layered
+      - hexagonal
+      - clean architecture
+      - ddd
+      - saga
+      - strangler
+  caching.md:
+    title: "Caching"
+    keywords:
+      - cache
+      - redis
+      - ttl
+      - evict
+      - invalidation
+      - stampede
+      - cache-aside
+      - write-through
+      - read-through
+  cqrs-event-driven.md:
+    title: "CQRS & Event-Driven"
+    keywords:
+      - cqrs
+      - event sourc
+      - event driven
+      - command
+      - query
+      - projection
+      - read model
+      - ledger
+      - idempotency
+      - outbox
+  data-concurrency.md:
+    title: "Data & Concurrency"
+    keywords:
+      - acid
+      - transaction
+      - isolation
+      - concurrency
+      - lock
+      - deadlock
+      - mvcc
+      - serializ
+  dotnet-multithreading.md:
+    title: ".NET Multithreading"
+    keywords:
+      - dotnet
+      - thread
+      - task
+      - async
+      - await
+      - tap
+      - semaphore
+      - mutex
+      - threadpool
+      - channel
+  fintech.md:
+    title: "Fintech"
+    keywords:
+      - payment
+      - fintech
+      - bank
+      - card
+      - compliance
+      - pci
+      - clearing
+      - settlement
+  hsm-cryptography.md:
+    title: "HSM & Cryptography"
+    keywords:
+      - hsm
+      - crypto
+      - encrypt
+      - decrypt
+      - key management
+      - tls
+      - ssl
+      - pki
+      - certificate
+      - signature
+  media-processing.md:
+    title: "Media Processing"
+    keywords:
+      - video
+      - encoding
+      - transcoding
+      - streaming
+      - codec
+      - bitrate
+      - hls
+      - dash
+  messaging.md:
+    title: "Messaging"
+    keywords:
+      - kafka
+      - rabbitmq
+      - pubsub
+      - queue
+      - topic
+      - partition
+      - offset
+      - consumer group
+      - dlq
+      - poison message
+  resilience.md:
+    title: "Resilience & Fault Tolerance"
+    keywords:
+      - circuit breaker
+      - retry
+      - bulkhead
+      - timeout
+      - fallback
+      - resilience
+      - graceful
+      - thundering herd
+      - cascading
+
+  azure-services.md:
+    title: "Azure Services"
+    keywords:
+      - "also see", azure, vnet, storage, service
+        event, managed, identity
+
+    title: "Kubernetes"
+
+  kubernetes.md:
+    title: "Kubernetes"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

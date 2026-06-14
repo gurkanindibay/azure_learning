@@ -1,11 +1,161 @@
-# OKF Agents — Azure Learning Repository
+# OKF Agent Tools — Azure Learning Repository
 
 > **OKF Bundle**: This repository is an [Open Knowledge Format (OKF) v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle.  
-> **Agent Source**: The agent patterns below are derived from [GoogleCloudPlatform/knowledge-catalog/agents/](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/agents).
+> **Agent Source**: The patterns below are derived from [GoogleCloudPlatform/knowledge-catalog/agents/](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/agents).
 
 ---
 
-## What Are OKF Agents?
+## Skills vs Tools — Clear Distinction
+
+This repository uses two distinct concepts:
+
+| Concept | Location | What it is | How to use |
+|:---|:---|:---|:---|
+| **Skills** | `.github/skills/` | Task workflows with bundled instructions | Slash commands in Copilot Chat (`/okf-format`, `/okf-takeaways`, etc.) |
+| **Tools** | `agent_tools/` | Python scripts that implement the logic | Run from terminal or invoked by skills |
+| **Instructions** | `.github/copilot-instructions.md`, `AGENTS.md` | Always-on guidance for Copilot | Loaded automatically |
+
+### Why Skills, Not Agents?
+
+- **Skills** are on-demand workflows with bundled scripts — perfect for task-oriented operations like "format this document" or "extract takeaways"
+- **Agents** (`.agent.md`) are persistent personas with tool restrictions — better suited for long-running assistant roles (not needed here since each task is self-contained)
+
+## 🤖 GitHub Copilot Integration
+
+### Slash Commands (Skills)
+
+Type `/` in Copilot Chat to access these skills:
+
+| Slash Command | Skill | What it does |
+|:---|:---|:---|
+| `/okf-format` | [`.github/skills/okf-format/`](../.github/skills/okf-format/SKILL.md) | Format raw markdown into OKF-compliant concepts |
+| `/okf-takeaways` | [`.github/skills/okf-takeaways/`](../.github/skills/okf-takeaways/SKILL.md) | Extract system-design takeaways from articles |
+| `/okf-dictionary` | [`.github/skills/okf-dictionary/`](../.github/skills/okf-dictionary/SKILL.md) | Add novel terms to reference-dictionary |
+| `/okf-domain-discovery` | [`.github/skills/okf-domain-discovery/`](../.github/skills/okf-domain-discovery/SKILL.md) | Discover and register new domains |
+
+Skills are also **auto-loaded** by Copilot when their description matches your request — you don't always need to type the slash command.
+
+### Terminal Commands (Tools)
+
+```bash
+python3 agent_tools/format_agent.py format <file.md>       # Format & validate
+python3 agent_tools/takeaways_agent.py extract <file.md>    # Extract takeaways
+python3 agent_tools/dictionary_agent.py extract-terms <f>   # Add dictionary terms
+python3 agent_tools/discovery_agent.py --apply              # Register new domains
+python3 agent_tools/coordinator.py process <file.md>        # Run all 4 steps
+```
+
+## Coordinated Agent Workflow
+
+When adding a new document to the repository, three agents work in coordination:
+
+```
+┌─────────────────────┐
+│   Raw Document       │
+│   (article, note,    │
+│    external source)  │
+└────────┬────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  Agent 1: format_agent.py                   │
+│  Format & Validate                          │
+│  • Converts raw markdown to OKF format      │
+│  • Determines placement (which directory)   │
+│  • Adds YAML frontmatter with type/title    │
+│  • Normalizes heading hierarchy             │
+│  • Validates against repo standards         │
+└────────┬────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  Agent 2: takeaways_agent.py  [OPTIONAL]    │
+│  Key Takeaways                              │
+│  • Extracts architectural patterns          │
+│  • Assigns domain-prefixed IDs              │
+│  • Generates system-design-architecture/    │
+│    takeaway file with Contents table        │
+│  • Adds cross-references                    │
+└────────┬────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  Agent 3: dictionary_agent.py               │
+│  Reference Dictionary                       │
+│  • Extracts technical terms from document   │
+│  • Checks which terms are already defined   │
+│  • Adds novel terms to reference-dictionary │
+│  • Places terms in correct domain file      │
+└────────┬────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│  coordinator.py                             │
+│  • Runs all agents in sequence              │
+│  • Validates cross-references               │
+│  • Runs taxonomy sync                       │
+└─────────────────────────────────────────────┘
+```
+
+### Quick Start
+
+```bash
+# Full pipeline — process a raw document through all agents
+python3 agent_tools/coordinator.py process my-raw-article.md
+
+# Skip the takeaways step
+python3 agent_tools/coordinator.py process my-raw-article.md --no-takeaways
+
+# Run individual agents
+python3 agent_tools/format_agent.py format my-article.md
+python3 agent_tools/takeaways_agent.py extract articles/medium/my-article.md --prefix cb
+python3 agent_tools/dictionary_agent.py extract-terms system-design-architecture/23-circuit-breaker-key-takeaways.md
+
+# Validate everything
+python3 agent_tools/coordinator.py validate-all
+```
+
+### Agent Files
+
+| File | Agent | Purpose |
+|:---|:---|:---|
+| `format_agent.py` | Agent 1 | Format raw markdown into OKF-compliant concepts |
+| `takeaways_agent.py` | Agent 2 | Create system-design takeaway files from articles |
+| `dictionary_agent.py` | Agent 3 | Add novel terms to the reference dictionary |
+| `discovery_agent.py` | Discovery | Auto-discover new domains from the filesystem |
+| `coordinator.py` | Orchestrator | Run all agents in coordinated sequence (+ discovery) |
+| `okf_tools.py` | Utilities | Bundle introspection (validate, search, stats) |
+| `config.yaml` | Configuration | Single source of truth for all domain registries |
+| `config_loader.py` | Configuration | Config loader with auto-discovery from filesystem |
+| `SKILL.md` | Skill Definition | AI agent instructions for domain discovery |
+
+---
+
+## Domain Discovery
+
+When new files are added to `system-design-architecture/` or `reference-dictionary/`, the discovery agent automatically detects new domains and offers to register them in `config.yaml`.
+
+```bash
+# Show undiscovered domains
+python3 agent_tools/discovery_agent.py
+
+# Preview what would be added to config.yaml
+python3 agent_tools/discovery_agent.py --dry-run
+
+# Register all discovered domains
+python3 agent_tools/discovery_agent.py --apply
+
+# Analyze a specific new file
+python3 agent_tools/discovery_agent.py --watch system-design-architecture/29-mesh-key-takeaways.md
+```
+
+**No code changes needed** — just create the file and run `--apply`.
+
+The coordinator runs discovery automatically after processing a new document.
+
+See [`SKILL.md`](SKILL.md) for the full AI agent instructions.
+
+---
 
 In the OKF ecosystem, there are two kinds of agents:
 
@@ -255,19 +405,19 @@ A dependency-free Python toolkit for working with this OKF bundle. See [`okf_too
 
 ```bash
 # Validate the bundle
-python3 agents/okf_tools.py validate
+python3 agent_tools/okf_tools.py validate
 
 # List all concepts grouped by type
-python3 agents/okf_tools.py list
+python3 agent_tools/okf_tools.py list
 
 # Search concepts by keyword
-python3 agents/okf_tools.py search "circuit breaker"
+python3 agent_tools/okf_tools.py search "circuit breaker"
 
 # Check cross-reference integrity
-python3 agents/okf_tools.py check-links
+python3 agent_tools/okf_tools.py check-links
 
 # Generate an index summary
-python3 agents/okf_tools.py summary
+python3 agent_tools/okf_tools.py summary
 ```
 
 ### `okf_migrate.py` (repo root)
@@ -305,7 +455,7 @@ To expose this bundle to an MCP-compatible agent, create an MCP server that wrap
   "mcpServers": {
     "okf-azure-learning": {
       "command": "python3",
-      "args": ["agents/okf_tools.py", "serve"],
+      "args": ["agent_tools/okf_tools.py", "serve"],
       "cwd": "/path/to/azure_learning"
     }
   }

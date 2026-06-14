@@ -131,14 +131,14 @@ python scripts/okf_migrate.py             # Apply frontmatter to new files
 ### OKF Agent Tools (bundle introspection)
 
 ```bash
-python3 agents/okf_tools.py validate      # Validate OKF conformance
-python3 agents/okf_tools.py search <kw>   # Search concepts by keyword
-python3 agents/okf_tools.py check-links   # Check cross-reference integrity
-python3 agents/okf_tools.py stats         # Bundle statistics (JSON)
-python3 agents/okf_tools.py graph         # Export relationship graph (JSON)
+python3 agent_tools/okf_tools.py validate      # Validate OKF conformance
+python3 agent_tools/okf_tools.py search <kw>   # Search concepts by keyword
+python3 agent_tools/okf_tools.py check-links   # Check cross-reference integrity
+python3 agent_tools/okf_tools.py stats         # Bundle statistics (JSON)
+python3 agent_tools/okf_tools.py graph         # Export relationship graph (JSON)
 ```
 
-See [`agents/README.md`](agents/README.md) for the full OKF agent guide.
+See [`agent_tools/README.md`](agent_tools/README.md) for the full OKF agent guide.
 
 ## Content Standards
 
