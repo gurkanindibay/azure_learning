@@ -1,7 +1,8 @@
 # GitHub Copilot Instructions - Azure Learning Repository
 
 > **Repository Type**: Technical documentation repository with supporting automation tooling  
-> **Focus**: Cloud architecture, software engineering patterns, programming languages (.NET, C#), system design, and AI/agentic systems
+> **Focus**: Cloud architecture, software engineering patterns, programming languages (.NET, C#), system design, and AI/agentic systems  
+> **OKF Conformance**: This repository follows [Open Knowledge Format (OKF) v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) — all concept `.md` files carry YAML frontmatter with a `type` field; directory listings use `index.md`
 
 ## Repository Structure
 
@@ -108,7 +109,7 @@ Is it Azure-specific?
 
 ## Automation
 
-### Taxonomy Sync (run after editing any `architecture-general/**/README.md`)
+### Taxonomy Sync (run after editing any `architecture-general/**/index.md`)
 
 ```bash
 python scripts/sync_taxonomy_reference.py          # Regenerate
@@ -178,8 +179,8 @@ graph TD
    - Link terms to `reference-dictionary/` definitions
    - Link patterns to Azure implementations (and vice versa)
    - Link system-design strategies to their source articles
-5. **Update parent README.md** with link to new doc — if the target file already exists, update it in place rather than creating a duplicate; only add a new README entry when the file is newly created
-6. **Run taxonomy sync** if you modified any `architecture-general/**/README.md`
+5. **Update parent index.md** with link to new doc — if the target file already exists, update it in place rather than creating a duplicate; only add a new entry when the file is newly created
+6. **Run taxonomy sync** if you modified any `architecture-general/**/index.md`
 
 ### Directory-Specific Checklist
 

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra ID Authentication Integration Scenarios"
+description: "This document provides comprehensive guidance on integrating Microsoft Entra ID (formerly Azure Active Directory) for authentication in various application scenarios. It covers different authentica..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra ID Authentication Integration Scenarios
 
 ## Overview

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Consuming Azure Cosmos DB for NoSQL Change Feed Using the SDK"
+description: "The Azure Cosmos DB change feed is a persistent record of changes to a container in the order they occur. It enables you to build efficient and scalable applications that can react to insert and up..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Consuming Azure Cosmos DB for NoSQL Change Feed Using the SDK
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "PostgreSQL Performance & Caching Strategies"
+description: "PostgreSQL 18 introduced significant performance improvements that fundamentally change the caching architecture decisions for many workloads. This document explores modern PostgreSQL performance f..."
+tags: [data-analytics-ai-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # PostgreSQL Performance & Caching Strategies
 
 ## Overview

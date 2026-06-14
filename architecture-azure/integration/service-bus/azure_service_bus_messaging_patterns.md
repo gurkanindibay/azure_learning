@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus - Messaging Patterns with ASCII Diagrams"
+description: "Single producer sends messages to a queue, and a single consumer receives and processes each message exactly once."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus - Messaging Patterns with ASCII Diagrams
 
 ## Table of Contents

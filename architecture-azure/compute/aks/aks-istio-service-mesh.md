@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Istio Service Mesh on AKS"
+description: "Istio is an open-source service mesh that provides a uniform way to connect, secure, control, and observe microservices. It manages service-to-service communication in a microservices architecture ..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Istio Service Mesh on AKS
 
 ## Overview

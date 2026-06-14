@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "CQRS Pattern (Command Query Responsibility Segregation)"
+description: "**CQRS (Command Query Responsibility Segregation)** is an architectural pattern that separates read and write operations into different models. It was introduced by Greg Young as an evolution of CQ..."
+tags: [application-software-architecture, design-patterns]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # CQRS Pattern (Command Query Responsibility Segregation)
 
 ## Table of Contents

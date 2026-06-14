@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Hub-Spoke Network Architecture"
+description: "A **hub-spoke network** is a network topology where multiple isolated networks (spokes) connect to a central network (hub). All shared services, security controls, and external connectivity are cen..."
+tags: [cloud-infrastructure-platform-architecture, networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Hub-Spoke Network Architecture
 
 ## Overview

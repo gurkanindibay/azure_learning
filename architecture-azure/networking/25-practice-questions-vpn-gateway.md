@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Practice Questions: Azure VPN Gateway"
+description: "You have an Azure subscription named \"Subscription2\" which includes two Azure virtual networks (VNets) named VNet2 and VNet3. VNet2 has a VPN gateway named \"VGW1\" and it uses static routing. There ..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Practice Questions: Azure VPN Gateway
 
 > **Certification Domain**: Design, implement, and manage connectivity services (20–25%)

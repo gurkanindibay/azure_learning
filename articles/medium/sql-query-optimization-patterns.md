@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Effective SQL Queries: 5 Query Optimization Patterns"
+description: "Writing SQL that returns results isn't hard. Writing SQL that doesn't destroy your database at scale — that's what separates juniors from seniors."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Effective SQL Queries: 5 Query Optimization Patterns
 
 > **Source**: [Medium — HabibWahid](https://medium.com) · May 27, 2026 · 8 min read  

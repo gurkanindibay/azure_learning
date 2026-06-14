@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Static Web Apps"
+description: "Azure Static Web Apps is a service that automatically builds and deploys full stack web apps to Azure from a code repository. It provides a streamlined developer experience with features like:"
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Static Web Apps
 
 ## Table of Contents

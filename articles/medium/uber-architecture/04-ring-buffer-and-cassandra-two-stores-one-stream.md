@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Uber Architecture — Part 4: The Ring Buffer and Cassandra: Two Stores, One Stream"
+description: "*By Simranjeet Singh · 24 min read · Mar 28, 2026*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Uber Architecture — Part 4: The Ring Buffer and Cassandra: Two Stores, One Stream
 
 *By Simranjeet Singh · 24 min read · Mar 28, 2026*

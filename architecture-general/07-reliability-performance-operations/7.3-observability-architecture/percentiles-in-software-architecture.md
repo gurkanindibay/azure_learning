@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Percentiles in Software Architecture"
+description: "Percentiles are statistical measures used to understand the distribution of values in a dataset. In software architecture, percentiles are critical for measuring **latency**, **response times**, **..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Percentiles in Software Architecture
 
 ## Table of Contents

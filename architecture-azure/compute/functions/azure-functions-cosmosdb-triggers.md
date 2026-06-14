@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Functions - Cosmos DB Triggers"
+description: "Azure Functions provides native integration with Azure Cosmos DB through triggers and bindings. The Cosmos DB trigger uses the Azure Cosmos DB Change Feed to listen for inserts and updates across p..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Functions - Cosmos DB Triggers
 ## Table of Contents
 

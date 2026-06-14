@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "When to Use Azure Virtual WAN (vWAN)"
+description: "Azure Virtual WAN (vWAN) is a Microsoft-managed networking service designed to simplify **large-scale, global, and hybrid connectivity**. It provides a unified control plane for connecting branches..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # When to Use Azure Virtual WAN (vWAN)
 
 ## Overview

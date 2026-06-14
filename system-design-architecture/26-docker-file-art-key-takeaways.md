@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Dockerfile Optimization — Key Takeaways"
+description: "FROM node:20-slim"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 26. Dockerfile Optimization — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [Junior Devs Write Dockerfiles. Senior Devs Write These 5 Layers That Cut Build Time by 70%](../articles/medium/docker-file-art.md) — The Atomic Architect, May 2026
 > **Purpose**: Extract practical Dockerfile optimization patterns — treating the Dockerfile as a cache strategy, ordering layers by change frequency, shrinking production images, and persisting dependency caches across builds.
 > **Also see**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) (`prag-01`–`prag-08`), [Resilience Patterns](10-resilience-patterns.md)

@@ -1,6 +1,12 @@
+---
+type: System Design
+title: "Azure Service Mapping"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 7. Azure Service Mapping
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Purpose**: Map each problem domain to the Azure service that solves it.
 
 ---

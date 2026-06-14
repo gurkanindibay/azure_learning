@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Agent Harness — The Anatomy of Production AI Agents"
+description: "CPU[CPU = Raw LLM]"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 28. Agent Harness — The Anatomy of Production AI Agents
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [The Anatomy of an Agent Harness](../articles/personal-blogs/the-anatomy-of-agent-harness.md) — by Akshay Pachaar (2026)  
 > **Purpose**: Extract reusable architectural patterns for designing the non-model infrastructure that transforms a stateless LLM into a capable, production-grade agent.  
 > **Also see**: [AI Agent Architecture](21-ai-agent-architecture-key-takeaways.md), [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md), [AI/ML Infrastructure](11-ai-ml-infrastructure.md)  

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Bastion - Secure VM Access"
+description: "**Azure Bastion** is a fully managed PaaS service that provides secure and seamless RDP and SSH connectivity to virtual machines directly through the Azure portal over TLS (port 443), without expos..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Bastion - Secure VM Access
 
 ## Table of Contents

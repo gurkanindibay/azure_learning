@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Blob Storage - Data Transfer Solutions"
+description: "Transferring data from on-premises infrastructure to Azure Blob Storage is a common requirement for cloud migration scenarios. Azure provides multiple services and tools to facilitate data transfer..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Blob Storage - Data Transfer Solutions
 
 ## Table of Contents

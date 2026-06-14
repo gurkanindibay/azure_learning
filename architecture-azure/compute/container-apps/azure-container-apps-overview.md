@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Apps - Notable Details & Key Concepts"
+description: "Azure Container Apps is a fully managed serverless container service that enables you to run microservices and containerized applications without managing complex infrastructure. Built on top of Ku..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Apps - Notable Details & Key Concepts
 
 ## Table of Contents

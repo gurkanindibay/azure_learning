@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "SAN and NAS: Storage Architecture Guide"
+description: "**SAN (Storage Area Network)** and **NAS (Network Attached Storage)** are the two dominant enterprise network storage architectures. Both decouple physical storage from individual servers — enablin..."
+tags: [cloud-infrastructure-platform-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # SAN and NAS: Storage Architecture Guide
 
 > **Taxonomy Reference**: §5.2 Infrastructure Architecture  

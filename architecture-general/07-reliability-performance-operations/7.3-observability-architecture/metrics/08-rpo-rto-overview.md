@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "RPO and RTO: Recovery Metrics Overview"
+description: "RPO (Recovery Point Objective) and RTO (Recovery Time Objective) are two critical metrics used in disaster recovery and business continuity planning. They help organizations define their tolerance ..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # RPO and RTO: Recovery Metrics Overview
 
 ## Introduction

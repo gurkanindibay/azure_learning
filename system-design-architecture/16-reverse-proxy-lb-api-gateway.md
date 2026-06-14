@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Reverse Proxy, Load Balancer & API Gateway: Key Takeaways"
+description: "Backend servers are directly exposed to the internet. Every server handles its own TLS, caches its own responses, and advertises its real IP. This duplicates work, wastes CPU, and enlarges the atta..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 16. Reverse Proxy, Load Balancer & API Gateway: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [Reverse Proxy vs Load Balancer vs API Gateway: The Real Difference?](../videos/reverse-proxy-load-balancer-api-gateway.md) — YouTube breakdown  
 > **Purpose**: Distinguish these three often-conflated networking components, understand when each applies, and how they compose in production.
 

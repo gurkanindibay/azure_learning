@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Message Routing Patterns"
+description: "Patterns for directing message flow through the system based on content, rules, or dynamic configuration."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Message Routing Patterns
 
 Patterns for directing message flow through the system based on content, rules, or dynamic configuration.
@@ -263,4 +271,4 @@ An order fulfillment saga tracks state across: Order Created → Payment Authori
 
 - [Message Construction Patterns](./02-message-construction-patterns.md)
 - [Message Transformation Patterns](./04-message-transformation-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

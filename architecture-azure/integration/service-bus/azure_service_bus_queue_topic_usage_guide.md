@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus: Queue vs Topic Usage Guide"
+description: "This guide provides detailed recommendations on when to use **Queues** vs **Topics** in Azure Service Bus, with practical scenarios, patterns, and decision criteria."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus: Queue vs Topic Usage Guide
 ## Table of Contents
 

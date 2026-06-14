@@ -2,9 +2,9 @@
 
 This document is a **canonical markdown reference** for commonly recognized architecture types used in enterprise, cloud, and software engineering contexts. It is suitable for **architecture handbooks, governance boards, interviews, and internal standards**.
 
-> **Auto-generated**: This file is automatically synchronized with README.md files in the architecture-general directory structure.
+> **Auto-generated**: This file is automatically synchronized with index.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-05-03 16:46:31
+> **Last updated**: 2026-06-15 00:20:41
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 
@@ -236,30 +236,30 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Database Caching Patterns - General caching strategies and patterns
 
 ### 4.1 Data Architecture
-- OLTP Architecture
-- OLAP Architecture
-- Polyglot Persistence
-- Data Virtualization
+- OLTP Architecture - Transaction processing systems with ACID guarantees
+- OLAP Architecture - Analytical processing and dimensional modeling
+- Polyglot Persistence - Multi-database strategies for heterogeneous workloads
+- Data Virtualization - Abstracted data access across disparate sources
 
 ### 4.2 Analytics Architecture
-- Data Warehouse Architecture
-- Data Lake Architecture
-- Lakehouse Architecture
-- Lambda Architecture
-- Kappa Architecture
+- Data Warehouse Architecture - Dimensional modeling, ETL/ELT, Kimball/Inmon
+- Data Lake Architecture - Schema-on-read, medallion architecture, governance
+- Lakehouse Architecture - Unified lake and warehouse with ACID on data lakes
+- Lambda Architecture - Batch + speed layer pattern for big data
+- Kappa Architecture - Stream-first design with event log as source of truth
 
 ### 4.3 Streaming & Real-Time Architecture
-- Real-Time Analytics Architecture
-- Stream Processing Architecture
-- Change Data Capture (CDC)
+- Real-Time Analytics Architecture - Windowing, watermarks, exactly-once semantics
+- Stream Processing Architecture - Stream processors, topologies, state management
+- Change Data Capture (CDC) - Database change propagation in real time
 
 ### 4.4 AI / ML Architecture
-- Machine Learning Pipeline Architecture
-- MLOps Architecture
-- Feature Store Architecture
-- Model Training Architecture
-- Model Inference Architecture
-- Vector Database Architecture
+- Machine Learning Pipeline Architecture - End-to-end ML pipelines from data to deployment
+- MLOps Architecture - ML operations, CI/CD/CT, lifecycle management
+- Feature Store Architecture - Feature engineering, serving, and registry
+- Model Training Architecture - Distributed training, hyperparameter tuning, AutoML
+- Model Inference Architecture - Model serving, deployment strategies, optimization
+- Vector Database Architecture - Embeddings, similarity search, ANN algorithms
 - Architecture Taxonomy Reference
 
 ---
@@ -288,6 +288,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Hub-Spoke Network Architecture
 - Proxy and Load Balancing Architecture
 - Service Mesh Architecture
+- eBPF Architecture
 - scaling/ - System design evolution and scaling patterns
 - storage/ - Storage architecture patterns
 - SAN and NAS: Storage Architecture Guide
@@ -374,6 +375,10 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Trading Platforms
 - Regulatory Compliance
 - Security Architecture
+- 9.1.1.1 Credit Card Transaction System Architecture
+- 9.1.1.2 HSM in Payment Systems Architecture
+- 9.1.1.3 Stripe Payment System Architecture
+- 9.1.1.4 Turkish Payment System Architecture (BKM Integration)
 - Healthcare Architecture
 - Telecommunications Architecture
 - Government Architecture
@@ -503,4 +508,4 @@ These apply **across all architecture types**:
 
 ---
 
-**Status:** Living document – automatically synchronized with README.md files in architecture-general directory.
+**Status:** Living document – automatically synchronized with index.md files in architecture-general directory.

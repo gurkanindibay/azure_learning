@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Database for MySQL Flexible Server"
+description: "Azure Database for MySQL Flexible Server is a fully managed database service designed to provide more granular control and flexibility over database management functions and configuration settings ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Database for MySQL Flexible Server
 
 ## Table of Contents

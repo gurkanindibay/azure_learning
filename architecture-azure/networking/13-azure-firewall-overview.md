@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Firewall Overview"
+description: "Azure Firewall is a managed, cloud-based network security service that protects your Azure Virtual Network resources. It's a fully stateful firewall as a service with built-in high availability and..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Firewall Overview
 
 Azure Firewall is a managed, cloud-based network security service that protects your Azure Virtual Network resources. It's a fully stateful firewall as a service with built-in high availability and unrestricted cloud scalability.

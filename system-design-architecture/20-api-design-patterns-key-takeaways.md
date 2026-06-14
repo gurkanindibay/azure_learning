@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "API Design Patterns — Key Takeaways"
+description: "/v1/charges          ← Major version in URL (rarely changes)"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 20. API Design Patterns — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [The API Design Patterns Nobody Teaches You](../../articles/medium/api-design-patterns-nobody-teaches-you.md)  
 > **Also see**: [APIs & Network Design](04-api-network-design.md), [Reverse Proxy, LB & API Gateway](16-reverse-proxy-lb-api-gateway.md), [Concurrency & Transactions](02-concurrency-transactions.md)
 

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Policy - Complete Overview"
+description: "**Azure Policy** is a service in Azure that enables you to create, assign, and manage policies that enforce rules and effects over your resources. These policies help maintain compliance with corpo..."
+tags: [governance]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Policy - Complete Overview
 
 ## Table of Contents

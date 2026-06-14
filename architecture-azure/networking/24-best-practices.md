@@ -1,6 +1,14 @@
+---
+type: Azure Service
+title: "Azure Networking Best Practices Guide"
+description: "See [README](./index.md) for overview."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Networking Best Practices Guide
 
-See [README](./README.md) for overview.
+See [README](./index.md) for overview.
 
 ## Design Principles
 

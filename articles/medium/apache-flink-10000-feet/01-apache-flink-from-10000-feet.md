@@ -1,3 +1,10 @@
+---
+type: Article
+title: "System Design Series: Apache Flink from 10,000 Feet — Building a Flink-Powered Recommendation Engine"
+description: "*By Sanil Khurana · 14 min read · May 1, 2026*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # System Design Series: Apache Flink from 10,000 Feet — Building a Flink-Powered Recommendation Engine
 
 *By Sanil Khurana · 14 min read · May 1, 2026*

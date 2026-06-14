@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Mutex"
+description: "Provides mutual exclusion for cross-process synchronization. Only one thread can hold the mutex at a time."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Mutex
 
 Provides mutual exclusion for cross-process synchronization. Only one thread can hold the mutex at a time.
@@ -644,4 +652,4 @@ var mutex = new Mutex(false, "Global\\App");
 - Handle `AbandonedMutexException` gracefully
 - Prefer `lock` for single-process scenarios
 
-**Next:** [Monitor and Lock](./07-Monitor-Lock.md) | **Previous:** [Semaphore](./05-Semaphore.md) | **Back to:** [README](./README.md)
+**Next:** [Monitor and Lock](./07-Monitor-Lock.md) | **Previous:** [Semaphore](./05-Semaphore.md) | **Back to:** [README](./index.md)

@@ -1,6 +1,14 @@
+---
+type: Azure Service
+title: "VPN vs Private Link Guide"
+description: "See [README](./index.md) for overview."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # VPN vs Private Link Guide
 
-See [README](./README.md) for overview.
+See [README](./index.md) for overview.
 
 ## Quick Summary
 

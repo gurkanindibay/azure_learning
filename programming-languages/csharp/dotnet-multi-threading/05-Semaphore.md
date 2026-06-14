@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Semaphore and SemaphoreSlim"
+description: "Controls access to a resource pool with a maximum count. Useful for throttling concurrent operations."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Semaphore and SemaphoreSlim
 
 Controls access to a resource pool with a maximum count. Useful for throttling concurrent operations.
@@ -639,4 +647,4 @@ public class MonitoredSemaphore
 - Always release in finally block
 - Prefer SemaphoreSlim unless you need cross-process synchronization
 
-**Next:** [Mutex](./06-Mutex.md) | **Previous:** [Multithreading Concepts](./04-Multithreading-Concepts.md) | **Back to:** [README](./README.md)
+**Next:** [Mutex](./06-Mutex.md) | **Previous:** [Multithreading Concepts](./04-Multithreading-Concepts.md) | **Back to:** [README](./index.md)

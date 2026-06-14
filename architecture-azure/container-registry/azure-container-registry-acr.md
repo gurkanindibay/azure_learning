@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Registry (ACR)"
+description: "Azure Container Registry (ACR) is a managed, private Docker registry service based on the open-source Docker Registry 2.0. ACR allows you to store and manage container images and related artifacts ..."
+tags: [containers]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Registry (ACR)
 
 ## Table of Contents

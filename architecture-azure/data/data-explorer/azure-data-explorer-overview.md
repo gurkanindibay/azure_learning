@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Data Explorer (ADX) Overview"
+description: "Azure Data Explorer (ADX) is a fully managed, high-performance big data analytics platform optimized for real-time analysis of large volumes of data streaming from applications, websites, IoT devic..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Data Explorer (ADX) Overview
 
 Azure Data Explorer (ADX) is a fully managed, high-performance big data analytics platform optimized for real-time analysis of large volumes of data streaming from applications, websites, IoT devices, and more.

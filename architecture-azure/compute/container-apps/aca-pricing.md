@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Apps - Pricing"
+description: "Azure Container Apps offers **two pricing models**:"
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Apps - Pricing
 
 ## Table of Contents

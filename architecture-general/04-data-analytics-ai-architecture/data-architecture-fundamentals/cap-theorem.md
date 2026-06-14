@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "CAP Theorem"
+description: "The CAP theorem, also known as Brewer's theorem, states that a distributed data store can only provide two of the following three guarantees simultaneously:"
+tags: [data-analytics-ai-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # CAP Theorem
 
 ## Overview

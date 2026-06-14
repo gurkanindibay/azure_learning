@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Async & Concurrency Patterns"
+description: "**Simplest fix (Java)**: Configure a named `ThreadPoolTaskExecutor` bean with explicit pool limits."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 8. Async & Concurrency Patterns
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Sources**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md), [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md)
 
 ---

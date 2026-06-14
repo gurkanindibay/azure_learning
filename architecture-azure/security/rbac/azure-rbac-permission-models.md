@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure RBAC Permission Models"
+description: "Azure provides two primary approaches for controlling access to resources:"
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure RBAC Permission Models
 
 ## Table of Contents

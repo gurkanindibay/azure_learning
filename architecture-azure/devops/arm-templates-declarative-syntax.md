@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "ARM Templates: Declarative Syntax"
+description: "ARM (Azure Resource Manager) templates use a **declarative syntax** to define and deploy Azure infrastructure. This approach allows you to describe *what* you want to deploy rather than *how* to de..."
+tags: [devops]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # ARM Templates: Declarative Syntax
 
 ## Table of Contents

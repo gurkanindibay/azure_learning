@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra ID Identity Governance"
+description: "Microsoft Entra ID Identity Governance is a comprehensive suite of identity lifecycle management capabilities within Microsoft Entra ID that helps organizations balance security and productivity. I..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra ID Identity Governance
 
 ## Overview

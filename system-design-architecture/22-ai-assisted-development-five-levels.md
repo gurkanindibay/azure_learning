@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "AI-Assisted Software Development — The Five Levels"
+description: "Traditional system design assumes human throughput as the bottleneck. Under technical deflation, **the bottleneck shifts from coding speed to specification quality and review bandwidth**. Architect..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 22. AI-Assisted Software Development — The Five Levels
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [The Five Levels: From Spicy Autocomplete to the Dark Factory](../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md) — by Dan Shapiro (Jan 2026)  
 > **Also see**: [AI Agent Architecture](21-ai-agent-architecture-key-takeaways.md), [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md), [Pragmatic System Design](18-pragmatic-system-design-takeaways.md)  
 > **Purpose**: Extract the five-level maturity model for AI-assisted software development — from manual coding to fully autonomous "dark factory" — and the strategic implications for engineering teams navigating technical deflation.

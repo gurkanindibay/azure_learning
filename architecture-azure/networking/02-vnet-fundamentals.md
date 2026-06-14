@@ -1,6 +1,14 @@
+---
+type: Azure Service
+title: "Azure Virtual Network (VNet) Fundamentals"
+description: "See [README](./index.md) for overview."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Virtual Network (VNet) Fundamentals
 
-See [README](./README.md) for overview.
+See [README](./index.md) for overview.
 
 ## Table of Contents
 

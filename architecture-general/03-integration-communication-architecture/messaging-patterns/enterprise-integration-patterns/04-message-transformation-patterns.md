@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Message Transformation Patterns"
+description: "Patterns for modifying message content, structure, and format as they flow through the system."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Message Transformation Patterns
 
 Patterns for modifying message content, structure, and format as they flow through the system.
@@ -150,4 +158,4 @@ A healthcare network defines a canonical patient record format—each hospital s
 
 - [Message Routing Patterns](./03-message-routing-patterns.md)
 - [Messaging Endpoint Patterns](./05-messaging-endpoint-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

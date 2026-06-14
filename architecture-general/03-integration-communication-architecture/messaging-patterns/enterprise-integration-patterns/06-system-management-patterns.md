@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "System Management Patterns"
+description: "Patterns for operating, monitoring, and troubleshooting messaging systems."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # System Management Patterns
 
 Patterns for operating, monitoring, and troubleshooting messaging systems.
@@ -203,4 +211,4 @@ A payment processing system sends synthetic test transactions every minute throu
 
 - [Messaging Endpoint Patterns](./05-messaging-endpoint-patterns.md)
 - [Messaging System Patterns](./01-messaging-system-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Stream Processing Architecture"
+description: "Stream Processing Architecture defines how to build systems that **continuously process unbounded streams of events** — transforming, enriching, aggregating, and routing data in real-time. Unlike b..."
+tags: [data-analytics-ai-architecture, streaming-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Stream Processing Architecture
 
 > **Taxonomy Reference**: §4.3 Streaming & Real-Time Architecture

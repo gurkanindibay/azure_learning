@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Networking Fundamentals - Network Architecture Best Practices"
+description: "┌─────────────────────┐"
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Networking Fundamentals - Network Architecture Best Practices
 
 ## 10. Network Architecture Best Practices

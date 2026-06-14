@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "Architecture & Design Patterns"
+description: "**Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Architecture & Design Patterns
 
 > **Domain**: Software architecture patterns, domain-driven design, cloud adoption frameworks, and migration strategies.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

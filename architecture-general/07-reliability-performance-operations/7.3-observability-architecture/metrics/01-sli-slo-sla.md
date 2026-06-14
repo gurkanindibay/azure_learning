@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "SLI, SLO, and SLA: Service Level Metrics"
+description: "SLI, SLO, and SLA form the foundation of **Service Level Management** in Site Reliability Engineering (SRE). They provide a structured approach to defining, measuring, and communicating service rel..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # SLI, SLO, and SLA: Service Level Metrics
 
 ## Table of Contents

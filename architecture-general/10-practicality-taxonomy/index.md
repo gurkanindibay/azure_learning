@@ -17,4 +17,4 @@ This section classifies architectures by their level of abstraction and proximit
 
 ## Related
 
-- [Architecture General README](../README.md) - Overview of all sections
+- [Architecture General README](../index.md) - Overview of all sections

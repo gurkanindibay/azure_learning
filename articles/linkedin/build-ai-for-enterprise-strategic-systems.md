@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Building an Agentic AI System for Enterprise Strategic Intelligence"
+description: "When most people think about AI systems, they imagine a single chatbot answering questions."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Building an Agentic AI System for Enterprise Strategic Intelligence
 
 > **Author**: [Oktay Selcuk](https://www.linkedin.com/in/oktay-selcuk/) — Decision-Focused Applied AI | Multi-Agent Systems | AI Strategy  

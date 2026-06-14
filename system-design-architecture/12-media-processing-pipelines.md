@@ -1,3 +1,10 @@
+---
+type: System Design
+title: "Media Processing Pipelines: Async Workflows at Scale"
+description: "A user uploads a 4K video and expects streaming support quickly. Processing a 2-hour 4K video requires **1000+ chunks × 5+ resolutions = 5000+ encoding jobs**, totaling hours of CPU time. But users..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Media Processing Pipelines: Async Workflows at Scale
 
 > **Source**: [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenario #10  

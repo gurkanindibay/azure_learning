@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "System.Threading.Channels"
+description: "High-performance, thread-safe producer/consumer data structures for passing data between tasks and threads."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # System.Threading.Channels
 
 High-performance, thread-safe producer/consumer data structures for passing data between tasks and threads.

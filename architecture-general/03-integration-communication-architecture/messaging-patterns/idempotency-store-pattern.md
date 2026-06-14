@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Idempotency Store Pattern"
+description: "In distributed messaging systems, **at-least-once delivery** is the default guarantee of most brokers (Kafka, Azure Service Bus, RabbitMQ, SQS). This means:"
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Idempotency Store Pattern
 
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging — Reliability Patterns (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))

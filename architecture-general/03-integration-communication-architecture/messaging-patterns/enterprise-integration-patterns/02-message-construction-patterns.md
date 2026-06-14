@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Message Construction Patterns"
+description: "Patterns for building and structuring messages for different communication needs."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Message Construction Patterns
 
 Patterns for building and structuring messages for different communication needs.
@@ -186,4 +194,4 @@ A flash sale system sets 5-minute TTL on discount offers—if the inventory serv
 
 - [Messaging System Patterns](./01-messaging-system-patterns.md)
 - [Message Routing Patterns](./03-message-routing-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

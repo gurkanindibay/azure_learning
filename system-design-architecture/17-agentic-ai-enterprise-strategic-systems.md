@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Agentic AI for Enterprise Strategic Systems: Key Takeaways"
+description: "SC[Signal Collection] --> SI[Signal Interpretation]"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 17. Agentic AI for Enterprise Strategic Systems: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [Building an Agentic AI System for Enterprise Strategic Intelligence](../articles/linkedin/build-ai-for-enterprise-strategic-systems.md) — by Oktay Selcuk (Jun 2026)  
 > **Purpose**: Extract reusable architectural patterns for multi-agent AI systems in enterprise decision-intelligence contexts.  
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture

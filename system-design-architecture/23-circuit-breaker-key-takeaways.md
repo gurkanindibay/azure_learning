@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Circuit Breaker Honesty — Key Takeaways"
+description: "resilience4j:"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 23. Circuit Breaker Honesty — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [Your Circuit Breaker Is Lying to You](../../articles/medium/your-circuit-breaker-lying-to-you.md) — The Atomic Architect, Apr 2026
 > **Purpose**: Extract the gap between "having a circuit breaker" and "protecting the user experience" — the four lies circuit breakers tell, and how to build an honest resilience stack.
 > **Also see**: [Resilience Patterns](10-resilience-patterns.md) (`resilience-01`–`resilience-06`), [Concurrency & Transactions](02-concurrency-transactions.md), [API Design Patterns](20-api-design-patterns-key-takeaways.md)

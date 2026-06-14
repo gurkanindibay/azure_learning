@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Key Vault"
+description: "Azure Key Vault is a cloud service for securely storing and accessing secrets. It provides:"
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Key Vault
 
 ## Table of Contents

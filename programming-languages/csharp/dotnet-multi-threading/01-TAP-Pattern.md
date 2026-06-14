@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "TAP (Task-based Asynchronous Pattern)"
+description: "**The Modern Standard** - Introduced in .NET Framework 4.0 and refined with async/await in C# 5.0."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # TAP (Task-based Asynchronous Pattern)
 
 **The Modern Standard** - Introduced in .NET Framework 4.0 and refined with async/await in C# 5.0.
@@ -492,4 +500,4 @@ TAP with async/await is the modern standard for asynchronous programming in .NET
 - Follow best practices to avoid deadlocks and performance issues
 - Use `ConfigureAwait(false)` in library code
 
-**Next:** [EAP Pattern](./02-EAP-Pattern.md) | **Back to:** [README](./README.md)
+**Next:** [EAP Pattern](./02-EAP-Pattern.md) | **Back to:** [README](./index.md)

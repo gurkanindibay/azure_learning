@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Pragmatic System Design: Key Takeaways"
+description: "**Case study**: A team proposed 2× API servers, Redis cache, 2× read replicas, and a load balancer ($350/month, +293%) for a system serving 423 users at 145ms p95. The existing single-server setup ..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 18. Pragmatic System Design: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [Why I Ignore Architecture Diagrams in System Design Reviews](../../articles/medium/why-I-ignore-architecture-diagrams-in-system-design-interviews.md) — by Bhavyansh Yadav (Feb 2026)
 > **Purpose**: Extract reusable principles for cutting through "architecture theater" — focusing on user metrics, operational reality, and solving today's problems instead of imaginary future scale.
 

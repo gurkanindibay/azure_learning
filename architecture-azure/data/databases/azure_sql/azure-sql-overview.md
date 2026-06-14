@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure SQL - Complete Overview"
+description: "**Azure SQL** is a family of managed SQL Server database services running in the Azure cloud. It provides a range of deployment options from fully managed PaaS databases to infrastructure-as-a-serv..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure SQL - Complete Overview
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB: Database Account vs Container"
+description: "Azure Cosmos DB has a hierarchical structure where **Database Account** and **Container** represent different levels of the resource hierarchy. Understanding the difference between them is crucial ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cosmos DB: Database Account vs Container
 
 ## Table of Contents

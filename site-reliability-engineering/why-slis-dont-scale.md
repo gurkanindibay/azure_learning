@@ -1,3 +1,10 @@
+---
+type: SRE Guide
+title: "Why SLIs Don't Scale Without Engineering Pipelines"
+description: "Most teams define SLIs correctly."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Why SLIs Don't Scale Without Engineering Pipelines
 
 Most teams define SLIs correctly.

@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Events (ManualResetEvent & AutoResetEvent)"
+description: "Event-based synchronization primitives for signaling between threads."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Events (ManualResetEvent & AutoResetEvent)
 
 Event-based synchronization primitives for signaling between threads.
@@ -752,4 +760,4 @@ await tcs.Task; // Doesn't block thread
 - Always dispose when done
 - Consider async alternatives (Task, TaskCompletionSource) for modern code
 
-**Next:** [Barrier](./10-Barrier.md) | **Previous:** [ReaderWriterLockSlim](./08-ReaderWriterLock.md) | **Back to:** [README](./README.md)
+**Next:** [Barrier](./10-Barrier.md) | **Previous:** [ReaderWriterLockSlim](./08-ReaderWriterLock.md) | **Back to:** [README](./index.md)

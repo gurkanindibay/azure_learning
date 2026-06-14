@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Application Architecture Styles"
+description: "Application architecture styles define how software components are organized, how they communicate, and how responsibilities are distributed. Choosing the right architecture impacts:"
+tags: [application-software-architecture, application-architecture-styles]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Application Architecture Styles
 
 ## Table of Contents

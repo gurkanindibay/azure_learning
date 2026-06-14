@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus Detailed Reference"
+description: "Azure Service Bus is a fully managed enterprise message broker with message queues and publish-subscribe topics. It is used to decouple applications and services."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus Detailed Reference
 
 ## Table of Contents

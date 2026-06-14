@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "System Design Interview Roadmap: Key Takeaways"
+description: "**Trap**: Skipping a phase. Each phase feeds the next — skip requirements and your design has no foundation; skip math and you can't justify decisions; skip trade-offs and you appear junior."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 15. System Design Interview Roadmap: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [How to Structure Any System Design Interview in 45 Minutes](../../articles/medium/design-system-interviews.md) — by Kunal Sinha (Dec 2025)  
 > **Purpose**: Extract a repeatable 7-phase interview framework with specific scripts, traps, and trade-off patterns that distinguish senior candidates.
 

@@ -3,7 +3,8 @@
 Sync Architecture Taxonomy Reference
 
 This script automatically generates/updates the architecture_taxonomy_reference.md
-file by aggregating content from all README.md files in the architecture-general
+file by aggregating content from all index.md files in the architecture-general
+directory structure (OKF convention; falls back to README.md).
 directory structure.
 
 Usage:
@@ -42,16 +43,19 @@ DIRECTORY_MAPPING = [
 ]
 
 
-def read_readme(dir_path: Path) -> str | None:
-    """Read README.md from a directory if it exists."""
+def read_index(dir_path: Path) -> str | None:
+    """Read index.md (or README.md as fallback) from a directory if it exists."""
+    index_path = dir_path / "index.md"
+    if index_path.exists():
+        return index_path.read_text(encoding="utf-8")
     readme_path = dir_path / "README.md"
     if readme_path.exists():
         return readme_path.read_text(encoding="utf-8")
     return None
 
 
-def extract_content_from_readme(content: str) -> dict:
-    """Extract structured content from a README.md file."""
+def extract_content_from_index(content: str) -> dict:
+    """Extract structured content from an index.md (or README.md) file."""
     result = {
         "title": "",
         "description": "",
@@ -115,12 +119,12 @@ def generate_toc() -> str:
     
     for dir_name, section_title in DIRECTORY_MAPPING:
         dir_path = ARCHITECTURE_GENERAL_DIR / dir_name
-        readme_content = read_readme(dir_path)
+        readme_content = read_index(dir_path)
         
         if not readme_content:
             continue
             
-        content = extract_content_from_readme(readme_content)
+        content = extract_content_from_index(readme_content)
         
         # Create anchor from section title
         anchor = section_title.lower()
@@ -149,12 +153,12 @@ def generate_toc() -> str:
 def generate_section_content(dir_name: str, section_title: str) -> str:
     """Generate content for a single taxonomy section."""
     dir_path = ARCHITECTURE_GENERAL_DIR / dir_name
-    readme_content = read_readme(dir_path)
+    readme_content = read_index(dir_path)
     
     if not readme_content:
         return ""
     
-    content = extract_content_from_readme(readme_content)
+    content = extract_content_from_index(readme_content)
     
     lines = [f"## {section_title}"]
     
@@ -169,13 +173,13 @@ def generate_section_content(dir_name: str, section_title: str) -> str:
 
 
 def generate_static_sections() -> dict:
-    """Return static sections that don't come from READMEs."""
+    """Return static sections that don't come from index files."""
     return {
         "header": """# Architecture Taxonomy – Comprehensive Reference
 
 This document is a **canonical markdown reference** for commonly recognized architecture types used in enterprise, cloud, and software engineering contexts. It is suitable for **architecture handbooks, governance boards, interviews, and internal standards**.
 
-> **Auto-generated**: This file is automatically synchronized with README.md files in the architecture-general directory structure.
+> **Auto-generated**: This file is automatically synchronized with index.md files in the architecture-general directory structure.
 > 
 > **Last updated**: {timestamp}
 > 
@@ -301,7 +305,7 @@ These apply **across all architecture types**:
 
 ---
 
-**Status:** Living document – automatically synchronized with README.md files in architecture-general directory.
+**Status:** Living document – automatically synchronized with index.md files in architecture-general directory.
 """,
     }
 
@@ -318,7 +322,7 @@ def generate_full_taxonomy() -> str:
     sections.append(generate_toc())
     sections.append("\n---\n")
     
-    # Generate dynamic sections from READMEs (sections 1-9)
+    # Generate dynamic sections from index files (sections 1-9)
     for dir_name, section_title in DIRECTORY_MAPPING[:9]:
         section_content = generate_section_content(dir_name, section_title)
         if section_content:
@@ -334,7 +338,7 @@ def generate_full_taxonomy() -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Sync Architecture Taxonomy Reference with README.md files"
+        description="Sync Architecture Taxonomy Reference with index.md files"
     )
     parser.add_argument(
         "--dry-run",
@@ -348,7 +352,7 @@ def main():
     )
     args = parser.parse_args()
     
-    print("🔍 Scanning README.md files in architecture-general/...")
+    print("🔍 Scanning index.md files in architecture-general/...")
     
     new_content = generate_full_taxonomy()
     
@@ -369,10 +373,10 @@ def main():
             new_clean = re.sub(r'\*\*Last updated\*\*:.*\n', '', new_content)
             
             if current_clean.strip() == new_clean.strip():
-                print("✅ Taxonomy reference is in sync with README.md files")
+                print("✅ Taxonomy reference is in sync with index.md files")
                 return 0
             else:
-                print("❌ Taxonomy reference is OUT OF SYNC with README.md files")
+                print("❌ Taxonomy reference is OUT OF SYNC with index.md files")
                 print("   Run 'python scripts/sync_taxonomy_reference.py' to update")
                 return 1
         else:

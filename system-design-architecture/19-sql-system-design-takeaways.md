@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "SQL System Design: From Fresher to Staff Engineer"
+description: "S1[\"<b>Step 1: Single Instance</b><br/>One DB, one connection<br/>⏱️ 0 operational overhead\"]"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 19. SQL System Design: From Fresher to Staff Engineer
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [SQL for System Design: From Fresher to Staff Engineer](../../articles/medium/sql-for-system-design.md) — The Latency Gambler, Mar 2026
 > **Purpose**: Extract system-design-level SQL principles — when to use SQL, how to scale it honestly, and the architectural patterns that make SQL the backbone of production systems.
 > **Also see**: [Databases & Query Performance](01-databases-query-performance.md) (db-01–db-06), [SQL Query Optimization](14-sql-query-optimization.md) (sql-01–sql-05), [Concurrency & Transactions](02-concurrency-transactions.md) (tx-01–tx-04)

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Lighthouse Overview"
+description: "Azure Lighthouse enables **multi-tenant management** with scalability, higher automation, and enhanced governance across resources. It allows service providers and enterprises to manage resources a..."
+tags: [governance]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Lighthouse Overview
 
 ## Table of Contents

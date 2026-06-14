@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Model Training Architecture"
+description: "Model Training Architecture defines how to **efficiently train ML models at scale** — from single-GPU experimentation to distributed training across hundreds of GPUs. It covers parallelism strategi..."
+tags: [data-analytics-ai-architecture, ai-ml-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Model Training Architecture
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture

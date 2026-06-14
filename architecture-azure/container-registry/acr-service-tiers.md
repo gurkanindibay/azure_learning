@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Registry Service Tiers"
+description: "Azure Container Registry (ACR) offers three service tiers: **Basic**, **Standard**, and **Premium**. Each tier provides different levels of storage, throughput, and features to meet varying workloa..."
+tags: [containers]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Registry Service Tiers
 
 ## Table of Contents

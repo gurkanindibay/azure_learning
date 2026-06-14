@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure SQL Managed Instance - Comprehensive Comparison Guide"
+description: "Azure SQL offers multiple deployment options to meet different application requirements, migration scenarios, and management preferences. This guide provides an in-depth comparison of **Azure SQL M..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure SQL Managed Instance - Comprehensive Comparison Guide
 
 ## Table of Contents

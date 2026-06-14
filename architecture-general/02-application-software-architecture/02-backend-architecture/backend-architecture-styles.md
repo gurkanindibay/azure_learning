@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Backend Architecture Styles"
+description: "Backend architecture styles define how server-side components are designed, how they expose APIs, and how they communicate with clients and other services. Choosing the right backend architecture i..."
+tags: [application-software-architecture, backend-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Backend Architecture Styles
 
 ## Table of Contents

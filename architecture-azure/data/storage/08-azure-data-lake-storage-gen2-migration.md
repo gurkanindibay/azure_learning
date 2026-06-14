@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Data Lake Storage Gen2 - Migration and Data Transfer"
+description: "Azure Data Lake Storage Gen2 is the result of converging the capabilities of Azure Data Lake Storage Gen1 with Azure Blob Storage. It provides a hierarchical file system optimized for big data anal..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Data Lake Storage Gen2 - Migration and Data Transfer
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "API Architecture"
+description: "API (Application Programming Interface) architecture defines how APIs are designed, built, deployed, and managed. It establishes the standards and patterns for creating consistent, scalable, and se..."
+tags: [integration-communication-architecture, api]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # API Architecture
 
 ## Table of Contents

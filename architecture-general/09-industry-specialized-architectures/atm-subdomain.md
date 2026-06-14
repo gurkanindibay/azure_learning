@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "ATM Subdomain - Payment Systems"
+description: "The ATM (Automated Teller Machine) subdomain manages all ATM-related operations including cash withdrawals, deposits, balance inquiries, and mini-statement generation. This domain ensures secure, r..."
+tags: [industry-specialized-architectures]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # ATM Subdomain - Payment Systems
 
 ## Overview

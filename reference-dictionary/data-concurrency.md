@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "Data, Concurrency & Transactions"
+description: "The four guarantees of a reliable database transaction:"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Data, Concurrency & Transactions
 
 > **Domain**: Database transactions, isolation levels, locking, distributed transactions, and sharding.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

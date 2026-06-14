@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Concurrency & Transactions"
+description: "- Money is involved (double-spend risk)"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 2. Concurrency & Transactions
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #5–8
 
 ---

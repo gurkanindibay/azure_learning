@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "ReaderWriterLockSlim"
+description: "Optimizes scenarios with many readers and few writers. Allows multiple concurrent readers but exclusive writer access."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # ReaderWriterLockSlim
 
 Optimizes scenarios with many readers and few writers. Allows multiple concurrent readers but exclusive writer access.
@@ -775,4 +783,4 @@ _cache.TryAdd(key, value);
 - Always exit locks in finally blocks
 - Consider ConcurrentDictionary for simpler scenarios
 
-**Next:** [Events (ManualReset & AutoReset)](./09-Events.md) | **Previous:** [Monitor and Lock](./07-Monitor-Lock.md) | **Back to:** [README](./README.md)
+**Next:** [Events (ManualReset & AutoReset)](./09-Events.md) | **Previous:** [Monitor and Lock](./07-Monitor-Lock.md) | **Back to:** [README](./index.md)

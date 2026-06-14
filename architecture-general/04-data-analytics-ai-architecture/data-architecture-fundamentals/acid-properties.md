@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "ACID Properties"
+description: "ACID is an acronym representing four key properties that guarantee reliable processing of database transactions. These properties ensure data validity despite errors, power failures, or other failu..."
+tags: [data-analytics-ai-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # ACID Properties
 
 ## Overview

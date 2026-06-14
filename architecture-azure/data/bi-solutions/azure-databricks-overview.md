@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Databricks Overview"
+description: "Azure Databricks is a unified analytics platform optimized for the Microsoft Azure cloud services platform. It provides a collaborative environment for data engineers, data scientists, and machine ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Databricks Overview
 
 Azure Databricks is a unified analytics platform optimized for the Microsoft Azure cloud services platform. It provides a collaborative environment for data engineers, data scientists, and machine learning engineers to work together on big data and AI projects.

@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "AI/ML, LLM & Agentic AI"
+description: "A **Large Language Model** — a foundation model that generates text probabilistically from training data. LLMs power chatbots, code assistants, and AI agents."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # AI/ML, LLM & Agentic AI
 
 > **Domain**: LLM infrastructure, RAG architecture, AI agents, prompt engineering, and AI-assisted development.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

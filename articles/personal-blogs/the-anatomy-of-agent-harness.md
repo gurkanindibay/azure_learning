@@ -1,3 +1,10 @@
+---
+type: Article
+title: "The Anatomy of an Agent Harness"
+description: "https://x.com/akshay_pachaar/status/2041146899319971922"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # The Anatomy of an Agent Harness
 
 ![Agent harness title card: "If you're not the model, you're the harness"](images/agent-harness-title.png)

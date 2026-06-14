@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Event Consumer Patterns"
+description: "Event consumer patterns address reliability, throughput, and state management challenges when consuming from high-throughput event streams. These patterns apply to any ordered-log event system (Kaf..."
+tags: [integration-communication-architecture, event-driven, patterns]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Event Consumer Patterns
 
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging — Consumer Reliability & Performance Patterns (see [architecture_taxonomy_reference.md](../../../../10-practicality-taxonomy/architecture_taxonomy_reference.md))

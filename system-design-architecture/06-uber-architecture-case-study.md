@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Uber Architecture Case Study: Key Takeaways"
+description: "**Architecture pattern**: **Staged Event-Driven Architecture (SEDA)** — a network of stages connected by queues (Kafka), where each stage is independently tunable. This is a **Kappa Architecture** ..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 6. Uber Architecture Case Study: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [Uber Architecture — 5-Part Series](../../articles/medium/uber-architecture/) — by Simranjeet Singh (Mar 2026)  
 > **Purpose**: Extract reusable architectural patterns, tradeoffs, and strategies from Uber's real-time GPS tracking system at 83,000 writes/sec.
 

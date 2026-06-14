@@ -1,3 +1,10 @@
+---
+type: SRE Guide
+title: "Predictive SRE: From Reactive to Proactive Reliability"
+description: "<img src=\"infographics/predictive_sre.png\" alt=\"Predictive SRE Infographic\" width=\"600\" />"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Predictive SRE: From Reactive to Proactive Reliability
 
 <img src="infographics/predictive_sre.png" alt="Predictive SRE Infographic" width="600" />

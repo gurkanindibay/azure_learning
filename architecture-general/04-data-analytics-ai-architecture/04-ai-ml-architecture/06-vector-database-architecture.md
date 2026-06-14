@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Vector Database Architecture"
+description: "Vector databases are purpose-built systems for **storing, indexing, and querying high-dimensional vector embeddings** — the numerical representations of unstructured data (text, images, audio) prod..."
+tags: [data-analytics-ai-architecture, ai-ml-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Vector Database Architecture
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture

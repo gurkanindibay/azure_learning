@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Lakehouse Architecture"
+description: "The Lakehouse is a modern data architecture that **merges the best of data lakes and data warehouses** into a single, unified platform. It brings ACID transactions, schema enforcement, and BI perfo..."
+tags: [data-analytics-ai-architecture, analytics-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Lakehouse Architecture
 
 > **Taxonomy Reference**: §4.2 Analytics Architecture

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Identity Concepts: SP, SAMI, UAMI, and Certificate Renewal Flow"
+description: "This document explains the foundational Azure identity concepts required for securing applications and services:"
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Identity Concepts: SP, SAMI, UAMI, and Certificate Renewal Flow
 ## Table of Contents
 

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Observability Tools and Platforms"
+description: "A collection of APIs, SDKs, and tools for instrumenting, generating, collecting, and exporting telemetry data (metrics, logs, traces)."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Observability Tools and Platforms
 
 ## Open Standards and Frameworks

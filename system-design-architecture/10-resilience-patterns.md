@@ -1,3 +1,10 @@
+---
+type: System Design
+title: "Resilience Patterns: Surviving Chaos at Scale"
+description: "Users stop receiving OTPs during login spikes. The failure is an **amplification feedback loop**:"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Resilience Patterns: Surviving Chaos at Scale
 
 > **Source**: [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #20, #21, #22  

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure DNS"
+description: "Azure DNS is a hosting service for DNS domains that provides name resolution using Microsoft Azure infrastructure. By hosting your domains in Azure, you can manage your DNS records using the same c..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure DNS
 
 ## Overview

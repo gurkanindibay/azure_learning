@@ -1,3 +1,10 @@
+---
+type: Article
+title: "I Thought Apache Iggy Was Just Another Kafka Clone. I Was Wrong."
+description: "A few weeks ago, I stumbled across a discussion about a project called **Apache Iggy**."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # I Thought Apache Iggy Was Just Another Kafka Clone. I Was Wrong.
 
 ## What I discovered after researching one of the fastest streaming platforms being built today 🚀

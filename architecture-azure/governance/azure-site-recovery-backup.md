@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Site Recovery and Azure Backup"
+description: "**Azure Site Recovery** and **Azure Backup** are complementary services that help organizations meet their business continuity and disaster recovery (BCDR) objectives. While they both protect workl..."
+tags: [governance]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Site Recovery and Azure Backup
 
 ## Table of Contents

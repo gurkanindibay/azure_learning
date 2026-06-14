@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Event Hubs Detailed Reference"
+description: "Azure Event Hubs is a big data streaming platform and event ingestion service. It can receive and process millions of events per second. Data sent to an event hub can be transformed and stored usin..."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Event Hubs Detailed Reference
 ## Table of Contents
 

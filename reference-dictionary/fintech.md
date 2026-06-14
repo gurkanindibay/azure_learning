@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "Fintech-Specific Terms"
+description: "The continuous process of verifying that **internal records match external reality** — comparing the ledger against payment rails, settlement files, and provider responses. Reconciliation detects m..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Fintech-Specific Terms
 
 > **Domain**: Financial technology patterns — reconciliation, limits, risk decisions, ledger design, and financial state management.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

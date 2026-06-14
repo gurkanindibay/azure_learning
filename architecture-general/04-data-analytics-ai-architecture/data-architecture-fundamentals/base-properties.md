@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "BASE Properties"
+description: "BASE is an acronym representing an alternative approach to ACID for distributed systems. It prioritizes availability and partition tolerance over immediate consistency."
+tags: [data-analytics-ai-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # BASE Properties
 
 ## Overview

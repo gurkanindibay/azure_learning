@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Migrate"
+description: "**Azure Migrate** is a centralized hub that provides tools and services to discover, assess, and migrate on-premises workloads to Azure. It simplifies the migration journey by offering a unified pl..."
+tags: [migration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Migrate
 
 ## Table of Contents

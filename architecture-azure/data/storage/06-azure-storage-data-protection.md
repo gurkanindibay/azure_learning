@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Storage Data Protection Features"
+description: "Azure Storage provides multiple data protection features to help you recover from accidental deletion or corruption. Understanding the differences between these features is crucial for both exam pr..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Storage Data Protection Features
 
 ## Table of Contents

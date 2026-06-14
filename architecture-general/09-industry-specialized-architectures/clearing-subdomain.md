@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Clearing Subdomain - Payment Systems"
+description: "The Clearing subdomain manages the settlement and reconciliation of payment transactions between financial institutions, merchants, and cardholders. This domain ensures accurate fund transfers, tra..."
+tags: [industry-specialized-architectures]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Clearing Subdomain - Payment Systems
 
 ## Overview

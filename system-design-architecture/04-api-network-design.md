@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "APIs & Network Design"
+description: "Versioning approach:"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 4. APIs & Network Design
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16  
 > **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
 

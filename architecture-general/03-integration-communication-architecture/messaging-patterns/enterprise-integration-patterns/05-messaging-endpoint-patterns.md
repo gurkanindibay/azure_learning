@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Messaging Endpoint Patterns"
+description: "Patterns for connecting applications to messaging systems."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Messaging Endpoint Patterns
 
 Patterns for connecting applications to messaging systems.
@@ -238,4 +246,4 @@ A payment processor tracks processed transaction IDs—if a network retry causes
 
 - [Message Transformation Patterns](./04-message-transformation-patterns.md)
 - [System Management Patterns](./06-system-management-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

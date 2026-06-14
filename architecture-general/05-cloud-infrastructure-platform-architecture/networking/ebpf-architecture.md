@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "eBPF Architecture"
+description: "eBPF (extended Berkeley Packet Filter) is a technology that allows sandboxed programs to run directly in the Linux kernel without modifying kernel source code or loading kernel modules. Originally ..."
+tags: [cloud-infrastructure-platform-architecture, networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # eBPF Architecture
 
 > **Taxonomy Reference**: §5.2 Infrastructure Architecture

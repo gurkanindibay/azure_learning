@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Functions - Configuration Files"
+description: "Azure Functions use configuration files to define function behavior, triggers, bindings, and application settings. Understanding these configuration files is essential for developing, deploying, an..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Functions - Configuration Files
 
 ## Overview

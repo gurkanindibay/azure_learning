@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Batch"
+description: "**Azure Batch** is a managed service that enables you to run large-scale parallel and high-performance computing (HPC) batch jobs in Azure. It handles job scheduling and compute resource management..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Batch
 
 ## Table of Contents

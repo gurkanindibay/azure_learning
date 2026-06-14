@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Event Storming"
+description: "**Event Storming** is a collaborative workshop technique for discovering and modeling complex business domains. Created by **Alberto Brandolini**, it brings together domain experts and developers t..."
+tags: [application-software-architecture, domain-driven-design]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Event Storming
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Barrier"
+description: "Synchronizes a group of threads at a specific point, useful for phased algorithms."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Barrier
 
 Synchronizes a group of threads at a specific point, useful for phased algorithms.
@@ -619,4 +627,4 @@ Parallel.For(0, workerCount, i =>
 - Always dispose when done
 - Use timeouts to avoid deadlocks
 
-**Next:** [CountdownEvent](./11-CountdownEvent.md) | **Previous:** [Events (ManualReset & AutoReset)](./09-Events.md) | **Back to:** [README](./README.md)
+**Next:** [CountdownEvent](./11-CountdownEvent.md) | **Previous:** [Events (ManualReset & AutoReset)](./09-Events.md) | **Back to:** [README](./index.md)

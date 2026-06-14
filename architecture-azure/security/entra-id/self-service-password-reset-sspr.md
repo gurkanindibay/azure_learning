@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Self-Service Password Reset (SSPR) in Microsoft Entra ID"
+description: "Self-Service Password Reset (SSPR) is a Microsoft Entra ID (formerly Azure Active Directory) feature that enables users to reset their passwords without contacting IT support. SSPR reduces helpdesk..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Self-Service Password Reset (SSPR) in Microsoft Entra ID
 
 ## Overview

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB High Availability Options"
+description: "Azure Cosmos DB is designed from the ground up for **global distribution** and **high availability**. It provides multiple configuration options to achieve different levels of availability, from 99..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cosmos DB High Availability Options
 
 ## Table of Contents

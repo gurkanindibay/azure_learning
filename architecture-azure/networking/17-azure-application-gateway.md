@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Application Gateway"
+description: "**Layer/scope:** Regional Layer 7 load balancer/web application firewall with TLS termination."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Application Gateway
 
 ## Overview

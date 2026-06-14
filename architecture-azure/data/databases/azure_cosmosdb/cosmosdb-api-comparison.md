@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB API Comparison Guide"
+description: "Azure Cosmos DB is a fully managed, globally distributed, multi-model database service that supports multiple APIs. Each API is optimized for specific data models and use cases. This document provi..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cosmos DB API Comparison Guide
 
 ## Overview

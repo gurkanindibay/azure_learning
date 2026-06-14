@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Error Budgets: Balancing Reliability and Velocity"
+description: "An **error budget** is the maximum amount of unreliability you can tolerate while still meeting your SLO. It transforms the tension between \"ship features fast\" and \"keep systems reliable\" into a d..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Error Budgets: Balancing Reliability and Velocity
 
 ## Table of Contents

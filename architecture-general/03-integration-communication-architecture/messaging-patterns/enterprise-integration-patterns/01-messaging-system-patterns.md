@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Messaging System Patterns"
+description: "Core patterns for messaging infrastructure that enable communication between distributed systems."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Messaging System Patterns
 
 Core patterns for messaging infrastructure that enable communication between distributed systems.
@@ -148,4 +156,4 @@ A microservices application uses a standardized endpoint library that handles co
 
 - [Message Construction Patterns](./02-message-construction-patterns.md)
 - [Message Routing Patterns](./03-message-routing-patterns.md)
-- [EIP Overview](./README.md)
+- [EIP Overview](./index.md)

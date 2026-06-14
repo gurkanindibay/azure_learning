@@ -1,3 +1,9 @@
+---
+type: Unstructured Note
+description: "Go vs Java for Microservices: We Tried Both, Here’s What Happened"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 Go vs Java for Microservices: We Tried Both, Here’s What Happened
 Real production battle scars from running the same service in two languages
 CodePulse

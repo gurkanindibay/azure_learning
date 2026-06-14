@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Frontend Architecture Styles"
+description: "Frontend architecture styles define how user interfaces are structured, rendered, and delivered to users. Choosing the right frontend architecture impacts:"
+tags: [application-software-architecture, frontend-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Frontend Architecture Styles
 
 ## Table of Contents

@@ -1,9 +1,17 @@
+---
+type: Azure Service
+title: "Azure ExpressRoute & BGP Routing Guide"
+description: "See [README](./index.md) for overview. See also [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md)."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure ExpressRoute & BGP Routing Guide
 
 > **General Pattern**: [Hybrid Cloud Architecture](../../architecture-general/05-cloud-infrastructure-platform-architecture/)
 > **Taxonomy Reference**: §5 Cloud, Infrastructure & Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))
 
-See [README](./README.md) for overview. See also [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md).
+See [README](./index.md) for overview. See also [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md).
 
 ## Table of Contents
 

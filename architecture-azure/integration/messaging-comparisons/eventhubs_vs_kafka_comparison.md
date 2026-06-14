@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Event Hubs vs Apache Kafka — Comparison Guide"
+description: "This document provides a structured comparison between **Azure Event Hubs** and **Apache Kafka**, including architecture, use cases, differences, and best practices."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Event Hubs vs Apache Kafka — Comparison Guide
 ## Table of Contents
 

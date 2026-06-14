@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra Domain Services"
+description: "**Microsoft Entra Domain Services** (formerly Azure AD Domain Services) is a managed domain service that provides Active Directory-compatible services in Azure without the need to deploy, manage, o..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra Domain Services
 
 ## Table of Contents

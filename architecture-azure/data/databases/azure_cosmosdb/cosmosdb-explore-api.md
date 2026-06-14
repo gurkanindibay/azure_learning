@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Explore Microsoft .NET SDK v3 for Azure Cosmos DB"
+description: "This unit focuses on Azure Cosmos DB .NET SDK v3 for API for NoSQL (`Microsoft.Azure.Cosmos` NuGet package). If you're familiar with the previous version of the .NET SDK, you might be familiar with..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Explore Microsoft .NET SDK v3 for Azure Cosmos DB
 
 **Completed**  

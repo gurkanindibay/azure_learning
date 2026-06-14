@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Instances (ACI) vs Azure Container Apps (ACA)"
+description: "Before diving into Azure container services, it's important to understand the benefits of containerized applications compared to non-containerized (traditional) applications."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Instances (ACI) vs Azure Container Apps (ACA)
 ## Table of Contents
 

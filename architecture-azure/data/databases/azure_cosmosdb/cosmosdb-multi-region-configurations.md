@@ -1,3 +1,10 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB Multi-Region Configurations"
+description: "Azure Cosmos DB provides multiple configuration options for distributing data across regions to achieve high availability, low latency, and disaster recovery. Understanding these configurations is ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
 
 # Azure Cosmos DB Multi-Region Configurations
 

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Integration Architecture Overview"
+description: "Integration architecture defines how different systems, applications, and services communicate and share data within an enterprise or across organizational boundaries. It establishes the patterns, ..."
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Integration Architecture Overview
 
 ## Table of Contents

@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Databases & Query Performance"
+description: "**Tradeoff**: UUIDv7 leaks creation time (privacy concern for user-facing IDs). ULID is case-insensitive, UUIDv7 is standard (RFC 9562)."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 1. Databases & Query Performance
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #1–4  
 > **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
 

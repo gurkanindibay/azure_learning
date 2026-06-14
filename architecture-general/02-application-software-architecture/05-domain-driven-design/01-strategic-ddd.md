@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Strategic Domain-Driven Design"
+description: "**Strategic Domain-Driven Design** focuses on the high-level structure of a software system. It provides patterns and practices for decomposing a large domain into manageable parts and defining how..."
+tags: [application-software-architecture, domain-driven-design]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Strategic Domain-Driven Design
 
 ## Table of Contents

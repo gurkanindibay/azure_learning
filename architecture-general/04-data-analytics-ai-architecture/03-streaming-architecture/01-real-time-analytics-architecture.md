@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Real-Time Analytics Architecture"
+description: "Real-Time Analytics Architecture enables **sub-second insights** on live data streams — processing, enriching, and aggregating events as they arrive rather than waiting for batch windows. It powers..."
+tags: [data-analytics-ai-architecture, streaming-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Real-Time Analytics Architecture
 
 > **Taxonomy Reference**: §4.3 Streaming & Real-Time Architecture

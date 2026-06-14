@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "CQRS, Event Sourcing & Event-Driven Patterns"
+description: "**Command Query Responsibility Segregation** — an architectural pattern that separates write operations (commands, which change state) from read operations (queries, which serve data)."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # CQRS, Event Sourcing & Event-Driven Patterns
 
 > **Domain**: Command/query separation, event-driven architecture, projections, and related patterns.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

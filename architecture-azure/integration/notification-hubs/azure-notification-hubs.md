@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Notification Hubs"
+description: "Azure Notification Hubs is a massively scalable push notification engine that enables you to send push notifications to any platform (iOS, Android, Windows, etc.) from any backend (cloud or on-prem..."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Notification Hubs
 
 ## Overview

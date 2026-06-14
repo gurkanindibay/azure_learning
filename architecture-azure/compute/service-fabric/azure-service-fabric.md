@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Fabric"
+description: "**Azure Service Fabric** is a distributed systems platform that makes it easy to package, deploy, and manage scalable and reliable microservices and containers. It is designed for building and mana..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Fabric
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Network Security Services Comparison"
+description: "Azure provides multiple network security services that operate at different layers and serve complementary purposes. Understanding their differences is critical for designing a defense-in-depth arc..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Network Security Services Comparison
 
 > **Taxonomy Reference**: §5 Cloud & Infrastructure / Platform Architecture (see [architecture_taxonomy_reference.md](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md))

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure DMZ (Demilitarized Zone) Implementation"
+description: "A **Demilitarized Zone (DMZ)** is an isolated network segment that sits between an untrusted external network (the internet) and your trusted internal network. It hosts services that must be reacha..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure DMZ (Demilitarized Zone) Implementation
 
 > **General Pattern**: [6.3.1 DMZ Architecture](../../architecture-general/06-security-architecture/6.3-network-security/6.3.1-dmz-architecture.md)

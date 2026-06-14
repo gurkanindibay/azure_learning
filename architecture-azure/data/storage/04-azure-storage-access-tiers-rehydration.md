@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Blob Storage Access Tiers"
+description: "Azure Blob Storage offers different access tiers to help you store blob object data in the most cost-effective manner based on how frequently the data is accessed. The access tier of a blob can be ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Blob Storage Access Tiers
 
 ## Table of Contents

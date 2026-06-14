@@ -1,7 +1,14 @@
+---
+type: Reference
+title: ".NET Multithreading & Concurrency"
+description: "**Task-based Asynchronous Pattern** — the modern .NET async pattern using `Task`/`Task<T>` with `async`/`await`. TAP is the **only recommended async pattern** for new .NET development."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # .NET Multithreading & Concurrency
 
 > **Domain**: .NET threading models, async patterns, synchronization primitives, and concurrency best practices.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

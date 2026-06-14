@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Well-Known Metrics Catalog"
+description: "This document catalogs **well-known, commonly used metrics** across different domains of software engineering, operations, and business. Each metric includes its category, typical usage, and applic..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Well-Known Metrics Catalog
 
 ## Table of Contents

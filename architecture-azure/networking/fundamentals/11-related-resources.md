@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Networking Fundamentals - Related Resources"
+description: "- [ExpressRoute Global Reach](https://learn.microsoft.com/azure/expressroute/expressroute-global-reach)"
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Networking Fundamentals - Related Resources
 
 ## Related Resources

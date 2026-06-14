@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Event Grid Detailed Reference"
+description: "Azure Event Grid is a highly scalable, serverless event broker that lets you integrate applications using events. It simplifies building event-driven architectures."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Event Grid Detailed Reference
 ## Table of Contents
 

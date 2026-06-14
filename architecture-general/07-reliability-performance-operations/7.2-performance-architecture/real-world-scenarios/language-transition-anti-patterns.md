@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Language Transition Anti-Patterns: A Java to Go Case Study"
+description: "This document explores the common pitfalls of language transitions in microservices, using a real-world case study of a team that rewrote a production Java service in Go. The key lesson: **performa..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Language Transition Anti-Patterns: A Java to Go Case Study
 
 > **Taxonomy Reference**: §7.2 Performance Architecture (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))

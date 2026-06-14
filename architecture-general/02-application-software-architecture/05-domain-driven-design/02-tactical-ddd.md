@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Tactical Domain-Driven Design"
+description: "**Tactical Domain-Driven Design** provides the building blocks for implementing a rich domain model within a bounded context. While Strategic DDD focuses on the big picture, Tactical DDD focuses on..."
+tags: [application-software-architecture, domain-driven-design]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Tactical Domain-Driven Design
 
 ## Table of Contents

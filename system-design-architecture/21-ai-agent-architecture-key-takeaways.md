@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "AI Agent Architecture — Key Takeaways"
+description: "User Request"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 21. AI Agent Architecture — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [Hap Bilgi 15: AI Agent Mimarisi — Bir Yapay Zekâ Ajanı Nasıl Çalışır?](../../articles/linkedin/llm-agents.md)  
 > **Also see**: [AI/ML Infrastructure](11-ai-ml-infrastructure.md), [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md)  
 > **Taxonomy Reference**: §12 AI Applications

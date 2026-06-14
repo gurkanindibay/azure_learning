@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "CQRS for Fintech — Key Takeaways"
+description: "Can this request be accepted?"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 25. CQRS for Fintech — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [CQRS For Fintech In 2026: Ledgers, Limits, Risk, And The Fight Over Truth](https://medium.com/@the_atomic_architect/cqrs-fintech-2026-ledger-truth-bdbbcfeb65dc) — The Atomic Architect, Apr 2026 · [Local copy](../articles/medium/cqrs-for-fintech-2026.md)
 > **Purpose**: Extract practical CQRS boundaries for money-facing systems — separating command authority from query flexibility, protecting the ledger as the single source of financial truth, and preventing one model from becoming a junk drawer for the whole company.
 > **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [Message Brokers & Async](05-message-brokers-async.md), [Resilience Patterns](10-resilience-patterns.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md)

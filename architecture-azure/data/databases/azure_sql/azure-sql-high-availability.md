@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure SQL High Availability Options"
+description: "Azure SQL provides comprehensive high availability options across its product family. The HA architecture and capabilities differ based on the deployment option (SQL Database, Managed Instance, or ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure SQL High Availability Options
 
 ## Table of Contents

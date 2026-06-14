@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "APM (Asynchronous Programming Model)"
+description: "**Oldest Pattern** - Also known as the \"Begin/End\" pattern, found in legacy .NET code."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # APM (Asynchronous Programming Model)
 
 **Oldest Pattern** - Also known as the "Begin/End" pattern, found in legacy .NET code.
@@ -505,4 +513,4 @@ stream.BeginRead(buffer, 0, buffer.Length, ar =>
 - Never create new APM code - use TAP instead
 - APM is largely replaced by modern async methods in .NET Core/.NET 5+
 
-**Next:** [Multithreading Concepts](./04-Multithreading-Concepts.md) | **Previous:** [EAP Pattern](./02-EAP-Pattern.md) | **Back to:** [README](./README.md)
+**Next:** [Multithreading Concepts](./04-Multithreading-Concepts.md) | **Previous:** [EAP Pattern](./02-EAP-Pattern.md) | **Back to:** [README](./index.md)

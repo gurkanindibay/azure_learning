@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Multithreading Concepts"
+description: "Understanding the fundamentals of multithreading in .NET."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Multithreading Concepts
 
 Understanding the fundamentals of multithreading in .NET.
@@ -550,4 +558,4 @@ Parallel.For(0, 100, i => Interlocked.Increment(ref counter));
 - Always consider **thread safety** when sharing state
 - Use **concurrent collections** for thread-safe data structures
 
-**Next:** [Semaphore](./05-Semaphore.md) | **Previous:** [APM Pattern](./03-APM-Pattern.md) | **Back to:** [README](./README.md)
+**Next:** [Semaphore](./05-Semaphore.md) | **Previous:** [APM Pattern](./03-APM-Pattern.md) | **Back to:** [README](./index.md)

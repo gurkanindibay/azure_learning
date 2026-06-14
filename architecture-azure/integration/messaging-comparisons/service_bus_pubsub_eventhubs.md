@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus Pub/Sub vs Event Hubs"
+description: "A Structured Technical Comparison Document"
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus Pub/Sub vs Event Hubs  
 ## Table of Contents
 

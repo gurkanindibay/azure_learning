@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus Service Tiers"
+description: "Azure Service Bus offers three pricing tiers: **Basic**, **Standard**, and **Premium**. Each tier is designed for different messaging scenarios, with varying features, throughput capabilities, and ..."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus Service Tiers
 
 ## Table of Contents

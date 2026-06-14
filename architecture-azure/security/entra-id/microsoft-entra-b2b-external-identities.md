@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra B2B External Identities"
+description: "Microsoft Entra B2B (Business-to-Business) collaboration enables organizations to securely share applications and services with guest users from other organizations while maintaining control over c..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra B2B External Identities
 
 ## Overview

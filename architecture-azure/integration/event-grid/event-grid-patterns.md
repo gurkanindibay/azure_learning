@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Event Grid Messaging Patterns"
+description: "Azure Event Grid is a fully managed event routing service that enables event-driven architectures using a publish-subscribe model."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Event Grid Messaging Patterns
 
 Azure Event Grid is a fully managed event routing service that enables event-driven architectures using a publish-subscribe model.

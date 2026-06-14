@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Queue Storage"
+description: "Azure Queue Storage is a service for storing large numbers of messages that can be accessed from anywhere in the world via authenticated HTTP or HTTPS calls. A single queue message can be up to 64 ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Queue Storage
 ## Table of Contents
 

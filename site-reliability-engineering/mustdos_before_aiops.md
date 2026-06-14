@@ -1,3 +1,10 @@
+---
+type: SRE Guide
+title: "Before AIOps: What High-Maturity SRE Teams Do First"
+description: "Many organizations are investing in AIOps to improve reliability. But there is a common mistake."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Before AIOps: What High-Maturity SRE Teams Do First
 
 ![AIOps prerequisites dependency diagram](../infographics/aiops_dependencies.png)

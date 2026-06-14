@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Event Hubs Service Tiers"
+description: "Azure Event Hubs offers four pricing tiers: **Basic**, **Standard**, **Premium**, and **Dedicated**. Each tier is designed for different event streaming scenarios with varying throughput capabiliti..."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Event Hubs Service Tiers
 
 ## Table of Contents

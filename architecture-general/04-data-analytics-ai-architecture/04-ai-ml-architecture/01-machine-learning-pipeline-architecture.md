@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Machine Learning Pipeline Architecture"
+description: "A Machine Learning Pipeline is an end-to-end, automated workflow that orchestrates the full ML lifecycle — from raw data ingestion through model deployment. It ensures reproducibility, scalability,..."
+tags: [data-analytics-ai-architecture, ai-ml-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Machine Learning Pipeline Architecture
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture

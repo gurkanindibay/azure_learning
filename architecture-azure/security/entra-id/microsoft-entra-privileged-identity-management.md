@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra Privileged Identity Management (PIM)"
+description: "Microsoft Entra Privileged Identity Management (PIM) is a service within Microsoft Entra ID (formerly Azure AD) that enables you to manage, control, and monitor access to important resources in you..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra Privileged Identity Management (PIM)
 
 ## Overview

@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Your Circuit Breaker Is Lying to You"
+description: "The dashboard says **CLOSED**. Your users are still suffering."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Your Circuit Breaker Is Lying to You
 
 > **Author**: The Atomic Architect · **Published**: Apr 23, 2026 · **7 min read**

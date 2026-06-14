@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure App Service Authentication (Easy Auth)"
+description: "Azure App Service provides built-in authentication and authorization support (commonly called \"Easy Auth\"), allowing you to sign in users and access data by writing minimal or no code in your web a..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure App Service Authentication (Easy Auth)
 
 ## Table of Contents

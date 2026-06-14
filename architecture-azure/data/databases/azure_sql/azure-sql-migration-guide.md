@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure SQL Migration Guide"
+description: "Migrating SQL Server databases to Azure requires careful planning and selection of the right tools. This guide provides comprehensive information about available migration tools, best practices, an..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure SQL Migration Guide
 
 ## Table of Contents

@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Uber Architecture – Part 2: The Ingestion Edge"
+description: "*By Simranjeet Singh · 12 min read · Mar 22, 2026*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Uber Architecture – Part 2: The Ingestion Edge
 
 *By Simranjeet Singh · 12 min read · Mar 22, 2026*

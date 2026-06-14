@@ -14,7 +14,7 @@ From any file in the repo, use a relative path:
 From system-design-architecture/:  [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
 From architecture-azure/:          [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
 From articles/medium/:              [Projection](../../reference-dictionary/cqrs-event-driven.md#projection)
-From repo root (README.md):         [Projection](reference-dictionary/cqrs-event-driven.md#projection)
+From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-driven.md#projection)
 ```
 
 ### Adding a New Term

@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "HSM Integration Bottlenecks — Key Takeaways"
+description: "Authorization target SLA:  200 ms"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 24. HSM Integration Bottlenecks — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [HSM Integration Creates Architectural Bottlenecks](../../articles/medium/hsm-integration-creates-bottleneck.md) — Umut Akbulut, Mar 2026
 > **Purpose**: Extract the cryptographic hardware constraints that create architectural bottlenecks in high-volume payment systems — why HSM cannot be treated like any other software component.
 > **Also see**: [Resilience Patterns](10-resilience-patterns.md) (`resilience-01`–`resilience-06`), [Concurrency & Transactions](02-concurrency-transactions.md), [Azure Service Mapping](07-azure-service-mapping.md)

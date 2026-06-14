@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Application Insights"
+description: "**Application Insights** is an extensible Application Performance Management (APM) service for developers and DevOps professionals. It helps you monitor your live applications and automatically det..."
+tags: [observability]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Application Insights
 
 ## Table of Contents

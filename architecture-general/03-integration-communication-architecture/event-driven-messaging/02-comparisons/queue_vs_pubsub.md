@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Message Queues vs Pub-Sub"
+description: "Most people don’t understand the difference between **Message Queues** and **Pub-Sub**."
+tags: [integration-communication-architecture, event-driven, comparisons]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Message Queues vs Pub-Sub
 ## Table of Contents
 

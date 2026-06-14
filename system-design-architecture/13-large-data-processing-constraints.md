@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Large Data Processing Under Constraints"
+description: "try (BufferedReader reader = new BufferedReader(new FileReader(\"large.csv\"))) {"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 13. Large Data Processing Under Constraints
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: ["I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me](../articles/medium/10gb-csv-512mb-ram-interview-question.md)  
 > **Taxonomy Reference**: §7.2 Performance & Scalability, §7.1 Reliability & Resilience
 

@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "CountdownEvent"
+description: "Signals when a counter reaches zero, useful for waiting on multiple operations."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # CountdownEvent
 
 Signals when a counter reaches zero, useful for waiting on multiple operations.
@@ -735,4 +743,4 @@ await Task.WhenAll(tasks);
 - Consider Task.WhenAll for pure async scenarios
 - Always dispose when done
 
-**Next:** [Best Practices](./12-Best-Practices.md) | **Previous:** [Barrier](./10-Barrier.md) | **Back to:** [README](./README.md)
+**Next:** [Best Practices](./12-Best-Practices.md) | **Previous:** [Barrier](./10-Barrier.md) | **Back to:** [README](./index.md)

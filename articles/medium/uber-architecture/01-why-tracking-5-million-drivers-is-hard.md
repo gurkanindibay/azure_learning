@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Uber Architecture – Part 1: Why Tracking 5 Million Drivers Every Second Is One of Tech's Hardest Problems"
+description: "*By Simranjeet Singh · 8 min read · Mar 19, 2026*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Uber Architecture – Part 1: Why Tracking 5 Million Drivers Every Second Is One of Tech's Hardest Problems
 
 *By Simranjeet Singh · 8 min read · Mar 19, 2026*

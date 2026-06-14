@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Analytics and BI Tools Comparison"
+description: "This document provides a comprehensive comparison of Azure's analytics and business intelligence tools: Azure Data Explorer, Azure Synapse Analytics, Azure Databricks, Log Analytics, and Microsoft ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Analytics and BI Tools Comparison
 
 This document provides a comprehensive comparison of Azure's analytics and business intelligence tools: Azure Data Explorer, Azure Synapse Analytics, Azure Databricks, Log Analytics, and Microsoft Fabric.

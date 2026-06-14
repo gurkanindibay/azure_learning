@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure AD / Microsoft Entra ID Conditional Access Policies"
+description: "**Microsoft Entra ID Conditional Access** (formerly Azure AD Conditional Access) is a zero-trust security feature that enables organizations to enforce access policies based on various signals and ..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure AD / Microsoft Entra ID Conditional Access Policies
 
 ## Table of Contents

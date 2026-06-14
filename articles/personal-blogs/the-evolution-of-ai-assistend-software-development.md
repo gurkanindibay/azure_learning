@@ -1,3 +1,10 @@
+---
+type: Article
+title: "The Five Levels: From Spicy Autocomplete to the Dark Factory"
+description: "In my last post, I wrote about **technical deflation**. We're seeing the cost of code is dropping so fast that we need to change our tech debt payment plans. The smart teams are deferring payment o..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # The Five Levels: From Spicy Autocomplete to the Dark Factory
 
 > **Author**: Dan Shapiro — Glowforge CEO, Wharton Research Fellow, Robot Turtles creator  

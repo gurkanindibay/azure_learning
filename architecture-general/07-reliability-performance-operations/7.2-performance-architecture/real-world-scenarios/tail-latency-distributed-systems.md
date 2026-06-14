@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Tail Latency and Distributed Systems Performance"
+description: "In distributed systems, **tail latency** (p99, p999) often matters more than median latency for overall throughput. This document explores how variance in response times—not just average speed—dete..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Tail Latency and Distributed Systems Performance
 
 > **Taxonomy Reference**: §7.2 Performance Architecture (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))

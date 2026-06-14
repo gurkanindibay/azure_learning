@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Message Brokers & Asynchronous Processing"
+description: "A[Need async messaging?] --> B{Replay history required?}"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 5. Message Brokers & Asynchronous Processing
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #17–20  
 > **Also see**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md) — Producer acks, offset modes, rebalances, EOS
 

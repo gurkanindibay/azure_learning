@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Resource Management Hierarchy"
+description: "Azure uses a hierarchical structure to organize and manage cloud resources. Understanding this hierarchy is crucial for:"
+tags: [governance]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Resource Management Hierarchy
 
 ## Table of Contents

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Service Bus:  Reply Trail Auditing Guide"
+description: "This document explains how to implement a reply trail auditing solution using Azure Service Bus, particularly for scenarios like hazard notification systems where audit trails are critical."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Service Bus:  Reply Trail Auditing Guide
 
 ## Overview

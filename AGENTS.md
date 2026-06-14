@@ -73,13 +73,13 @@ cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-The hook runs only when `architecture-general/**/README.md` files are staged.
+The hook runs only when `architecture-general/**/index.md` files are staged.
 
 ---
 
 ## Testing / Validation Workflow
 
-1. After editing any `architecture-general/**/README.md`, run:
+1. After editing any `architecture-general/**/index.md`, run:
    ```bash
    python scripts/sync_taxonomy_reference.py --check
    ```
@@ -103,7 +103,7 @@ The hook runs only when `architecture-general/**/README.md` files are staged.
 
 File: `scripts/sync_taxonomy_reference.py`
 
-- Scans `architecture-general/01-*/README.md` through `architecture-general/09-*/README.md`.
+- Scans `architecture-general/01-*/index.md` through `architecture-general/09-*/index.md`.
 - Extracts H3 subsections and bullet items.
 - Generates `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md`.
 - Appends static sections for abstraction levels, architectural qualities, and naming conventions.
@@ -114,8 +114,8 @@ File: `scripts/sync_taxonomy_reference.py`
 
 File: `.github/workflows/sync-taxonomy.yml`
 
-- **On PR** (when `architecture-general/**/README.md` changes): runs `--check` and fails if stale.
-- **On push to `main`** (when `architecture-general/**/README.md` changes): if `--check` fails, regenerates and commits with `chore: auto-sync taxonomy reference [skip ci]`.
+- **On PR** (when `architecture-general/**/index.md` changes): runs `--check` and fails if stale.
+- **On push to `main`** (when `architecture-general/**/index.md` changes): if `--check` fails, regenerates and commits with `chore: auto-sync taxonomy reference [skip ci]`.
 
 ---
 
@@ -139,7 +139,7 @@ File: `.github/workflows/sync-taxonomy.yml`
 | `architecture-azure/.copilot-instructions.md` | Azure-specific service documentation guidelines |
 | `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` | Auto-generated canonical taxonomy (do not edit directly) |
 | `scripts/sync_taxonomy_reference.py` | Taxonomy sync automation |
-| `reference-dictionary/README.md` | Glossary usage, term template, and anchor conventions |
+| `reference-dictionary/index.md` | Glossary usage, term template, and anchor conventions |
 
 ---
 
@@ -148,8 +148,8 @@ File: `.github/workflows/sync-taxonomy.yml`
 - **New Azure service doc**: See `architecture-azure/.copilot-instructions.md`.
 - **New general pattern**: See `architecture-general/.copilot-instructions.md`; add `> **Taxonomy Reference**: §X.X ...`; run `python scripts/sync_taxonomy_reference.py` if you edited a README.
 - **New system design takeaway**: See `.github/copilot-instructions.md` for ID conventions and required sections.
-- **New term**: See `reference-dictionary/README.md`.
-- **Any `architecture-general/**/README.md` change**: Run `python scripts/sync_taxonomy_reference.py --check`.
+- **New term**: See `reference-dictionary/index.md`.
+- **Any `architecture-general/**/index.md` change**: Run `python scripts/sync_taxonomy_reference.py --check`.
 
 ---
 

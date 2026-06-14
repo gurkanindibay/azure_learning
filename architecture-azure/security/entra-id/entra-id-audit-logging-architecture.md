@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Entra ID Audit Logging Architecture"
+description: "Microsoft Entra ID (formerly Azure Active Directory) generates audit logs that track identity-related activities such as user creation, role assignments, sign-ins, and privilege escalations. These ..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Entra ID Audit Logging Architecture
 
 ## Overview

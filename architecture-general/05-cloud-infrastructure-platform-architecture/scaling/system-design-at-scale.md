@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "System Design at Scale: 1K vs 1M vs 10M Users"
+description: "This document outlines how system architecture evolves as your user base grows from a small MVP (1K users) to a scaling product (1M users) to enterprise-scale (10M users). Each scale requires diffe..."
+tags: [cloud-infrastructure-platform-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # System Design at Scale: 1K vs 1M vs 10M Users
 
 ## Overview

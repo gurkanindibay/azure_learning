@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Model Inference Architecture"
+description: "Model Inference Architecture defines how trained ML models **serve predictions** in production — from low-latency real-time endpoints to high-throughput batch inference. It covers serving framework..."
+tags: [data-analytics-ai-architecture, ai-ml-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Model Inference Architecture
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture

@@ -1,10 +1,8 @@
 ---
-title: "I will never walk into a backend interview without solving these 20 questions"
-author: "Emily"
-date: "2026-05-05"
-readTime: "7 min read"
-source: "Medium"
-tags: ["backend", "interview", "system-design", "databases", "caching", "concurrency", "message-brokers"]
+type: Article
+title: "I Will Never Walk Into a Backend Interview Without Solving These 20 Questions"
+description: "A practical baseline checklist of the specific technical concepts you need to understand before sitting across from a senior engineer."
+timestamp: 2026-06-14T00:00:00Z
 ---
 
 # I Will Never Walk Into a Backend Interview Without Solving These 20 Questions

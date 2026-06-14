@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "SQL Query Optimization Patterns"
+description: "-- ❌ Leading wildcard — no index on email can help"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 14. SQL Query Optimization Patterns
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [5 Query Optimization Patterns](../../articles/medium/sql-query-optimization-patterns.md) — HabibWahid, May 2026  
 > **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — db-01 through db-06, [SQL System Design](19-sql-system-design-takeaways.md) — sqld-01 (Scaling Ladder), sqld-08 (Performance Checklist)
 

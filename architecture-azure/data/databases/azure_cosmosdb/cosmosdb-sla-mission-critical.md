@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB SLA for Mission-Critical Applications"
+description: "When designing storage solutions for **mission-critical applications**, one of the most important requirements is predictable performance. This means having **Service Level Agreements (SLAs)** that..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cosmos DB SLA for Mission-Critical Applications
 
 ## Table of Contents

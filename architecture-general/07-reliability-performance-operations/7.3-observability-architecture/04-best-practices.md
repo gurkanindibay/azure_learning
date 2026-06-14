@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Observability Best Practices"
+description: "from opentelemetry import trace"
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Observability Best Practices
 
 ## 1. Instrumentation Best Practices

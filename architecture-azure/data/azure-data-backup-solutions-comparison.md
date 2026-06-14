@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Data Backup Solutions - Comprehensive Comparison"
+description: "Azure provides various backup and data protection solutions across its data services. The backup approach differs significantly based on whether the service is:"
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Data Backup Solutions - Comprehensive Comparison
 
 ## Table of Contents

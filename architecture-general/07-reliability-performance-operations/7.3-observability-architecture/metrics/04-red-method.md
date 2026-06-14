@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "The RED Method"
+description: "The **RED Method** is a monitoring methodology specifically designed for **request-driven services** (microservices, APIs, web applications). It was created by Tom Wilkie at Weave Works and focuses..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # The RED Method
 
 ## Table of Contents

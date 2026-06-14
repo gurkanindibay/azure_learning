@@ -1,3 +1,10 @@
+---
+type: Article
+title: "How to Structure Any System Design Interview in 45 Minutes"
+description: "*By Kunal Sinha · 12 min read · Dec 21, 2025*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # How to Structure Any System Design Interview in 45 Minutes
 
 *By Kunal Sinha · 12 min read · Dec 21, 2025*

@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Apache Iggy — Key Takeaways"
+description: "Traditional async runtime  →  syscalls + context switches + copying"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 27. Apache Iggy — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](README.md)
+> **Parent**: [System Design Interview Reference](index.md)
 > **Source**: [I Thought Apache Iggy Was Just Another Kafka Clone. I Was Wrong.](../articles/medium/apache-iggy.md) — The Atomic Architect, Jun 2026
 > **Purpose**: Extract the architectural signals behind Apache Iggy — why Rust-based streaming platforms are emerging, what tradeoffs they make against Kafka, and where they fit in modern infrastructure decisions.
 > **Also see**: [Message Brokers & Async](05-message-brokers-async.md) (`broker-01`–`broker-07`), [Stream Processing (Flink)](09-stream-processing-flink.md) (`flink-01`–`flink-05`), [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) (`prag-01`–`prag-08`)

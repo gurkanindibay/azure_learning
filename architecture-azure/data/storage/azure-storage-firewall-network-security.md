@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Storage Account Firewall and Virtual Network Security"
+description: "Azure Storage accounts can be secured by configuring firewall rules and virtual network access controls. This ensures that only authorized networks and services can access the storage account resou..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Storage Account Firewall and Virtual Network Security
 
 ## Overview

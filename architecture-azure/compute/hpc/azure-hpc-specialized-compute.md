@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure High Performance Computing (HPC) and Specialized Compute Solutions"
+description: "Azure provides specialized compute services designed for High Performance Computing (HPC) workloads that require massive parallel processing, custom schedulers, and dynamic resource management. Thi..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure High Performance Computing (HPC) and Specialized Compute Solutions
 
 ## Table of Contents

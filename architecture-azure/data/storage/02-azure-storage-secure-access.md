@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Secure Access to Azure Storage"
+description: "Azure Storage provides multiple layers of security to protect your data and control access. This document covers authentication methods, authorization mechanisms, and Shared Access Signatures (SAS)..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Secure Access to Azure Storage
 
 ## Table of Contents

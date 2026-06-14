@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Observability Overview"
+description: "**Observability** is the ability to understand the internal state of a system by examining its external outputs. In software systems, it's the practice of instrumenting applications and infrastruct..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Observability Overview
 
 ## What is Observability?

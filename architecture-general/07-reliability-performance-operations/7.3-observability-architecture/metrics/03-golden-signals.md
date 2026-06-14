@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "The Four Golden Signals"
+description: "The **Four Golden Signals** are a monitoring framework introduced by Google in their Site Reliability Engineering (SRE) book. They represent the most critical metrics for understanding the health o..."
+tags: [reliability-performance-operations]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # The Four Golden Signals
 
 ## Table of Contents

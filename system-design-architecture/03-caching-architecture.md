@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Caching Architecture"
+description: "def should_refresh(ttl_ms, delta=1000, beta=1.0):"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 3. Caching Architecture
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #9–12  
 > **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Request coalescing (in-flight deduplication)
 

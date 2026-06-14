@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Kafka Concepts Every Architect Must Master"
+description: "*\"Our consumers suddenly reprocessed old messages after a pod restart… and our downstream system panicked.\"*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Kafka Concepts Every Architect Must Master
 
 > **Originally published**: Jan 23, 2026 · 5 min read  

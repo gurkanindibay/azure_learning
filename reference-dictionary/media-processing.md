@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "Media Processing & Async Pipelines"
+description: "Splitting video at **keyframe (Group of Pictures) boundaries** for clean cuts. Chunks cut at keyframes can be decoded independently; chunks cut mid-GOP produce artifacts."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Media Processing & Async Pipelines
 
 > **Domain**: Video processing, adaptive streaming, parallel work distribution, and encoding infrastructure.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

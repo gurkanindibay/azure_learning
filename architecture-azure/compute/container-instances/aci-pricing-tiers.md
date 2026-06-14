@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Container Instances (ACI) - Pricing Tiers"
+description: "Azure Container Instances (ACI) uses a **pay-per-use** pricing model rather than traditional pricing tiers. You are charged based on the resources allocated to your container instances and the dura..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Container Instances (ACI) - Pricing Tiers
 
 ## Overview

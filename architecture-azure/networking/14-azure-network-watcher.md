@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Network Watcher"
+description: "Azure Network Watcher provides tools to monitor, diagnose, view metrics, and enable or disable logs for resources in an Azure virtual network. It is designed to monitor and repair the network healt..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Network Watcher
 
 Azure Network Watcher provides tools to monitor, diagnose, view metrics, and enable or disable logs for resources in an Azure virtual network. It is designed to monitor and repair the network health of IaaS (Infrastructure-as-a-Service) products which includes Virtual Machines, Virtual Networks, Application Gateways, Load balancers, etc.

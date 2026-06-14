@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cache for Redis - Scaling and Memory Options"
+description: "Azure Cache for Redis provides an in-memory data store based on Redis software. When your caching needs exceed the memory limits of a single Redis instance, Azure provides clustering capabilities t..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cache for Redis - Scaling and Memory Options
 
 ## Overview

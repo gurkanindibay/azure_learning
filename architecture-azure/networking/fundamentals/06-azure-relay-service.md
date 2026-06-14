@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Networking Fundamentals - Azure Relay Service"
+description: "**Azure Relay** is a cloud service that enables you to securely expose services running behind a firewall or NAT to the public cloud, without opening inbound firewall ports. It acts as a \"meeting p..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Networking Fundamentals - Azure Relay Service
 
 ## 7. Azure Relay Service

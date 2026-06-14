@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Credit Card Subdomain - Payment Systems"
+description: "The Credit Card subdomain manages the complete lifecycle of credit card operations within a payment ecosystem. This domain handles credit line management, transaction authorization, billing cycles,..."
+tags: [industry-specialized-architectures]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Credit Card Subdomain - Payment Systems
 
 ## Overview

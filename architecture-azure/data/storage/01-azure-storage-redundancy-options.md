@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Storage Redundancy Options"
+description: "Azure Storage always stores multiple copies of your data so that it is protected from planned and unplanned events, including:"
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Storage Redundancy Options
 
 ## Table of Contents

@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "Resilience & Fault Tolerance"
+description: "A resilience pattern that **prevvents cascading failures** by detecting when a downstream service is failing and temporarily stopping calls to it. States: **Closed** (normal), **Open** (failing, ca..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Resilience & Fault Tolerance
 
 > **Domain**: Circuit breakers, bulkheads, retries, timeouts, and resilience patterns.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

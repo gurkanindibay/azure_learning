@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "On-Premises to Cloud Migration: Strategies, Steps, and Pitfalls"
+description: "Cloud migration is the process of moving applications, data, and infrastructure from on-premises data centers to cloud platforms. While the promise of flexibility, scalability, and cost optimizatio..."
+tags: [cloud-infrastructure-platform-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # On-Premises to Cloud Migration: Strategies, Steps, and Pitfalls
 
 ## Overview

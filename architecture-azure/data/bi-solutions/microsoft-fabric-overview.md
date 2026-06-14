@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Microsoft Fabric Overview"
+description: "Microsoft Fabric is an all-in-one analytics solution for enterprises that covers everything from data movement to data science, real-time analytics, and business intelligence. It offers a comprehen..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Microsoft Fabric Overview
 
 Microsoft Fabric is an all-in-one analytics solution for enterprises that covers everything from data movement to data science, real-time analytics, and business intelligence. It offers a comprehensive suite of services including Data Factory, Data Engineering, Data Warehouse, Data Science, Real-Time Analytics, and Power BI.

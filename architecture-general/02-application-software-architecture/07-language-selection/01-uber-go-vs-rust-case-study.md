@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Uber's Go vs Rust Decision: Organizational Scale Trumps Raw Performance"
+description: "This case study examines Uber's decision to standardize on Go (Golang) instead of Rust for their backend microservices infrastructure during their hyper-growth phase (2014-2016). Despite Rust's sup..."
+tags: [application-software-architecture, language-selection]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Uber's Go vs Rust Decision: Organizational Scale Trumps Raw Performance
 
 > **Taxonomy Reference**: §2 Application & Software Architecture  

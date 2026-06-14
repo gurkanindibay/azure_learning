@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "EAP (Event-based Asynchronous Pattern)"
+description: "**Legacy Pattern** - Common in older .NET Framework code and some UI components."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # EAP (Event-based Asynchronous Pattern)
 
 **Legacy Pattern** - Common in older .NET Framework code and some UI components.
@@ -438,4 +446,4 @@ catch
 - Avoid creating new EAP code - use TAP instead
 - When maintaining legacy code, wrap EAP in TAP for better integration
 
-**Next:** [APM Pattern](./03-APM-Pattern.md) | **Previous:** [TAP Pattern](./01-TAP-Pattern.md) | **Back to:** [README](./README.md)
+**Next:** [APM Pattern](./03-APM-Pattern.md) | **Previous:** [TAP Pattern](./01-TAP-Pattern.md) | **Back to:** [README](./index.md)

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Flux GitOps on AKS"
+description: "Flux is a GitOps tool that automatically synchronizes the state of your Kubernetes cluster with configurations stored in Git repositories. It enables continuous delivery by monitoring Git repositor..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Flux GitOps on AKS
 
 ## Overview

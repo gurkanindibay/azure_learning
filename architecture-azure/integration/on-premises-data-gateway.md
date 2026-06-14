@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "On-Premises Data Gateway"
+description: "The On-premises Data Gateway is a bridge that provides secure data transfer between on-premises data sources and several Microsoft cloud services. It enables cloud services to access on-premises da..."
+tags: [integration]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # On-Premises Data Gateway
 
 The On-premises Data Gateway is a bridge that provides secure data transfer between on-premises data sources and several Microsoft cloud services. It enables cloud services to access on-premises data without requiring a VPN or exposing on-premises servers to the public internet.

@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Card Application Subdomain - Payment Systems"
+description: "The Card Application subdomain manages the complete customer journey from initial card application through approval, verification, and account setup. This domain handles credit assessments, identit..."
+tags: [industry-specialized-architectures]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Card Application Subdomain - Payment Systems
 
 ## Overview

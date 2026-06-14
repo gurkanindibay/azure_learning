@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Virtual WAN"
+description: "**Azure Virtual WAN** is a networking service that provides optimized and automated branch connectivity to, and through, Azure. It brings together many Azure networking services, such as VPN, Expre..."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Virtual WAN
 
 ## Table of Contents

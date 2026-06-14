@@ -1,3 +1,11 @@
+---
+type: Programming Guide
+title: "Monitor and Lock"
+description: "The `lock` keyword is syntactic sugar for `Monitor.Enter` and `Monitor.Exit`. Used for protecting critical sections within a single process."
+tags: [csharp, dotnet]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Monitor and Lock
 
 The `lock` keyword is syntactic sugar for `Monitor.Enter` and `Monitor.Exit`. Used for protecting critical sections within a single process.
@@ -799,4 +807,4 @@ private readonly ConcurrentDictionary<string, int> _dict =
 - Avoid external calls within locks
 - Watch for deadlocks with nested locks
 
-**Next:** [ReaderWriterLockSlim](./08-ReaderWriterLock.md) | **Previous:** [Mutex](./06-Mutex.md) | **Back to:** [README](./README.md)
+**Next:** [ReaderWriterLockSlim](./08-ReaderWriterLock.md) | **Previous:** [Mutex](./06-Mutex.md) | **Back to:** [README](./index.md)

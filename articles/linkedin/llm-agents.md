@@ -1,3 +1,10 @@
+---
+type: Article
+title: "Hap Bilgi 15: AI Agent Mimarisi — Bir Yapay Zekâ Ajanı Nasıl Çalışır?"
+description: "Son dönemde teknoloji dünyasının en popüler kavramlarından biri **AI Agent**."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Hap Bilgi 15: AI Agent Mimarisi — Bir Yapay Zekâ Ajanı Nasıl Çalışır?
 
 > **Seri**: Developer Hap Bilgi — Bölüm 15  

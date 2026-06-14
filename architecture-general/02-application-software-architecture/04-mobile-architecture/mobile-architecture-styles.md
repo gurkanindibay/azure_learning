@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Mobile Architecture Styles"
+description: "Mobile architecture styles define how mobile applications are structured, how they interact with backend services, and how they handle the unique constraints of mobile environments. Choosing the ri..."
+tags: [application-software-architecture, mobile-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Mobile Architecture Styles
 
 ## Table of Contents

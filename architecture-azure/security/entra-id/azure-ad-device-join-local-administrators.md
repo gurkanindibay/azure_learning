@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure AD Device Join and Local Administrator Permissions"
+description: "When a Windows device is joined to Microsoft Entra ID (formerly Azure AD), specific users are automatically granted local administrator rights on that device. Understanding who receives these privi..."
+tags: [security]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure AD Device Join and Local Administrator Permissions
 
 ## Table of Contents

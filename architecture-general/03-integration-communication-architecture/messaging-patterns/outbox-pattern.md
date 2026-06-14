@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Transactional Outbox Pattern"
+description: "In distributed systems, a service often needs to **atomically update its database and publish a message** to a message broker. Without a solution, the following failure modes exist:"
+tags: [integration-communication-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Transactional Outbox Pattern
 
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging — Reliability Patterns (see [architecture_taxonomy_reference.md](../10-practicality-taxonomy/architecture_taxonomy_reference.md))

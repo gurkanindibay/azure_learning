@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Network Architecture Base Elements"
+description: "This guide defines vendor-neutral building blocks for a production-ready network architecture."
+tags: [cloud-infrastructure-platform-architecture, networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Network Architecture Base Elements
 
 > **Taxonomy Reference**: §5.2 Infrastructure Architecture (see [architecture_taxonomy_reference.md](../../10-practicality-taxonomy/architecture_taxonomy_reference.md))

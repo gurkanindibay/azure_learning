@@ -1,3 +1,10 @@
+---
+type: Article
+title: "22 Scenario-Based System Design Questions That Reveal How Real Systems Actually Break"
+description: "*By Arvind Kumar · 5 min read · May 22, 2026*"
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 22 Scenario-Based System Design Questions That Reveal How Real Systems Actually Break
 
 *By Arvind Kumar · 5 min read · May 22, 2026*

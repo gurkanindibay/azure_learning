@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Polyglot Persistence"
+description: "Polyglot Persistence is the architectural principle of using **multiple data storage technologies** within a single system, choosing the best-fit database for each specific workload. Rather than fo..."
+tags: [data-analytics-ai-architecture, data-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Polyglot Persistence
 
 > **Taxonomy Reference**: §4.1 Data Architecture

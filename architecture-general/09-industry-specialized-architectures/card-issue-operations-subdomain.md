@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Card Issue Operations Subdomain - Payment Systems"
+description: "The Card Issue Operations subdomain manages the physical and digital issuance of payment cards, including production, personalization, delivery, activation, and lifecycle management. This domain en..."
+tags: [industry-specialized-architectures]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Card Issue Operations Subdomain - Payment Systems
 
 ## Overview

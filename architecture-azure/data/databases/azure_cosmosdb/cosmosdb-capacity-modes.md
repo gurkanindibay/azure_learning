@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Cosmos DB Capacity Modes"
+description: "Azure Cosmos DB offers different capacity modes that determine how you're charged for the throughput and storage your database consumes. Choosing the right capacity mode is critical for optimizing ..."
+tags: [data]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Cosmos DB Capacity Modes
 
 ## Table of Contents

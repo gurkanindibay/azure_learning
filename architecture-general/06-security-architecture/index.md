@@ -25,7 +25,7 @@ Identity and access management, authentication protocols, and authorization mode
 
 | Document | Description |
 |----------|-------------|
-| [README.md](./6.2-identity/README.md) | Identity governance, federation, lifecycle, authorization models |
+| [index.md](./6.2-identity/README.md) | Identity governance, federation, lifecycle, authorization models |
 | [6.2.1 Authentication Methods](./6.2-identity/6.2.1-authentication-methods.md) | Method catalog, decision matrices, security comparisons |
 | [6.2.2 Authentication Protocols](./6.2-identity/6.2.2-authentication-protocols.md) | Protocol deep dives — sequence diagrams, React + .NET code, token handling |
 
@@ -35,7 +35,7 @@ Network-level security controls from perimeter to micro-segmentation.
 
 | Document | Description |
 |----------|-------------|
-| [README.md](./6.3-network-security/README.md) | Perimeter security, micro-segmentation, WAF, DDoS protection |
+| [index.md](./6.3-network-security/README.md) | Perimeter security, micro-segmentation, WAF, DDoS protection |
 | [6.3.1 DMZ Architecture](./6.3-network-security/6.3.1-dmz-architecture.md) | DMZ design, topologies, and implementation guide |
 | [6.3.2 Network Segmentation](./6.3-network-security/6.3.2-network-segmentation.md) | Zone models, VLAN design, micro-segmentation, Zero Trust segmentation |
 

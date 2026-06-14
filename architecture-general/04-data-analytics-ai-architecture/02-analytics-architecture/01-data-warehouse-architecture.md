@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Data Warehouse Architecture"
+description: "A Data Warehouse (DW) is a centralized repository designed for analytical querying and reporting. It consolidates data from multiple operational sources, transforms it into a consistent format, and..."
+tags: [data-analytics-ai-architecture, analytics-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Data Warehouse Architecture
 
 > **Taxonomy Reference**: §4.2 Analytics Architecture

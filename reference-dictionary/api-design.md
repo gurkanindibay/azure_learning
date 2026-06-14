@@ -1,7 +1,14 @@
+---
+type: Reference
+title: "API Design Patterns"
+description: "The mechanism for evolving an API without breaking existing clients."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # API Design Patterns
 
 > **Domain**: API versioning, rate limiting, pagination, error design, and compatibility patterns.
-> **Parent**: [Reference Dictionary](README.md)
+> **Parent**: [Reference Dictionary](index.md)
 
 ---
 

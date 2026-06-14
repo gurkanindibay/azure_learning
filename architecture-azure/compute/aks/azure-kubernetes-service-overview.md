@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Kubernetes Service (AKS) Overview"
+description: "Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies deploying, managing, and scaling containerized applications using Kubernetes on Azure. AKS reduces the complexity and ..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Kubernetes Service (AKS) Overview
 
 ## Table of Contents

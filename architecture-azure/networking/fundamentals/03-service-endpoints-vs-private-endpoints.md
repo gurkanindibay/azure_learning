@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Azure Networking Fundamentals - Service Endpoints vs Private Endpoints"
+description: "**Service Endpoints** extend your VNet identity to Azure services, enabling secure access over an optimized route."
+tags: [networking]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Azure Networking Fundamentals - Service Endpoints vs Private Endpoints
 
 ## 4. Service Endpoints vs Private Endpoints

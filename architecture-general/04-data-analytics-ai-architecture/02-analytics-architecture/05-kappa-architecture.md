@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Kappa Architecture"
+description: "Kappa Architecture is a **stream-first data processing paradigm** proposed by Jay Kreps (co-creator of Apache Kafka) as a simplification of Lambda Architecture. It eliminates the batch layer entire..."
+tags: [data-analytics-ai-architecture, analytics-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Kappa Architecture
 
 > **Taxonomy Reference**: §4.2 Analytics Architecture

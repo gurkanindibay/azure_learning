@@ -1,3 +1,11 @@
+---
+type: Architecture Pattern
+title: "Database Caching Patterns"
+description: "Caching is a fundamental technique for improving database performance by storing frequently accessed data in faster storage tiers. This document covers general caching patterns, strategies, and dec..."
+tags: [data-analytics-ai-architecture]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Database Caching Patterns
 
 ## Overview

@@ -1,6 +1,13 @@
+---
+type: System Design
+title: "Stream Processing (Apache Flink)"
+description: "**Key insight**: Batch data is just a stream that stopped flowing. Your 6-month historical data and your 6-second real-time data are the same JSON events at different time windows. One engine can h..."
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # 9. Stream Processing (Apache Flink)
 
-> **Parent**: [System Design Interview Reference](README.md)  
+> **Parent**: [System Design Interview Reference](index.md)  
 > **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md)
 
 ---

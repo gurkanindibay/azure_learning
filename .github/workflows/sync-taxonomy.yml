@@ -3,12 +3,12 @@ name: Sync Taxonomy Reference
 on:
   push:
     paths:
-      - 'architecture-general/**/README.md'
+      - 'architecture-general/**/index.md'
     branches:
       - main
   pull_request:
     paths:
-      - 'architecture-general/**/README.md'
+      - 'architecture-general/**/index.md'
 
 jobs:
   check-sync:

@@ -1,3 +1,11 @@
+---
+type: Azure Service
+title: "Default Load Balancers for Azure Compute Services"
+description: "Azure compute services have varying levels of built-in load balancing capabilities. Understanding which services include automatic load balancing versus which require manual configuration is crucia..."
+tags: [compute]
+timestamp: 2026-06-14T00:00:00Z
+---
+
 # Default Load Balancers for Azure Compute Services
 
 ## Table of Contents
