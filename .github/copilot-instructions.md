@@ -120,6 +120,26 @@ python scripts/sync_taxonomy_reference.py --dry-run  # Preview
 - GitHub Actions validates sync on PRs (`.github/workflows/sync-taxonomy.yml`)
 - Optional pre-commit hook: `cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit`
 
+### OKF Validation (run after any content change)
+
+```bash
+python scripts/okf_migrate.py --check     # Validate OKF conformance
+python scripts/okf_migrate.py --dry-run   # Preview frontmatter changes
+python scripts/okf_migrate.py             # Apply frontmatter to new files
+```
+
+### OKF Agent Tools (bundle introspection)
+
+```bash
+python3 agents/okf_tools.py validate      # Validate OKF conformance
+python3 agents/okf_tools.py search <kw>   # Search concepts by keyword
+python3 agents/okf_tools.py check-links   # Check cross-reference integrity
+python3 agents/okf_tools.py stats         # Bundle statistics (JSON)
+python3 agents/okf_tools.py graph         # Export relationship graph (JSON)
+```
+
+See [`agents/README.md`](agents/README.md) for the full OKF agent guide.
+
 ## Content Standards
 
 - Proper heading hierarchy (H1 → H2 → H3)
