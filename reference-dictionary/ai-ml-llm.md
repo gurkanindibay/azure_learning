@@ -23,6 +23,10 @@
 | MCP (Model Context Protocol) | [`#mcp`](#mcp) |
 | Chain of Thought (CoT) | [`#chain-of-thought`](#chain-of-thought) |
 | Hybrid Intelligence | [`#hybrid-intelligence`](#hybrid-intelligence) |
+| Agent Harness | [`#agent-harness`](#agent-harness) |
+| Context Rot (Lost in the Middle) | [`#context-rot`](#context-rot) |
+| Scaffolding (LLM) | [`#scaffolding-llm`](#scaffolding-llm) |
+| Verification Loop (AI) | [`#verification-loop-ai`](#verification-loop-ai) |
 | Technical Deflation | [`#technical-deflation`](#technical-deflation) |
 | Five Levels of AI-Assisted Dev | [`#five-levels`](#five-levels) |
 | Dark Factory | [`#dark-factory`](#dark-factory) |
@@ -170,6 +174,76 @@ A prompting technique where the LLM is instructed to **reason step-by-step** bef
 Combining **deterministic rules** (calculations, risk scores, thresholds) with **AI reasoning** (interpretation, context, narrative). The deterministic engine provides ground truth; AI adds explainability.
 
 **Also see**: [Agentic AI](#agentic-ai)
+
+---
+
+## Agent Harness
+
+The **complete software infrastructure wrapping an LLM** — orchestration loop, tools, memory, context management, state persistence, error handling, guardrails, and verification loops. The harness is what transforms a stateless LLM into a production-capable agent.
+
+> "If you're not the model, you're the harness." — Vivek Trivedy, LangChain
+
+| Component | Role |
+|:---|:---|
+| Orchestration Loop | ReAct/TAO cycle: assemble prompt → call LLM → parse output → execute tools → repeat |
+| Tools | Schema-defined external capabilities (APIs, code exec, web access) |
+| Memory | Multi-tier: short-term (session), long-term (cross-session files/DBs) |
+| Context Management | Compaction, masking, JIT retrieval, sub-agent delegation |
+| Verification Loops | Rules-based (tests), visual (screenshots), LLM-as-judge |
+| Guardrails | Input/output/tool validation; permission enforcement |
+
+**When to use**: Any production agent beyond a single prompt-and-response.  
+**When NOT to use**: Simple chatbots, single-call LLM usage, prototypes.  
+**Also see**: [Agentic AI](#agentic-ai), [Agent Loop](#agent-loop), [Context Rot](#context-rot), [Scaffolding (LLM)](#scaffolding-llm), [Verification Loop](#verification-loop-ai)
+
+---
+
+## Context Rot
+
+**Performance degradation when key content falls in mid-window positions** of an LLM's context. Also known as the **"Lost in the Middle"** phenomenon (Stanford research): models attend strongly to beginning and end of context, but mid-window content is effectively invisible. Even million-token windows suffer instruction-following degradation as context grows — 30%+ performance drops are documented.
+
+| Mitigation | Mechanism |
+|:---|:---|
+| Compaction | Summarize history; preserve architectural decisions, discard redundant outputs |
+| Observation Masking | Hide old tool outputs while keeping tool calls visible |
+| JIT Retrieval | Load data dynamically via search rather than full-file reads |
+| Sub-Agent Delegation | Subagents return 1,000–2,000 token condensed summaries |
+
+**When to use**: Multi-turn agents, long-running tasks, context-heavy workflows.  
+**When NOT to use**: Single-call LLM usage, short conversations.  
+**Also see**: [Agent Harness](#agent-harness), [LLM](#llm), [Token](#token)
+
+---
+
+## Scaffolding (LLM)
+
+**Temporary infrastructure that enables an LLM to perform capabilities it cannot yet do natively** — analogous to construction scaffolding. As models improve, scaffolding is removed. The co-evolution principle: models are now post-trained with specific harnesses in the loop; changing tool implementations can degrade performance because of this tight coupling.
+
+| Principle | Implication |
+|:---|:---|
+| Scaffolding is temporary | Remove as models internalize the capability |
+| Co-evolution | Models trained with specific harnesses; tool changes may break expectations |
+| Future-proofing test | If performance scales with better models without adding harness complexity, the design is sound |
+
+**When to use**: Gap-filling for model limitations that will be resolved by future model versions.  
+**When NOT to use**: Permanent architectural decisions (use harness instead).  
+**Also see**: [Agent Harness](#agent-harness), [Agentic AI](#agentic-ai)
+
+---
+
+## Verification Loop (AI)
+
+A **self-checking mechanism that validates agent output before delivery** — improving quality by 2–3x according to Claude Code's creator. Three approaches: **rules-based** (tests, linters, type checkers — deterministic ground truth), **visual** (screenshots via Playwright for UI tasks), and **LLM-as-judge** (separate subagent evaluates semantic output quality).
+
+| Type | Mechanism | Latency | Determinism |
+|:---|:---|:---|:---|
+| Rules-Based | Tests, linters, schemas | Low | Deterministic |
+| Visual | Screenshots via browser automation | Medium | Deterministic |
+| LLM-as-Judge | Subagent semantic evaluation | High | Probabilistic |
+
+**When to use**: Any agent whose output must be correct (code generation, data transformation, UI work).  
+**When NOT to use**: Exploratory/conversational agents where correctness is subjective.  
+**Also see**: [Agent Harness](#agent-harness), [Guardrails](#guardrails-ai), [Agent Loop](#agent-loop)
 
 ---
 
