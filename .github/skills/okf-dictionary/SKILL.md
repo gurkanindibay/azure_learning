@@ -25,7 +25,9 @@ python3 agent_tools/dictionary_agent.py list-domains
 python3 agent_tools/dictionary_agent.py extract-terms <file> --dry-run
 ```
 
-Review the list — filter out false positives (structural labels, common words).
+If `<file>` does not exist or the command returns an error, stop immediately and report the invalid path or tool failure; do not create, modify, or guess glossary entries.
+
+Review the list and exclude only headings, section labels, and words in the project stopword list; keep all other technical terms.
 
 ### 2. Check which terms are novel
 
@@ -33,7 +35,9 @@ Review the list — filter out false positives (structural labels, common words)
 python3 agent_tools/dictionary_agent.py check-term "<term>"
 ```
 
-Already-defined terms are skipped. Novel terms get placed in the correct domain file.
+Already-defined terms are skipped only when the current definition is complete and correct. If a term already exists but its definition is incomplete or outdated, update the existing entry instead of creating a duplicate.
+
+For novel terms, use the domain mapping in `agent_tools/config.yaml` to choose the most specific domain for each term. If a term fits more than one domain, place it in the most specific domain and note the alternate domain in the entry.
 
 ### 3. Add entries
 
@@ -73,6 +77,6 @@ Add the new term to the Contents table at the top of the domain file.
 
 ## Tools
 
-- [Dictionary Agent](../../agent_tools/dictionary_agent.py) — Main executable
-- [Config](../../agent_tools/config.yaml) — Dictionary domain registry
+- [Dictionary Agent](../../../agent_tools/dictionary_agent.py) — Main executable
+- [Config](../../../agent_tools/config.yaml) — Dictionary domain registry
 - [Discovery Skill](../okf-domain-discovery/SKILL.md) — Register new dictionary domains
