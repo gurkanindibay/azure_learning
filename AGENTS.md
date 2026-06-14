@@ -1,32 +1,42 @@
 # Agent Guide — Azure Learning Repository
 
-> This file is intended for AI coding agents that work in this repository. Read it first, then consult `.github/copilot-instructions.md` for the full content-authoring rules.
+> This repository is an [Open Knowledge Format (OKF)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle. This file is the **Kimi Code root agent guide**. It does not duplicate the detailed rules; instead it points to the skill, tool, and instruction files that govern each task.
 
 ---
 
 ## Project Overview
 
-This repository is a **technical knowledge base** — not a traditional software project. It contains curated notes, patterns, case studies, and reference material covering Microsoft Azure services, cloud-agnostic architecture patterns, system design takeaways, a technical glossary, programming-language notes (currently C# / .NET concurrency), SRE resources, and source articles/videos.
-
-Everything is written in **Markdown**. There is no application server, compiled artifacts, or package manager. The only executable code is a small Python 3 script that keeps the architecture taxonomy reference in sync.
-
-### Repository Type
+This is a **technical knowledge base**, not a traditional software project. It contains curated notes, patterns, case studies, and reference material covering Azure services, cloud-agnostic architecture, system design takeaways, a technical glossary, programming-language notes, SRE resources, and source articles/videos.
 
 | Aspect | Value |
 |--------|-------|
 | Primary format | Markdown (`.md`) with YAML frontmatter (OKF v0.1) |
-| OKF format | [Open Knowledge Format v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) |
 | Programming language | Python 3.11 (automation only) |
 | Build system | None |
-| Test framework | None (validation via OKF check and GitHub Actions) |
+| Test framework | None — validation is via `okf_migrate.py`, `sync_taxonomy_reference.py`, and GitHub Actions |
 | Deployment | None (static documentation repository) |
 | CI/CD | GitHub Actions (`.github/workflows/sync-taxonomy.yml`) |
 
 ---
 
-## Where the Rules Live
+## How This Repository Is Organized for Agents
 
-This file covers **agent-specific operational guidance** (environment, automation, validation, security). For all content-authoring rules, use `.github/copilot-instructions.md` as the base:
+The repo uses a **skills + tools + instructions** pattern. Do not duplicate guidance from these files; read and follow them by reference.
+
+| Layer | Location | Purpose |
+|:---|:---|:---|
+| **Instructions** | `.github/copilot-instructions.md` | Base content-authoring rules: placement, taxonomy, cross-references, naming, checklists |
+| **Skills** | `.github/skills/okf-*/SKILL.md` | Task-specific workflows (format, takeaways, dictionary, domain discovery) |
+| **Tools** | `agent_tools/` | Python scripts that implement the skill workflows |
+| **Validation** | `scripts/okf_migrate.py`, `scripts/sync_taxonomy_reference.py` | OKF conformance and taxonomy sync checks |
+
+For the full architecture of the agent tooling, see [`agent_tools/README.md`](agent_tools/README.md).
+
+---
+
+## Base Instructions
+
+Always start from `.github/copilot-instructions.md` for content-authoring rules:
 
 | Topic | File |
 |---|---|
@@ -35,7 +45,7 @@ This file covers **agent-specific operational guidance** (environment, automatio
 | Taxonomy alignment (`§X.X` references) | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
 | Cross-reference patterns & map | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
 | Naming conventions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
-| Adding new content step-by-step | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
+| Step-by-step adding new content | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
 | Directory-specific checklists | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
 | Azure service doc templates | [`architecture-azure/.copilot-instructions.md`](architecture-azure/.copilot-instructions.md) |
 | General pattern & taxonomy templates | [`architecture-general/.copilot-instructions.md`](architecture-general/.copilot-instructions.md) |
@@ -43,28 +53,61 @@ This file covers **agent-specific operational guidance** (environment, automatio
 
 ---
 
-## Technology Stack
+## Skills
 
-- **Documentation**: Markdown, Mermaid diagrams, fenced code blocks with language tags.
-- **Automation**: Python 3.11, standard library only (`os`, `re`, `sys`, `argparse`, `pathlib`, `datetime`). No `requirements.txt`, virtual environment, or external packages are required.
-- **CI/CD**: GitHub Actions (`/.github/workflows/sync-taxonomy.yml`).
-- **Editor**: `.vscode/settings.json`.
+Each skill is a task workflow. Read the linked `SKILL.md` before performing that task.
+
+| Skill | Purpose | Detailed Procedure |
+|:---|:---|:---|
+| `okf-format` | Format raw markdown into an OKF-compliant concept document and determine correct placement | [`.github/skills/okf-format/SKILL.md`](.github/skills/okf-format/SKILL.md) |
+| `okf-takeaways` | Extract system-design takeaways from source articles into `system-design-architecture/` | [`.github/skills/okf-takeaways/SKILL.md`](.github/skills/okf-takeaways/SKILL.md) |
+| `okf-dictionary` | Add novel technical terms to `reference-dictionary/` | [`.github/skills/okf-dictionary/SKILL.md`](.github/skills/okf-dictionary/SKILL.md) |
+| `okf-domain-discovery` | Discover and register new domains in `agent_tools/config.yaml` | [`.github/skills/okf-domain-discovery/SKILL.md`](.github/skills/okf-domain-discovery/SKILL.md) |
 
 ---
 
-## Build and Test Commands
+## Tools
 
-There is no build step. The only validation is the taxonomy sync check.
+Skills are implemented by the Python scripts in `agent_tools/`. For command reference and architecture, see [`agent_tools/README.md`](agent_tools/README.md).
+
+| Tool | Maps to Skill | Purpose |
+|:---|:---|:---|
+| `agent_tools/format_agent.py` | `okf-format` | Format & validate OKF concept documents |
+| `agent_tools/takeaways_agent.py` | `okf-takeaways` | Extract takeaways and assign domain-prefixed IDs |
+| `agent_tools/dictionary_agent.py` | `okf-dictionary` | Extract terms and add novel ones to the dictionary |
+| `agent_tools/discovery_agent.py` | `okf-domain-discovery` | Detect and register new domains |
+| `agent_tools/coordinator.py` | All skills | Run the full enrichment pipeline in sequence |
+| `agent_tools/okf_tools.py` | — | Bundle introspection: validate, list, search, check-links, summary |
+| `agent_tools/config.yaml` | All skills | Single source of truth for domain/type registries |
+
+---
+
+## Validation Commands
+
+There is no build step. Run these checks after making changes.
 
 ```bash
-# Validate that the taxonomy reference is in sync
+# OKF conformance: frontmatter, index.md, reserved files
+python scripts/okf_migrate.py --check
+
+# Taxonomy sync (run after editing any architecture-general/**/README.md)
 python scripts/sync_taxonomy_reference.py --check
 
-# Regenerate the taxonomy reference (edit READMEs first, then run this)
+# Regenerate taxonomy reference when needed
 python scripts/sync_taxonomy_reference.py
+```
 
-# Preview what would be generated without writing to disk
-python scripts/sync_taxonomy_reference.py --dry-run
+### Full Enrichment Pipeline
+
+```bash
+# Process a raw document through format → takeaways → dictionary → discovery
+python3 agent_tools/coordinator.py process <file.md>
+
+# Skip takeaways extraction
+python3 agent_tools/coordinator.py process <file.md> --no-takeaways
+
+# Validate the entire bundle
+python3 agent_tools/coordinator.py validate-all
 ```
 
 ### Optional Pre-Commit Hook
@@ -74,49 +117,7 @@ cp scripts/hooks/pre-commit-taxonomy-check.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-The hook runs only when `architecture-general/**/index.md` files are staged.
-
----
-
-## Testing / Validation Workflow
-
-1. After editing any `architecture-general/**/index.md`, run:
-   ```bash
-   python scripts/sync_taxonomy_reference.py --check
-   ```
-2. If the check fails, regenerate and stage the reference:
-   ```bash
-   python scripts/sync_taxonomy_reference.py
-   git add architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md
-   ```
-3. Preview changes before committing:
-   ```bash
-   python scripts/sync_taxonomy_reference.py --dry-run
-   ```
-4. Verify relative Markdown links resolve correctly.
-5. Ensure Mermaid diagrams follow `.github/accessibility-guidelines.md`.
-
----
-
-## Automation Details
-
-### Taxonomy Sync Script
-
-File: `scripts/sync_taxonomy_reference.py`
-
-- Scans `architecture-general/01-*/index.md` through `architecture-general/09-*/index.md`.
-- Extracts H3 subsections and bullet items.
-- Generates `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md`.
-- Appends static sections for abstraction levels, architectural qualities, and naming conventions.
-- Deterministic except for the `**Last updated**` timestamp, which `--check` ignores.
-- **Never edit the taxonomy reference file by hand.**
-
-### GitHub Actions Workflow
-
-File: `.github/workflows/sync-taxonomy.yml`
-
-- **On PR** (when `architecture-general/**/index.md` changes): runs `--check` and fails if stale.
-- **On push to `main`** (when `architecture-general/**/index.md` changes): if `--check` fails, regenerates and commits with `chore: auto-sync taxonomy reference [skip ci]`.
+The hook runs only when `architecture-general/**/README.md` files are staged.
 
 ---
 
@@ -124,7 +125,7 @@ File: `.github/workflows/sync-taxonomy.yml`
 
 - No secrets or credentials are stored in the repository. `.gitignore` only ignores `.DS_Store` and `temp_file.txt`.
 - The GitHub Actions workflow uses the automatic `GITHUB_TOKEN`; no custom secrets are needed.
-- The taxonomy sync script uses only the Python standard library.
+- Automation scripts use only the Python standard library unless declared otherwise.
 - Do not add `.env` files, API keys, connection strings, or personal access tokens.
 - New automation scripts should be dependency-free or declare dependencies in a file such as `requirements.txt` and run in an isolated environment.
 
@@ -134,46 +135,33 @@ File: `.github/workflows/sync-taxonomy.yml`
 
 | File | Purpose |
 |------|---------|
-| `.github/copilot-instructions.md` | Base content-authoring rules: structure, placement, taxonomy, cross-references, naming, checklists |
+| `.github/copilot-instructions.md` | Base content-authoring rules |
 | `.github/accessibility-guidelines.md` | WCAG 2.1 AA diagram and documentation accessibility rules |
 | `architecture-general/.copilot-instructions.md` | Cloud-agnostic pattern guidelines and taxonomy alignment rules |
 | `architecture-azure/.copilot-instructions.md` | Azure-specific service documentation guidelines |
-| `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` | Auto-generated canonical taxonomy (do not edit directly) |
+| `.github/skills/okf-format/SKILL.md` | Format & validate OKF documents |
+| `.github/skills/okf-takeaways/SKILL.md` | Extract system-design takeaways |
+| `.github/skills/okf-dictionary/SKILL.md` | Add dictionary terms |
+| `.github/skills/okf-domain-discovery/SKILL.md` | Register new domains |
+| `agent_tools/README.md` | Full agent-tool architecture, commands, and examples |
+| `agent_tools/config.yaml` | Domain/type registry source of truth |
+| `scripts/okf_migrate.py` | OKF conformance validation and migration |
 | `scripts/sync_taxonomy_reference.py` | Taxonomy sync automation |
-| `scripts/okf_migrate.py` | OKF frontmatter migration and validation |
-| `agent_tools/okf_tools.py` | OKF bundle utilities (validate, search, list, check-links, stats, graph) |
-| `agent_tools/README.md` | OKF agent guide — enrichment & consumption patterns |
-| `reference-dictionary/index.md` | Glossary usage, term template, and anchor conventions |
-
----
-
-## OKF Agent Tools
-
-This repository is an [OKF v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundle. Use the bundled agent tools:
-
-```bash
-python3 agent_tools/okf_tools.py validate      # Validate OKF conformance
-python3 agent_tools/okf_tools.py list          # List all concepts by type
-python3 agent_tools/okf_tools.py search <kw>   # Search concepts by keyword
-python3 agent_tools/okf_tools.py check-links   # Check cross-reference integrity
-python3 agent_tools/okf_tools.py summary       # Generate bundle summary
-python3 agent_tools/okf_tools.py stats         # JSON statistics
-python3 agent_tools/okf_tools.py graph         # Export relationship graph (JSON)
-```
-
-See [`agent_tools/README.md`](agent_tools/README.md) for the full OKF agent guide including enrichment agent templates.
+| `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` | Auto-generated canonical taxonomy (do not edit directly) |
+| `reference-dictionary/README.md` | Glossary usage, term template, and anchor conventions |
 
 ---
 
 ## Quick Reference
 
-- **New Azure service doc**: See `architecture-azure/.copilot-instructions.md`.
-- **New general pattern**: See `architecture-general/.copilot-instructions.md`; add `> **Taxonomy Reference**: §X.X ...`; run `python scripts/sync_taxonomy_reference.py` if you edited a README.
-- **New system design takeaway**: See `.github/copilot-instructions.md` for ID conventions and required sections.
-- **New term**: See `reference-dictionary/index.md`.
-- **Any `architecture-general/**/index.md` change**: Run `python scripts/sync_taxonomy_reference.py --check`.
-- **After any content change**: Run `python3 agent_tools/okf_tools.py validate` to verify OKF conformance.
+- **Format or validate a document**: follow [`okf-format`](.github/skills/okf-format/SKILL.md) → run `python3 agent_tools/format_agent.py validate <file.md>`.
+- **Extract takeaways from an article**: follow [`okf-takeaways`](.github/skills/okf-takeaways/SKILL.md) → run `python3 agent_tools/takeaways_agent.py extract <article.md> --prefix <domain>`.
+- **Add dictionary terms**: follow [`okf-dictionary`](.github/skills/okf-dictionary/SKILL.md) → run `python3 agent_tools/dictionary_agent.py extract-terms <file.md> --dry-run`.
+- **Register a new domain**: follow [`okf-domain-discovery`](.github/skills/okf-domain-discovery/SKILL.md) → run `python3 agent_tools/discovery_agent.py --apply`.
+- **Run full pipeline**: `python3 agent_tools/coordinator.py process <file.md>`.
+- **After any edit**: `python scripts/okf_migrate.py --check`.
+- **After `architecture-general/**/README.md` edits**: `python scripts/sync_taxonomy_reference.py --check`.
 
 ---
 
-> **Remember**: This repository values accuracy, stable cross-references, and taxonomy alignment over volume. For content-authoring details, always check `.github/copilot-instructions.md` first.
+> **Remember**: This repository values accuracy, stable cross-references, and taxonomy alignment over volume. For content-authoring details, start with `.github/copilot-instructions.md`; for task workflows, use the `.github/skills/` files; for implementation, use the `agent_tools/` scripts.
