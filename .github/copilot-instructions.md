@@ -92,41 +92,58 @@ Before contributing to a directory, consult the table below for its specific ins
 | `unstructured-resources/` | — | Use the directory-specific checklist in this file |
 | `scripts/` | — | Use the directory-specific checklist in this file |
 
-## Content Placement
+## Content Placement (Routing Rule)
 
-Use this numbered decision algorithm in order. **If multiple rules match, apply the first matching rule.**
+**Routing is decided first; taxonomy references are added only after routing succeeds.**
 
-1. **Is the content Azure-specific?** (services, tiers, implementation patterns tied to Azure)  
-   → `architecture-azure/` (compute/, data/, networking/, security/, integration/, etc.)
+Use this two-stage classifier to determine where content belongs:
 
-2. **Is the primary topic a specific programming language's syntax, runtime, framework, or concurrency model?** (e.g., C# async/await, .NET TPL, Java streams)  
-   → `programming-languages/<language>/` (e.g., csharp/dotnet-multi-threading/)  
-   *Do not use this path for general cloud architecture or cross-language patterns that happen to include code examples.*
+### Stage 1 — Classify by Content Type
 
-3. **Does it describe a concrete system-design problem with a solution strategy, trade-offs, and at least one source reference?**  
-   → `system-design-architecture/` (use domain-prefixed IDs: db-, tx-, cache-, api-, broker-, etc.)  
-   *If the user does not provide at least one source reference, or if the problem/solution/trade-offs are missing, stop and ask for the missing information before creating the document. Do not place general architecture notes or raw article summaries here.*
+| Primary Content Type | Destination |
+|:---|:---|
+| Azure service specifics (tiers, implementation patterns tied to Azure) | `architecture-azure/` |
+| Programming language syntax, runtime, framework, or concurrency model | `programming-languages/<language>/` |
+| System-design problem with solution strategy + trade-offs + source reference | `system-design-architecture/` |
+| Term definition or glossary entry | `reference-dictionary/` |
+| Reusable architectural pattern, decision guide, or case study | `architecture-general/` |
+| Source article | `articles/<platform>/` |
+| Video note | `videos/` |
+| Raw or evolving note | `unstructured-resources/` |
 
-4. **Is it a term definition or glossary entry?**  
-   → `reference-dictionary/` (pick the right domain file, add anchor)
+### Stage 2 — Resolve Ambiguity
 
-5. **Is it a source article, video note, or raw/evolving note?**  
-   - Source article → `articles/<platform>/`
-   - Video note → `videos/`
-   - Raw/evolving note → `unstructured-resources/`
+1. **Identify the primary topic** from the title and first heading only — do not infer it from body text.
+2. **If the title and first heading disagree or are missing**: Stop and ask the user "Which topic should this file focus on?"
+3. **Route to the single destination** that matches the primary topic (see Stage 1 table).
 
-6. **Is it a reusable architectural pattern, decision guide, or case study that maps to one primary taxonomy section (§X.X)?**  
-   → `architecture-general/` (do not place drafts, notes, or raw ideas here)
-
-**Precedence rule**: If a document plausibly fits more than one destination, choose the destination based on the primary topic, not the secondary example. If the primary topic cannot be determined, stop and ask the user which category should take precedence.
+**Exception rules** (apply after routing is decided):
+- Programming-language paths are for language-specific topics only. Do not use them for general cloud architecture or cross-language patterns that happen to include code examples.
+- `system-design-architecture/` requires a concrete problem, solution strategy, trade-offs, and at least one source reference. A source reference must be a real Markdown link to either an article under `articles/` or an official Microsoft/vendor documentation page — placeholder citations are not allowed. If any required elements are missing, stop and ask for the missing information. Do not place hypothetical, interview-style, or training-only problem statements here — route those to `unstructured-resources/`.
+- `architecture-general/` is for content that is complete, reviewed, and ready for publication. Treat drafts, outlines, raw notes, and unfinished ideas as `unstructured-resources/` unless the user explicitly asks to refine them first. If the user asks to place unfinished material directly in `architecture-general/`, ask whether to move it to `unstructured-resources/` first or to revise it into a finished draft.
+- If a term could belong to more than one domain file in `reference-dictionary/`, stop and ask the user which domain to use. Do not choose by intuition or by the first matching keyword. If you are unsure whether a term belongs to more than one domain, stop and ask the user to confirm.
+- If the content covers two or more distinct main topics, create one file per main topic with a "Related topics" cross-reference section linking the other files. Do not combine unrelated topics into a single file.
+- If a requested destination path does not exist or is outside the standard repository directories listed in this file, stop and ask the user to choose an existing directory. Do not create new top-level folders without confirmation.
+- If the user names more than one possible destination path and the content could fit both, ask the user to choose the primary destination before making any changes; do not choose by convenience or by the first matching path.
+- If the user does not specify any destination directory, stop and ask which existing directory the content should go to. Do not choose a destination from context alone.
 
 ## Taxonomy Alignment
 
-**All content MUST align with the [Architecture Taxonomy](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md)**.
+**Taxonomy alignment is required for `architecture-general/` and `system-design-architecture/` files.** Files under `articles/`, `videos/`, and `unstructured-resources/` may omit taxonomy references unless the user explicitly asks for them.
+
+All taxonomy-aligned content must reference the [Architecture Taxonomy](../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md).
 
 - Reference taxonomy sections using `§X.X` format: `> **Taxonomy Reference**: §3.3 Event-Driven & Messaging`
 - The taxonomy file is **auto-generated** — never edit it directly
-- When the relevant taxonomy section cannot be identified from the taxonomy reference (e.g., the section is missing or the reference is stale), do not invent a `§X.X` reference. Choose the single best matching section using the document's dominant topic only and explicitly state the assumption (e.g., "> **Taxonomy Reference**: §3.3 Event-Driven & Messaging — closest match; no exact section exists for X"). If two or more sections are equally plausible matches, stop and ask the user for clarification instead of guessing
+
+**Taxonomy section selection procedure** (apply in order):
+
+1. **If the taxonomy reference file is missing or unreadable**: Stop and report the exact missing path. Ask the user whether to continue without taxonomy alignment or to provide the file first. Do not choose a closest-match taxonomy section in this case.
+2. **If the relevant taxonomy section is clearly identifiable in the reference**: Use it.
+3. **If the relevant section is missing from the reference or is stale**: Do not invent a `§X.X` reference. Use an exact section title match if one exists. If no exact title match exists, ask the user to confirm one of the closest matching sections. Do not use a fuzzy match without confirmation.
+4. **If two or more sections have the same highest normalized match score**: Stop and ask the user to confirm the intended section. Do not infer a tie-breaker from intuition.
+
+**Default**: If the taxonomy file is unavailable, stop and ask the user before proceeding. If no exact match exists in the file, ask the user to confirm the closest match rather than guessing.
 
 ## Automation
 
@@ -171,6 +188,7 @@ See [`agent_tools/README.md`](../agent_tools/README.md) for the full OKF agent g
 - Reference official Microsoft/vendor documentation
 - Include practical examples and case studies
 - **Accessibility**: Follow [accessibility guidelines](accessibility-guidelines.md) for diagrams (WCAG 2.1 AA contrast, approved color palette)
+- **Citations**: For every source reference, use a real Markdown link to either an article under `articles/` or an official Microsoft/vendor documentation page. Do not invent citations, article titles, or URLs. If a cited source link is broken, missing, or inaccessible, stop and ask the user for a valid replacement link instead of substituting another citation. If the supplied citation is not a valid Markdown link or cannot be resolved to an existing article or official documentation page, stop and ask the user for a valid link before proceeding.
 
 ## Cross-References
 
@@ -215,7 +233,8 @@ graph TD
 1. **Determine location** using content placement tree above
 2. **Check taxonomy alignment** — which `§X.X` section? (required for `architecture-general/`)
 3. **Use templates** from subdirectory `.copilot-instructions.md` files (service doc, comparison, case study)
-   - If a referenced `.copilot-instructions.md` file or the taxonomy reference file is missing or unreadable, report the missing path and do not guess at the required format or placement
+   - If a referenced `.copilot-instructions.md` file is missing or unreadable, report the missing path and do not guess at the required format or placement
+   - If the taxonomy reference file is missing or unreadable, apply the taxonomy section selection procedure (step 1) under Taxonomy Alignment above
 4. **Add cross-references** to related content:
    - Link terms to `reference-dictionary/` definitions
    - Link patterns to Azure implementations (and vice versa)
