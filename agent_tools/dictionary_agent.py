@@ -222,7 +222,7 @@ def find_domain_for_term(term: str) -> str | None:
 
     for domain_file, info in _get_dictionary_domains().items():
         score = 0
-        for keyword in info["keywords"]:
+        for keyword in info.get("keywords", []):
             if keyword in term_lower:
                 score += 1
             # Check individual words
