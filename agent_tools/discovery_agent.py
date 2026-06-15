@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = REPO_ROOT / "agents" / "config.yaml"
+CONFIG_PATH = REPO_ROOT / "agent_tools" / "config.yaml"
 SDA_DIR = REPO_ROOT / "system-design-architecture"
 REF_DIR = REPO_ROOT / "reference-dictionary"
 
