@@ -1,3 +1,10 @@
+---
+type: System Design
+title: "System Design Interview: Problem → Strategy Reference"
+description: "Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation."
+timestamp: 2026-06-15T00:00:00Z
+---
+
 # System Design Interview: Problem → Strategy Reference
 
 > **Sources**: Derived from [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md), [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md), [Discord Data Architecture](../articles/medium/discord-data-architecture-master-class.md), [Kafka Concepts](../articles/medium/kafka-concepts-that-every-architect-should-master.md), [Uber Architecture Series](../articles/medium/uber-architecture/), [Async Concurrency Patterns](../articles/medium/async-patterns-java/), [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/), [System Design Interview Roadmap](../articles/medium/design-system-interviews.md), [API Design Patterns](../articles/medium/api-design-patterns-nobody-teaches-you.md), [AI Agent Architecture](../articles/linkedin/llm-agents.md), [The Five Levels of AI-Assisted Development](../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md), [Your Circuit Breaker Is Lying to You](../articles/medium/your-circuit-breaker-lying-to-you.md), [HSM Integration Bottlenecks](../articles/medium/hsm-integration-creates-bottleneck.md), [Dockerfile Optimization](../articles/medium/docker-file-art.md), [Apache Iggy](../articles/medium/apache-iggy.md), and [Java vs Go Microservices Benchmark 2026](../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md)  
@@ -12,7 +19,7 @@
 |:---|:---|:---|:---|
 | 📊 **Databases & Query Performance** | [`01-databases-query-performance.md`](01-databases-query-performance.md) | `db-01` – `db-06` | UUID indexing, Pagination, Composite indexes, N+1, Hot partitions, DB migration at scale |
 | 🔒 **Concurrency & Transactions** | [`02-concurrency-transactions.md`](02-concurrency-transactions.md) | `tx-01` – `tx-04` | Double-booking, Isolation levels, Distributed locks, Idempotency |
-| ⚡ **Caching Architecture** | [`03-caching-architecture.md`](03-caching-architecture.md) | `cache-01` – `cache-05` | Cache stampede, Invalidation, Anti-patterns, Eviction, Request coalescing |
+| ⚡ **Caching Architecture** | [`03-caching-architecture.md`](03-caching-architecture.md), [`31-cache-key-takeaways.md`](31-cache-key-takeaways.md) | `cache-01` – `cache-11` | Cache stampede, Invalidation, Anti-patterns, Eviction, Request coalescing, I/O multiplexing, Hash slots, COW persistence, Morris counter, UNLINK, TRACKING |
 | 🌐 **APIs & Network Design** | [`04-api-network-design.md`](04-api-network-design.md) | `api-01` – `api-05` | Versioning, Rate limiting, Large uploads, Async tasks, Consistent hash routing |
 | 📨 **Message Brokers & Async** | [`05-message-brokers-async.md`](05-message-brokers-async.md) | `broker-01` – `broker-07` | Broker selection, Offset commits, Poison messages, Ordering, Stream processing, Producer durability, Multi-consumer-group dedup |
 | 🚗 **Uber Architecture Case Study** | [`06-uber-architecture-case-study.md`](06-uber-architecture-case-study.md) | `uber-01` – `uber-11` | Decomposition, Geo-partitioning (H3), Ring buffer, LSM vs B-Tree, Dispatch engine, Kalman filter, Map rendering |
