@@ -1,2 +1,4 @@
 .DS_Store
 temp_file.txt
+*/__pycache__/
+*.log
