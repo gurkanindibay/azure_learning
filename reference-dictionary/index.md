@@ -49,6 +49,7 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework, Virtual Threads, Leyden AOT, Helidon SE, GOMAXPROCS |
 | 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
 | 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography |
+| 14 | [`java-jvm.md`](java-jvm.md) | Java JVM & Memory Management | JVM Heap, Young/Old Generation, Metaspace, PermGen, GC, Minor/Major/Full GC, G1GC, ZGC, OutOfMemoryError, Memory Leak, ThreadLocal, Heap Dump, Java Flight Recorder |
 
 ---
 
