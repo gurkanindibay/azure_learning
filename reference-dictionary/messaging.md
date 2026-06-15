@@ -26,6 +26,8 @@ timestamp: 2026-06-14T00:00:00Z
 | At-Least-Once Semantics | [`#at-least-once-semantics`](#at-least-once-semantics) |
 | Exactly-Once Semantics | [`#exactly-once-semantics`](#exactly-once-semantics) |
 | Rebalance | [`#rebalance`](#rebalance) |
+| Consumer Lag | [`#consumer-lag`](#consumer-lag) |
+| Kafka Connect | [`#kafka-connect`](#kafka-connect) |
 
 ---
 
@@ -90,7 +92,7 @@ The mechanism by which a consumer **records its progress** in reading a partitio
 
 ## Dead Letter Queue (DLQ)
 
-A queue for messages that **cannot be processed** after all retry attempts are exhausted. DLQs prevent poison messages from blocking the entire queue. DLQ messages must be **alerted on** and investigated.
+A queue (or Kafka topic) for messages that **cannot be processed** after all retry attempts are exhausted. DLQs prevent poison messages from blocking the entire queue/topic. DLQ messages must be **alerted on** and investigated. In Kafka this is usually called a **Dead Letter Topic (DLT)**.
 
 **Also see**: [Poison Message](#poison-message) · [Resilience](resilience.md)
 
@@ -153,3 +155,31 @@ When the **assignment of partitions to consumers changes** — triggered by cons
 | **Tune timeouts** | `session.timeout.ms`, `max.poll.interval.ms`, `heartbeat.interval.ms` |
 
 **Also see**: [Consumer Group](#consumer-group), [Partition](#partition)
+
+---
+
+## Consumer Lag
+
+The difference between the **last produced offset** and the **last consumed offset** for a partition. Lag measures how far a consumer is behind the producer. Sustained growth in lag means the consumer cannot keep up with the topic throughput.
+
+| Signal | Interpretation |
+|:---|:---|
+| **Lag grows** | Consumer is slower than producer or has stalled |
+| **Lag spikes after deploy** | New code is slower or blocking on I/O |
+| **Lag stays flat** | Consumer keeps up with arrival rate |
+
+**Also see**: [Consumer Group](#consumer-group), [Partition](#partition)
+
+---
+
+## Kafka Connect
+
+A Kafka framework for **moving data between Kafka and external systems** using reusable connectors. Commonly used to archive events to object storage (e.g., S3) for replay, analytics, or compliance.
+
+| Use case | Example |
+|:---|:---|
+| **Event archival** | Kafka → S3 → data lake for replay months later |
+| **Database ingestion** | CDC from PostgreSQL/MySQL into Kafka |
+| **Sink to analytics** | Kafka → Elasticsearch/Snowflake |
+
+**Also see**: [Partition](#partition) · [At-Least-Once Semantics](#at-least-once-semantics)
