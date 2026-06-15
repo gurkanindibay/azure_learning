@@ -25,9 +25,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Message Ordering | [`#message-ordering`](#message-ordering) |
 | At-Least-Once Semantics | [`#at-least-once-semantics`](#at-least-once-semantics) |
 | Exactly-Once Semantics | [`#exactly-once-semantics`](#exactly-once-semantics) |
+| Kafka Transactions | [`#kafka-transactions`](#kafka-transactions) |
 | Rebalance | [`#rebalance`](#rebalance) |
 | Consumer Lag | [`#consumer-lag`](#consumer-lag) |
 | Kafka Connect | [`#kafka-connect`](#kafka-connect) |
+| Idempotent Consumer | [`#idempotent-consumer`](#idempotent-consumer) |
+| Auto Commit | [`#auto-commit`](#auto-commit) |
 
 ---
 
@@ -183,3 +186,66 @@ A Kafka framework for **moving data between Kafka and external systems** using r
 | **Sink to analytics** | Kafka → Elasticsearch/Snowflake |
 
 **Also see**: [Partition](#partition) · [At-Least-Once Semantics](#at-least-once-semantics)
+
+---
+
+## Kafka Transactions
+
+Atomic **consume-process-produce** across Kafka topics. A transactional producer can consume a record, transform it, produce to an output topic, and commit the consumer offset — all as a single atomic unit. Achieves **exactly-once semantics** for Kafka-to-Kafka pipelines.
+
+### Key Characteristics
+- **Atomic boundary**: Offset commit + output produce succeed or fail together
+- **Requires**: idempotent producer (`enable.idempotence=true`), `transaction-id-prefix`, consumer `isolation.level=read_committed`
+- **Performance cost**: ~20-30% throughput reduction vs non-transactional
+
+### When to Use
+- Kafka-to-Kafka data pipelines where no duplicates or gaps are acceptable
+- Financial processing chains (input topic → transform → output topic)
+
+### When NOT to Use
+- When the pipeline involves external systems (use Outbox pattern instead)
+- High-throughput pipelines where at-least-once + idempotent consumer is sufficient
+
+**Also see**: [Exactly-Once Semantics](#exactly-once-semantics) · [Idempotent Consumer](#idempotent-consumer)
+
+---
+
+## Idempotent Consumer
+
+A consumer designed so that **processing the same message multiple times produces the same result** as processing it once. This is the universal invariant of reliable message processing: duplicates are inevitable (from rebalances, retries, restarts), and idempotency is the only defense.
+
+### Key Characteristics
+- **Duplicate-tolerant**: Same input → same outcome, no side-effect amplification
+- **Implementation patterns**: Upsert instead of insert, de-duplication by message key, idempotency keys in database
+- **Non-negotiable**: No offset commit strategy can prevent duplicates entirely
+
+### When to Use
+- Always — design for idempotency from day one in any message-driven system
+- Especially critical for: payments, order processing, inventory updates, audit events
+
+### When NOT to Use
+- Append-only log consumers where duplicates are harmless (rare)
+- Telemetry/metrics where occasional double-counting is acceptable
+
+**Also see**: [At-Least-Once Semantics](#at-least-once-semantics) · [Kafka Transactions](#kafka-transactions) · [Offset Commit](#offset-commit)
+
+---
+
+## Auto Commit
+
+A Kafka consumer mode (`enable-auto-commit: true`) where offsets are **committed periodically on a timer**, independent of whether processing succeeded. The fastest strategy but also the most dangerous: if the consumer crashes after commit but before processing, those messages are **permanently lost**.
+
+### Key Characteristics
+- **Decoupled from processing**: Kafka has no visibility into business logic success
+- **Timer-based**: Commit fires every `auto.commit.interval.ms` (default 5s)
+- **Data loss risk**: Commit before processing = at-most-once in practice
+
+### When to Use
+- Logs, metrics, telemetry, clickstream — data where occasional loss is acceptable
+- High-throughput pipelines prioritizing speed over correctness
+
+### When NOT to Use
+- Business-critical processing (orders, payments, workflows)
+- Any system where data loss has regulatory or financial implications
+
+**Also see**: [Offset Commit](#offset-commit) · [At-Least-Once Semantics](#at-least-once-semantics) · [Idempotent Consumer](#idempotent-consumer)
