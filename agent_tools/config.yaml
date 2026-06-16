@@ -166,60 +166,22 @@ takeaway_domains:
   harness:
     file: "28-agent-harness-key-takeaways.md"
     desc: "Agent Harness"
-
-    file: "20-api-design-patterns-key-takeaways.md"
-    desc: "API Design Patterns"
-    keywords: [source, azure, problem, also see, users, query]
-
-    file: "21-ai-agent-architecture-key-takeaways.md"
-    desc: "AI Agent Architecture"
-    keywords: [azure, source, problem, agentarch-, agent, root cause]
-
-    file: "23-circuit-breaker-key-takeaways.md"
-    desc: "Circuit Breaker"
-    keywords: [breaker, source, problem, root cause, key insight, cross-reference]
-
-    file: "24-hsm-bottleneck-key-takeaways.md"
-    desc: "HSM Bottleneck"
-    keywords: [source, problem, key insight, root cause, hsm-, latency]
-
-    file: "25-cqrs-fintech-key-takeaways.md"
-    desc: "CQRS Fintech"
-    keywords: [source, problem, cross-reference, root cause, ledger, cqrs-]
-
-    file: "26-docker-file-art-key-takeaways.md"
-    desc: "Docker File Art"
-    keywords: [source, key insight, problem, cache, docker-, root cause]
-
-    file: "27-apache-iggy-key-takeaways.md"
-    desc: "Apache Iggy"
-    keywords: [source, problem, root cause, key insight, iggy-, iggy]
-
-    file: "28-agent-harness-key-takeaways.md"
-    desc: "Agent Harness"
     keywords: [azure, harness, source, taxonomy, tradeoff, problem]
-
-    file: "29-mesh-key-takeaways.md"
-    desc: "Mesh"
-
-  broker:
-    file: "30-broker-key-takeaways.md"
-    desc: "Broker"
-    keywords: [source, problem, strategy, tradeoff, cross-reference, consumer]
-
+  mesh:
+    file: "35-mesh-key-takeaways.md"
+    desc: "Data Mesh & Medallion Architecture"
+    keywords: [data, mesh, data product, semantic layer, governance, source, problem, strategy, tradeoff]
   cache:
     file: "31-cache-key-takeaways.md"
     desc: "Cache"
     keywords: [source, dictionary, azure, problem, taxonomy, strategy]
-
   broker:
     file: "32-broker-key-takeaways.md"
     desc: "Broker"
     keywords: [source, dictionary, strategy, taxonomy, problem, also see]
-
   jvm:
     file: "33-jvm-key-takeaways.md"
-    desc: "Jvm"
+    desc: "JVM Memory & GC"
     keywords: [source, problem, cross-reference, root cause, key insight, memory]
 
 # Keyword → domain prefix suggestions for auto-detection
@@ -263,6 +225,13 @@ takeaway_keywords:
   media: media
   video: media
   encoding: media
+  data mesh: mesh
+  semantic layer: mesh
+  data fabric: mesh
+  federated governance: mesh
+  data catalog: mesh
+  data product: mesh
+  practical decentralization: mesh
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 

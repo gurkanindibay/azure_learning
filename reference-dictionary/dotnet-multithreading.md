@@ -33,6 +33,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Interlocked | [`#interlocked`](#interlocked) |
 | Deadlock | [`#deadlock`](#deadlock) |
 | EAP / APM (Legacy) | [`#eap-apm`](#eap-apm) |
+| Single-Threaded Architecture | [`#single-threaded-architecture`](#single-threaded-architecture) |
 
 ---
 
@@ -229,3 +230,32 @@ Two or more threads **waiting on each other forever**. Common cause in .NET: mix
 | **TAP** | `async Task<T> MethodAsync()` | **Use this** |
 
 **Also see**: [TAP](#tap)
+
+---
+
+## Single-Threaded Architecture
+
+A deliberate architectural choice to process all work on a single thread, eliminating lock contention, race conditions, and thread-safety overhead. Redis is the archetypal example — it is single-threaded by design, not by accident or laziness, because in-memory operations are so fast that the threading overhead would exceed the benefit.
+
+### Key Characteristics
+
+- **Lock-free by construction**: No mutexes, no semaphores, no atomic operations needed — data structure access is inherently serialized
+- **Simplified reasoning**: Debugging, profiling, and maintaining single-threaded code is dramatically simpler than multi-threaded equivalents
+- **Predictable latency**: No thread scheduling jitter or context-switch overhead; each operation completes before the next begins
+
+### When to Use
+
+- In-memory data stores where individual operations complete in microseconds (Redis, Memcached)
+- Event-loop-based servers processing I/O-bound workloads
+- Systems where correctness and debuggability are more important than raw multi-core throughput
+
+### When NOT to Use
+
+- CPU-bound workloads that need to saturate multiple cores to meet latency SLOs
+- When a blocking operation (e.g., a slow disk I/O or external API call) would stall the entire system
+- Horizontally scaled services where per-instance throughput must be maximized
+
+### Also see
+
+- [Event Loop](../reference-dictionary/architecture-patterns.md#event-loop) — the concurrency pattern that single-threaded architectures typically employ
+- [Thread-Safety patterns](../reference-dictionary/dotnet-multithreading.md)
