@@ -47,6 +47,7 @@ Data protection at rest, in transit, and in use.
 |----------|-------------|
 | [6.4.0 Data Security Architecture](./6.4-data-security/6.4.0-data-security-architecture.md) | Encryption, key management, confidential computing, privacy-by-design |
 | [6.4.1 PCI DSS Encryption Guide](./6.4-data-security/6.4.1-pci-dss-encryption-guide.md) | DEK/KEK hierarchy, HSM tokenization, PCI DSS operational controls |
+| [6.4.2 Redis Blacklist Integrity](./6.4-data-security/6.4.2-redis-blacklist-integrity.md) | Per-entry HMAC, versioned set hashing, atomic refresh, deny-closed fallback for cache-based trust boundaries |
 
 ---
 
