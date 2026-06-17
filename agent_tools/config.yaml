@@ -184,6 +184,21 @@ takeaway_domains:
     desc: "JVM Memory & GC"
     keywords: [source, problem, cross-reference, root cause, key insight, memory]
 
+  broker:
+    file: "30-broker-key-takeaways.md"
+    desc: "Broker"
+    keywords: [source, problem, strategy, tradeoff, cross-reference, consumer]
+
+  sdi:
+    file: "34-sdi-key-takeaways.md"
+    desc: "Sdi"
+    keywords: [source, dictionary, taxonomy, problem, strategy, azure]
+
+  auth:
+    file: "36-auth-key-takeaways.md"
+    desc: "Auth"
+    keywords: [source, problem, strategy, tradeoff, key concept, identity]
+
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
 takeaway_keywords:
@@ -412,5 +427,8 @@ dictionary_domains:
       - generation
       - outofmemoryerror
       - metaspace
+
+
+
 
 

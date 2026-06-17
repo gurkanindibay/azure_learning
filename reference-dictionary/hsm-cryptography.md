@@ -26,6 +26,9 @@ timestamp: 2026-06-14T00:00:00Z
 | 3D Secure (3DS) | [`#3d-secure`](#3d-secure) |
 | Post-Quantum Cryptography | [`#post-quantum-cryptography`](#post-quantum-cryptography) |
 | ARQC | [`#arqc`](#arqc) |
+| TLS (Transport Layer Security) | [`#tls-transport-layer-security`](#tls-transport-layer-security) |
+| mTLS (Mutual TLS) | [`#mtls-mutual-tls`](#mtls-mutual-tls) |
+| Man-in-the-Middle Attack | [`#man-in-the-middle-attack`](#man-in-the-middle-attack) |
 
 ---
 
@@ -116,3 +119,84 @@ Cryptographic algorithms **resistant to quantum computer attacks**. NIST publish
 **Authorization Request Cryptogram** — an EMV chip-generated cryptogram validated by the issuer HSM during a card-present transaction. The chip proves it is genuine by producing this cryptogram using keys securely stored on the card.
 
 **Also see**: [Payment HSM](#payment-hsm), [PIN Block Translation](#pin-block-translation)
+
+---
+
+## TLS (Transport Layer Security)
+
+A cryptographic protocol that provides **confidentiality, integrity, and server authentication** for communication over a network. TLS uses X.509 certificates to prove the server's identity and encrypts data in transit.
+
+### Key Characteristics
+
+- Uses X.509 certificates for server authentication
+- Protects against eavesdropping and tampering
+- Successor to SSL
+- Terminated at the server, load balancer, or API gateway
+
+### When to Use
+
+- All external communication over untrusted networks
+- Any API handling sensitive data
+
+### When NOT to Use
+
+- As the only control for service-to-service authentication (use mTLS)
+- With self-signed certificates in production without proper trust distribution
+
+### Also see
+
+- [mTLS](#mtls-mutual-tls)
+- [Man-in-the-Middle Attack](#man-in-the-middle-attack)
+
+---
+
+## mTLS (Mutual TLS)
+
+TLS extended so that **both the client and server present and validate each other's certificates**, enabling mutual authentication.
+
+### Key Characteristics
+
+- Both peers authenticate with X.509 certificates
+- Common in microservices and service mesh architectures
+- Requires certificate provisioning, rotation, and revocation infrastructure
+
+### When to Use
+
+- Service-to-service authentication in microservices
+- Zero Trust internal networks
+- When service identity must be cryptographically proven
+
+### When NOT to Use
+
+- Client-to-server browser traffic (browsers cannot easily present service certificates)
+- When certificate management overhead exceeds security requirements
+
+### Also see
+
+- [TLS](#tls-transport-layer-security)
+- [Zero Trust](architecture-patterns.md#zero-trust)
+
+---
+
+## Man-in-the-Middle Attack
+
+An attack where an adversary **intercepts or alters communication** between two parties. TLS prevents MITM by authenticating the server (and optionally the client via mTLS) and encrypting the channel.
+
+### Key Characteristics
+
+- Attacker positions between client and server
+- Can eavesdrop, modify, or inject messages
+- Prevented by certificate-based authentication and encryption
+
+### When to Use
+
+- Threat model for any unencrypted or unauthenticated channel
+
+### When NOT to Use
+
+- N/A — this is an attack pattern, not a control
+
+### Also see
+
+- [TLS](#tls-transport-layer-security)
+- [mTLS](#mtls-mutual-tls)

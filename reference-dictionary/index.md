@@ -46,9 +46,9 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |
 | 9 | [`dotnet-multithreading.md`](dotnet-multithreading.md) | .NET Multithreading & Async | TAP, Task, async/await, ThreadPool, ConfigureAwait, SemaphoreSlim, Mutex, lock, Barrier, Interlocked, Deadlock |
 | 10 | [`azure-services.md`](azure-services.md) | Azure Services (Networking, Identity, Compute, Data, Integration, Observability) | VNet, NSG, Entra ID, Managed Identity, AKS, Cosmos DB, Event Hubs, Service Bus, Azure Monitor, Application Insights |
-| 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework, Virtual Threads, Leyden AOT, Helidon SE, GOMAXPROCS |
+| 11 | [`architecture-patterns.md`](architecture-patterns.md) | Architecture & Design Patterns | DDD, Bounded Context, Ubiquitous Language, Strangler Fig, Anti-Corruption Layer, Sidecar, Blue-Green, Canary, Well-Architected Framework, Virtual Threads, Leyden AOT, Helidon SE, GOMAXPROCS, Authentication, Authorization, JWT, OAuth2, Zero Trust, RBAC, ABAC, API Gateway |
 | 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
-| 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography |
+| 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography, TLS, mTLS, Man-in-the-Middle Attack |
 | 14 | [`java-jvm.md`](java-jvm.md) | Java JVM & Memory Management | JVM Heap, Young/Old Generation, Metaspace, PermGen, GC, Minor/Major/Full GC, G1GC, ZGC, OutOfMemoryError, Memory Leak, ThreadLocal, Heap Dump, Java Flight Recorder |
 
 ---
@@ -87,6 +87,9 @@ Some terms span multiple domains. They are **defined once** in their primary dom
 | "What's the difference between Event Hubs and Service Bus?" | [`azure-services.md#event-hubs`](azure-services.md#event-hubs) |
 | "What is a Bounded Context in DDD?" | [`architecture-patterns.md#bounded-context`](architecture-patterns.md#bounded-context) |
 | "Why can't HSMs scale horizontally?" | [`hsm-cryptography.md#hsm`](hsm-cryptography.md#hsm) |
+| "What's the difference between authentication and authorization?" | [`architecture-patterns.md#authentication`](architecture-patterns.md#authentication) |
+| "When should I use JWT vs sessions?" | [`architecture-patterns.md#jwt-json-web-token`](architecture-patterns.md#jwt-json-web-token) |
+| "What's the difference between TLS and mTLS?" | [`hsm-cryptography.md#mtls-mutual-tls`](hsm-cryptography.md#mtls-mutual-tls) |
 | "What's DASH/HLS adaptive streaming?" | [`media-processing.md#dash-hls`](media-processing.md#dash-hls) |
 
 ---
