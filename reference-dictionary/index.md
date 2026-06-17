@@ -36,11 +36,11 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 
 | # | File | Domain | Key Terms |
 |:---|:---|:---|:---|
-| 1 | [`cqrs-event-driven.md`](cqrs-event-driven.md) | CQRS, Event Sourcing & Patterns | CQRS, Event Sourcing, Projection, Read Model, Ledger, Outbox Pattern, Idempotency, Dual-Write Problem, Event-Driven Architecture |
+| 1 | [`cqrs-event-driven.md`](cqrs-event-driven.md) | CQRS, Event Sourcing & Patterns | CQRS, Command Side, Query Side, Event Sourcing, Projection, Read Model, Ledger, Outbox Pattern, Post-Commit Dispatch, Idempotency, Dual-Write Problem, Event-Driven Architecture |
 | 2 | [`resilience.md`](resilience.md) | Resilience & Fault Tolerance | Circuit Breaker, Bulkhead, Retry Amplification, Fallback, Timeout, Resilience Stack, Graceful Degradation |
 | 3 | [`messaging.md`](messaging.md) | Message Brokers & Async | Kafka vs RabbitMQ, Partition, Consumer Group, Offset Commit, DLQ, Poison Message, Message Ordering, At-Least-Once, Exactly-Once |
 | 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations, Consistent Hashing, Nagle's Algorithm / TCP_NODELAY |
-| 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Isolation Levels, Double-Booking, Pessimistic/Optimistic Locking, Fencing Token, Saga, Sharding |
+| 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Atomic Conditional Update, Change Data Capture (CDC), Distributed Lock, Double-Booking, Exclusion Constraint, Fencing Token, Isolation Levels, Lease-Based Lock, Optimistic/Pessimistic Locking, Saga, Sharding |
 | 6 | [`caching.md`](caching.md) | Caching Architecture | Cache Stampede, Cache-Aside, Invalidation, TTL, Eviction Policies, Request Coalescing, PER Algorithm |
 | 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry) |
 | 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |

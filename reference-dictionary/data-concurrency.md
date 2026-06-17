@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: "Data, Concurrency & Transactions"
-description: "The four guarantees of a reliable database transaction:"
+description: "Database transactions, isolation levels, locking primitives, and concurrency guarantees."
 timestamp: 2026-06-14T00:00:00Z
 ---
 
@@ -17,11 +17,16 @@ timestamp: 2026-06-14T00:00:00Z
 | Term | Anchor |
 |:---|:---|
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
-| Isolation Levels | [`#isolation-levels`](#isolation-levels) |
+| Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
+| Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
+| Distributed Lock | [`#distributed-lock`](#distributed-lock) |
 | Double-Booking Problem | [`#double-booking-problem`](#double-booking-problem) |
-| Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
-| Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
+| Exclusion Constraint | [`#exclusion-constraint`](#exclusion-constraint) |
 | Fencing Token | [`#fencing-token`](#fencing-token) |
+| Isolation Levels | [`#isolation-levels`](#isolation-levels) |
+| Lease-Based Lock | [`#lease-based-lock`](#lease-based-lock) |
+| Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
+| Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Sharding | [`#sharding`](#sharding) |
 
@@ -42,6 +47,83 @@ The four guarantees of a reliable database transaction:
 
 ---
 
+## Atomic Conditional Update
+
+A single SQL `UPDATE` statement that changes a row only if a predicate is still true, relying on the database to guarantee atomicity. The application checks the affected-row count to determine success or failure.
+
+```sql
+UPDATE inventory
+SET available = false
+WHERE room_id = 101 AND available = true;
+```
+
+If one row is updated, the booking succeeded; if zero, the resource was already taken.
+
+### Key Characteristics
+- Atomic check-and-set in one round trip
+- No explicit transaction-level lock required for many scenarios
+- Affected-row count tells the application whether it won the race
+
+### When to Use
+- Single-row flag flips (for example, `available` → `booked`)
+- Low-to-moderate contention where `SELECT ... FOR UPDATE` is unnecessary
+- Databases without exclusion-constraint support
+
+### When NOT to Use
+- Multi-row or multi-table invariants (use serializable isolation or compensating logic)
+- Complex business rules that cannot be expressed in a single predicate
+
+**Also see**: [Pessimistic Locking](#pessimistic-locking), [Optimistic Locking](#optimistic-locking), [Exclusion Constraint](#exclusion-constraint)
+
+---
+
+## Change Data Capture (CDC)
+
+A mechanism that observes and propagates changes made to a database (inserts, updates, deletes) to downstream consumers in near real time, typically by reading the transaction log.
+
+### Key Characteristics
+- **Log-based**: reads the database's native transaction log (WAL, binlog) for low overhead
+- **Event-driven**: emits change events that downstream systems can consume
+- **Decouples producers from consumers**: applications do not need to publish events explicitly
+
+### When to Use
+- Triggering downstream workflows after a database commit
+- Keeping caches, search indexes, or read models synchronized
+- Reliable event emission when the outbox pattern is not in place
+
+### When NOT to Use
+- When the database does not expose a transaction log or CDC connector
+- As a replacement for transactional business logic; events describe what happened, they do not enforce correctness
+
+**Also see**: [Outbox Pattern](cqrs-event-driven.md#outbox-pattern), [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
+
+---
+
+## Distributed Lock
+
+A coordination primitive used across multiple processes or nodes to grant temporary, mutually exclusive access to a shared resource. Implementations include Redis Redlock, ZooKeeper ephemeral sequential nodes, and etcd leases.
+
+> **Key insight**: Distributed locks are **best-effort coordination mechanisms**, not correctness guarantees. They reduce contention and improve latency but cannot enforce long-lived invariants when lease expiry, GC pauses, clock skew, or network jitter occur.
+
+### Key Characteristics
+- **Lease-based**: most implementations rely on a TTL or session that can expire
+- **Best-effort**: safety depends on timing, fencing tokens, and correct client behavior
+- **Useful for**: reducing hot-key contention, preventing thundering herd, deduplicating background jobs
+
+### When to Use
+- Non-critical serialization (cache refresh, job deduplication)
+- High-contention paths where database locks would be too expensive
+- As an optimization layered over already-correct database invariants
+
+### When NOT to Use
+- As the sole correctness mechanism for financial or inventory bookings
+- When critical-section duration can exceed the lock lease window
+- Without a fencing token or equivalent stale-operation guard
+
+**Also see**: [Lease-Based Lock](#lease-based-lock), [Fencing Token](#fencing-token), [Pessimistic Locking](#pessimistic-locking)
+
+---
+
 ## Isolation Levels
 
 Controls how transaction changes are visible to other concurrent transactions.
@@ -56,6 +138,27 @@ Controls how transaction changes are visible to other concurrent transactions.
 > **Fintech default**: Repeatable Read for balance checks; Serializable for ledger posting.
 
 **Also see**: [ACID Transactions](#acid-transactions), [Double-Booking Problem](#double-booking-problem)
+
+---
+
+## Lease-Based Lock
+
+A lock that is valid only for a bounded time window (lease/TTL). The holder must renew the lease before it expires; otherwise the resource becomes available to other contenders.
+
+### Key Characteristics
+- Automatic expiry prevents stuck locks after client crashes
+- Renewal heartbeats are sensitive to GC pauses, network jitter, and clock skew
+- Lease duration is a tradeoff between safety (longer) and throughput/availability (shorter)
+
+### When to Use
+- Distributed resource coordination with bounded critical sections
+- Environments where clients may fail without releasing locks explicitly
+
+### When NOT to Use
+- When the protected operation's duration is unpredictable or can exceed the lease
+- As the only guard for correctness-critical invariants
+
+**Also see**: [Distributed Lock](#distributed-lock), [Fencing Token](#fencing-token)
 
 ---
 
@@ -83,25 +186,50 @@ TX2: UPDATE seats SET booked=true → success  ← DOUBLE BOOKING
 
 ---
 
-## Pessimistic Locking
+## Exclusion Constraint
 
-Locks a row **before** reading or writing — other transactions must wait. Use `SELECT ... FOR UPDATE` in PostgreSQL.
+A PostgreSQL constraint that prevents rows from satisfying a given operator expression at the same time. Commonly used with the `gist` index to prevent overlapping date ranges for the same resource.
 
 ```sql
-BEGIN;
-SELECT balance FROM accounts WHERE id = 123 FOR UPDATE;
--- Other TXs trying FOR UPDATE on id=123 wait here
-UPDATE accounts SET balance = balance - 100 WHERE id = 123;
-COMMIT;
+EXCLUDE USING gist (
+  room_id WITH =,
+  daterange(start_date, end_date) WITH &&
+);
 ```
 
-| When to Use | When NOT |
-|:---|:---|
-| High contention on the same rows | Read-heavy, low-contention workloads |
-| Financial operations (limit reservation) | Reporting/dashboard queries |
-| Money movement | Search/browse endpoints |
+### Key Characteristics
+- Enforces range-based uniqueness (for example, no overlapping bookings)
+- Uses a GiST index and operator class (`&&` for range overlap)
+- Database-native guarantee, not dependent on application logic
 
-**Also see**: [Optimistic Locking](#optimistic-locking), [Double-Booking Problem](#double-booking-problem)
+### When to Use
+- Booking systems with date ranges (hotel rooms, rental cars, conference rooms)
+- Any domain where "no overlap" is the invariant
+
+### When NOT to Use
+- Databases that do not support exclusion constraints (use application-level checks or serialized locking instead)
+- Simple single-value uniqueness scenarios where a unique constraint is sufficient
+
+**Also see**: [Atomic Conditional Update](#atomic-conditional-update), [Double-Booking Problem](#double-booking-problem)
+
+---
+
+## Fencing Token
+
+A **monotonically increasing token** issued with a distributed lock. The resource server rejects operations with stale tokens, preventing a GC-paused or clock-drifted lock holder from corrupting data.
+
+```
+Lock service:  Lock acquired → token: 42
+Client:        Write(key, value, token=42)
+Resource:      Accept — token 42 ≥ last_seen 41
+---
+GC pause...
+---
+Old client:    Write(key, value, token=42)
+Resource:      Reject — token 42 < last_seen 43 (another holder already wrote)
+```
+
+**Also see**: [Optimistic Locking](#optimistic-locking), [Lease-Based Lock](#lease-based-lock), [Distributed Lock](#distributed-lock)
 
 ---
 
@@ -126,22 +254,25 @@ WHERE id = 123 AND version = 5;
 
 ---
 
-## Fencing Token
+## Pessimistic Locking
 
-A **monotonically increasing token** issued with a distributed lock. The resource server rejects operations with stale tokens, preventing a GC-paused or clock-drifted lock holder from corrupting data.
+Locks a row **before** reading or writing — other transactions must wait. Use `SELECT ... FOR UPDATE` in PostgreSQL.
 
-```
-Lock service:  Lock acquired → token: 42
-Client:        Write(key, value, token=42)
-Resource:      Accept — token 42 ≥ last_seen 41
----
-GC pause...
----
-Old client:    Write(key, value, token=42)
-Resource:      Reject — token 42 < last_seen 43 (another holder already wrote)
+```sql
+BEGIN;
+SELECT balance FROM accounts WHERE id = 123 FOR UPDATE;
+-- Other TXs trying FOR UPDATE on id=123 wait here
+UPDATE accounts SET balance = balance - 100 WHERE id = 123;
+COMMIT;
 ```
 
-**Also see**: [Optimistic Locking](#optimistic-locking)
+| When to Use | When NOT |
+|:---|:---|
+| High contention on the same rows | Read-heavy, low-contention workloads |
+| Financial operations (limit reservation) | Reporting/dashboard queries |
+| Money movement | Search/browse endpoints |
+
+**Also see**: [Optimistic Locking](#optimistic-locking), [Double-Booking Problem](#double-booking-problem)
 
 ---
 

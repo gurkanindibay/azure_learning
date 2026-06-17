@@ -4,7 +4,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 > **Auto-generated**: This file is automatically synchronized with index.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-06-15 00:20:41
+> **Last updated**: 2026-06-17 22:37:12
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 

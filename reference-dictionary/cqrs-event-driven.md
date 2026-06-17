@@ -24,6 +24,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Read Model | [`#read-model`](#read-model) |
 | Ledger | [`#ledger`](#ledger) |
 | Outbox Pattern | [`#outbox-pattern`](#outbox-pattern) |
+| Post-Commit Dispatch | [`#post-commit-dispatch`](#post-commit-dispatch) |
 | Idempotency | [`#idempotency`](#idempotency) |
 | Dual-Write Problem | [`#dual-write-problem`](#dual-write-problem) |
 | Event-Driven Architecture | [`#event-driven-architecture`](#event-driven-architecture) |
@@ -176,6 +177,32 @@ RIGHT:   DB write + Outbox write (same TX) → Publisher reads outbox → Event 
 | **Order preserved** | Events published in transaction commit order |
 
 **Also see**: [Dual-Write Problem](#dual-write-problem), [Idempotency](#idempotency) · [Messaging](messaging.md)
+
+---
+
+## Post-Commit Dispatch
+
+The rule that side effects such as events, notifications, and confirmations must be emitted only after the originating database transaction has successfully committed.
+
+```
+WRONG:  Check inventory → Emit event → Commit DB  (event may describe a failed write)
+RIGHT:  Check inventory → Commit DB → Emit event  (event is a fact)
+```
+
+### Key Characteristics
+- Prevents confirmations or downstream events for rolled-back transactions
+- Often implemented via outbox pattern, CDC, or database post-commit hooks
+- Requires idempotency on the consumer side because at-least-once delivery is common
+
+### When to Use
+- Sending booking confirmations, payment receipts, or inventory updates
+- Any workflow where an external observable must reflect committed state
+
+### When NOT to Use
+- When the side effect is purely in-process and does not outlive the transaction
+- Do not use this as an excuse to delay user feedback; return a `202 Accepted` or equivalent while the post-commit path completes
+
+**Also see**: [Outbox Pattern](#outbox-pattern), [Dual-Write Problem](#dual-write-problem) · [Data & Concurrency: Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture)
 
 ---
 
