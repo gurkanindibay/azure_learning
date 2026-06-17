@@ -91,15 +91,9 @@ takeaway_domains:
   tx:
     file: "02-concurrency-transactions.md"
     desc: "Concurrency & Transactions"
-  cache:
-    file: "03-caching-architecture.md"
-    desc: "Caching Architecture"
   api:
     file: "04-api-network-design.md"
     desc: "API & Network Design"
-  broker:
-    file: "05-message-brokers-async.md"
-    desc: "Message Brokers & Async"
   uber:
     file: "06-uber-architecture-case-study.md"
     desc: "Uber Architecture"
@@ -124,9 +118,6 @@ takeaway_domains:
   sql:
     file: "14-sql-query-optimization.md"
     desc: "SQL Query Optimization"
-  sdi:
-    file: "15-system-design-interview-roadmap.md"
-    desc: "System Design Interview"
   gw:
     file: "16-reverse-proxy-lb-api-gateway.md"
     desc: "Reverse Proxy, LB & API Gateway"
@@ -166,38 +157,35 @@ takeaway_domains:
   harness:
     file: "28-agent-harness-key-takeaways.md"
     desc: "Agent Harness"
-    keywords: [azure, harness, source, taxonomy, tradeoff, problem]
-  mesh:
-    file: "35-mesh-key-takeaways.md"
-    desc: "Data Mesh & Medallion Architecture"
-    keywords: [data, mesh, data product, semantic layer, governance, source, problem, strategy, tradeoff]
-  cache:
-    file: "31-cache-key-takeaways.md"
-    desc: "Cache"
-    keywords: [source, dictionary, azure, problem, taxonomy, strategy]
-  broker:
-    file: "32-broker-key-takeaways.md"
-    desc: "Broker"
-    keywords: [source, dictionary, strategy, taxonomy, problem, also see]
-  jvm:
-    file: "33-jvm-key-takeaways.md"
-    desc: "JVM Memory & GC"
-    keywords: [source, problem, cross-reference, root cause, key insight, memory]
-
+    keywords: ["azure", "harness", "source", "taxonomy", "tradeoff", "problem"]
+  perf:
+    file: "29-microservices-runtime-performance.md"
+    desc: "Microservices Runtime Performance"
   broker:
     file: "30-broker-key-takeaways.md"
     desc: "Broker"
-    keywords: [source, problem, strategy, tradeoff, cross-reference, consumer]
-
+    keywords: ["source", "problem", "strategy", "tradeoff", "cross-reference", "consumer"]
+  cache:
+    file: "31-cache-key-takeaways.md"
+    desc: "Cache"
+    keywords: ["source", "dictionary", "azure", "problem", "taxonomy", "strategy"]
+  jvm:
+    file: "33-jvm-key-takeaways.md"
+    desc: "JVM Memory & GC"
+    keywords: ["source", "problem", "cross-reference", "root cause", "key insight", "memory"]
   sdi:
     file: "34-sdi-key-takeaways.md"
     desc: "Sdi"
-    keywords: [source, dictionary, taxonomy, problem, strategy, azure]
-
+    keywords: ["source", "dictionary", "taxonomy", "problem", "strategy", "azure"]
+  mesh:
+    file: "35-mesh-key-takeaways.md"
+    desc: "Data Mesh & Medallion Architecture"
+    keywords: ["data", "mesh", "data product", "semantic layer", "governance", "source", "problem", "strategy", "tradeoff"]
   auth:
     file: "36-auth-key-takeaways.md"
     desc: "Auth"
-    keywords: [source, problem, strategy, tradeoff, key concept, identity]
+    keywords: ["source", "problem", "strategy", "tradeoff", "key concept", "identity"]
+
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
@@ -247,6 +235,14 @@ takeaway_keywords:
   data catalog: mesh
   data product: mesh
   practical decentralization: mesh
+  authentication: auth
+  authorization: auth
+  identity: auth
+  jwt: auth
+  oauth: auth
+  oauth2: auth
+  mtls: auth
+  zero trust: auth
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
