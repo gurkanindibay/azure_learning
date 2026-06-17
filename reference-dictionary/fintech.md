@@ -16,11 +16,86 @@ timestamp: 2026-06-14T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
-| Reconciliation | [`#reconciliation`](#reconciliation) |
-| Limit Reservation | [`#limit-reservation`](#limit-reservation) |
-| Risk Actions | [`#risk-actions`](#risk-actions) |
 | Financial States | [`#financial-states`](#financial-states) |
+| KYC (Know Your Customer) | [`#kyc-know-your-customer`](#kyc-know-your-customer) |
 | Ledger (Double-Entry) | [`#ledger-double-entry`](#ledger-double-entry) |
+| Limit Reservation | [`#limit-reservation`](#limit-reservation) |
+| Payment Gateway | [`#payment-gateway`](#payment-gateway) |
+| Payment Processor | [`#payment-processor`](#payment-processor) |
+| Reconciliation | [`#reconciliation`](#reconciliation) |
+| Risk Actions | [`#risk-actions`](#risk-actions) |
+
+---
+
+## Payment Gateway
+
+The **frontend-facing component** that collects and encrypts payment instrument data, authenticates the payer, and requests an authorization from the downstream processor or acquirer. It is the "bouncer" at the entrance of the payment flow.
+
+### Key Characteristics
+- **Encrypts sensitive data** (card number, CVV) using TLS and tokenization before forwarding
+- **Authenticates the payer** through credentials, 3D Secure, or biometric verification
+- **Routes the authorization request** to the appropriate processor or acquirer
+- **Narrows PCI-DSS scope** for merchants by keeping raw card data out of merchant systems
+
+### When to Use
+- E-commerce checkouts, mobile wallets, and any merchant-facing payment collection
+- Multi-processor setups where one gateway abstracts several back-end processors
+
+### When NOT to Use
+- As the component that actually moves money or settles with card networks
+- As a substitute for processor-level reconciliation and settlement reporting
+
+### Also see
+- [Payment Processor](#payment-processor) — the engine that moves money
+- [PCI-DSS](../reference-dictionary/hsm-cryptography.md#pci-dss-payment-card-industry-data-security-standard) — the compliance standard gateways help contain
+
+---
+
+## Payment Processor
+
+The **back-end engine** that routes authorization and settlement messages between the merchant, card networks (Visa, Mastercard), and issuing banks. It is the "club infrastructure" that actually moves money from payer to merchant.
+
+### Key Characteristics
+- **Talks to card networks and banks** to authorize, capture, and settle transactions
+- **Manages merchant settlement** — moving funds to the merchant account after clearing
+- **Handles reversals, refunds, and chargebacks** through the card-network message flows
+- **Is usually PCI-DSS Level 1 compliant** and stores/tokenizes sensitive instruments
+
+### When to Use
+- Any system that must clear and settle card payments
+- When the business needs network-level routing, retries, and dispute management
+
+### When NOT to Use
+- For simple payer authentication or data collection (use a payment gateway)
+- When the only requirement is wallet/top-up movements inside a closed loop
+
+### Also see
+- [Payment Gateway](#payment-gateway) — the front-door collector
+- [Ledger (Double-Entry)](#ledger-double-entry) — how the system records the movement
+
+---
+
+## KYC (Know Your Customer)
+
+The **regulatory process** of verifying a customer's identity before allowing them to use financial services. KYC reduces fraud, money laundering, and terrorist financing risk.
+
+### Key Characteristics
+- **Identity verification** — government ID, selfie matching, document liveness checks
+- **Risk scoring** — sanctions lists, politically exposed persons (PEP), adverse media
+- **Ongoing monitoring** — periodic re-verification and transaction monitoring
+- **Jurisdiction-specific** — different rules per country/regulator
+
+### When to Use
+- Onboarding for wallets, bank accounts, lending, trading, or high-value payments
+- Before enabling withdrawals, cross-border transfers, or merchant payouts
+
+### When NOT to Use
+- For anonymous or low-risk product flows where regulation does not require it
+- As a one-time check; KYC is a lifecycle process, not a single gate
+
+### Also see
+- [PCI-DSS](../reference-dictionary/hsm-cryptography.md#pci-dss-payment-card-industry-data-security-standard) — payment-card security standard
+- [Risk Actions](#risk-actions) — how risk decisions become new ledger entries
 
 ---
 

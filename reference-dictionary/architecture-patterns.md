@@ -19,6 +19,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Domain-Driven Design (DDD) | [`#ddd`](#ddd) |
 | Bounded Context | [`#bounded-context`](#bounded-context) |
 | Ubiquitous Language | [`#ubiquitous-language`](#ubiquitous-language) |
+| Database Per Service | [`#database-per-service`](#database-per-service) |
 | Strangler Fig Pattern | [`#strangler-fig`](#strangler-fig) |
 | Anti-Corruption Layer | [`#anti-corruption-layer`](#anti-corruption-layer) |
 | Sidecar Pattern | [`#sidecar-pattern`](#sidecar-pattern) |
@@ -81,6 +82,29 @@ An **explicit boundary** around a domain model with its own ubiquitous language.
 A **shared, precise terminology** between developers and domain experts within a bounded context. The same word means the same thing to everyone — no translation gaps.
 
 **Also see**: [DDD](#ddd), [Bounded Context](#bounded-context) · [Fintech: Financial States](fintech.md#financial-states)
+
+---
+
+## Database Per Service
+
+A **microservices data pattern** where each service owns and manages its own database. No two services share the same logical data store, enforcing service boundaries and independent deployability.
+
+### Key Characteristics
+- **Private schema per service** — other services access data only through the service's API or events
+- **Technology fit** — each service can choose SQL, NoSQL, or a specialized store based on its access patterns
+- **No shared locks or joins** — cross-service consistency is achieved via APIs, sagas, or events
+- **Independent scaling and recovery** — one service's database load does not starve another
+
+### When to Use
+- Microservices where teams need autonomous deployment and schema evolution
+- Domains with heterogeneous data access patterns (e.g., ACID balances + high-write event logs)
+
+### When NOT to Use
+- Early-stage monoliths where cross-table joins and transactions dramatically simplify correctness
+- When the organization lacks mature API/event contracts and saga compensation design
+
+### Also see
+- [Bounded Context](#bounded-context) · [Saga Pattern](data-concurrency.md#saga-pattern) · [Outbox Pattern](cqrs-event-driven.md#outbox-pattern)
 
 ---
 

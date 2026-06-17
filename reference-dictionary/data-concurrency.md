@@ -19,6 +19,7 @@ timestamp: 2026-06-14T00:00:00Z
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
 | Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
+| Compensating Transaction | [`#compensating-transaction`](#compensating-transaction) |
 | Distributed Lock | [`#distributed-lock`](#distributed-lock) |
 | Double-Booking Problem | [`#double-booking-problem`](#double-booking-problem) |
 | Exclusion Constraint | [`#exclusion-constraint`](#exclusion-constraint) |
@@ -96,6 +97,39 @@ A mechanism that observes and propagates changes made to a database (inserts, up
 - As a replacement for transactional business logic; events describe what happened, they do not enforce correctness
 
 **Also see**: [Outbox Pattern](cqrs-event-driven.md#outbox-pattern), [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
+
+---
+
+## Compensating Transaction
+
+An **undo operation** that reverses the effect of a previously committed step in a distributed transaction. Used by the [Saga pattern](#saga-pattern) when a later step fails and the system cannot rely on a global rollback.
+
+### Key Characteristics
+- **Applies to already-committed work** — unlike a database rollback, it is a new business action
+- **Must be idempotent** — the same compensation may be retried after a crash
+- **Must be deterministic** — given the same original step, it always produces the same reversal
+- **May be partial** — some steps (e.g., a notification) cannot be undone, only acknowledged
+
+### Example
+
+```
+Step 1: Reserve inventory  →  success
+Step 2: Charge payment     →  success
+Step 3: Create shipment    →  failure
+Compensate: Refund payment →  success
+Compensate: Release inventory →  success
+```
+
+### When to Use
+- Distributed sagas where steps cross service or database boundaries
+- Business operations that are irreversible by simple rollback (external payments, inventory reservations)
+
+### When NOT to Use
+- Inside a single ACID database transaction (use normal rollback)
+- When the business domain has no well-defined reversal semantics
+
+### Also see
+- [Saga Pattern](#saga-pattern) · [Idempotency](cqrs-event-driven.md#idempotency)
 
 ---
 

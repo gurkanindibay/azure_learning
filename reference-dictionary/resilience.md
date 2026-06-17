@@ -21,6 +21,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Bulkhead | [`#bulkhead`](#bulkhead) |
 | Aspect Order | [`#aspect-order`](#aspect-order) |
 | Retry Amplification | [`#retry-amplification`](#retry-amplification) |
+| Exponential Backoff | [`#exponential-backoff`](#exponential-backoff) |
 | Fallback | [`#fallback`](#fallback) |
 | Timeout | [`#timeout`](#timeout) |
 | Resilience Stack | [`#resilience-stack`](#resilience-stack) |
@@ -110,6 +111,29 @@ When retries multiply the load on an already-failing system — each failed call
 **Mitigations**: Circuit breaker must wrap retry (aspect order: Retry → CircuitBreaker), exponential backoff with jitter, max retry limit, retry only on transient errors.
 
 **Also see**: [Circuit Breaker](#circuit-breaker), [Timeout](#timeout) · [Messaging](messaging.md#poison-message)
+
+---
+
+## Exponential Backoff
+
+A retry strategy that **increases the wait time between retries exponentially** after each failure. Combined with jitter, it prevents a thundering herd from overwhelming a recovering downstream service.
+
+### Key Characteristics
+- **Wait interval grows**: 100 ms → 200 ms → 400 ms → 800 ms → capped maximum
+- **Caps at a maximum delay** to avoid unbounded wait times
+- **Adds jitter** (randomized offset) to desynchronize retry storms
+- **Resets on success** so healthy paths stay fast
+
+### When to Use
+- Retrying transient failures from external services, networks, or databases
+- Before a circuit breaker opens, to give the dependency time to recover
+
+### When NOT to Use
+- For non-retryable errors (4xx client errors, business validation failures)
+- When low latency is more important than eventual success
+
+### Also see
+- [Retry Amplification](#retry-amplification) · [Circuit Breaker](#circuit-breaker) · [Thundering Herd](#thundering-herd)
 
 ---
 
