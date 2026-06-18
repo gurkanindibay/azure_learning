@@ -25,6 +25,9 @@ timestamp: 2026-06-18T00:00:00Z
 | Bloom Filter | [`#bloom-filter`](#bloom-filter) |
 | LSM-Tree | [`#lsm-tree`](#lsm-tree) |
 | Write-Ahead Log (WAL) | [`#write-ahead-log-wal`](#write-ahead-log-wal) |
+| Merkle Tree | [`#merkle-tree`](#merkle-tree) |
+| Anti-Entropy | [`#anti-entropy`](#anti-entropy) |
+| NoSQL | [`#nosql`](#nosql) |
 
 ---
 
@@ -216,3 +219,67 @@ A durability technique in which every database modification is written to an app
 - Systems where durability is not a requirement
 
 **Also see**: [B-Tree](#b-tree), [LSM-Tree](#lsm-tree), [Change Data Capture (CDC)](data-concurrency.md#change-data-capture)
+
+---
+
+## Merkle Tree {#merkle-tree}
+
+A **hash tree** in which every leaf node is the hash of a data block and every non-leaf node is the hash of its children. It enables efficient comparison of large datasets by identifying the smallest divergent subtree instead of scanning every record.
+
+### Key Characteristics
+- **Logarithmic divergence detection**: compare root hashes first, then descend only into mismatched branches
+- **Tamper evidence**: changing any leaf invalidates all parent hashes up to the root
+- **Common in distributed databases**: Cassandra, Dynamo, Riak and Git all use Merkle-tree-like structures for repair or verification
+
+### When to Use
+- Verifying data integrity across replicas without full data transfer
+- Synchronizing divergent datasets in distributed key-value stores
+
+### When NOT to Use
+- When data changes so frequently that tree comparisons are always stale
+- For small datasets where a simple hash or direct comparison is cheaper
+
+**Also see**: [Anti-Entropy](#anti-entropy), [Bloom Filter](#bloom-filter)
+
+---
+
+## Anti-Entropy {#anti-entropy}
+
+The process of **detecting and repairing inconsistencies** between replicas in a distributed data store. It is essential for eventually consistent systems where writes may not immediately propagate to every node.
+
+### Key Characteristics
+- **Repair mechanisms**: read repair, hinted handoff, and Merkle-tree-based active repair
+- **Eventual consistency helper**: speeds up convergence when replicas diverge due to partitions or failures
+- **Proactive and reactive**: both background scrubbing and on-read reconciliation
+
+### When to Use
+- Distributed databases with replication and partition tolerance
+- Systems where silent divergence is more dangerous than temporary inconsistency
+
+### When NOT to Use
+- Strongly consistent systems where writes are synchronously replicated (no divergence to repair)
+- When repair traffic would itself overwhelm the cluster
+
+**Also see**: [Merkle Tree](#merkle-tree), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem)
+
+---
+
+## NoSQL {#nosql}
+
+A broad category of data stores that **relax parts of the relational model** — typically schema rigidity, ACID guarantees or join support — to achieve horizontal scalability, flexible schemas or specialized access patterns.
+
+### Key Characteristics
+- **Variety of models**: key-value, document, wide-column, graph and time-series stores
+- **Horizontal scaling**: designed to shard and replicate across commodity nodes
+- **Trade-off spectrum**: from strongly consistent (etcd, Spanner) to eventually consistent (Cassandra, DynamoDB)
+
+### When to Use
+- High-write or high-volume workloads that exceed single-node SQL capacity
+- Unstructured or rapidly evolving data models
+- Geo-distributed deployments requiring tunable consistency
+
+### When NOT to Use
+- When complex joins, strong ACID transactions and referential integrity are core requirements
+- As a default choice without understanding the consistency and operational trade-offs
+
+**Also see**: [ACID Transactions](data-concurrency.md#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Sharding](data-concurrency.md#sharding)

@@ -31,6 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
+| CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
 
 ---
 
@@ -365,3 +366,24 @@ A distributed transaction protocol that coordinates multiple participants throug
 - Scenarios where eventual consistency and compensations are acceptable — prefer the Saga pattern
 
 **Also see**: [Saga Pattern](#saga-pattern), [Compensating Transaction](#compensating-transaction), [ACID Transactions](#acid-transactions)
+
+---
+
+## CRDT (Conflict-free Replicated Data Type)
+
+A data structure designed so that **concurrent updates on different replicas can be merged automatically without coordination**, while still guaranteeing eventual consistency. CRDTs sidestep the need for locks or consensus during partitions.
+
+### Key Characteristics
+- **Conflict freedom**: by construction, all valid merge orders produce the same result
+- **Two main families**: state-based (merge whole states) and operation-based (replay operations)
+- **Eventual consistency without coordination**: replicas converge after they exchange updates
+
+### When to Use
+- Active-active multi-region systems where partitions are expected
+- Collaborative editing, counters, shopping carts, presence indicators and flags
+
+### When NOT to Use
+- When strong consistency or linearizability is required (e.g., financial balances)
+- When the data type cannot be expressed as a CRDT without losing business semantics
+
+**Also see**: [ACID Transactions](#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Eventual Consistency](cqrs-event-driven.md)

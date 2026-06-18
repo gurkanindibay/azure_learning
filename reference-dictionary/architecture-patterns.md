@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Claim Check Pattern | [`#claim-check`](#claim-check) |
 | Blue-Green Deployment | [`#blue-green`](#blue-green) |
 | Canary Deployment | [`#canary-deployment`](#canary-deployment) |
+| Blue-Green vs Canary Deployment | [`#blue-green-vs-canary-deployment`](#blue-green-vs-canary-deployment) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
 | Cloud Adoption Framework (CAF) | [`#caf`](#caf) |
 | Hub-and-Spoke Topology | [`#hub-and-spoke`](#hub-and-spoke) |
@@ -58,6 +59,20 @@ timestamp: 2026-06-14T00:00:00Z
 | RBAC (Role-Based Access Control) | [`#rbac-role-based-access-control`](#rbac-role-based-access-control) |
 | ABAC (Attribute-Based Access Control) | [`#abac-attribute-based-access-control`](#abac-attribute-based-access-control) |
 | API Gateway | [`#api-gateway`](#api-gateway) |
+| Microservices | [`#microservices`](#microservices) |
+| Monolith | [`#monolith`](#monolith) |
+| Progressive Delivery | [`#progressive-delivery`](#progressive-delivery) |
+| Feature Flag | [`#feature-flag`](#feature-flag) |
+| A/B Testing | [`#ab-testing`](#ab-testing) |
+| Active-Active | [`#active-active`](#active-active) |
+| Shadow Testing | [`#shadow-testing`](#shadow-testing) |
+| OpenTelemetry | [`#opentelemetry`](#opentelemetry) |
+| Golden Signals | [`#golden-signals`](#golden-signals) |
+| Error Budget | [`#error-budget`](#error-budget) |
+| Blameless Postmortem | [`#blameless-postmortem`](#blameless-postmortem) |
+| Technical Debt | [`#technical-debt`](#technical-debt) |
+| Upstream System | [`#upstream-system`](#upstream-system) |
+| Downstream System | [`#downstream-system`](#downstream-system) |
 
 ---
 
@@ -169,6 +184,43 @@ Two **identical environments** — Blue (current) and Green (new version). Traff
 Route a **small percentage of traffic** to the new version before full rollout. If error rates spike, the canary is killed and traffic reverts. Safer than Blue-Green for high-risk changes.
 
 **Also see**: [Blue-Green](#blue-green)
+
+---
+
+## Blue-Green vs Canary Deployment
+
+Both strategies separate **deployment** (installing the new version) from **release** (exposing it to users). The difference is how traffic moves:
+
+| Aspect | Blue-Green | Canary Deployment |
+|:---|:---|:---|
+| Traffic shift | Instant 0% → 100% | Gradual 0% → small % → 100% |
+| Rollback speed | Immediate (switch back) | Fast (drain canary) |
+| Blast radius | All users if the new version fails | Only canary users |
+| Best for | Low-risk changes, predictable rollbacks | High-risk changes, sensitive services |
+
+They are often combined: a Blue-Green pair gives you an isolated environment to canary into before committing all traffic.
+
+```mermaid
+graph LR
+    subgraph "Blue-Green"
+        B[Blue v1<br/>100% traffic] -->|instant cutover| G[Green v2<br/>100% traffic]
+        G -.->|rollback| B
+    end
+
+    subgraph "Canary"
+        O[Old v1<br/>100%] -->|shift 10%| OC[Old 90%<br/>Canary v2 10%]
+        OC -->|shift all| C[Canary v2<br/>100%]
+        OC -.->|revert| O
+    end
+
+    style B fill:#0984e3,color:#ffffff
+    style G fill:#27ae60,color:#ffffff
+    style O fill:#0984e3,color:#ffffff
+    style OC fill:#f39c12,color:#000000
+    style C fill:#27ae60,color:#ffffff
+```
+
+**Diagram description**: Two deployment patterns shown side by side. Blue-Green (left) switches all traffic instantly from Blue v1 (blue) to Green v2 (green) with a dashed rollback arrow. Canary (right) gradually shifts traffic from Old v1 (blue) to a mix of Old 90% + Canary v2 10% (yellow), then to Canary v2 100% (green), with a dashed revert arrow to the old version.
 
 ---
 
@@ -898,3 +950,341 @@ An infrastructure component that sits between clients and backend services, prov
 
 - [Rate Limiting](api-design.md#rate-limiting)
 - [Reverse Proxy, LB & API Gateway](../system-design-architecture/16-reverse-proxy-lb-api-gateway.md)
+
+---
+
+## Microservices
+
+An architectural style that structures an application as a **collection of loosely coupled services**, each aligned to a business capability, owning its own data and deployable independently.
+
+### Key Characteristics
+- **Service boundaries**: usually aligned to bounded contexts or business capabilities
+- **Independent deployability**: teams can release, scale and fail over services separately
+- **Polyglot persistence**: each service may choose the data store that fits its access patterns
+- **Operational overhead**: requires observability, CI/CD, service discovery and graceful degradation
+
+### When to Use
+- Large engineering organizations with multiple autonomous teams
+- Domains with independently scaling or evolving subsystems
+
+### When NOT to Use
+- Early-stage products where a monolith is faster to build and iterate
+- When the organization lacks the platform maturity to operate dozens of services
+
+**Also see**: [Monolith](#monolith), [Database Per Service](#database-per-service), [Bounded Context](#bounded-context)
+
+---
+
+## Monolith
+
+A single deployable unit in which all functionality, data access and business logic runs together. A well-factored monolith is often the fastest and simplest path to product-market fit.
+
+### Key Characteristics
+- **Single codebase and deployment unit**: everything ships together
+- **In-process communication**: no network calls between modules
+- **Simpler transactions and consistency**: ACID across the whole data model
+- **Can be modular**: a “modular monolith” has clear internal boundaries without service boundaries
+
+### When to Use
+- Small teams, early-stage products and rapid iteration
+- Domains where cross-module transactions and joins are frequent
+
+### When NOT to Use
+- When multiple teams are blocked by a shared deployment cadence
+- When one component needs to scale independently by orders of magnitude
+
+**Also see**: [Microservices](#microservices), [Strangler Fig](#strangler-fig)
+
+---
+
+## Progressive Delivery
+
+An umbrella term for **gradually exposing new code to users** using techniques such as canary releases, feature flags, blue-green deployments, A/B testing and load-balanced rollouts. It decouples deployment from release.
+
+### Key Characteristics
+- **Controlled blast radius**: new code reaches a small subset first
+- **Measurable gating**: promote or rollback based on error rates, latency and business metrics
+- **User segmentation**: target by region, device, customer tier or random percentage
+
+### When to Use
+- High-risk changes in large-scale services
+- Products where business metrics must validate a change before full rollout
+
+### When NOT to Use
+- For trivial changes where the overhead of gating exceeds the risk
+- Without automated rollback and clear success criteria
+
+**Also see**: [Canary Deployment](#canary-deployment), [Blue-Green](#blue-green), [Feature Flag](#feature-flag), [A/B Testing](#ab-testing)
+
+---
+
+## Feature Flag
+
+A software development technique that wraps functionality in a **runtime-controllable toggle**, allowing teams to enable, disable or gradually roll out features without deploying new code.
+
+### Key Characteristics
+- **Decouples deploy from release**: code can ship dark and be enabled later
+- **Targeted rollout**: per user, per segment, per region or percentage-based
+- **Kill switch**: problematic features can be turned off instantly
+
+### When to Use
+- Long-running features that must be merged incrementally
+- High-risk changes requiring instant rollback
+- A/B tests and phased rollouts
+
+### When NOT to Use
+- As a substitute for branch-based development discipline (flag debt accumulates)
+- When the flag adds runtime complexity without clear value
+
+**Also see**: [Progressive Delivery](#progressive-delivery), [A/B Testing](#ab-testing)
+
+---
+
+## A/B Testing
+
+A controlled experiment where **two or more variants of a product experience are served to different user groups** to measure the impact on a business or user-experience metric.
+
+### Key Characteristics
+- **Randomized assignment**: users are bucketed to reduce selection bias
+- **Hypothesis and metric**: every test has a primary success metric and stopping criteria
+- **Statistical rigor**: requires sufficient sample size and significance testing
+
+### When to Use
+- Validating product changes, algorithms or UI designs with real user behavior
+- Decisions where multiple options are defensible and data should break the tie
+
+### When NOT to Use
+- For changes with clear correctness or safety requirements (prefer canary metrics instead)
+- When sample sizes are too small to reach statistical significance
+
+**Also see**: [Feature Flag](#feature-flag), [Progressive Delivery](#progressive-delivery)
+
+---
+
+## Active-Active
+
+A high-availability deployment pattern where **multiple data centers or regions actively serve traffic and accept writes simultaneously**, rather than one being on standby.
+
+### Key Characteristics
+- **Traffic served from multiple regions**: lower latency and better fault tolerance
+- **Data synchronization**: replicas exchange writes, requiring conflict resolution
+- **Complexity trade-off**: adds consistency challenges in exchange for resilience
+
+### When to Use
+- Globally distributed users requiring low-latency writes
+- Mission-critical systems where a single region failure must be transparent
+
+### When NOT to Use
+- When strong consistency is more important than availability during partitions
+- Without a clear conflict-resolution strategy (e.g., CRDTs, last-write-wins, custom merge)
+
+**Also see**: [CRDT](data-concurrency.md#crdt-conflict-free-replicated-data-type), [CAP Theorem](#cap-theorem)
+
+---
+
+## Shadow Testing
+
+A validation technique where production traffic is **duplicated and sent to a new version or service without affecting real users**. Responses are compared between the old and new systems to detect regressions.
+
+### Key Characteristics
+- **Non-impactful**: users see only the production response; the shadow result is discarded
+- **High-fidelity workload**: tests against real traffic patterns, not synthetic loads
+- **Comparison metrics**: latency, errors, response payloads and resource usage
+
+### When to Use
+- Refactoring or re-platforming systems where behavioral equivalence must be proven
+- Load-testing new versions with production-scale traffic
+
+### When NOT to Use
+- When the operation has side effects (e.g., payments, writes) that cannot be isolated
+- Without a safe way to capture, compare and discard shadow responses
+
+**Also see**: [Canary Deployment](#canary-deployment), [Progressive Delivery](#progressive-delivery)
+
+---
+
+## OpenTelemetry
+
+An **open observability standard and toolchain** for collecting distributed traces, metrics and logs. It provides vendor-neutral APIs, SDKs and the OpenTelemetry Collector for telemetry pipelines.
+
+### Key Characteristics
+- **Vendor-neutral**: single instrumentation emits data to many backends (Jaeger, Prometheus, cloud vendors)
+- **Three pillars**: traces, metrics and logs under one semantic convention
+- **Auto and manual instrumentation**: libraries, agents and explicit code annotations
+
+### When to Use
+- Microservices and serverless architectures needing distributed tracing
+- Organizations wanting to avoid vendor lock-in for observability tools
+
+### When NOT to Use
+- As a replacement for thoughtful SLI/SLO design — telemetry without intent creates noise
+- When the operational overhead of collectors and agents is not justified
+
+**Also see**: [Golden Signals](#golden-signals), [Distributed Tracing](azure-services.md#distributed-tracing)
+
+---
+
+## Golden Signals
+
+The four key metrics that provide a **high-level view of system health** in production: latency, traffic, errors and saturation. Popularized by Google’s SRE book.
+
+| Signal | Question it answers |
+|:---|:---|
+| **Latency** | How long is it taking? |
+| **Traffic** | How much demand is hitting the system? |
+| **Errors** | How many requests are failing? |
+| **Saturation** | How close to full capacity is the system? |
+
+### When to Use
+- Defining SLIs and dashboards for any user-facing service
+- Incident triage and capacity planning
+
+### When NOT to Use
+- As the only metrics — business metrics, cost metrics and custom SLIs are also needed
+- Without setting explicit SLO thresholds and alerting policies
+
+**Also see**: [Error Budget](#error-budget), [OpenTelemetry](#opentelemetry)
+
+---
+
+## Error Budget
+
+The amount of **acceptable unreliability** over a period, derived from an SLO. It frames trade-offs between velocity and stability: as long as budget remains, teams can launch freely; when it is exhausted, launches pause until reliability improves.
+
+### Key Characteristics
+- **1 - SLO = budget**: a 99.9% SLO leaves a 0.1% error budget
+- **Product-level contract**: aligns engineering and product on risk tolerance
+- **Policy-driven**: defines when launches are blocked and how to prioritize reliability work
+
+### When to Use
+- Services with explicit reliability targets and frequent releases
+- Organizations where product wants speed and engineering wants stability guardrails
+
+### When NOT to Use
+- For systems without meaningful SLOs or measurable availability
+- As a rigid blocker without executive buy-in and a path to restore budget
+
+**Also see**: [Golden Signals](#golden-signals), [Blameless Postmortem](#blameless-postmortem)
+
+---
+
+## Blameless Postmortem
+
+A retrospective practice focused on **understanding systemic causes and improving processes** rather than assigning individual blame. It is foundational to a healthy reliability culture.
+
+### Key Characteristics
+- **Psychological safety**: participants can describe mistakes without fear of punishment
+- **Actionable outputs**: concrete remediation items with owners and timelines
+- **Shared learning**: findings are published broadly so other teams can prevent similar incidents
+
+### When to Use
+- After every significant incident or near-miss
+- When introducing chaos engineering or major architecture changes
+
+### When NOT to Use
+- As a checkbox exercise without follow-through on action items
+- When leadership uses it to indirectly assign blame
+
+**Also see**: [Error Budget](#error-budget), [Chaos Engineering](resilience.md#chaos-engineering)
+
+---
+
+## Technical Debt
+
+The **accumulated cost of shortcuts or suboptimal design decisions** that make future changes slower, riskier or more expensive. Like financial debt, it can be strategic if it is tracked and paid down.
+
+### Key Characteristics
+- **Visible inventory**: a debt register with estimated impact, risk and payback plan
+- **Intentional and accidental**: some debt is taken deliberately to meet a deadline; some is discovered later
+- **Interest grows**: untreated debt compounds as the system evolves around it
+
+### When to Use
+- Strategic short-term trade-offs with a clear repayment plan
+- Refactoring work prioritized by risk and velocity impact
+
+### When NOT to Use
+- As an excuse to skip testing, documentation or security in every sprint
+- Without a plan to pay it down — unchecked debt becomes a rewrite trigger
+
+**Also see**: [Strangler Fig](#strangler-fig), [Monolith](#monolith), [Microservices](#microservices)
+
+---
+
+## Upstream System
+
+A system or component that **produces data, events or requests that flow into another system**. The upstream direction is the source side of a dependency: if system A calls or emits data that system B consumes, A is upstream of B.
+
+### Key Characteristics
+- **Caller / producer / source** in a data or control flow
+- **Depends on by downstream**: changes in upstream output can break downstream consumers
+- **Context-relative**: the same service can be upstream to one system and downstream to another
+
+### When to Use
+- Talking about service dependencies, data lineage, event pipelines or API call chains
+- Defining ownership and SLOs (upstream availability affects downstream reliability)
+
+### When NOT to Use
+- As a synonym for “client” or “server” without explaining the direction of data flow
+- In isolation without clarifying what the dependency relationship actually is
+
+**Also see**: [Downstream System](#downstream-system), [API Gateway](#api-gateway), [Microservices](#microservices)
+
+---
+
+## Downstream System
+
+A system or component that **consumes data, events or requests from another system**. The downstream direction is the consumer side of a dependency: it receives what upstream systems produce.
+
+### Key Characteristics
+- **Callee / consumer / sink** in a data or control flow
+- **Affected by upstream changes**: schema changes, latency or outages upstream propagate downstream
+- **Context-relative**: the same service can be downstream to one system and upstream to another
+
+### When to Use
+- Discussing consumers of events, API clients, data subscribers or pipeline outputs
+- Planning backward compatibility, fan-out and error handling
+
+### When NOT to Use
+- As a synonym for “backend” or “frontend” without describing the flow direction
+- When the relationship is peer-to-peer and has no clear producer/consumer direction
+
+### Also see
+- [Upstream System](#upstream-system) · [Messaging](messaging.md) · [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
+
+---
+
+## Upstream/Downstream Relationship
+
+```mermaid
+graph LR
+    subgraph Upstreams
+        U1[Mobile App]
+        U2[Web App]
+        U3[Partner API]
+    end
+
+    S[Core Platform]
+
+    subgraph Downstreams
+        D1[Email Service]
+        D2[Data Warehouse]
+        D3[Fraud Check]
+    end
+
+    U1 -->|requests| S
+    U2 -->|requests| S
+    U3 -->|requests| S
+    S -->|events| D1
+    S -->|events| D2
+    S -->|events| D3
+
+    style S fill:#8e44ad,color:#ffffff
+    style U1 fill:#0984e3,color:#ffffff
+    style U2 fill:#0984e3,color:#ffffff
+    style U3 fill:#0984e3,color:#ffffff
+    style D1 fill:#27ae60,color:#ffffff
+    style D2 fill:#27ae60,color:#ffffff
+    style D3 fill:#27ae60,color:#ffffff
+```
+
+**Diagram description**: Upstream systems (Mobile App, Web App, Partner API) send requests into a Core Platform (purple). The Core Platform then emits events to downstream systems (Email Service, Data Warehouse, Fraud Check) shown in green. Arrows follow the direction of data/control flow from upstream producers to downstream consumers.

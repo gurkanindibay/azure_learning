@@ -28,6 +28,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Graceful Degradation | [`#graceful-degradation`](#graceful-degradation) |
 | Cascading Failure | [`#cascading-failure`](#cascading-failure) |
 | Thundering Herd | [`#thundering-herd`](#thundering-herd) |
+| Defense in Depth | [`#defense-in-depth`](#defense-in-depth) |
+| Chaos Engineering | [`#chaos-engineering`](#chaos-engineering) |
+| Load Shedding | [`#load-shedding`](#load-shedding) |
+| Backpressure | [`#backpressure`](#backpressure) |
 
 ---
 
@@ -205,3 +209,91 @@ A failure in one component that **triggers failures in dependent components**, c
 When many clients or processes **simultaneously retry** after a failure or cache expiration, overwhelming the recovering system. Mitigated by exponential backoff with **jitter** (randomized delay).
 
 **Also see**: [Circuit Breaker](#circuit-breaker), [Retry Amplification](#retry-amplification) · [Caching](caching.md#cache-stampede)
+
+---
+
+## Defense in Depth
+
+A security and reliability principle that **layers multiple independent controls** so that no single failure can compromise the system. In distributed systems this means combining validation, checksums, retries, circuit breakers, encryption, audits and observability rather than relying on one mechanism.
+
+### Key Characteristics
+- **Independent layers**: each control protects against a different class of failure or threat
+- **No single point of safety**: one layer can fail while others still contain the damage
+- **Validation at every boundary**: write path, read path, replication path and downstream consumers
+
+### When to Use
+- Systems where silent data corruption or security breaches are unacceptable
+- Any architecture moving from a single trust domain to distributed services
+
+### When NOT to Use
+- As an excuse for unnecessary complexity in low-risk internal tools
+- When layers are not truly independent (multiple layers with the same bug add no value)
+
+### Also see
+- [Resilience Stack](#resilience-stack) · [Circuit Breaker](#circuit-breaker) · [Chaos Engineering](#chaos-engineering)
+
+---
+
+## Chaos Engineering
+
+The practice of **deliberately injecting failures** into a production-like system to discover weaknesses before they cause real outages. Coined and popularized by Netflix, it turns “unknown unknowns” into observable, fixable gaps.
+
+### Key Characteristics
+- **Hypothesis-driven**: start with a specific failure mode and expected system behavior
+- **Production-realistic**: ideally run in production with automatic abort criteria
+- **Blast-radius controlled**: use canaries, traffic segmentation and rollback plans
+
+### When to Use
+- Mature services with strong observability and rollback mechanisms
+- Before high-traffic events or after major architecture changes
+
+### When NOT to Use
+- On systems without adequate monitoring or rollback capability
+- As a one-off stunt without follow-up remediation
+
+### Also see
+- [Defense in Depth](#defense-in-depth) · [Canary Deployment](../reference-dictionary/architecture-patterns.md#canary-deployment)
+
+---
+
+## Load Shedding
+
+A resilience tactic where the system **intentionally drops some traffic** to protect core functionality during overload. The goal is to survive a “success disaster” by sacrificing non-critical requests instead of collapsing entirely.
+
+### Key Characteristics
+- **Priority-based**: critical requests are preserved, low-priority or expensive requests are dropped
+- **Fast feedback**: rejected clients receive a clear error (e.g., 503 with `Retry-After`) instead of timing out
+- **Coordinated**: ideally applied at the edge, API gateway and queue levels
+
+### When to Use
+- Sudden traffic spikes that exceed provisioned capacity
+- Cascading failure scenarios where a downstream dependency is saturated
+
+### When NOT to Use
+- As a substitute for proper capacity planning
+- When every request has the same business criticality and cannot be ranked
+
+### Also see
+- [Circuit Breaker](#circuit-breaker) · [Rate Limiting](api-design.md#rate-limiting) · [Bulkhead](#bulkhead)
+
+---
+
+## Backpressure
+
+A flow-control mechanism where an **overloaded downstream signals upstream to slow down**, preventing queues from growing unbounded and memory from exhausting. It is the distributed-system equivalent of a pressure-release valve.
+
+### Key Characteristics
+- **Upstream-aware**: producers throttle based on consumer capacity (e.g., bounded queues, TCP windowing, gRPC flow control)
+- **Bounded queues**: fixed-size buffers force shedding or blocking instead of unbounded growth
+- **Propagation**: backpressure should flow end-to-end, not be swallowed at one layer
+
+### When to Use
+- Streaming pipelines, message brokers and async I/O where producer and consumer speeds differ
+- Any system where unbounded buffering would cause memory exhaustion or tail latency spikes
+
+### When NOT to Use
+- When latency is more important than durability (shedding may be preferable to slowing down)
+- Without a clear policy for what happens when the bound is reached (block, drop, or reject)
+
+### Also see
+- [Load Shedding](#load-shedding) · [Bulkhead](#bulkhead) · [Messaging](messaging.md)
