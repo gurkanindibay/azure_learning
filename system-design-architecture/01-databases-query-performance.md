@@ -273,3 +273,38 @@ CREATE TABLE checkpoint (
 > **Architect's rule**: Never trust a migration without continuous automated validation. Dual-writes + sampled read comparison is the minimum for any migration where data loss is unacceptable. Gut feelings don't survive trillion-record datasets.
 
 > **Azure**: Azure Database Migration Service for SQL migrations. Cosmos DB change feed for live migrations between Cosmos containers. For Cassandra → Cosmos DB (Cassandra API), use the same dual-write + validation pattern with custom tooling.
+
+---
+
+## db-07: PostgreSQL 18 Async I/O — When Sequential Scans Become the Right Plan
+
+> **Source**: [PostgreSQL 18’s Async I/O Isn’t Just Faster — It Changes How You Think About Slow Queries](../articles/medium/PostgreSQL%2018’s%20Async%20IO%20Isn’t%20Just%20Faster%20—%20It%20Changes%20How%20You%20Think%20About%20Slow%20Queries.md)
+
+| | |
+|:---|:---|
+| **Problem** | A slow query is reflexively treated as a sequential-scan bug that must be indexed away, even when the workload is cold and scan-heavy |
+| **Root cause** | Pre-18 PostgreSQL issues one synchronous read at a time; the CPU idles while waiting for each block from disk, making large scans disproportionately expensive |
+
+**Strategy**:
+
+PostgreSQL 18 introduces a native asynchronous I/O subsystem that queues multiple read requests and overlaps disk latency instead of serializing it.
+
+| Setting | Meaning | When to use |
+|:---|:---|:---|
+| [`io_method = 'worker'`](../reference-dictionary/databases.md#io-method) | Default: dedicated background I/O processes; runs everywhere | Safe default on any OS |
+| [`io_method = 'io_uring'`](../reference-dictionary/databases.md#io-uring) | Linux kernel async I/O interface; usually fastest on supported kernels | Recent Linux only; benchmark before committing |
+| [`io_method = 'sync'`](../reference-dictionary/databases.md#io-method) | Pre-18 synchronous behavior | Escape hatch for regression testing or compatibility |
+| [`effective_io_concurrency`](../reference-dictionary/databases.md#effective-io-concurrency) | Number of concurrent reads Postgres may issue (default 16 in 18) | Raise for high-latency cloud volumes; lower for single local NVMe |
+
+Monitoring: query [`pg_aios`](../reference-dictionary/databases.md#pg-aios) while a heavy query runs to observe in-flight async I/O.
+
+**Tradeoff**:
+
+- ✅ Big wins only for **cold, scan-heavy, disk-bound reads** that exceed [`shared_buffers`](../reference-dictionary/databases.md#shared-buffers) / OS cache
+- ❌ No benefit for cached data, plain index lookups, or writes (WAL is still synchronous)
+- ❌ `io_method` requires a config change and restart; not a runtime knob
+- ⚠️ Project benchmarks show 2–3× throughput in specific cases, but your number requires measurement on your data, your disks, and your queries
+
+> **Architect's rule**: The index reflex is still correct for transactional hot paths, but it is no longer automatically correct for large analytical reads. Let the execution plan and measured A/B test decide, not habit.
+
+> **Dictionary**: [io_method](../reference-dictionary/databases.md#io-method) · [io_uring](../reference-dictionary/databases.md#io-uring) · [effective_io_concurrency](../reference-dictionary/databases.md#effective-io-concurrency) · [pg_aios](../reference-dictionary/databases.md#pg-aios) · [shared_buffers](../reference-dictionary/databases.md#shared-buffers)

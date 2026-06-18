@@ -1,3 +1,10 @@
+---
+type: Reference
+title: "Reference Dictionary"
+description: "Repo-root reference dictionary for all technical terms used across this repository."
+timestamp: 2026-06-18T00:00:00Z
+---
+
 # Reference Dictionary
 
 > **Purpose**: Repo-root reference dictionary for all technical terms used across this repository — available to `architecture-azure/`, `architecture-general/`, `system-design-architecture/`, `programming-languages/`, `articles/`, and all other folders. Each file covers one domain; each term has a stable anchor ID for direct linking.
@@ -50,6 +57,7 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
 | 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography, TLS, mTLS, Man-in-the-Middle Attack |
 | 14 | [`java-jvm.md`](java-jvm.md) | Java JVM & Memory Management | JVM Heap, Young/Old Generation, Metaspace, PermGen, GC, Minor/Major/Full GC, G1GC, ZGC, OutOfMemoryError, Memory Leak, ThreadLocal, Heap Dump, Java Flight Recorder |
+| 15 | [`databases.md`](databases.md) | Databases & Database Engines | effective_io_concurrency, io_method, io_uring, pg_aios, shared_buffers |
 
 ---
 
@@ -92,6 +100,8 @@ Some terms span multiple domains. They are **defined once** in their primary dom
 | "When should I use JWT vs sessions?" | [`architecture-patterns.md#jwt-json-web-token`](architecture-patterns.md#jwt-json-web-token) |
 | "What's the difference between TLS and mTLS?" | [`hsm-cryptography.md#mtls-mutual-tls`](hsm-cryptography.md#mtls-mutual-tls) |
 | "What's DASH/HLS adaptive streaming?" | [`media-processing.md#dash-hls`](media-processing.md#dash-hls) |
+| "What is PostgreSQL 18's io_method setting?" | [`databases.md#io-method`](databases.md#io-method) |
+| "What does effective_io_concurrency control?" | [`databases.md#effective-io-concurrency`](databases.md#effective-io-concurrency) |
 
 ---
 
