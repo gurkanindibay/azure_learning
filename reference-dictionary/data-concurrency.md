@@ -29,6 +29,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
 | Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
+| Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
 
 ---
@@ -342,3 +343,25 @@ Splitting a database into **independent partitions (shards)** based on a shard k
 > **Tradeoff**: Sharding adds operational complexity. Exhaust indexing, caching, read replicas, and vertical scaling first.
 
 **Also see**: [ACID Transactions](#acid-transactions)
+
+---
+
+## Two-Phase Commit (2PC)
+
+A distributed transaction protocol that coordinates multiple participants through a coordinator to achieve an atomic commit. In phase one the coordinator asks every participant whether it can commit; in phase two it instructs all participants to commit or abort.
+
+### Key Characteristics
+- **Atomic across participants**: all nodes commit or all abort
+- **Blocking**: participants hold locks while waiting for the coordinator's final decision
+- **Coordinator is a single point of failure**: if the coordinator crashes after prepare, participants must wait until it recovers
+
+### When to Use
+- Strong consistency is non-negotiable across separate databases or services
+- Short-lived transactions with a small, known set of participants
+
+### When NOT to Use
+- Long-running transactions (locks are held for the duration)
+- High-availability paths where coordinator failure would be unacceptable
+- Scenarios where eventual consistency and compensations are acceptable — prefer the Saga pattern
+
+**Also see**: [Saga Pattern](#saga-pattern), [Compensating Transaction](#compensating-transaction), [ACID Transactions](#acid-transactions)

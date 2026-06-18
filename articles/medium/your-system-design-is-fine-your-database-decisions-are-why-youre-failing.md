@@ -1,35 +1,37 @@
 ---
 type: Article
-title: "Your System Design Is Fine. Your Database Decisions Are Why You’re Failing."
+title: "Your System Design Is Fine. Your Database Decisions Are Why You're Failing."
 source: "https://medium.com/@kanishks772/your-system-design-is-fine-your-database-decisions-are-why-youre-failing-58dd75bc6417"
 author:
   - "[[The Latency Gambler]]"
 published: 2026-04-24
-created: 2026-06-18
 timestamp: 2026-06-18T00:00:00Z
-description: "More"
+description: "A system-design interview guide to the database decisions that actually matter: SQL vs NoSQL, ACID, indexing, scaling reads/writes, CAP, sharding, isolation levels, storage internals, and distributed transactions."
 tags:
-  - "clippings"
+  - clippings
+  - databases
+  - system-design
 ---
+
+# Your System Design Is Fine. Your Database Decisions Are Why You're Failing
+
 *Most engineers can draw boxes and arrows. The ones who get the offer know what lives inside those boxes.*
 
-There’s a pattern in system design interviews at top companies. Candidates sketch a clean architecture load balancers, microservices, caches and then freeze the moment someone asks: *“How would you handle write contention at scale?”* or *“Walk me through your sharding strategy.”*
+There's a pattern in system design interviews at top companies. Candidates sketch a clean architecture load balancers, microservices, caches and then freeze the moment someone asks: *"How would you handle write contention at scale?"* or *"Walk me through your sharding strategy."*
 
-The system design wasn’t the problem. The database layer was.
+The system design wasn't the problem. The database layer was.
 
 Here are the concepts that actually get tested, and what you need to know about each one.
 
-![](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*IL31TJVS4W-Kiyrs3_40OA.png)
-
-Ai Generated Image
+![Database decisions overview - AI generated image](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*IL31TJVS4W-Kiyrs3_40OA.png)
 
 ## The Foundation You Cannot Skip
 
-### SQL vs NoSQL It’s a Data Model Choice, Not a Trend
+### SQL vs NoSQL — It's a Data Model Choice, Not a Trend
 
 Stop treating this as a popularity contest. The decision comes down to your access patterns.
 
-```c
+```text
 Use SQL when:                        Use NoSQL when:
 - Complex joins are common           - Schema changes frequently
 - ACID guarantees are required       - Horizontal scale is priority
@@ -37,20 +39,20 @@ Use SQL when:                        Use NoSQL when:
 - Reports and aggregations matter    - Latency at scale matters more than consistency
 ```
 
-A social feed’s post metadata? NoSQL fits. A payment ledger? SQL, no question.
+A social feed's post metadata? NoSQL fits. A payment ledger? SQL, no question.
 
-### ACID What It Actually Means Under Load
+### ACID — What It Actually Means Under Load
 
 Most people can recite the acronym. Few can explain *why* it matters when 10,000 concurrent users hit the same table.
 
-- **Atomicity**: Partial writes don’t exist. The transaction commits fully or rolls back entirely.
+- **Atomicity**: Partial writes don't exist. The transaction commits fully or rolls back entirely.
 - **Consistency**: A write that violates a constraint never lands in the database.
 - **Isolation**: Concurrent transactions behave as if they ran serially at varying degrees (more on isolation levels below).
 - **Durability**: Once committed, data survives a crash.
 
-### Indexing Where Interviews Get Separated
+### Indexing — Where Interviews Get Separated
 
-```c
+```sql
 -- Without index: full table scan, O(n)
 SELECT * FROM orders WHERE customer_id = 9821;
 
@@ -67,7 +69,7 @@ An index speeds up reads but adds overhead on every write. Know when to add them
 
 ### Scaling Reads
 
-```c
+```text
 ┌─────────────┐
 Write ─────────►│  Primary DB │
                 └──────┬──────┘
@@ -82,11 +84,11 @@ Write ─────────►│  Primary DB │
                    Read traffic
 ```
 
-**Read replicas** handle read-heavy workloads by distributing SELECT queries across copies of your data. The tradeoff: replication lag. A user might write a post and briefly not see it on a replica that hasn’t caught up.
+**Read replicas** handle read-heavy workloads by distributing SELECT queries across copies of your data. The tradeoff: replication lag. A user might write a post and briefly not see it on a replica that hasn't caught up.
 
 **Database caching** (Redis, Memcached) sits in front of the database entirely. Serve hot data from memory sub-millisecond latency instead of milliseconds from disk.
 
-```c
+```python
 def get_user_profile(user_id):
     cache_key = f"user:{user_id}"
     cached = redis.get(cache_key)
@@ -103,11 +105,11 @@ def get_user_profile(user_id):
 
 This is where most candidates stumble.
 
-### CAP Theorem The Real Constraint
+### CAP Theorem — The Real Constraint
 
 In a distributed system, during a network partition, you get two choices:
 
-```c
+```text
 Consistency
             /\
            /  \
@@ -117,14 +119,15 @@ Consistency
 Partition ──────── Availability
 Tolerance
 ```
+
 - **CP systems** (e.g., HBase, Zookeeper): Stay consistent, reject requests when partition happens
 - **AP systems** (e.g., Cassandra, DynamoDB): Stay available, allow stale reads during partition
 
-There is no “CA” in a distributed system. Partitions happen. Pick your tradeoff.
+There is no "CA" in a distributed system. Partitions happen. Pick your tradeoff.
 
-### Sharding Split the Data, Multiply the Complexity
+### Sharding — Split the Data, Multiply the Complexity
 
-```c
+```text
 ┌─────────────────────────────┐
  │      Application Layer      │
  └──────┬──────────────┬───────┘
@@ -140,9 +143,9 @@ user_id % 2 = 0   user_id % 2 = 1
 
 Sharding splits data horizontally across machines. The hard problems: cross-shard queries become expensive, resharding when you add nodes is painful, and hotspots (one shard receiving disproportionate traffic) can tank performance. **Consistent hashing** solves the resharding problem by minimizing key remapping when nodes are added or removed.
 
-### Isolation Levels The One Nobody Studies
+### Isolation Levels — The One Nobody Studies
 
-```c
+```text
 Level               | Dirty Read | Non-Repeatable Read | Phantom Read
 --------------------|------------|---------------------|-------------
 Read Uncommitted    |    YES     |        YES          |    YES
@@ -157,7 +160,7 @@ Higher isolation = stronger guarantees = worse performance. Most databases defau
 
 ### B-Tree vs LSM-Tree
 
-```c
+```text
 B-Tree (PostgreSQL, MySQL):          LSM-Tree (Cassandra, RocksDB):
 - Optimized for reads                - Optimized for writes
 - In-place updates                   - Append-only, compaction later
@@ -167,11 +170,11 @@ B-Tree (PostgreSQL, MySQL):          LSM-Tree (Cassandra, RocksDB):
 
 ### Write-Ahead Log (WAL)
 
-Before any change hits the actual data file, it’s written to a log. If the database crashes mid-write, it replays the log on recovery. This is how durability works in practice. Every major database uses this pattern.
+Before any change hits the actual data file, it's written to a log. If the database crashes mid-write, it replays the log on recovery. This is how durability works in practice. Every major database uses this pattern.
 
 ### Bloom Filters
 
-```c
+```python
 # Probabilistic data structure
 # "Is this key definitely NOT in the set?"
 
@@ -181,13 +184,13 @@ bloom_filter.check("user:9999")  # → False (definitely not present)
 bloom_filter.check("user:1234")  # → True (probably present - go check disk)
 ```
 
-Bloom filters eliminate unnecessary disk lookups. If the filter says “not present,” skip the read entirely. Used in Cassandra, HBase, and Bigtable to avoid ghost reads.
+Bloom filters eliminate unnecessary disk lookups. If the filter says "not present," skip the read entirely. Used in Cassandra, HBase, and Bigtable to avoid ghost reads.
 
-## Distributed Transactions The Final Boss
+## Distributed Transactions — The Final Boss
 
 ### Two-Phase Commit (2PC)
 
-```c
+```text
 Coordinator ──► "Prepare to commit?" ──► All participants
 Coordinator ◄── "Ready" ◄────────────── All participants
 Coordinator ──► "Commit!" ─────────────► All participants
@@ -195,9 +198,9 @@ Coordinator ──► "Commit!" ─────────────► All p
 
 Atomic across services, but the coordinator is a single point of failure and the protocol blocks during failures. Used when strong consistency is non-negotiable.
 
-### Saga Pattern The Practical Alternative
+### Saga Pattern — The Practical Alternative
 
-```c
+```text
 Order Service ──► Payment Service ──► Inventory Service
       │                 │                    │
    On fail:         On fail:              On fail:
@@ -208,7 +211,7 @@ Each step has a compensating transaction. If step 3 fails, you run the compensat
 
 ### Change Data Capture (CDC)
 
-```c
+```text
 MySQL Binlog ──► Debezium ──► Kafka ──► Search Index
                                     └──► Analytics DB
                                     └──► Cache Invalidation
@@ -218,9 +221,9 @@ Stream every database change downstream without polling. Debezium reads the WAL 
 
 ## The Mental Model That Ties It Together
 
-These topics aren’t isolated — they’re a hierarchy:
+These topics aren't isolated — they're a hierarchy:
 
-```c
+```text
 ┌─────────────────────────┐
 │   Distributed Txns      │  ← Hardest
 │  (Saga, 2PC, Quorum)    │
@@ -243,10 +246,10 @@ You cannot have a meaningful conversation about sharding without understanding i
 
 ## Final Word
 
-System design interviews are not testing whether you can draw a diagram. They’re testing whether you understand the *constraints* behind the diagram where data lives, how it gets written, what happens when a node goes down.
+System design interviews are not testing whether you can draw a diagram. They're testing whether you understand the *constraints* behind the diagram where data lives, how it gets written, what happens when a node goes down.
 
-The engineers who clear these rounds consistently are not the ones who memorize the most tools. They’re the ones who can say: *“Given this workload, this consistency requirement, and this scale, here’s the tradeoff I’m making and why.”*
+The engineers who clear these rounds consistently are not the ones who memorize the most tools. They're the ones who can say: *"Given this workload, this consistency requirement, and this scale, here's the tradeoff I'm making and why."*
 
 That clarity comes from understanding databases from the ground up. Start at the foundation. Work your way to the top.
 
-*If this was useful, follow for more system design and engineering content. Drop a comment with any concepts you’d add to this list.*
+*If this was useful, follow for more system design and engineering content. Drop a comment with any concepts you'd add to this list.*

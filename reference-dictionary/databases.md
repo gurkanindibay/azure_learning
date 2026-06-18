@@ -21,6 +21,10 @@ timestamp: 2026-06-18T00:00:00Z
 | io_uring | [`#io-uring`](#io-uring) |
 | pg_aios | [`#pg-aios`](#pg-aios) |
 | shared_buffers | [`#shared-buffers`](#shared-buffers) |
+| B-Tree | [`#b-tree`](#b-tree) |
+| Bloom Filter | [`#bloom-filter`](#bloom-filter) |
+| LSM-Tree | [`#lsm-tree`](#lsm-tree) |
+| Write-Ahead Log (WAL) | [`#write-ahead-log-wal`](#write-ahead-log-wal) |
 
 ---
 
@@ -128,3 +132,87 @@ The region of memory PostgreSQL uses to cache table and index blocks. Data alrea
 - Oversizing can starve the OS page cache and hurt performance
 
 **Also see**: [effective_io_concurrency](#effective-io-concurrency)
+
+---
+
+## B-Tree {#b-tree}
+
+A balanced tree data structure that keeps data sorted and allows searches, sequential access, insertions, and deletions in logarithmic time. Most relational databases (PostgreSQL, MySQL, SQL Server) use B-Tree indexes as their default index type.
+
+### Key Characteristics
+- Self-balancing: all leaf nodes stay at the same depth, keeping lookups predictable
+- Range-friendly: efficient for equality, range, and ordered scans
+- Write amplification: updates may split pages and cause random I/O
+
+### When to Use
+- Read-heavy OLTP workloads with point lookups and range queries
+- Workloads that need stable, predictable query latency
+
+### When NOT to Use
+- Append-only or log-like write-heavy workloads (LSM-Tree is usually better)
+- Scenarios where sequential write throughput matters more than read latency
+
+**Also see**: [LSM-Tree](#lsm-tree), [Write-Ahead Log (WAL)](#write-ahead-log-wal)
+
+---
+
+## Bloom Filter {#bloom-filter}
+
+A space-efficient probabilistic data structure used to test whether an element is a member of a set. It can return **false positives** but never false negatives, so it is useful for avoiding unnecessary disk lookups.
+
+### Key Characteristics
+- Compact: uses a bit array plus multiple hash functions
+- False positives possible, false negatives impossible
+- No deletion of individual elements in the basic form
+
+### When to Use
+- Checking whether a key might exist before doing an expensive disk read (e.g., Cassandra, HBase, RocksDB)
+- Reducing I/O in storage engines and caches
+
+### When NOT to Use
+- When exact membership is required (use a hash set instead)
+- When the false-positive rate cannot be tolerated
+
+**Also see**: [B-Tree](#b-tree), [LSM-Tree](#lsm-tree)
+
+---
+
+## LSM-Tree {#lsm-tree}
+
+A **Log-Structured Merge-Tree** storage engine optimized for high write throughput. Writes are appended to an in-memory structure and later flushed to immutable disk files (SSTables), which are periodically compacted.
+
+### Key Characteristics
+- Append-only writes: sequential I/O, low write amplification for ingest-heavy workloads
+- Tiered storage: memtable → immutable files → compacted SSTables
+- Read amplification: a read may check multiple levels until the key is found
+
+### When to Use
+- Write-heavy workloads such as time-series, logging, and event stores
+- Systems that need elastic horizontal write scaling (Cassandra, RocksDB, ScyllaDB)
+
+### When NOT to Use
+- Read-heavy OLTP with many small range queries (B-Tree is usually better)
+- Workloads sensitive to compaction I/O spikes
+
+**Also see**: [B-Tree](#b-tree), [Write-Ahead Log (WAL)](#write-ahead-log-wal), [Bloom Filter](#bloom-filter)
+
+---
+
+## Write-Ahead Log (WAL) {#write-ahead-log-wal}
+
+A durability technique in which every database modification is written to an append-only log before it is applied to the actual data files. If the database crashes, it replays the log to recover committed changes.
+
+### Key Characteristics
+- Sequential append: fast to write and fsync
+- Crash recovery: unapplied log records are replayed on startup
+- Foundation for replication and CDC: many systems stream the WAL to replicas or change-capture consumers
+
+### When to Use
+- Any database that must guarantee durability (effectively all transactional stores)
+- As the source of truth for replication and change data capture
+
+### When NOT to Use
+- Pure in-memory caches that explicitly tolerate data loss on restart
+- Systems where durability is not a requirement
+
+**Also see**: [B-Tree](#b-tree), [LSM-Tree](#lsm-tree), [Change Data Capture (CDC)](data-concurrency.md#change-data-capture)

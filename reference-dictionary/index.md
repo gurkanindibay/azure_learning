@@ -47,7 +47,7 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 2 | [`resilience.md`](resilience.md) | Resilience & Fault Tolerance | Circuit Breaker, Half-Open State, Bulkhead, Aspect Order, Retry Amplification, Exponential Backoff, Fallback, Timeout, Resilience Stack, Graceful Degradation, Cascading Failure, Thundering Herd |
 | 3 | [`messaging.md`](messaging.md) | Message Brokers & Async | Kafka vs RabbitMQ, Partition, Consumer Group, Offset Commit, DLQ, Poison Message, Message Ordering, At-Least-Once, Exactly-Once |
 | 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations, Consistent Hashing, Nagle's Algorithm / TCP_NODELAY |
-| 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Atomic Conditional Update, Change Data Capture (CDC), Compensating Transaction, Distributed Lock, Double-Booking, Exclusion Constraint, Fencing Token, Isolation Levels, Lease-Based Lock, Optimistic/Pessimistic Locking, Saga, Sharding |
+| 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Atomic Conditional Update, Change Data Capture (CDC), Compensating Transaction, Distributed Lock, Double-Booking, Exclusion Constraint, Fencing Token, Isolation Levels, Lease-Based Lock, Optimistic/Pessimistic Locking, Saga, Sharding, Two-Phase Commit (2PC) |
 | 6 | [`caching.md`](caching.md) | Caching Architecture | Cache Stampede, Cache-Aside, Invalidation, TTL, Eviction Policies, Request Coalescing, PER Algorithm |
 | 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Payment Gateway, Payment Processor, KYC, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry) |
 | 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |
@@ -57,7 +57,7 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 12 | [`media-processing.md`](media-processing.md) | Media & Async Processing | GOP-Aligned Chunking, Transcoding, DASH/HLS, Fan-Out/Fan-In, Work Stealing, Embarrassingly Parallel |
 | 13 | [`hsm-cryptography.md`](hsm-cryptography.md) | HSM & Cryptographic Infrastructure | HSM, LMK, PCI-DSS, Payment HSM, PIN Block Translation, Tokenization (DPAN), 3D Secure, Post-Quantum Cryptography, TLS, mTLS, Man-in-the-Middle Attack |
 | 14 | [`java-jvm.md`](java-jvm.md) | Java JVM & Memory Management | JVM Heap, Young/Old Generation, Metaspace, PermGen, GC, Minor/Major/Full GC, G1GC, ZGC, OutOfMemoryError, Memory Leak, ThreadLocal, Heap Dump, Java Flight Recorder |
-| 15 | [`databases.md`](databases.md) | Databases & Database Engines | effective_io_concurrency, io_method, io_uring, pg_aios, shared_buffers |
+| 15 | [`databases.md`](databases.md) | Databases & Database Engines | effective_io_concurrency, io_method, io_uring, pg_aios, shared_buffers, B-Tree, Bloom Filter, LSM-Tree, Write-Ahead Log (WAL) |
 
 ---
 
