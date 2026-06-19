@@ -32,6 +32,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Chaos Engineering | [`#chaos-engineering`](#chaos-engineering) |
 | Load Shedding | [`#load-shedding`](#load-shedding) |
 | Backpressure | [`#backpressure`](#backpressure) |
+| Blast Radius | [`#blast-radius`](#blast-radius) |
+| Observability | [`#observability`](#observability) |
+| Correlated Failure Domain | [`#correlated-failure-domain`](#correlated-failure-domain) |
+| Fail-safe vs Fail-secure | [`#fail-safe-vs-fail-secure`](#fail-safe-vs-fail-secure) |
 
 ---
 
@@ -297,3 +301,92 @@ A flow-control mechanism where an **overloaded downstream signals upstream to sl
 
 ### Also see
 - [Load Shedding](#load-shedding) · [Bulkhead](#bulkhead) · [Messaging](messaging.md)
+
+---
+
+## Blast Radius
+
+The **scope of impact** when a component fails or a change goes wrong — measured in terms of users affected, services disrupted, or data corrupted. Minimizing blast radius is a core principle of resilient system design: a failure in one shard, region, or deployment unit should not propagate to the entire system.
+
+### Key Characteristics
+- **Bounded by isolation**: bulkheads, sharding, regional independence, and canary deployments all reduce blast radius
+- **Proportional to propagation speed**: the faster a change propagates (e.g., global config push), the larger the blast radius
+- **Measurable**: can be quantified as number of requests, users, or revenue affected per incident
+
+### When to Use
+- Designing deployment pipelines — canary or ring-based rollouts limit blast radius
+- Auditing shared infrastructure — ask "if this fails, what else breaks?"
+- Reviewing configuration changes — validate blast radius before global propagation
+
+### When NOT to Use
+- As the sole metric — a small blast radius with a long MTTR is still dangerous
+- Without considering correlated failure domains that amplify a small event
+
+### Also see
+- [Bulkhead](#bulkhead) · [Correlated Failure Domain](#correlated-failure-domain) · [Circuit Breaker](#circuit-breaker) · [Canary Deployment](../reference-dictionary/architecture-patterns.md#canary-deployment)
+
+---
+
+## Observability
+
+The ability to **understand a system's internal state from its external outputs** — logs, metrics, and traces. Unlike monitoring (which tracks known failure modes), observability enables diagnosing unknown failure modes by letting operators ask arbitrary questions about system behavior without deploying new code.
+
+### Key Characteristics
+- **Three pillars**: logs (events), metrics (aggregates), traces (request journeys)
+- **Independence**: the observability stack must not depend on the infrastructure it monitors (see [Roblox 2021 outage](#correlated-failure-domain))
+- **Cardinality**: high-cardinality data (user IDs, request IDs) is essential for debugging, not just aggregate metrics
+
+### When to Use
+- Every production system — especially distributed systems where failures are emergent
+- Before an incident: structured logs, distributed tracing, and dashboards for golden signals
+
+### When NOT to Use
+- As a substitute for testing — observability helps diagnose bugs but doesn't prevent them
+- Without a retention policy — storing everything forever is expensive and rarely needed
+
+### Also see
+- [Golden Signals](../reference-dictionary/architecture-patterns.md#golden-signals) · [OpenTelemetry](../reference-dictionary/architecture-patterns.md#opentelemetry) · [Blameless Postmortem](../reference-dictionary/architecture-patterns.md#blameless-postmortem)
+
+---
+
+## Correlated Failure Domain
+
+A set of components that appear independent but **share a hidden dependency or schedule** that causes them to fail together. The Datadog 2023 outage is a canonical example: five regions on different cloud providers all failed simultaneously because they shared the same OS update schedule.
+
+### Key Characteristics
+- **Hidden coupling**: the shared element is often invisible at the architecture level (OS images, update channels, package registries, DNS resolvers)
+- **Amplification**: a small trigger (a systemd update) can cascade across all "independent" regions
+- **Detection requires auditing**: standard architecture diagrams won't reveal correlated failure domains
+
+### When to Use
+- Auditing multi-region deployments — catalog every shared component across regions
+- Staggered maintenance windows — ensure no single event can hit all regions simultaneously
+
+### When NOT to Use
+- As an argument against standardization — the cure is staggered rollouts, not per-region snowflakes
+- Without considering the tradeoff between uniform security posture and blast-radius containment
+
+### Also see
+- [Blast Radius](#blast-radius) · [Bulkhead](#bulkhead) · [Defense in Depth](#defense-in-depth)
+
+---
+
+## Fail-safe vs Fail-secure
+
+Two opposing **failure mode design philosophies**. A **fail-safe** system defaults to a safe state when it fails (e.g., an elevator brake engages when power is lost). A **fail-secure** system defaults to a secure/restricted state (e.g., a door locks when power is lost, keeping intruders out). In distributed systems, the Meta 2021 outage illustrates the tension: DNS servers that withdrew BGP routes on health-check failure were fail-safe (prevent routing users to dead servers), but when all servers failed simultaneously, the combined effect was worse than doing nothing.
+
+### Key Characteristics
+- **Fail-safe (fail-open)**: prioritize availability — keep serving even if degraded
+- **Fail-secure (fail-closed)**: prioritize security/consistency — stop serving rather than risk incorrect behavior
+- **Context-dependent**: the same mechanism can be correct for partial failures and catastrophic for total failures
+
+### When to Use
+- **Fail-safe**: user-facing services where degraded service is better than no service
+- **Fail-secure**: financial transactions, access control, data integrity where correctness > availability
+
+### When NOT to Use
+- When the safety mechanism has no "floor" — always model what happens when all instances trigger simultaneously
+- Without a human-in-the-loop override for total-failure scenarios
+
+### Also see
+- [Circuit Breaker](#circuit-breaker) · [Graceful Degradation](#graceful-degradation) · [Defense in Depth](#defense-in-depth)

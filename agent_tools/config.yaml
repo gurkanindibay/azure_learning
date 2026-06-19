@@ -185,6 +185,10 @@ takeaway_domains:
     file: "36-auth-key-takeaways.md"
     desc: "Auth"
     keywords: ["source", "problem", "strategy", "tradeoff", "key concept", "identity"]
+  dp:
+    file: "39-design-patterns-key-takeaways.md"
+    desc: "Software Design Patterns (GoF + Enterprise)"
+    keywords: ["singleton", "factory", "builder", "adapter", "decorator", "proxy", "strategy", "observer", "command", "repository", "saga", "creational", "structural", "behavioral", "design pattern"]
 
 
 # Keyword → domain prefix suggestions for auto-detection
@@ -243,6 +247,19 @@ takeaway_keywords:
   oauth2: auth
   mtls: auth
   zero trust: auth
+  singleton: dp
+  factory method: dp
+  builder pattern: dp
+  adapter pattern: dp
+  decorator pattern: dp
+  proxy pattern: dp
+  strategy pattern: dp
+  observer pattern: dp
+  command pattern: dp
+  repository pattern: dp
+  design pattern: dp
+  gof: dp
+  gang of four: dp
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
