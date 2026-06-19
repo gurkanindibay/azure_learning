@@ -87,6 +87,15 @@ timestamp: 2026-06-14T00:00:00Z
 | YAGNI | [`#yagni`](#yagni) |
 | Circular Dependency | [`#circular-dependency`](#circular-dependency) |
 | Configuration Propagation | [`#configuration-propagation`](#configuration-propagation) |
+| Least Privilege | [`#least-privilege`](#least-privilege) |
+| Separation of Concerns | [`#separation-of-concerns`](#separation-of-concerns) |
+| Fail Fast | [`#fail-fast`](#fail-fast) |
+| Single Source of Truth | [`#single-source-of-truth`](#single-source-of-truth) |
+| Loose Coupling | [`#loose-coupling`](#loose-coupling) |
+| Immutability | [`#immutability`](#immutability) |
+| Scalability | [`#scalability`](#scalability) |
+| Architecture Decision Record | [`#architecture-decision-record`](#architecture-decision-record) |
+| Anti-pattern | [`#anti-pattern`](#anti-pattern) |
 
 ---
 
@@ -1613,3 +1622,201 @@ An **anti-pattern** where a familiar pattern or tool is applied to every problem
 
 ### Also see
 - [Golden Hammer](#golden-hammer) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-12-choosing-the-right-pattern)
+
+---
+
+## Least Privilege
+
+A security principle stating that every component, service, credential, or user should receive only the minimum permissions necessary to perform its function — nothing more.
+
+### Key Characteristics
+- Permissions are scoped to the exact actions required
+- Applied at every layer: IAM roles, service accounts, method-level authorization, network ACLs
+- Reduces blast radius when credentials are leaked or compromised
+
+### When to Use
+- All production systems, especially those handling sensitive data or money
+- Microservices and agentic AI systems where tools can mutate state
+
+### When NOT to Use
+- As an excuse to block legitimate developer access without a just-in-time elevation path
+- When the operational overhead of fine-grained permissions exceeds the risk (rare)
+
+### Also see
+- [Zero Trust](#zero-trust) · [RBAC](#rbac-role-based-access-control) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-01-least-privilege)
+
+---
+
+## Separation of Concerns
+
+A design principle that assigns each module, class, or service one well-defined responsibility, keeping internal cohesion high and external coupling low.
+
+### Key Characteristics
+- Each component has a single reason to change
+- Boundaries are drawn along responsibilities, not along implementation details
+- Changes in one concern do not cascade into unrelated concerns
+
+### When to Use
+- When a module grows large enough that its tests, reviews, and deployments span multiple teams
+- When business capabilities can be clearly distinguished
+
+### When NOT to Use
+- When over-separation creates more interfaces and deployment units than a small team can operate
+- When premature abstraction hides a simple, cohesive workflow
+
+### Also see
+- [Loose Coupling](#loose-coupling) · [Bounded Context](#bounded-context) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-02-separation-of-concerns)
+
+---
+
+## Fail Fast
+
+A reliability principle that detects invalid state or unexpected conditions as early as possible, at the closest boundary to where the problem originates.
+
+### Key Characteristics
+- Validates inputs and assumptions at system boundaries
+- Rejects bad state before it can propagate downstream
+- Surfaces failures loudly rather than swallowing exceptions
+
+### When to Use
+- At API boundaries, message consumers, and dependency calls
+- In distributed systems where defect cost grows exponentially with distance from source
+
+### When NOT to Use
+- When aggressive failure prevents graceful degradation that users depend on
+- When it replaces proper error handling with panic-driven code
+
+### Also see
+- [Defense in Depth](resilience.md#defense-in-depth) · [Circuit Breaker](resilience.md#circuit-breaker) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-04-fail-fast)
+
+---
+
+## Single Source of Truth
+
+A data principle stating that every important fact has exactly one authoritative location. Derived stores may cache or project the fact, but they do not redefine it.
+
+### Key Characteristics
+- One system owns writes for each fact
+- Read replicas, caches, search indices, and warehouses are fed from the source
+- Eliminates reconciliation drift between competing authorities
+
+### When to Use
+- When multiple teams or systems need consistent views of the same entity
+- In event-sourced or CDC-driven architectures
+
+### When NOT to Use
+- When the single writer becomes a contention or availability bottleneck that cannot be partitioned
+- When the domain genuinely requires independent bounded contexts with their own truths
+
+### Also see
+- [CQRS](cqrs-event-driven.md#cqrs-command-query-responsibility-segregation) · [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Dual-Write Problem](cqrs-event-driven.md#dual-write-problem) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-05-single-source-of-truth)
+
+---
+
+## Loose Coupling
+
+An architectural principle in which components interact through stable, well-defined contracts so that changes to one component do not force changes in others.
+
+### Key Characteristics
+- Contracts are explicit: schemas, APIs, event schemas, or protocols
+- Components can be deployed, scaled, and replaced independently
+- Asynchronous communication is preferred where eventual consistency is acceptable
+
+### When to Use
+- Microservices, modular monoliths, and multi-team codebases
+- Any system where deployment independence is a goal
+
+### When NOT to Use
+- When a tightly-knit algorithm or transaction must remain consistent and fast
+- When contract governance overhead exceeds the value of independence
+
+### Also see
+- [Separation of Concerns](#separation-of-concerns) · [API Gateway](#api-gateway) · [Message Brokers](../system-design-architecture/05-message-brokers-async.md) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-06-loose-coupling)
+
+---
+
+## Immutability
+
+A design principle that avoids mutating state in place by creating new versions of data and preserving history.
+
+### Key Characteristics
+- State changes produce new values rather than modifying existing ones
+- Eliminates a large class of concurrency bugs and reproducibility issues
+- Enables event sourcing, audit trails, and content-addressed artifacts
+
+### When to Use
+- Distributed systems with shared state
+- ML/AI pipelines where reproducibility depends on frozen datasets, models, and prompts
+
+### When NOT to Use
+- When storage cost or query patterns make append-only data impractical
+- When every operation must update a single current value and history adds no value
+
+### Also see
+- [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Immutability in Java](../reference-dictionary/java-jvm.md) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-07-immutability)
+
+---
+
+## Scalability
+
+The ability of a system to absorb growth in load — 10x, 100x, or more — without requiring fundamental architectural changes.
+
+### Key Characteristics
+- Horizontal scale: add more nodes rather than bigger nodes
+- Stateless services, careful partitioning, and elastic resources
+- Caching, asynchronous processing, and database sharding planned before they are urgently needed
+
+### When to Use
+- Products with planned growth, viral potential, or seasonal spikes
+- Any architecture review that asks "what happens if this succeeds?"
+
+### When NOT to Use
+- As premature optimization for products with unproven demand
+- When horizontal elasticity adds more operational complexity than the team can support
+
+### Also see
+- [Vertical vs Horizontal Scaling](#vertical-vs-horizontal-scaling) · [Caching](caching.md) · [Sharding](#sharding) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-09-scalability-by-design)
+
+---
+
+## Architecture Decision Record
+
+A **lightweight document** that captures a significant architectural decision, the context in which it was made, the options considered, and the consequences of the chosen option. Often abbreviated as **ADR**.
+
+### Key Characteristics
+- One ADR per decision, kept close to the code or in a dedicated `docs/adr/` folder
+- Explains not just *what* was decided but *why*, including rejected alternatives
+- Provides a durable record for future maintainers and reviewers
+
+### When to Use
+- When choosing between technologies, patterns, or tradeoffs that will be hard to reverse
+- When deliberately violating a standard principle, to document the rationale
+
+### When NOT to Use
+- For trivial decisions that are obvious to the whole team
+- As a substitute for discussion — ADRs capture consensus, not replace it
+
+### Also see
+- [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md) · [Technical Debt](#technical-debt)
+
+---
+
+## Anti-pattern
+
+A **common response to a recurring problem** that is usually ineffective and risks being highly counterproductive. Anti-patterns look like solutions but create more problems than they solve.
+
+### Key Characteristics
+- Repeatedly observed in real systems
+- Often arises from deadline pressure, habit, or misunderstanding a pattern
+- Naming an anti-pattern helps teams recognize and avoid it
+
+### When to Use
+- In code reviews and architecture reviews to label recurring problematic solutions
+- When teaching patterns by contrasting them with what *not* to do
+
+### When NOT to Use
+- As a vague insult for any code you dislike — label only well-documented, recurring problems
+- To discourage pragmatic shortcuts that are explicitly temporary and tracked
+
+### Also see
+- [Golden Hammer](#golden-hammer) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md)

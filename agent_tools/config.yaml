@@ -189,6 +189,10 @@ takeaway_domains:
     file: "39-design-patterns-key-takeaways.md"
     desc: "Software Design Patterns (GoF + Enterprise)"
     keywords: ["singleton", "factory", "builder", "adapter", "decorator", "proxy", "strategy", "observer", "command", "repository", "saga", "creational", "structural", "behavioral", "design pattern"]
+  arch:
+    file: "40-arch-key-takeaways.md"
+    desc: "Architecture Principles"
+    keywords: ["architecture principle", "least privilege", "separation of concerns", "defense in depth", "fail fast", "single source of truth", "loose coupling", "immutability", "idempotency", "scalability", "observability", "zero trust"]
 
 
 # Keyword → domain prefix suggestions for auto-detection

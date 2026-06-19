@@ -1,14 +1,22 @@
 ---
+type: Article
 title: "The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems"
 source: "https://medium.com/@chrisvanbreeden/the-11-architecture-principles-every-senior-engineer-pretends-to-know-a-practical-guide-for-java-ab6969938e71"
 author:
-  - "[[Chris van Breeden]]"
+  - "Chris van Breeden"
 published: 2026-05-27
 created: 2026-06-19
-description: "Chris van Breeden highlighted"
+description: "Eleven foundational architecture principles (least privilege, separation of concerns, defense in depth, fail fast, single source of truth, loose coupling, immutability, idempotency, scalability, observability, zero trust) with Java and AI/LLM examples."
 tags:
-  - "clippings"
+  - "architecture"
+  - "java"
+  - "ai"
+  - "system-design"
+  - "security"
 ---
+
+# The 11 Architecture Principles Every Senior Engineer Pretends to Know
+
 ![](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*rDMQsvOWZLJ8B57_6FAf7Q.jpeg)
 
 Photo by Alex wong on Unsplash
@@ -117,7 +125,7 @@ These aren’t novel. That’s the point. The novelty is in *how* and *where* yo
 
 **Why senior engineers care.** The hardest production bugs are the ones whose symptoms don’t match their cause. Observability is what makes them tractable. The investment compounds: every observable system makes the next incident faster to resolve.
 
-==**In practice.**== ==Adopt OpenTelemetry. Instrument Spring Boot with Micrometer; export to Prometheus, Tempo, Loki, or your vendor of choice. Use structured (JSON) logs with correlation IDs propagated across services. Define SLIs and SLOs at the boundary of user experience, not at the boundary of CPU usage. Add explicit business-event metrics (“orders\_placed\_total” with high-cardinality labels for tier, region, payment\_method). They’re worth their weight in postmortems avoided. For LLM systems, log prompts, model versions, latencies, token counts, and (where lawful) representative outputs. You cannot debug what you cannot inspec== t.
+**In practice.** Adopt OpenTelemetry. Instrument Spring Boot with Micrometer; export to Prometheus, Tempo, Loki, or your vendor of choice. Use structured (JSON) logs with correlation IDs propagated across services. Define SLIs and SLOs at the boundary of user experience, not at the boundary of CPU usage. Add explicit business-event metrics (`orders_placed_total` with high-cardinality labels for tier, region, payment_method). They’re worth their weight in postmortems avoided. For LLM systems, log prompts, model versions, latencies, token counts, and (where lawful) representative outputs. You cannot debug what you cannot inspect.
 
 **Anti-pattern**. SSHing into a production box to `grep` log files. If that's your incident-response playbook, your observability investment is overdue.
 
