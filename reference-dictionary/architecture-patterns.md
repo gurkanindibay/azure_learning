@@ -96,6 +96,14 @@ timestamp: 2026-06-14T00:00:00Z
 | Scalability | [`#scalability`](#scalability) |
 | Architecture Decision Record | [`#architecture-decision-record`](#architecture-decision-record) |
 | Anti-pattern | [`#anti-pattern`](#anti-pattern) |
+| Base62 Encoding | [`#base62-encoding`](#base62-encoding) |
+| URL Shortener | [`#url-shortener`](#url-shortener) |
+| Snowflake ID | [`#snowflake-id`](#snowflake-id) |
+| Key Generation Service | [`#key-generation-service`](#key-generation-service) |
+| Fanout on Write | [`#fanout-on-write`](#fanout-on-write) |
+| Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
+| Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
+| Hotlinking | [`#hotlinking`](#hotlinking) |
 
 ---
 
@@ -1820,3 +1828,172 @@ A **common response to a recurring problem** that is usually ineffective and ris
 
 ### Also see
 - [Golden Hammer](#golden-hammer) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md)
+
+---
+
+## Base62 Encoding
+
+A binary-to-text encoding scheme that uses 62 characters: `0-9`, `a-z`, and `A-Z`. It produces shorter strings than Base64 (which uses 64 characters including `+` and `/`) while remaining URL-safe and human-readable. Commonly used to compress large numeric IDs into short tokens.
+
+### Key Characteristics
+- **Alphabet**: 62 URL-friendly characters
+- **Compactness**: `62^7 ≈ 3.5 trillion` unique 7-character codes
+- **Lexicographic ambiguity**: Case-sensitive (`a` ≠ `A`)
+
+### When to Use
+- Short URL aliases, invite codes, reference numbers
+- Anywhere a large numeric ID needs a compact, shareable string
+
+### When NOT to Use
+- When case insensitivity is required (use Base36)
+- When cryptographic entropy is required (use random tokens or hashes)
+
+**Also see**: [URL Shortener](#url-shortener) · [Snowflake ID](#snowflake-id)
+
+---
+
+## URL Shortener
+
+A system that maps long URLs to short, unique aliases and redirects users from the alias to the original URL. The classic design problem separates a write-heavy shortening path from a read-heavy redirect path, using pre-generated IDs, cache-aside reads, and asynchronous analytics.
+
+### Key Characteristics
+- **Read-heavy**: Redirect traffic dominates writes (often 100:1)
+- **Immutable mappings**: Short codes rarely change after creation
+- **Global uniqueness**: No two long URLs may share the same alias
+- **Low-latency redirects**: Served from cache at the edge
+
+### When to Use
+- Link sharing, tracking, branding (e.g., `short.ly/abc123`)
+- Any scenario requiring compact, memorable references to long resources
+
+### When NOT to Use
+- When the original URL must be hidden from the service operator
+- When deterministic, collision-free generation is impossible to guarantee
+
+**Also see**: [Base62 Encoding](#base62-encoding) · [Key Generation Service](#key-generation-service) · [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern)
+
+---
+
+## Snowflake ID
+
+A distributed unique ID generation algorithm introduced by Twitter. Each ID is a 64-bit integer composed of a timestamp, datacenter ID, worker ID, and sequence number. IDs are roughly time-ordered and unique without coordination beyond worker registration.
+
+### Key Characteristics
+- **64-bit**: Fits in a `BIGINT` / `long`
+- **Time-ordered**: High bits encode millisecond timestamp
+- **Distributed**: Datacenter and worker IDs allow independent generation
+- **Sequence number**: Handles up to 4096 IDs per worker per millisecond
+
+### When to Use
+- Distributed systems needing unique, sortable IDs
+- Primary keys where monotonic time ordering aids indexing
+
+### When NOT to Use
+- When strict global monotonicity is required (clock drift can break ordering)
+- When IDs must be unpredictable (Snowflake IDs are guessable)
+
+**Also see**: [Key Generation Service](#key-generation-service) · [Base62 Encoding](#base62-encoding)
+
+---
+
+## Key Generation Service
+
+A dedicated service responsible for producing unique identifiers or tokens at scale. In a URL shortener, it pre-allocates disjoint ranges of numeric IDs to workers, who encode them locally as short aliases. This eliminates collision checks on the write path.
+
+### Key Characteristics
+- **Range allocation**: Coordinator assigns blocks of IDs to workers
+- **Local incrementing**: Workers generate IDs without network calls
+- **Fault tolerance**: Lost unused ranges are acceptable at large namespace sizes
+
+### When to Use
+- Systems requiring billions of unique, short tokens
+- Workloads where write latency and collision-freedom are both critical
+
+### When NOT to Use
+- When UUIDs or database sequences are sufficient
+- When centralized ID assignment is acceptable and simpler
+
+**Also see**: [Snowflake ID](#snowflake-id) · [URL Shortener](#url-shortener)
+
+---
+
+## Fanout on Write
+
+A distribution model where a new event is propagated to all consumers at write time. In social media, posting a message writes the post ID into every follower's timeline cache immediately. Reads are fast because results are pre-computed.
+
+### Key Characteristics
+- **Read-optimized**: Feed loads are O(1)
+- **Write amplification**: Each post generates N writes for N followers
+- **Latency to readers**: Near zero (data is already present)
+
+### When to Use
+- Small-to-medium follower counts
+- Read latency is the dominant SLO
+
+### When NOT to Use
+- Celebrity accounts with millions of followers (write amplification explodes)
+- Systems where producers significantly outnumber consumers
+
+**Also see**: [Fanout on Read](#fanout-on-read) · [Hybrid Fanout](#hybrid-fanout) · [Timeline Cache](../reference-dictionary/caching.md#timeline-cache)
+
+---
+
+## Fanout on Read
+
+A distribution model where events are stored centrally and consumers collect relevant items at read time. In social media, a follower loads their feed by fetching recent posts from each account they follow. Writes are cheap; reads are more expensive.
+
+### Key Characteristics
+- **Write-optimized**: Each post generates O(1) writes
+- **Read cost grows with followees**: Feed load is O(followees)
+- **No write amplification**: Ideal for celebrity producers
+
+### When to Use
+- Highly skewed graphs where a few producers have massive audiences
+- Systems where reads are infrequent relative to writes
+
+### When NOT to Use
+- Feeds with strict latency SLOs and many followees
+- Uniform graphs where push would be simpler and faster
+
+**Also see**: [Fanout on Write](#fanout-on-write) · [Hybrid Fanout](#hybrid-fanout)
+
+---
+
+## Hybrid Fanout
+
+A distribution model that combines fanout-on-write for normal users and fanout-on-read for high-follower celebrities. Balances read latency against write amplification by choosing the fanout strategy per producer based on follower count.
+
+### Key Characteristics
+- **Threshold-based**: Users below a follower count are pushed; celebrities are pulled
+- **Best of both worlds**: Fast reads for most users, bounded write amplification
+- **Operational complexity**: Requires separate code paths and caches
+
+### When to Use
+- Social networks with highly skewed follower distributions
+- Any fanout problem where neither pure push nor pure pull is affordable
+
+### When NOT to Use
+- Simple graphs where one strategy clearly dominates
+- When operational complexity outweighs the fanout savings
+
+**Also see**: [Fanout on Write](#fanout-on-write) · [Fanout on Read](#fanout-on-read) · [Celebrity Cache](../reference-dictionary/caching.md#celebrity-cache)
+
+---
+
+## Hotlinking
+
+Directly embedding or linking to a resource hosted on another server without re-hosting it. The consuming site gets the benefit (image, video, file) while the hosting site pays the bandwidth and infrastructure costs.
+
+### Key Characteristics
+- **Bandwidth theft**: Origin server serves traffic for external sites
+- **Common targets**: Images, videos, downloadable files
+- **Prevention**: Signed URLs, referrer checks, watermarking, CDN rules
+
+### When to Use
+- Intentional sharing with explicit permission (e.g., CDN-hosted assets with hotlink protection)
+
+### When NOT to Use
+- Without permission, as it consumes the origin's resources
+- For resources whose origin must remain hidden or whose URLs should not be guessable
+
+**Also see**: [API Gateway](#api-gateway) · [CDN](../reference-dictionary/caching.md#cache-aside-pattern)

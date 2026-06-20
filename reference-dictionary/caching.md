@@ -29,6 +29,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Morris Probabilistic Counter | [`#morris-probabilistic-counter`](#morris-probabilistic-counter) |
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
+| Write-Through | [`#write-through`](#write-through) |
+| Timeline Cache | [`#timeline-cache`](#timeline-cache) |
+| Celebrity Cache | [`#celebrity-cache`](#celebrity-cache) |
 
 ---
 
@@ -276,3 +279,66 @@ Redis 6+ feature (via `CLIENT TRACKING ON`) where the server pushes invalidation
 - When server memory for the invalidation table is a constraint (use BCAST mode or skip)
 
 **Also see**: [Cache Invalidation](#cache-invalidation) · [TTL](#ttl-time-to-live) · [UNLINK (Async Deletion)](#unlink-async-deletion)
+
+---
+
+## Write-Through
+
+A caching pattern where data is written to both the cache and the backing store **synchronously** as part of the same write operation. The cache and database remain consistent, but write latency increases because every write waits for both stores.
+
+### Key Characteristics
+- **Synchronous dual write**: Every write updates cache and DB before returning success
+- **Strong consistency**: Cache is never stale relative to the DB
+- **Write amplification**: Each logical write becomes two physical writes
+
+### When to Use
+- Data that must be read immediately after writing (author's own timeline, user profiles)
+- Workloads where read-after-write consistency is more important than write latency
+
+### When NOT to Use
+- Write-heavy workloads where dual-write latency is unacceptable
+- Scenarios where cache failures should not block the primary write path
+
+**Also see**: [Cache-Aside Pattern](#cache-aside-pattern) · [Cache Invalidation](#cache-invalidation)
+
+---
+
+## Timeline Cache
+
+A user-specific pre-computed data structure (commonly a Redis sorted set) that stores references to recent events — such as social-media posts — in reverse-chronological order. Feed reads become O(1) fetches instead of scatter-gather queries across many followees.
+
+### Key Characteristics
+- **User-scoped**: One timeline per consumer (`timeline:{user_id}`)
+- **Sorted by time**: Score = event timestamp for natural reverse-chronological pagination
+- **Bounded size**: Trimmed to the latest N entries (e.g., 1000) to bound memory
+
+### When to Use
+- Social feeds, activity streams, notification inboxes where read latency matters
+- Fanout-on-write architectures where writes pre-compute read results
+
+### When NOT to Use
+- Eventual-consistency-tolerant read paths that can be computed on demand cheaply
+- Small graphs where scatter-gather is faster than maintaining per-user caches
+
+**Also see**: [Cache-Aside Pattern](#cache-aside-pattern) · [Celebrity Cache](#celebrity-cache)
+
+---
+
+## Celebrity Cache
+
+A dedicated cache tier for high-follower accounts whose content is read by millions. Instead of fanning every celebrity post into all followers' timelines, the system stores a bounded list of recent celebrity posts and merges them into follower feeds at read time.
+
+### Key Characteristics
+- **Isolated hot keys**: Celebrity content is separated from normal timelines to prevent cache storms
+- **Bounded list**: Latest N posts per celebrity (e.g., 100), trimmed on new writes
+- **Lazy or pre-warmed refresh**: Populated on post creation and refreshed on read miss
+
+### When to Use
+- Social networks with highly skewed follower distributions (1% of users have >1M followers)
+- Any fanout system where push-all would create unbounded write amplification
+
+### When NOT to Use
+- Graphs with uniformly small follower counts — pure push is simpler
+- When read-time merging complexity outweighs fanout savings
+
+**Also see**: [Timeline Cache](#timeline-cache) · [Request Coalescing](#request-coalescing)

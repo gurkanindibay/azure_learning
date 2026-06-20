@@ -193,6 +193,14 @@ takeaway_domains:
     file: "40-arch-key-takeaways.md"
     desc: "Architecture Principles"
     keywords: ["architecture principle", "least privilege", "separation of concerns", "defense in depth", "fail fast", "single source of truth", "loose coupling", "immutability", "idempotency", "scalability", "observability", "zero trust"]
+  url:
+    file: "41-url-key-takeaways.md"
+    desc: "URL Shortener"
+    keywords: ["url shortener", "base62", "key generation", "cache-aside", "redirect", "tinyurl", "alias"]
+  feed:
+    file: "42-feed-key-takeaways.md"
+    desc: "News Feed"
+    keywords: ["news feed", "fanout", "timeline cache", "celebrity cache", "social graph", "push", "pull"]
 
 
 # Keyword → domain prefix suggestions for auto-detection
@@ -264,6 +272,18 @@ takeaway_keywords:
   design pattern: dp
   gof: dp
   gang of four: dp
+  url shortener: url
+  base62: url
+  key generation: url
+  tinyurl: url
+  alias: url
+  news feed: feed
+  fanout: feed
+  timeline cache: feed
+  celebrity cache: feed
+  social graph: feed
+  push fanout: feed
+  pull fanout: feed
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
