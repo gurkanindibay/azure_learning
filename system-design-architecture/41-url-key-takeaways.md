@@ -8,7 +8,7 @@ timestamp: 2026-06-20T00:00:00Z
 # 41. URL Shortener — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [PART 2 — Distinguished Engineer — System Design Interview Questions](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [Question 1: Design a URL Shortener Service (like TinyURL)](../system-design-cases/cases/part-2-url-shortener-system-design.md)
 > **Purpose**: Extract reusable architectural patterns from designing a TinyURL-scale URL shortening service.
 
 > **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, invalidation, eviction policies

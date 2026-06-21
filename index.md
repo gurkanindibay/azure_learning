@@ -16,6 +16,7 @@ A technical knowledge base covering Microsoft Azure services, cloud-agnostic arc
 ## System Design
 
 * [System Design Architecture](/system-design-architecture/) — Problem → strategy reference with domain-prefixed IDs and Azure mappings
+* [System Design Cases](/system-design-cases/) — Original interview case write-ups in the style of the Medium source articles
 
 ## Reference
 

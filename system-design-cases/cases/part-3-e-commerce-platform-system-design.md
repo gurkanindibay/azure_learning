@@ -1,5 +1,5 @@
 ---
-type: Article
+type: System Design Case
 title: "Question 2: Design an E-Commerce Platform (like Amazon / Flipkart / eBay)"
 source: "https://medium.com/@rameshwar.blog/part-3-distinguished-engineer-system-design-interview-questions-real-time-messaging-e-commerce-dec372b79967"
 author:

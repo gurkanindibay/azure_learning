@@ -8,7 +8,7 @@ timestamp: 2026-06-21T00:00:00Z
 # 44. E-Commerce Checkout Consistency — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 > **Purpose**: Extract reusable consistency and transaction patterns from a high-scale e-commerce design.
 
 > **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [SQL System Design](19-sql-system-design-takeaways.md)
@@ -31,7 +31,7 @@ timestamp: 2026-06-21T00:00:00Z
 
 ## tx-08: Atomic Inventory Reservation
 
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 
 | | |
 |:---|:---|
@@ -60,7 +60,7 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 
 ## tx-09: Saga Orchestration for Checkout
 
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 
 | | |
 |:---|:---|
@@ -83,7 +83,7 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 
 ## tx-10: Compensating Transactions
 
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 
 | | |
 |:---|:---|
@@ -106,7 +106,7 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 
 ## tx-11: Idempotent Payment Capture
 
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 
 | | |
 |:---|:---|
@@ -129,7 +129,7 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 
 ## tx-12: Strong vs Eventual Consistency by Subdomain
 
-> **Source**: [Question 2: Design an E-Commerce Platform](../articles/medium/part-3-e-commerce-platform-system-design.md)
+> **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 
 | | |
 |:---|:---|

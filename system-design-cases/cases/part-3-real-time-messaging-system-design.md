@@ -1,5 +1,5 @@
 ---
-type: Article
+type: System Design Case
 title: "Question 1: Design a Real-Time Messaging System (like WhatsApp)"
 source: "https://medium.com/@rameshwar.blog/part-3-distinguished-engineer-system-design-interview-questions-real-time-messaging-e-commerce-dec372b79967"
 author:

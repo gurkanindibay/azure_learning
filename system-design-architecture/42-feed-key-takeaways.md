@@ -8,7 +8,7 @@ timestamp: 2026-06-20T00:00:00Z
 # 42. News Feed System — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [PART 2 — Distinguished Engineer — System Design Interview Questions](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [Question 2: Design a Social Media News Feed System](../system-design-cases/cases/part-2-news-feed-system-design.md)
 > **Purpose**: Extract reusable architectural patterns from designing a social-media news feed at hundreds-of-millions-of-users scale.
 
 > **Also see**: [URL Shortener — Key Takeaways](41-url-key-takeaways.md) — Cache-aside, CAP split, unique key generation

@@ -8,7 +8,7 @@ timestamp: 2026-06-21T00:00:00Z
 # 43. Real-Time Messaging — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Question 1: Design a Real-Time Messaging System (like WhatsApp)](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System (like WhatsApp)](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 > **Purpose**: Extract reusable messaging and streaming patterns from a global chat-system design.
 
 > **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Caching Architecture](03-caching-architecture.md)
@@ -32,7 +32,7 @@ timestamp: 2026-06-21T00:00:00Z
 
 ## broker-18: Per-Conversation Kafka Partitioning
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|
@@ -59,7 +59,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 
 ## broker-19: Per-Device Redis Streams Inbox
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|
@@ -82,7 +82,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 
 ## broker-20: Fan-Out on Write vs Fan-Out on Read
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|
@@ -105,7 +105,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 
 ## broker-21: Presence Service with TTL + Heartbeats
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|
@@ -128,7 +128,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 
 ## broker-22: Multi-Device Sync via Shared Ordered Stream
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|
@@ -151,7 +151,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 
 ## broker-23: Reconnection Thundering Herd Mitigation
 
-> **Source**: [Question 1: Design a Real-Time Messaging System](../articles/medium/part-3-real-time-messaging-system-design.md)
+> **Source**: [Question 1: Design a Real-Time Messaging System](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 
 | | |
 |:---|:---|

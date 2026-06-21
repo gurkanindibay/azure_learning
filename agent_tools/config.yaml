@@ -19,6 +19,7 @@ type_mapping:
 
   # System design
   "system-design-architecture/": "System Design"
+  "system-design-cases/": "System Design Case"
 
   # Reference
   "reference-dictionary/": "Reference"
