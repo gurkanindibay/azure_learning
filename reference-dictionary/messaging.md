@@ -20,7 +20,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Partition | [`#partition`](#partition) |
 | Consumer Group | [`#consumer-group`](#consumer-group) |
 | Offset Commit | [`#offset-commit`](#offset-commit) |
+| Redis Streams | [`#redis-streams`](#redis-streams) |
 | Dead Letter Queue (DLQ) | [`#dead-letter-queue-dlq`](#dead-letter-queue-dlq) |
+| Per-Device Inbox | [`#per-device-inbox`](#per-device-inbox) |
 | Poison Message | [`#poison-message`](#poison-message) |
 | Message Ordering | [`#message-ordering`](#message-ordering) |
 | At-Least-Once Semantics | [`#at-least-once-semantics`](#at-least-once-semantics) |
@@ -249,3 +251,49 @@ A Kafka consumer mode (`enable-auto-commit: true`) where offsets are **committed
 - Any system where data loss has regulatory or financial implications
 
 **Also see**: [Offset Commit](#offset-commit) · [At-Least-Once Semantics](#at-least-once-semantics) · [Idempotent Consumer](#idempotent-consumer)
+
+---
+
+## Redis Streams
+
+A Redis data type that models an append-only log with consumer-group semantics, allowing durable, ordered, fault-tolerant message processing inside Redis.
+
+### Key Characteristics
+- Entries are ordered and identified by time-based IDs
+- Consumer groups track pending entries and support explicit ACKs
+- Memory is bounded via trimming / `MAXLEN`
+
+### When to Use
+- Per-device inboxes and lightweight message queues
+- Ordered event streams that fit in memory
+- Scenarios where a full Kafka cluster is too heavy
+
+### When NOT to Use
+- Long-term event storage (prefer Kafka or an event store)
+- Very large payloads (use the claim-check pattern)
+
+### Also see
+- [Per-Device Inbox](#per-device-inbox) · [Kafka vs RabbitMQ](#kafka-vs-rabbitmq) · [At-Least-Once Semantics](#at-least-once-semantics)
+
+---
+
+## Per-Device Inbox
+
+A messaging pattern that gives each recipient device its own durable queue so delivery and read progress can be tracked independently per device.
+
+### Key Characteristics
+- One queue or stream per user-device pair
+- Enables offline catch-up and multi-device synchronization
+- Usually paired with at-least-once delivery and client-side deduplication
+
+### When to Use
+- Real-time messaging with multi-device support
+- Push-notification buffering for offline clients
+
+### When NOT to Use
+- Simple broadcast use cases where all consumers share one stream
+- Systems that can tolerate lossy fan-out
+
+### Also see
+- [Redis Streams](#redis-streams) · [At-Least-Once Semantics](#at-least-once-semantics) · [Message Ordering](#message-ordering)
+

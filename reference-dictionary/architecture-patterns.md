@@ -104,6 +104,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Hotlinking | [`#hotlinking`](#hotlinking) |
+| Presence Service | [`#presence-service`](#presence-service) |
+| Faceted Search | [`#faceted-search`](#faceted-search) |
 
 ---
 
@@ -1997,3 +1999,48 @@ Directly embedding or linking to a resource hosted on another server without re-
 - For resources whose origin must remain hidden or whose URLs should not be guessable
 
 **Also see**: [API Gateway](#api-gateway) · [CDN](../reference-dictionary/caching.md#cache-aside-pattern)
+
+---
+
+## Presence Service
+
+A component that tracks which users are currently online, on which devices, and which server or gateway holds their active connection.
+
+### Key Characteristics
+- Updated by heartbeats, WebSocket pong events, or explicit connect/disconnect
+- Typically uses TTL-backed storage to survive unclean disconnects
+- Essential for routing real-time messages and showing online status
+
+### When to Use
+- Chat, gaming, collaboration, and live collaboration tools
+- Any system that needs connection-aware routing
+
+### When NOT to Use
+- Stateless request/response APIs without long-lived connections
+- When approximate presence is unacceptable
+
+### Also see
+- [Redis Streams](messaging.md#redis-streams) · [Fanout on Write](#fanout-on-write)
+
+---
+
+## Faceted Search
+
+A search interface that lets users refine results by applying multiple filters (facets) such as category, brand, price range, and rating.
+
+### Key Characteristics
+- Facets are derived from the current result set and update as filters are applied
+- Requires a search index that supports aggregations (e.g., Elasticsearch, Azure Cognitive Search)
+- Combines full-text relevance with structured, multi-dimensional filtering
+
+### When to Use
+- E-commerce catalogs, document repositories, and media libraries
+- Any large collection where users browse by multiple dimensions
+
+### When NOT to Use
+- Small datasets where simple keyword search is sufficient
+- When facet-computation latency exceeds user expectations
+
+### Also see
+- [API Gateway](#api-gateway)
+

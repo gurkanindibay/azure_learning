@@ -18,15 +18,18 @@ timestamp: 2026-06-14T00:00:00Z
 |:---|:---|
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
+| Causal Ordering | [`#causal-ordering`](#causal-ordering) |
 | Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
 | Compensating Transaction | [`#compensating-transaction`](#compensating-transaction) |
 | Distributed Lock | [`#distributed-lock`](#distributed-lock) |
 | Double-Booking Problem | [`#double-booking-problem`](#double-booking-problem) |
 | Exclusion Constraint | [`#exclusion-constraint`](#exclusion-constraint) |
 | Fencing Token | [`#fencing-token`](#fencing-token) |
+| Inventory Reservation | [`#inventory-reservation`](#inventory-reservation) |
 | Isolation Levels | [`#isolation-levels`](#isolation-levels) |
 | Lease-Based Lock | [`#lease-based-lock`](#lease-based-lock) |
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
+| Overselling | [`#overselling`](#overselling) |
 | Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
@@ -387,3 +390,69 @@ A data structure designed so that **concurrent updates on different replicas can
 - When the data type cannot be expressed as a CRDT without losing business semantics
 
 **Also see**: [ACID Transactions](#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Eventual Consistency](cqrs-event-driven.md)
+
+---
+
+## Causal Ordering
+
+A partial ordering guarantee in which events are ordered only if they are causally related (for example, a reply depends on the message it answers). Independent events may be observed in different orders on different replicas.
+
+### Key Characteristics
+- Preserves **happens-before** relationships rather than a global total order
+- Weaker than linearizability but stronger than eventual consistency
+- Does not require synchronized clocks
+
+### When to Use
+- Real-time messaging per-conversation order
+- Comment threads and collaborative editing
+- Systems where global ordering is infeasible
+
+### When NOT to Use
+- Financial ledgers requiring a strict total order
+- Workflows that require linearizable reads
+
+### Also see
+- [Message Ordering](messaging.md#message-ordering) · [Eventual Consistency](cqrs-event-driven.md)
+
+---
+
+## Inventory Reservation
+
+Temporarily setting aside stock for an in-flight checkout or order, reducing the quantity available to other buyers until the order is confirmed or the reservation expires.
+
+### Key Characteristics
+- Usually performed at checkout rather than at cart-add to avoid inventory hoarding
+- Paired with a TTL or timeout to release abandoned reservations
+- Must be atomic to prevent overselling
+
+### When to Use
+- E-commerce checkout flows
+- Ticketing, hotel, and rental booking systems
+
+### When NOT to Use
+- Low-value items where occasional oversell is acceptable
+- Systems without a reliable reservation-expiry mechanism
+
+### Also see
+- [Atomic Conditional Update](#atomic-conditional-update) · [Overselling](#overselling) · [Saga Pattern](#saga-pattern)
+
+---
+
+## Overselling
+
+Selling more units of a product than are actually in stock because concurrent checkouts did not enforce inventory invariants.
+
+### Key Characteristics
+- Caused by **check-then-act** races across multiple application instances
+- Prevented by atomic conditional updates, pessimistic locking, or database constraints
+- Most likely during flash sales and viral traffic spikes
+
+### When to Use
+- N/A — overselling is a failure mode to prevent, not a pattern to adopt
+
+### When NOT to Use
+- Never acceptable when stock counts are hard business constraints
+
+### Also see
+- [Double-Booking Problem](#double-booking-problem) · [Atomic Conditional Update](#atomic-conditional-update) · [Inventory Reservation](#inventory-reservation)
+

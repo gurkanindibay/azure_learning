@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | ARQC | [`#arqc`](#arqc) |
 | TLS (Transport Layer Security) | [`#tls-transport-layer-security`](#tls-transport-layer-security) |
 | mTLS (Mutual TLS) | [`#mtls-mutual-tls`](#mtls-mutual-tls) |
+| End-to-End Encryption (E2EE) | [`#end-to-end-encryption`](#end-to-end-encryption) |
 | Man-in-the-Middle Attack | [`#man-in-the-middle-attack`](#man-in-the-middle-attack) |
 
 ---
@@ -200,3 +201,26 @@ An attack where an adversary **intercepts or alters communication** between two 
 
 - [TLS](#tls-transport-layer-security)
 - [mTLS](#mtls-mutual-tls)
+
+---
+
+## End-to-End Encryption (E2EE)
+
+A communication model in which only the endpoints can read the messages; intermediaries such as servers, brokers, and gateways handle only ciphertext and cannot decrypt content.
+
+### Key Characteristics
+- Encryption occurs on the sender's device; decryption occurs on the recipient's device
+- The server sees only metadata and ciphertext
+- Requires secure key distribution and verification to prevent man-in-the-middle attacks
+
+### When to Use
+- Messaging, email, and file sharing where the service provider must not access content
+- Regulatory or privacy-sensitive domains
+
+### When NOT to Use
+- When the server must inspect or process message content
+- When key recovery is a hard requirement, because E2EE makes recovery difficult
+
+### Also see
+- [TLS](#tls-transport-layer-security) · [mTLS](#mtls-mutual-tls) · [Man-in-the-Middle Attack](#man-in-the-middle-attack)
+
