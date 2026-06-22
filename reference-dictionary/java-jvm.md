@@ -33,6 +33,8 @@ timestamp: 2026-06-15T00:00:00Z
 | ThreadLocal | [`#threadlocal`](#threadlocal) |
 | Heap Dump | [`#heap-dump`](#heap-dump) |
 | Java Flight Recorder | [`#java-flight-recorder`](#java-flight-recorder) |
+| HashMap | [`#hashmap`](#hashmap) |
+| Treeification | [`#treeification`](#treeification) |
 
 ---
 
@@ -242,3 +244,56 @@ jmap -dump:live,format=b,file=heap.hprof PID
 A **low-overhead profiling and diagnostics framework** built into the JVM. JFR records detailed runtime events (GC, thread, memory, I/O) and is useful for production troubleshooting without heavy overhead.
 
 **Also see**: [Heap Dump](#heap-dump), [Garbage Collection](#garbage-collection)
+
+---
+
+## HashMap
+
+### hashmap
+
+A **hash-table-based key-value map** in the Java Collections Framework. It hashes keys to indices in an internal array of buckets; each bucket stores a linked list of entries that share the same index. Java 8+ upgrades a bucket to a Red-Black Tree when the chain grows beyond a threshold and the backing array is large enough.
+
+### Key Characteristics
+
+- **Average O(1)** `get`, `put`, and `remove` — under uniform hashing and reasonable load factor.
+- **Worst-case O(n)** when all keys collide and treeification does not apply.
+- **Not thread-safe**; use `ConcurrentHashMap` for concurrent access.
+- **Allows one `null` key** and multiple `null` values.
+
+### When to Use
+
+- Fast in-memory lookups by a well-distributed key.
+- Caches, indexes, and deduplication sets where keys are immutable and hash-friendly.
+
+### When NOT to Use
+
+- As a production cache without bounds or eviction (use Caffeine or similar instead).
+- With untrusted or attacker-controlled keys unless collision risk is mitigated.
+- When iteration order must be predictable (use `LinkedHashMap` instead).
+
+**Also see**: [Treeification](#treeification), [Hash Collision](../reference-dictionary/databases.md#hash-collision), [Red-Black Tree](../reference-dictionary/databases.md#red-black-tree)
+
+---
+
+## Treeification
+
+### treeification
+
+The **internal Java HashMap mechanism** that converts a bucket's linked-list collision chain into a Red-Black Tree when the chain exceeds `TREEIFY_THRESHOLD = 8` and the backing array capacity is at least `MIN_TREEIFY_CAPACITY = 64`.
+
+### Key Characteristics
+
+- Reduces worst-case lookup from **O(n)** to **O(log n)** for heavily colliding buckets.
+- Only triggers when **both** threshold conditions are met; otherwise the map resizes instead.
+- Adds per-entry memory overhead compared to a linked list.
+
+### When to Use
+
+- Treeification is automatic; you do not invoke it directly. You size and hash so that it can help when collisions occur.
+
+### When NOT to Use
+
+- Do not rely on treeification to fix a bad `hashCode()`. Prevention is cheaper than adaptive repair.
+- Do not assume small HashMaps are protected; below capacity 64 they resize rather than treeify.
+
+**Also see**: [HashMap](#hashmap), [Red-Black Tree](../reference-dictionary/databases.md#red-black-tree)

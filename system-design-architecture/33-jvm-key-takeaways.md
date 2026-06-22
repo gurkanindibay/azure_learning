@@ -1,7 +1,7 @@
 ---
 type: System Design
 title: "JVM Memory & GC — Key Takeaways"
-description: "Production JVM memory failures and tuning strategies: heap sizing, stack overflow, metaspace leaks, full GC storms, memory leaks, and thread explosion."
+description: "Production JVM memory failures and tuning strategies: heap sizing, stack overflow, metaspace leaks, full GC storms, memory leaks, thread explosion, and HashMap collision/treeification behavior."
 timestamp: 2026-06-15T00:00:00Z
 ---
 
@@ -25,6 +25,9 @@ timestamp: 2026-06-15T00:00:00Z
 | [`jvm-04`](#jvm-04-full-gc-storms-from-long-lived-objects) | API latency jumps 50 ms → 8 s every 20 seconds | Full GC is a symptom, not the root cause |
 | [`jvm-05`](#jvm-05-static-collections-and-threadlocal-cause-memory-leaks) | Heap usage climbs monotonically; `jmap` shows retained static maps | GC cannot collect what is still referenced |
 | [`jvm-06`](#jvm-06-unbounded-thread-creation-exhausts-native-memory) | `OutOfMemoryError: unable to create new native thread` | Threads consume memory outside the heap |
+| [`jvm-07`](#jvm-07-hashmap-lookups-degrade-under-adversarial-collisions) | HashMap lookup slows from O(1) to O(n) under crafted input | Collision chains bypass the constant-time assumption |
+| [`jvm-08`](#jvm-08-treeification-has-a-capacity-gate) | Long collision chains stay as linked lists in small maps | Treeification requires bucket size ≥ 8 AND capacity ≥ 64 |
+| [`jvm-09`](#jvm-09-poor-hashcode-and-undersized-capacity-hide-performance-cliffs) | Latency spikes in HashMap-heavy hot paths | Custom `hashCode()` and initial capacity determine whether treeification or resize saves you |
 
 ---
 
@@ -231,3 +234,93 @@ timestamp: 2026-06-15T00:00:00Z
 > **Key insight**: Threads are not free. At 1 MB stack each, 10,000 threads ≈ 10 GB of memory before your application does any work.
 
 **Cross-reference**: See [`OutOfMemoryError`](../reference-dictionary/java-jvm.md#outofmemoryerror)
+
+---
+
+## jvm-07: HashMap Lookups Degrade Under Adversarial Collisions
+
+> **Source**: [Article §"The Bucket Model"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-bucket-model-quick-refresher)
+
+| | |
+|:---|:---|
+| **Problem** | A service accepts attacker-controlled or accidentally colliding keys. All keys land in the same HashMap bucket, turning `O(1)` `get()`/`put()` operations into `O(n)` linked-list walks. |
+| **Root cause** | HashMap only guarantees constant time when keys hash uniformly. A poor hash function or malicious input defeats the uniform-distribution assumption. |
+
+### Strategy
+
+1. **Never use raw user input as a HashMap key without validation** in security-sensitive or latency-sensitive paths.
+2. **Audit custom `hashCode()` implementations** for classes used as keys; ensure they use multiple fields and spread values across the integer range.
+3. **Add rate limiting or input shape checks** when keys come from external sources, similar to hash-collision DoS protection.
+4. **Consider immutable keys** with well-distributed hashes (for example, `String`, `UUID`, or composite keys with a mixed hash).
+
+### Tradeoff
+
+| Uniform hash keys | Colliding keys |
+|:---|:---|
+| O(1) average lookup | O(n) worst-case lookup |
+| Predictable latency | Latency spikes under specific inputs |
+| Safe for untrusted input | Potential denial-of-service vector |
+
+> **Key insight**: HashMap is not inherently O(1); it is O(1) *on average* under uniform hashing. The worst case is a linked list.
+
+**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Hash Collision`](../reference-dictionary/databases.md#hash-collision)
+
+---
+
+## jvm-08: Treeification Has a Capacity Gate
+
+> **Source**: [Article §"The Treeification Rule Has a Catch"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-treeification-rule-has-a-catch)
+
+| | |
+|:---|:---|
+| **Problem** | A HashMap with colliding keys never converts its linked lists to Red-Black Trees, so lookups remain O(n) even though Java 8 "fixed" collisions with treeification. |
+| **Root cause** | Java 8 treeification only happens when a bucket exceeds `TREEIFY_THRESHOLD = 8` **and** the backing array capacity is at least `MIN_TREEIFY_CAPACITY = 64`. Below capacity 64, the map resizes instead. |
+
+### Strategy
+
+1. **Set the initial capacity high enough** for the expected entry count so the map does not spend its lifetime resizing small arrays.
+2. **Size for the load factor**: a default load factor of 0.75 means resizing happens when 75% of buckets are occupied. Pre-size to `expectedSize / 0.75 + 1` to avoid rehashing.
+3. **Monitor bucket depth** in performance-critical maps if you have access to heap dumps or internal metrics; deep chains are a smell.
+4. **Do not assume treeification is automatic protection** — config maps and small caches may never reach the capacity gate.
+
+### Tradeoff
+
+| Small initial capacity | Large initial capacity |
+|:---|:---|
+| Memory-efficient for tiny maps | Wastes array space if few entries are stored |
+| Resizes frequently under growth | Fewer resizes and rehashes |
+| May never treeify; stays O(n) on collisions | Reaches treeification threshold sooner |
+
+> **Key insight**: Treeification is a safety net, not a guarantee. The capacity gate means small HashMaps still degrade linearly under collisions.
+
+**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Treeification`](../reference-dictionary/java-jvm.md#treeification)
+
+---
+
+## jvm-09: Poor hashCode and Undersized Capacity Hide Performance Cliffs
+
+> **Source**: [Article §"What This Means in Practice"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#what-this-means-in-practice)
+
+| | |
+|:---|:---|
+| **Problem** | A microservice uses HashMaps as hot-path caches or indexes. Under production load, p99 latency doubles or triples with no obvious GC or thread-pool cause. |
+| **Root cause** | Either custom `hashCode()` clusters keys into a few buckets, or the map is undersized and repeatedly resizes, or both. The degradation is hidden inside a "constant-time" data structure. |
+
+### Strategy
+
+1. **Treat HashMap as a hybrid adaptive structure**, not a black-box array. Its performance depends on hash quality, capacity, and entry count.
+2. **Prefer library implementations** of caches (for example, Caffeine) over raw `HashMap` when the map is a production cache; they handle eviction, bounded size, and concurrency.
+3. **For custom-key HashMaps**, write unit tests that verify `hashCode()` distributes a representative key set across buckets.
+4. **In concurrent paths**, use `ConcurrentHashMap` and understand that its segment locking and treeification rules differ from plain `HashMap`.
+
+### Tradeoff
+
+| Raw HashMap | Bounded external cache |
+|:---|:---|
+| Zero dependencies and minimal overhead | Operational complexity and external call latency |
+| No eviction or concurrency control | Explicit limits, TTL, and thread safety |
+| Easy to misuse in production | Safer for hot paths and untrusted input |
+
+> **Key insight**: "It's just a HashMap" is a performance anti-pattern. The real guarantee is conditional on hash distribution, capacity, and collision handling.
+
+**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Red-Black Tree`](../reference-dictionary/databases.md#red-black-tree)

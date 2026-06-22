@@ -28,6 +28,8 @@ timestamp: 2026-06-18T00:00:00Z
 | Merkle Tree | [`#merkle-tree`](#merkle-tree) |
 | Anti-Entropy | [`#anti-entropy`](#anti-entropy) |
 | NoSQL | [`#nosql`](#nosql) |
+| Hash Collision | [`#hash-collision`](#hash-collision) |
+| Red-Black Tree | [`#red-black-tree`](#red-black-tree) |
 
 ---
 
@@ -283,3 +285,50 @@ A broad category of data stores that **relax parts of the relational model** —
 - As a default choice without understanding the consistency and operational trade-offs
 
 **Also see**: [ACID Transactions](data-concurrency.md#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Sharding](data-concurrency.md#sharding)
+
+---
+
+## Hash Collision {#hash-collision}
+
+When **two distinct inputs produce the same hash value** and therefore map to the same bucket or slot in a hash-based data structure. Collisions are inevitable in any hash table (pigeonhole principle) and are handled by chaining, open addressing, or treeification.
+
+### Key Characteristics
+
+- **Inevitable** when the key space is larger than the hash space.
+- **Handled by chaining**: store colliding entries in a linked list or tree inside the bucket.
+- **Performance impact**: degrades average O(1) lookup toward O(n) as collisions cluster.
+
+### When to Use
+
+- N/A — collisions are a property of hash tables, not a choice. The design decision is how to mitigate them.
+
+### When NOT to Use
+
+- Do not ignore collision behavior when building hash tables for untrusted input.
+- Do not rely on a small hash space for security-sensitive deduplication or lookups.
+
+**Also see**: [HashMap](../reference-dictionary/java-jvm.md#hashmap), [Bloom Filter](#bloom-filter), [B-Tree](#b-tree)
+
+---
+
+## Red-Black Tree {#red-black-tree}
+
+A **self-balancing binary search tree** that guarantees O(log n) insert, delete, and lookup by enforcing five color-based invariants, including that no two red nodes appear consecutively and every root-to-leaf path has the same number of black nodes.
+
+### Key Characteristics
+
+- **Self-balancing**: tree height stays logarithmic after insertions and deletions.
+- **Less strictly balanced than AVL trees** but with faster insertion and deletion.
+- **Used inside Java HashMap buckets** (Java 8+) to cap collision-chain lookup at O(log n).
+
+### When to Use
+
+- Sorted maps/sets where consistent O(log n) operations are needed (for example, `java.util.TreeMap`).
+- Collision chains in hash tables where linked-list O(n) would be unacceptable.
+
+### When NOT to Use
+
+- When only immutable snapshots are needed and rebuild is cheap (a sorted array may be simpler).
+- When a simpler data structure already meets performance requirements.
+
+**Also see**: [HashMap](../reference-dictionary/java-jvm.md#hashmap), [Treeification](../reference-dictionary/java-jvm.md#treeification), [B-Tree](#b-tree)
