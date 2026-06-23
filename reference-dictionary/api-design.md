@@ -27,6 +27,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Contract-First Design | [`#contract-first-design`](#contract-first-design) |
 | Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
 | Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm--tcp_nodelay`](#nagles-algorithm--tcp_nodelay) |
+| ETag | [`#etag`](#etag) |
+| JSON Merge Patch | [`#json-merge-patch`](#json-merge-patch) |
+| Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
 
 ---
 
@@ -241,3 +244,95 @@ A distributed hashing technique that minimizes key redistribution when nodes are
 ### Also see
 - [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads) — concurrency model that interacts with socket I/O
 - [Azure Services: Application Gateway](../reference-dictionary/azure-services.md#application-gateway) — L7 proxy that terminates TCP connections
+
+---
+
+## ETag
+
+An opaque string token (entity tag) that the server attaches to a resource response to identify a specific version of that resource. Clients include the token in subsequent conditional requests to detect whether the resource has changed since it was last loaded.
+
+### Key Characteristics
+- Returned by the server as a response header: `ETag: "5"` (weak: `W/"5"`)
+- Clients send `If-Match: "5"` on write requests; server rejects stale writes with **412 Precondition Failed**
+- Clients send `If-None-Match: "5"` on read requests; server returns **304 Not Modified** (no body) if unchanged — saves bandwidth
+- In JPA/Hibernate, the `@Version` field maps directly to the ETag value with zero extra infrastructure
+- ETags are the standard HTTP mechanism for **optimistic concurrency control** at the API layer
+
+### When to Use
+- Any `PUT` or `PATCH` endpoint where concurrent updates from multiple clients must be detected
+- `GET` endpoints on resources that change infrequently — `304 Not Modified` eliminates redundant payload delivery
+- Collaborative editing workflows where the client must be informed that a conflict has occurred
+
+### When NOT to Use
+- High-frequency write paths where the mandatory GET → modify → PUT round-trip is prohibitively expensive (consider CRDTs or operational transforms instead)
+- Internal service-to-service calls where the caller controls all write paths and concurrency is handled at the database layer
+
+### Also see
+- [Optimistic Locking](data-concurrency.md#optimistic-locking) — database-level equivalent
+- [apipat-11: ETag-Based Optimistic Concurrency Control](../system-design-architecture/46-rest-api-senior-patterns-key-takeaways.md#apipat-11-etag-based-optimistic-concurrency-control)
+
+---
+
+## JSON Merge Patch
+
+A partial-update format for HTTP APIs standardized in **RFC 7396**. A JSON Merge Patch document contains only the fields the client wants to change. Fields present in the patch body are updated; fields absent from the patch are left unchanged; fields set to `null` in the patch are removed.
+
+```http
+PATCH /users/42
+Content-Type: application/merge-patch+json
+
+{"email": "new@example.com"}
+```
+
+Only `email` is changed — all other fields remain exactly as they were.
+
+### Key Characteristics
+- Content type: `application/merge-patch+json` (IANA-registered)
+- Simpler than JSON Patch (RFC 6902): no op codes, no arrays of operations — just a partial object
+- Merge semantics: missing key = leave unchanged; explicit `null` = delete the key
+- Correct alternative to `PUT` when only a subset of fields should be modified
+- Supported natively by libraries such as Jackson (`JsonMergePatch`) and Jakarta JSON-P
+
+### When to Use
+- PATCH endpoints where clients update a subset of scalar fields on a resource
+- Mobile or low-bandwidth clients that should send minimal payloads
+- Any endpoint currently using PUT for partial updates — switch to PATCH + JSON Merge Patch
+
+### When NOT to Use
+- Resources with nullable fields that legitimately need to be set to `null` — use **JSON Patch** (RFC 6902) instead, as `null` in a merge patch means "remove the field"
+- Arrays: merge patch replaces the entire array rather than merging elements
+
+### Also see
+- [Idempotency-Key](#idempotency-key)
+- [apipat-10: PATCH vs PUT](../system-design-architecture/46-rest-api-senior-patterns-key-takeaways.md#apipat-10-patch-vs-put--partial-updates-with-json-merge-patch)
+
+---
+
+## Sparse Fieldsets
+
+A pattern that lets clients declare exactly which fields they need in a response using a `?fields=` query parameter. The server filters the response to include only the requested fields, reducing payload size without requiring separate endpoints per consumer.
+
+```http
+GET /users?fields=id,name
+→ [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+```
+
+### Key Characteristics
+- Implemented as an optional query parameter — existing clients that omit it receive the full response (backward-compatible)
+- Reduces payload size by 80%+ on mobile paths where clients render only a few fields from a large resource
+- A single endpoint serves multiple consumers with different field requirements, eliminating endpoint proliferation
+- Conceptually equivalent to GraphQL field selection — REST can achieve the same result with one query parameter
+- Server-side filtering in memory is simple; add database-level projection (`SELECT id, name FROM ...`) for high-traffic endpoints
+
+### When to Use
+- List endpoints (`GET /users`, `GET /products`) consumed by multiple clients with different field needs
+- Mobile or low-bandwidth clients that render only a small subset of resource fields
+- Public APIs where you want to minimize overfetching without adopting GraphQL
+
+### When NOT to Use
+- Resources with a small, fixed field set where the savings are negligible
+- Security-sensitive fields that should never be returned — apply field-level authorization before filtering, not after
+
+### Also see
+- [Pagination (Cursor vs Offset)](#pagination-cursor-vs-offset)
+- [apipat-12: Sparse Fieldsets](../system-design-architecture/46-rest-api-senior-patterns-key-takeaways.md#apipat-12-sparse-fieldsets--client-driven-field-selection)

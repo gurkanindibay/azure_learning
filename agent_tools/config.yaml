@@ -198,6 +198,10 @@ takeaway_domains:
     file: "41-url-key-takeaways.md"
     desc: "URL Shortener"
     keywords: ["url shortener", "base62", "key generation", "cache-aside", "redirect", "tinyurl", "alias"]
+  restpat:
+    file: "46-rest-api-senior-patterns-key-takeaways.md"
+    desc: "REST API Senior Patterns (PATCH, ETag, Sparse Fieldsets)"
+    keywords: ["patch", "json merge patch", "etag", "if-match", "sparse fieldsets", "fields", "optimistic concurrency", "rest", "api", "partial update"]
   feed:
     file: "42-feed-key-takeaways.md"
     desc: "News Feed"
