@@ -65,6 +65,8 @@ timestamp: 2026-06-14T00:00:00Z
 | API Gateway | [`#api-gateway`](#api-gateway) |
 | Microservices | [`#microservices`](#microservices) |
 | Monolith | [`#monolith`](#monolith) |
+| Distributed Monolith | [`#distributed-monolith`](#distributed-monolith) |
+| Deployment Coupling | [`#deployment-coupling`](#deployment-coupling) |
 | Progressive Delivery | [`#progressive-delivery`](#progressive-delivery) |
 | Feature Flag | [`#feature-flag`](#feature-flag) |
 | A/B Testing | [`#ab-testing`](#ab-testing) |
@@ -1187,6 +1189,57 @@ A single deployable unit in which all functionality, data access and business lo
 - When one component needs to scale independently by orders of magnitude
 
 **Also see**: [Microservices](#microservices), [Strangler Fig](#strangler-fig)
+
+---
+
+## Distributed Monolith
+
+A **microservices anti-pattern** in which a system is decomposed into separate deployable services but retains tight coupling across service boundaries — delivering the operational complexity of microservices (network overhead, independent deployments, distributed tracing) without the primary benefit: **team and deployment independence**.
+
+### Key Characteristics
+- **Shared database schemas** across service boundaries — services join across tables they do not own
+- **Synchronous call chains**: Service A calls B calls C; a failure in C propagates to A
+- **Coordinated deployments**: deploying one service requires deploying or approving others
+- **Implicit contract coupling**: changes to shared libraries or schemas ripple across all consumers
+- **Cascading failures**: a single slow downstream service saturates upstream thread pools
+
+### Warning Signs
+- You maintain a deployment order spreadsheet
+- An on-call incident involves engineers from 3+ services simultaneously
+- A two-line config change requires a multi-team Slack war room
+- Services share a Postgres schema or an ORM model class
+
+### When to Use
+Not applicable — this is an anti-pattern to detect and remediate.
+
+### When NOT to Use
+Always avoid. Prefer bounded contexts with database-per-service and async event integration.
+
+### Also see
+- [Microservices](#microservices) · [Monolith](#monolith) · [Deployment Coupling](#deployment-coupling) · [Database Per Service](#database-per-service) · [Bounded Context](#bounded-context) · [Strangler Fig](#strangler-fig)
+- [Microservices & Service Design — Key Takeaways](../system-design-architecture/48-svc-distributed-monolith-key-takeaways.md#svc-01-distributed-monolith-anti-pattern)
+
+---
+
+## Deployment Coupling
+
+A condition in which deploying one service requires **coordinating the deployment of one or more other services**, eliminating independent deployability — a core benefit of microservices.
+
+### Key Characteristics
+- **Deployment order dependencies**: Service B must be deployed before Service A can start
+- **Shared schema migrations**: database schema changes must be applied across service boundaries simultaneously
+- **Synchronized release trains**: teams are forced to align release schedules rather than deploying on their own cadence
+- **Rollback propagation**: rolling back one service breaks others that depend on the new API or schema
+
+### When to Use
+Not applicable — this is an anti-pattern.
+
+### When NOT to Use
+Always avoid in microservices architectures. Use async events, versioned API contracts, and database-per-service to eliminate deployment dependencies.
+
+### Also see
+- [Distributed Monolith](#distributed-monolith) · [Microservices](#microservices) · [Database Per Service](#database-per-service)
+- [Microservices & Service Design — Key Takeaways](../system-design-architecture/48-svc-distributed-monolith-key-takeaways.md#svc-02-deployment-coupling-via-synchronous-call-chains)
 
 ---
 

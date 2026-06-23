@@ -206,6 +206,10 @@ takeaway_domains:
     file: "42-feed-key-takeaways.md"
     desc: "News Feed"
     keywords: ["news feed", "fanout", "timeline cache", "celebrity cache", "social graph", "push", "pull"]
+  svc:
+    file: "48-svc-distributed-monolith-key-takeaways.md"
+    desc: "Microservices & Service Design"
+    keywords: ["microservices", "distributed monolith", "service coupling", "bounded context", "service boundary", "deployment coupling", "strangler fig", "database per service", "service independence"]
 
 
 # Keyword → domain prefix suggestions for auto-detection
