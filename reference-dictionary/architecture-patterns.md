@@ -38,6 +38,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Medallion Architecture | [`#medallion-architecture`](#medallion-architecture) |
 | Helidon SE | [`#helidon-se`](#helidon-se) |
 | GOMAXPROCS | [`#gomaxprocs`](#gomaxprocs) |
+| Goroutine | [`#goroutine`](#goroutine) |
+| M:N Scheduling | [`#mn-scheduling`](#mn-scheduling) |
+| Thread Pinning | [`#thread-pinning`](#thread-pinning) |
+| Carrier Thread | [`#carrier-thread`](#carrier-thread) |
 | Semantic Layer | [`#semantic-layer`](#semantic-layer) |
 | Vertical vs Horizontal Scaling | [`#vertical-vs-horizontal-scaling`](#vertical-vs-horizontal-scaling) |
 | CAP Theorem | [`#cap-theorem`](#cap-theorem) |
@@ -402,6 +406,162 @@ A **network topology** where a central hub VNet hosts shared services (firewall,
 ### Also see
 - [Virtual Threads](#virtual-threads) — Java's concurrency model counterpart
 - [Azure Container Apps](azure-services.md#container-apps) — containerized deployment target
+
+---
+
+## Goroutine
+
+**Goroutine** — Go's fundamental unit of concurrency. A goroutine is a user-space, lightweight execution context managed entirely by the Go runtime scheduler. It starts with a ~2 KB stack (compared to ~512 KB–1 MB for OS threads) and grows dynamically. When a goroutine blocks on I/O, the Go scheduler parks it and runs another goroutine on the same OS thread — no kernel context switch required.
+
+```go
+func getOrder(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get("id")
+    order := db.FindOrder(id) // goroutine yields here, does not block OS thread
+    json.NewEncoder(w).Encode(order)
+}
+// 10,000 of these running costs ~20 MB total stack
+// Java platform threads equivalent: ~10 GB
+```
+
+### Key Characteristics
+- Initial stack ~2 KB; grows in small increments as needed (unlike fixed OS thread stacks)
+- Multiplexed onto OS threads via the Go runtime's M:N scheduler (see [M:N Scheduling](#mn-scheduling))
+- Channels provide goroutine-safe communication and synchronization — no `synchronized` locks, no pinning risk
+- Count is not limited by OS constraints: 50,000+ goroutines is routine in production
+- Managed by `GOMAXPROCS` OS-thread pool (see [GOMAXPROCS](#gomaxprocs))
+
+### When to Use
+- Any concurrent I/O operation in Go — the idiomatic model is one goroutine per task
+- High-concurrency HTTP handlers, background workers, pipeline stages
+
+### When NOT to Use
+- Not applicable outside Go (Java equivalent: [Virtual Threads](#virtual-threads); .NET equivalent: async/await tasks)
+- Goroutines shared across FFI/CGo boundaries require extra care — CGo calls block the OS thread
+
+### Also see
+- [GOMAXPROCS](#gomaxprocs) — controls the OS-thread pool goroutines run on
+- [M:N Scheduling](#mn-scheduling) — the scheduling model behind goroutines
+- [Virtual Threads](#virtual-threads) — Java's closest equivalent
+
+---
+
+## M:N Scheduling
+
+**M:N Scheduling** (also: *many-to-many threading*) — a concurrency model where M user-space execution contexts (goroutines, virtual threads, fibers) are multiplexed onto N OS threads, where M >> N. The user-space scheduler decides which lightweight context runs on which OS thread, yielding cooperatively or preemptively when a context blocks.
+
+```
+M:N Model (e.g., Go goroutines)
+================================
+Goroutine-1  ╲
+Goroutine-2   ╲
+Goroutine-3    ──▶  OS Thread-1  (user-space scheduling; no syscall on yield)
+Goroutine-4   ╱
+Goroutine-5  ╱
+
+vs.
+
+1:1 Model (Java platform threads, pre-Loom)
+============================================
+Request-1  ──▶  OS Thread-1  (kernel scheduler; syscall on every context switch)
+Request-2  ──▶  OS Thread-2
+Request-3  ──▶  OS Thread-3
+```
+
+### Key Characteristics
+- **Low memory footprint**: user-space contexts start at KBs vs OS thread stacks at hundreds of KBs
+- **Cheap context switch**: switching between user-space contexts is a function call, not a kernel syscall
+- **High multiplexing**: tens of thousands of logical tasks can share a handful of OS threads
+- **Implementations**: Go goroutines (runtime scheduler), Java Virtual Threads (JVM carrier threads), Erlang processes, Kotlin coroutines
+
+### When to Use
+- I/O-bound, high-concurrency services where tasks spend most of their time waiting
+- When per-task memory cost matters (microservices, serverless, embedded)
+
+### When NOT to Use
+- Pure CPU-bound workloads benefit more from N = CPU-count platform threads; extra scheduling overhead from M:N adds no value
+- When the runtime does not support M:N natively (pre-Loom Java with platform threads is 1:1)
+
+### Also see
+- [Goroutine](#goroutine) — Go's implementation of M:N scheduling
+- [Virtual Threads](#virtual-threads) — JVM's M:N implementation (Java 21+)
+- [GOMAXPROCS](#gomaxprocs) — controls N (OS thread count) in Go's M:N model
+
+---
+
+## Thread Pinning
+
+**Thread Pinning** — a failure mode in JVM Virtual Threads where a virtual thread becomes permanently bound to its carrier OS thread and **cannot be unmounted**, even when blocked on I/O. The carrier thread is held captive, defeating the purpose of virtual threads and reintroducing the platform-thread starvation problem.
+
+Pinning occurs in two situations:
+1. The virtual thread holds a `synchronized` monitor lock while blocking
+2. The virtual thread executes a native method (JNI/FFI)
+
+```java
+// ❌ PINS the carrier thread — OS thread blocked until lock released
+synchronized(lock) {
+    result = db.query();  // IO here holds the carrier thread hostage
+}
+
+// ✅ Virtual thread parks correctly — carrier thread freed immediately
+lock.lock();
+try {
+    result = db.query();  // virtual thread unmounted; carrier runs other VTs
+} finally {
+    lock.unlock();
+}
+```
+
+### Key Characteristics
+- Silent by default — pinning does not throw an exception or produce a log warning
+- Detection: `-Djdk.tracePinnedThreads=full` JVM flag emits stack traces on pin events
+- JFR event `jdk.VirtualThreadPinned` available for monitoring
+- Common in legacy code using `synchronized` on database/HTTP I/O paths
+- Go channels and goroutines have no equivalent pinning risk — scheduler-awareness is native
+
+### When to Use
+- Understanding thread pinning is required before enabling virtual threads in any service with existing synchronized blocks
+
+### When NOT to Use
+- (Not a pattern to use — a failure mode to detect and eliminate)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the feature thread pinning undermines
+- [Carrier Thread](#carrier-thread) — the OS thread that gets pinned
+- [Goroutine](#goroutine) — Go's scheduler-native alternative with no pinning concept
+
+---
+
+## Carrier Thread
+
+**Carrier Thread** — in the JVM Virtual Threads model, a carrier thread is the **OS-level platform thread** that a virtual thread is currently mounted onto and executing on. The JVM scheduler mounts and unmounts virtual threads onto carrier threads as they become runnable or block.
+
+```
+Virtual Thread lifecycle on a carrier:
+
+  [Runnable] ──mount──▶ [Running on Carrier-1] ──IO block──▶ [Parked]
+       ▲                                                          │
+       └──────────────────────unmount◀────────────────────────────┘
+  Carrier-1 is immediately free to run another virtual thread
+```
+
+### Key Characteristics
+- Carrier threads form a fixed pool (default: `ForkJoinPool`, size = CPU count)
+- A virtual thread is only consuming CPU when mounted on a carrier
+- Unmounting on I/O block is the core mechanism enabling high concurrency — carrier threads are never wasted waiting
+- **Pinning breaks unmounting**: if the virtual thread holds a `synchronized` lock, the carrier cannot be freed (see [Thread Pinning](#thread-pinning))
+- Configurable via `jdk.virtualThreadScheduler.parallelism` system property
+
+### When to Use
+- When diagnosing virtual thread performance: check carrier thread pool saturation, not virtual thread count
+- Tuning: `jdk.virtualThreadScheduler.parallelism` controls the carrier pool size for CPU-heavy virtual-thread workloads
+
+### When NOT to Use
+- Carrier threads are an implementation detail of the JVM; application code should not interact with them directly
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the feature carrier threads support
+- [Thread Pinning](#thread-pinning) — failure mode where carrier threads get stuck
+- [Goroutine](#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
 
 ---
 
