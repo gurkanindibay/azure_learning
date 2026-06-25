@@ -112,6 +112,10 @@ The code demonstrates how vector clocks can be used to track and compare causal 
 - **happenedBefore() Function**: Compares two vector clocks to determine whether one event occurred before another based on their timestamps.
 - **main() Function**: Creates and updates vector clocks, merges them, and checks the causal relationship between events using the vector clock mechanism.
 
+## Azure Cosmos DB Mapping
+
+> **Azure Implementation**: In Azure Cosmos DB, [Session consistency](../../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) is the closest match to causal consistency. It preserves read-your-writes, write-follows-reads, and monotonic reads/writes within a session. [Consistent Prefix](../../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md#consistent-prefix-consistency) preserves global write order but does not guarantee read-your-writes.
+
 ## Challenges
 
 While causal consistency provides a balance between strong consistency and performance, it introduces several implementation and management challenges.

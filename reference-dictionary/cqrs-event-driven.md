@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Idempotency | [`#idempotency`](#idempotency) |
 | Dual-Write Problem | [`#dual-write-problem`](#dual-write-problem) |
 | Event-Driven Architecture | [`#event-driven-architecture`](#event-driven-architecture) |
+| Event Carried State Transfer | [`#event-carried-state-transfer`](#event-carried-state-transfer) |
 
 ---
 
@@ -257,3 +258,28 @@ An architectural style where services communicate by producing and consuming **e
 > **Key insight**: "Let's make it event-driven" does not fix a confused financial model. The question is: "What exactly is the source of truth?" Events are excellent after a trusted command has committed. They are dangerous when used to avoid making the command boundary clear.
 
 **Also see**: [CQRS](#cqrs), [Outbox Pattern](#outbox-pattern) · [Messaging](messaging.md)
+
+---
+
+## Event Carried State Transfer
+
+An event design pattern where events include **all the state information that downstream consumers need** — not just an identifier. This eliminates the need for consumers to call back to the producing service to fetch associated data.
+
+### Key Characteristics
+- **Self-contained events**: Each event carries a complete, consumer-usable snapshot of the relevant entity state
+- **Eliminates round-trips**: Consumers can act immediately without synchronous back-calls
+- **Producer-defined contract**: The producer decides what context to include; consumers cannot request more
+- **Payload size growth**: Rich payloads increase message size; combine with the Claim Check pattern for payloads over the broker limit
+
+### When to Use
+- Consumers consistently need the same contextual fields alongside the event notification
+- Low-latency systems where every additional network call is unacceptable
+- Decoupling services so the producer's internal model can evolve independently of consumers (as long as the event contract holds)
+
+### When NOT to Use
+- Event payloads would exceed broker message size limits (use [Claim Check](architecture-patterns.md#claim-check) instead)
+- Sensitive data fields should not be broadcast to all consumers
+- The producer state is so large or varied that different consumers need entirely different subsets
+
+### Also see
+- [Event-Driven Architecture](#event-driven-architecture) · [CQRS](#cqrs) · [Messaging: Claim Check](architecture-patterns.md#claim-check)

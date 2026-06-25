@@ -256,6 +256,11 @@ takeaway_domains:
     desc: "CQRS"
     keywords: [provider, source, problem, strategy, dictionary, tradeoff]
 
+  kafka-patterns:
+    file: "53-kafka-design-patterns-key-takeaways.md"
+    desc: "Kafka Design Patterns (11 patterns overview)"
+    keywords: [kafka, event sourcing, cqrs, claim check, dlq, idempotent consumer, transactional outbox, compacted topic, partition key, stream-table, saga, choreography, broker]
+
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy

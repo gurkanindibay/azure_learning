@@ -14,6 +14,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 > **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [E-Commerce Checkout Consistency](44-tx-key-takeaways.md)
 > **Dictionary**: [Causal Consistency](../reference-dictionary/data-concurrency.md#causal-consistency), [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering), [Lamport Clocks](../reference-dictionary/data-concurrency.md#lamport-clocks), [Vector Clocks](../reference-dictionary/data-concurrency.md#vector-clocks)
+> **Azure Services**: [Azure Cosmos DB — Consistency Levels](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md)
 > **Taxonomy Reference**: §4.0 Data Architecture Fundamentals
 
 ---
@@ -42,7 +43,7 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Weaker than linearizability or serializability, but offers higher availability and lower latency than strong consistency.
 >
-> **Cross-reference**: See [Causal Consistency](../reference-dictionary/data-concurrency.md#causal-consistency) and [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering) in the dictionary.
+> **Cross-reference**: See [Causal Consistency](../reference-dictionary/data-concurrency.md#causal-consistency) and [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering) in the dictionary. In Azure Cosmos DB, [Session consistency](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) provides the closest causal-ordering guarantees within a session.
 
 ---
 

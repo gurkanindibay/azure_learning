@@ -440,6 +440,7 @@ A consistency model for distributed systems that guarantees all nodes observe ca
 
 ### Also see
 - [Causal Ordering](#causal-ordering) · [Consistency Model](#consistency-model) · [Vector Clocks](#vector-clocks)
+- Azure implementation: [Azure Cosmos DB consistency levels](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) — Session consistency is the closest match (causal-ordering guarantees scoped to a session)
 
 ---
 

@@ -33,6 +33,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Kafka Connect | [`#kafka-connect`](#kafka-connect) |
 | Idempotent Consumer | [`#idempotent-consumer`](#idempotent-consumer) |
 | Auto Commit | [`#auto-commit`](#auto-commit) |
+| Compacted Topic | [`#compacted-topic`](#compacted-topic) |
+| Stream-Table Duality | [`#stream-table-duality`](#stream-table-duality) |
 
 ---
 
@@ -296,4 +298,51 @@ A messaging pattern that gives each recipient device its own durable queue so de
 
 ### Also see
 - [Redis Streams](#redis-streams) · [At-Least-Once Semantics](#at-least-once-semantics) · [Message Ordering](#message-ordering)
+
+---
+
+## Compacted Topic
+
+A Kafka topic configured with `cleanup.policy=compact`. Instead of deleting messages by time or size, Kafka's log compactor retains only the **latest message for each key**, turning the topic into a fault-tolerant, replicated key-value store that new consumers can bootstrap from.
+
+### Key Characteristics
+- **Latest-per-key retention**: All previous values for a key are asynchronously removed
+- **Tombstone records**: Publishing a message with a null value deletes the key from the compacted log
+- **CDC integration**: Debezium uses compacted topics to publish database changelogs
+
+### When to Use
+- Consumers need only the current state per entity (user profile, product price, config)
+- New consumers should start from the latest state without replaying full history
+- Building a distributed changelog for database tables (CDC / Debezium)
+
+### When NOT to Use
+- Full event history is required (use a regular time-retained topic for audit trails)
+- Events carry no meaningful key (compaction has no effect without stable keys)
+
+### Also see
+- [Partition](#partition) · [Kafka Transactions](#kafka-transactions) · [CQRS & Event-Driven: Event Sourcing](cqrs-event-driven.md#event-sourcing)
+
+---
+
+## Stream-Table Duality
+
+The insight — central to Kafka Streams and ksqlDB — that a **stream** and a **table** are two views of the same underlying data: a stream is a table in motion (each event is a change), and a table is a stream at rest (the accumulated latest state). The two can be converted between each other and joined in real time.
+
+### Key Characteristics
+- **Stream → Table**: Aggregate events (e.g., count clicks per user) to produce a materialized view
+- **Table → Stream**: Emit a changelog of every row update as a stream of events
+- **Stream-Table join**: Enrich each stream event with the corresponding table row (e.g., click + user profile)
+- **Local state stores**: Kafka Streams uses RocksDB-backed state stores for sub-millisecond table lookups
+
+### When to Use
+- Real-time enrichment: join a high-throughput event stream with slowly-changing reference data
+- Materialized views that must update as new events arrive
+- Real-time dashboards and monitoring where aggregations must reflect the latest state
+
+### When NOT to Use
+- Reference tables too large for available memory (spills to disk, degrading performance)
+- Join semantics require point-in-time consistency across both sides (Kafka joins are approximate)
+
+### Also see
+- [Compacted Topic](#compacted-topic) · [Partition](#partition) · [Kafka Transactions](#kafka-transactions)
 
