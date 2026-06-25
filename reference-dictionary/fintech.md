@@ -20,10 +20,14 @@ timestamp: 2026-06-14T00:00:00Z
 | KYC (Know Your Customer) | [`#kyc-know-your-customer`](#kyc-know-your-customer) |
 | Ledger (Double-Entry) | [`#ledger-double-entry`](#ledger-double-entry) |
 | Limit Reservation | [`#limit-reservation`](#limit-reservation) |
+| Merchant Onboarding | [`#merchant-onboarding`](#merchant-onboarding) |
 | Payment Gateway | [`#payment-gateway`](#payment-gateway) |
+| Payment Method Aggregation | [`#payment-method-aggregation`](#payment-method-aggregation) |
 | Payment Processor | [`#payment-processor`](#payment-processor) |
 | Reconciliation | [`#reconciliation`](#reconciliation) |
 | Risk Actions | [`#risk-actions`](#risk-actions) |
+| Settlement | [`#settlement`](#settlement) |
+| Smart Routing | [`#smart-routing`](#smart-routing) |
 
 ---
 
@@ -222,3 +226,97 @@ An **append-only, immutable record of financial movement** using double-entry ac
 > **The golden rule of fintech**: "The ledger is the truth. The balance is a derived view."
 
 **Also see**: [CQRS & Event-Driven: Ledger](cqrs-event-driven.md#ledger), [Projection](cqrs-event-driven.md#projection) · [Reconciliation](#reconciliation)
+
+---
+
+## Merchant Onboarding
+
+The **end-to-end process** of verifying a merchant's identity and business legitimacy before allowing them to accept payments through a gateway. Combines KYC, risk scoring, account provisioning, and API credential issuance.
+
+### Key Characteristics
+- **Document collection**: business registration, tax ID, bank details, address proof
+- **Automated verification**: OCR extraction + external data source validation
+- **Risk scoring**: automated score drives approve / manual-review / reject decision
+- **API key generation**: cryptographically secure keys, SHA256 hash stored, plain key shown once
+
+### When to Use
+- Any platform that lets third-party merchants collect money from customers
+- Before enabling live transactions; test credentials can be issued earlier
+
+### When NOT to Use
+- For closed-loop wallet systems where the operator is the only merchant
+- When regulatory jurisdiction does not require merchant verification
+
+### Also see
+- [KYC](#kyc-know-your-customer) — the identity-verification sub-process
+- [Payment Gateway](#payment-gateway) — the system merchants are onboarded into
+
+---
+
+## Payment Method Aggregation
+
+The **architectural pattern** of supporting multiple payment instruments — cards, UPI, wallets, net banking — through a single unified gateway interface, abstracting method-specific complexity from merchants.
+
+### Key Characteristics
+- **Unified API**: one endpoint initiates payments regardless of underlying method
+- **Method-specific routing**: each method maps to one or more provider integrations
+- **Fall-forward**: if a method fails, the customer can retry with another method
+- **Method distribution tracking**: understand customer preference and provider performance per method
+
+### When to Use
+- E-commerce, SaaS billing, or any checkout that must maximize payment success rate
+- Markets where customers strongly prefer local payment methods (UPI in India, iDEAL in Netherlands)
+
+### When NOT to Use
+- Single-method systems where aggregation adds no value
+- When method-specific compliance requirements conflict with unified processing
+
+### Also see
+- [Payment Gateway](#payment-gateway) · [Smart Routing](#smart-routing)
+
+---
+
+## Settlement
+
+The **process of transferring cleared funds from the gateway or processor to the merchant's bank account** after deducting fees. Settlement cycles define how long the merchant waits to receive money.
+
+### Key Characteristics
+- **Settlement cycles**: T+1 (next day), T+2 (two days), T+0 (same day — premium)
+- **Net settlement**: total transaction amount minus gateway fees, refunds, and chargebacks
+- **Reconciliation prerequisite**: settlement should only happen after transactions are reconciled
+- **Dispute handling**: settled funds may be clawed back for chargebacks or fraud
+
+### When to Use
+- Any payment system where the merchant does not receive funds in real time
+- When risk management requires a holding period before releasing funds
+
+### When NOT to Use
+- Real-time peer-to-peer transfers where funds move directly between accounts
+- Closed-loop systems where balance is internal and never leaves the platform
+
+### Also see
+- [Payment Processor](#payment-processor) — the entity that initiates settlement
+- [Reconciliation](#reconciliation) — the verification step before settlement
+
+---
+
+## Smart Routing
+
+A **multi-factor scoring algorithm** that selects the optimal payment provider for each transaction based on real-time metrics rather than static rules.
+
+### Key Characteristics
+- **Scored factors**: cost, latency, success rate, provider health, current load, merchant preference
+- **Normalization**: lower-is-better metrics (cost, latency) use inverse normalization; higher-is-better (success rate) use direct
+- **Health override**: circuit-breaker OPEN forces provider score to zero regardless of other factors
+- **Decision caching**: identical routing contexts cached for 1–5 minutes to reduce compute at scale
+
+### When to Use
+- Multi-provider payment gateways optimizing for cost, success rate, or latency
+- Peak traffic events where provider performance diverges significantly
+
+### When NOT to Use
+- Single-provider setups where there is no choice
+- When regulatory or contractual requirements mandate a specific provider for certain transactions
+
+### Also see
+- [Payment Gateway](#payment-gateway) · [Circuit Breaker](resilience.md#circuit-breaker) · [Payment Method Aggregation](#payment-method-aggregation)

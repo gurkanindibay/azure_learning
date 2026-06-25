@@ -49,7 +49,7 @@ From repo root (index.md):         [Projection](reference-dictionary/cqrs-event-
 | 4 | [`api-design.md`](api-design.md) | API Design Patterns | API Versioning, Rate Limiting, Pagination, RFC 7807, Expand-Contract, Idempotency-Key, HATEOAS, Long-Running Operations, Consistent Hashing, Nagle's Algorithm / TCP_NODELAY |
 | 5 | [`data-concurrency.md`](data-concurrency.md) | Data, Concurrency & Transactions | ACID, Atomic Conditional Update, Causal Ordering, Change Data Capture (CDC), Compensating Transaction, Distributed Lock, Double-Booking, Exclusion Constraint, Fencing Token, Inventory Reservation, Isolation Levels, Lease-Based Lock, Optimistic/Pessimistic Locking, Overselling, Saga, Sharding, Two-Phase Commit (2PC), CRDT |
 | 6 | [`caching.md`](caching.md) | Caching Architecture | Cache Stampede, Cache-Aside, Invalidation, TTL, Eviction Policies, Request Coalescing, PER Algorithm, Write-Through, Timeline Cache, Celebrity Cache |
-| 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Payment Gateway, Payment Processor, KYC, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry) |
+| 7 | [`fintech.md`](fintech.md) | Fintech-Specific Terms | Reconciliation, Payment Gateway, Payment Processor, KYC, Limit Reservation, Risk Actions, Financial States, Ledger (Double-Entry), Merchant Onboarding, Payment Method Aggregation, Settlement, Smart Routing |
 | 8 | [`ai-ml-llm.md`](ai-ml-llm.md) | AI/ML, LLM & Agentic AI | LLM, RAG, Vector DB, Embedding, Grounding, Hallucination, Agentic AI, Tool Calling, MCP, Five Levels, Dark Factory |
 | 9 | [`dotnet-multithreading.md`](dotnet-multithreading.md) | .NET Multithreading & Async | TAP, Task, async/await, ThreadPool, ConfigureAwait, SemaphoreSlim, Mutex, lock, Barrier, Interlocked, Deadlock |
 | 10 | [`azure-services.md`](azure-services.md) | Azure Services (Networking, Identity, Compute, Data, Integration, Observability) | VNet, NSG, Entra ID, Managed Identity, AKS, Cosmos DB, Event Hubs, Service Bus, Azure Monitor, Application Insights |
@@ -91,6 +91,7 @@ Some terms span multiple domains. They are **defined once** in their primary dom
 | "How do I prevent double-booking?" | [`data-concurrency.md#double-booking`](data-concurrency.md#double-booking) |
 | "How do I survive a cache stampede?" | [`caching.md#cache-stampede`](caching.md#cache-stampede) |
 | "What does 'reconciliation' mean in fintech?" | [`fintech.md#reconciliation`](fintech.md#reconciliation) |
+| "What is smart routing in payment gateways?" | [`fintech.md#smart-routing`](fintech.md#smart-routing) |
 | "How does RAG reduce LLM hallucination?" | [`ai-ml-llm.md#rag`](ai-ml-llm.md#rag) |
 | "TAP vs EAP vs APM — which .NET async pattern?" | [`dotnet-multithreading.md#tap`](dotnet-multithreading.md#tap) |
 | "What's the difference between Event Hubs and Service Bus?" | [`azure-services.md#event-hubs`](azure-services.md#event-hubs) |

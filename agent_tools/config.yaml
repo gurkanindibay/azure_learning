@@ -211,6 +211,51 @@ takeaway_domains:
     desc: "Microservices & Service Design"
     keywords: ["microservices", "distributed monolith", "service coupling", "bounded context", "service boundary", "deployment coupling", "strangler fig", "database per service", "service independence"]
 
+  broker:
+    file: "32-broker-key-takeaways.md"
+    desc: "Broker"
+    keywords: [source, dictionary, strategy, taxonomy, problem, also see]
+
+  cqrs:
+    file: "37-cqrs-key-takeaways.md"
+    desc: "CQRS"
+    keywords: [source, dictionary, payment, problem, strategy, tradeoff]
+
+  database-decisions:
+    file: "38-database-decisions-key-takeaways.md"
+    desc: "Database Decisions"
+    keywords: [source, problem, taxonomy, dictionary, strategy, also see]
+
+  resilience:
+    file: "39-resilience-key-takeaways.md"
+    desc: "Resilience"
+    keywords: [dictionary, problem, resilience-, root cause, key concept, azure services]
+
+  broker:
+    file: "43-broker-key-takeaways.md"
+    desc: "Broker"
+    keywords: [source, dictionary, azure, problem, strategy, also see]
+
+  tx:
+    file: "44-tx-key-takeaways.md"
+    desc: "Tx"
+    keywords: [azure, source, dictionary, problem, strategy, also see]
+
+  agentic-ai-accountability:
+    file: "45-agentic-ai-accountability-key-takeaways.md"
+    desc: "Agentic AI Accountability"
+    keywords: [source, dictionary, problem, tradeoff, also see, strategy]
+
+  jvm-thread-model:
+    file: "47-jvm-thread-model-key-takeaways.md"
+    desc: "Jvm Thread Model"
+    keywords: [thread, threads, source, virtual, synchronized, problem]
+
+  cqrs:
+    file: "49-cqrs-key-takeaways.md"
+    desc: "CQRS"
+    keywords: [provider, source, problem, strategy, dictionary, tradeoff]
+
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
@@ -483,5 +528,14 @@ dictionary_domains:
       - effective_io_concurrency
       - pg_aios
       - shared_buffers
+
+
+
+
+
+
+
+
+
 
 
