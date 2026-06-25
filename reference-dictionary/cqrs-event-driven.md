@@ -29,6 +29,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Dual-Write Problem | [`#dual-write-problem`](#dual-write-problem) |
 | Event-Driven Architecture | [`#event-driven-architecture`](#event-driven-architecture) |
 | Event Carried State Transfer | [`#event-carried-state-transfer`](#event-carried-state-transfer) |
+| Aggregate Snapshot | [`#aggregate-snapshot`](#aggregate-snapshot) |
+| Cryptographic Erasure | [`#cryptographic-erasure`](#cryptographic-erasure) |
 
 ---
 
@@ -283,3 +285,49 @@ An event design pattern where events include **all the state information that do
 
 ### Also see
 - [Event-Driven Architecture](#event-driven-architecture) · [CQRS](#cqrs) · [Messaging: Claim Check](architecture-patterns.md#claim-check)
+
+---
+
+## Aggregate Snapshot
+
+A **point-in-time serialisation of an event-sourced aggregate's current state**, stored externally alongside the Kafka offset at which it was captured. On consumer restart or new deployment, the snapshot is loaded first and only events after the snapshot offset are replayed — bounding rebuild time to a fixed interval regardless of total event history.
+
+### Key Characteristics
+- **Offset-tagged**: the snapshot records the exact Kafka partition offset (or event sequence number) at which it was taken so replay can resume precisely
+- **Frequency trade-off**: more frequent snapshots → faster rebuild, higher storage cost; typical intervals are every 1 000 events or every 5 minutes
+- **Storage**: DynamoDB (for fast key lookup) or S3 (for large aggregates or cost-sensitivity)
+- **Atomicity**: the snapshot must be written in the same transaction as the offset bookmark; a partial snapshot is corrupted state
+
+### When to Use
+- Aggregates with millions of events where cold-start replay is unacceptably slow
+- Event-sourced consumers that must restart quickly (e.g., serverless or auto-scaling deployments)
+
+### When NOT to Use
+- Aggregates with a small event history where full replay takes < 1 second
+- Systems where snapshot storage is not available or adds unacceptable operational overhead
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Projection](#projection) · [Messaging: Compacted Topic](messaging.md#compacted-topic)
+
+---
+
+## Cryptographic Erasure
+
+A GDPR compliance technique for **immutable event logs**: encrypt each event containing PII with a **per-user symmetric key**. When the user requests deletion, destroy the key. The events remain physically in the log but are permanently unreadable — satisfying the erasure obligation without mutating the log.
+
+### Key Characteristics
+- **Key granularity**: one encryption key per data-subject (user); deleting the key erases all their events across all topics
+- **Accepted by regulators**: most Data Protection Authorities accept cryptographic erasure as equivalent to physical deletion when the encryption is provably unrecoverable (AES-256)
+- **Key store**: AWS KMS (Customer Managed Keys), HashiCorp Vault, or a dedicated secrets table with strict access controls
+- **Performance overhead**: AES-256 GCM encryption adds < 1 ms per event write; key lookup adds one extra service call
+
+### When to Use
+- Event-sourced systems subject to GDPR, CCPA, or similar right-to-erasure regulations
+- Any immutable log (blockchain, audit trail) where physical deletion would corrupt the chain
+
+### When NOT to Use
+- Systems where PII can be kept in a separate, mutable store (simpler: just delete the record)
+- When regulatory guidance in the applicable jurisdiction does not accept cryptographic erasure as equivalent to deletion
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Outbox Pattern](#outbox-pattern) · [HSM](../reference-dictionary/hsm-cryptography.md)

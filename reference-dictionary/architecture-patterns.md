@@ -48,6 +48,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Replication | [`#replication`](#replication) |
 | Sharding | [`#sharding`](#sharding) |
 | Data Catalog | [`#data-catalog`](#data-catalog) |
+| Polyglot Persistence | [`#polyglot-persistence`](#polyglot-persistence) |
 | Data Fabric | [`#data-fabric`](#data-fabric) |
 | Data Mesh | [`#data-mesh`](#data-mesh) |
 | Data Product | [`#data-product`](#data-product) |
@@ -2357,4 +2358,27 @@ An **observability technique that captures performance and interaction data from
 
 ### Also see
 - [Observability](resilience.md#observability) · [Golden Signals](#golden-signals) · [OpenTelemetry](#opentelemetry)
+
+---
+
+## Polyglot Persistence
+
+An architectural approach where **different services (or different read models within a single service) each use the data store best suited to their access patterns**, rather than sharing a single database technology across the system.
+
+### Key Characteristics
+- **Fit-for-purpose stores**: RDBMS for strong consistency and relational queries; document stores for flexible schema; key-value stores for low-latency single-key lookups; search engines for full-text and faceted queries
+- **Service autonomy**: each service owns its data store — no shared schema, no cross-service joins
+- **CQRS enabler**: the pattern is the operational foundation of CQRS read models — each query model independently selects its optimal store
+
+### When to Use
+- Command side needs ACID transactions; read side needs low-latency key lookups or full-text search
+- Different teams own different services and should not be constrained by a shared schema
+- Scaling requirements differ radically between services (e.g., write-heavy transactional service vs. read-heavy reporting service)
+
+### When NOT to Use
+- Small teams or early-stage products where the operational overhead of multiple stores outweighs the benefits
+- When strong cross-service consistency is required (cross-store distributed transactions are expensive)
+
+### Also see
+- [CQRS](cqrs-event-driven.md#cqrs) · [Database Per Service](#database-per-service) · [Microservices](#microservices)
 
