@@ -35,6 +35,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Auto Commit | [`#auto-commit`](#auto-commit) |
 | Compacted Topic | [`#compacted-topic`](#compacted-topic) |
 | Stream-Table Duality | [`#stream-table-duality`](#stream-table-duality) |
+| Hot Partition | [`#hot-partition`](#hot-partition) |
+| Retry Topic | [`#retry-topic`](#retry-topic) |
 
 ---
 
@@ -345,4 +347,50 @@ The insight — central to Kafka Streams and ksqlDB — that a **stream** and a 
 
 ### Also see
 - [Compacted Topic](#compacted-topic) · [Partition](#partition) · [Kafka Transactions](#kafka-transactions)
+
+---
+
+## Hot Partition
+
+A Kafka partition that receives a **disproportionately large share of traffic** because too many messages are routed to the same partition. Caused by low-cardinality partition keys (e.g., `country_code`, `status`) where a small number of distinct values map to a small subset of partitions.
+
+### Key Characteristics
+- **Throughput ceiling**: only one consumer in a group can read from a partition at a time, so the hot partition becomes a throughput bottleneck for the entire consumer group
+- **Uneven broker load**: the broker hosting the hot partition's leader handles all reads and writes for that partition
+- **Metric**: coefficient of variation (CV) of `BytesInPerPartition` > 1.0 indicates a severely skewed distribution
+
+### When to Identify
+- Partition skew: one consumer is saturated while others are idle
+- `BytesInPerPartition` CloudWatch metric shows one partition with multiples of the average load
+
+### How to Mitigate
+- Switch to a high-cardinality key (`order_id`, `user_id`, `device_id`) to distribute load across all partitions
+- Apply **salting** (append a random suffix to the key) to spread an unavoidably hot key — but this breaks per-key ordering
+- Increase partition count and redistribute consumers
+
+### Also see
+- [Partition](#partition) · [Message Ordering](#message-ordering) · [Consumer Group](#consumer-group)
+
+---
+
+## Retry Topic
+
+A dedicated Kafka topic used to implement **delayed retry with exponential backoff** without blocking the main consumer. Failed messages are routed to a retry topic tagged with a `scheduled_at` timestamp; a separate retry consumer reads from the topic but waits until the scheduled time before re-processing.
+
+### Key Characteristics
+- **Tiered topology**: multiple retry topics per delay tier (`main.retry_1s`, `main.retry_5s`, `main.retry_30s`, `main.dlq`)
+- **Non-blocking main consumer**: the main consumer commits the offset and routes the failure immediately — it never sleeps
+- **Envelope schema**: the retry message wraps the original payload with metadata (`stage`, `error_type`, `scheduled_at`, `retry_count`)
+- **Terminal tier**: after exhausting all retry tiers, the message routes to the Dead Letter Queue
+
+### When to Use
+- Transient failures that benefit from a delay before retry (database deadlocks, rate limits, network blips)
+- Any system where `time.sleep()` inside a consumer would block partition processing and starve healthy messages
+
+### When NOT to Use
+- Permanent failures (schema mismatch, invalid business data) — route directly to DLQ instead of retrying
+- Very high throughput where dozens of extra topics become unmanageable
+
+### Also see
+- [Dead Letter Queue (DLQ)](#dead-letter-queue-dlq) · [Poison Message](#poison-message) · [Resilience: Exponential Backoff](resilience.md#exponential-backoff)
 

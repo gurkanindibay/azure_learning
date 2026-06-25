@@ -261,6 +261,11 @@ takeaway_domains:
     desc: "Kafka Design Patterns (11 patterns overview)"
     keywords: [kafka, event sourcing, cqrs, claim check, dlq, idempotent consumer, transactional outbox, compacted topic, partition key, stream-table, saga, choreography, broker]
 
+  kafka-reliability:
+    file: "54-kafka-reliability-ordering-key-takeaways.md"
+    desc: "Kafka Reliability & Ordering (production deep-dive)"
+    keywords: [dual-write, outbox publisher, debezium, hot partition, retry topic, exponential backoff, jitter, thundering herd, conditional write, partition count, dlq replay]
+
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
