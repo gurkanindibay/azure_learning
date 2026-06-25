@@ -18,6 +18,7 @@ timestamp: 2026-06-14T00:00:00Z
 |:---|:---|
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
+| Causal Consistency | [`#causal-consistency`](#causal-consistency) |
 | Causal Ordering | [`#causal-ordering`](#causal-ordering) |
 | Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
 | Compensating Transaction | [`#compensating-transaction`](#compensating-transaction) |
@@ -27,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Fencing Token | [`#fencing-token`](#fencing-token) |
 | Inventory Reservation | [`#inventory-reservation`](#inventory-reservation) |
 | Isolation Levels | [`#isolation-levels`](#isolation-levels) |
+| Lamport Clocks | [`#lamport-clocks`](#lamport-clocks) |
 | Lease-Based Lock | [`#lease-based-lock`](#lease-based-lock) |
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
 | Overselling | [`#overselling`](#overselling) |
@@ -34,6 +36,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
+| Vector Clocks | [`#vector-clocks`](#vector-clocks) |
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
 
 ---
@@ -413,6 +416,97 @@ A partial ordering guarantee in which events are ordered only if they are causal
 
 ### Also see
 - [Message Ordering](messaging.md#message-ordering) · [Eventual Consistency](cqrs-event-driven.md)
+
+---
+
+## Causal Consistency
+
+A consistency model for distributed systems that guarantees all nodes observe causally related operations in the same order while allowing independent (concurrent) operations to be observed in different orders.
+
+### Key Characteristics
+- Preserves **happens-before** relationships between events.
+- Weaker than linearizability or serializability, but stronger than eventual consistency.
+- Enables higher availability and lower latency than strong consistency.
+- Tolerates delayed or out-of-order messages as long as causal dependencies are respected.
+
+### When to Use
+- Collaborative editing, comment threads, and real-time messaging.
+- Distributed databases and event-sourced systems where only related events must be ordered.
+- Scenarios where a global total order is unnecessary or too expensive.
+
+### When NOT to Use
+- Financial or inventory systems requiring a strict total order of all events.
+- Use cases requiring linearizable reads and writes across all nodes.
+
+### Also see
+- [Causal Ordering](#causal-ordering) · [Consistency Model](#consistency-model) · [Vector Clocks](#vector-clocks)
+
+---
+
+## Consistency Model
+
+A contract that defines the rules and ordering guarantees for read and write operations in a distributed or concurrent system.
+
+### Key Characteristics
+- Determines what values readers can observe after writers complete.
+- Ranges from strong guarantees (linearizability, serializability) to weak guarantees (eventual, causal).
+- Directly trades off correctness, latency, availability, and partition tolerance.
+
+### When to Use
+- Selecting a database, cache, or messaging system.
+- Designing concurrency and replication semantics.
+
+### When NOT to Use
+- Do not mix multiple consistency models in the same invariant without explicit handling.
+
+### Also see
+- [Causal Consistency](#causal-consistency) · [Isolation Levels](#isolation-levels) · [Eventual Consistency](cqrs-event-driven.md)
+
+---
+
+## Lamport Clocks
+
+Logical timestamps assigned to events in a distributed system to establish a partial ordering of events based on happened-before relationships.
+
+### Key Characteristics
+- Each process maintains a monotonic counter.
+- The counter increments on local events and is propagated with messages.
+- Receivers advance their clock to `max(local, received) + 1`.
+- Can determine happened-before relationships but cannot distinguish concurrent events.
+
+### When to Use
+- Simple causal ordering when only one-way dependencies matter.
+- Distributed logging, debugging, and basic event sequencing.
+
+### When NOT to Use
+- When you need to detect concurrency or compare unrelated events precisely (use vector clocks).
+
+### Also see
+- [Vector Clocks](#vector-clocks) · [Causal Ordering](#causal-ordering)
+
+---
+
+## Vector Clocks
+
+A mechanism that uses an array of per-process logical counters to track causal dependencies and determine whether two events are ordered or concurrent.
+
+### Key Characteristics
+- Each process has its own entry in the vector.
+- Local events increment the process's own counter.
+- Receiving a message merges vectors by taking element-wise maximums.
+- Enables precise detection of happened-before relationships and concurrency.
+
+### When to Use
+- Causal consistency implementations.
+- Distributed databases, collaborative editing, and event sourcing.
+- Conflict resolution where knowing whether events are concurrent is required.
+
+### When NOT to Use
+- Systems with a very large number of processes (storage and network overhead grow).
+- Systems that only need a simple monotonic ordering (Lamport clocks suffice).
+
+### Also see
+- [Lamport Clocks](#lamport-clocks) · [Causal Consistency](#causal-consistency) · [CRDT](#crdt-conflict-free-replicated-data-type)
 
 ---
 
