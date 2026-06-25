@@ -46,6 +46,8 @@ timestamp: 2026-06-14T00:00:00Z
 | LLM-as-Judge | [`#llm-as-judge`](#llm-as-judge) |
 | Context Engineering | [`#context-engineering`](#context-engineering) |
 | Ralph Loop | [`#ralph-loop`](#ralph-loop) |
+| Two-Track Agentic Workflow | [`#two-track-agentic-workflow`](#two-track-agentic-workflow) |
+| Attention-Weighted Parallelism | [`#attention-weighted-parallelism`](#attention-weighted-parallelism) |
 
 ---
 
@@ -531,3 +533,71 @@ The filesystem acts as persistent memory across context windows. Git commits are
 - [Scaffolding (LLM)](#scaffolding-llm)
 - [Context Rot](#context-rot)
 - [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Two-Track Agentic Workflow
+
+An **agentic development pattern that pairs a high-attention spec track with a low-attention implementation track**, enabling a single developer to run both in parallel by matching cognitive demand to available attention. Adapted from Marty Cagan's Dual-Track Development for AI-assisted software development.
+
+```
+Spec Track (high-attention):
+  Idea → dialogue with agent → PRD → technical design → implementation plan
+  [Human attention: continuous]
+
+Implementation Track (low-attention):
+  Implementation plan → agent executes autonomously
+  → periodic human review checkpoints
+  [Human attention: sporadic]
+
+Parallel execution:
+  While agent implements Feature N → human writes spec for Feature N+1
+```
+
+### Key Characteristics
+- Maximum natural parallelism for a solo developer is 2 tracks (1 spec + 1 implementation)
+- The spec track externalises tacit knowledge through iterative agent dialogue before any code is written
+- Throughput is bounded by the spec track (Theory of Constraints), not by the number of implementation agents
+- Verification (code review, functional QA, UX iteration) is a third non-delegatable phase that caps total delivery rate
+
+### When to Use
+- Solo developers or indie builders who hold both product and code decisions
+- Features that are intended to live in production (not throwaway/vibe-coded work)
+- Contexts where spec quality is the primary determinant of implementation quality
+
+### When NOT to Use
+- Throwaway or exploratory code where a spec would cost more than the code itself
+- Team settings where dedicated PMs write specs (implementation plan step still applies, but PRD step is done externally)
+- Single-file or trivial features where the implementation plan fits in one sentence
+
+### Also see
+- [Agent Harness](#agent-harness)
+- [Five Levels of AI-Assisted Dev](#five-levels)
+- [Verification Loop (AI)](#verification-loop-ai)
+- [Attention-Weighted Parallelism](#attention-weighted-parallelism)
+- [agentic-11 in system-design-architecture](../system-design-architecture/50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
+
+---
+
+## Attention-Weighted Parallelism
+
+The principle that **tasks should be parallelised by matching their cognitive-attention demand to available human focus, not by maximising computational concurrency**. Two tasks with different attention profiles (one continuous, one sporadic) can run in parallel with a single human; two high-attention tasks cannot.
+
+### Key Characteristics
+- Attention is the finite resource in human-agent collaboration, not compute
+- High-attention tasks (spec creation, UX iteration) are serially bounded per human
+- Low-attention tasks (agent implementation, background builds) can be run alongside high-attention tasks
+- Exceeding attention capacity creates context-switching overhead that degrades all tasks in flight
+
+### When to Use
+- Designing human-agent collaboration workflows
+- Deciding how many parallel workstreams a single developer can sustain
+- Prioritising where to apply automation (automate low-attention tasks first to free attention budget)
+
+### When NOT to Use
+- Pure computational parallelism problems where no human attention is required
+- Team settings where attention cost is distributed across multiple people
+
+### Also see
+- [Two-Track Agentic Workflow](#two-track-agentic-workflow)
+- [agentic-11 in system-design-architecture](../system-design-architecture/50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
