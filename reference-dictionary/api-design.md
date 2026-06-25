@@ -30,6 +30,9 @@ timestamp: 2026-06-14T00:00:00Z
 | ETag | [`#etag`](#etag) |
 | JSON Merge Patch | [`#json-merge-patch`](#json-merge-patch) |
 | Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
+| Migration-Driven Deprecation | [`#migration-driven-deprecation`](#migration-driven-deprecation) |
+| Deprecation Header | [`#deprecation-header`](#deprecation-header) |
+| Sunset Header | [`#sunset-header`](#sunset-header) |
 
 ---
 
@@ -336,3 +339,95 @@ GET /users?fields=id,name
 ### Also see
 - [Pagination (Cursor vs Offset)](#pagination-cursor-vs-offset)
 - [apipat-12: Sparse Fieldsets](../system-design-architecture/46-rest-api-senior-patterns-key-takeaways.md#apipat-12-sparse-fieldsets--client-driven-field-selection)
+
+
+---
+
+## Migration-Driven Deprecation
+
+The practice of treating API deprecation as an active migration management exercise rather than a passive communication exercise. A version is not truly "deprecated" until all consumers have migrated and the version is actually disabled — not merely when a notice is posted.
+
+### Key Characteristics
+- Deprecation is a project with an owner, a timeline, and success criteria — not a status label
+- Requires per-client traffic tracking to identify unmigrated consumers
+- Includes active outreach and migration support for high-volume consumers
+- Enforced with a hard sunset date (not an indefinite "we'll remove it someday")
+- The version is disabled on the sunset date regardless of remaining traffic percentage
+- Security-critical versions use an accelerated timeline (≤ 30 days) regardless of migration completeness
+
+### When to Use
+- Any time a new API version is released and the old version needs to be retired
+- Especially when the deprecated version has a known security vulnerability
+- When previous "soft" deprecations have failed to drive adoption of the new version
+
+### When NOT to Use
+- Internal APIs with a single known consumer — coordinate directly instead of running the full process
+- Prototype or sandbox APIs with no production consumers
+
+### Also see
+- [API Versioning](#api-versioning)
+- [Deprecation Header](#deprecation-header)
+- [Sunset Header](#sunset-header)
+- [api-06: API Deprecation as Migration Strategy](../system-design-architecture/04-api-network-design.md#api-06-api-deprecation-as-migration-strategy)
+
+---
+
+## Deprecation Header
+
+An HTTP response header defined in **RFC 8594** that signals to API clients that the endpoint they called is deprecated. The value is a date indicating when the deprecation was announced.
+
+```http
+Deprecation: Sat, 01 Jan 2026 00:00:00 GMT
+Link: <https://api.example.com/v2/users>; rel="successor-version"
+```
+
+### Key Characteristics
+- Defined in RFC 8594 alongside the `Sunset` header
+- Machine-readable: API clients and gateway middleware can detect and log deprecated calls automatically without reading documentation
+- The value is the deprecation *announcement* date — it does **not** indicate the removal date; use `Sunset` for that
+- Conventionally paired with a `Link` header pointing to the successor resource or migration guide
+- Should be added to every response from the deprecated version — not only error responses
+- Can be injected centrally by an API gateway (e.g., Azure API Management policy) without modifying service code
+
+### When to Use
+- Every V1 response from the moment V2 is released and V1 is officially deprecated
+- In API gateways to apply the header centrally without touching service code
+
+### When NOT to Use
+- Do not use as a substitute for a sunset date — `Deprecation` alone without `Sunset` sends no urgency signal
+
+### Also see
+- [Sunset Header](#sunset-header)
+- [API Versioning](#api-versioning)
+- [Migration-Driven Deprecation](#migration-driven-deprecation)
+
+---
+
+## Sunset Header
+
+An HTTP response header defined in **RFC 8594** that communicates the date and time at which an API endpoint will be permanently removed. Unlike `Deprecation`, `Sunset` creates urgency by specifying a hard deadline.
+
+```http
+Sunset: Fri, 01 Jan 2027 00:00:00 GMT
+Deprecation: Sat, 01 Jan 2026 00:00:00 GMT
+```
+
+### Key Characteristics
+- Defined in RFC 8594 alongside the `Deprecation` header
+- Machine-readable: clients and monitoring tools can alert when the sunset date is approaching
+- Should be returned on every deprecated endpoint's response alongside `Deprecation`
+- After the sunset date, the server should return **410 Gone** (not 404) to distinguish intentional removal from resource not found
+- Some API gateway products (e.g., Azure API Management) support automatic Sunset header injection and traffic reporting per deprecated operation
+
+### When to Use
+- All deprecated API versions where a hard retirement date has been set
+- Security-critical deprecations where a short sunset window (≤ 30 days) needs to be communicated urgently
+
+### When NOT to Use
+- Do not set a `Sunset` date before the migration path is ready — clients have nowhere to go and will be broken on a date they cannot avoid
+
+### Also see
+- [Deprecation Header](#deprecation-header)
+- [API Versioning](#api-versioning)
+- [Migration-Driven Deprecation](#migration-driven-deprecation)
+- [api-08: Security-Triggered Forced Sunset](../system-design-architecture/04-api-network-design.md#api-08-security-triggered-forced-sunset)

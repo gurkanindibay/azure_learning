@@ -397,3 +397,110 @@ Without consistent hash routing:         With consistent hash routing:
 > **Architect's rule**: Consistent hash routing is the **enabler** for request coalescing and per-entity caching. Without it, a hot entity's traffic scatters, coalescing degrades, and cold entities suffer collateral damage. It's the difference between "500 requests = 1 DB query" and "500 requests = 500 DB queries spread across all your instances."
 
 > **Azure**: Application Gateway supports session affinity (cookie-based). For header/query-string-based routing, use Azure Front Door with custom rules, or implement at the application layer. AKS with Envoy/Istio service mesh can do consistent hash load balancing via `RingHash` or `Maglev` LB policies. | **General**: §8.2 Load Balancing Patterns
+
+---
+
+## api-06: API Deprecation as Migration Strategy
+
+> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+
+| | |
+|:---|:---|
+| **Problem** | API V1 has a critical security bug and was "deprecated" 8 months ago but still handles 40% of traffic — blocking the ability to retire it |
+| **Root cause** | Deprecation was treated as a communication exercise (announcement only) rather than a migration strategy (active client migration with a hard deadline) |
+
+**Strategy** — six-step migration-driven deprecation:
+
+```
+1. Release V2 → immediately announce V1 deprecation
+2. Add Deprecation + Sunset headers to all V1 responses (RFC 8594)
+3. Track which clients are still calling V1 (per-client-ID monitoring)
+4. Publish a hard sunset date (≤ 6 months for normal; ≤ 30 days for security)
+5. Actively migrate high-volume consumers — UAT if needed
+6. Disable V1 on the sunset date regardless of remaining traffic
+```
+
+| Step | Why it matters |
+|:---|:---|
+| Headers on V1 | Machine-readable signal; clients can react without reading docs |
+| Per-client tracking | Enables targeted outreach instead of broadcast announcements |
+| Hard sunset date | Creates urgency; "soft" deprecations never complete |
+| Active migration | Passive announcements leave large consumers permanently on V1 |
+| Forced disable | The only way to actually retire the version |
+
+**Tradeoff**:
+
+| Pro | Con |
+|:---|:---|
+| Guarantees retirement — V1 actually goes away | Requires dedicated migration engineering effort |
+| Security vulnerabilities can be closed | May break clients that missed the sunset date |
+| Forces client teams to prioritize migration | High-volume consumers may push back on the timeline |
+
+> **Dictionary**: [Migration-Driven Deprecation](../reference-dictionary/api-design.md#migration-driven-deprecation) · [Deprecation Header](../reference-dictionary/api-design.md#deprecation-header) · [Sunset Header](../reference-dictionary/api-design.md#sunset-header)  
+> **General**: §8.3 API Design
+
+---
+
+## api-07: Client Traffic Monitoring During API Migration
+
+> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+
+| | |
+|:---|:---|
+| **Problem** | You announced V1 deprecation but don't know which clients are still calling it or how much traffic they contribute — making targeted outreach impossible |
+| **Root cause** | No per-client traffic attribution was instrumented at deprecation time; monitoring was added to V2 but not V1 |
+
+**Strategy** — instrument V1 with per-client-ID metrics:
+
+```
+- Log: client_id, endpoint, version, timestamp on every V1 call
+- Dashboard: traffic % per client still on V1 (sorted by volume)
+- Alert: "V1 > 20% of total traffic at T-30 days before sunset"
+- Outreach: contact top-N consumers by volume individually; offer migration support
+```
+
+**Tradeoff**:
+
+| Pro | Con |
+|:---|:---|
+| Enables targeted migration support for high-traffic consumers | Requires client identification (API key, OAuth scope, or custom header) |
+| Makes sunset progress visible — avoids surprise on shutdown day | Adds instrumentation overhead to the deprecated version |
+| Surfaces unknown consumers (internal teams, undocumented integrations) | — |
+
+> **Azure**: API Management analytics + Application Insights per-operation metrics  
+> **Dictionary**: [Migration-Driven Deprecation](../reference-dictionary/api-design.md#migration-driven-deprecation)  
+> **General**: §8.3 API Design
+
+---
+
+## api-08: Security-Triggered Forced Sunset
+
+> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+
+| | |
+|:---|:---|
+| **Problem** | A deprecated API version has a known critical security vulnerability but remains live because some clients have not migrated — the compatibility obligation is blocking the security fix |
+| **Root cause** | No policy distinguishes security-critical deprecations from routine lifecycle deprecations; compatibility is being treated as higher priority than security |
+
+**Strategy** — escalate to a forced sunset timeline:
+
+```
+NORMAL deprecation:   sunset date ≤ 6 months, migration-driven
+SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traffic
+  → Notify all clients immediately (email, status page, Deprecation + short Sunset header)
+  → Escalate to customer success for high-value consumers
+  → Disable on day 30 — even at non-zero traffic
+```
+
+**Tradeoff**:
+
+| Pro | Con |
+|:---|:---|
+| Closes the vulnerability; risk is bounded in time | Breaks clients that missed the deadline |
+| Establishes a clear security-vs-compatibility policy | Requires executive or product sign-off for forced disable |
+| Prevents indefinitely-deprecated "zombie" versions | May violate SLAs with certain enterprise customers |
+
+> **Risk principle**: *A deprecated API with a known security flaw should not stay alive indefinitely because migration is inconvenient. At some point, the risk outweighs the compatibility concerns.*
+
+> **Azure**: Azure API Management deprecation + revision policies; Azure Security Center alerts for known vulnerabilities  
+> **General**: §8.3 API Design
