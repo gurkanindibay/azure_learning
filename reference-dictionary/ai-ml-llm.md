@@ -52,6 +52,18 @@ timestamp: 2026-06-14T00:00:00Z
 | Loop Build Order | [`#loop-build-order`](#loop-build-order) |
 | Cost Per Accepted Change | [`#cost-per-accepted-change`](#cost-per-accepted-change) |
 | Premature Loop Exit | [`#premature-loop-exit`](#premature-loop-exit) |
+| Prompt Caching | [`#prompt-caching`](#prompt-caching) |
+| Workflow Files | [`#workflow-files`](#workflow-files) |
+| Persistent Session Memory | [`#persistent-session-memory`](#persistent-session-memory) |
+| Subagent | [`#subagent`](#subagent) |
+| Multi-Agent Coordination Patterns | [`#multi-agent-coordination-patterns`](#multi-agent-coordination-patterns) |
+| Agent Sandboxing | [`#agent-sandboxing`](#agent-sandboxing) |
+| Agent Permissions | [`#agent-permissions`](#agent-permissions) |
+| Pre-Tool Hook | [`#pre-tool-hook`](#pre-tool-hook) |
+| Prompt Injection | [`#prompt-injection`](#prompt-injection) |
+| Pre-Commit Gate | [`#pre-commit-gate`](#pre-commit-gate) |
+| Agent Tracing | [`#agent-tracing`](#agent-tracing) |
+| Agent Metrics | [`#agent-metrics`](#agent-metrics) |
 
 ---
 
@@ -724,3 +736,301 @@ A **silent failure mode** in agentic loops where the agent declares the task com
 - [Review Gate](#review-gate)
 - [Loop Build Order](#loop-build-order)
 - [agentic-17 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-17-verify-gate--the-heart-of-the-loop)
+
+---
+
+## Prompt Caching
+
+The **LLM provider feature that stores the stable prefix of a conversation** (system prompt, config files, tool definitions) so that subsequent turns only pay for the variable portion. The first call populates the cache at full cost; every subsequent turn within the cache window is cheaper and lower-latency.
+
+```
+Turn 1: [stable prefix: 2000 tok] + [message] → full cost, cache warm
+Turn 2: [cache hit:   2000 tok] + [message] → reduced cost
+Turn N: [cache hit:   2000 tok] + [message] → reduced cost
+```
+
+### Key Characteristics
+- Rewards quality, not quantity — clean stable prefixes are cheap; bloated ones are still expensive
+- Caches expire after a provider-defined idle period; next turn after expiry pays full cost
+- Most effective when config and workflow files are kept short and stable
+
+### When to Use
+- Multi-turn agent sessions where the same system prompt, config, and tool schemas repeat every turn
+
+### When NOT to Use
+- Single-call LLM usage — no second turn to benefit from the cache
+- Sessions where the stable prefix changes every turn
+
+### Also see
+- [Token](#token)
+- [Workflow Files](#workflow-files)
+- [Agent Harness](#agent-harness)
+
+---
+
+## Workflow Files
+
+**Task-specific instruction files loaded on demand** — distinct from always-active config files (CLAUDE.md / AGENTS.md). Workflow files explain how to perform one specific task type (write tests, review a PR, migrate a database) and are only loaded when the agent needs that procedure.
+
+### Key Characteristics
+- Loaded on demand, not every session
+- Written by humans based on real work — AI-generated workflow files under-perform human-written ones (SkillsBench: 86 tasks, 11 domains)
+- A smaller model with good workflow files can outperform a larger model without them
+- Generic AI-generated instructions add noise without clear guidance
+
+### When to Use
+- Repeated task types that benefit from standardized procedures
+- Onboarding new agents to project-specific workflows
+
+### When NOT to Use
+- One-off tasks with no repetition — the write cost exceeds the reuse benefit
+- Tasks where the correct procedure changes every time
+
+### Also see
+- [Context Engineering](#context-engineering)
+- [Agent Harness](#agent-harness)
+- [Prompt Caching](#prompt-caching)
+
+---
+
+## Persistent Session Memory
+
+**Cross-session state that survives between agent invocations** — typically implemented as a `MEMORY.md` file or a searchable indexed store. Unlike the context window (which resets each session), persistent memory carries architectural decisions, conventions, and known issues forward so the developer does not repeat themselves.
+
+### Key Characteristics
+- The simplest form: a short `MEMORY.md` file in the project root, read at session start and updated during work
+- If the memory file grows too large, it creates the same context-rot problem as a bloated config — keep it short
+- For larger projects: searchable indexed memory where past sessions are stored and queried on demand
+
+### When to Use
+- Multi-session projects where decisions compound across sessions
+- When re-explaining project context to the agent costs more than maintaining a memory file
+
+### When NOT to Use
+- Single-session tasks — no cross-session state is needed
+- When memory file size exceeds what the agent can usefully process
+
+### Also see
+- [Context Rot](#context-rot)
+- [Context Freshness](#context-freshness)
+
+---
+
+## Subagent
+
+A **smaller, focused agent created by a parent agent for one specific job** — given a narrow task, a limited toolset, and a fresh context window. When the subagent finishes, it returns only a compressed summary (not every intermediate step) to the parent.
+
+### Key Characteristics
+- Fresh context window — subagent's intermediate tool outputs do not pollute the parent's context
+- Parallel execution — multiple subagents can run simultaneously
+- Conflict prevention — Git worktrees give each subagent its own file copy when editing shared files
+- Returns a 1,000–2,000 token condensed summary to the parent
+
+### When to Use
+- Side tasks that produce large intermediate output (security review, test generation, docs update)
+- When multiple independent tasks can run in parallel
+
+### When NOT to Use
+- Trivial tasks where subagent invocation latency exceeds the work itself
+- When the parent needs every intermediate detail from the subtask
+
+### Also see
+- [Agent Harness](#agent-harness)
+- [Agent Loop](#agent-loop)
+- [Multi-Agent Coordination Patterns](#multi-agent-coordination-patterns)
+- [Context Rot](#context-rot)
+
+---
+
+## Multi-Agent Coordination Patterns
+
+**Three canonical patterns for organizing multiple agents** to handle tasks that a single agent cannot effectively perform alone. The handoff between agents — the size and quality of context passed — is the primary determinant of success.
+
+| Pattern | Structure | Best For |
+|:---|:---|:---|
+| **Planner / Executor** | One agent creates the plan; another executes it | When reasoning before acting improves quality |
+| **Router / Specialist** | One agent classifies the request; domain specialists handle each category | Predictability, lower cost, easier debugging per specialist |
+| **Map-Reduce** | Task splits into parallel pieces; agents work concurrently; one agent merges results | Large content reviews, code review at scale, document analysis |
+
+### Key Characteristics
+- Real workflows combine all three patterns
+- The Router/Specialist pattern is the most predictable — each specialist has a narrow prompt and smaller toolset
+- Map-Reduce is the most expensive to debug when reducers merge inconsistent outputs
+- Handoff context must be Goldilocks-sized: too little and the next agent loses the goal; too much and it loses focus
+
+### When to Use
+- When a single agent cannot handle the full task scope or quality requirements
+- When parallel execution is needed for throughput
+
+### When NOT to Use
+- Tasks completable by a single well-prompted agent — multi-agent adds handoff complexity and cost
+
+### Also see
+- [Subagent](#subagent)
+- [Agentic AI](#agentic-ai)
+- [Agent Harness](#agent-harness)
+
+---
+
+## Agent Sandboxing
+
+**Restrictions on what an agent can access**, enforced outside the model at the OS or container level — the agent cannot argue or prompt-engineer its way past the walls. Limits filesystem read/write paths, network access, and credential visibility so that when the agent makes a mistake, the blast radius is bounded.
+
+### Key Characteristics
+- Enforced at OS/container level, not inside the model — the sandbox does not care what the agent wants
+- Strongest isolation: Docker container with no network access, no host credentials, no outbound connections unless explicitly whitelisted
+- Complements but does not replace permission lists — sandboxing limits damage if something bad runs; permissions try to prevent it from running
+
+### When to Use
+- Any production agent with tool access to the filesystem or network
+- When running agents on cloned repositories or untrusted code
+
+### When NOT to Use
+- Read-only agents that only consume trusted API responses — sandbox overhead exceeds risk
+
+### Also see
+- [Agent Permissions](#agent-permissions)
+- [Pre-Tool Hook](#pre-tool-hook)
+- [Prompt Injection](#prompt-injection)
+
+---
+
+## Agent Permissions
+
+**An allow-list and deny-list that controls what an agent can do without asking for human approval each time**. Project-level permissions define safe actions (run tests, read files, standard Git operations); user-level deny lists block dangerous actions regardless of context (read .env, rm -rf, force-push to main, curl | sh).
+
+### Key Characteristics
+- Two layers: project-level allow (safe for this repo) + user-level deny (never allowed anywhere)
+- Agents may try bad shortcuts when a command fails — permissions are the first safety net
+- Any agent with tool access needs permissions; this is not optional
+
+### When to Use
+- Any agent deployment where tool access exists
+
+### When NOT to Use
+- Agents with no tool access — permissions have nothing to gate
+
+### Also see
+- [Agent Sandboxing](#agent-sandboxing)
+- [Pre-Tool Hook](#pre-tool-hook)
+- [Prompt Injection](#prompt-injection)
+
+---
+
+## Pre-Tool Hook
+
+A **check that fires after the agent produces a tool call but before the tool executes** — the last safe moment to reject or transform a dangerous command. Most critical for shell (Bash) commands, where one bad command can delete files, expose secrets, or run untrusted code.
+
+### Key Characteristics
+- Timing is the defining property: post-decision, pre-execution
+- Scans for: suspicious Unicode look-alikes, dangerous file paths, pipe-to-shell patterns (`curl | sh`), ANSI injection, force-destructive flags
+- Hooks do not replace sandboxing — if a hook misses something, the sandbox limits blast radius
+
+### When to Use
+- Any agent with shell command access
+- Whenever the agent operates on production or shared infrastructure
+
+### When NOT to Use
+- Agents limited to read-only API calls — hook overhead exceeds risk
+
+### Also see
+- [Agent Sandboxing](#agent-sandboxing)
+- [Agent Permissions](#agent-permissions)
+- [Prompt Injection](#prompt-injection)
+- [Guardrails (AI)](#guardrails-ai)
+
+---
+
+## Prompt Injection
+
+An **attack where adversarial instructions are embedded in external content** that the agent reads and follows — agent config files in cloned repos, MCP server metadata, web page content, or retrieved documents. The agent treats injected instructions as legitimate because its design goal is to follow instructions from its context.
+
+### Key Characteristics
+- Not a model vulnerability — a trust-boundary problem: the agent reads external content and cannot distinguish principal from adversarial instructions
+- Threat vectors: agent config files in cloned repos, untrusted MCP servers, Unicode look-alike characters, web content injection
+- Mitigation: treat agent config files like code (review before trusting); never auto-trust MCP servers from external sources; sanitize retrieved web content
+
+### When to Use
+- Any agent that reads external files, web content, or cloned repositories
+- Whenever designing agent security boundaries
+
+### When NOT to Use
+- Fully air-gapped agents operating only on trusted, internally-authored content
+
+### Also see
+- [Agent Sandboxing](#agent-sandboxing)
+- [Pre-Tool Hook](#pre-tool-hook)
+- [Guardrails (AI)](#guardrails-ai)
+
+---
+
+## Pre-Commit Gate
+
+A **set of automated checks that block a commit from entering Git history** unless all checks pass. For agentic workflows, this is more valuable than for humans — agents hit the error, read the message, fix the code, and retry without frustration. The gate becomes a teaching mechanism, not just a blocker.
+
+### Key Characteristics
+- Typical gates: secret detection, YAML validation, linter, formatter, security scanner (bandit, semgrep)
+- Correction loop: agent fails → reads error → fixes code → retries → passes
+- Complements CI gates — pre-commit protects local history; CI protects the shared repo
+
+### When to Use
+- Any agent that produces code and commits to version control
+- When agent output quality must be verified before it enters shared history
+
+### When NOT to Use
+- Non-code agent output (reports, summaries) where Git is not the delivery mechanism
+
+### Also see
+- [Guardrails (AI)](#guardrails-ai)
+- [Verification Loop (AI)](#verification-loop-ai)
+- [Review Gate](#review-gate)
+
+---
+
+## Agent Tracing
+
+**The structured record of an agent's full execution path** from first request to final result — every tool call, subagent invocation, input/output at each step, and model reasoning at key decision points. A tree visualization (parent → child tool calls) is more useful than a flat log for debugging.
+
+### Key Characteristics
+- Records actual behavior, not what the agent claimed it did
+- Tree-structured to show causality — which step caused which sub-step
+- Enables line-by-line post-mortem debugging of agent failures
+
+### When to Use
+- Debugging agent failures where the final output is wrong but the intermediate path is unknown
+- Auditing agent behavior in production systems
+
+### When NOT to Use
+- Trivial single-call LLM usage where there is no multi-step path to trace
+
+### Also see
+- [Agent Metrics](#agent-metrics)
+- [Agent Loop](#agent-loop)
+- [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Agent Metrics
+
+**Quantitative signals that measure agent behavior and outcomes** — divided into proxy signals (what the agent did) and outcome signals (whether the work succeeded). Proxy signals surface problems; outcome signals are the only real measure of value.
+
+| Metric Type | Examples | What It Shows |
+|:---|:---|:---|
+| **Proxy signals** | Latency, token cost, tool call count, loop iteration count, failure count | How the agent behaved |
+| **Outcome signals** | Tests pass in CI, PR merged, deploy succeeded, rollback occurred | Whether the work actually succeeded |
+
+### Key Characteristics
+- "Task complete" from the agent is a claim, not an outcome signal — the agent may be wrong
+- Proxy metrics catch runaway loops, stuck agents, and cost spikes
+- Outcome metrics require CI/CD integration and are harder to instrument but matter more
+
+### When to Use
+- Any production agent deployment — without metrics, you cannot distinguish productive from unproductive sessions
+
+### When NOT to Use
+- One-off or exploratory agent use where the human directly observes the outcome
+
+### Also see
+- [Agent Tracing](#agent-tracing)
+- [Cost Per Accepted Change](#cost-per-accepted-change)
+- [Verification Loop (AI)](#verification-loop-ai)
