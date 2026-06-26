@@ -48,6 +48,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Ralph Loop | [`#ralph-loop`](#ralph-loop) |
 | Two-Track Agentic Workflow | [`#two-track-agentic-workflow`](#two-track-agentic-workflow) |
 | Attention-Weighted Parallelism | [`#attention-weighted-parallelism`](#attention-weighted-parallelism) |
+| Loop Viability Test | [`#loop-viability-test`](#loop-viability-test) |
+| Loop Build Order | [`#loop-build-order`](#loop-build-order) |
+| Cost Per Accepted Change | [`#cost-per-accepted-change`](#cost-per-accepted-change) |
+| Premature Loop Exit | [`#premature-loop-exit`](#premature-loop-exit) |
 
 ---
 
@@ -601,3 +605,122 @@ The principle that **tasks should be parallelised by matching their cognitive-at
 ### Also see
 - [Two-Track Agentic Workflow](#two-track-agentic-workflow)
 - [agentic-11 in system-design-architecture](../system-design-architecture/50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
+
+---
+
+## Loop Viability Test
+
+A **four-condition checklist that determines whether a task warrants an agentic loop** rather than a well-crafted manual prompt. A loop is worth building only when all four conditions hold simultaneously.
+
+| Condition | Minimum Bar | If Not Met |
+|:---|:---|:---|
+| **Task repeats** | At least weekly | Setup cost never pays back |
+| **Auto-reject exists** | Test, type check, build, or hard rule | Loop spins without progress |
+| **Agent can do it end-to-end** | No mid-task human hand-off | Human still in critical path |
+| **"Done" is objective** | Not a matter of taste | Human judgment is required |
+
+### Key Characteristics
+- All four conditions must hold; missing one makes a manual prompt cheaper and more reliable
+- The test eliminates most candidates; most tasks that feel like loop candidates fail condition 2 or 4
+- Applying this filter before building prevents the class of loops that bill silently without delivering value
+
+### When to Use
+- Before investing time in loop design and tooling for any recurring AI task
+- When evaluating whether to automate an AI workflow that currently runs manually
+
+### When NOT to Use
+- Skip the test for one-off tasks — a loop is already ruled out
+- Do not use it as a reason to over-engineer a task that a single good prompt handles correctly
+
+### Also see
+- [Agent Loop](#agent-loop)
+- [Loop Build Order](#loop-build-order)
+- [agentic-19 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-19-loop-viability-test--four-conditions)
+
+---
+
+## Loop Build Order
+
+The **four-step sequence for building a reliable agentic loop**: prove manual reliability first, extract the instructions into a reusable skill, wrap in a loop with a verify gate and stop condition, then and only then put it on a schedule. Skipping any step produces a loop that bills silently while delivering nothing.
+
+```
+1. Manual run   — prove the task works reliably at least once by hand
+2. Skill        — save instructions as a reusable file the loop reads every run
+3. Loop         — add the verify gate + hard stop condition
+4. Schedule     — only after steps 1–3 are solid
+```
+
+### Key Characteristics
+- Each step validates the next; a schedule makes unreliable work run at scale, not more reliably
+- The skill step is what makes automation maintainable — instructions live in one place, not embedded in a schedule nobody updates
+- The verify gate and stop condition in step 3 are what distinguish a loop from a cron job that calls an LLM
+
+### When to Use
+- Any time a recurring AI task graduates from manual prompt to scheduled automation
+- Building agentic pipelines that will run unsupervised
+
+### When NOT to Use
+- Do not apply to one-off tasks — the build order is for tasks that will recur
+- Do not skip directly to step 4 even when time is tight; step 3 is what prevents runaway billing
+
+### Also see
+- [Agent Loop](#agent-loop)
+- [Loop Viability Test](#loop-viability-test)
+- [Premature Loop Exit](#premature-loop-exit)
+- [agentic-20 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-20-loop-build-order--prove-before-scheduling)
+
+---
+
+## Cost Per Accepted Change
+
+The **efficiency metric for agentic loops**: the total token cost across all iterations divided by the number of results that passed review and were kept. This metric distinguishes a productive loop (high accept rate) from an expensive treadmill (high token spend, low accepted output).
+
+```
+cost per accepted change = total_tokens_spent / accepted_results_count
+```
+
+**Threshold**: an accept rate below **50%** means the loop costs more — in tokens and in human review time — than the value it produces.
+
+### Key Characteristics
+- Tokens spent or iterations run measure activity, not value; cost per accepted change measures return on loop investment
+- Requires a result-auditing step outside the loop itself: a human or system marks each result accepted or rejected
+- A strong verify gate raises the accept rate by blocking bad work before human review; maker/checker separation further raises quality
+
+### When to Use
+- Instrumenting any production agentic loop to determine whether it is worth running
+- Comparing loop configurations (single-agent vs maker/checker, different verify gates) on a common efficiency basis
+
+### When NOT to Use
+- Exploratory or experimental loops where accept/reject judgment is not yet defined
+- Loops with very small iteration counts where the metric has high variance
+
+### Also see
+- [Token](#token)
+- [Verification Loop (AI)](#verification-loop-ai)
+- [LLM-as-Judge](#llm-as-judge)
+- [agentic-21 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-21-cost-per-accepted-change--the-loop-efficiency-metric)
+
+---
+
+## Premature Loop Exit
+
+A **silent failure mode** in agentic loops where the agent declares the task complete — and exits — before the work is actually done. Named by engineer Geoffrey Huntley as the "Ralph Wiggum loop", after the character who reports "I'm helping" while not actually helping. The loop then keeps running on its next scheduled trigger and billing for nothing.
+
+### Key Characteristics
+- The agent satisfies itself (not the verify gate) that the goal is met and returns a success signal prematurely
+- Without a hard verify gate, the loop has no way to catch the false success
+- The failure is silent: no error is raised, billing continues, and output quality silently degrades
+- Distinct from the [Ralph Loop](#ralph-loop), which is a beneficial multi-context-window agentic pattern from Anthropic
+
+### When to Use
+- Use the term when diagnosing loops that appear to complete but produce incomplete or incorrect output
+- Use it as the primary motivation for requiring a hard verify gate in every production loop
+
+### When NOT to Use
+- Do not apply to loops that fail with an explicit error — premature exit is specifically the *false success* case
+
+### Also see
+- [Verification Loop (AI)](#verification-loop-ai)
+- [Review Gate](#review-gate)
+- [Loop Build Order](#loop-build-order)
+- [agentic-17 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-17-verify-gate--the-heart-of-the-loop)
