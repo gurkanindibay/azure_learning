@@ -209,9 +209,26 @@ Multiple consumers **pull from a single queue** for load-balanced processing. If
 
 ## Claim Check
 
-Store a **large payload in external storage** and pass only a reference (the "claim check") in the message. Avoids bloating message brokers with large payloads.
+Store a **large payload in external storage** and pass only a reference (the "claim check") in the message. The reference acts like a coat-check ticket — small enough to traverse the broker, containing all the information the consumer needs to retrieve the full payload.
 
-**Also see**: [Messaging](messaging.md)
+### Key Characteristics
+- **Payload externalised**: large binaries (images, PDFs, ML artefacts) live in S3 or equivalent object storage; the Kafka message carries only `{s3_bucket, s3_key, checksum, size_bytes, content_type}`
+- **Size threshold**: Kafka's default maximum message size is 1 MB; payloads > ~100 KB benefit from Claim Check; anything > 1 MB requires it
+- **Orphaned object problem**: if S3 upload succeeds but the Kafka send fails, the payload is stranded with no consumer — write the orphan key to a DynamoDB tracking table and run a daily Lambda cleanup job to purge unclaimed objects
+- **Lazy loading vs presigned URL**: if payload < ~50 MB, download directly in the consumer; if ≥ 50 MB, generate a time-limited S3 presigned URL and delegate streaming to downstream processors to avoid loading large bytes into consumer memory
+- **Lifecycle cost**: S3 Standard (~$0.023/GB) is ~4× cheaper than MSK EBS storage (~$0.10/GB); apply lifecycle policies to transition to S3 Glacier at 30 days and delete at 90 days
+
+### When to Use
+- Any message broker with a payload size limit (Kafka 1 MB default, SQS 256 KB)
+- Large user uploads: images, PDFs, videos, log files, ML training data
+- When payload lifetime policies (GDPR deletion, archiving) must be managed independently of the message log
+
+### When NOT to Use
+- Payloads smaller than ~10 KB where the S3 round-trip overhead outweighs the broker savings
+- Systems where strict exactly-once guarantees must span both the broker and the object store (two-phase coordination is complex)
+
+### Also see
+- [Messaging](messaging.md) · [Event Carried State Transfer](cqrs-event-driven.md#event-carried-state-transfer) · [Messaging: Compacted Topic](messaging.md#compacted-topic)
 
 ---
 

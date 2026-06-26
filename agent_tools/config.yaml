@@ -271,6 +271,11 @@ takeaway_domains:
     desc: "Kafka Data & State Patterns (production deep-dive)"
     keywords: [event sourcing, aggregate snapshot, s3 archiving, cryptographic erasure, gdpr, cqrs, polyglot persistence, read-after-write, compacted topic, snapshot delta, fat event, fetcher pattern, event carried state transfer]
 
+  kafka-performance:
+    file: "56-kafka-performance-integration-key-takeaways.md"
+    desc: "Kafka Performance & Integration Patterns (production deep-dive)"
+    keywords: [claim check, orphaned object, presigned url, s3 lifecycle, glacier, stream-table join, ktable, kstream, rocksdb, late arriving data, grace period, saga choreography, compensating transaction, step functions, orchestration]
+
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy

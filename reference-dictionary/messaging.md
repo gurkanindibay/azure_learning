@@ -37,6 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Stream-Table Duality | [`#stream-table-duality`](#stream-table-duality) |
 | Hot Partition | [`#hot-partition`](#hot-partition) |
 | Retry Topic | [`#retry-topic`](#retry-topic) |
+| KTable | [`#ktable`](#ktable) |
 
 ---
 
@@ -393,4 +394,30 @@ A dedicated Kafka topic used to implement **delayed retry with exponential backo
 
 ### Also see
 - [Dead Letter Queue (DLQ)](#dead-letter-queue-dlq) · [Poison Message](#poison-message) · [Resilience: Exponential Backoff](resilience.md#exponential-backoff)
+
+---
+
+## KTable
+
+The **changelog-backed, locally materialised table** abstraction in Kafka Streams. While a **KStream** represents an unbounded stream of events (append-only, every record is an insert), a **KTable** represents the **current latest value per key** — updated in place as new events arrive from the underlying compacted changelog topic.
+
+### Key Characteristics
+- **Backed by a compacted topic**: Kafka maintains the full changelog; the KTable is a live materialised view that keeps only the most recent value per key
+- **Local RocksDB store**: each Kafka Streams instance embeds a co-partitioned RocksDB store containing its shard of the KTable — joins require no network calls, only local disk lookups
+- **KStream.leftJoin(KTable)**: enriches every stream event with the matching table row (e.g., click event + user profile) at sub-millisecond latency; the join is a local RocksDB `get()` call
+- **Partition co-location**: stream and table topics must share the same partition count and key scheme; if they differ, Kafka Streams automatically inserts a repartition step (adds latency and a new topic)
+- **KStream vs KTable**: `KStream` is the event-by-event changelog view; `KTable` is the aggregated latest-state view. The two are duals — `stream.groupByKey().reduce(...)` produces a KTable; `table.toStream()` produces a KStream
+
+### When to Use
+- Enriching a high-throughput event stream with slowly changing reference data (user profiles, product catalog, device metadata)
+- Building materialised views that update incrementally as events arrive, without querying a remote database
+- Replacing synchronous per-event database lookups in a stream processor
+
+### When NOT to Use
+- Reference tables exceeding local disk capacity (~10–50 GB per partition in practice); joins degrade as RocksDB spills increase
+- When you need point-in-time historical lookups (KTable retains only the latest value per key)
+- When partition co-location cannot be guaranteed and the repartition overhead is unacceptable
+
+### Also see
+- [Stream-Table Duality](#stream-table-duality) · [Compacted Topic](#compacted-topic) · [Kafka Transactions](#kafka-transactions)
 
