@@ -32,6 +32,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
 | Migration-Driven Deprecation | [`#migration-driven-deprecation`](#migration-driven-deprecation) |
 | Deprecation Header | [`#deprecation-header`](#deprecation-header) |
+| Hierarchical Rate Limiting | [`#hierarchical-rate-limiting`](#hierarchical-rate-limiting) |
 | Sunset Header | [`#sunset-header`](#sunset-header) |
 
 ---
@@ -369,6 +370,39 @@ The practice of treating API deprecation as an active migration management exerc
 - [Deprecation Header](#deprecation-header)
 - [Sunset Header](#sunset-header)
 - [api-06: API Deprecation as Migration Strategy](../system-design-architecture/04-api-network-design.md#api-06-api-deprecation-as-migration-strategy)
+
+---
+
+## Hierarchical Rate Limiting
+
+Applying rate limits at multiple layers of the request path — edge/gateway, service, and endpoint — so that abusive traffic is rejected as early as possible while still protecting individual backends.
+
+### Key Characteristics
+- **Defense in depth**: A single layer failing does not collapse the whole system
+- **Progressive granularity**: Global → per-IP → per-API-key → per-user → per-endpoint → per-method+endpoint
+- **Early rejection**: The edge/gateway tier blocks scrapers before they consume compute, DB connections, or bandwidth
+- **Independent counters**: Each layer uses its own counter/key so a hot key in one layer does not starve another
+
+### When to Use
+- Public APIs with mixed client types and abuse patterns
+- Microservices where the gateway alone cannot protect expensive downstream calls
+- When different endpoints have very different costs (e.g., `/upload` vs `/health`)
+
+### When NOT to Use
+- Simple internal APIs where a single per-client limit is sufficient
+- When operational complexity of multiple limit sets exceeds the risk of abuse
+
+### Example Tiers
+| Tier | Key | Limit example | Purpose |
+|:---|:---|:---|:---|
+| **Global** | — | 10,000 req/s | Protect infrastructure |
+| **Per IP** | `rate:ip:{ip}` | 100 req/min | Block scrapers/single-source floods |
+| **Per API Key** | `rate:key:{api_key}` | 1,000 req/min | Enforce customer plan |
+| **Per User** | `rate:user:{user_id}` | 50 req/min | Fairness across users |
+| **Per Endpoint** | `rate:key:{api_key}:{endpoint}` | 10 req/s | Protect expensive endpoints |
+| **Per Method + Endpoint** | `rate:key:{api_key}:POST:/upload` | 5 req/min | Granular control |
+
+**Also see**: [Rate Limiting](#rate-limiting) · [api-09: Hot Key Problem in Distributed Rate Limiters](../system-design-architecture/04-api-network-design.md#api-09-hot-key-problem-in-distributed-rate-limiters) · [gw-03: API Gateway](../system-design-architecture/16-reverse-proxy-lb-api-gateway.md#gw-03-api-gateway--when-api-lifecycle-management-is-the-priority)
 
 ---
 

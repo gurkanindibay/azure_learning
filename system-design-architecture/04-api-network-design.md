@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 4. APIs & Network Design
 
 > **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16  
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16, [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)  
 > **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
 
 ---
@@ -503,4 +503,112 @@ SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traf
 > **Risk principle**: *A deprecated API with a known security flaw should not stay alive indefinitely because migration is inconvenient. At some point, the risk outweighs the compatibility concerns.*
 
 > **Azure**: Azure API Management deprecation + revision policies; Azure Security Center alerts for known vulnerabilities  
+> **General**: §8.3 API Design
+
+---
+
+## api-09: Hot Key Problem in Distributed Rate Limiters
+
+> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+
+| | |
+|:---|:---|
+| **Problem** | A single API key or client generates tens of thousands of requests per second and the centralized Redis counter becomes the bottleneck |
+| **Root cause** | Every request for that tenant updates the exact same Redis key, creating a hot key that saturates one node/slot |
+
+**Strategy** — reduce contention on the single key:
+
+| Technique | How | Tradeoff |
+|:---|:---|:---|
+| **Key sharding** | Split `rate:user:42` into `rate:user:42:0` … `rate:user:42:N` and sum on read | More reads; slight over-allowance unless reconciled |
+| **Local token cache** | Keep a small in-process token cache that syncs asynchronously | Reduced accuracy; eventual consistency |
+| **Hierarchical limits** | Enforce coarse limit at edge/gateway, finer limit per service | Multiple counters to maintain; complex debugging |
+| **Gateway enforcement** | Reject abuse before it reaches Redis/backend | Gateway itself can become a hotspot |
+
+> **Dictionary**: [Hot Key](../reference-dictionary/caching.md#hot-key) · [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
+> **Related**: [gw-03: API Gateway](16-reverse-proxy-lb-api-gateway.md#gw-03-api-gateway--when-api-lifecycle-management-is-the-priority)  
+> **General**: §8.3 API Design
+
+---
+
+## api-10: Multi-Tenant Rate Limiting with Plan-Specific Buckets
+
+> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+
+| | |
+|:---|:---|
+| **Problem** | Free, Pro, and Enterprise customers need different API quotas, but the rate-limiting algorithm must stay the same |
+| **Root cause** | A single bucket configuration cannot represent multiple commercial tiers |
+
+**Strategy** — make bucket parameters part of the tenant configuration:
+
+```
+Free:      capacity=100,  refill=100/min
+Pro:       capacity=1000, refill=1000/min
+Enterprise: capacity=∞,   refill=∞   (or dedicated pool)
+```
+
+The algorithm (token bucket, fixed window, etc.) remains identical; only the per-tenant configuration changes. Load the configuration at request time from a fast cache or inject it via the API gateway.
+
+**Tradeoff**:
+
+| Pro | Con |
+|:---|:---|
+| Single implementation serves all tiers | Configuration propagation must be reliable; stale config can over/under-limit |
+| Easy to add new plans or custom limits | More keys/dimensions increase monitoring and operational surface |
+
+> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
+> **General**: §8.3 API Design
+
+---
+
+## api-11: Rate Limiter Failure Mode — Fail-Open vs Fail-Closed
+
+> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+
+| | |
+|:---|:---|
+| **Problem** | The shared state store (Redis) goes down; the rate limiter must still make an allow/reject decision |
+| **Root cause** | Rate limiting is a safety mechanism that itself depends on infrastructure that can fail |
+
+**Strategy** — choose a deliberate failure posture:
+
+| Mode | Behavior | Best for |
+|:---|:---|:---|
+| **Fail-closed** | Redis down → reject all requests | Internal/admin APIs; abuse-sensitive endpoints |
+| **Fail-open** | Redis down → allow requests temporarily | Customer-facing APIs; availability is more important than short-term quota enforcement |
+
+**Tradeoff**:
+
+| Fail-closed | Fail-open |
+|:---|:---|
+| Protects downstream services from abuse | Avoids an outage caused by the rate limiter itself |
+| Can turn a Redis failure into a full API outage | Risks temporary over-consumption and abuse |
+
+> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting) · [Fail-safe vs Fail-secure](../reference-dictionary/resilience.md#fail-safe-vs-fail-secure)  
+> **Related**: [resilience-02: Circuit Breaker](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)  
+> **General**: §8.3 API Design
+
+---
+
+## api-12: Multi-Region Rate Limiting — Consistency vs Latency
+
+> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+
+| | |
+|:---|:---|
+| **Problem** | API is deployed in US-East, Europe, and Asia; a user can hit any region and must still respect the global quota |
+| **Root cause** | Cross-region coordination to maintain a single consistent counter adds round-trip latency |
+
+**Strategy** — pick the consistency/latency point that matches the product requirement:
+
+| Approach | How | Tradeoff |
+|:---|:---|:---|
+| **Global consistent counter** | All regions write to a single Redis/Redis Cluster in one region | Perfect accuracy; higher latency for remote regions; single region is a SPOF |
+| **Regional counters** | Each region tracks its own quota portion; aggregate asynchronously | Low latency; slight over-allowance when traffic shifts between regions |
+| **Partitioned quota** | Pre-allocate quota per region (e.g., 40% US, 35% EU, 25% Asia) | Predictable latency; unused regional quota is wasted |
+
+> **Rule of thumb**: For most customer-facing APIs, accept a small accuracy loss in exchange for low latency; enforce strict global limits only for expensive or abuse-sensitive endpoints.
+
+> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
 > **General**: §8.3 API Design

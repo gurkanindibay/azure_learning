@@ -30,6 +30,7 @@ timestamp: 2026-06-14T00:00:00Z
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
 | Write-Through | [`#write-through`](#write-through) |
+| Hot Key | [`#hot-key`](#hot-key) |
 | Timeline Cache | [`#timeline-cache`](#timeline-cache) |
 | Celebrity Cache | [`#celebrity-cache`](#celebrity-cache) |
 
@@ -300,6 +301,36 @@ A caching pattern where data is written to both the cache and the backing store 
 - Scenarios where cache failures should not block the primary write path
 
 **Also see**: [Cache-Aside Pattern](#cache-aside-pattern) · [Cache Invalidation](#cache-invalidation)
+
+---
+
+## Hot Key
+
+A single cache key that receives a disproportionately large share of traffic, causing one node, slot, or thread to become a bottleneck while the rest of the cluster is underutilized.
+
+### Key Characteristics
+- **Skewed access pattern**: 1% of keys can drive 99% of requests in skewed workloads
+- **Single-node saturation**: In Redis Cluster, one hot key maps to one slot on one node
+- **Amplified by counter patterns**: Rate limiters, like counts, and trending-item caches naturally centralize updates on one key
+- **Symptom**: Latency spikes for that key while overall cluster CPU/memory looks healthy
+
+### When to Use
+- Skew is unavoidable and the business key is inherently centralized (e.g., a global config flag or a celebrity post)
+- When monitoring shows a single key dominating request volume
+
+### When NOT to Use
+- Uniform access patterns where no key stands out (solutions add unnecessary complexity)
+- As a substitute for proper capacity planning
+
+### Mitigations
+| Technique | Mechanism | Tradeoff |
+|:---|:---|:---|
+| **Key sharding / salting** | Append a random suffix to spread writes across N keys | Reads must aggregate; ordering may be lost |
+| **Local caching** | Cache the hot value in application memory | Stale reads; replica consistency challenge |
+| **Read replicas** | Direct read traffic to replicas | Writes still hit the primary; replication lag |
+| **Request coalescing** | Collapse in-flight identical reads into one backend call | Helps read-heavy hot keys, not write-heavy ones |
+
+**Also see**: [Request Coalescing](#request-coalescing) · [Celebrity Cache](#celebrity-cache) · [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting) · [api-09: Hot Key Problem in Distributed Rate Limiters](../system-design-architecture/04-api-network-design.md#api-09-hot-key-problem-in-distributed-rate-limiters)
 
 ---
 
