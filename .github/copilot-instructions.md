@@ -36,7 +36,26 @@ azure_learning/
 │   └── 12-ai-applications/             # AI application patterns
 │
 ├── system-design-architecture/   # Concrete system-design problems with solution strategies,
-│                                  # trade-offs, and source references; not for raw notes or article summaries
+│   ├── databases/               # db-: query performance, SQL optimization, DB decisions
+│   ├── concurrency-transactions/ # tx-: double-booking, isolation, idempotency, causal consistency
+│   ├── caching/                  # cache-: stampede prevention, Redis internals, hot-key mitigation
+│   ├── api-network/              # api-, gw-, apipat-: API design, rate limiting, reverse proxy, gateway
+│   ├── messaging/                # broker-, iggy-: Kafka patterns, offset commits, real-time messaging
+│   ├── resilience/               # resilience-, cb-: circuit breakers, outages, defensive coding
+│   ├── agentic-ai/               # agentic-, agentarch-, aidev-, harness-: multi-agent, loops, accountability
+│   ├── cqrs-fintech/             # cqrs-: command/query separation, payment systems, gateways
+│   ├── jvm-runtime/              # jvm-: memory/GC, Java vs Go thread model
+│   ├── performance/              # perf-: microservices runtime, language selection tradeoffs
+│   ├── security/                 # hsm-, auth-: HSM bottlenecks, authentication/authorization
+│   ├── system-design-interview/  # sdi-, prag-: interview roadmaps, pragmatic design
+│   ├── software-architecture/    # dp-, arch-, svc-, docker-: design patterns, principles, service design
+│   ├── case-studies/             # uber-, feed-, url-, mesh-: real-world architecture case studies
+│   ├── stream-processing/        # async-, flink-: Flink fundamentals, async concurrency
+│   ├── ai-ml-infrastructure/     # ai-: RAG architecture, LLM optimization, vector search
+│   ├── media-processing/         # media-: chunk splitting, parallel transcoding
+│   ├── large-data-processing/    # proc-: streaming, checkpointing, backpressure
+│   └── azure-service-mapping/    # Problem domain → Azure service quick lookup
+│                                  # Each subdirectory has its own index.md for domain-level navigation
 │
 ├── reference-dictionary/         # Repo-root technical glossary (single source of truth for all terms)
 │                                  # Each file = one domain; each term = stable anchor for direct linking
@@ -45,11 +64,22 @@ azure_learning/
 │   └── csharp/                   # C# language
 │       └── dotnet-multi-threading/  # .NET concurrency patterns (TAP, EAP, APM, sync primitives)
 │
-├── articles/                     # Source articles organized by platform
-│   ├── medium/                   # Medium.com articles (primary source for system-design-architecture/)
-│   ├── linkedin/                 # LinkedIn articles
-│   ├── personal-blogs/           # Personal/independent blog posts
-│   └── substack/                 # Substack articles
+├── articles/                     # Source articles organized by domain
+│   ├── databases/                # Query optimization, PostgreSQL, SQL design
+│   ├── messaging/                # Kafka patterns, offset strategies, distributed log
+│   ├── agentic-ai/               # Multi-agent, loops, harness, accountability
+│   ├── system-design-interview/  # Roadmaps, scenario questions, interview prep
+│   ├── case-studies/             # Uber, data mesh, URL shortener, news feed
+│   ├── software-architecture/    # Design patterns, architecture principles, Docker
+│   ├── api-network/              # API design, rate limiting, deprecation
+│   ├── caching/                  # Redis internals, hot-key workloads
+│   ├── cqrs-fintech/             # Payment systems, CQRS, gateways
+│   ├── concurrency-transactions/ # Double-booking, causal consistency
+│   ├── performance/              # Java/Go/Rust benchmarks
+│   ├── resilience/               # Circuit breakers, outages, defensive coding
+│   ├── security/                 # HSM bottlenecks, authentication
+│   ├── stream-processing/        # Flink, async patterns
+│   └── jvm-runtime/              # JVM memory internals
 │
 ├── videos/                       # Video-based learning resources with structured notes
 │
@@ -69,7 +99,7 @@ azure_learning/
 | `system-design-architecture/` | System design problems mapped to strategies with ID-based references | Problem→strategy→tradeoff analyses with source references | `articles/` (sources), `reference-dictionary/` (terms), `architecture-azure/` (services) |
 | `reference-dictionary/` | Single-source glossary for ALL technical terms across the repo | Domain-specific term definitions with anchors | Used by ALL other directories |
 | `programming-languages/` | Programming language ecosystems, patterns & concurrency | Language-specific docs, best practices, concurrency patterns | `reference-dictionary/dotnet-multithreading.md` |
-| `articles/` | Original source material | Saved articles organized by platform | Upstream source for `system-design-architecture/` takeaways |
+| `articles/` | Original source material | Saved articles organized by domain | Upstream source for `system-design-architecture/` takeaways |
 | `videos/` | Video-based learning notes | Structured notes with timestamps & key points | `architecture-general/`, `system-design-architecture/` |
 | `site-reliability-engineering/` | SRE practices & infographics | Reference links, visual resources | `architecture-general/07-reliability-performance-operations/` |
 | `unstructured-resources/` | Raw notes, evolving ideas | Unstructured drafts before formal placement | — (incubator zone) |
@@ -107,7 +137,7 @@ Use this two-stage classifier to determine where content belongs:
 | System-design problem with solution strategy + trade-offs + source reference | `system-design-architecture/` |
 | Term definition or glossary entry | `reference-dictionary/` |
 | Reusable architectural pattern, decision guide, or case study | `architecture-general/` |
-| Source article | `articles/<platform>/` |
+| Source article | `articles/<domain>/` |
 | Video note | `videos/` |
 | Raw or evolving note | `unstructured-resources/` |
 
@@ -199,7 +229,7 @@ See [`agent_tools/README.md`](../agent_tools/README.md) for the full OKF agent g
 | General → Azure | `> **Azure Implementation**: See [Service Name](../architecture-azure/category/service/)` | `> **Azure Implementation**: See [Event Hubs](../architecture-azure/integration/event-hubs/)` |
 | Azure → General | `> **General Pattern**: [Pattern Name](../architecture-general/section/)`<br>`> **Taxonomy**: §X.X Section Name` | `> **Taxonomy**: §3.3 Event-Driven & Messaging` |
 | Any → Dictionary | `[Term Name](../reference-dictionary/domain-file.md#anchor)` | `[Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker)` |
-| System Design → Article | `> **Source**: [Article Title](../articles/platform/article/)` | `> **Source**: [Circuit Breaker](../articles/medium/your-circuit-breaker-lying-to-you.md)` |
+| System Design → Article | `> **Source**: [Article Title](../articles/domain/article/)` | `> **Source**: [Circuit Breaker](../articles/resilience/your-circuit-breaker-lying-to-you.md)` |
 | System Design → Azure | `> **Azure Services**: [Service](../architecture-azure/category/service/)` | `> **Azure Services**: [Cosmos DB](../architecture-azure/data/databases/cosmos-db/)` |
 
 ### Cross-Reference Map (How Directories Interlink)
