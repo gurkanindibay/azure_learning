@@ -16,6 +16,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
+| asyncio | [`#asyncio`](#asyncio) |
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
 | Causal Consistency | [`#causal-consistency`](#causal-consistency) |
@@ -26,6 +27,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Double-Booking Problem | [`#double-booking-problem`](#double-booking-problem) |
 | Exclusion Constraint | [`#exclusion-constraint`](#exclusion-constraint) |
 | Fencing Token | [`#fencing-token`](#fencing-token) |
+| Global Interpreter Lock (GIL) | [`#global-interpreter-lock`](#global-interpreter-lock) |
 | Inventory Reservation | [`#inventory-reservation`](#inventory-reservation) |
 | Isolation Levels | [`#isolation-levels`](#isolation-levels) |
 | Lamport Clocks | [`#lamport-clocks`](#lamport-clocks) |
@@ -551,3 +553,43 @@ Selling more units of a product than are actually in stock because concurrent ch
 ### Also see
 - [Double-Booking Problem](#double-booking-problem) · [Atomic Conditional Update](#atomic-conditional-update) · [Inventory Reservation](#inventory-reservation)
 
+---
+
+## asyncio
+
+Python’s standard-library **asynchronous I/O framework** for writing single-threaded concurrent code using coroutines and an event loop.
+
+### Key Characteristics
+- **Cooperative multitasking**: coroutines yield control at `await` points, allowing one thread to multiplex many I/O-bound tasks.
+- **Single-threaded**: does not bypass Python’s [Global Interpreter Lock](#global-interpreter-lock) for CPU-bound work.
+- **Built-in primitives**: `async`/`await`, `asyncio.gather`, `asyncio.Queue`, `asyncio.Lock`.
+
+### When to Use
+- High-concurrency I/O-bound services (network clients, web servers, database drivers).
+- Many simultaneous connections where each connection spends most of its time waiting.
+
+### When NOT to Use
+- CPU-bound workloads — the GIL still serializes Python bytecode execution.
+- As a drop-in replacement for threads or multiprocessing without measuring where time is actually spent.
+
+**Also see**: [Global Interpreter Lock](#global-interpreter-lock) · [Pessimistic Locking](#pessimistic-locking)
+
+---
+
+## Global Interpreter Lock
+
+A **mutex** in CPython that ensures only one thread executes Python bytecode at a time. It protects access to Python objects and simplifies memory management, but it prevents true thread-level parallelism for CPU-bound Python code.
+
+### Key Characteristics
+- **Per-process**: each Python process has its own GIL.
+- **Bytecode-level**: the lock is held around Python bytecode execution, not around native code or I/O syscalls.
+- **Workarounds**: multiprocessing (separate processes), C extensions that release the GIL, or rewriting the hot path in a GIL-free language.
+
+### When to Use
+- The GIL is not a choice — it is a property of CPython. Design around it when using CPython for CPU-bound concurrency.
+
+### When NOT to Use
+- Do not try to "remove" the GIL by adding more threads to a CPU-bound workload.
+- Do not assume asyncio solves CPU parallelism; it solves I/O concurrency.
+
+**Also see**: [asyncio](#asyncio) · [Pessimistic Locking](#pessimistic-locking) · [Two-Phase Commit (2PC)](#two-phase-commit-2pc)

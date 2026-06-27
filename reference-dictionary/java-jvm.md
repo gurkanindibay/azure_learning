@@ -26,6 +26,7 @@ timestamp: 2026-06-15T00:00:00Z
 | Minor GC | [`#minor-gc`](#minor-gc) |
 | Major GC | [`#major-gc`](#major-gc) |
 | Full GC | [`#full-gc`](#full-gc) |
+| GC Pause | [`#gc-pause`](#gc-pause) |
 | G1GC | [`#g1gc`](#g1gc) |
 | ZGC | [`#zgc`](#zgc) |
 | OutOfMemoryError | [`#outofmemoryerror`](#outofmemoryerror) |
@@ -158,6 +159,29 @@ A **garbage collection event that cleans the Old Generation**. Slower than Minor
 A **garbage collection event that cleans the entire heap**, including both Young and Old Generations. It is the most expensive type of GC and can cause long or noticeable application pauses.
 
 **Also see**: [Major GC](#major-gc), [OutOfMemoryError](#outofmemoryerror)
+
+---
+
+## GC Pause
+
+### gc-pause
+
+A **stop-the-world pause** during which application threads are suspended while the garbage collector reclaims memory. GC pauses are the dominant cause of tail-latency spikes in managed runtimes when collection events are long or frequent.
+
+### Key Characteristics
+- **Stop-the-world**: most collectors pause all application threads during at least part of the collection.
+- **Tail-latency sensitive**: p99/p99.9 latency often moves more than median latency because of outliers caused by pauses.
+- **Collector-dependent**: G1GC targets a maximum pause time; ZGC aims for sub-10 ms pauses; Full GC events are typically the longest.
+
+### When to Use
+- N/A — GC pauses are a property of managed runtimes, not a feature to adopt.
+- Measure them with GC logs, JFR, or APM tools before deciding on tuning or language changes.
+
+### When NOT to Use
+- Do not ignore GC pause metrics when latency SLAs are strict.
+- Do not assume "no GC" is the only fix; tuning, collector selection, and heap sizing often suffice.
+
+**Also see**: [Garbage Collection](#garbage-collection), [Full GC](#full-gc), [G1GC](#g1gc), [ZGC](#zgc)
 
 ---
 

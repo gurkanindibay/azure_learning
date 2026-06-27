@@ -42,6 +42,7 @@ timestamp: 2026-06-14T00:00:00Z
 | M:N Scheduling | [`#mn-scheduling`](#mn-scheduling) |
 | Thread Pinning | [`#thread-pinning`](#thread-pinning) |
 | Carrier Thread | [`#carrier-thread`](#carrier-thread) |
+| Tokio | [`#tokio`](#tokio) |
 | Semantic Layer | [`#semantic-layer`](#semantic-layer) |
 | Vertical vs Horizontal Scaling | [`#vertical-vs-horizontal-scaling`](#vertical-vs-horizontal-scaling) |
 | CAP Theorem | [`#cap-theorem`](#cap-theorem) |
@@ -68,6 +69,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Monolith | [`#monolith`](#monolith) |
 | Distributed Monolith | [`#distributed-monolith`](#distributed-monolith) |
 | Deployment Coupling | [`#deployment-coupling`](#deployment-coupling) |
+| Native Extension | [`#native-extension`](#native-extension) |
 | Progressive Delivery | [`#progressive-delivery`](#progressive-delivery) |
 | Feature Flag | [`#feature-flag`](#feature-flag) |
 | A/B Testing | [`#ab-testing`](#ab-testing) |
@@ -589,6 +591,29 @@ Virtual Thread lifecycle on a carrier:
 - [Virtual Threads](#virtual-threads) — the feature carrier threads support
 - [Thread Pinning](#thread-pinning) — failure mode where carrier threads get stuck
 - [Goroutine](#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
+
+---
+
+## Tokio
+
+**Tokio** — Rust’s asynchronous runtime, providing the event loop, task scheduler, I/O driver, and timer infrastructure needed to run async Rust code in production.
+
+### Key Characteristics
+- **Work-stealing scheduler**: tasks are distributed across a pool of OS threads; idle threads steal work from busy threads.
+- **Async/await**: built on Rust `async`/`await` and `Future`; the runtime polls tasks to completion.
+- **Zero-cost abstractions**: async code compiles to state machines without pervasive runtime allocation.
+- **Ecosystem**: `tokio::sync` (channels, locks), `tokio::time`, `tokio::net`, and `tokio::task` cover most async service needs.
+
+### When to Use
+- High-concurrency network services in Rust where many connections are handled concurrently on a small thread pool.
+- CPU- and latency-sensitive services that benefit from Rust’s ownership model plus async I/O.
+
+### When NOT to Use
+- For blocking or CPU-bound work without spawning it on a dedicated thread pool (`spawn_blocking`), or it will stall the async runtime.
+- As a default choice when the team has no Rust operational experience; the safety gains come with a learning curve.
+
+### Also see
+- [Virtual Threads](#virtual-threads) · [Goroutine](#goroutine) · [Event Loop](#event-loop) · [Global Interpreter Lock](../reference-dictionary/data-concurrency.md#global-interpreter-lock)
 
 ---
 
@@ -1265,6 +1290,29 @@ Always avoid in microservices architectures. Use async events, versioned API con
 ### Also see
 - [Distributed Monolith](#distributed-monolith) · [Microservices](#microservices) · [Database Per Service](#database-per-service)
 - [Microservices & Service Design — Key Takeaways](../system-design-architecture/48-svc-distributed-monolith-key-takeaways.md#svc-02-deployment-coupling-via-synchronous-call-chains)
+
+---
+
+## Native Extension
+
+A **compiled module** (written in a language such as Rust, C, C++, or Cython) that is called from a higher-level runtime to execute a hot or CPU-bound function without rewriting the entire application.
+
+### Key Characteristics
+- **Surgical optimization**: targets a single bottleneck function or small module rather than the whole service.
+- **FFI boundary**: the extension exposes a callable interface to the host runtime (e.g., Python via PyO3/Cython, Node.js via N-API, Ruby via C extensions).
+- **Lower operational churn**: the existing service boundary, deployment pipeline, and team fluency stay mostly intact.
+
+### When to Use
+- A profile shows that one CPU-bound function dominates latency or cost.
+- The service changes frequently and a full rewrite would impose an unacceptable velocity tax.
+- The team needs most of the rewrite’s performance win with a fraction of its cost.
+
+### When NOT to Use
+- When the bottleneck is I/O, an algorithm, or a missing index — fixing the root cause is cheaper than adding a foreign build.
+- When the FFI and build-tooling complexity outweighs the savings (small or rarely executed functions).
+
+### Also see
+- [Strangler Fig](#strangler-fig) · [Anti-Corruption Layer](#anti-corruption-layer) · [Tokio](#tokio) · [Microservices Runtime Performance — Python to Rust Rewrite Takeaways](../system-design-architecture/60-perf-key-takeaways.md#perf-11-native-extension-as-middle-path)
 
 ---
 
