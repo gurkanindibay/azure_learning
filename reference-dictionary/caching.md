@@ -31,6 +31,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
 | Write-Through | [`#write-through`](#write-through) |
 | Hot Key | [`#hot-key`](#hot-key) |
+| Counter Sharding | [`#counter-sharding`](#counter-sharding) |
+| Hot Key Detection | [`#hot-key-detection`](#hot-key-detection) |
+| Adaptive Request Routing | [`#adaptive-request-routing`](#adaptive-request-routing) |
+| Dedicated Hot-Key Tier | [`#dedicated-hot-key-tier`](#dedicated-hot-key-tier) |
 | Timeline Cache | [`#timeline-cache`](#timeline-cache) |
 | Celebrity Cache | [`#celebrity-cache`](#celebrity-cache) |
 
@@ -327,8 +331,11 @@ A single cache key that receives a disproportionately large share of traffic, ca
 |:---|:---|:---|
 | **Key sharding / salting** | Append a random suffix to spread writes across N keys | Reads must aggregate; ordering may be lost |
 | **Local caching** | Cache the hot value in application memory | Stale reads; replica consistency challenge |
-| **Read replicas** | Direct read traffic to replicas | Writes still hit the primary; replication lag |
+| **Read replicas / hot-key replication** | Direct read traffic to replicas | Writes still hit the primary; replication lag |
 | **Request coalescing** | Collapse in-flight identical reads into one backend call | Helps read-heavy hot keys, not write-heavy ones |
+| **Counter sharding** | Split write-heavy counters into N sub-keys | Reads must aggregate; see [Counter Sharding](#counter-sharding) |
+| **Hot-key detection** | Auto-detect viral keys and promote them | Adds monitoring/routing complexity; see [Hot Key Detection](#hot-key-detection) |
+| **Dedicated hot-key tier** | Isolate hot keys on separate resources | Operational complexity; see [Dedicated Hot-Key Tier](#dedicated-hot-key-tier) |
 
 **Also see**: [Request Coalescing](#request-coalescing) · [Celebrity Cache](#celebrity-cache) · [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting) · [api-09: Hot Key Problem in Distributed Rate Limiters](../system-design-architecture/04-api-network-design.md#api-09-hot-key-problem-in-distributed-rate-limiters)
 
@@ -373,3 +380,91 @@ A dedicated cache tier for high-follower accounts whose content is read by milli
 - When read-time merging complexity outweighs fanout savings
 
 **Also see**: [Timeline Cache](#timeline-cache) · [Request Coalescing](#request-coalescing)
+
+---
+
+## Counter Sharding
+
+Splitting a single write-heavy hot key (typically a counter) into **N sub-keys** so that writes are distributed across multiple shards or nodes. Reads aggregate the shards to reconstruct the current value.
+
+### Key Characteristics
+- **Write distribution**: 100K writes/sec on one key becomes 1K writes/sec across 100 shards
+- **Read aggregation**: A read issues N GETs and sums them — adds latency and bandwidth
+- **Non-atomic aggregate**: The summed value is a point-in-time snapshot, not a transactional read
+- **Random shard selection**: Writers pick a shard uniformly to spread load
+
+### When to Use
+- Write-heavy hot keys such as like counters, view counters, inventory counters
+- When the read rate is low enough that aggregation cost is acceptable
+
+### When NOT to Use
+- Read-heavy hot keys — replication is cheaper (see [Hot Key](#hot-key))
+- When the counter must be read atomically or with strong consistency
+
+**Also see**: [Hot Key](#hot-key) · [Request Coalescing](#request-coalescing)
+
+---
+
+## Hot Key Detection
+
+Real-time identification of keys whose request rate is rapidly becoming a bottleneck, usually by counting accesses per key over a sliding window and comparing against a threshold.
+
+### Key Characteristics
+- **Sliding-window counters**: Per-key access counts reset periodically to catch bursts
+- **Threshold-based promotion**: A key is flagged "hot" when its count crosses a configured threshold
+- **Self-healing trigger**: Detected hot keys can be auto-replicated, moved to a hot tier, or cached locally
+- **Approximate counting**: At scale, frequency sketches (e.g., Count-Min Sketch) reduce memory overhead
+
+### When to Use
+- Traffic patterns are unpredictable (viral content, trending products)
+- You want automated mitigation rather than on-call manual intervention
+
+### When NOT to Use
+- Known, stable hot keys — pre-provision replicas instead of detecting them
+- When false positives would cause expensive, unnecessary reconfiguration
+
+**Also see**: [Hot Key](#hot-key) · [Dedicated Hot-Key Tier](#dedicated-hot-key-tier)
+
+---
+
+## Adaptive Request Routing
+
+Routing read requests for a hot key to **dynamically chosen replicas or tiers** based on real-time load, key temperature, or health signals, rather than always hashing to the same shard.
+
+### Key Characteristics
+- **Load-aware routing**: Requests prefer nodes with lower latency or queue depth
+- **Hot-key registry**: A control plane tracks currently hot keys and their replica locations
+- **Failover**: If a replica melts, traffic shifts to other replicas or the primary
+- **Coupled with detection**: Usually driven by hot-key detection output
+
+### When to Use
+- Read-heavy hot keys with many replicas
+- When a static hash ring cannot absorb traffic spikes
+
+### When NOT to Use
+- Uniform workloads where consistent hashing is sufficient
+- When routing state itself would become a bottleneck or single point of failure
+
+**Also see**: [Hot Key](#hot-key) · [Hot Key Detection](#hot-key-detection)
+
+---
+
+## Dedicated Hot-Key Tier
+
+A separate cache or serving tier reserved for **hot keys only**, with its own replicas, memory, and bandwidth, so that viral traffic cannot starve normal (cold/long-tail) queries.
+
+### Key Characteristics
+- **Resource isolation**: Hot and cold keys do not share connection pools, CPU, or network
+- **Independent scaling**: The hot tier can be scaled out without touching the normal tier
+- **Traffic classification**: A proxy or client decides whether a key/request belongs to the hot tier
+- **Blast-radius reduction**: A spike in one celebrity key does not degrade latency for all other keys
+
+### When to Use
+- Highly skewed workloads where a small set of keys dominates traffic
+- When mixed hot/cold traffic causes connection pool exhaustion or noisy-neighbor issues
+
+### When NOT to Use
+- Uniform access patterns — a second tier adds operational overhead with no benefit
+- When the classification/routing layer is more complex than the hot-key problem itself
+
+**Also see**: [Hot Key](#hot-key) · [Celebrity Cache](#celebrity-cache) · [Hot Key Detection](#hot-key-detection)
