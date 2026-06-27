@@ -262,7 +262,7 @@ The process of **detecting and repairing inconsistencies** between replicas in a
 - Strongly consistent systems where writes are synchronously replicated (no divergence to repair)
 - When repair traffic would itself overwhelm the cluster
 
-**Also see**: [Merkle Tree](#merkle-tree), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem)
+**Also see**: [Merkle Tree](#merkle-tree), [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem)
 
 ---
 
@@ -284,7 +284,7 @@ A broad category of data stores that **relax parts of the relational model** —
 - When complex joins, strong ACID transactions and referential integrity are core requirements
 - As a default choice without understanding the consistency and operational trade-offs
 
-**Also see**: [ACID Transactions](data-concurrency.md#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Sharding](data-concurrency.md#sharding)
+**Also see**: [ACID Transactions](data-concurrency.md#acid-transactions), [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem), [Sharding](data-concurrency.md#sharding)
 
 ---
 

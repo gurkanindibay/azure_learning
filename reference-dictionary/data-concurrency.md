@@ -394,7 +394,7 @@ A data structure designed so that **concurrent updates on different replicas can
 - When strong consistency or linearizability is required (e.g., financial balances)
 - When the data type cannot be expressed as a CRDT without losing business semantics
 
-**Also see**: [ACID Transactions](#acid-transactions), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Eventual Consistency](cqrs-event-driven.md)
+**Also see**: [ACID Transactions](#acid-transactions), [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem), [Eventual Consistency](cqrs-event-driven.md)
 
 ---
 

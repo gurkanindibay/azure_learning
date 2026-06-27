@@ -54,7 +54,7 @@ The 1:1 model is an architectural ceiling, not a tuning problem. There are three
 
 > **Key insight**: The app was not broken — the threading model had a hidden ceiling that only reveals itself under real I/O concurrency. Thread dumps, not CPU or DB metrics, expose it.
 
-**Cross-reference**: [Stack Memory](../../reference-dictionary/java-jvm.md#stack-memory) · [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads)
+**Cross-reference**: [Stack Memory](../../reference-dictionary/java-jvm.md#stack-memory) · [Virtual Threads](../../reference-dictionary/java-jvm.md#virtual-threads)
 
 ---
 
@@ -154,7 +154,7 @@ Detection signals:
 
 > **Key insight**: Virtual threads are a retrofit on a 30-year-old platform. The performance model is different from Go channels, which were designed to be scheduler-aware from the start. Go developers never think about pinning.
 
-**Cross-reference**: [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads) · [Thread Pinning](../../reference-dictionary/architecture-patterns.md#thread-pinning) · [Carrier Thread](../../reference-dictionary/architecture-patterns.md#carrier-thread)
+**Cross-reference**: [Virtual Threads](../../reference-dictionary/java-jvm.md#virtual-threads) · [Thread Pinning](../../reference-dictionary/java-jvm.md#thread-pinning) · [Carrier Thread](../../reference-dictionary/java-jvm.md#carrier-thread)
 
 ---
 
@@ -210,4 +210,4 @@ Benchmark results from a simple HTTP → Postgres service (10,000 concurrent req
 
 > **Key insight**: Enable virtual threads before anything else. The ROI of that one line is extraordinary. But the gap to Go is still real — for services that need to scale hard under I/O pressure, Go's numbers come without any tuning.
 
-**Cross-reference**: [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads) · [JVM Memory & GC Takeaways](jvm-runtime/jvm-memory-gc.md) · [Microservices Runtime Performance](performance/microservices-runtime-performance.md)
+**Cross-reference**: [Virtual Threads](../../reference-dictionary/java-jvm.md#virtual-threads) · [JVM Memory & GC Takeaways](jvm-runtime/jvm-memory-gc.md) · [Microservices Runtime Performance](performance/microservices-runtime-performance.md)

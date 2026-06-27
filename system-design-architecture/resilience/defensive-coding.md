@@ -39,7 +39,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Strict validation can reject edge-case valid inputs and requires clear error feedback to guide clients; applying full validation at every internal service layer adds latency and cognitive overhead without meaningful security gain.
 
-**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Input Validation](../../reference-dictionary/architecture-patterns.md#input-validation) · [Parameterized Query](../../reference-dictionary/architecture-patterns.md#parameterized-query) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Input Validation](../../reference-dictionary/resilience.md#input-validation) · [Parameterized Query](../../reference-dictionary/resilience.md#parameterized-query) · [Defensive Programming](../../reference-dictionary/resilience.md#defensive-programming)
 
 ---
 
@@ -54,7 +54,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Assertions disabled in production provide zero runtime protection — an invariant that passes during testing can still be violated in prod; over-asserting on frequently changing code slows iteration when refactoring legitimately breaks assumptions.
 
-**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defensive Programming](../../reference-dictionary/resilience.md#defensive-programming)
 
 ---
 
@@ -84,4 +84,4 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Frequent major upgrades risk API-breaking changes and require regression testing; pinning transitive versions increases maintenance burden and can cause version conflicts with other library requirements over time.
 
-**Cross-reference**: [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Least Privilege](software-architecture/architecture-principles.md#arch-01-least-privilege) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Least Privilege](software-architecture/architecture-principles.md#arch-01-least-privilege) · [Defensive Programming](../../reference-dictionary/resilience.md#defensive-programming)

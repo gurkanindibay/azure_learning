@@ -36,6 +36,11 @@ timestamp: 2026-06-15T00:00:00Z
 | Java Flight Recorder | [`#java-flight-recorder`](#java-flight-recorder) |
 | HashMap | [`#hashmap`](#hashmap) |
 | Treeification | [`#treeification`](#treeification) |
+| Virtual Threads | [`#virtual-threads`](#virtual-threads) |
+| Leyden AOT | [`#leyden-aot`](#leyden-aot) |
+| Helidon SE | [`#helidon-se`](#helidon-se) |
+| Thread Pinning | [`#thread-pinning`](#thread-pinning) |
+| Carrier Thread | [`#carrier-thread`](#carrier-thread) |
 
 ---
 
@@ -321,3 +326,164 @@ The **internal Java HashMap mechanism** that converts a bucket's linked-list col
 - Do not assume small HashMaps are protected; below capacity 64 they resize rather than treeify.
 
 **Also see**: [HashMap](#hashmap), [Red-Black Tree](../reference-dictionary/databases.md#red-black-tree)
+
+---
+
+## Virtual Threads
+
+**Project Loom Virtual Threads** — lightweight JVM-managed threads introduced in Java 21. Unlike platform threads (1:1 mapped to OS threads, ~1 MB stack each), virtual threads are managed by the JVM and mapped many-to-few onto platform threads (~hundreds of bytes each). When a virtual thread blocks on I/O, the JVM unmounts it and reassigns the carrier platform thread to another virtual thread.
+
+### Key Characteristics
+- Available since Java 21 (JEP 444) as a standard feature
+- `Thread.ofVirtual().start(task)` or `Executors.newVirtualThreadPerTaskExecutor()`
+- No pool needed — virtual threads are cheap enough to create one-per-task
+- Automatic unmounting on blocking I/O (socket read/write, `Thread.sleep()`, `LockSupport.park()`)
+- **Pinning risk**: `synchronized` blocks and native calls (JNI) pin the virtual thread to its carrier, blocking the OS thread
+
+### When to Use
+- High-concurrency I/O-bound services (HTTP handlers, database calls, message consumers)
+- Replacing reactive/async programming models (callback hell) with synchronous-style code
+- When you need goroutine-level concurrency scale in Java without rearchitecting to reactive streams
+
+### When NOT to Use
+- CPU-bound workloads (virtual threads don't add CPU parallelism — use platform threads + ForkJoinPool)
+- Code with pervasive `synchronized` blocks (pinning degrades throughput)
+- Pre-Java 21 runtimes (not available; use reactive or CompletableFuture)
+
+### Also see
+- [Task / async-await](dotnet-multithreading.md#task) — .NET equivalent async pattern
+- [Leyden AOT](#leyden-aot) — complementary startup optimization
+- [Helidon SE](#helidon-se) — framework that uses virtual threads for request handling
+
+---
+
+## Leyden AOT
+
+**Project Leyden Ahead-of-Time Compilation** — a JVM feature that captures JIT-optimized native code during training runs and replays it on subsequent starts via an AOT cache. Reduces the JVM warmup penalty (interpreting bytecode, C1/C2 profiling) while retaining peak throughput.
+
+### Key Characteristics
+- Two-phase workflow: **training** (record) → **production** (replay from cache)
+- JVM flags: `-XX:AOTTraining` (record), `-XX:AOTCache` (replay)
+- Cache is version-specific: same JDK version, JVM flags, and classpath required
+- Complementary to GraalVM Native Image (Leyden improves JVM startup; GraalVM compiles ahead-of-time to a standalone binary)
+- Part of Project Leyden (JEP 483), targeting JDK 24+
+
+### When to Use
+- Serverless / containerized Java services with cold-start constraints
+- Auto-scaling scenarios where new instances must reach peak throughput quickly
+- Services with predictable code paths (training covers production behavior)
+
+### When NOT to Use
+- Long-running monolithic services with stable load (JIT eventually reaches similar peak)
+- Frequently changing codebases (cache invalidation overhead)
+- Environments where cache portability is required (cache is JDK-version-specific)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — complementary concurrency optimization
+- [Helidon SE](#helidon-se) — lightweight framework that benefits from AOT
+
+---
+
+## Helidon SE
+
+**Helidon SE** — Oracle's lightweight, reactive Java microservices framework. Helidon SE (Standard Edition) provides a minimal web server without dependency injection, designed for small footprint and fast startup. Helidon 4 uses Java virtual threads for request handling, making blocking code efficient at high concurrency.
+
+### Key Characteristics
+- Two editions: **SE** (minimal, no DI) and **MP** (MicroProfile, full Jakarta EE)
+- Helidon SE WebServer is a compact, programmatic API — no annotations, no classpath scanning
+- Built-in support for virtual threads (Helidon 4+)
+- ~5 MB hello-world JAR; fast startup even without AOT
+- Native integration with Oracle JDK and Leyden AOT
+
+### When to Use
+- Small, high-throughput HTTP services where framework overhead matters
+- When comparing Java microservice performance to Go (Helidon SE is the closest Java equivalent to Go's `net/http` in terms of framework weight)
+- Greenfield services that want virtual threads without Spring Boot's dependency graph
+
+### When NOT to Use
+- Teams invested in Spring Boot ecosystem (Spring Boot 3.2+ also supports virtual threads)
+- Applications requiring extensive middleware (Helidon MP is the fuller alternative)
+- When you need a large ecosystem of third-party integrations (Spring has more)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the concurrency model Helidon SE uses
+- [Leyden AOT](#leyden-aot) — complementary startup optimization
+- [Azure App Service](azure-services.md#app-service) — deployment target
+
+---
+
+## Thread Pinning
+
+**Thread Pinning** — a failure mode in JVM Virtual Threads where a virtual thread becomes permanently bound to its carrier OS thread and **cannot be unmounted**, even when blocked on I/O. The carrier thread is held captive, defeating the purpose of virtual threads and reintroducing the platform-thread starvation problem.
+
+Pinning occurs in two situations:
+1. The virtual thread holds a `synchronized` monitor lock while blocking
+2. The virtual thread executes a native method (JNI/FFI)
+
+```java
+// ❌ PINS the carrier thread — OS thread blocked until lock released
+synchronized(lock) {
+    result = db.query();  // IO here holds the carrier thread hostage
+}
+
+// ✅ Virtual thread parks correctly — carrier thread freed immediately
+lock.lock();
+try {
+    result = db.query();  // virtual thread unmounted; carrier runs other VTs
+} finally {
+    lock.unlock();
+}
+```
+
+### Key Characteristics
+- Silent by default — pinning does not throw an exception or produce a log warning
+- Detection: `-Djdk.tracePinnedThreads=full` JVM flag emits stack traces on pin events
+- JFR event `jdk.VirtualThreadPinned` available for monitoring
+- Common in legacy code using `synchronized` on database/HTTP I/O paths
+- Go channels and goroutines have no equivalent pinning risk — scheduler-awareness is native
+
+### When to Use
+- Understanding thread pinning is required before enabling virtual threads in any service with existing synchronized blocks
+
+### When NOT to Use
+- (Not a pattern to use — a failure mode to detect and eliminate)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the feature thread pinning undermines
+- [Carrier Thread](#carrier-thread) — the OS thread that gets pinned
+- [Goroutine](architecture-patterns.md#goroutine) — Go's scheduler-native alternative with no pinning concept
+
+---
+
+## Carrier Thread
+
+**Carrier Thread** — in the JVM Virtual Threads model, a carrier thread is the **OS-level platform thread** that a virtual thread is currently mounted onto and executing on. The JVM scheduler mounts and unmounts virtual threads onto carrier threads as they become runnable or block.
+
+```
+Virtual Thread lifecycle on a carrier:
+
+  [Runnable] ──mount──▶ [Running on Carrier-1] ──IO block──▶ [Parked]
+       ▲                                                          │
+       └──────────────────────unmount◀────────────────────────────┘
+  Carrier-1 is immediately free to run another virtual thread
+```
+
+### Key Characteristics
+- Carrier threads form a fixed pool (default: `ForkJoinPool`, size = CPU count)
+- A virtual thread is only consuming CPU when mounted on a carrier
+- Unmounting on I/O block is the core mechanism enabling high concurrency — carrier threads are never wasted waiting
+- **Pinning breaks unmounting**: if the virtual thread holds a `synchronized` lock, the carrier cannot be freed (see [Thread Pinning](#thread-pinning))
+- Configurable via `jdk.virtualThreadScheduler.parallelism` system property
+
+### When to Use
+- When diagnosing virtual thread performance: check carrier thread pool saturation, not virtual thread count
+- Tuning: `jdk.virtualThreadScheduler.parallelism` controls the carrier pool size for CPU-heavy virtual-thread workloads
+
+### When NOT to Use
+- Carrier threads are an implementation detail of the JVM; application code should not interact with them directly
+
+### Also see
+- [Virtual Threads](#virtual-threads) — the feature carrier threads support
+- [Thread Pinning](#thread-pinning) — failure mode where carrier threads get stuck
+- [Goroutine](architecture-patterns.md#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
+

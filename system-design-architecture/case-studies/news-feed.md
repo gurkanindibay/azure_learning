@@ -149,7 +149,7 @@ timestamp: 2026-06-20T00:00:00Z
 | **Complexity** | Two consistency paths require clear observability and alerts on fanout lag |
 
 > **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) — Consistency models
-> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem), [Write-Through](../../reference-dictionary/caching.md#write-through)
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/data-architecture.md#cap-theorem), [Write-Through](../../reference-dictionary/caching.md#write-through)
 > **Azure**: [Azure Cosmos DB](../../architecture-azure/data/databases/) consistency levels, [Azure Event Hubs](../../architecture-azure/integration/event-hubs/) for fanout
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 

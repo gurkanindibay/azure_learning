@@ -119,7 +119,7 @@ timestamp: 2026-06-26T00:00:00Z
 | **Storage lifecycle** | Set expiry/lifecycle rules on the object store to prevent unbounded growth |
 
 > **Also see**: [Message Brokers & Async — broker-01](messaging/message-brokers-async.md#broker-01-broker-selection)
-> **Dictionary**: [Claim Check Pattern](../../reference-dictionary/architecture-patterns.md#claim-check)
+> **Dictionary**: [Claim Check Pattern](../../reference-dictionary/messaging.md#claim-check)
 
 ---
 

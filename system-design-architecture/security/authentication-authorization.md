@@ -13,7 +13,7 @@ timestamp: 2026-06-17T00:00:00Z
 > **Purpose**: Extract reusable architectural patterns for identity, authentication, authorization, and secure service communication.
 
 > **Also see**: [API & Network Design](api-network/api-network-design.md), [Reverse Proxy, LB & API Gateway](api-network/reverse-proxy-lb-gateway.md), [HSM & Cryptography](../../reference-dictionary/hsm-cryptography.md)
-> **Dictionary**: [Authentication](../../reference-dictionary/architecture-patterns.md#authentication), [Authorization](../../reference-dictionary/architecture-patterns.md#authorization), [JWT](../../reference-dictionary/architecture-patterns.md#jwt-json-web-token), [OAuth2](../../reference-dictionary/architecture-patterns.md#oauth2), [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls), [Zero Trust](../../reference-dictionary/architecture-patterns.md#zero-trust)
+> **Dictionary**: [Authentication](../../reference-dictionary/security-iam.md#authentication), [Authorization](../../reference-dictionary/security-iam.md#authorization), [JWT](../../reference-dictionary/security-iam.md#jwt-json-web-token), [OAuth2](../../reference-dictionary/security-iam.md#oauth2), [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls), [Zero Trust](../../reference-dictionary/security-iam.md#zero-trust)
 > **Taxonomy Reference**: §6.1 Security Foundations · §6.2 Identity Architecture · §6.3 Network Security
 
 ---

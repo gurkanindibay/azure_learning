@@ -62,7 +62,7 @@ Java virtual threads scaled better as concurrency and payload grew. At low concu
 
 **Tradeoff**: Virtual threads remove the need for reactive programming in most cases, but they are not a silver bullet — pinning (synchronized blocks, native calls) can still cause platform-thread starvation. Requires Java 21+ and framework support (Helidon 4, Spring Boot 3.2+).
 
-> **Dictionary**: [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads) · [Helidon SE](../../reference-dictionary/architecture-patterns.md#helidon-se) | **Azure**: App Service + Java 21+ runtime stack
+> **Dictionary**: [Virtual Threads](../../reference-dictionary/java-jvm.md#virtual-threads) · [Helidon SE](../../reference-dictionary/java-jvm.md#helidon-se) | **Azure**: App Service + Java 21+ runtime stack
 
 ---
 
@@ -100,7 +100,7 @@ Leyden AOT had the best peak throughput for every payload size. The largest rela
 
 **Tradeoff**: AOT caches are version-specific (JDK version, JVM flags, classpath changes invalidate the cache) and require a training phase. The cache adds deployment artifact size. For long-running services with stable load, the regular JIT eventually reaches similar peak throughput.
 
-> **Dictionary**: [Leyden AOT](../../reference-dictionary/architecture-patterns.md#leyden-aot) | **Azure**: Relevant for Azure Container Apps and Azure Functions (Java) cold-start optimization
+> **Dictionary**: [Leyden AOT](../../reference-dictionary/java-jvm.md#leyden-aot) | **Azure**: Relevant for Azure Container Apps and Azure Functions (Java) cold-start optimization
 
 ---
 

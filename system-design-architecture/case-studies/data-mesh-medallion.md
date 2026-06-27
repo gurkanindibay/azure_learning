@@ -51,7 +51,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Decentralization promises speed and autonomy vs. the reality that decentralization without discipline becomes "chaos with documentation."
 
-> **Dictionary**: [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Mesh](../../reference-dictionary/data-architecture.md#data-mesh), [Data Product](../../reference-dictionary/data-architecture.md#data-product), [Federated Governance](../../reference-dictionary/data-architecture.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -72,7 +72,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Requires a strong platform team and clear RACI vs. the mess of ungoverned domain autonomy.
 
-> **Dictionary**: [Practical Decentralization](../../reference-dictionary/architecture-patterns.md#practical-decentralization) · **Taxonomy**: §4 Data & Analytics, §5 Cloud Infrastructure & Platform
+> **Dictionary**: [Practical Decentralization](../../reference-dictionary/data-architecture.md#practical-decentralization) · **Taxonomy**: §4 Data & Analytics, §5 Cloud Infrastructure & Platform
 
 ---
 
@@ -93,7 +93,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Adds a central dependency and change-management process vs. metric chaos and duplicate logic.
 
-> **Dictionary**: [Semantic Layer](../../reference-dictionary/architecture-patterns.md#semantic-layer) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Semantic Layer](../../reference-dictionary/data-architecture.md#semantic-layer) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -114,7 +114,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Upfront investment in policy-as-code and tooling vs. reactive firefighting and audit risk.
 
-> **Dictionary**: [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics, §6 Security Architecture
+> **Dictionary**: [Federated Governance](../../reference-dictionary/data-architecture.md#federated-governance) · **Taxonomy**: §4 Data & Analytics, §6 Security Architecture
 
 ---
 
@@ -134,7 +134,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Multiple overlapping concepts can confuse stakeholders vs. forcing one paradigm to do everything.
 
-> **Dictionary**: [Data Fabric](../../reference-dictionary/architecture-patterns.md#data-fabric) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Fabric](../../reference-dictionary/data-architecture.md#data-fabric) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -157,7 +157,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Operational tooling and process add overhead vs. the hidden tax of untrustworthy, undocumented data.
 
-> **Dictionary**: [Data Catalog](../../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics, §7 Reliability & Performance
+> **Dictionary**: [Data Catalog](../../reference-dictionary/data-architecture.md#data-catalog) · **Taxonomy**: §4 Data & Analytics, §7 Reliability & Performance
 
 ---
 
@@ -178,7 +178,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Domain-aligned ownership simplifies accountability but requires cross-domain coordination on shared infrastructure (orchestration, catalog, security). Medallion-as-org-chart is simpler to set up initially but collapses under scale.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Data Mesh](../../reference-dictionary/data-architecture.md#data-mesh), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -199,7 +199,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: More stages mean better clarity for producers vs. more surface area for consumers to navigate and for orchestration to manage. The three-layer simplicity is lost, but the alternative is undocumented chaos.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Catalog](../../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Data Catalog](../../reference-dictionary/data-architecture.md#data-catalog) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -220,7 +220,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Contracts add upfront design cost and governance overhead vs. the "just write SQL" speed of direct coupling. The payoff is that a Bronze schema change no longer triggers a Slack fire drill.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Data Product](../../reference-dictionary/data-architecture.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -241,7 +241,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Streaming Medallion requires different infrastructure (stream processors, event logs) and different skills (windowing, watermarking, state management) vs. the familiar batch ETL/ELT toolchain.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
 
 ---
 
@@ -262,7 +262,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Product-oriented data management demands organizational maturity (stable teams, documentation discipline, governance) that many organizations lack. Without it, "data product" becomes a relabeling exercise.
 
-> **Dictionary**: [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Product](../../reference-dictionary/data-architecture.md#data-product), [Data Mesh](../../reference-dictionary/data-architecture.md#data-mesh), [Federated Governance](../../reference-dictionary/data-architecture.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -283,7 +283,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: A semantic layer adds another system to maintain and requires the central team to keep up with domain change velocity. Without it, metric drift erodes trust in data.
 
-> **Dictionary**: [Semantic Layer](../../reference-dictionary/architecture-patterns.md#semantic-layer), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Semantic Layer](../../reference-dictionary/data-architecture.md#semantic-layer), [Data Product](../../reference-dictionary/data-architecture.md#data-product) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
@@ -304,7 +304,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Contract enforcement adds pipeline latency (validation step) and governance overhead (contract maintenance). The alternative — runtime schema surprises — is cheaper to build but more expensive to operate.
 
-> **Dictionary**: [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
+> **Dictionary**: [Data Product](../../reference-dictionary/data-architecture.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
 
 ---
 
@@ -325,7 +325,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Over-engineering from day one wastes time on problems you may never have. Under-engineering locks you into a model that's expensive to evolve. The sweet spot is building Medallion with extension points (contract boundaries between layers, domain-aligned naming) that make evolution cheaper later.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Practical Decentralization](../../reference-dictionary/architecture-patterns.md#practical-decentralization), [Vertical vs Horizontal Scaling](../../reference-dictionary/architecture-patterns.md#vertical-vs-horizontal-scaling) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Practical Decentralization](../../reference-dictionary/data-architecture.md#practical-decentralization), [Vertical vs Horizontal Scaling](../../reference-dictionary/data-architecture.md#vertical-vs-horizontal-scaling) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
 
 ---
 

@@ -280,12 +280,12 @@ An event design pattern where events include **all the state information that do
 - Decoupling services so the producer's internal model can evolve independently of consumers (as long as the event contract holds)
 
 ### When NOT to Use
-- Event payloads would exceed broker message size limits (use [Claim Check](architecture-patterns.md#claim-check) instead)
+- Event payloads would exceed broker message size limits (use [Claim Check](messaging.md#claim-check) instead)
 - Sensitive data fields should not be broadcast to all consumers
 - The producer state is so large or varied that different consumers need entirely different subsets
 
 ### Also see
-- [Event-Driven Architecture](#event-driven-architecture) · [CQRS](#cqrs) · [Messaging: Claim Check](architecture-patterns.md#claim-check)
+- [Event-Driven Architecture](#event-driven-architecture) · [CQRS](#cqrs) · [Messaging: Claim Check](messaging.md#claim-check)
 
 ---
 
@@ -355,4 +355,4 @@ A **globally unique identifier** assigned to every business event at production 
 - When the consumer can derive idempotency from natural business keys (e.g., `order_id` + `version`)
 
 ### Also see
-- [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/architecture-patterns.md#atomic-deduplication)
+- [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)

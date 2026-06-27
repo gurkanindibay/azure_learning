@@ -145,7 +145,7 @@ There is no "CA" system in practice.
 | **CP** | Strong consistency but reduced availability during partitions. |
 | **AP** | High availability but applications must tolerate stale reads and resolve conflicts later. |
 
-> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/data-architecture.md#cap-theorem)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---

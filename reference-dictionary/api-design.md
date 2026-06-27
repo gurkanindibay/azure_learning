@@ -34,6 +34,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Deprecation Header | [`#deprecation-header`](#deprecation-header) |
 | Hierarchical Rate Limiting | [`#hierarchical-rate-limiting`](#hierarchical-rate-limiting) |
 | Sunset Header | [`#sunset-header`](#sunset-header) |
+| API Gateway | [`#api-gateway`](#api-gateway) |
+| Hotlinking | [`#hotlinking`](#hotlinking) |
+| Faceted Search | [`#faceted-search`](#faceted-search) |
 
 ---
 
@@ -246,7 +249,7 @@ A distributed hashing technique that minimizes key redistribution when nodes are
 - Interactive terminal protocols (telnet, SSH) where the original optimization was designed
 
 ### Also see
-- [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads) — concurrency model that interacts with socket I/O
+- [Virtual Threads](../reference-dictionary/java-jvm.md#virtual-threads) — concurrency model that interacts with socket I/O
 - [Azure Services: Application Gateway](../reference-dictionary/azure-services.md#application-gateway) — L7 proxy that terminates TCP connections
 
 ---
@@ -465,3 +468,74 @@ Deprecation: Sat, 01 Jan 2026 00:00:00 GMT
 - [API Versioning](#api-versioning)
 - [Migration-Driven Deprecation](#migration-driven-deprecation)
 - [api-08: Security-Triggered Forced Sunset](../system-design-architecture/04-api-network-design.md#api-08-security-triggered-forced-sunset)
+
+---
+
+## API Gateway
+
+An infrastructure component that sits between clients and backend services, providing cross-cutting concerns such as **authentication, rate limiting, request routing, SSL termination, and protocol translation**.
+
+### Key Characteristics
+
+- Single entry point for external clients
+- Centralizes auth validation, logging, and monitoring
+- Hides internal service topology
+- Often paired with load balancers and WAFs
+
+### When to Use
+
+- Multiple client types (mobile, web, third-party) access the same backend
+- Need centralized authentication, rate limiting, or routing
+
+### When NOT to Use
+
+- As a single point of failure without redundancy
+- For internal service-to-service communication (prefer service mesh or direct mTLS)
+
+### Also see
+
+- [Rate Limiting](api-design.md#rate-limiting)
+- [Reverse Proxy, LB & API Gateway](../system-design-architecture/16-reverse-proxy-lb-api-gateway.md)
+
+---
+
+## Hotlinking
+
+Directly embedding or linking to a resource hosted on another server without re-hosting it. The consuming site gets the benefit (image, video, file) while the hosting site pays the bandwidth and infrastructure costs.
+
+### Key Characteristics
+- **Bandwidth theft**: Origin server serves traffic for external sites
+- **Common targets**: Images, videos, downloadable files
+- **Prevention**: Signed URLs, referrer checks, watermarking, CDN rules
+
+### When to Use
+- Intentional sharing with explicit permission (e.g., CDN-hosted assets with hotlink protection)
+
+### When NOT to Use
+- Without permission, as it consumes the origin's resources
+- For resources whose origin must remain hidden or whose URLs should not be guessable
+
+**Also see**: [API Gateway](#api-gateway) · [CDN](../reference-dictionary/caching.md#cache-aside-pattern)
+
+---
+
+## Faceted Search
+
+A search interface that lets users refine results by applying multiple filters (facets) such as category, brand, price range, and rating.
+
+### Key Characteristics
+- Facets are derived from the current result set and update as filters are applied
+- Requires a search index that supports aggregations (e.g., Elasticsearch, Azure Cognitive Search)
+- Combines full-text relevance with structured, multi-dimensional filtering
+
+### When to Use
+- E-commerce catalogs, document repositories, and media libraries
+- Any large collection where users browse by multiple dimensions
+
+### When NOT to Use
+- Small datasets where simple keyword search is sufficient
+- When facet-computation latency exceeds user expectations
+
+### Also see
+- [API Gateway](#api-gateway)
+

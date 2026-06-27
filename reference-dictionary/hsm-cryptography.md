@@ -175,7 +175,7 @@ TLS extended so that **both the client and server present and validate each othe
 ### Also see
 
 - [TLS](#tls-transport-layer-security)
-- [Zero Trust](architecture-patterns.md#zero-trust)
+- [Zero Trust](security-iam.md#zero-trust)
 
 ---
 

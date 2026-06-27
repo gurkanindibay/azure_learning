@@ -38,6 +38,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Hot Partition | [`#hot-partition`](#hot-partition) |
 | Retry Topic | [`#retry-topic`](#retry-topic) |
 | KTable | [`#ktable`](#ktable) |
+| Competing Consumers | [`#competing-consumers`](#competing-consumers) |
+| Claim Check | [`#claim-check`](#claim-check) |
+| Atomic Deduplication | [`#atomic-deduplication`](#atomic-deduplication) |
+| Deduplication Store | [`#deduplication-store`](#deduplication-store) |
+| Distributed Commit Log | [`#distributed-commit-log`](#distributed-commit-log) |
+| Message Batching | [`#message-batching`](#message-batching) |
 
 ---
 
@@ -420,4 +426,143 @@ The **changelog-backed, locally materialised table** abstraction in Kafka Stream
 
 ### Also see
 - [Stream-Table Duality](#stream-table-duality) · [Compacted Topic](#compacted-topic) · [Kafka Transactions](#kafka-transactions)
+
+---
+
+## Competing Consumers
+
+Multiple consumers **pull from a single queue** for load-balanced processing. If one consumer is slow, others pick up the slack. Core pattern for scaling message processing horizontally.
+
+**Also see**: [Messaging](messaging.md)
+
+---
+
+## Claim Check
+
+Store a **large payload in external storage** and pass only a reference (the "claim check") in the message. The reference acts like a coat-check ticket — small enough to traverse the broker, containing all the information the consumer needs to retrieve the full payload.
+
+### Key Characteristics
+- **Payload externalised**: large binaries (images, PDFs, ML artefacts) live in S3 or equivalent object storage; the Kafka message carries only `{s3_bucket, s3_key, checksum, size_bytes, content_type}`
+- **Size threshold**: Kafka's default maximum message size is 1 MB; payloads > ~100 KB benefit from Claim Check; anything > 1 MB requires it
+- **Orphaned object problem**: if S3 upload succeeds but the Kafka send fails, the payload is stranded with no consumer — write the orphan key to a DynamoDB tracking table and run a daily Lambda cleanup job to purge unclaimed objects
+- **Lazy loading vs presigned URL**: if payload < ~50 MB, download directly in the consumer; if ≥ 50 MB, generate a time-limited S3 presigned URL and delegate streaming to downstream processors to avoid loading large bytes into consumer memory
+- **Lifecycle cost**: S3 Standard (~$0.023/GB) is ~4× cheaper than MSK EBS storage (~$0.10/GB); apply lifecycle policies to transition to S3 Glacier at 30 days and delete at 90 days
+
+### When to Use
+- Any message broker with a payload size limit (Kafka 1 MB default, SQS 256 KB)
+- Large user uploads: images, PDFs, videos, log files, ML training data
+- When payload lifetime policies (GDPR deletion, archiving) must be managed independently of the message log
+
+### When NOT to Use
+- Payloads smaller than ~10 KB where the S3 round-trip overhead outweighs the broker savings
+- Systems where strict exactly-once guarantees must span both the broker and the object store (two-phase coordination is complex)
+
+### Also see
+- [Messaging](messaging.md) · [Event Carried State Transfer](cqrs-event-driven.md#event-carried-state-transfer) · [Messaging: Compacted Topic](messaging.md#compacted-topic)
+
+---
+
+## Atomic Deduplication
+
+A pattern that prevents race conditions in idempotent message processing by using a database `INSERT` with a `UNIQUE` constraint as the deduplication check, rather than a non-atomic check-then-act sequence.
+
+```sql
+-- Atomic: only one consumer succeeds
+INSERT INTO processed_events (event_id) VALUES ('EVT-8A72F1');
+-- UNIQUE(event_id) constraint ensures atomicity
+```
+
+### Key Characteristics
+- **Database-enforced atomicity**: The database itself (not application logic) guarantees that only one INSERT for a given Event ID succeeds
+- **Eliminates check-then-act races**: No gap between "check if processed" and "mark as processed" — they are the same operation
+- **Constraint violation = already processed**: Consumers treat the UNIQUE constraint error as a signal to skip processing
+- **Portable across stores**: Works with any store that supports atomic conditional inserts (SQL UNIQUE, Redis `SETNX`, DynamoDB conditional put)
+
+### When to Use
+- At-least-once consumers where concurrent instances may process the same event
+- High-throughput systems where lock-based deduplication would create contention
+- Any consumer that must be horizontally scalable while maintaining idempotency
+
+### When NOT to Use
+- When the deduplication store does not support unique constraints or conditional writes
+- When the business update and dedup record are in different transactional scopes (use Outbox Pattern instead)
+- Single-instance consumers where a simple in-memory set suffices
+
+### Also see
+- [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Event ID](../reference-dictionary/cqrs-event-driven.md#event-id) · [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern)
+
+---
+
+## Deduplication Store
+
+A **shared, external data store** used by idempotent consumers to track which events have already been processed. It serves as the single source of truth across all consumer instances so that duplicate deliveries are recognized and skipped regardless of which instance receives the redelivery.
+
+### Key Characteristics
+- **Shared across instances**: All consumers in a group read and write to the same store — a local in-memory cache is insufficient at scale
+- **Atomic conditional inserts**: Typically backed by a database with UNIQUE constraints (relational DB, Redis `SETNX`, DynamoDB conditional put)
+- **Retention-bounded**: Entries are purged after a configurable window that exceeds Kafka's maximum redelivery window
+- **Per-event granularity**: Keyed by Event ID, not by message offset or partition
+
+### When to Use
+- Horizontally scaled consumer groups where duplicate events may land on any instance after a rebalance
+- At-least-once messaging systems (Kafka, Event Hubs, Service Bus) where redelivery is a normal occurrence
+- Payment, inventory, or order workflows where double-processing is unacceptable
+
+### When NOT to Use
+- Single-instance consumers where an in-memory `HashSet<EventId>` suffices
+- Systems with true exactly-once delivery guarantees (rare in practice)
+- When the deduplication store itself becomes a bottleneck (consider partitioning by Event ID)
+
+### Also see
+- [Atomic Deduplication](#atomic-deduplication) · [Event ID](../reference-dictionary/cqrs-event-driven.md#event-id) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern)
+
+---
+
+## Distributed Commit Log
+
+An **append-only, immutable, ordered log** distributed across multiple machines. Unlike a traditional message queue where the broker manages per-message delivery state, a distributed commit log only appends messages sequentially to on-disk logs. Consumers independently track their own read position (offset), removing coordination overhead from the broker. Apache Kafka is the canonical implementation.
+
+### Key Characteristics
+- **Append-only**: Messages are never mutated — only appended; enables sequential disk writes at near hardware limit
+- **Consumer-managed offsets**: The broker does not track who has read what — consumers commit their own progress
+- **Immutable history**: Messages persist based on retention policy (time/size), not consumption status — enables replay
+- **Partitioned**: The log is sharded into partitions for horizontal scaling across brokers
+
+### When to Use
+- Event streaming and high-throughput messaging where millions of messages per second are required
+- Systems that need event replay, audit trails, or long-term event history
+- When producers and consumers should be fully decoupled — producers never wait for consumers
+
+### When NOT to Use
+- Task queues with per-message acknowledgment and complex routing logic (RabbitMQ is a better fit)
+- Low-throughput systems where operational complexity of Kafka outweighs its benefits
+- When strict global message ordering across all partitions is required
+
+### Also see
+- [Kafka vs RabbitMQ](messaging.md#kafka-vs-rabbitmq) · [Partition](messaging.md#partition) · [Zero-Copy Transfer](#zero-copy-transfer) · [Message Batching](#message-batching)
+
+---
+
+## Message Batching
+
+The practice of **accumulating multiple messages into a single batch** before writing to disk or sending over the network. In Kafka, producers batch messages (controlled by `linger.ms` and `batch.size`) and consumers fetch entire batches at once. Batching converts many small I/O operations into fewer large sequential operations, dramatically improving throughput at the cost of a small increase in latency.
+
+### Key Characteristics
+- **Throughput over latency**: Optimizes for messages-per-second rather than per-message delivery time
+- **Configurable delay**: `linger.ms` introduces artificial wait time to fill batches before sending
+- **Often combined with compression**: Compression is applied at the batch level for better ratios than per-message compression
+- **Network efficiency**: Fewer, larger TCP packets reduce per-packet overhead
+
+### When to Use
+- High-throughput streaming pipelines where a few milliseconds of additional latency is acceptable
+- When network bandwidth or disk I/O is the bottleneck rather than CPU
+- Batch processing systems that naturally accumulate messages before processing
+
+### When NOT to Use
+- Low-latency use cases where messages must be delivered in single-digit milliseconds
+- Systems with very low message rates — batching adds unnecessary delay with no throughput gain
+- When message ordering within a batch matters and batches may fail partially
+
+### Also see
+- [Zero-Copy Transfer](#zero-copy-transfer) · [Distributed Commit Log](#distributed-commit-log) · [Consumer Lag](messaging.md#consumer-lag)
 

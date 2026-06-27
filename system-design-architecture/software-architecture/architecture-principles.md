@@ -48,7 +48,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Tighter permissions increase setup and review effort, and can slow down ad-hoc debugging that previously relied on broad access.
 
-**Cross-reference**: [Zero Trust](#arch-11-zero-trust) · [RBAC](../../reference-dictionary/architecture-patterns.md#rbac-role-based-access-control) · [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls)
+**Cross-reference**: [Zero Trust](#arch-11-zero-trust) · [RBAC](../../reference-dictionary/security-iam.md#rbac-role-based-access-control) · [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls)
 
 ---
 
@@ -201,7 +201,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: High-cardinality telemetry is powerful but expensive to store and query; retention policies and sampling are required to control cost.
 
-**Cross-reference**: [Observability](../../reference-dictionary/resilience.md#observability) · [Golden Signals](../../reference-dictionary/architecture-patterns.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
+**Cross-reference**: [Observability](../../reference-dictionary/resilience.md#observability) · [Golden Signals](../../reference-dictionary/resilience.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
 
 ---
 
@@ -218,4 +218,4 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Per-request authentication and authorization add latency and require robust identity infrastructure and certificate rotation.
 
-**Cross-reference**: [Zero Trust](../../reference-dictionary/architecture-patterns.md#zero-trust) · [Auth Takeaways](security/authentication-authorization.md) · [Least Privilege](#arch-01-least-privilege)
+**Cross-reference**: [Zero Trust](../../reference-dictionary/security-iam.md#zero-trust) · [Auth Takeaways](security/authentication-authorization.md) · [Least Privilege](#arch-01-least-privilege)

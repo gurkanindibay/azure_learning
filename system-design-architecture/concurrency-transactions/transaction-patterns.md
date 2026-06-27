@@ -146,7 +146,7 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Payment** | Exactly-once | Idempotency keys + gateway reconciliation. |
 
 > **Also see**: [sqld-02 SQL vs NoSQL Decision Framework](databases/sql-system-design.md#sqld-02-sql-vs-nosql-decision-framework)
-> **Dictionary**: [ACID Transactions](../../reference-dictionary/data-concurrency.md#acid-transactions), [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md), [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Dictionary**: [ACID Transactions](../../reference-dictionary/data-concurrency.md#acid-transactions), [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md), [CAP Theorem](../../reference-dictionary/data-architecture.md#cap-theorem)
 > **Azure**: Azure SQL for strong consistency; Azure Cognitive Search / Cosmos DB for eventually consistent read models; Azure Cache for Redis for cart/session state.
 
 ---

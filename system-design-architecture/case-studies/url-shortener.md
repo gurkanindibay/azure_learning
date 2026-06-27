@@ -136,7 +136,7 @@ timestamp: 2026-06-20T00:00:00Z
 | **Correctness** | No two long URLs ever share the same alias, even during partitions |
 
 > **Also see**: [Databases & Query Performance](databases/query-performance.md) — CAP theorem
-> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/data-architecture.md#cap-theorem)
 > **Azure**: Cosmos DB consistency levels for tunable per-operation guarantees
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 

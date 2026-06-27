@@ -53,7 +53,7 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 | **Replay** | Full history replay becomes trivial — rewind offsets and re-process |
 | **Complexity** | Moves coordination burden from broker to consumer; requires consumer discipline around offset management |
 
-> **Cross-reference**: [Distributed Commit Log](../../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Partition](../../reference-dictionary/messaging.md#partition) · [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq)
+> **Cross-reference**: [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Partition](../../reference-dictionary/messaging.md#partition) · [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq)
 
 ---
 
@@ -142,4 +142,4 @@ Topic "orders" (3 partitions, 3 brokers):
 | **Zero-copy constraints** | Only works when consuming from disk cache; messages not yet flushed to disk still involve memory copies |
 | **Not for low-latency use cases** | If messages must be delivered in single-digit milliseconds, batching and linger.ms must be minimized or disabled |
 
-> **Cross-reference**: [Zero-Copy Transfer](../../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Message Batching](../../reference-dictionary/architecture-patterns.md#message-batching)
+> **Cross-reference**: [Zero-Copy Transfer](../../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Message Batching](../../reference-dictionary/messaging.md#message-batching)

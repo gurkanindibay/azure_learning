@@ -74,7 +74,7 @@ Alternatively, use an S3 `temp/` prefix with a 1-day lifecycle policy for all up
 | **Two-write atomicity** | Still not atomic; orphan record could also fail to write — accept this as a best-effort mechanism |
 
 > **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [DLQ — broker-28](messaging/kafka-design-patterns.md#broker-28)
-> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check)
+> **Dictionary**: [Claim Check](../../reference-dictionary/messaging.md#claim-check)
 
 ---
 
@@ -119,7 +119,7 @@ The presigned URL lets downstream systems (video processors, ML inference engine
 | **Caching** | Frequently accessed small payloads should be cached locally (TTL-backed file cache) to avoid repeated S3 downloads for the same claim check key |
 
 > **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [broker-52 Orphaned Object Cleanup](#broker-52)
-> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check)
+> **Dictionary**: [Claim Check](../../reference-dictionary/messaging.md#claim-check)
 
 ---
 
@@ -171,7 +171,7 @@ S3 Standard is already ~**4.3× cheaper** than MSK EBS; Glacier is ~**25× cheap
 | **Lifecycle granularity** | Apply different rules per `prefix` to avoid archiving frequently accessed reference data |
 
 > **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [S3 Archiving — broker-44](messaging/kafka-data-state.md#broker-44)
-> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing)
+> **Dictionary**: [Claim Check](../../reference-dictionary/messaging.md#claim-check), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing)
 
 ---
 

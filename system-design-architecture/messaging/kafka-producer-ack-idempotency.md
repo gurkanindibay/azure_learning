@@ -92,8 +92,8 @@ timestamp: 2026-06-27T00:00:00Z
 | **Database dependency** | Requires a relational database or a store that supports atomic conditional inserts (Redis SETNX, DynamoDB conditional put) |
 | **Error handling** | Consumers must handle the constraint-violation error gracefully (skip, not crash) |
 
-> **Also see**: [Atomic Deduplication](../../reference-dictionary/architecture-patterns.md#atomic-deduplication), [Transactional Boundary — broker-62](#broker-62)
-> **Dictionary**: [Atomic Deduplication](../../reference-dictionary/architecture-patterns.md#atomic-deduplication), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Also see**: [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Transactional Boundary — broker-62](#broker-62)
+> **Dictionary**: [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
 
 ---
 

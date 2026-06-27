@@ -138,7 +138,7 @@ Replay path:
 | **Data freshness** | Each read model lags by its consumer's processing latency; reads are eventually consistent |
 
 > **Also see**: [CQRS Overview — broker-25](messaging/kafka-design-patterns.md#broker-25), [CQRS Fintech — cqrs-01](cqrs-fintech/cqrs-fintech.md)
-> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model), [Polyglot Persistence](../../reference-dictionary/architecture-patterns.md#polyglot-persistence)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model), [Polyglot Persistence](../../reference-dictionary/data-architecture.md#polyglot-persistence)
 
 ---
 
