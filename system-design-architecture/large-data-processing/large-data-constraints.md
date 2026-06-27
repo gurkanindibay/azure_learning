@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 13. Large Data Processing Under Constraints
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: ["I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me](../../articles/medium/10gb-csv-512mb-ram-interview-question.md)  
+> **Source**: ["I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me](../../articles/databases/10gb-csv-512mb-ram-interview-question.md)  
 > **Taxonomy Reference**: §7.2 Performance & Scalability, §7.1 Reliability & Resilience
 
 ---
@@ -27,7 +27,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## proc-01: Streaming & Chunking for Memory-Constrained Processing
 
-> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "The Ideal Answer: Streaming + Chunking + Offset Tracking"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/databases/10gb-csv-512mb-ram-interview-question.md) — "The Ideal Answer: Streaming + Chunking + Offset Tracking"
 
 | | |
 |:---|:---|
@@ -79,7 +79,7 @@ if (!batch.isEmpty()) processBatch(batch);
 
 ## proc-02: Checkpointing for Fault-Tolerant Batch Processing
 
-> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Track progress for fault tolerance"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/databases/10gb-csv-512mb-ram-interview-question.md) — "Track progress for fault tolerance"
 
 | | |
 |:---|:---|
@@ -139,7 +139,7 @@ raf.seek(lastOffset);  // resume from last safe point
 
 ## proc-03: Producer-Consumer with Backpressure
 
-> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Use producer-consumer pattern"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/databases/10gb-csv-512mb-ram-interview-question.md) — "Use producer-consumer pattern"
 
 | | |
 |:---|:---|
@@ -202,7 +202,7 @@ Thread consumer = new Thread(() -> {
 
 ## proc-04: Parallel Consumers with Ordered Merge
 
-> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Parallelize writes with multiple consumers (while keeping order)"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/databases/10gb-csv-512mb-ram-interview-question.md) — "Parallelize writes with multiple consumers (while keeping order)"
 
 | | |
 |:---|:---|
@@ -275,7 +275,7 @@ mergeTempFiles("tmp/", "final.json");
 
 ## proc-05: Single-Machine vs Distributed Framework Selection
 
-> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Wait — Could Kafka or Flink Be the Right Answer?"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/databases/10gb-csv-512mb-ram-interview-question.md) — "Wait — Could Kafka or Flink Be the Right Answer?"
 
 | | |
 |:---|:---|

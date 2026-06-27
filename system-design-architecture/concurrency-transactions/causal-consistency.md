@@ -8,7 +8,7 @@ timestamp: 2026-06-25T00:00:00Z
 # 52. Causal Consistency — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Causal Consistency Model in System Design](../../articles/personal-blogs/causal-consistency-model-in-system-design.md)
+> **Source**: [Causal Consistency Model in System Design](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md)
 > **Author**: GeeksforGeeks
 > **Purpose**: Extract reusable architectural patterns and key takeaways from the source article.
 
@@ -32,7 +32,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-01: Choosing the Right Consistency Model for Distributed Writes
 
-> **Source**: [§"Characteristics"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#characteristics)
+> **Source**: [§"Characteristics"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#characteristics)
 
 | | |
 |:---|:---|
@@ -49,7 +49,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-02: Tracking Causal Dependencies Across Nodes
 
-> **Source**: [§"Causal Relationships in Distributed Systems"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#causal-relationships-in-distributed-systems)
+> **Source**: [§"Causal Relationships in Distributed Systems"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#causal-relationships-in-distributed-systems)
 
 | | |
 |:---|:---|
@@ -66,7 +66,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-03: Preserving Meaningful Ordering in User-Facing Systems
 
-> **Source**: [§"Real-World Example"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#real-world-example)
+> **Source**: [§"Real-World Example"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#real-world-example)
 
 | | |
 |:---|:---|
@@ -83,7 +83,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-04: Applying Causal Consistency to Databases, Logs, and Event Sourcing
 
-> **Source**: [§"Use-Cases and Applications"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#use-cases-and-applications)
+> **Source**: [§"Use-Cases and Applications"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#use-cases-and-applications)
 
 | | |
 |:---|:---|
@@ -100,7 +100,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-05: Implementing Causal Consistency with Vector Clocks
 
-> **Source**: [§"Implementation of Causal Consistency"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#implementation-of-causal-consistency)
+> **Source**: [§"Implementation of Causal Consistency"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#implementation-of-causal-consistency)
 
 | | |
 |:---|:---|
@@ -117,7 +117,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-06: Managing the Complexity of Causal Consistency at Scale
 
-> **Source**: [§"Challenges"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#challenges)
+> **Source**: [§"Challenges"](../../articles/concurrency-transactions/causal-consistency-model-in-system-design.md#challenges)
 
 | | |
 |:---|:---|

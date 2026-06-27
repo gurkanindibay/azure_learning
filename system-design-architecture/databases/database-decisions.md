@@ -8,7 +8,7 @@ timestamp: 2026-06-18T00:00:00Z
 # 38. Database Decisions — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Your System Design Is Fine. Your Database Decisions Are Why You're Failing](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [Your System Design Is Fine. Your Database Decisions Are Why You're Failing](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 > **Purpose**: Extract reusable database-decision patterns from the source article.
 
 > **Also see**: [Databases & Query Performance](databases/query-performance.md) (db-01–db-07), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) (tx-01–tx-07), [SQL System Design](databases/sql-system-design.md) (sqld-01–sqld-08)
@@ -36,7 +36,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-08: SQL vs NoSQL — Data Model Choice
 
-> **Source**: [§"SQL vs NoSQL — It's a Data Model Choice, Not a Trend"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"SQL vs NoSQL — It's a Data Model Choice, Not a Trend"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -58,7 +58,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-09: ACID Guarantees Under Load
 
-> **Source**: [§"ACID — What It Actually Means Under Load"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"ACID — What It Actually Means Under Load"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -84,7 +84,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-10: Indexing & Composite Indexes
 
-> **Source**: [§"Indexing — Where Interviews Get Separated"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Indexing — Where Interviews Get Separated"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -105,7 +105,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-11: Scaling Reads — Read Replicas & Caching
 
-> **Source**: [§"Scaling Reads"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Scaling Reads"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -127,7 +127,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-12: CAP Theorem — Partition Tradeoffs
 
-> **Source**: [§"CAP Theorem — The Real Constraint"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"CAP Theorem — The Real Constraint"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -152,7 +152,7 @@ There is no "CA" system in practice.
 
 ## db-13: Sharding — Horizontal Partitioning & Hotspots
 
-> **Source**: [§"Sharding — Split the Data, Multiply the Complexity"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Sharding — Split the Data, Multiply the Complexity"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -174,7 +174,7 @@ There is no "CA" system in practice.
 
 ## db-14: Isolation Levels
 
-> **Source**: [§"Isolation Levels — The One Nobody Studies"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Isolation Levels — The One Nobody Studies"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -200,7 +200,7 @@ There is no "CA" system in practice.
 
 ## db-15: Storage Engine Internals — B-Tree vs LSM-Tree, WAL & Bloom Filters
 
-> **Source**: [§"Storage Internals That Show Up More Than You Think"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Storage Internals That Show Up More Than You Think"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -227,7 +227,7 @@ There is no "CA" system in practice.
 
 ## db-16: Distributed Transactions — 2PC vs Saga
 
-> **Source**: [§"Distributed Transactions — The Final Boss"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Distributed Transactions — The Final Boss"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -251,7 +251,7 @@ There is no "CA" system in practice.
 
 ## db-17: Change Data Capture (CDC)
 
-> **Source**: [§"Change Data Capture (CDC)"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Change Data Capture (CDC)"](../../articles/databases/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|

@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 54. Kafka Reliability & Ordering — Production Deep-Dive Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md)
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md)
 > **Part 1 Overview**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
 > **Purpose**: Extract production-depth engineering insights from the Part 2 deep-dive that go beyond the high-level overview.
 
@@ -35,7 +35,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-35: Dual-Write Failure Modes
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Transactional Outbox
 
 | | |
 |:---|:---|
@@ -65,7 +65,7 @@ All three scenarios are reliably prevented only by the Transactional Outbox: wri
 
 ## broker-36: Outbox Publisher Selection
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Transactional Outbox
 
 | | |
 |:---|:---|
@@ -97,7 +97,7 @@ All three scenarios are reliably prevented only by the Transactional Outbox: wri
 
 ## broker-37: Atomic Idempotency Check with DynamoDB Conditional Writes
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Idempotent Consumer
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Idempotent Consumer
 
 | | |
 |:---|:---|
@@ -128,7 +128,7 @@ Set TTL to the replay window (typically 7 days) to auto-expire old markers witho
 
 ## broker-38: Hot Partition and Partition Key Salting
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Partition Key / Ordering
 
 | | |
 |:---|:---|
@@ -159,7 +159,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 
 ## broker-39: Partition Count Decision Framework
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Partition Key / Ordering
 
 | | |
 |:---|:---|
@@ -189,7 +189,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 
 ## broker-40: DLQ with Persistent Retry Tracking
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Dead Letter Queue
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Dead Letter Queue
 
 | | |
 |:---|:---|
@@ -215,7 +215,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 
 ## broker-41: Retry Topics for Delayed Retry Without Consumer Sleep
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Retry with Backoff
 
 | | |
 |:---|:---|
@@ -248,7 +248,7 @@ The main consumer never sleeps — it commits the offset and routes the failed m
 
 ## broker-42: Exponential Backoff with Jitter (Thundering Herd Prevention)
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md) — Retry with Backoff
 
 | | |
 |:---|:---|

@@ -8,13 +8,13 @@ timestamp: 2026-06-14T00:00:00Z
 # 9. Stream Processing (Apache Flink)
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md)
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md)
 
 ---
 
 ## flink-01: Lambda Architecture — Two Systems, Two Codebases
 
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "The Problem" & "The Key Insight"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "The Problem" & "The Key Insight"
 
 | | |
 |:---|:---|
@@ -39,7 +39,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## flink-02: Batch as a Special Case of Streaming
 
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Unified Batch and Stream Processing"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Unified Batch and Stream Processing"
 
 | | |
 |:---|:---|
@@ -72,7 +72,7 @@ Batch (Blocked):        Op1 ████ DONE → Op2 ████ DONE → Op3 
 
 ## flink-03: Stateful Stream Processing with Exactly-Once Guarantees
 
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "State" & "Fault Tolerance"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "State" & "Fault Tolerance"
 
 | | |
 |:---|:---|
@@ -104,7 +104,7 @@ Events → [barrier] → Operator snapshots state → forwards barrier
 
 ## flink-04: Windowing — Aggregating Infinite Streams
 
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "Windows"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "Windows"
 
 | | |
 |:---|:---|
@@ -129,7 +129,7 @@ Events → [barrier] → Operator snapshots state → forwards barrier
 
 ## flink-05: Asynchronous Barrier Snapshotting (ABS) — Fault Tolerance Without Pausing
 
-> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Fault Tolerance"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Fault Tolerance"
 
 | | |
 |:---|:---|

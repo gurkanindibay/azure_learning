@@ -1,0 +1,24 @@
+---
+type: Index
+title: "System Design Interview — Source Articles"
+description: "Source articles for system design interview system-design topics."
+timestamp: 2026-06-27T00:00:00Z
+---
+
+# System Design Interview — Source Articles
+
+> **Parent**: [Articles Overview](../index.md)
+> **Related**: [System Design Architecture → system-design-interview](../../system-design-architecture/system-design-interview/)
+
+Source articles covering system design interview patterns, strategies, and case studies.
+
+## Articles
+
+- [22-design-interview-questions/01-22-scenario-based-system-design-questions](22-design-interview-questions/01-22-scenario-based-system-design-questions.md)
+- [90-percent-system-design-questions](90-percent-system-design-questions.md)
+- [How I Finally Learned System Design (After Feeling Totally Lost)](How I Finally Learned System Design (After Feeling Totally Lost).md)
+- [I Stopped Grinding LeetCode. These 6 Codebases Taught Me More Than 4 Years of CS](I Stopped Grinding LeetCode. These 6 Codebases Taught Me More Than 4 Years of CS.md)
+- [I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates.](I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
+- [PART 1 — Distinguished Engineer — Behavioural Interview Questions](PART 1 — Distinguished Engineer — Behavioural Interview Questions.md)
+- [design-system-interviews](design-system-interviews.md)
+- [why-I-ignore-architecture-diagrams-in-system-design-interviews](why-I-ignore-architecture-diagrams-in-system-design-interviews.md)

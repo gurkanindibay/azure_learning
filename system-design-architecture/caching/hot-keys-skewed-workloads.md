@@ -8,7 +8,7 @@ timestamp: 2026-06-27T12:00:00Z
 # 61. Hot Keys & Skewed Workloads — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [How Do You Design a System Where 1% of Data Causes 90% of the Load?](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [How Do You Design a System Where 1% of Data Causes 90% of the Load?](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 > **Purpose**: Extract reusable strategies for taming hot keys, celebrity problems, and skewed cache/database workloads.
 
 > **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
@@ -31,7 +31,7 @@ timestamp: 2026-06-27T12:00:00Z
 
 ## cache-12: Hot-Key Read Replication
 
-> **Source**: [§"Principle 1: Replicate Hot Data"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 1: Replicate Hot Data"](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 
 | | |
 |:---|:---|
@@ -64,7 +64,7 @@ def get_hot_key(key):
 
 ## cache-13: Local (L1) In-Process Cache
 
-> **Source**: [§"Principle 2: Add a Local Cache Layer"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 2: Add a Local Cache Layer"](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 
 | | |
 |:---|:---|
@@ -99,7 +99,7 @@ def get_with_local_cache(key, ttl_seconds=5):
 
 ## cache-14: Counter Sharding
 
-> **Source**: [§"Principle 3: Shard the Hot Key Itself"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 3: Shard the Hot Key Itself"](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 
 | | |
 |:---|:---|
@@ -138,7 +138,7 @@ def get_like_count(post_id):
 
 ## cache-15: Hot-Key Detection & Adaptive Request Routing
 
-> **Source**: [§"Principle 4: Detect and Adapt to Hot Spots"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 4: Detect and Adapt to Hot Spots"](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 
 | | |
 |:---|:---|
@@ -186,7 +186,7 @@ class HotKeyDetector:
 
 ## cache-16: Dedicated Hot-Key Tier
 
-> **Source**: [§"Principle 5: Isolate Hot Paths"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 5: Isolate Hot Paths"](../../articles/caching/How Do You Design a System Where 1% of Data Causes 90% of the Load.md)
 
 | | |
 |:---|:---|

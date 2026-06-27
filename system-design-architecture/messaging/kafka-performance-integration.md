@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 56. Kafka Performance & Integration Patterns — Production Deep-Dive Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md)
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md)
 > **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
 > **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](messaging/kafka-reliability-ordering.md)
 > **Part 3**: [Kafka Data & State — broker-43 to broker-51](messaging/kafka-data-state.md)
@@ -36,7 +36,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-52: Orphaned S3 Object Cleanup in Claim Check
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -80,7 +80,7 @@ Alternatively, use an S3 `temp/` prefix with a 1-day lifecycle policy for all up
 
 ## broker-53: Lazy Loading vs Presigned URL Decision in Claim Check
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -125,7 +125,7 @@ The presigned URL lets downstream systems (video processors, ML inference engine
 
 ## broker-54: S3 Lifecycle Policies for Claim Check Cost Management
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -177,7 +177,7 @@ S3 Standard is already ~**4.3× cheaper** than MSK EBS; Glacier is ~**25× cheap
 
 ## broker-55: Local RocksDB State Enables Zero-Network-Call Stream-Table Joins
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Stream-Table Duality
 
 | | |
 |:---|:---|
@@ -219,7 +219,7 @@ KStream<String, EnrichedClick> enriched = clicks.leftJoin(
 
 ## broker-56: Late Arriving Data Grace Period in Windowed Aggregations
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Stream-Table Duality
 
 | | |
 |:---|:---|
@@ -259,7 +259,7 @@ Events that arrive after the window closes but within the grace period are **re-
 
 ## broker-57: Compensating Transaction Design in Saga Choreography
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Saga Choreography
 
 | | |
 |:---|:---|
@@ -300,7 +300,7 @@ Each compensation must also handle the case where the forward operation never co
 
 ## broker-58: Choreography vs Orchestration — When to Use Each
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Performance & Integration Deep Dive.md) — Saga Choreography
 
 | | |
 |:---|:---|

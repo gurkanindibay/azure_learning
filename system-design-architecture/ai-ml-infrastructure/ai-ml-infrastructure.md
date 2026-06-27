@@ -7,7 +7,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 # AI/ML Infrastructure: Patterns for Production LLM Systems
 
-> **Source**: [22 Scenario-Based System Design Questions](../../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #17, #18, #19  
+> **Source**: [22 Scenario-Based System Design Questions](../../articles/system-design-interview/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #17, #18, #19  
 > **Taxonomy Reference**: §12 AI Applications, §4.1 Data & Analytics  
 > **Azure Mapping**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 

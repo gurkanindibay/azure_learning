@@ -8,14 +8,14 @@ timestamp: 2026-06-14T00:00:00Z
 # 3. Caching Architecture
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #9–12  
-> **Also see**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md) — Request coalescing (in-flight deduplication)
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Questions #9–12  
+> **Also see**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md) — Request coalescing (in-flight deduplication)
 
 ---
 
 ## cache-01: Cache Stampede
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#9
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#9
 
 
 | | |
@@ -46,7 +46,7 @@ def should_refresh(ttl_ms, delta=1000, beta=1.0):
 
 ## cache-02: Cache Invalidation
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#10
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#10
 
 
 | | |
@@ -147,7 +147,7 @@ READ:  cache GET → miss → DB SELECT → cache SET user:42 (TTL: 300s)
 
 ## cache-03: Caching Anti-Patterns
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#11
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#11
 
 
 | | |
@@ -193,7 +193,7 @@ return db.query(...)
 
 ## cache-04: Eviction Policies
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#12
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#12
 
 
 | | |
@@ -230,7 +230,7 @@ return db.query(...)
 
 ## cache-05: Request Coalescing (In-Flight Deduplication)
 
-> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md)
 
 
 | | |

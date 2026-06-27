@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 57. Agentic Loop Engineering — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Loops explained: Claude, GPT, Mira and what actually works](../../articles/personal-blogs/loops-explained-claude-gpt-mira-what-actually-works.md) — by @AnatoliKopadze (Jun 2026)
+> **Source**: [Loops explained: Claude, GPT, Mira and what actually works](../../articles/agentic-ai/loops-explained-claude-gpt-mira-what-actually-works.md) — by @AnatoliKopadze (Jun 2026)
 > **Purpose**: Reusable architectural patterns for designing, building, and evaluating agentic loops in AI-assisted workflows.
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 

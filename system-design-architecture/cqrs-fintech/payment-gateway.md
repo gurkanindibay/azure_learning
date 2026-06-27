@@ -8,7 +8,7 @@ timestamp: 2026-06-25T00:00:00Z
 # 49. CQRS — Payment Gateway Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Designing a Payment Gateway System: Multi-Provider Aggregation, Smart Routing & Merchant Onboarding](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md)
+> **Source**: [Designing a Payment Gateway System: Multi-Provider Aggregation, Smart Routing & Merchant Onboarding](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md)
 > **Purpose**: Extract reusable architectural patterns from payment gateway system design: intelligent provider routing, adapter-based multi-provider integration, dynamic pricing, automated reconciliation, and multi-layer caching for extreme scale.
 
 > **Also see**: [Global Payment System](cqrs-fintech/global-payment-system.md), [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md), [Resilience Patterns](resilience/resilience-patterns.md), [API & Network Design](api-network/api-network-design.md), [Caching Architecture](caching/caching-architecture.md)
@@ -31,7 +31,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## cqrs-22: Smart Routing with Multi-Factor Scoring
 
-> **Source**: [§"Part 4: Smart Routing Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-4-smart-routing-algorithm)
+> **Source**: [§"Part 4: Smart Routing Algorithm"](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md#part-4-smart-routing-algorithm)
 
 | | |
 |:---|:---|
@@ -70,7 +70,7 @@ ProviderScore = (
 
 ## cqrs-23: Provider Adapter + Circuit Breaker for Failover
 
-> **Source**: [§"Part 5: Multi-Provider Integration & Failover"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-5-multi-provider-integration--failover)
+> **Source**: [§"Part 5: Multi-Provider Integration & Failover"](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md#part-5-multi-provider-integration--failover)
 
 | | |
 |:---|:---|
@@ -106,7 +106,7 @@ ProviderScore = (
 
 ## cqrs-24: Dynamic Fee Calculation with Multiple Pricing Models
 
-> **Source**: [§"Part 6: Fee Calculation Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-6-fee-calculation-algorithm)
+> **Source**: [§"Part 6: Fee Calculation Algorithm"](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md#part-6-fee-calculation-algorithm)
 
 | | |
 |:---|:---|
@@ -132,7 +132,7 @@ ProviderScore = (
 
 ## cqrs-25: Automated Reconciliation with Discrepancy Detection
 
-> **Source**: [§"Part 10: Reconciliation Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-10-reconciliation-algorithm)
+> **Source**: [§"Part 10: Reconciliation Algorithm"](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md#part-10-reconciliation-algorithm)
 
 | | |
 |:---|:---|
@@ -164,7 +164,7 @@ ProviderScore = (
 
 ## cqrs-26: Multi-Layer Caching for Sub-50ms Routing Decisions
 
-> **Source**: [§"Part 12: Scaling Strategies — C. Caching Strategy"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-13-scaling-strategies)
+> **Source**: [§"Part 12: Scaling Strategies — C. Caching Strategy"](../../articles/cqrs-fintech/Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md#part-13-scaling-strategies)
 
 | | |
 |:---|:---|

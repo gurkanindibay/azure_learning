@@ -8,7 +8,7 @@ timestamp: 2026-06-16T00:00:00Z
 # 34. System Design Learning Roadmap — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [How I Finally Learned System Design (After Feeling Totally Lost)](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [How I Finally Learned System Design (After Feeling Totally Lost)](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 > **Purpose**: Extract reusable architectural concepts and learning patterns from the system design self-study roadmap.
 
 > **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — 7-phase interview structure, NFR quantification, quorum vs consensus
@@ -38,7 +38,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 ## sdi-16: Vertical vs Horizontal Scaling — The Pizza Shop Analogy
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -80,7 +80,7 @@ Vertical Scaling (scale up):         Horizontal Scaling (scale out):
 
 ## sdi-17: Caching Fundamentals — Keep Popular Results Ready
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -118,7 +118,7 @@ Client -> Server -> DB (every time)   Client -> Cache (hit? return)
 
 ## sdi-18: Latency vs Throughput — Two Different Goals
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -147,7 +147,7 @@ Client -> Server -> DB (every time)   Client -> Cache (hit? return)
 
 ## sdi-19: CAP Theorem — The Triangle of Sadness
 
-> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 2](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 2](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -192,7 +192,7 @@ AP: Sacrifice consistency during partition (Cassandra, DynamoDB, Cosmos DB)
 
 ## sdi-20: Replication & Sharding — Scale Beyond One Database
 
-> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 3](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 3](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -236,7 +236,7 @@ Reads: Any replica
 
 ## sdi-21: Design Tradeoffs — There Is No "Best" Design
 
-> **Source**: [§"4. Real-World Thinking" and "Final Thoughts"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"4. Real-World Thinking" and "Final Thoughts"](../../articles/system-design-interview/How I Finally Learned System Design (After Feeling Totally Lost).md)
 
 | | |
 |:---|:---|
@@ -268,7 +268,7 @@ Reads: Any replica
 
 ## sdi-22: Clarify Before You Draw
 
-> **Source**: [§"Mistake 1: They Start Drawing Before They Start Thinking"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 1: They Start Drawing Before They Start Thinking"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|
@@ -298,7 +298,7 @@ Reads: Any replica
 
 ## sdi-23: Design for the Company, Not the Textbook
 
-> **Source**: [§"Mistake 2: They Ignore What the Company Actually Cares About"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 2: They Ignore What the Company Actually Cares About"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|
@@ -328,7 +328,7 @@ Reads: Any replica
 
 ## sdi-24: Design for Reality, Not Fantasy Scale
 
-> **Source**: [§"Mistake 3: They Optimize for Scale They’ll Never Reach"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 3: They Optimize for Scale They’ll Never Reach"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|
@@ -358,7 +358,7 @@ Reads: Any replica
 
 ## sdi-25: Defend Every Decision with Trade-offs
 
-> **Source**: [§"Mistake 4: They Present Solutions Like They’re Facts"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 4: They Present Solutions Like They’re Facts"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|
@@ -388,7 +388,7 @@ Reads: Any replica
 
 ## sdi-26: Explain the Why, Not Just the Where
 
-> **Source**: [§"Mistake 5: They Can’t Explain Why"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 5: They Can’t Explain Why"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|
@@ -418,7 +418,7 @@ Reads: Any replica
 
 ## sdi-27: Pattern Matching Is Not Design
 
-> **Source**: [§"Mistake 6: They Memorized Patterns Instead of Learning to Think"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 6: They Memorized Patterns Instead of Learning to Think"](../../articles/system-design-interview/I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates..md)
 
 | | |
 |:---|:---|

@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 21. AI Agent Architecture — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Hap Bilgi 15: AI Agent Mimarisi — Bir Yapay Zekâ Ajanı Nasıl Çalışır?](../../../articles/linkedin/llm-agents.md)  
+> **Source**: [Hap Bilgi 15: AI Agent Mimarisi — Bir Yapay Zekâ Ajanı Nasıl Çalışır?](../../../articles/agentic-ai/llm-agents.md)  
 > **Also see**: [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md), [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md)  
 > **Taxonomy Reference**: §12 AI Applications
 
@@ -27,7 +27,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## agentarch-01: Brain — LLM as Decision Maker
 
-> **Source**: [Article §"1. Brain (Beyin)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"1. Brain (Beyin)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|
@@ -63,7 +63,7 @@ The LLM evaluates the current state, decides which tool to invoke (or whether to
 
 ## agentarch-02: Planning — Task Decomposition
 
-> **Source**: [Article §"2. Planning (Planlama)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"2. Planning (Planlama)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|
@@ -99,7 +99,7 @@ Generate response
 
 ## agentarch-03: Tools — External World Interaction
 
-> **Source**: [Article §"3. Tools (Araçlar)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"3. Tools (Araçlar)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|
@@ -141,7 +141,7 @@ LLM (processes result, decides next step)
 
 ## agentarch-04: Memory — Short-Term & Long-Term
 
-> **Source**: [Article §"4. Memory (Hafıza)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"4. Memory (Hafıza)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|
@@ -183,7 +183,7 @@ When the conversation grows too long, older content is summarized to maintain co
 
 ## agentarch-05: Agent Loop — Continuous Decision Cycle
 
-> **Source**: [Article §"5. Agent Loop (Karar Döngüsü)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"5. Agent Loop (Karar Döngüsü)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|
@@ -225,7 +225,7 @@ Goal Complete?
 
 ## agentarch-06: Guardrails — Safety & Control Layer
 
-> **Source**: [Article §"6. Guardrails (Kontrol ve Güvenlik Katmanı)"](../../../articles/linkedin/llm-agents.md)
+> **Source**: [Article §"6. Guardrails (Kontrol ve Güvenlik Katmanı)"](../../../articles/agentic-ai/llm-agents.md)
 
 | | |
 |:---|:---|

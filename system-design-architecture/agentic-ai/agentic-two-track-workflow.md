@@ -8,7 +8,7 @@ timestamp: 2026-06-25T00:00:00Z
 # 50. Agentic Two-Track Workflow — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [You don't need ten agents. You need two tracks.](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md) — by Hugo Baraúna (@hugobarauna, Jun 2026)
+> **Source**: [You don't need ten agents. You need two tracks.](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md) — by Hugo Baraúna (@hugobarauna, Jun 2026)
 > **Purpose**: Reusable architectural patterns for structuring human-agent collaboration workflows, identifying bottlenecks, and bounding parallelism correctly.
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 
@@ -28,7 +28,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## agentic-11: Two-Track Workflow — Attention-Weighted Parallelism
 
-> **Source**: [The two tracks](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#the-two-tracks)
+> **Source**: [The two tracks](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#the-two-tracks)
 
 | | |
 |:---|:---|
@@ -68,7 +68,7 @@ Parallel execution:
 
 ## agentic-12: Spec Track — Human-Dense Front-Loading
 
-> **Source**: [The spec track](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#the-two-tracks)
+> **Source**: [The spec track](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#the-two-tracks)
 
 | | |
 |:---|:---|
@@ -100,7 +100,7 @@ Step 2 — Technical design (PRD → implementation plan):
 
 ## agentic-13: Spec Creation Is the Throughput Constraint
 
-> **Source**: [Specs are the first bottleneck](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#why-only-two-agents)
+> **Source**: [Specs are the first bottleneck](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#why-only-two-agents)
 
 | | |
 |:---|:---|
@@ -138,7 +138,7 @@ Agentic pipeline stages:
 
 ## agentic-14: Non-Delegatable Verification and UX
 
-> **Source**: [Finishing the code isn't finishing the work](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#why-only-two-agents), [You can't delegate UX](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#why-only-two-agents)
+> **Source**: [Finishing the code isn't finishing the work](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#why-only-two-agents), [You can't delegate UX](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#why-only-two-agents)
 
 | | |
 |:---|:---|
@@ -170,7 +170,7 @@ Delivery pipeline (realistic):
 
 ## agentic-15: Kanban WIP Control in Agentic Development
 
-> **Source**: [Evolution, not disruption](../../articles/medium/You%20don't%20need%20ten%20agents.%20You%20need%20two%20tracks..md#evolution-not-disruption)
+> **Source**: [Evolution, not disruption](../../articles/agentic-ai/You don't need ten agents. You need two tracks..md#evolution-not-disruption)
 
 | | |
 |:---|:---|

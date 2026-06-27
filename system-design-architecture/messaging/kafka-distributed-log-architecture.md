@@ -8,7 +8,7 @@ timestamp: 2026-06-27T00:00:00Z
 # 59. Kafka Distributed Log Architecture — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](../../articles/messaging/3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
 > **Purpose**: Extract the foundational architectural principles behind Kafka's throughput advantage — why log-based, coordination-free design outperforms centralized queue architectures at scale.
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Stream Processing (Flink)](stream-processing/stream-processing-flink.md), [Kafka Design Patterns Overview](messaging/kafka-design-patterns.md), [Kafka Reliability & Ordering](messaging/kafka-reliability-ordering.md)
@@ -30,7 +30,7 @@ timestamp: 2026-06-27T00:00:00Z
 
 ## broker-59: Distributed Commit Log vs Centralized Queue
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/messaging/3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
 
 | | |
 |:---|:---|
@@ -59,7 +59,7 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 
 ## broker-60: Consumer-Managed Offsets Remove Coordination Overhead
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/messaging/3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
 
 | | |
 |:---|:---|
@@ -81,7 +81,7 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 
 ## broker-61: Partitions Physically Distributed Across Broker Nodes
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/messaging/3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
 
 | | |
 |:---|:---|
@@ -122,7 +122,7 @@ Topic "orders" (3 partitions, 3 brokers):
 
 ## broker-62: Zero-Copy, Batching, and Compression as First-Class Optimizations
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/messaging/3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
 
 | | |
 |:---|:---|

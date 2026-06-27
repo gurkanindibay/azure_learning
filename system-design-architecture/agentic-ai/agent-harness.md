@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 28. Agent Harness — The Anatomy of Production AI Agents
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [The Anatomy of an Agent Harness](../../articles/personal-blogs/the-anatomy-of-agent-harness.md) — by Akshay Pachaar (2026)  
+> **Source**: [The Anatomy of an Agent Harness](../../articles/agentic-ai/the-anatomy-of-agent-harness.md) — by Akshay Pachaar (2026)  
 > **Purpose**: Extract reusable architectural patterns for designing the non-model infrastructure that transforms a stateless LLM into a capable, production-grade agent.  
 > **Also see**: [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md), [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md)  
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
@@ -32,7 +32,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## harness-01: The Harness Is the Product — Infrastructure over Model
 
-> **Source**: [The Harness Is the Product](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#the-harness-is-the-product)
+> **Source**: [The Harness Is the Product](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#the-harness-is-the-product)
 
 | | |
 |:---|:---|
@@ -79,7 +79,7 @@ graph LR
 
 ## harness-02: Three Levels of Engineering — Prompt, Context, Harness
 
-> **Source**: [Three Levels of Engineering](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#three-levels-of-engineering)
+> **Source**: [Three Levels of Engineering](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#three-levels-of-engineering)
 
 | | |
 |:---|:---|
@@ -126,7 +126,7 @@ graph LR
 
 ## harness-03: The Orchestration Loop — ReAct/TAO Cycle
 
-> **Source**: [The Orchestration Loop](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#1-the-orchestration-loop)
+> **Source**: [The Orchestration Loop](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#1-the-orchestration-loop)
 
 | | |
 |:---|:---|
@@ -176,7 +176,7 @@ flowchart TB
 
 ## harness-04: Context Management — Fighting Context Rot
 
-> **Source**: [Context Management](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#4-context-management)
+> **Source**: [Context Management](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#4-context-management)
 
 | | |
 |:---|:---|
@@ -213,7 +213,7 @@ flowchart TB
 
 ## harness-05: Verification Loops — Rules, Visual, LLM-as-Judge
 
-> **Source**: [Verification Loops](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#10-verification-loops)
+> **Source**: [Verification Loops](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#10-verification-loops)
 
 | | |
 |:---|:---|
@@ -257,7 +257,7 @@ flowchart TB
 
 ## harness-06: Error Handling — Compounding Failure in Multi-Step Agents
 
-> **Source**: [Error Handling](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#8-error-handling)
+> **Source**: [Error Handling](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#8-error-handling)
 
 | | |
 |:---|:---|
@@ -295,7 +295,7 @@ For $n = 10$ steps at $P = 0.99$: $0.99^{10} \approx 0.904$ — nearly 10% failu
 
 ## harness-07: Thin vs. Thick Harness — The Scaffolding Co-Evolution
 
-> **Source**: [The Scaffolding Metaphor](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#the-scaffolding-metaphor)
+> **Source**: [The Scaffolding Metaphor](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#the-scaffolding-metaphor)
 
 | | |
 |:---|:---|
@@ -340,7 +340,7 @@ flowchart LR
 
 ## harness-08: Tool Scoping — Less Is More
 
-> **Source**: [Tool Scoping Strategy](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#6-tool-scoping-strategy)
+> **Source**: [Tool Scoping Strategy](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#6-tool-scoping-strategy)
 
 | | |
 |:---|:---|
@@ -376,7 +376,7 @@ flowchart LR
 
 ## harness-09: Memory Architecture — Multi-Tiered Persistence
 
-> **Source**: [Memory](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#3-memory)
+> **Source**: [Memory](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#3-memory)
 
 | | |
 |:---|:---|
@@ -417,7 +417,7 @@ flowchart TB
 
 ## harness-10: Seven Decisions That Define Every Harness
 
-> **Source**: [Seven Decisions That Define Every Harness](../../articles/personal-blogs/the-anatomy-of-agent-harness.md#seven-decisions-that-define-every-harness)
+> **Source**: [Seven Decisions That Define Every Harness](../../articles/agentic-ai/the-anatomy-of-agent-harness.md#seven-decisions-that-define-every-harness)
 
 | | |
 |:---|:---|
@@ -465,4 +465,4 @@ flowchart TB
 
 > **Taxonomy**: §12 AI Applications · §2 Application Software Architecture · §7 Reliability & Performance · §11 Architectural Qualities  
 > **See also**: [AI Agent Architecture](agentic-ai/ai-agent-architecture.md) · [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md) · [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md) · [Resilience Patterns](resilience/resilience-patterns.md)  
-> **Source article**: [The Anatomy of an Agent Harness](../../articles/personal-blogs/the-anatomy-of-agent-harness.md)
+> **Source article**: [The Anatomy of an Agent Harness](../../articles/agentic-ai/the-anatomy-of-agent-harness.md)

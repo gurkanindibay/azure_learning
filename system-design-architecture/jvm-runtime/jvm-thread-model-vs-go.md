@@ -8,7 +8,7 @@ timestamp: 2026-06-23T00:00:00Z
 # 47. JVM Thread Model vs Go Goroutines — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md) — The Concurrent Mind, Jun 2026
+> **Source**: [Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking](../../articles/performance/Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md) — The Concurrent Mind, Jun 2026
 > **Purpose**: Translate the Java vs Go threading model debate into concrete production problems, root causes, and actionable migration strategies for Spring Boot teams.
 > **Also see**: [JVM Memory & GC Key Takeaways](jvm-runtime/jvm-memory-gc.md), [Microservices Runtime Performance](performance/microservices-runtime-performance.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
@@ -28,7 +28,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## jvm-10: Java 1:1 Thread Model Ceiling Under I/O Pressure
 
-> **Source**: [The Problem That Nobody Talked About Loudly Enough](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#the-problem-that-nobody-talked-about-loudly-enough)
+> **Source**: [The Problem That Nobody Talked About Loudly Enough](../../articles/performance/Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md#the-problem-that-nobody-talked-about-loudly-enough)
 
 | | |
 |:---|:---|
@@ -60,7 +60,7 @@ The 1:1 model is an architectural ceiling, not a tuning problem. There are three
 
 ## jvm-11: Go M:N Scheduler — Thousands of Goroutines, Six OS Threads
 
-> **Source**: [What Go Got Right From Day One](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-go-got-right-from-day-one)
+> **Source**: [What Go Got Right From Day One](../../articles/performance/Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md#what-go-got-right-from-day-one)
 
 | | |
 |:---|:---|
@@ -112,7 +112,7 @@ Request-2  ──▶  OS Thread-2  (1 MB stack, blocked on DB)
 
 ## jvm-12: Virtual Thread Pinning Trap — `synchronized` Erases the Gains
 
-> **Source**: [Java Virtual Threads — The "We Heard You" Response](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#java-virtual-threads--the-we-heard-you-response)
+> **Source**: [Java Virtual Threads — The "We Heard You" Response](../../articles/performance/Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md#java-virtual-threads--the-we-heard-you-response)
 
 | | |
 |:---|:---|
@@ -160,7 +160,7 @@ Detection signals:
 
 ## jvm-13: Spring Boot 3.2 Virtual Thread Migration Path
 
-> **Source**: [What You Should Actually Do Right Now](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-you-should-actually-do-right-now)
+> **Source**: [What You Should Actually Do Right Now](../../articles/performance/Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md#what-you-should-actually-do-right-now)
 
 | | |
 |:---|:---|

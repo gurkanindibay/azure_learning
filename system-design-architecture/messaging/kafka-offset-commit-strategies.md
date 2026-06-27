@@ -8,7 +8,7 @@ timestamp: 2026-06-15T00:00:00Z
 # 32. Kafka Offset Commit Strategies — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Kafka Offset Commit Strategies — What Actually Works in Production](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [Kafka Offset Commit Strategies — What Actually Works in Production](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 > **Purpose**: Extract reusable architectural patterns from the Kafka offset commit strategies deep-dive.
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md) — Broker selection, offset commits, poison messages, ordering, stream processing
@@ -35,7 +35,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-09: Offset as Distributed Agreement About Truth
 
-> **Source**: [§"1. What an Offset Commit Really Means"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"1. What an Offset Commit Really Means"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -63,7 +63,7 @@ The real contract: **your processing must be idempotent**. No offset strategy ca
 
 ## broker-10: Auto Commit — Fast, and Quietly Dangerous
 
-> **Source**: [§"2. Auto Commit — Fast, and Quietly Dangerous"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"2. Auto Commit — Fast, and Quietly Dangerous"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -101,7 +101,7 @@ msg1, msg2, msg3 → LOST
 
 ## broker-11: Manual Commit — At-Least-Once with Control
 
-> **Source**: [§"3. Manual Commit — The Default for Real Systems"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"3. Manual Commit — The Default for Real Systems"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -137,7 +137,7 @@ public void consume(String message, Acknowledgment ack) {
 
 ## broker-12: Batch Processing — Throughput Optimization
 
-> **Source**: [§"4. Batch Processing — Throughput Optimization"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"4. Batch Processing — Throughput Optimization"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -175,7 +175,7 @@ public void consume(List<String> messages, Acknowledgment ack) {
 
 ## broker-13: Per-Record Commit — Precision at a Cost
 
-> **Source**: [§"5. Per-Record Commit — Precision at a Cost"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"5. Per-Record Commit — Precision at a Cost"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -207,7 +207,7 @@ public void consume(ConsumerRecord<String, String> record,
 
 ## broker-14: Kafka Transactions — Exactly-Once Semantics
 
-> **Source**: [§"6. Transactions — Closing the Consistency Gap"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"6. Transactions — Closing the Consistency Gap"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -242,7 +242,7 @@ public void process(ConsumerRecord<String, String> record) {
 
 ## broker-15: Rebalancing — The Hidden Offset Killer
 
-> **Source**: [§"7. Rebalancing — The Hidden Offset Killer"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"7. Rebalancing — The Hidden Offset Killer"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -283,7 +283,7 @@ Consumer polls batch
 
 ## broker-16: Critical Configurations That Shape Behavior
 
-> **Source**: [§"8. Critical Configurations That Shape Behavior"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"8. Critical Configurations That Shape Behavior"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|
@@ -314,7 +314,7 @@ Consumer polls batch
 
 ## broker-17: Strategy Selection — Match Commit to Failure Cost
 
-> **Source**: [§"9. Strategy Selection by Use Case"](../../articles/medium/Kafka%20Offset%20Commit%20Strategies%20%E2%80%94%20What%20Actually%20Works%20in%20Production.md)
+> **Source**: [§"9. Strategy Selection by Use Case"](../../articles/messaging/Kafka Offset Commit Strategies — What Actually Works in Production.md)
 
 | | |
 |:---|:---|

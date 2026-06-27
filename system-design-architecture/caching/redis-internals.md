@@ -8,7 +8,7 @@ timestamp: 2026-06-15T00:00:00Z
 # 31. Redis Internals — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [If You Only Know 'Redis is Single-Threaded', You Know Nothing](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [If You Only Know 'Redis is Single-Threaded', You Know Nothing](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 > **Purpose**: Extract reusable architectural patterns from the Redis internals deep-dive.
 
 > **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
@@ -32,7 +32,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## cache-06: I/O Multiplexing — Single-Threaded Event Loop
 
-> **Source**: [§"1. Single-Threaded, But Not Blocking: I/O Multiplexing"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"1. Single-Threaded, But Not Blocking: I/O Multiplexing"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|
@@ -72,7 +72,7 @@ context-switch, contend on locks             v
 
 ## cache-07: Hash Slots — Fixed-Partition Data Distribution
 
-> **Source**: [§"2. Hash Slots, Not Consistent Hashing"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"2. Hash Slots, Not Consistent Hashing"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|
@@ -108,7 +108,7 @@ context-switch, contend on locks             v
 
 ## cache-08: Copy-on-Write Persistence — Non-Blocking Snapshots
 
-> **Source**: [§"3. Fork + Copy-on-Write: How RDB Persistence Works Without Downtime"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"3. Fork + Copy-on-Write: How RDB Persistence Works Without Downtime"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|
@@ -149,7 +149,7 @@ writes/reads normally        snapshot to disk (dump.rdb)
 
 ## cache-09: Morris Probabilistic Counter — 8-Bit LFU Eviction
 
-> **Source**: [§"4. LFU With an 8-Bit Counter"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"4. LFU With an 8-Bit Counter"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|
@@ -184,7 +184,7 @@ def morris_increment(counter: int) -> int:
 
 ## cache-10: UNLINK — Non-Blocking Key Deletion
 
-> **Source**: [§"5. UNLINK Is Not DEL"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"5. UNLINK Is Not DEL"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|
@@ -221,7 +221,7 @@ UNLINK large_key:
 
 ## cache-11: Server-Assisted Client-Side Caching (TRACKING)
 
-> **Source**: [§"6. Client-Side Caching With Server Invalidation (Redis 6+)"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"6. Client-Side Caching With Server Invalidation (Redis 6+)"](../../articles/caching/If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)
 
 | | |
 |:---|:---|

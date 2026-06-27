@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 58. Agentic Core Engineering — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [30 Core Agentic Engineering Concepts Every Developer Should Know](../../articles/personal-blogs/30%20Core%20Agentic%20Engineering%20Concepts%20Every%20Developer%20Should%20Know.md) — by @sairahul1 (Jun 2026)
+> **Source**: [30 Core Agentic Engineering Concepts Every Developer Should Know](../../articles/agentic-ai/30 Core Agentic Engineering Concepts Every Developer Should Know.md) — by @sairahul1 (Jun 2026)
 > **Purpose**: Reusable architectural patterns for building, configuring, securing, and observing AI agents in production.
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 

@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 17. Agentic AI for Enterprise Strategic Systems: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Building an Agentic AI System for Enterprise Strategic Intelligence](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md) — by Oktay Selcuk (Jun 2026)  
+> **Source**: [Building an Agentic AI System for Enterprise Strategic Intelligence](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md) — by Oktay Selcuk (Jun 2026)  
 > **Purpose**: Extract reusable architectural patterns for multi-agent AI systems in enterprise decision-intelligence contexts.  
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 
@@ -27,7 +27,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## agentic-01: Multi-Agent Specialization over Monolithic AI
 
-> **Source**: [From One AI Assistant to Multiple Specialized Roles](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#from-one-ai-assistant-to-multiple-specialized-roles)
+> **Source**: [From One AI Assistant to Multiple Specialized Roles](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#from-one-ai-assistant-to-multiple-specialized-roles)
 
 | | |
 |:---|:---|
@@ -71,7 +71,7 @@ flowchart LR
 
 ## agentic-02: Hybrid Intelligence — Deterministic + AI Reasoning
 
-> **Source**: [Agentic AI Is More Than LLM Calls](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#agentic-ai-is-more-than-llm-calls)
+> **Source**: [Agentic AI Is More Than LLM Calls](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#agentic-ai-is-more-than-llm-calls)
 
 | | |
 |:---|:---|
@@ -122,7 +122,7 @@ flowchart LR
 
 ## agentic-03: Contradiction Detection & Confidence Scoring
 
-> **Source**: [One of the Hardest Problems: Contradictory Signals](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#one-of-the-hardest-problems-contradictory-signals)
+> **Source**: [One of the Hardest Problems: Contradictory Signals](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#one-of-the-hardest-problems-contradictory-signals)
 
 | | |
 |:---|:---|
@@ -173,7 +173,7 @@ flowchart TB
 
 ## agentic-04: AI Interpretation Layer — Beyond Dashboards
 
-> **Source**: [From Data Visualization to AI Interpretation](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#from-data-visualization-to-ai-interpretation)
+> **Source**: [From Data Visualization to AI Interpretation](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#from-data-visualization-to-ai-interpretation)
 
 | | |
 |:---|:---|
@@ -235,7 +235,7 @@ flowchart TB
 
 ## agentic-05: Architecture Is the Hard Problem, Not the Model
 
-> **Source**: [Lessons Learned: Building an Applied AI System](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#lessons-learned-building-an-applied-ai-system)
+> **Source**: [Lessons Learned: Building an Applied AI System](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#lessons-learned-building-an-applied-ai-system)
 
 | | |
 |:---|:---|
@@ -279,7 +279,7 @@ flowchart TB
 
 ## agentic-06: Human-in-the-Decision — AI as Reasoning Partner
 
-> **Source**: [Where Agentic Enterprise AI May Be Heading](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md#where-agentic-enterprise-ai-may-be-heading)
+> **Source**: [Where Agentic Enterprise AI May Be Heading](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md#where-agentic-enterprise-ai-may-be-heading)
 
 | | |
 |:---|:---|
@@ -331,4 +331,4 @@ flowchart TB
 
 > **Taxonomy**: §12 AI Applications · §2 Application Software Architecture · §6 Security Architecture · §11 Architectural Qualities  
 > **See also**: [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)  
-> **Source article**: [Building an Agentic AI System for Enterprise Strategic Intelligence](../../articles/linkedin/build-ai-for-enterprise-strategic-systems.md)
+> **Source article**: [Building an Agentic AI System for Enterprise Strategic Intelligence](../../articles/agentic-ai/build-ai-for-enterprise-strategic-systems.md)

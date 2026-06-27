@@ -8,7 +8,7 @@ timestamp: 2026-06-23T00:00:00Z
 # 45. Agentic AI Accountability — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md) — by The Latency Gambler (Jun 2026)  
+> **Source**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md) — by The Latency Gambler (Jun 2026)  
 > **Purpose**: Extract the ownership and quality patterns required to ship AI-generated output into production without losing accountability.
 
 > **Also see**: [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md), [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [AI-Assisted Development — Five Levels](agentic-ai/ai-assisted-development.md)
@@ -30,7 +30,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## agentic-07: Accountability Gap in Production AI
 
-> **Source**: [§"The Accountability Gap Nobody Wants to Talk About"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#the-accountability-gap-nobody-wants-to-talk-about)
+> **Source**: [§"The Accountability Gap Nobody Wants to Talk About"](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#the-accountability-gap-nobody-wants-to-talk-about)
 
 | | |
 |:---|:---|
@@ -48,7 +48,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## agentic-08: Context Freshness Checks
 
-> **Source**: [§"A Lightweight Ownership Pattern"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#a-lightweight-ownership-pattern)
+> **Source**: [§"A Lightweight Ownership Pattern"](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#a-lightweight-ownership-pattern)
 
 | | |
 |:---|:---|
@@ -75,7 +75,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## agentic-09: Owner Tag + Review Gate
 
-> **Source**: [§"What 'Quality First' Looks Like in Practice"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#what-quality-first-looks-like-in-practice)
+> **Source**: [§"What 'Quality First' Looks Like in Practice"](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#what-quality-first-looks-like-in-practice)
 
 | | |
 |:---|:---|
@@ -103,7 +103,7 @@ Every output gets an owner tag, and the review gate checks that the owner explic
 
 ## agentic-10: 2x with Accountability Beats 10x Volume
 
-> **Source**: [§"Why 2x Beats 10x"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#why-2x-beats-10x)
+> **Source**: [§"Why 2x Beats 10x"](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#why-2x-beats-10x)
 
 | | |
 |:---|:---|
@@ -132,4 +132,4 @@ Every output gets an owner tag, and the review gate checks that the owner explic
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture · §8.1 DevOps Architecture  
 > **See also**: [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md) · [AI Agent Architecture](agentic-ai/ai-agent-architecture.md) · [AI-Assisted Development — Five Levels](agentic-ai/ai-assisted-development.md)  
-> **Source article**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)
+> **Source article**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/software-architecture/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)

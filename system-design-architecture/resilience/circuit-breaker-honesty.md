@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 23. Circuit Breaker Honesty — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Your Circuit Breaker Is Lying to You](../../../articles/medium/your-circuit-breaker-lying-to-you.md) — The Atomic Architect, Apr 2026
+> **Source**: [Your Circuit Breaker Is Lying to You](../../../articles/resilience/your-circuit-breaker-lying-to-you.md) — The Atomic Architect, Apr 2026
 > **Purpose**: Extract the gap between "having a circuit breaker" and "protecting the user experience" — the four lies circuit breakers tell, and how to build an honest resilience stack.
 > **Also see**: [Resilience Patterns](resilience/resilience-patterns.md) (`resilience-01`–`resilience-06`), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [API Design Patterns](api-network/api-design-patterns.md)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
@@ -31,7 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## cb-01: Monitor Slow-Call Rate, Not Just Failure Rate
 
-> **Source**: [Article §"The First Lie"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#the-first-lie-no-errors-means-no-problem)
+> **Source**: [Article §"The First Lie"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#the-first-lie-no-errors-means-no-problem)
 
 | | |
 |:---|:---|
@@ -68,7 +68,7 @@ resilience4j:
 
 ## cb-02: `minimumNumberOfCalls` — The Hidden Trap
 
-> **Source**: [Article §"The Second Lie"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#the-second-lie-hidden-inside-your-window)
+> **Source**: [Article §"The Second Lie"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#the-second-lie-hidden-inside-your-window)
 
 | | |
 |:---|:---|
@@ -105,7 +105,7 @@ Breaker state: CLOSED ← because 9 < 10
 
 ## cb-03: Circuit Breaker ≠ Concurrency Control
 
-> **Source**: [Article §"The Third Lie"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#the-third-lie-a-circuit-breaker-controls-load)
+> **Source**: [Article §"The Third Lie"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#the-third-lie-a-circuit-breaker-controls-load)
 
 | | |
 |:---|:---|
@@ -149,7 +149,7 @@ resilience4j:
 
 ## cb-04: Retries Multiply Load
 
-> **Source**: [Article §"The Fourth Lie"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#the-fourth-lie-retries-make-it-safer)
+> **Source**: [Article §"The Fourth Lie"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#the-fourth-lie-retries-make-it-safer)
 
 | | |
 |:---|:---|
@@ -197,7 +197,7 @@ DecorateCompletionStage
 
 ## cb-05: The Honest Resilience Stack
 
-> **Source**: [Article §"What an Honest Design Looks Like"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#what-an-honest-design-looks-like)
+> **Source**: [Article §"What an Honest Design Looks Like"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#what-an-honest-design-looks-like)
 
 | | |
 |:---|:---|
@@ -255,7 +255,7 @@ Bulkhead           ← "Max 10 concurrent calls"
 
 ## cb-06: Fallback Is the Real Product
 
-> **Source**: [Article §"What an Honest Design Looks Like"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#what-an-honest-design-looks-like)
+> **Source**: [Article §"What an Honest Design Looks Like"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#what-an-honest-design-looks-like)
 
 | | |
 |:---|:---|
@@ -306,7 +306,7 @@ private CompletableFuture<CatalogResponse> readFromCache(
 
 ## cb-07: User Experience Metrics > Breaker State Metrics
 
-> **Source**: [Article §"The Metrics I Care About Now"](../../../articles/medium/your-circuit-breaker-lying-to-you.md#the-metrics-i-care-about-now)
+> **Source**: [Article §"The Metrics I Care About Now"](../../../articles/resilience/your-circuit-breaker-lying-to-you.md#the-metrics-i-care-about-now)
 
 | | |
 |:---|:---|

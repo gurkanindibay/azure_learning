@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 18. Pragmatic System Design: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Why I Ignore Architecture Diagrams in System Design Reviews](../../../articles/medium/why-I-ignore-architecture-diagrams-in-system-design-interviews.md) — by Bhavyansh Yadav (Feb 2026)
+> **Source**: [Why I Ignore Architecture Diagrams in System Design Reviews](../../../articles/system-design-interview/why-I-ignore-architecture-diagrams-in-system-design-interviews.md) — by Bhavyansh Yadav (Feb 2026)
 > **Purpose**: Extract reusable principles for cutting through "architecture theater" — focusing on user metrics, operational reality, and solving today's problems instead of imaginary future scale.
 
 ---

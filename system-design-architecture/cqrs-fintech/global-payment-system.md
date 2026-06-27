@@ -8,7 +8,7 @@ timestamp: 2026-06-18T00:00:00Z
 # 37. Global Payment System — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
+> **Source**: [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
 > **Author**: Harsh Shukla
 > **Purpose**: Extract reusable architectural patterns from a global payment-system design: fintech service boundaries, async decoupling, idempotency, distributed transactions, and external-gateway resilience.
 
@@ -33,7 +33,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## cqrs-16: Distinguish Payment Gateway from Payment Processor
 
-> **Source**: [§"First, Let’s Get Our Terms Straight"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#first-lets-get-our-terms-straight)
+> **Source**: [§"First, Let’s Get Our Terms Straight"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#first-lets-get-our-terms-straight)
 
 | | |
 |:---|:---|
@@ -55,7 +55,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## cqrs-17: One Service, One Database in Fintech
 
-> **Source**: [§"Database Ownership: One Service, One Database"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#database-ownership-one-service-one-database)
+> **Source**: [§"Database Ownership: One Service, One Database"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#database-ownership-one-service-one-database)
 
 | | |
 |:---|:---|
@@ -81,7 +81,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## cqrs-18: Decouple Payment Flow with Async Messaging
 
-> **Source**: [§"The Kafka Topics: The Nervous System of the System"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#the-kafka-topics-the-nervous-system-of-the-system)
+> **Source**: [§"The Kafka Topics: The Nervous System of the System"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#the-kafka-topics-the-nervous-system-of-the-system)
 
 | | |
 |:---|:---|
@@ -108,7 +108,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## cqrs-19: Idempotency Keys Prevent Double Charging
 
-> **Source**: [§"A Transaction, Step by Step — Step 5: Recording the Transaction"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step)
+> **Source**: [§"A Transaction, Step by Step — Step 5: Recording the Transaction"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step)
 
 | | |
 |:---|:---|
@@ -132,7 +132,7 @@ Server: key seen → return stored result, do NOT charge again
 
 ## cqrs-20: Saga Pattern for Distributed Money Flows
 
-> **Source**: [§"Resilience Patterns — Saga Pattern"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
+> **Source**: [§"Resilience Patterns — Saga Pattern"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
 
 | | |
 |:---|:---|
@@ -157,7 +157,7 @@ Server: key seen → return stored result, do NOT charge again
 
 ## cqrs-21: Circuit Breaker and Backoff for External Gateways
 
-> **Source**: [§"A Transaction, Step by Step — Step 4: External Payment Processing"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step), [§"Resilience Patterns"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
+> **Source**: [§"A Transaction, Step by Step — Step 4: External Payment Processing"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step), [§"Resilience Patterns"](../../articles/cqrs-fintech/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
 
 | | |
 |:---|:---|

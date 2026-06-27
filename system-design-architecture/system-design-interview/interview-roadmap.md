@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 15. System Design Interview Roadmap: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [How to Structure Any System Design Interview in 45 Minutes](../../../articles/medium/design-system-interviews.md) — by Kunal Sinha (Dec 2025)  
+> **Source**: [How to Structure Any System Design Interview in 45 Minutes](../../../articles/system-design-interview/design-system-interviews.md) — by Kunal Sinha (Dec 2025)  
 > **Purpose**: Extract a repeatable 7-phase interview framework with specific scripts, traps, and trade-off patterns that distinguish senior candidates.
 
 ---

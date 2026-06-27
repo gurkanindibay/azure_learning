@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 22. AI-Assisted Software Development — The Five Levels
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [The Five Levels: From Spicy Autocomplete to the Dark Factory](../../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md) — by Dan Shapiro (Jan 2026)  
+> **Source**: [The Five Levels: From Spicy Autocomplete to the Dark Factory](../../../articles/agentic-ai/the-evolution-of-ai-assistend-software-development.md) — by Dan Shapiro (Jan 2026)  
 > **Also see**: [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md), [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md)  
 > **Purpose**: Extract the five-level maturity model for AI-assisted software development — from manual coding to fully autonomous "dark factory" — and the strategic implications for engineering teams navigating technical deflation.
 
@@ -56,7 +56,7 @@ Traditional system design assumes human throughput as the bottleneck. Under tech
 
 ## aidev-02: The Five Levels Framework
 
-> **Source**: [Article §"The Five Levels"](../../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md)
+> **Source**: [Article §"The Five Levels"](../../../articles/agentic-ai/the-evolution-of-ai-assistend-software-development.md)
 
 The framework parallels the NHTSA's five levels of driving automation — providing a common language for where teams are and where they're heading.
 

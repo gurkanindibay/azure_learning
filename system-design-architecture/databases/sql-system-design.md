@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 19. SQL System Design: From Fresher to Staff Engineer
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [SQL for System Design: From Fresher to Staff Engineer](../../../articles/medium/sql-for-system-design.md) — The Latency Gambler, Mar 2026
+> **Source**: [SQL for System Design: From Fresher to Staff Engineer](../../../articles/databases/sql-for-system-design.md) — The Latency Gambler, Mar 2026
 > **Purpose**: Extract system-design-level SQL principles — when to use SQL, how to scale it honestly, and the architectural patterns that make SQL the backbone of production systems.
 > **Also see**: [Databases & Query Performance](databases/query-performance.md) (db-01–db-06), [SQL Query Optimization](databases/sql-query-optimization.md) (sql-01–sql-05), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) (tx-01–tx-04)
 
@@ -31,7 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## sqld-01: The SQL Scaling Ladder
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §4
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §4
 
 
 | | |
@@ -101,7 +101,7 @@ A single well-tuned Postgres instance on modern hardware handles: **~10 TB** dat
 
 ## sqld-02: SQL vs NoSQL Decision Framework
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §5
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §5
 
 
 | | |
@@ -143,7 +143,7 @@ A single well-tuned Postgres instance on modern hardware handles: **~10 TB** dat
 
 ## sqld-03: CQRS with SQL
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §6
 
 
 | | |
@@ -198,7 +198,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY order_summary;
 
 ## sqld-04: Event Sourcing with SQL
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §6
 
 
 | | |
@@ -240,7 +240,7 @@ ORDER BY id ASC;
 
 ## sqld-05: Row-Level Security for Multi-tenancy
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §6
 
 
 | | |
@@ -276,7 +276,7 @@ SELECT * FROM orders; -- only sees tenant 42's data
 
 ## sqld-06: Database per Service + Saga Pattern
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §7
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §7
 
 
 | | |
@@ -336,7 +336,7 @@ Order Service        Payment Service      Inventory Service
 
 ## sqld-07: Staff Engineer's 5 Questions
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §9
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §9
 
 
 | | |
@@ -364,7 +364,7 @@ Order Service        Payment Service      Inventory Service
 
 ## sqld-08: Performance Checklist
 
-> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §8
+> **Source**: [SQL for System Design](../../../articles/databases/sql-for-system-design.md) — §8
 
 
 | | |

@@ -8,7 +8,7 @@ timestamp: 2026-06-19T00:00:00Z
 # 39. Famous Outages — Resilience Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [What 5 Famous Outages Taught Me About System Design](../../articles/medium/What%205%20Famous%20Outages%20Taught%20Me%20About%20System%20Design.md)
+> **Source**: [What 5 Famous Outages Taught Me About System Design](../../articles/resilience/What 5 Famous Outages Taught Me About System Design.md)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
 > **Also see**: [Resilience Patterns](resilience/resilience-patterns.md), [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 > **Dictionary**: [Resilience](../../reference-dictionary/resilience.md), [Observability](../../reference-dictionary/resilience.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)

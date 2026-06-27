@@ -8,13 +8,13 @@ timestamp: 2026-06-14T00:00:00Z
 # 2. Concurrency & Transactions
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #5–8
+> **Source**: [20 Design Interview Questions](../../articles/databases/20-design-interview-questions.md) — Questions #5–8
 
 ---
 
 ## tx-01: Double-Booking
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#5
+> **Source**: [20 Design Interview Questions](../../articles/databases/20-design-interview-questions.md) — Q#5
 
 
 | | |
@@ -37,7 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## tx-02: Isolation Levels
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#6
+> **Source**: [20 Design Interview Questions](../../articles/databases/20-design-interview-questions.md) — Q#6
 
 
 | | |
@@ -68,7 +68,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## tx-03: Distributed Locks
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#7
+> **Source**: [20 Design Interview Questions](../../articles/databases/20-design-interview-questions.md) — Q#7
 
 
 | | |
@@ -113,7 +113,7 @@ Client A resumes → writes with token 17 → RESOURCE REJECTS (18 > 17)
 
 ## tx-04: Idempotency
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#8
+> **Source**: [20 Design Interview Questions](../../articles/databases/20-design-interview-questions.md) — Q#8
 
 
 | | |
@@ -146,7 +146,7 @@ Server → Check idempotency store for key "a1b2c3d4"
 
 ## tx-05: Locks for Coordination, Database for Correctness
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/concurrency-transactions/The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness.md)
 > **Also see**: [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock), [Fencing Token](../../reference-dictionary/data-concurrency.md#fencing-token)
 
 | | |
@@ -164,7 +164,7 @@ Server → Check idempotency store for key "a1b2c3d4"
 
 ## tx-06: Database Invariants Over Lock Timeouts
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/concurrency-transactions/The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness.md)
 > **Also see**: [Double-Booking Problem](../../reference-dictionary/data-concurrency.md#double-booking-problem), [Exclusion Constraint](../../reference-dictionary/data-concurrency.md#exclusion-constraint), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update)
 
 | | |
@@ -190,7 +190,7 @@ Server → Check idempotency store for key "a1b2c3d4"
 
 ## tx-07: Post-Commit Confirmation and Events
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/concurrency-transactions/The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness.md)
 > **Also see**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Change Data Capture](../../reference-dictionary/data-concurrency.md#change-data-capture), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 
 | | |

@@ -8,14 +8,14 @@ timestamp: 2026-06-14T00:00:00Z
 # 4. APIs & Network Design
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #13–16, [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)  
-> **Also see**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Questions #13–16, [System Design Interview: API Rate Limiter](../../../articles/api-network/system-design-interview-api-rate-limiter-distributed.md)  
+> **Also see**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
 
 ---
 
 ## api-01: API Versioning
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#13
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#13
 
 
 | | |
@@ -50,7 +50,7 @@ Payload evolution:
 
 ## api-02: Rate Limiting
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#14
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#14
 
 
 | | |
@@ -273,7 +273,7 @@ Check in order: most-specific first. The first tier to reject returns `429`.
 
 ## api-03: Large File Uploads
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#15
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#15
 
 
 | | |
@@ -305,7 +305,7 @@ Presigned URL flow:
 
 ## api-04: Long-Running Tasks
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#16
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#16
 
 
 | | |
@@ -335,7 +335,7 @@ Sequence:
 
 ## api-05: Consistent Hash-Based Routing
 
-> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -402,7 +402,7 @@ Without consistent hash routing:         With consistent hash routing:
 
 ## api-06: API Deprecation as Migration Strategy
 
-> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/api-network/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -443,7 +443,7 @@ Without consistent hash routing:         With consistent hash routing:
 
 ## api-07: Client Traffic Monitoring During API Migration
 
-> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/api-network/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -475,7 +475,7 @@ Without consistent hash routing:         With consistent hash routing:
 
 ## api-08: Security-Triggered Forced Sunset
 
-> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/api-network/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -509,7 +509,7 @@ SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traf
 
 ## api-09: Hot Key Problem in Distributed Rate Limiters
 
-> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/api-network/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -533,7 +533,7 @@ SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traf
 
 ## api-10: Multi-Tenant Rate Limiting with Plan-Specific Buckets
 
-> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/api-network/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -564,7 +564,7 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 
 ## api-11: Rate Limiter Failure Mode — Fail-Open vs Fail-Closed
 
-> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/api-network/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -593,7 +593,7 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 
 ## api-12: Multi-Region Rate Limiting — Consistency vs Latency
 
-> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/api-network/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|

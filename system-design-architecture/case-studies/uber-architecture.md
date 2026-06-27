@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 6. Uber Architecture Case Study: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Uber Architecture — 5-Part Series](../../../articles/medium/uber-architecture/) — by Simranjeet Singh (Mar 2026)  
+> **Source**: [Uber Architecture — 5-Part Series](../../../articles/case-studies/uber-architecture/) — by Simranjeet Singh (Mar 2026)  
 > **Purpose**: Extract reusable architectural patterns, tradeoffs, and strategies from Uber's real-time GPS tracking system at 83,000 writes/sec.
 
 ---
@@ -32,7 +32,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## uber-01: The Decomposition Principle
 
-> **Source**: [Part 1 — Why Tracking 5 Million Drivers Is Hard](../../../articles/medium/uber-architecture/01-why-tracking-5-million-drivers-is-hard.md)
+> **Source**: [Part 1 — Why Tracking 5 Million Drivers Is Hard](../../../articles/case-studies/uber-architecture/01-why-tracking-5-million-drivers-is-hard.md)
 
 
 | | |
@@ -62,7 +62,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## uber-02: Ingestion Edge — Stateless Validation Gate
 
-> **Source**: [Part 2 — The Ingestion Edge](../../../articles/medium/uber-architecture/02-the-ingestion-edge.md)
+> **Source**: [Part 2 — The Ingestion Edge](../../../articles/case-studies/uber-architecture/02-the-ingestion-edge.md)
 
 
 | | |
@@ -98,7 +98,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## uber-03: Geo-Partitioning vs Identity-Partitioning
 
-> **Source**: [Part 3 — Kafka Partitioning & Hexagonal Grid](../../../articles/medium/uber-architecture/03-kafka-partitioning-geography-hex-grid.md)
+> **Source**: [Part 3 — Kafka Partitioning & Hexagonal Grid](../../../articles/case-studies/uber-architecture/03-kafka-partitioning-geography-hex-grid.md)
 
 
 | | |
@@ -302,7 +302,7 @@ All three are computed from a single `latlng_to_cell` call plus two `cell_to_par
 
 ## uber-04: Ring Buffer for Real-Time Serving
 
-> **Source**: [Part 4 — Ring Buffer & Cassandra](../../../articles/medium/uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream.md)
+> **Source**: [Part 4 — Ring Buffer & Cassandra](../../../articles/case-studies/uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream.md)
 
 
 | | |
@@ -350,7 +350,7 @@ LTRIM driver:{id}:positions 0 9    # Keep only last 10
 
 ## uber-05: B-Tree vs LSM-Tree — Write-Heavy Workloads
 
-> **Source**: [Part 4 — Ring Buffer & Cassandra](../../../articles/medium/uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream.md)
+> **Source**: [Part 4 — Ring Buffer & Cassandra](../../../articles/case-studies/uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream.md)
 
 
 | | |
@@ -399,7 +399,7 @@ CREATE TABLE driver_positions (
 
 ## uber-06: Dispatch as O(1) Spatial Lookup
 
-> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/medium/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
+> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/case-studies/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
 
 
 | | |
@@ -441,7 +441,7 @@ If K=1 returns fewer than minimum candidates, expand to K=2 and retry. Each expa
 
 ## uber-07: ETA Computation Pipeline
 
-> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/medium/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
+> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/case-studies/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
 
 
 | | |
@@ -469,7 +469,7 @@ If K=1 returns fewer than minimum candidates, expand to K=2 and retry. Each expa
 
 ## uber-08: Map Rendering as Signal Processing
 
-> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/medium/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
+> **Source**: [Part 5 — Dispatch Engine & Map Rendering](../../../articles/case-studies/uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
 
 
 | | |
@@ -511,7 +511,7 @@ Kalman Gain:      Blend ratio — high when measurement is trustworthy, low when
 
 ## uber-09: Adaptive Sampling — Server-Side Rate Control
 
-> **Source**: [Part 2 — The Ingestion Edge](../../../articles/medium/uber-architecture/02-the-ingestion-edge.md)
+> **Source**: [Part 2 — The Ingestion Edge](../../../articles/case-studies/uber-architecture/02-the-ingestion-edge.md)
 
 
 | | |
@@ -543,7 +543,7 @@ Kalman Gain:      Blend ratio — high when measurement is trustworthy, low when
 
 ## uber-10: Partition Boundary Handoff
 
-> **Source**: [Part 3 — Kafka Partitioning & Hexagonal Grid](../../../articles/medium/uber-architecture/03-kafka-partitioning-geography-hex-grid.md)
+> **Source**: [Part 3 — Kafka Partitioning & Hexagonal Grid](../../../articles/case-studies/uber-architecture/03-kafka-partitioning-geography-hex-grid.md)
 
 
 | | |
@@ -653,9 +653,9 @@ GPS chip fires → WebSocket → Regional Edge Node (validate, dedup, <2ms)
 
 | Resource | Path |
 |:---|:---|
-| Uber Architecture — Full Series | [`articles/medium/uber-architecture/`](../../../articles/medium/uber-architecture/) |
-| Kafka Concepts Every Architect Must Master | [`articles/medium/kafka-concepts-that-every-architect-should-master.md`](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md) |
-| Discord Data Architecture Masterclass | [`articles/medium/discord-data-architecture-master-class.md`](../../../articles/medium/discord-data-architecture-master-class.md) |
+| Uber Architecture — Full Series | [`articles/medium/uber-architecture/`](../../../articles/case-studies/uber-architecture/) |
+| Kafka Concepts Every Architect Must Master | [`articles/medium/kafka-concepts-that-every-architect-should-master.md`](../../../articles/messaging/kafka-concepts-that-every-architect-should-master.md) |
+| Discord Data Architecture Masterclass | [`articles/medium/discord-data-architecture-master-class.md`](../../../articles/databases/discord-data-architecture-master-class.md) |
 | Azure Event Services Full Comparison | [`architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md`](../../architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md) |
 | Event Hubs vs Kafka | [`architecture-azure/integration/messaging-comparisons/eventhubs_vs_kafka_comparison.md`](../../architecture-azure/integration/messaging-comparisons/eventhubs_vs_kafka_comparison.md) |
 | Messaging Patterns Overview | [`architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md`](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md) |

@@ -8,7 +8,7 @@ timestamp: 2026-06-15T00:00:00Z
 # 30. Message Brokers & Async — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
+> **Source**: [The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
 > **Purpose**: Kafka consumer reliability patterns for production messaging pipelines.
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md)
@@ -29,7 +29,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-01: Committing Offsets Before Processing
 
-> **Source**: [§"Mistake #1 — Committing Offsets Before Processing"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-1--committing-offsets-before-processing)
+> **Source**: [§"Mistake #1 — Committing Offsets Before Processing"](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-1--committing-offsets-before-processing)
 
 | | |
 |:---|:---|
@@ -46,7 +46,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-02: Not Monitoring Consumer Lag
 
-> **Source**: [§"Mistake #2 — Not Monitoring Consumer Lag"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-2--not-monitoring-consumer-lag)
+> **Source**: [§"Mistake #2 — Not Monitoring Consumer Lag"](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-2--not-monitoring-consumer-lag)
 
 | | |
 |:---|:---|
@@ -63,7 +63,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-03: Sharing Consumer Groups Across Regions
 
-> **Source**: [§"Mistake #3 — Using the Same Consumer Group Across Regions"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-3--using-the-same-consumer-group-across-regions)
+> **Source**: [§"Mistake #3 — Using the Same Consumer Group Across Regions"](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-3--using-the-same-consumer-group-across-regions)
 
 | | |
 |:---|:---|
@@ -80,7 +80,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-04: Short Kafka Retention
 
-> **Source**: [§"Mistake #4 — Short Kafka Retention"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-4--short-kafka-retention)
+> **Source**: [§"Mistake #4 — Short Kafka Retention"](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-4--short-kafka-retention)
 
 | | |
 |:---|:---|
@@ -97,7 +97,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-05: Missing Dead Letter Topics
 
-> **Source**: [§"Mistake #5 — No Dead Letter Topics"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-5--no-dead-letter-topics)
+> **Source**: [§"Mistake #5 — No Dead Letter Topics"](../../articles/messaging/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-5--no-dead-letter-topics)
 
 | | |
 |:---|:---|

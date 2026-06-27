@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 53. Kafka Design Patterns — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 > **Purpose**: Extract reusable Kafka architectural patterns from the overview article covering all 11 patterns.
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [CQRS Fintech Takeaways](cqrs-fintech/cqrs-fintech.md)
@@ -37,7 +37,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-24: Event Sourcing on Kafka
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -59,7 +59,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-25: CQRS on Kafka
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -81,7 +81,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-26: Event Carried State Transfer
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -103,7 +103,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-27: Claim Check Pattern
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -125,7 +125,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-28: Dead Letter Queue (DLQ)
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -147,7 +147,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-29: Idempotent Consumer
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -169,7 +169,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-30: Transactional Outbox
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -191,7 +191,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-31: Compacted Topic
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -213,7 +213,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-32: Partition Key / Ordering Pattern
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -235,7 +235,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-33: Stream-Table Duality
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|
@@ -257,7 +257,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-34: Saga (Choreography)
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/messaging/11 Kafka Design Patterns for Every Backend Engineer.md)
 
 | | |
 |:---|:---|

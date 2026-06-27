@@ -8,7 +8,7 @@ timestamp: 2026-04-03T00:00:00Z
 # 48. Microservices & Service Design — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [When Microservices Become Distributed Monoliths: Warning Signs and Recovery](../../articles/medium/When%20Microservices%20Become%20Distributed%20Monoliths%20Warning%20Signs%20and%20Recovery.md)
+> **Source**: [When Microservices Become Distributed Monoliths: Warning Signs and Recovery](../../articles/software-architecture/When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 > **Also see**: [Resilience Patterns](resilience/resilience-patterns.md), [Architecture Principles](software-architecture/architecture-principles.md), [Design Patterns](software-architecture/design-patterns.md)
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -26,7 +26,7 @@ timestamp: 2026-04-03T00:00:00Z
 
 ## svc-01: Distributed Monolith Anti-Pattern
 
-> **Source**: [Article §"I Didn't Know I Was Building the Wrong Thing"](../../articles/medium/When%20Microservices%20Become%20Distributed%20Monoliths%20Warning%20Signs%20and%20Recovery.md)
+> **Source**: [Article §"I Didn't Know I Was Building the Wrong Thing"](../../articles/software-architecture/When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 
 | | |
 |:---|:---|
@@ -44,7 +44,7 @@ timestamp: 2026-04-03T00:00:00Z
 
 ## svc-02: Deployment Coupling via Synchronous Call Chains
 
-> **Source**: [Article §"I Didn't Know I Was Building the Wrong Thing"](../../articles/medium/When%20Microservices%20Become%20Distributed%20Monoliths%20Warning%20Signs%20and%20Recovery.md)
+> **Source**: [Article §"I Didn't Know I Was Building the Wrong Thing"](../../articles/software-architecture/When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 
 | | |
 |:---|:---|
@@ -62,7 +62,7 @@ timestamp: 2026-04-03T00:00:00Z
 
 ## svc-03: Recovery via Strangler Fig and Bounded Contexts
 
-> **Source**: [When Microservices Become Distributed Monoliths: Warning Signs and Recovery](../../articles/medium/When%20Microservices%20Become%20Distributed%20Monoliths%20Warning%20Signs%20and%20Recovery.md)
+> **Source**: [When Microservices Become Distributed Monoliths: Warning Signs and Recovery](../../articles/software-architecture/When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 
 | | |
 |:---|:---|

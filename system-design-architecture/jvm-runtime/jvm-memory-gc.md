@@ -8,7 +8,7 @@ timestamp: 2026-06-15T00:00:00Z
 # 33. JVM Memory & GC — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md) — Hitesh Laxman, Jun 2026
+> **Source**: [JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md) — Hitesh Laxman, Jun 2026
 > **Purpose**: Translate JVM memory internals into concrete production problems, debugging signals, and tuning tradeoffs for backend engineers running Java/Spring Boot services.
 > **Also see**: [Java JVM & Memory Management](../../reference-dictionary/java-jvm.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md), [Microservices Runtime Performance](performance/microservices-runtime-performance.md)
 > **Taxonomy Reference**: §7.2 Performance Architecture
@@ -33,7 +33,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-01: Allocation Rate Outpaces Minor GC
 
-> **Source**: [Article §"Real Production Example — Heap Issue"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--heap-issue)
+> **Source**: [Article §"Real Production Example — Heap Issue"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#real-production-example--heap-issue)
 
 | | |
 |:---|:---|
@@ -66,7 +66,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-02: Recursive Parsing Blows the Stack
 
-> **Source**: [Article §"Stack Overflow Error Example"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#stack-overflow-error-example)
+> **Source**: [Article §"Stack Overflow Error Example"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#stack-overflow-error-example)
 
 | | |
 |:---|:---|
@@ -100,7 +100,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-03: Dynamic Proxies Leak Metaspace
 
-> **Source**: [Article §"Real Production Example — Metaspace Leak"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--metaspace-leak)
+> **Source**: [Article §"Real Production Example — Metaspace Leak"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#real-production-example--metaspace-leak)
 
 | | |
 |:---|:---|
@@ -133,7 +133,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-04: Full GC Storms from Long-Lived Objects
 
-> **Source**: [Article §"Real Production GC Problem"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-gc-problem)
+> **Source**: [Article §"Real Production GC Problem"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#real-production-gc-problem)
 
 | | |
 |:---|:---|
@@ -166,7 +166,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-05: Static Collections and ThreadLocal Cause Memory Leaks
 
-> **Source**: [Article §"Memory Leaks in Java"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#memory-leaks-in-java)
+> **Source**: [Article §"Memory Leaks in Java"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#memory-leaks-in-java)
 
 | | |
 |:---|:---|
@@ -205,7 +205,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-06: Unbounded Thread Creation Exhausts Native Memory
 
-> **Source**: [Article §"Real Production Example — Thread Explosion"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--thread-explosion)
+> **Source**: [Article §"Real Production Example — Thread Explosion"](../../articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md#real-production-example--thread-explosion)
 
 | | |
 |:---|:---|
@@ -239,7 +239,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-07: HashMap Lookups Degrade Under Adversarial Collisions
 
-> **Source**: [Article §"The Bucket Model"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-bucket-model-quick-refresher)
+> **Source**: [Article §"The Bucket Model"](../../articles/databases/Most Developers Think HashMap Is Always O(1). That’s Not True..md#the-bucket-model-quick-refresher)
 
 | | |
 |:---|:---|
@@ -269,7 +269,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-08: Treeification Has a Capacity Gate
 
-> **Source**: [Article §"The Treeification Rule Has a Catch"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-treeification-rule-has-a-catch)
+> **Source**: [Article §"The Treeification Rule Has a Catch"](../../articles/databases/Most Developers Think HashMap Is Always O(1). That’s Not True..md#the-treeification-rule-has-a-catch)
 
 | | |
 |:---|:---|
@@ -299,7 +299,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-09: Poor hashCode and Undersized Capacity Hide Performance Cliffs
 
-> **Source**: [Article §"What This Means in Practice"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#what-this-means-in-practice)
+> **Source**: [Article §"What This Means in Practice"](../../articles/databases/Most Developers Think HashMap Is Always O(1). That’s Not True..md#what-this-means-in-practice)
 
 | | |
 |:---|:---|

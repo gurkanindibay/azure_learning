@@ -7,7 +7,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 # Media Processing Pipelines: Async Workflows at Scale
 
-> **Source**: [22 Scenario-Based System Design Questions](../../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenario #10  
+> **Source**: [22 Scenario-Based System Design Questions](../../articles/system-design-interview/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenario #10  
 > **Taxonomy Reference**: §2.2 Application Architecture, §3.3 Event-Driven & Messaging  
 > **Azure Mapping**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 

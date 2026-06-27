@@ -8,14 +8,14 @@ timestamp: 2026-06-14T00:00:00Z
 # 14. SQL Query Optimization Patterns
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — HabibWahid, May 2026  
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — HabibWahid, May 2026  
 > **Also see**: [Databases & Query Performance](databases/query-performance.md) — db-01 through db-06, [SQL System Design](databases/sql-system-design.md) — sqld-01 (Scaling Ladder), sqld-08 (Performance Checklist)
 
 ---
 
 ## sql-01: Index-Aware Query Design
 
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — Pattern 1
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — Pattern 1
 
 
 | | |
@@ -72,7 +72,7 @@ public class Order { ... }
 
 ## sql-02: SELECT Only What You Need
 
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — Pattern 2
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — Pattern 2
 
 
 | | |
@@ -121,7 +121,7 @@ Page<ProductSummary> findByActiveTrue(Pageable pageable);
 
 ## sql-03: Eliminate N+1 at the SQL Level
 
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — Pattern 3  
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — Pattern 3  
 > **Related**: [db-04: N+1 Query Problem](databases/query-performance.md#db-04-n1-query-problem)
 
 
@@ -179,7 +179,7 @@ Page<Order> findByStatus(String status, Pageable pageable);
 
 ## sql-04: CTEs Over Nested Subqueries
 
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — Pattern 4
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — Pattern 4
 
 
 | | |
@@ -257,7 +257,7 @@ public List<CustomerSpendDTO> findHighValueCustomers(String country) {
 
 ## sql-05: EXPLAIN Before You Ship
 
-> **Source**: [5 Query Optimization Patterns](../../../articles/medium/sql-query-optimization-patterns.md) — Pattern 5
+> **Source**: [5 Query Optimization Patterns](../../../articles/databases/sql-query-optimization-patterns.md) — Pattern 5
 
 
 | | |

@@ -8,7 +8,7 @@ timestamp: 2026-06-26T00:00:00Z
 # 55. Kafka Data & State Patterns — Production Deep-Dive Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md)
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md)
 > **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
 > **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](messaging/kafka-reliability-ordering.md)
 > **Purpose**: Extract production-depth engineering insights from the Part 3 deep-dive covering Event Sourcing, CQRS, Compacted Topics, and Event Carried State Transfer.
@@ -37,7 +37,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-43: Aggregate Snapshot to Bound Replay Cost
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -64,7 +64,7 @@ Snapshot frequency: every N events (e.g., 1 000) or every M minutes (e.g., 5)
 
 ## broker-44: S3 Archiving for Infinite Event Retention
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -93,7 +93,7 @@ Replay path:
 
 ## broker-45: Cryptographic Erasure for GDPR-Compliant Event Logs
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -115,7 +115,7 @@ Replay path:
 
 ## broker-46: CQRS with Polyglot Persistence
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -144,7 +144,7 @@ Replay path:
 
 ## broker-47: Read-After-Write Consistency in CQRS
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -170,7 +170,7 @@ Replay path:
 
 ## broker-48: Handling Out-of-Order Events in Read Model Updaters
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -200,7 +200,7 @@ Additionally, route all events for the same aggregate to the same partition (usi
 
 ## broker-49: Snapshot + Delta Bootstrap for Large Compacted Topics
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Compacted Topic
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Compacted Topic
 
 | | |
 |:---|:---|
@@ -232,7 +232,7 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 
 ## broker-50: Fat Events — Eliminating the Fetcher Pattern
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Event Carried State Transfer
 
 | | |
 |:---|:---|
@@ -272,7 +272,7 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 
 ## broker-51: ECST vs Fetcher Pattern Decision
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/messaging/11 Kafka Design Patterns - Data & State Deep Dive.md) — Event Carried State Transfer
 
 | | |
 |:---|:---|

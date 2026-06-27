@@ -8,14 +8,14 @@ timestamp: 2026-06-14T00:00:00Z
 # 1. Databases & Query Performance
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #1–4  
-> **Also see**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Questions #1–4  
+> **Also see**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
 
 ---
 
 ## db-01: Random UUID Indexing
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#1
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#1
 
 
 | | |
@@ -40,7 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## db-02: Keyset Pagination
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#2
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#2
 
 
 | | |
@@ -79,7 +79,7 @@ Fetch `LIMIT page_size + 1` to detect whether a next page exists — no `COUNT(*
 
 ## db-03: Composite Index vs. Separate Indexes
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#3
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#3
 
 
 | | |
@@ -110,7 +110,7 @@ Index on `(A, B)` can serve:
 
 ## db-04: N+1 Query Problem
 
-> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#4
+> **Source**: [20 Design Interview Questions](../../../articles/databases/20-design-interview-questions.md) — Q#4
 
 
 | | |
@@ -156,7 +156,7 @@ flowchart TD
 
 ## db-05: Hot Partition Problem
 
-> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -199,7 +199,7 @@ Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
 
 ## db-06: Database Migration at Scale
 
-> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/databases/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -278,7 +278,7 @@ CREATE TABLE checkpoint (
 
 ## db-07: PostgreSQL 18 Async I/O — When Sequential Scans Become the Right Plan
 
-> **Source**: [PostgreSQL 18’s Async I/O Isn’t Just Faster — It Changes How You Think About Slow Queries](../../articles/medium/PostgreSQL%2018’s%20Async%20IO%20Isn’t%20Just%20Faster%20—%20It%20Changes%20How%20You%20Think%20About%20Slow%20Queries.md)
+> **Source**: [PostgreSQL 18’s Async I/O Isn’t Just Faster — It Changes How You Think About Slow Queries](../../articles/databases/PostgreSQL 18’s Async IO Isn’t Just Faster — It Changes How You Think About Slow Queries.md)
 
 | | |
 |:---|:---|

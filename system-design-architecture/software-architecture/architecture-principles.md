@@ -8,7 +8,7 @@ timestamp: 2026-06-19T00:00:00Z
 # 40. Architecture Principles — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [The 11 Architecture Principles Every Senior Engineer Pretends to Know](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md)
+> **Source**: [The 11 Architecture Principles Every Senior Engineer Pretends to Know](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md)
 > **Purpose**: Extract reusable foundational principles and their failure modes so they can be checked during design reviews.
 
 > **Also see**: [Software Design Patterns](software-architecture/design-patterns.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Auth Takeaways](security/authentication-authorization.md)
@@ -37,7 +37,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-01: Least Privilege
 
-> **Source**: [§"1. Least Privilege: More Access Equals More Risk"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#1-least-privilege-more-access-equals-more-risk)
+> **Source**: [§"1. Least Privilege: More Access Equals More Risk"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#1-least-privilege-more-access-equals-more-risk)
 
 | | |
 |:---|:---|
@@ -54,7 +54,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-02: Separation of Concerns
 
-> **Source**: [§"2. Separation of Concerns: One Job, Done Right"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#2-separation-of-concerns-one-job-done-right)
+> **Source**: [§"2. Separation of Concerns: One Job, Done Right"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#2-separation-of-concerns-one-job-done-right)
 
 | | |
 |:---|:---|
@@ -71,7 +71,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-03: Defense in Depth
 
-> **Source**: [§"3. Defense in Depth: Don’t Rely on One Lock"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#3-defense-in-depth-dont-rely-on-one-lock)
+> **Source**: [§"3. Defense in Depth: Don’t Rely on One Lock"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#3-defense-in-depth-dont-rely-on-one-lock)
 
 | | |
 |:---|:---|
@@ -88,7 +88,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-04: Fail Fast
 
-> **Source**: [§"4. Fail Fast: Early Warning Saves Everything"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#4-fail-fast-early-warning-saves-everything)
+> **Source**: [§"4. Fail Fast: Early Warning Saves Everything"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#4-fail-fast-early-warning-saves-everything)
 
 | | |
 |:---|:---|
@@ -105,7 +105,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-05: Single Source of Truth
 
-> **Source**: [§"5. Single Source of Truth: Eliminate Conflicting Reports"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#5-single-source-of-truth-eliminate-conflicting-reports)
+> **Source**: [§"5. Single Source of Truth: Eliminate Conflicting Reports"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#5-single-source-of-truth-eliminate-conflicting-reports)
 
 | | |
 |:---|:---|
@@ -122,7 +122,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-06: Loose Coupling
 
-> **Source**: [§"6. Loose Coupling: Connected, Not Tangled"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#6-loose-coupling-connected-not-tangled)
+> **Source**: [§"6. Loose Coupling: Connected, Not Tangled"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#6-loose-coupling-connected-not-tangled)
 
 | | |
 |:---|:---|
@@ -139,7 +139,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-07: Immutability
 
-> **Source**: [§"7. Immutability: Save a New Document, Don’t Overwrite"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#7-immutability-save-a-new-document-dont-overwrite)
+> **Source**: [§"7. Immutability: Save a New Document, Don’t Overwrite"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#7-immutability-save-a-new-document-dont-overwrite)
 
 | | |
 |:---|:---|
@@ -156,7 +156,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-08: Idempotency
 
-> **Source**: [§"8. Idempotency: Consistency Equals Reliability"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#8-idempotency-consistency-equals-reliability)
+> **Source**: [§"8. Idempotency: Consistency Equals Reliability"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#8-idempotency-consistency-equals-reliability)
 
 | | |
 |:---|:---|
@@ -173,7 +173,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-09: Scalability by Design
 
-> **Source**: [§"9. Scalability by Design: No Expensive Rebuilds Every Six Months"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#9-scalability-by-design-no-expensive-rebuilds-every-six-months)
+> **Source**: [§"9. Scalability by Design: No Expensive Rebuilds Every Six Months"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#9-scalability-by-design-no-expensive-rebuilds-every-six-months)
 
 | | |
 |:---|:---|
@@ -190,7 +190,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-10: Observability
 
-> **Source**: [§"10. Observability: You Can’t Fix What You Can’t See"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#10-observability-you-cant-fix-what-you-cant-see)
+> **Source**: [§"10. Observability: You Can’t Fix What You Can’t See"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#10-observability-you-cant-fix-what-you-cant-see)
 
 | | |
 |:---|:---|
@@ -207,7 +207,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-11: Zero Trust
 
-> **Source**: [§"11. Zero Trust: Always Verify, Never Assume"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#11-zero-trust-always-verify-never-assume)
+> **Source**: [§"11. Zero Trust: Always Verify, Never Assume"](../../articles/software-architecture/The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md#11-zero-trust-always-verify-never-assume)
 
 | | |
 |:---|:---|

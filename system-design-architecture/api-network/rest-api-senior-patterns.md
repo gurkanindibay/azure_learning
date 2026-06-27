@@ -8,7 +8,7 @@ timestamp: 2026-06-23T00:00:00Z
 # 46. REST API Senior Patterns — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Stop Designing REST APIs Like a Mid-Level Dev](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Stop Designing REST APIs Like a Mid-Level Dev](../../../articles/api-network/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 > **Also see**: [API Design Patterns](api-network/api-design-patterns.md), [APIs & Network Design](api-network/api-network-design.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
 > **Taxonomy**: §8.3 API Design
 
@@ -26,7 +26,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## apipat-10: PATCH vs PUT — Partial Updates with JSON Merge Patch
 
-> **Source**: [Article §"Mistake 2 — Using PUT When You Mean PATCH"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 2 — Using PUT When You Mean PATCH"](../../../articles/api-network/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|
@@ -67,7 +67,7 @@ Content-Type: application/merge-patch+json
 
 ## apipat-11: ETag-Based Optimistic Concurrency Control
 
-> **Source**: [Article §"Mistake 3 — No Concurrency Control on Updates"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 3 — No Concurrency Control on Updates"](../../../articles/api-network/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|
@@ -110,7 +110,7 @@ public ResponseEntity<ProductResponse> updateProduct(
 
 ## apipat-12: Sparse Fieldsets — Client-Driven Field Selection
 
-> **Source**: [Article §"Mistake 4 — No Field Selection"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 4 — No Field Selection"](../../../articles/api-network/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|

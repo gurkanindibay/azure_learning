@@ -8,13 +8,13 @@ timestamp: 2026-06-14T00:00:00Z
 # 8. Async & Concurrency Patterns
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Sources**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md), [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md)
+> **Sources**: [Java Async Patterns](../../articles/stream-processing/async-patterns-java/01-senior-java-concurrency-patterns.md), [.NET Async Patterns](../../articles/stream-processing/async-patterns-java/02-dotnet-async-concurrency-patterns.md)
 
 ---
 
 ## async-01: Unbounded Thread Pool Exhaustion
 
-> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 1, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 1
+> **Source**: [Java Async Patterns](../../articles/stream-processing/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 1, [.NET Async Patterns](../../articles/stream-processing/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 1
 
 | | |
 |:---|:---|
@@ -40,7 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## async-02: Sequential I/O Calls Instead of Parallel
 
-> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 2, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 2
+> **Source**: [Java Async Patterns](../../articles/stream-processing/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 2, [.NET Async Patterns](../../articles/stream-processing/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 2
 
 | | |
 |:---|:---|
@@ -70,7 +70,7 @@ Parallel:   var tA=A(); var tB=B(); var tC=C(); await Task.WhenAll(tA,tB,tC) = 3
 
 ## async-03: Side Effects Before Transaction Commit
 
-> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 3, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 3
+> **Source**: [Java Async Patterns](../../articles/stream-processing/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 3, [.NET Async Patterns](../../articles/stream-processing/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 3
 
 | | |
 |:---|:---|
@@ -96,7 +96,7 @@ Parallel:   var tA=A(); var tB=B(); var tC=C(); await Task.WhenAll(tA,tB,tC) = 3
 
 ## async-04: Silent Async Failures
 
-> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 4, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 4
+> **Source**: [Java Async Patterns](../../articles/stream-processing/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 4, [.NET Async Patterns](../../articles/stream-processing/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 4
 
 | | |
 |:---|:---|

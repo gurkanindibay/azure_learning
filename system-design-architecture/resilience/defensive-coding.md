@@ -8,7 +8,7 @@ timestamp: 2026-06-25T00:00:00Z
 # 51. Defensive Coding — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Defensive Coding Approach](../../articles/medium/defensive-coding-approach.md)
+> **Source**: [Defensive Coding Approach](../../articles/resilience/defensive-coding-approach.md)
 > **Purpose**: Extract reusable defensive coding patterns with their failure modes and tradeoffs for use in design reviews and code-review checklists.
 
 > **Also see**: [Architecture Principles](software-architecture/architecture-principles.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Auth Takeaways](security/authentication-authorization.md) · [Software Design Patterns](software-architecture/design-patterns.md)

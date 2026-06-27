@@ -8,7 +8,7 @@ timestamp: 2026-06-15T00:00:00Z
 # 29. Microservices Runtime Performance — Java vs Go Benchmark Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)
-> **Source**: [Can Java Microservices Be As Fast As Go? A 2026 Benchmark Update](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md) — by Mark Nelson (2026)
+> **Source**: [Can Java Microservices Be As Fast As Go? A 2026 Benchmark Update](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md) — by Mark Nelson (2026)
 > **Purpose**: Extract reusable architectural patterns for microservice runtime selection, concurrency model choice, AOT compilation, TCP tuning, and benchmark methodology.
 > **Also see**: [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md), [Resilience Patterns](resilience/resilience-patterns.md)
 > **Taxonomy Reference**: §2 Application Software Architecture, §7 Reliability, Performance & Operations
@@ -28,7 +28,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## perf-01: Virtual Threads — Concurrency Model Matters More Than Language
 
-> **Source**: [The Baseline](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#the-baseline) — Helidon 4 uses virtual threads for request handling
+> **Source**: [The Baseline](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#the-baseline) — Helidon 4 uses virtual threads for request handling
 
 | | |
 |:---|:---|
@@ -68,7 +68,7 @@ Java virtual threads scaled better as concurrency and payload grew. At low concu
 
 ## perf-02: Leyden AOT — Ahead-of-Time Compilation Changes the Startup Game
 
-> **Source**: [What Leyden AOT Did](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#what-leyden-aot-did)
+> **Source**: [What Leyden AOT Did](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#what-leyden-aot-did)
 
 | | |
 |:---|:---|
@@ -106,7 +106,7 @@ Leyden AOT had the best peak throughput for every payload size. The largest rela
 
 ## perf-03: TCP_NODELAY — One Socket Option Worth 40 ms
 
-> **Source**: [The Small Tuning Detail That Changed The Java Result](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#the-small-tuning-detail-that-changed-the-java-result)
+> **Source**: [The Small Tuning Detail That Changed The Java Result](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#the-small-tuning-detail-that-changed-the-java-result)
 
 | | |
 |:---|:---|
@@ -143,7 +143,7 @@ WebServer server = WebServer.builder()
 
 ## perf-04: Benchmark Methodology — Warmup, Matrix, Isolation
 
-> **Source**: [The Benchmark Shape](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#the-benchmark-shape)
+> **Source**: [The Benchmark Shape](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#the-benchmark-shape)
 
 | | |
 |:---|:---|
@@ -177,7 +177,7 @@ WebServer server = WebServer.builder()
 
 ## perf-05: Runtime Shape Selection — Language Is Not the Decision
 
-> **Source**: [What The Results Mean](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#what-the-results-mean)
+> **Source**: [What The Results Mean](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#what-the-results-mean)
 
 | | |
 |:---|:---|
@@ -220,7 +220,7 @@ Runtime Shape = Language
 
 ## perf-06: Measurement-Driven Architecture — Slogans vs Data
 
-> **Source**: [The Bit I Still Believe](../../articles/medium/Can%20Java%20Microservices%20Be%20As%20Fast%20As%20Go%20A%202026%20Benchmark%20Update.md#the-bit-i-still-believe)
+> **Source**: [The Bit I Still Believe](../../articles/performance/Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md#the-bit-i-still-believe)
 
 | | |
 |:---|:---|
