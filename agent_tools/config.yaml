@@ -27,11 +27,8 @@ type_mapping:
   # Programming languages
   "programming-languages/": "Programming Guide"
 
-  # Source articles
-  "articles/medium/": "Article"
-  "articles/linkedin/": "Article"
-  "articles/personal-blogs/": "Article"
-  "articles/substack/": "Article"
+  # Source articles (organized by domain, not platform)
+  "articles/": "Article"
 
   # Other
   "videos/": "Video Notes"
@@ -87,194 +84,116 @@ placement_signals:
 # [manual] Add entries here to provide descriptions and keyword hints.
 takeaway_domains:
   db:
-    file: "01-databases-query-performance.md"
+    file: "databases/query-performance.md"
     desc: "Databases & Query Performance"
   tx:
-    file: "02-concurrency-transactions.md"
+    file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"
   api:
-    file: "04-api-network-design.md"
+    file: "api-network/api-network-design.md"
     desc: "API & Network Design"
   uber:
-    file: "06-uber-architecture-case-study.md"
+    file: "case-studies/uber-architecture.md"
     desc: "Uber Architecture"
   async:
-    file: "08-async-concurrency-patterns.md"
+    file: "stream-processing/async-concurrency-patterns.md"
     desc: "Async & Concurrency Patterns"
   flink:
-    file: "09-stream-processing-flink.md"
+    file: "stream-processing/stream-processing-flink.md"
     desc: "Stream Processing (Flink)"
   resilience:
-    file: "10-resilience-patterns.md"
+    file: "resilience/resilience-patterns.md"
     desc: "Resilience Patterns"
   ai:
-    file: "11-ai-ml-infrastructure.md"
+    file: "ai-ml-infrastructure/ai-ml-infrastructure.md"
     desc: "AI/ML Infrastructure"
   media:
-    file: "12-media-processing-pipelines.md"
+    file: "media-processing/media-processing-pipelines.md"
     desc: "Media Processing"
   proc:
-    file: "13-large-data-processing-constraints.md"
+    file: "large-data-processing/large-data-constraints.md"
     desc: "Large Data Processing"
   sql:
-    file: "14-sql-query-optimization.md"
+    file: "databases/sql-query-optimization.md"
     desc: "SQL Query Optimization"
   gw:
-    file: "16-reverse-proxy-lb-api-gateway.md"
+    file: "api-network/reverse-proxy-lb-gateway.md"
     desc: "Reverse Proxy, LB & API Gateway"
   agentic:
-    file: "17-agentic-ai-enterprise-strategic-systems.md"
+    file: "agentic-ai/enterprise-strategic-systems.md"
     desc: "Agentic AI"
   prag:
-    file: "18-pragmatic-system-design-takeaways.md"
+    file: "system-design-interview/pragmatic-takeaways.md"
     desc: "Pragmatic System Design"
   sqld:
-    file: "19-sql-system-design-takeaways.md"
+    file: "databases/sql-system-design.md"
     desc: "SQL System Design"
   apipat:
-    file: "20-api-design-patterns-key-takeaways.md"
+    file: "api-network/api-design-patterns.md"
     desc: "API Design Patterns"
   agentarch:
-    file: "21-ai-agent-architecture-key-takeaways.md"
+    file: "agentic-ai/ai-agent-architecture.md"
     desc: "AI Agent Architecture"
   aidev:
-    file: "22-ai-assisted-development-five-levels.md"
+    file: "agentic-ai/ai-assisted-development.md"
     desc: "AI-Assisted Development"
   cb:
-    file: "23-circuit-breaker-key-takeaways.md"
+    file: "resilience/circuit-breaker-honesty.md"
     desc: "Circuit Breaker"
   hsm:
-    file: "24-hsm-bottleneck-key-takeaways.md"
+    file: "security/hsm-integration-bottlenecks.md"
     desc: "HSM Integration"
   cqrs:
-    file: "25-cqrs-fintech-key-takeaways.md"
+    file: "cqrs-fintech/cqrs-fintech.md"
     desc: "CQRS for Fintech"
   docker:
-    file: "26-docker-file-art-key-takeaways.md"
+    file: "software-architecture/dockerfile-optimization.md"
     desc: "Docker Optimization"
   iggy:
-    file: "27-apache-iggy-key-takeaways.md"
+    file: "messaging/apache-iggy.md"
     desc: "Apache Iggy"
   harness:
-    file: "28-agent-harness-key-takeaways.md"
+    file: "agentic-ai/agent-harness.md"
     desc: "Agent Harness"
-    keywords: ["azure", "harness", "source", "taxonomy", "tradeoff", "problem"]
   perf:
-    file: "29-microservices-runtime-performance.md"
+    file: "performance/microservices-runtime-performance.md"
     desc: "Microservices Runtime Performance"
   broker:
-    file: "30-broker-key-takeaways.md"
-    desc: "Broker"
-    keywords: ["source", "problem", "strategy", "tradeoff", "cross-reference", "consumer"]
+    file: "messaging/kafka-consumer-mistakes.md"
+    desc: "Message Brokers & Kafka"
   cache:
-    file: "31-cache-key-takeaways.md"
-    desc: "Cache"
-    keywords: ["source", "dictionary", "azure", "problem", "taxonomy", "strategy"]
+    file: "caching/redis-internals.md"
+    desc: "Caching & Redis Internals"
   jvm:
-    file: "33-jvm-key-takeaways.md"
+    file: "jvm-runtime/jvm-memory-gc.md"
     desc: "JVM Memory & GC"
-    keywords: ["source", "problem", "cross-reference", "root cause", "key insight", "memory"]
   sdi:
-    file: "34-sdi-key-takeaways.md"
-    desc: "Sdi"
-    keywords: ["source", "dictionary", "taxonomy", "problem", "strategy", "azure"]
+    file: "system-design-interview/interview-roadmap.md"
+    desc: "System Design Interview"
   mesh:
-    file: "35-mesh-key-takeaways.md"
+    file: "case-studies/data-mesh-medallion.md"
     desc: "Data Mesh & Medallion Architecture"
-    keywords: ["data", "mesh", "data product", "semantic layer", "governance", "source", "problem", "strategy", "tradeoff"]
   auth:
-    file: "36-auth-key-takeaways.md"
-    desc: "Auth"
-    keywords: ["source", "problem", "strategy", "tradeoff", "key concept", "identity"]
+    file: "security/authentication-authorization.md"
+    desc: "Authentication & Authorization"
   dp:
-    file: "39-design-patterns-key-takeaways.md"
+    file: "software-architecture/design-patterns.md"
     desc: "Software Design Patterns (GoF + Enterprise)"
-    keywords: ["singleton", "factory", "builder", "adapter", "decorator", "proxy", "strategy", "observer", "command", "repository", "saga", "creational", "structural", "behavioral", "design pattern"]
   arch:
-    file: "40-arch-key-takeaways.md"
+    file: "software-architecture/architecture-principles.md"
     desc: "Architecture Principles"
-    keywords: ["architecture principle", "least privilege", "separation of concerns", "defense in depth", "fail fast", "single source of truth", "loose coupling", "immutability", "idempotency", "scalability", "observability", "zero trust"]
   url:
-    file: "41-url-key-takeaways.md"
+    file: "case-studies/url-shortener.md"
     desc: "URL Shortener"
-    keywords: ["url shortener", "base62", "key generation", "cache-aside", "redirect", "tinyurl", "alias"]
   restpat:
-    file: "46-rest-api-senior-patterns-key-takeaways.md"
+    file: "api-network/rest-api-senior-patterns.md"
     desc: "REST API Senior Patterns (PATCH, ETag, Sparse Fieldsets)"
-    keywords: ["patch", "json merge patch", "etag", "if-match", "sparse fieldsets", "fields", "optimistic concurrency", "rest", "api", "partial update"]
   feed:
-    file: "42-feed-key-takeaways.md"
+    file: "case-studies/news-feed.md"
     desc: "News Feed"
-    keywords: ["news feed", "fanout", "timeline cache", "celebrity cache", "social graph", "push", "pull"]
   svc:
-    file: "48-svc-distributed-monolith-key-takeaways.md"
+    file: "software-architecture/distributed-monolith.md"
     desc: "Microservices & Service Design"
-    keywords: ["microservices", "distributed monolith", "service coupling", "bounded context", "service boundary", "deployment coupling", "strangler fig", "database per service", "service independence"]
-
-  broker:
-    file: "32-broker-key-takeaways.md"
-    desc: "Broker"
-    keywords: [source, dictionary, strategy, taxonomy, problem, also see]
-
-  cqrs:
-    file: "37-cqrs-key-takeaways.md"
-    desc: "CQRS"
-    keywords: [source, dictionary, payment, problem, strategy, tradeoff]
-
-  database-decisions:
-    file: "38-database-decisions-key-takeaways.md"
-    desc: "Database Decisions"
-    keywords: [source, problem, taxonomy, dictionary, strategy, also see]
-
-  resilience:
-    file: "39-resilience-key-takeaways.md"
-    desc: "Resilience"
-    keywords: [dictionary, problem, resilience-, root cause, key concept, azure services]
-
-  broker:
-    file: "43-broker-key-takeaways.md"
-    desc: "Broker"
-    keywords: [source, dictionary, azure, problem, strategy, also see]
-
-  tx:
-    file: "44-tx-key-takeaways.md"
-    desc: "Tx"
-    keywords: [azure, source, dictionary, problem, strategy, also see]
-
-  agentic-ai-accountability:
-    file: "45-agentic-ai-accountability-key-takeaways.md"
-    desc: "Agentic AI Accountability"
-    keywords: [source, dictionary, problem, tradeoff, also see, strategy]
-
-  jvm-thread-model:
-    file: "47-jvm-thread-model-key-takeaways.md"
-    desc: "Jvm Thread Model"
-    keywords: [thread, threads, source, virtual, synchronized, problem]
-
-  cqrs:
-    file: "49-cqrs-key-takeaways.md"
-    desc: "CQRS"
-    keywords: [provider, source, problem, strategy, dictionary, tradeoff]
-
-  kafka-patterns:
-    file: "53-kafka-design-patterns-key-takeaways.md"
-    desc: "Kafka Design Patterns (11 patterns overview)"
-    keywords: [kafka, event sourcing, cqrs, claim check, dlq, idempotent consumer, transactional outbox, compacted topic, partition key, stream-table, saga, choreography, broker]
-
-  kafka-reliability:
-    file: "54-kafka-reliability-ordering-key-takeaways.md"
-    desc: "Kafka Reliability & Ordering (production deep-dive)"
-    keywords: [dual-write, outbox publisher, debezium, hot partition, retry topic, exponential backoff, jitter, thundering herd, conditional write, partition count, dlq replay]
-
-  kafka-data-state:
-    file: "55-kafka-data-state-key-takeaways.md"
-    desc: "Kafka Data & State Patterns (production deep-dive)"
-    keywords: [event sourcing, aggregate snapshot, s3 archiving, cryptographic erasure, gdpr, cqrs, polyglot persistence, read-after-write, compacted topic, snapshot delta, fat event, fetcher pattern, event carried state transfer]
-
-  kafka-performance:
-    file: "56-kafka-performance-integration-key-takeaways.md"
-    desc: "Kafka Performance & Integration Patterns (production deep-dive)"
-    keywords: [claim check, orphaned object, presigned url, s3 lifecycle, glacier, stream-table join, ktable, kstream, rocksdb, late arriving data, grace period, saga choreography, compensating transaction, step functions, orchestration]
 
 
 # Keyword → domain prefix suggestions for auto-detection
@@ -519,10 +438,13 @@ dictionary_domains:
   azure-services.md:
     title: "Azure Services"
     keywords:
-      - "also see", azure, vnet, storage, service
-        event, managed, identity
-
-    title: "Kubernetes"
+      - azure
+      - vnet
+      - storage
+      - managed identity
+      - event hubs
+      - service bus
+      - key vault
 
   kubernetes.md:
     title: "Kubernetes"

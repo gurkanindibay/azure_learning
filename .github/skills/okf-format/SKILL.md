@@ -26,7 +26,7 @@ Use the decision tree from `.github/copilot-instructions.md`:
 - System design → `system-design-architecture/`
 - Term definitions → `reference-dictionary/`
 - Programming → `programming-languages/<language>/`
-- Articles → `articles/<platform>/`
+- Articles → `articles/<domain>/`
 - Video notes → `videos/`
 - Raw drafts → `unstructured-resources/`
 
