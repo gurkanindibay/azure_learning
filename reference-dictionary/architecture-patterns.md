@@ -117,6 +117,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Input Validation | [`#input-validation`](#input-validation) |
 | Parameterized Query | [`#parameterized-query`](#parameterized-query) |
 | Real User Monitoring (RUM) | [`#real-user-monitoring-rum`](#real-user-monitoring-rum) |
+| Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
+| Distributed Commit Log | [`#distributed-commit-log`](#distributed-commit-log) |
+| Message Batching | [`#message-batching`](#message-batching) |
 
 ---
 
@@ -2398,4 +2401,77 @@ An architectural approach where **different services (or different read models w
 
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Database Per Service](#database-per-service) · [Microservices](#microservices)
+
+---
+
+## Zero-Copy Transfer
+
+An OS-level optimization that transfers data directly from **disk cache to the network socket** without copying it through application memory. In Kafka, the `sendfile()` system call eliminates CPU copies and context switches between kernel and user space, dramatically reducing CPU usage during high-throughput data serving.
+
+### Key Characteristics
+- Data path: disk → page cache → network socket (no application buffer involved)
+- Eliminates redundant CPU copies and kernel/user context switches
+- Available when data is served directly from the OS page cache (not from application-managed buffers)
+- Used by Kafka for consumer fetch requests; also employed by Nginx and other high-performance servers
+
+### When to Use
+- High-throughput streaming systems where CPU is the bottleneck for data serving
+- When consumers read data that is already in the OS page cache (recently produced or frequently read)
+
+### When NOT to Use
+- When messages require application-level transformation or encryption before sending
+- When data is not in the page cache (misses still require disk reads into application memory first)
+
+### Also see
+- [Distributed Commit Log](#distributed-commit-log) · [Message Batching](#message-batching) · [Partition](messaging.md#partition)
+
+---
+
+## Distributed Commit Log
+
+An **append-only, immutable, ordered log** distributed across multiple machines. Unlike a traditional message queue where the broker manages per-message delivery state, a distributed commit log only appends messages sequentially to on-disk logs. Consumers independently track their own read position (offset), removing coordination overhead from the broker. Apache Kafka is the canonical implementation.
+
+### Key Characteristics
+- **Append-only**: Messages are never mutated — only appended; enables sequential disk writes at near hardware limit
+- **Consumer-managed offsets**: The broker does not track who has read what — consumers commit their own progress
+- **Immutable history**: Messages persist based on retention policy (time/size), not consumption status — enables replay
+- **Partitioned**: The log is sharded into partitions for horizontal scaling across brokers
+
+### When to Use
+- Event streaming and high-throughput messaging where millions of messages per second are required
+- Systems that need event replay, audit trails, or long-term event history
+- When producers and consumers should be fully decoupled — producers never wait for consumers
+
+### When NOT to Use
+- Task queues with per-message acknowledgment and complex routing logic (RabbitMQ is a better fit)
+- Low-throughput systems where operational complexity of Kafka outweighs its benefits
+- When strict global message ordering across all partitions is required
+
+### Also see
+- [Kafka vs RabbitMQ](messaging.md#kafka-vs-rabbitmq) · [Partition](messaging.md#partition) · [Zero-Copy Transfer](#zero-copy-transfer) · [Message Batching](#message-batching)
+
+---
+
+## Message Batching
+
+The practice of **accumulating multiple messages into a single batch** before writing to disk or sending over the network. In Kafka, producers batch messages (controlled by `linger.ms` and `batch.size`) and consumers fetch entire batches at once. Batching converts many small I/O operations into fewer large sequential operations, dramatically improving throughput at the cost of a small increase in latency.
+
+### Key Characteristics
+- **Throughput over latency**: Optimizes for messages-per-second rather than per-message delivery time
+- **Configurable delay**: `linger.ms` introduces artificial wait time to fill batches before sending
+- **Often combined with compression**: Compression is applied at the batch level for better ratios than per-message compression
+- **Network efficiency**: Fewer, larger TCP packets reduce per-packet overhead
+
+### When to Use
+- High-throughput streaming pipelines where a few milliseconds of additional latency is acceptable
+- When network bandwidth or disk I/O is the bottleneck rather than CPU
+- Batch processing systems that naturally accumulate messages before processing
+
+### When NOT to Use
+- Low-latency use cases where messages must be delivered in single-digit milliseconds
+- Systems with very low message rates — batching adds unnecessary delay with no throughput gain
+- When message ordering within a batch matters and batches may fail partially
+
+### Also see
+- [Zero-Copy Transfer](#zero-copy-transfer) · [Distributed Commit Log](#distributed-commit-log) · [Consumer Lag](messaging.md#consumer-lag)
 
