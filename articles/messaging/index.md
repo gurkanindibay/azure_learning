@@ -18,7 +18,7 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [11 Kafka Design Patterns - Performance & Integration Deep Dive](11 Kafka Design Patterns - Performance & Integration Deep Dive.md)
 - [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](11 Kafka Design Patterns - Reliability & Ordering Deep Dive.md)
 - [11 Kafka Design Patterns for Every Backend Engineer](11 Kafka Design Patterns for Every Backend Engineer.md)
-- [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse.md)
+- [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](3-reason-kafka-laughs-at-1-million-messages-per-second-while-traditional-queues-collapse.md)
 - [5-kafka-design-patterns-every-backend-engineer-should-know](5-kafka-design-patterns-every-backend-engineer-should-know.md)
 - [Kafka Offset Commit Strategies — What Actually Works in Production](Kafka Offset Commit Strategies — What Actually Works in Production.md)
 - [apache-iggy](apache-iggy.md)

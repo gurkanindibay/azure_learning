@@ -9,13 +9,14 @@ timestamp: 2026-06-27T00:00:00Z
 
 > **Parent**: [System Design Interview Reference](../index.md)
 
-Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Generation (RAG) architecture, LLM cost optimization, and vector database performance.
+Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Generation (RAG) architecture, LLM cost optimization, vector database performance, and batch compute scheduling with Kueue.
 
 ## Files
 
 | File | ID Range | Topics |
 |:---|:---|:---|
 | [ai-ml-infrastructure.md](ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
+| [ai-batch-compute-kueue.md](ai-batch-compute-kueue.md) | `ai-04` – `ai-08` | Tenant hierarchy, Preemption-based fair sharing, Open-source adoption, Zero-lift migration, Kueue mapping |
 
 ## Cross-References
 

@@ -122,6 +122,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
 | Distributed Commit Log | [`#distributed-commit-log`](#distributed-commit-log) |
 | Message Batching | [`#message-batching`](#message-batching) |
+| Preemption | [`#preemption`](#preemption) |
+| Fair Sharing | [`#fair-sharing`](#fair-sharing) |
+| Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
 
 ---
 
@@ -2522,4 +2525,79 @@ The practice of **accumulating multiple messages into a single batch** before wr
 
 ### Also see
 - [Zero-Copy Transfer](#zero-copy-transfer) · [Distributed Commit Log](#distributed-commit-log) · [Consumer Lag](messaging.md#consumer-lag)
+
+---
+
+## Preemption
+
+In batch scheduling, **preemption** is the ability to evict a running, lower-priority workload to admit a higher-priority one or to reclaim resources for their owning tenant. Unlike queuing (which decides admission order), preemption operates on already-running jobs — it forcibly stops and requeues them.
+
+### Key Characteristics
+- **Priority-based**: Higher-priority jobs can displace lower-priority ones already consuming resources
+- **Reclamation**: Idle reserved capacity lent to other tenants can be reclaimed when the owning tenant needs it
+- **Graceful vs forceful**: Preempted jobs may receive a SIGTERM with a grace period or an immediate kill
+- **Restartable workloads only**: Preemption is safe for batch/idempotent jobs but destructive for serving workloads
+
+### When to Use
+- Multi-tenant batch platforms where reserved capacity sits idle while other tenants starve
+- Systems requiring priority-based scheduling where business-critical jobs must jump the queue
+- Kubernetes-native batch scheduling via Kueue's `reclaimWithinCohort` and `withinClusterQueue` policies
+
+### When NOT to Use
+- Serving workloads (HTTP, gRPC) where eviction causes user-visible errors or data loss
+- Systems without checkpointing or idempotent job design — preempted jobs lose all progress
+- When preemption frequency causes thrashing (jobs repeatedly preempted before completion)
+
+### Also see
+- [Fair Sharing](#fair-sharing) · [Tenant Hierarchy](#tenant-hierarchy) · [Kueue (Kubernetes-native job queueing)](azure-services.md) · [Resilience Patterns](../reference-dictionary/resilience.md)
+
+---
+
+## Fair Sharing
+
+A resource allocation strategy where **competing tenants receive a weighted share of available capacity** proportional to their configured weight. When demand exceeds supply, each tenant gets roughly `(weight / total_weight) × total_capacity`. Fair sharing prevents a single heavy tenant from starving others while allowing tenants to burst into unused capacity from others.
+
+### Key Characteristics
+- **Weighted allocation**: Tenants with higher weight get proportionally more resources under contention
+- **Work-conserving**: Idle capacity from one tenant is immediately available to others — no stranded resources
+- **Fairness over time**: Short-term unfairness is acceptable; the guarantee is long-term weighted proportionality
+- **With preemption**: When combined with preemption, fair sharing becomes dynamic — lower-priority work can be evicted to restore fair shares
+
+### When to Use
+- Multi-tenant platforms where capacity must be divided across teams or business units
+- Batch scheduling systems (Kueue, YARN, Mesos) managing heterogeneous workloads
+- Cloud resource management where cost attribution and fair access are both required
+
+### When NOT to Use
+- Single-tenant systems where the concept of "fairness across tenants" is meaningless
+- When strict capacity guarantees (not proportional sharing) are required — use reserved capacity instead
+- Very short-term allocation where the overhead of tracking weighted usage exceeds the fairness benefit
+
+### Also see
+- [Preemption](#preemption) · [Tenant Hierarchy](#tenant-hierarchy) · [Reserved Capacity](azure-services.md)
+
+---
+
+## Tenant Hierarchy
+
+A **tree-structured organizational model** for multi-tenant systems where tenants are arranged in a parent-child hierarchy. Internal (non-leaf) tenants aggregate capacity for their subtree but don't accept work directly; leaf tenants accept jobs and have associated queues. Capacity can be reserved at any level of the tree.
+
+### Key Characteristics
+- **Tree topology**: Internal tenants group and aggregate; leaf tenants execute work
+- **Capacity inheritance**: Reserved capacity at an internal tenant is fair-shared across its subtree
+- **Organizational mapping**: The hierarchy reflects team structure — an org can use a flat tenant or a deep tree matching ownership boundaries
+- **Two capacity pools**: Reserved (partitioned, guaranteed) and Shared (global pool, burst-eligible)
+
+### When to Use
+- Large organizations with complex team structures needing hierarchical resource allocation
+- Platforms where different business units need guaranteed capacity while sharing a common pool
+- Batch compute platforms (Netflix CMB/Titus, Kueue Cohorts/ClusterQueues)
+
+### When NOT to Use
+- Small teams where a flat priority queue suffices
+- When organizational structure is too fluid — constant hierarchy changes create operational churn
+- Without preemption: hierarchical reserved capacity without preemption leaves idle resources stranded
+
+### Also see
+- [Fair Sharing](#fair-sharing) · [Preemption](#preemption) · [Cohort/ClusterQueue (Kueue concepts)](https://kueue.sigs.k8s.io/docs/concepts/)
 
