@@ -12,7 +12,7 @@ Run discovery only on new or modified files under `system-design-architecture/` 
 ## When to Use
 
 - After creating a new takeaway file in `system-design-architecture/` (e.g., `29-mesh-key-takeaways.md`)
-- After creating a new dictionary file in `reference-dictionary/` (e.g., `kubernetes.md`)
+- After creating a new dictionary file in `reference-dictionary/` (e.g., `security-iam.md`)
 - After running the coordinator pipeline (`python3 agent_tools/coordinator.py process ...`)
 - During repository maintenance, scan only files under `system-design-architecture/` and `reference-dictionary/` and compare their discovered domain prefixes against `agent_tools/config.yaml`
 

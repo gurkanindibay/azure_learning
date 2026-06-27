@@ -277,6 +277,41 @@ takeaway_keywords:
   social graph: feed
   push fanout: feed
   pull fanout: feed
+  defensive programming: resilience
+  input validation: resilience
+  parameterized query: resilience
+  sql injection: resilience
+  opentelemetry: resilience
+  golden signals: resilience
+  error budget: resilience
+  blameless postmortem: resilience
+  real user monitoring: resilience
+  rum: resilience
+  configuration propagation: resilience
+  cap theorem: mesh
+  vertical scaling: mesh
+  horizontal scaling: mesh
+  replication: mesh
+  sharding: mesh
+  polyglot persistence: mesh
+  competing consumers: broker
+  claim check: broker
+  atomic deduplication: broker
+  deduplication store: broker
+  distributed commit log: broker
+  message batching: broker
+  virtual threads: jvm
+  leyden: jvm
+  helidon: jvm
+  thread pinning: jvm
+  carrier thread: jvm
+  goroutine: perf
+  gomaxprocs: perf
+  tokio: perf
+  event loop: perf
+  api gateway: gw
+  hotlinking: api
+  faceted search: api
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
@@ -314,8 +349,11 @@ dictionary_domains:
       - rate limit
       - openapi
       - swagger
+      - api gateway
+      - hotlinking
+      - faceted search
   architecture-patterns.md:
-    title: "Architecture Patterns"
+    title: "Architecture & Design Patterns"
     keywords:
       - microservice
       - monolith
@@ -325,6 +363,71 @@ dictionary_domains:
       - ddd
       - saga
       - strangler
+      - bounded context
+      - ubiquitous language
+      - blue-green
+      - canary
+      - deployment
+      - progressive delivery
+      - feature flag
+      - a/b testing
+      - active-active
+      - shadow testing
+      - goroutine
+      - go runtime
+      - gomaxprocs
+      - tokio
+      - event loop
+      - virtual file system
+      - vfs
+      - native extension
+      - technical debt
+      - upstream
+      - downstream
+      - circular dependency
+      - design pattern
+      - gof
+      - singleton
+      - factory
+      - builder
+      - adapter
+      - decorator
+      - proxy
+      - strategy
+      - observer
+      - command
+      - repository
+      - golden hammer
+      - yagni
+      - separation of concerns
+      - fail fast
+      - single source of truth
+      - loose coupling
+      - immutability
+      - scalability
+      - adr
+      - architecture decision record
+      - anti-pattern
+      - preemption
+      - fair sharing
+      - tenant hierarchy
+      - zero-copy
+      - url shortener
+      - snowflake
+      - key generation
+      - fanout
+      - presence
+      - hub-and-spoke
+      - dmz
+      - well-architected
+      - caf
+      - cloud adoption
+      - ambassador
+      - sidecar
+      - database per service
+      - distributed monolith
+      - deployment coupling
+      - base62
   caching.md:
     title: "Caching"
     keywords:
@@ -422,6 +525,13 @@ dictionary_domains:
       - consumer group
       - dlq
       - poison message
+      - competing consumers
+      - claim check
+      - large payload
+      - atomic deduplication
+      - deduplication store
+      - distributed commit log
+      - message batching
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:
@@ -434,6 +544,18 @@ dictionary_domains:
       - graceful
       - thundering herd
       - cascading
+      - defensive programming
+      - input validation
+      - parameterized query
+      - sql injection
+      - opentelemetry
+      - golden signals
+      - error budget
+      - blameless postmortem
+      - real user monitoring
+      - rum
+      - configuration propagation
+      - observability
 
   azure-services.md:
     title: "Azure Services"
@@ -446,9 +568,6 @@ dictionary_domains:
       - service bus
       - key vault
 
-  kubernetes.md:
-    title: "Kubernetes"
-
   java-jvm.md:
     title: "Java JVM & Memory Management"
     keywords:
@@ -460,6 +579,14 @@ dictionary_domains:
       - generation
       - outofmemoryerror
       - metaspace
+      - virtual thread
+      - leyden
+      - aot
+      - helidon
+      - thread pinning
+      - carrier thread
+      - hashmap
+      - treeification
 
   databases.md:
     title: "Databases & Database Engines"
@@ -468,6 +595,55 @@ dictionary_domains:
       - io_method
       - io_uring
       - effective_io_concurrency
+      - shared_buffers
+      - b-tree
+      - bloom filter
+      - lsm-tree
+      - write-ahead log
+      - wal
+      - merkle tree
+      - anti-entropy
+      - nosql
+
+  security-iam.md:
+    title: "Security, Identity & Access Management"
+    keywords:
+      - authentication
+      - authorization
+      - jwt
+      - oauth
+      - oauth2
+      - zero trust
+      - rbac
+      - abac
+      - least privilege
+      - access control
+      - identity
+      - token
+      - saml
+      - openid
+      - mfa
+      - bearer
+
+  data-architecture.md:
+    title: "Data Architecture & Distributed Systems"
+    keywords:
+      - cap theorem
+      - replication
+      - sharding
+      - scaling
+      - vertical scaling
+      - horizontal scaling
+      - data mesh
+      - data fabric
+      - data product
+      - data catalog
+      - federated governance
+      - semantic layer
+      - medallion
+      - polyglot persistence
+      - practical decentralization
+      - distributed system
       - pg_aios
       - shared_buffers
 

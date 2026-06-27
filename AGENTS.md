@@ -148,7 +148,7 @@ The hook runs only when `architecture-general/**/README.md` files are staged.
 | `scripts/okf_migrate.py` | OKF conformance validation and migration |
 | `scripts/sync_taxonomy_reference.py` | Taxonomy sync automation |
 | `architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md` | Auto-generated canonical taxonomy (do not edit directly) |
-| `reference-dictionary/README.md` | Glossary usage, term template, and anchor conventions |
+| `reference-dictionary/index.md` | Glossary usage, term template, and anchor conventions |
 
 ---
 
