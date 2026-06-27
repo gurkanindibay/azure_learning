@@ -28,6 +28,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Claim Check Pattern | [`#claim-check`](#claim-check) |
 | Blue-Green Deployment | [`#blue-green`](#blue-green) |
 | Canary Deployment | [`#canary-deployment`](#canary-deployment) |
+| Atomic Deduplication | [`#atomic-deduplication`](#atomic-deduplication) |
+| Deduplication Store | [`#deduplication-store`](#deduplication-store) |
 | Blue-Green vs Canary Deployment | [`#blue-green-vs-canary-deployment`](#blue-green-vs-canary-deployment) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
 | Cloud Adoption Framework (CAF) | [`#caf`](#caf) |
@@ -322,6 +324,62 @@ Azure's **five pillars** of architectural excellence:
 A **network topology** where a central hub VNet hosts shared services (firewall, gateway, DNS) and spoke VNets host workloads. All spoke-to-spoke traffic routes through the hub for inspection and control.
 
 **Also see**: [Azure Services: VNet](azure-services.md#vnet)
+
+---
+
+## Atomic Deduplication
+
+A pattern that prevents race conditions in idempotent message processing by using a database `INSERT` with a `UNIQUE` constraint as the deduplication check, rather than a non-atomic check-then-act sequence.
+
+```sql
+-- Atomic: only one consumer succeeds
+INSERT INTO processed_events (event_id) VALUES ('EVT-8A72F1');
+-- UNIQUE(event_id) constraint ensures atomicity
+```
+
+### Key Characteristics
+- **Database-enforced atomicity**: The database itself (not application logic) guarantees that only one INSERT for a given Event ID succeeds
+- **Eliminates check-then-act races**: No gap between "check if processed" and "mark as processed" — they are the same operation
+- **Constraint violation = already processed**: Consumers treat the UNIQUE constraint error as a signal to skip processing
+- **Portable across stores**: Works with any store that supports atomic conditional inserts (SQL UNIQUE, Redis `SETNX`, DynamoDB conditional put)
+
+### When to Use
+- At-least-once consumers where concurrent instances may process the same event
+- High-throughput systems where lock-based deduplication would create contention
+- Any consumer that must be horizontally scalable while maintaining idempotency
+
+### When NOT to Use
+- When the deduplication store does not support unique constraints or conditional writes
+- When the business update and dedup record are in different transactional scopes (use Outbox Pattern instead)
+- Single-instance consumers where a simple in-memory set suffices
+
+### Also see
+- [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Event ID](../reference-dictionary/cqrs-event-driven.md#event-id) · [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern)
+
+---
+
+## Deduplication Store
+
+A **shared, external data store** used by idempotent consumers to track which events have already been processed. It serves as the single source of truth across all consumer instances so that duplicate deliveries are recognized and skipped regardless of which instance receives the redelivery.
+
+### Key Characteristics
+- **Shared across instances**: All consumers in a group read and write to the same store — a local in-memory cache is insufficient at scale
+- **Atomic conditional inserts**: Typically backed by a database with UNIQUE constraints (relational DB, Redis `SETNX`, DynamoDB conditional put)
+- **Retention-bounded**: Entries are purged after a configurable window that exceeds Kafka's maximum redelivery window
+- **Per-event granularity**: Keyed by Event ID, not by message offset or partition
+
+### When to Use
+- Horizontally scaled consumer groups where duplicate events may land on any instance after a rebalance
+- At-least-once messaging systems (Kafka, Event Hubs, Service Bus) where redelivery is a normal occurrence
+- Payment, inventory, or order workflows where double-processing is unacceptable
+
+### When NOT to Use
+- Single-instance consumers where an in-memory `HashSet<EventId>` suffices
+- Systems with true exactly-once delivery guarantees (rare in practice)
+- When the deduplication store itself becomes a bottleneck (consider partitioning by Event ID)
+
+### Also see
+- [Atomic Deduplication](#atomic-deduplication) · [Event ID](../reference-dictionary/cqrs-event-driven.md#event-id) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern)
 
 ---
 

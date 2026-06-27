@@ -31,6 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Event Carried State Transfer | [`#event-carried-state-transfer`](#event-carried-state-transfer) |
 | Aggregate Snapshot | [`#aggregate-snapshot`](#aggregate-snapshot) |
 | Cryptographic Erasure | [`#cryptographic-erasure`](#cryptographic-erasure) |
+| Event ID | [`#event-id`](#event-id) |
 
 ---
 
@@ -331,3 +332,27 @@ A GDPR compliance technique for **immutable event logs**: encrypt each event con
 
 ### Also see
 - [Event Sourcing](#event-sourcing) · [Outbox Pattern](#outbox-pattern) · [HSM](../reference-dictionary/hsm-cryptography.md)
+
+---
+
+## Event ID
+
+A **globally unique identifier** assigned to every business event at production time, used by consumers for idempotent deduplication. The Event ID remains unchanged across producer retries so that the same business event always carries the same identifier.
+
+### Key Characteristics
+- **Deterministic per business event**: Same logical event → same Event ID across retries, regardless of how many times the producer publishes
+- **Consumer-facing**: The Event ID is the key consumers use to check "have I already processed this?"
+- **Analogous to idempotency keys**: Functions identically to an idempotency key in payment APIs — the same key means "this is the same action"
+- **Producer responsibility**: The producer must generate the ID before the first publish attempt and reuse it on retries
+
+### When to Use
+- Any at-least-once messaging system where producers may retry after acknowledgment loss
+- Event-driven architectures where duplicate events must not cause duplicate business side-effects
+- Payment systems, inventory updates, order processing — any workflow where double-processing is unacceptable
+
+### When NOT to Use
+- In systems with true exactly-once delivery guarantees (rare in practice)
+- When the consumer can derive idempotency from natural business keys (e.g., `order_id` + `version`)
+
+### Also see
+- [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/architecture-patterns.md#atomic-deduplication)

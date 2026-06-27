@@ -25,4 +25,5 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [kafka-anti-patterns/01-kafka-mistakes-breaking-your-system](kafka-anti-patterns/01-kafka-mistakes-breaking-your-system.md)
 - [kafka-concepts-that-every-architect-should-master](kafka-concepts-that-every-architect-should-master.md)
 - [kafka-over-rabbitmq](kafka-over-rabbitmq.md)
+- [kafka-producer-acknowledgment-failure](kafka-producer-acknowledgment-failure.md)
 - [the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1](the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
