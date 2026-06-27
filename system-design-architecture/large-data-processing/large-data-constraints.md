@@ -7,8 +7,8 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 13. Large Data Processing Under Constraints
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: ["I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me](../articles/medium/10gb-csv-512mb-ram-interview-question.md)  
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: ["I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me](../../articles/medium/10gb-csv-512mb-ram-interview-question.md)  
 > **Taxonomy Reference**: §7.2 Performance & Scalability, §7.1 Reliability & Resilience
 
 ---
@@ -27,7 +27,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## proc-01: Streaming & Chunking for Memory-Constrained Processing
 
-> **Source**: [10GB CSV, 512MB RAM](../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "The Ideal Answer: Streaming + Chunking + Offset Tracking"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "The Ideal Answer: Streaming + Chunking + Offset Tracking"
 
 | | |
 |:---|:---|
@@ -73,13 +73,13 @@ if (!batch.isEmpty()) processBatch(batch);
 
 > **Key insight**: The memory footprint is $O(1)$ regardless of file size. A 10GB file and a 10TB file use the same RAM — you never hold more than one batch in memory.
 
-> **Azure**: Azure Data Factory Copy Activity (streaming mode), Azure Functions (stream processing with output bindings) | **General**: [Stream Processing Patterns](../../architecture-general/04-data-analytics-ai-architecture/)
+> **Azure**: Azure Data Factory Copy Activity (streaming mode), Azure Functions (stream processing with output bindings) | **General**: [Stream Processing Patterns](../../../architecture-general/04-data-analytics-ai-architecture/)
 
 ---
 
 ## proc-02: Checkpointing for Fault-Tolerant Batch Processing
 
-> **Source**: [10GB CSV, 512MB RAM](../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Track progress for fault tolerance"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Track progress for fault tolerance"
 
 | | |
 |:---|:---|
@@ -133,13 +133,13 @@ raf.seek(lastOffset);  // resume from last safe point
 
 > **Key insight**: Resumability is often more important than raw speed. A job that takes 4 hours but survives crashes is better than one that takes 3 hours but restarts from zero.
 
-> **Azure**: Azure Batch (auto-resume on node failure), Azure Data Factory (retry policies with checkpoint support) | **General**: [Resilience Patterns](10-resilience-patterns.md#resilience-06-the-resilience-stack)
+> **Azure**: Azure Batch (auto-resume on node failure), Azure Data Factory (retry policies with checkpoint support) | **General**: [Resilience Patterns](resilience/resilience-patterns.md#resilience-06-the-resilience-stack)
 
 ---
 
 ## proc-03: Producer-Consumer with Backpressure
 
-> **Source**: [10GB CSV, 512MB RAM](../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Use producer-consumer pattern"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Use producer-consumer pattern"
 
 | | |
 |:---|:---|
@@ -196,13 +196,13 @@ Thread consumer = new Thread(() -> {
 
 > **Key insight**: A **bounded** queue with blocking `put()` is the simplest form of backpressure. The producer naturally slows to the consumer's pace. This is the same principle Kafka and Flink use at scale — just without the distributed coordination.
 
-> **Azure**: Event Hubs partitioned consumer groups, Service Bus sessions for ordered processing | **General**: [Async & Concurrency Patterns](08-async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
+> **Azure**: Event Hubs partitioned consumer groups, Service Bus sessions for ordered processing | **General**: [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
 
 ---
 
 ## proc-04: Parallel Consumers with Ordered Merge
 
-> **Source**: [10GB CSV, 512MB RAM](../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Parallelize writes with multiple consumers (while keeping order)"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Parallelize writes with multiple consumers (while keeping order)"
 
 | | |
 |:---|:---|
@@ -269,13 +269,13 @@ mergeTempFiles("tmp/", "final.json");
 
 > **When does this actually help?** If your transform is compute-bound — JSON serialization, compression (gzip/snappy), regex validation, Parquet conversion — then 4 consumers give ~3.5× throughput. If disk I/O is the bottleneck, adding consumers just adds contention. **Profile first.**
 
-> **Azure**: Azure Data Lake Analytics (U-SQL with partitioned output), Synapse Spark (partitioned write + merge) | **General**: [Scatter-Gather Pattern](../../architecture-general/03-integration-communication-architecture/scatter-gather-pattern.md)
+> **Azure**: Azure Data Lake Analytics (U-SQL with partitioned output), Synapse Spark (partitioned write + merge) | **General**: [Scatter-Gather Pattern](../../../architecture-general/03-integration-communication-architecture/scatter-gather-pattern.md)
 
 ---
 
 ## proc-05: Single-Machine vs Distributed Framework Selection
 
-> **Source**: [10GB CSV, 512MB RAM](../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Wait — Could Kafka or Flink Be the Right Answer?"
+> **Source**: [10GB CSV, 512MB RAM](../../articles/medium/10gb-csv-512mb-ram-interview-question.md) — "Wait — Could Kafka or Flink Be the Right Answer?"
 
 | | |
 |:---|:---|
@@ -313,7 +313,7 @@ flowchart TD
 
 > **Key insight**: The interviewer isn't testing whether you know Kafka — they're testing whether you know when NOT to use it. Starting with the simplest solution and escalating only when constraints demand it shows senior engineering judgment.
 
-> **Azure**: See [Azure Service Mapping](07-azure-service-mapping.md) for problem → service lookup | **General**: [Stream Processing (Flink)](09-stream-processing-flink.md#flink-01-lambda-architecture--two-systems-two-codebases) — Kappa vs Lambda
+> **Azure**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md) for problem → service lookup | **General**: [Stream Processing (Flink)](stream-processing/stream-processing-flink.md#flink-01-lambda-architecture--two-systems-two-codebases) — Kappa vs Lambda
 
 ---
 

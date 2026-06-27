@@ -7,12 +7,12 @@ timestamp: 2026-06-18T00:00:00Z
 
 # 38. Database Decisions — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Your System Design Is Fine. Your Database Decisions Are Why You're Failing](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Your System Design Is Fine. Your Database Decisions Are Why You're Failing](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 > **Purpose**: Extract reusable database-decision patterns from the source article.
 
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) (db-01–db-07), [Concurrency & Transactions](02-concurrency-transactions.md) (tx-01–tx-07), [SQL System Design](19-sql-system-design-takeaways.md) (sqld-01–sqld-08)
-> **Dictionary**: [Data, Concurrency & Transactions](../reference-dictionary/data-concurrency.md), [Databases & Database Engines](../reference-dictionary/databases.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) (db-01–db-07), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) (tx-01–tx-07), [SQL System Design](databases/sql-system-design.md) (sqld-01–sqld-08)
+> **Dictionary**: [Data, Concurrency & Transactions](../../reference-dictionary/data-concurrency.md), [Databases & Database Engines](../../reference-dictionary/databases.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Taxonomy Reference**: §4.0 Data Architecture Fundamentals, §4.0.1 Database Performance & Caching, §4.1 Data Architecture, §4.3 Streaming & Real-Time Architecture
 
 ---
@@ -36,7 +36,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## db-08: SQL vs NoSQL — Data Model Choice
 
-> **Source**: [§"SQL vs NoSQL — It's a Data Model Choice, Not a Trend"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"SQL vs NoSQL — It's a Data Model Choice, Not a Trend"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -50,15 +50,15 @@ timestamp: 2026-06-18T00:00:00Z
 | **SQL** | Strong consistency, query power, and relational integrity; scaling writes usually requires replicas, partitioning, or sharding. |
 | **NoSQL** | Elastic horizontal scale and flexible schemas; joins and multi-row transactions often move to application code. |
 
-> **Also see**: [sqld-02: SQL vs NoSQL Decision Framework](19-sql-system-design-takeaways.md#sqld-02-sql-vs-nosql-decision-framework)
-> **Dictionary**: [ACID Transactions](../reference-dictionary/data-concurrency.md#acid-transactions)
+> **Also see**: [sqld-02: SQL vs NoSQL Decision Framework](databases/sql-system-design.md#sqld-02-sql-vs-nosql-decision-framework)
+> **Dictionary**: [ACID Transactions](../../reference-dictionary/data-concurrency.md#acid-transactions)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals, §4.1 Data Architecture
 
 ---
 
 ## db-09: ACID Guarantees Under Load
 
-> **Source**: [§"ACID — What It Actually Means Under Load"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"ACID — What It Actually Means Under Load"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -76,15 +76,15 @@ timestamp: 2026-06-18T00:00:00Z
 | **Stronger guarantees cost throughput** | Full serializability prevents anomalies but serializes execution; relaxing isolation increases concurrency at the risk of anomalies. |
 | **Not all databases implement ACID the same way** | Defaults and durability settings vary by engine. |
 
-> **Also see**: [tx-02: Isolation Levels](02-concurrency-transactions.md#tx-02-isolation-levels)
-> **Dictionary**: [ACID Transactions](../reference-dictionary/data-concurrency.md#acid-transactions)
+> **Also see**: [tx-02: Isolation Levels](concurrency-transactions/concurrency-transactions.md#tx-02-isolation-levels)
+> **Dictionary**: [ACID Transactions](../../reference-dictionary/data-concurrency.md#acid-transactions)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---
 
 ## db-10: Indexing & Composite Indexes
 
-> **Source**: [§"Indexing — Where Interviews Get Separated"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Indexing — Where Interviews Get Separated"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -98,14 +98,14 @@ timestamp: 2026-06-18T00:00:00Z
 | **Read vs write cost** | Indexes turn O(n) scans into O(log n) lookups, but every write must update every relevant index. |
 | **Storage** | Each index is a separate structure that consumes disk and memory. |
 
-> **Also see**: [db-03: Composite Index vs. Separate Indexes](01-databases-query-performance.md#db-03-composite-index-vs-separate-indexes), [sql-05: EXPLAIN Before You Ship](14-sql-query-optimization.md#sql-05-explain-before-you-ship)
+> **Also see**: [db-03: Composite Index vs. Separate Indexes](databases/query-performance.md#db-03-composite-index-vs-separate-indexes), [sql-05: EXPLAIN Before You Ship](databases/sql-query-optimization.md#sql-05-explain-before-you-ship)
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## db-11: Scaling Reads — Read Replicas & Caching
 
-> **Source**: [§"Scaling Reads"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Scaling Reads"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -119,15 +119,15 @@ timestamp: 2026-06-18T00:00:00Z
 | **Replication lag** | A user may write to the primary and briefly not see the change on a replica. |
 | **Cache invalidation** | Stale cache entries must be explicitly deleted or allowed to expire; otherwise reads return outdated data. |
 
-> **Also see**: [sqld-01: The SQL Scaling Ladder](19-sql-system-design-takeaways.md#sqld-01-the-sql-scaling-ladder), [cache-02: Cache Invalidation](03-caching-architecture.md#cache-02-cache-invalidation)
-> **Dictionary**: [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern)
+> **Also see**: [sqld-01: The SQL Scaling Ladder](databases/sql-system-design.md#sqld-01-the-sql-scaling-ladder), [cache-02: Cache Invalidation](caching/caching-architecture.md#cache-02-cache-invalidation)
+> **Dictionary**: [Cache-Aside Pattern](../../reference-dictionary/caching.md#cache-aside-pattern)
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## db-12: CAP Theorem — Partition Tradeoffs
 
-> **Source**: [§"CAP Theorem — The Real Constraint"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"CAP Theorem — The Real Constraint"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -145,14 +145,14 @@ There is no "CA" system in practice.
 | **CP** | Strong consistency but reduced availability during partitions. |
 | **AP** | High availability but applications must tolerate stale reads and resolve conflicts later. |
 
-> **Dictionary**: [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---
 
 ## db-13: Sharding — Horizontal Partitioning & Hotspots
 
-> **Source**: [§"Sharding — Split the Data, Multiply the Complexity"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Sharding — Split the Data, Multiply the Complexity"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -166,15 +166,15 @@ There is no "CA" system in practice.
 | **Operational complexity** | Cross-shard joins and transactions become expensive or impossible; resharding is painful. |
 | **Hotspots** | A skewed shard key can concentrate traffic on one shard, negating the benefit. |
 
-> **Also see**: [db-05: Hot Partition Problem](01-databases-query-performance.md#db-05-hot-partition-problem), [api-05: Consistent Hash-Based Routing](04-api-network-design.md#api-05-consistent-hash-based-routing)
-> **Dictionary**: [Sharding](../reference-dictionary/data-concurrency.md#sharding), [Consistent Hashing](../reference-dictionary/api-design.md#consistent-hashing)
+> **Also see**: [db-05: Hot Partition Problem](databases/query-performance.md#db-05-hot-partition-problem), [api-05: Consistent Hash-Based Routing](api-network/api-network-design.md#api-05-consistent-hash-based-routing)
+> **Dictionary**: [Sharding](../../reference-dictionary/data-concurrency.md#sharding), [Consistent Hashing](../../reference-dictionary/api-design.md#consistent-hashing)
 > **Taxonomy**: §4.1 Data Architecture
 
 ---
 
 ## db-14: Isolation Levels
 
-> **Source**: [§"Isolation Levels — The One Nobody Studies"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Isolation Levels — The One Nobody Studies"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -192,15 +192,15 @@ There is no "CA" system in practice.
 | **Correctness vs performance** | Higher isolation removes anomalies but reduces concurrency and throughput. |
 | **Defaults differ** | PostgreSQL defaults to Read Committed; MySQL InnoDB defaults to Repeatable Read. |
 
-> **Also see**: [tx-02: Isolation Levels](02-concurrency-transactions.md#tx-02-isolation-levels)
-> **Dictionary**: [Isolation Levels](../reference-dictionary/data-concurrency.md#isolation-levels)
+> **Also see**: [tx-02: Isolation Levels](concurrency-transactions/concurrency-transactions.md#tx-02-isolation-levels)
+> **Dictionary**: [Isolation Levels](../../reference-dictionary/data-concurrency.md#isolation-levels)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---
 
 ## db-15: Storage Engine Internals — B-Tree vs LSM-Tree, WAL & Bloom Filters
 
-> **Source**: [§"Storage Internals That Show Up More Than You Think"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Storage Internals That Show Up More Than You Think"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -219,15 +219,15 @@ There is no "CA" system in practice.
 | **LSM-Tree** | Fast writes, but reads may check multiple levels and compaction creates I/O spikes. |
 | **Bloom filter** | Can produce false positives, so a positive result still requires a disk check. |
 
-> **Also see**: [uber-05: B-Tree vs LSM-Tree — Write-Heavy Workloads](06-uber-architecture-case-study.md#uber-05-b-tree-vs-lsm-tree--write-heavy-workloads)
-> **Dictionary**: [B-Tree](../reference-dictionary/databases.md#b-tree), [LSM-Tree](../reference-dictionary/databases.md#lsm-tree), [Write-Ahead Log (WAL)](../reference-dictionary/databases.md#write-ahead-log-wal), [Bloom Filter](../reference-dictionary/databases.md#bloom-filter)
+> **Also see**: [uber-05: B-Tree vs LSM-Tree — Write-Heavy Workloads](case-studies/uber-architecture.md#uber-05-b-tree-vs-lsm-tree--write-heavy-workloads)
+> **Dictionary**: [B-Tree](../../reference-dictionary/databases.md#b-tree), [LSM-Tree](../../reference-dictionary/databases.md#lsm-tree), [Write-Ahead Log (WAL)](../../reference-dictionary/databases.md#write-ahead-log-wal), [Bloom Filter](../../reference-dictionary/databases.md#bloom-filter)
 > **Taxonomy**: §4.1 Data Architecture
 
 ---
 
 ## db-16: Distributed Transactions — 2PC vs Saga
 
-> **Source**: [§"Distributed Transactions — The Final Boss"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Distributed Transactions — The Final Boss"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -243,15 +243,15 @@ There is no "CA" system in practice.
 | **2PC** | Strong consistency, simple conceptual model, but blocking and fragile during partitions or coordinator failure. |
 | **Saga** | Non-blocking and resilient, but requires carefully designed compensations and makes intermediate states visible. |
 
-> **Also see**: [tx-04: Idempotency](02-concurrency-transactions.md#tx-04-idempotency), [sqld-06: Database per Service + Saga Pattern](19-sql-system-design-takeaways.md#sqld-06-database-per-service--saga-pattern)
-> **Dictionary**: [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction), [Two-Phase Commit (2PC)](../reference-dictionary/data-concurrency.md#two-phase-commit-2pc)
+> **Also see**: [tx-04: Idempotency](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency), [sqld-06: Database per Service + Saga Pattern](databases/sql-system-design.md#sqld-06-database-per-service--saga-pattern)
+> **Dictionary**: [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Two-Phase Commit (2PC)](../../reference-dictionary/data-concurrency.md#two-phase-commit-2pc)
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---
 
 ## db-17: Change Data Capture (CDC)
 
-> **Source**: [§"Change Data Capture (CDC)"](../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+> **Source**: [§"Change Data Capture (CDC)"](../../articles/medium/your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 
 | | |
 |:---|:---|
@@ -265,6 +265,6 @@ There is no "CA" system in practice.
 | **Near-real-time consistency** | Downstream stores are updated within seconds rather than minutes. |
 | **Operational complexity** | Requires log connectors, schema evolution handling, and consumer idempotency. |
 
-> **Also see**: [tx-07: Post-Commit Confirmation and Events](02-concurrency-transactions.md#tx-07-post-commit-confirmation-and-events)
-> **Dictionary**: [Change Data Capture (CDC)](../reference-dictionary/data-concurrency.md#change-data-capture)
+> **Also see**: [tx-07: Post-Commit Confirmation and Events](concurrency-transactions/concurrency-transactions.md#tx-07-post-commit-confirmation-and-events)
+> **Dictionary**: [Change Data Capture (CDC)](../../reference-dictionary/data-concurrency.md#change-data-capture)
 > **Taxonomy**: §4.3 Streaming & Real-Time Architecture

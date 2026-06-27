@@ -7,7 +7,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 16. Reverse Proxy, Load Balancer & API Gateway: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)  
+> **Parent**: [System Design Interview Reference](../index.md)  
 > **Source**: [Reverse Proxy vs Load Balancer vs API Gateway: The Real Difference?](../videos/reverse-proxy-load-balancer-api-gateway.md) — YouTube breakdown  
 > **Purpose**: Distinguish these three often-conflated networking components, understand when each applies, and how they compose in production.
 
@@ -274,4 +274,4 @@ graph TD
 | L7 (HTTP) routing + WAF | **Application Gateway** |
 | API management + developer portal | **API Management** |
 
-> **Azure Implementation**: See [Architecture Azure Networking](../architecture-azure/networking/) and [Integration](../architecture-azure/integration/) for service deep-dives.
+> **Azure Implementation**: See [Architecture Azure Networking](../../architecture-azure/networking/) and [Integration](../../architecture-azure/integration/) for service deep-dives.

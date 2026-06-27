@@ -7,9 +7,9 @@ timestamp: 2026-06-23T00:00:00Z
 
 # 46. REST API Senior Patterns — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Stop Designing REST APIs Like a Mid-Level Dev](../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
-> **Also see**: [API Design Patterns](20-api-design-patterns-key-takeaways.md), [APIs & Network Design](04-api-network-design.md), [Concurrency & Transactions](02-concurrency-transactions.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Stop Designing REST APIs Like a Mid-Level Dev](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Also see**: [API Design Patterns](api-network/api-design-patterns.md), [APIs & Network Design](api-network/api-network-design.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
 > **Taxonomy**: §8.3 API Design
 
 ---
@@ -26,7 +26,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## apipat-10: PATCH vs PUT — Partial Updates with JSON Merge Patch
 
-> **Source**: [Article §"Mistake 2 — Using PUT When You Mean PATCH"](../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 2 — Using PUT When You Mean PATCH"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|
@@ -61,13 +61,13 @@ Content-Type: application/merge-patch+json
 
 **Tradeoff**: JSON Merge Patch cannot express "set a field to `null`" — a `null` value in the patch means *remove this field*, not *set it to null*. Use **JSON Patch** (RFC 6902, `Content-Type: application/json-patch+json`) for resources that have nullable fields requiring explicit null assignment.
 
-> **Also see**: [JSON Merge Patch](../reference-dictionary/api-design.md#json-merge-patch) · [apipat-03: Idempotency](20-api-design-patterns-key-takeaways.md#apipat-03-idempotency--preventing-double-charges) · [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key)
+> **Also see**: [JSON Merge Patch](../../reference-dictionary/api-design.md#json-merge-patch) · [apipat-03: Idempotency](api-network/api-design-patterns.md#apipat-03-idempotency--preventing-double-charges) · [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 
 ---
 
 ## apipat-11: ETag-Based Optimistic Concurrency Control
 
-> **Source**: [Article §"Mistake 3 — No Concurrency Control on Updates"](../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 3 — No Concurrency Control on Updates"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|
@@ -104,13 +104,13 @@ public ResponseEntity<ProductResponse> updateProduct(
 **Tradeoff**: Every write workflow now requires a GET before the PUT (GET → modify → PUT with `If-Match`). This is an extra round-trip but is acceptable for resources with low update frequency. For high-frequency collaborative editing, consider conflict-free replicated data types (CRDTs) or operational transforms instead.
 
 > **Azure**: Cosmos DB exposes `_etag` on every document; pass it via `If-Match` in the Cosmos SDK or REST API — the platform enforces optimistic concurrency natively.
-> **Also see**: [ETag](../reference-dictionary/api-design.md#etag) · [Optimistic Locking](../reference-dictionary/data-concurrency.md#optimistic-locking) · [tx-02: Isolation Levels](02-concurrency-transactions.md)
+> **Also see**: [ETag](../../reference-dictionary/api-design.md#etag) · [Optimistic Locking](../../reference-dictionary/data-concurrency.md#optimistic-locking) · [tx-02: Isolation Levels](concurrency-transactions/concurrency-transactions.md)
 
 ---
 
 ## apipat-12: Sparse Fieldsets — Client-Driven Field Selection
 
-> **Source**: [Article §"Mistake 4 — No Field Selection"](../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
+> **Source**: [Article §"Mistake 4 — No Field Selection"](../../../articles/medium/stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 
 | | |
 |:---|:---|
@@ -150,4 +150,4 @@ GET /users?fields=id,name
 
 **Tradeoff**: Field filtering in the Java layer still fetches all columns from the database. For high-traffic list endpoints where the full row scan is expensive, combine with database-level projection (`SELECT id, name FROM users`) and a dedicated query method. This adds implementation complexity but eliminates the unnecessary I/O cost.
 
-> **Also see**: [Sparse Fieldsets](../reference-dictionary/api-design.md#sparse-fieldsets) · [Pagination (Cursor vs Offset)](../reference-dictionary/api-design.md#pagination-cursor-vs-offset) · [apipat-04: Pagination](20-api-design-patterns-key-takeaways.md#apipat-04-pagination--cursor-vs-offset)
+> **Also see**: [Sparse Fieldsets](../../reference-dictionary/api-design.md#sparse-fieldsets) · [Pagination (Cursor vs Offset)](../../reference-dictionary/api-design.md#pagination-cursor-vs-offset) · [apipat-04: Pagination](api-network/api-design-patterns.md#apipat-04-pagination--cursor-vs-offset)

@@ -7,10 +7,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 26. Dockerfile Optimization — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Junior Devs Write Dockerfiles. Senior Devs Write These 5 Layers That Cut Build Time by 70%](../articles/medium/docker-file-art.md) — The Atomic Architect, May 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Junior Devs Write Dockerfiles. Senior Devs Write These 5 Layers That Cut Build Time by 70%](../../articles/medium/docker-file-art.md) — The Atomic Architect, May 2026
 > **Purpose**: Extract practical Dockerfile optimization patterns — treating the Dockerfile as a cache strategy, ordering layers by change frequency, shrinking production images, and persisting dependency caches across builds.
-> **Also see**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) (`prag-01`–`prag-08`), [Resilience Patterns](10-resilience-patterns.md)
+> **Also see**: [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) (`prag-01`–`prag-08`), [Resilience Patterns](resilience/resilience-patterns.md)
 
 ---
 
@@ -31,7 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## docker-01: Order by Change Frequency
 
-> **Source**: [Article §"Layer 1: Order by Change Frequency, Not by What Feels Natural"](../articles/medium/docker-file-art.md#layer-1-order-by-change-frequency-not-by-what-feels-natural)
+> **Source**: [Article §"Layer 1: Order by Change Frequency, Not by What Feels Natural"](../../articles/medium/docker-file-art.md#layer-1-order-by-change-frequency-not-by-what-feels-natural)
 
 | | |
 |:---|:---|
@@ -74,7 +74,7 @@ CMD ["node", "server.js"]
 
 ## docker-02: Use a Real `.dockerignore`
 
-> **Source**: [Article §"Layer 2: A .dockerignore That Actually Does Its Job"](../articles/medium/docker-file-art.md#layer-2-a-dockerignore-that-actually-does-its-job)
+> **Source**: [Article §"Layer 2: A .dockerignore That Actually Does Its Job"](../../articles/medium/docker-file-art.md#layer-2-a-dockerignore-that-actually-does-its-job)
 
 | | |
 |:---|:---|
@@ -112,7 +112,7 @@ README.md
 
 ## docker-03: Multi-Stage Builds
 
-> **Source**: [Article §"Layer 3: Multi-Stage Builds — Throw Away the Toolchain"](../articles/medium/docker-file-art.md#layer-3-multi-stage-builds--throw-away-the-toolchain)
+> **Source**: [Article §"Layer 3: Multi-Stage Builds — Throw Away the Toolchain"](../../articles/medium/docker-file-art.md#layer-3-multi-stage-builds--throw-away-the-toolchain)
 
 | | |
 |:---|:---|
@@ -171,7 +171,7 @@ ENTRYPOINT ["/server"]
 
 ## docker-04: Cache Mounts
 
-> **Source**: [Article §"Layer 4: Cache Mounts — Persist Caches the Layer Cache Can’t"](../articles/medium/docker-file-art.md#layer-4-cache-mounts--persist-caches-the-layer-cache-cant)
+> **Source**: [Article §"Layer 4: Cache Mounts — Persist Caches the Layer Cache Can’t"](../../articles/medium/docker-file-art.md#layer-4-cache-mounts--persist-caches-the-layer-cache-cant)
 
 | | |
 |:---|:---|
@@ -208,7 +208,7 @@ Cache mounts live on the build machine. In CI they only help if the runner persi
 
 ## docker-05: Pin Base Images and Merge RUN
 
-> **Source**: [Article §"Layer 5: Pin the Base Image and Stop Splitting RUN"](../articles/medium/docker-file-art.md#layer-5-pin-the-base-image-and-stop-splitting-run)
+> **Source**: [Article §"Layer 5: Pin the Base Image and Stop Splitting RUN"](../../articles/medium/docker-file-art.md#layer-5-pin-the-base-image-and-stop-splitting-run)
 
 | | |
 |:---|:---|
@@ -245,7 +245,7 @@ RUN apt-get update && \
 
 ## docker-06: The 70% Is a Lie — Measure First
 
-> **Source**: [Article §"The 70% Is a Lie (When You Skip This Part)"](../articles/medium/docker-file-art.md#the-70-is-a-lie-when-you-skip-this-part)
+> **Source**: [Article §"The 70% Is a Lie (When You Skip This Part)"](../../articles/medium/docker-file-art.md#the-70-is-a-lie-when-you-skip-this-part)
 
 | | |
 |:---|:---|
@@ -266,7 +266,7 @@ RUN apt-get update && \
 
 ## docker-07: The Mental Model
 
-> **Source**: [Article §"The Mental Model That Changes Everything"](../articles/medium/docker-file-art.md#the-mental-model-that-changes-everything)
+> **Source**: [Article §"The Mental Model That Changes Everything"](../../articles/medium/docker-file-art.md#the-mental-model-that-changes-everything)
 
 | Junior View | Senior View |
 |:---|:---|
@@ -291,7 +291,7 @@ RUN apt-get update && \
 
 ## docker-08: The Monday Action Plan
 
-> **Source**: [Article §"Your Action Plan for Monday"](../articles/medium/docker-file-art.md#your-action-plan-for-monday)
+> **Source**: [Article §"Your Action Plan for Monday"](../../articles/medium/docker-file-art.md#your-action-plan-for-monday)
 
 Don't refactor every `Dockerfile`. Pick the slowest one and apply these in order:
 

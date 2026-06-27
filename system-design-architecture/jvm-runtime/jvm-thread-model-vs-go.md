@@ -7,10 +7,10 @@ timestamp: 2026-06-23T00:00:00Z
 
 # 47. JVM Thread Model vs Go Goroutines — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking](../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md) — The Concurrent Mind, Jun 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md) — The Concurrent Mind, Jun 2026
 > **Purpose**: Translate the Java vs Go threading model debate into concrete production problems, root causes, and actionable migration strategies for Spring Boot teams.
-> **Also see**: [JVM Memory & GC Key Takeaways](33-jvm-key-takeaways.md), [Microservices Runtime Performance](29-microservices-runtime-performance.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md)
+> **Also see**: [JVM Memory & GC Key Takeaways](jvm-runtime/jvm-memory-gc.md), [Microservices Runtime Performance](performance/microservices-runtime-performance.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -28,7 +28,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## jvm-10: Java 1:1 Thread Model Ceiling Under I/O Pressure
 
-> **Source**: [The Problem That Nobody Talked About Loudly Enough](../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#the-problem-that-nobody-talked-about-loudly-enough)
+> **Source**: [The Problem That Nobody Talked About Loudly Enough](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#the-problem-that-nobody-talked-about-loudly-enough)
 
 | | |
 |:---|:---|
@@ -54,13 +54,13 @@ The 1:1 model is an architectural ceiling, not a tuning problem. There are three
 
 > **Key insight**: The app was not broken — the threading model had a hidden ceiling that only reveals itself under real I/O concurrency. Thread dumps, not CPU or DB metrics, expose it.
 
-**Cross-reference**: [Stack Memory](../reference-dictionary/java-jvm.md#stack-memory) · [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads)
+**Cross-reference**: [Stack Memory](../../reference-dictionary/java-jvm.md#stack-memory) · [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads)
 
 ---
 
 ## jvm-11: Go M:N Scheduler — Thousands of Goroutines, Six OS Threads
 
-> **Source**: [What Go Got Right From Day One](../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-go-got-right-from-day-one)
+> **Source**: [What Go Got Right From Day One](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-go-got-right-from-day-one)
 
 | | |
 |:---|:---|
@@ -106,13 +106,13 @@ Request-2  ──▶  OS Thread-2  (1 MB stack, blocked on DB)
 
 > **Key insight**: Go's performance advantage is not compiler quality — it is a fundamentally different concurrency architecture baked in before v1.0.
 
-**Cross-reference**: [Goroutine](../reference-dictionary/architecture-patterns.md#goroutine) · [M:N Scheduling](../reference-dictionary/architecture-patterns.md#mn-scheduling) · [GOMAXPROCS](../reference-dictionary/architecture-patterns.md#gomaxprocs)
+**Cross-reference**: [Goroutine](../../reference-dictionary/architecture-patterns.md#goroutine) · [M:N Scheduling](../../reference-dictionary/architecture-patterns.md#mn-scheduling) · [GOMAXPROCS](../../reference-dictionary/architecture-patterns.md#gomaxprocs)
 
 ---
 
 ## jvm-12: Virtual Thread Pinning Trap — `synchronized` Erases the Gains
 
-> **Source**: [Java Virtual Threads — The "We Heard You" Response](../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#java-virtual-threads--the-we-heard-you-response)
+> **Source**: [Java Virtual Threads — The "We Heard You" Response](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#java-virtual-threads--the-we-heard-you-response)
 
 | | |
 |:---|:---|
@@ -154,13 +154,13 @@ Detection signals:
 
 > **Key insight**: Virtual threads are a retrofit on a 30-year-old platform. The performance model is different from Go channels, which were designed to be scheduler-aware from the start. Go developers never think about pinning.
 
-**Cross-reference**: [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads) · [Thread Pinning](../reference-dictionary/architecture-patterns.md#thread-pinning) · [Carrier Thread](../reference-dictionary/architecture-patterns.md#carrier-thread)
+**Cross-reference**: [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads) · [Thread Pinning](../../reference-dictionary/architecture-patterns.md#thread-pinning) · [Carrier Thread](../../reference-dictionary/architecture-patterns.md#carrier-thread)
 
 ---
 
 ## jvm-13: Spring Boot 3.2 Virtual Thread Migration Path
 
-> **Source**: [What You Should Actually Do Right Now](../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-you-should-actually-do-right-now)
+> **Source**: [What You Should Actually Do Right Now](../../articles/medium/Go%20Just%20Killed%20the%20Java%20Thread%20Model%20%E2%80%94%20And%20Spring%20Boot%20Developers%20Are%20Panicking.md#what-you-should-actually-do-right-now)
 
 | | |
 |:---|:---|
@@ -210,4 +210,4 @@ Benchmark results from a simple HTTP → Postgres service (10,000 concurrent req
 
 > **Key insight**: Enable virtual threads before anything else. The ROI of that one line is extraordinary. But the gap to Go is still real — for services that need to scale hard under I/O pressure, Go's numbers come without any tuning.
 
-**Cross-reference**: [Virtual Threads](../reference-dictionary/architecture-patterns.md#virtual-threads) · [JVM Memory & GC Takeaways](33-jvm-key-takeaways.md) · [Microservices Runtime Performance](29-microservices-runtime-performance.md)
+**Cross-reference**: [Virtual Threads](../../reference-dictionary/architecture-patterns.md#virtual-threads) · [JVM Memory & GC Takeaways](jvm-runtime/jvm-memory-gc.md) · [Microservices Runtime Performance](performance/microservices-runtime-performance.md)

@@ -7,12 +7,12 @@ timestamp: 2026-06-25T00:00:00Z
 
 # 51. Defensive Coding — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Defensive Coding Approach](../articles/medium/defensive-coding-approach.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Defensive Coding Approach](../../articles/medium/defensive-coding-approach.md)
 > **Purpose**: Extract reusable defensive coding patterns with their failure modes and tradeoffs for use in design reviews and code-review checklists.
 
-> **Also see**: [Architecture Principles](40-arch-key-takeaways.md) · [Resilience Patterns](10-resilience-patterns.md) · [Auth Takeaways](36-auth-key-takeaways.md) · [Software Design Patterns](39-design-patterns-key-takeaways.md)
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md) · [Resilience](../reference-dictionary/resilience.md)
+> **Also see**: [Architecture Principles](software-architecture/architecture-principles.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Auth Takeaways](security/authentication-authorization.md) · [Software Design Patterns](software-architecture/design-patterns.md)
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md) · [Resilience](../../reference-dictionary/resilience.md)
 > **Taxonomy Reference**: §2.6 Design Patterns
 
 ---
@@ -39,7 +39,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Strict validation can reject edge-case valid inputs and requires clear error feedback to guide clients; applying full validation at every internal service layer adds latency and cognitive overhead without meaningful security gain.
 
-**Cross-reference**: [Fail Fast](40-arch-key-takeaways.md#arch-04-fail-fast) · [Defense in Depth](40-arch-key-takeaways.md#arch-03-defense-in-depth) · [Input Validation](../reference-dictionary/architecture-patterns.md#input-validation) · [Parameterized Query](../reference-dictionary/architecture-patterns.md#parameterized-query) · [Defensive Programming](../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Input Validation](../../reference-dictionary/architecture-patterns.md#input-validation) · [Parameterized Query](../../reference-dictionary/architecture-patterns.md#parameterized-query) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)
 
 ---
 
@@ -54,7 +54,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Assertions disabled in production provide zero runtime protection — an invariant that passes during testing can still be violated in prod; over-asserting on frequently changing code slows iteration when refactoring legitimately breaks assumptions.
 
-**Cross-reference**: [Fail Fast](40-arch-key-takeaways.md#arch-04-fail-fast) · [Defensive Programming](../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Fail Fast](software-architecture/architecture-principles.md#arch-04-fail-fast) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)
 
 ---
 
@@ -69,7 +69,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Partial batch completion introduces reconciliation logic and complicates downstream consumers that expect all-or-nothing semantics; "continue on error" can mask systemic failures if the FAILED count is not actively monitored and alerted on.
 
-**Cross-reference**: [Fail-safe vs Fail-secure](../reference-dictionary/resilience.md#fail-safe-vs-fail-secure) · [Graceful Degradation](../reference-dictionary/resilience.md#graceful-degradation) · [Idempotency](40-arch-key-takeaways.md#arch-08-idempotency)
+**Cross-reference**: [Fail-safe vs Fail-secure](../../reference-dictionary/resilience.md#fail-safe-vs-fail-secure) · [Graceful Degradation](../../reference-dictionary/resilience.md#graceful-degradation) · [Idempotency](software-architecture/architecture-principles.md#arch-08-idempotency)
 
 ---
 
@@ -84,4 +84,4 @@ timestamp: 2026-06-25T00:00:00Z
 
 **Tradeoff**: Frequent major upgrades risk API-breaking changes and require regression testing; pinning transitive versions increases maintenance burden and can cause version conflicts with other library requirements over time.
 
-**Cross-reference**: [Defense in Depth](40-arch-key-takeaways.md#arch-03-defense-in-depth) · [Least Privilege](40-arch-key-takeaways.md#arch-01-least-privilege) · [Defensive Programming](../reference-dictionary/architecture-patterns.md#defensive-programming)
+**Cross-reference**: [Defense in Depth](software-architecture/architecture-principles.md#arch-03-defense-in-depth) · [Least Privilege](software-architecture/architecture-principles.md#arch-01-least-privilege) · [Defensive Programming](../../reference-dictionary/architecture-patterns.md#defensive-programming)

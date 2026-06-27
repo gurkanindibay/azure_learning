@@ -7,12 +7,12 @@ timestamp: 2026-06-21T00:00:00Z
 
 # 44. E-Commerce Checkout Consistency — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
+> **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [Question 2: Design an E-Commerce Platform](../system-design-cases/cases/part-3-e-commerce-platform-system-design.md)
 > **Purpose**: Extract reusable consistency and transaction patterns from a high-scale e-commerce design.
 
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [SQL System Design](19-sql-system-design-takeaways.md)
-> **Dictionary**: [Data & Concurrency](../reference-dictionary/data-concurrency.md), [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md), [API Design](../reference-dictionary/api-design.md)
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [SQL System Design](databases/sql-system-design.md)
+> **Dictionary**: [Data & Concurrency](../../reference-dictionary/data-concurrency.md), [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [API Design](../../reference-dictionary/api-design.md)
 > **Taxonomy Reference**: §2.6 Design Patterns, §3 Integration & Communication Architecture
 
 ---
@@ -52,8 +52,8 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Contention** | Hot SKUs create lock contention; consider partitioning inventory by SKU or short-lived reservation TTLs. |
 | **Partial carts** | For multi-item carts, reserve all items or none to avoid leaving the user with half an order. |
 
-> **Also see**: [tx-01 Double-Booking](02-concurrency-transactions.md#tx-01-double-booking), [tx-06 Database Invariants](02-concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
-> **Dictionary**: [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Inventory Reservation](../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../reference-dictionary/data-concurrency.md#overselling)
+> **Also see**: [tx-01 Double-Booking](concurrency-transactions/concurrency-transactions.md#tx-01-double-booking), [tx-06 Database Invariants](concurrency-transactions/concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
+> **Dictionary**: [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling)
 > **Azure**: Azure SQL Database / Azure Database for PostgreSQL; use optimistic concurrency or row-versioning where supported.
 
 ---
@@ -75,8 +75,8 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Complexity** | The orchestrator and compensations become critical infrastructure. |
 | **Visibility** | A persistent saga log is essential for debugging partial states. |
 
-> **Also see**: [sqld-06 Database Per Service + Saga](19-sql-system-design-takeaways.md#sqld-06-database-per-service--saga-pattern)
-> **Dictionary**: [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern), [Database Per Service](../reference-dictionary/architecture-patterns.md#database-per-service)
+> **Also see**: [sqld-06 Database Per Service + Saga](databases/sql-system-design.md#sqld-06-database-per-service--saga-pattern)
+> **Dictionary**: [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Database Per Service](../../reference-dictionary/architecture-patterns.md#database-per-service)
 > **Azure**: Azure Service Bus or Event Grid can carry saga events; Azure Functions / Container Apps host orchestrator logic.
 
 ---
@@ -98,8 +98,8 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Idempotency required** | The same compensation may run multiple times safely. |
 | **Partial saga state** | The system must expose intermediate states to support and ops. |
 
-> **Also see**: [Saga Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
-> **Dictionary**: [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern)
+> **Also see**: [Saga Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
+> **Dictionary**: [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern)
 > **Azure**: Azure Service Bus scheduled messages can trigger compensation timers; Azure Durable Functions simplify saga state management.
 
 ---
@@ -121,8 +121,8 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Key lifecycle** | Keys must be retained until reconciliation confirms the transaction. |
 | **Gateway dependency** | Not all gateways support idempotency keys; build an internal idempotency store as a fallback. |
 
-> **Also see**: [tx-04 Idempotency](02-concurrency-transactions.md#tx-04-idempotency), [apipat-03 Idempotency-Key](20-api-design-patterns-key-takeaways.md#apipat-03-idempotency--preventing-double-charges)
-> **Dictionary**: [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key)
+> **Also see**: [tx-04 Idempotency](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency), [apipat-03 Idempotency-Key](api-network/api-design-patterns.md#apipat-03-idempotency--preventing-double-charges)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 > **Azure**: Azure API Management can enforce idempotency policies; Azure SQL / Cosmos DB stores idempotency keys.
 
 ---
@@ -145,8 +145,8 @@ WHERE sku_id = :sku AND available - reserved >= :qty;
 | **Cart** | Available + reconciled | Temporary divergence across devices is acceptable. |
 | **Payment** | Exactly-once | Idempotency keys + gateway reconciliation. |
 
-> **Also see**: [sqld-02 SQL vs NoSQL Decision Framework](19-sql-system-design-takeaways.md#sqld-02-sql-vs-nosql-decision-framework)
-> **Dictionary**: [ACID Transactions](../reference-dictionary/data-concurrency.md#acid-transactions), [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md), [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Also see**: [sqld-02 SQL vs NoSQL Decision Framework](databases/sql-system-design.md#sqld-02-sql-vs-nosql-decision-framework)
+> **Dictionary**: [ACID Transactions](../../reference-dictionary/data-concurrency.md#acid-transactions), [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md), [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
 > **Azure**: Azure SQL for strong consistency; Azure Cognitive Search / Cosmos DB for eventually consistent read models; Azure Cache for Redis for cart/session state.
 
 ---

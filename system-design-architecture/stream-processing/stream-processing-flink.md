@@ -7,14 +7,14 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 9. Stream Processing (Apache Flink)
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md)
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md)
 
 ---
 
 ## flink-01: Lambda Architecture — Two Systems, Two Codebases
 
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "The Problem" & "The Key Insight"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "The Problem" & "The Key Insight"
 
 | | |
 |:---|:---|
@@ -32,14 +32,14 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Key insight**: Batch data is just a stream that stopped flowing. Your 6-month historical data and your 6-second real-time data are the same JSON events at different time windows. One engine can handle both.
 
-> **Azure**: Azure Stream Analytics (real-time) + Azure Data Lake Analytics (batch) → converging toward unified via Azure Synapse | **General**: [Lambda vs Kappa Architecture](../../architecture-general/04-data-analytics-ai-architecture/)  
-> **Related**: [Single-Machine vs Distributed Framework Selection](13-large-data-processing-constraints.md#proc-05-single-machine-vs-distributed-framework-selection) — when NOT to use Kafka/Flink (the "right tool for the right scale" decision)
+> **Azure**: Azure Stream Analytics (real-time) + Azure Data Lake Analytics (batch) → converging toward unified via Azure Synapse | **General**: [Lambda vs Kappa Architecture](../../../architecture-general/04-data-analytics-ai-architecture/)  
+> **Related**: [Single-Machine vs Distributed Framework Selection](large-data-processing/large-data-constraints.md#proc-05-single-machine-vs-distributed-framework-selection) — when NOT to use Kafka/Flink (the "right tool for the right scale" decision)
 
 ---
 
 ## flink-02: Batch as a Special Case of Streaming
 
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Unified Batch and Stream Processing"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Unified Batch and Stream Processing"
 
 | | |
 |:---|:---|
@@ -66,13 +66,13 @@ Batch (Blocked):        Op1 ████ DONE → Op2 ████ DONE → Op3 
 
 **Key insight**: There is no separate batch engine in Flink. The **only** difference is how data moves between operators — pipelined (immediate) vs blocked (damed). Everything else is identical.
 
-> **Azure**: Azure Stream Analytics for streaming; Azure Synapse Spark pools for batch — separate engines, unlike Flink's unified approach | **General**: [Stream Processing Patterns](../../architecture-general/04-data-analytics-ai-architecture/)
+> **Azure**: Azure Stream Analytics for streaming; Azure Synapse Spark pools for batch — separate engines, unlike Flink's unified approach | **General**: [Stream Processing Patterns](../../../architecture-general/04-data-analytics-ai-architecture/)
 
 ---
 
 ## flink-03: Stateful Stream Processing with Exactly-Once Guarantees
 
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "State" & "Fault Tolerance"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "State" & "Fault Tolerance"
 
 | | |
 |:---|:---|
@@ -98,13 +98,13 @@ Events → [barrier] → Operator snapshots state → forwards barrier
 
 **Key insight**: Flink's state feels as reliable as writing to a database, with the performance of an in-memory hash map. Counts won't be doubled after crash recovery.
 
-> **Azure**: Azure Stream Analytics supports reference data joins (limited state); Cosmos DB change feed for stateful event sourcing | **General**: [Event Sourcing Pattern](../../architecture-general/04-data-analytics-ai-architecture/)
+> **Azure**: Azure Stream Analytics supports reference data joins (limited state); Cosmos DB change feed for stateful event sourcing | **General**: [Event Sourcing Pattern](../../../architecture-general/04-data-analytics-ai-architecture/)
 
 ---
 
 ## flink-04: Windowing — Aggregating Infinite Streams
 
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "Windows"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "Windows"
 
 | | |
 |:---|:---|
@@ -123,13 +123,13 @@ Events → [barrier] → Operator snapshots state → forwards barrier
 
 **Key insight**: A window is a bounded chunk sliced from an infinite stream. You define the slice boundary, Flink groups events into it, and emits results when the window completes.
 
-> **Azure**: Azure Stream Analytics supports tumbling, hopping (sliding), and session windows natively | **General**: [Windowed Aggregation Patterns](../../architecture-general/04-data-analytics-ai-architecture/)
+> **Azure**: Azure Stream Analytics supports tumbling, hopping (sliding), and session windows natively | **General**: [Windowed Aggregation Patterns](../../../architecture-general/04-data-analytics-ai-architecture/)
 
 ---
 
 ## flink-05: Asynchronous Barrier Snapshotting (ABS) — Fault Tolerance Without Pausing
 
-> **Source**: [Apache Flink from 10,000 Feet](../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Fault Tolerance"
+> **Source**: [Apache Flink from 10,000 Feet](../../articles/medium/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md) — "On Fault Tolerance"
 
 | | |
 |:---|:---|
@@ -157,7 +157,7 @@ Events → [barrier] → Operator snapshots state → forwards barrier
 
 **Key insight**: ABS is what makes Flink's exactly-once guarantee practical at scale. Without it, you'd have to choose between correctness and performance.
 
-> **Azure**: Azure Stream Analytics handles checkpointing transparently; Event Hubs capture provides durable replay | **General**: [Checkpointing & Recovery Patterns](../../architecture-general/07-reliability-performance-operations/)
+> **Azure**: Azure Stream Analytics handles checkpointing transparently; Event Hubs capture provides durable replay | **General**: [Checkpointing & Recovery Patterns](../../../architecture-general/07-reliability-performance-operations/)
 
 ---
 

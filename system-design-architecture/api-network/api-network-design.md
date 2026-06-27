@@ -7,15 +7,15 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 4. APIs & Network Design
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #13–16, [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)  
-> **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #13–16, [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)  
+> **Also see**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md) — Consistent hash routing, request coalescing
 
 ---
 
 ## api-01: API Versioning
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#13
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#13
 
 
 | | |
@@ -50,7 +50,7 @@ Payload evolution:
 
 ## api-02: Rate Limiting
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#14
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#14
 
 
 | | |
@@ -273,7 +273,7 @@ Check in order: most-specific first. The first tier to reject returns `429`.
 
 ## api-03: Large File Uploads
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#15
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#15
 
 
 | | |
@@ -299,13 +299,13 @@ Presigned URL flow:
 ```
 
 > **Azure**: Blob Storage SAS tokens (equivalent to presigned URLs) | **General**: §8.3 API Design  
-> **Related**: [Large Data Processing Under Constraints](13-large-data-processing-constraints.md#proc-01-streaming--chunking-for-memory-constrained-processing) — streaming & chunking for data files (not just uploads)
+> **Related**: [Large Data Processing Under Constraints](large-data-processing/large-data-constraints.md#proc-01-streaming--chunking-for-memory-constrained-processing) — streaming & chunking for data files (not just uploads)
 
 ---
 
 ## api-04: Long-Running Tasks
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#16
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#16
 
 
 | | |
@@ -335,7 +335,7 @@ Sequence:
 
 ## api-05: Consistent Hash-Based Routing
 
-> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -353,7 +353,7 @@ hash(entity_id) % num_instances  →  which instance handles this entity
   #random   → hash → Svc1    (isolated — unaffected by #general's load)
 ```
 
-**Real-world example — Discord**: The Rust data service layer routes all requests by `channel_id`. This concentrates hot-channel traffic at one instance where coalescing ([cache-05: Request Coalescing](../03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) can collapse 500 simultaneous reads into 1 DB query. Cold channels stay on separate instances — their latency is completely unaffected.
+**Real-world example — Discord**: The Rust data service layer routes all requests by `channel_id`. This concentrates hot-channel traffic at one instance where coalescing ([cache-05: Request Coalescing](../caching/caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) can collapse 500 simultaneous reads into 1 DB query. Cold channels stay on separate instances — their latency is completely unaffected.
 
 **Why this matters — with and without routing**:
 
@@ -402,7 +402,7 @@ Without consistent hash routing:         With consistent hash routing:
 
 ## api-06: API Deprecation as Migration Strategy
 
-> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -436,14 +436,14 @@ Without consistent hash routing:         With consistent hash routing:
 | Security vulnerabilities can be closed | May break clients that missed the sunset date |
 | Forces client teams to prioritize migration | High-volume consumers may push back on the timeline |
 
-> **Dictionary**: [Migration-Driven Deprecation](../reference-dictionary/api-design.md#migration-driven-deprecation) · [Deprecation Header](../reference-dictionary/api-design.md#deprecation-header) · [Sunset Header](../reference-dictionary/api-design.md#sunset-header)  
+> **Dictionary**: [Migration-Driven Deprecation](../../reference-dictionary/api-design.md#migration-driven-deprecation) · [Deprecation Header](../../reference-dictionary/api-design.md#deprecation-header) · [Sunset Header](../../reference-dictionary/api-design.md#sunset-header)  
 > **General**: §8.3 API Design
 
 ---
 
 ## api-07: Client Traffic Monitoring During API Migration
 
-> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -468,14 +468,14 @@ Without consistent hash routing:         With consistent hash routing:
 | Surfaces unknown consumers (internal teams, undocumented integrations) | — |
 
 > **Azure**: API Management analytics + Application Insights per-operation metrics  
-> **Dictionary**: [Migration-Driven Deprecation](../reference-dictionary/api-design.md#migration-driven-deprecation)  
+> **Dictionary**: [Migration-Driven Deprecation](../../reference-dictionary/api-design.md#migration-driven-deprecation)  
 > **General**: §8.3 API Design
 
 ---
 
 ## api-08: Security-Triggered Forced Sunset
 
-> **Source**: [API Deprecation as a Migration Strategy](../articles/medium/api-depreciation.md)
+> **Source**: [API Deprecation as a Migration Strategy](../../articles/medium/api-depreciation.md)
 
 | | |
 |:---|:---|
@@ -509,7 +509,7 @@ SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traf
 
 ## api-09: Hot Key Problem in Distributed Rate Limiters
 
-> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -525,15 +525,15 @@ SECURITY deprecation: sunset date ≤ 30 days, forced disable regardless of traf
 | **Hierarchical limits** | Enforce coarse limit at edge/gateway, finer limit per service | Multiple counters to maintain; complex debugging |
 | **Gateway enforcement** | Reject abuse before it reaches Redis/backend | Gateway itself can become a hotspot |
 
-> **Dictionary**: [Hot Key](../reference-dictionary/caching.md#hot-key) · [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
-> **Related**: [gw-03: API Gateway](16-reverse-proxy-lb-api-gateway.md#gw-03-api-gateway--when-api-lifecycle-management-is-the-priority)  
+> **Dictionary**: [Hot Key](../../reference-dictionary/caching.md#hot-key) · [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting)  
+> **Related**: [gw-03: API Gateway](api-network/reverse-proxy-lb-gateway.md#gw-03-api-gateway--when-api-lifecycle-management-is-the-priority)  
 > **General**: §8.3 API Design
 
 ---
 
 ## api-10: Multi-Tenant Rate Limiting with Plan-Specific Buckets
 
-> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -557,14 +557,14 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 | Single implementation serves all tiers | Configuration propagation must be reliable; stale config can over/under-limit |
 | Easy to add new plans or custom limits | More keys/dimensions increase monitoring and operational surface |
 
-> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
+> **Dictionary**: [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting)  
 > **General**: §8.3 API Design
 
 ---
 
 ## api-11: Rate Limiter Failure Mode — Fail-Open vs Fail-Closed
 
-> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -585,15 +585,15 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 | Protects downstream services from abuse | Avoids an outage caused by the rate limiter itself |
 | Can turn a Redis failure into a full API outage | Risks temporary over-consumption and abuse |
 
-> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting) · [Fail-safe vs Fail-secure](../reference-dictionary/resilience.md#fail-safe-vs-fail-secure)  
-> **Related**: [resilience-02: Circuit Breaker](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)  
+> **Dictionary**: [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting) · [Fail-safe vs Fail-secure](../../reference-dictionary/resilience.md#fail-safe-vs-fail-secure)  
+> **Related**: [resilience-02: Circuit Breaker](resilience/resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)  
 > **General**: §8.3 API Design
 
 ---
 
 ## api-12: Multi-Region Rate Limiting — Consistency vs Latency
 
-> **Source**: [System Design Interview: API Rate Limiter](../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
+> **Source**: [System Design Interview: API Rate Limiter](../../../articles/medium/system-design-interview-api-rate-limiter-distributed.md)
 
 | | |
 |:---|:---|
@@ -610,5 +610,5 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 
 > **Rule of thumb**: For most customer-facing APIs, accept a small accuracy loss in exchange for low latency; enforce strict global limits only for expensive or abuse-sensitive endpoints.
 
-> **Dictionary**: [Rate Limiting](../reference-dictionary/api-design.md#rate-limiting)  
+> **Dictionary**: [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting)  
 > **General**: §8.3 API Design

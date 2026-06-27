@@ -7,12 +7,12 @@ timestamp: 2026-06-23T00:00:00Z
 
 # 45. Agentic AI Accountability — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md) — by The Latency Gambler (Jun 2026)  
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md) — by The Latency Gambler (Jun 2026)  
 > **Purpose**: Extract the ownership and quality patterns required to ship AI-generated output into production without losing accountability.
 
-> **Also see**: [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md), [AI Agent Architecture](21-ai-agent-architecture-key-takeaways.md), [AI-Assisted Development — Five Levels](22-ai-assisted-development-five-levels.md)
-> **Dictionary**: [Accountability Gap](../reference-dictionary/ai-ml-llm.md#accountability-gap), [Context Freshness](../reference-dictionary/ai-ml-llm.md#context-freshness), [Owner Tag](../reference-dictionary/ai-ml-llm.md#owner-tag), [Review Gate](../reference-dictionary/ai-ml-llm.md#review-gate)
+> **Also see**: [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md), [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [AI-Assisted Development — Five Levels](agentic-ai/ai-assisted-development.md)
+> **Dictionary**: [Accountability Gap](../../reference-dictionary/ai-ml-llm.md#accountability-gap), [Context Freshness](../../reference-dictionary/ai-ml-llm.md#context-freshness), [Owner Tag](../../reference-dictionary/ai-ml-llm.md#owner-tag), [Review Gate](../../reference-dictionary/ai-ml-llm.md#review-gate)
 > **Taxonomy Reference**: §4.4 AI / ML Architecture
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-06-23T00:00:00Z
 
 ## agentic-07: Accountability Gap in Production AI
 
-> **Source**: [§"The Accountability Gap Nobody Wants to Talk About"](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#the-accountability-gap-nobody-wants-to-talk-about)
+> **Source**: [§"The Accountability Gap Nobody Wants to Talk About"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#the-accountability-gap-nobody-wants-to-talk-about)
 
 | | |
 |:---|:---|
@@ -41,14 +41,14 @@ timestamp: 2026-06-23T00:00:00Z
 
 **Tradeoff**: Ownership assignments add a small coordination cost to every output, but they eliminate the far larger cost of blameless-yet-unactionable post-mortems.
 
-> **Also see**: [agentic-06](17-agentic-ai-enterprise-strategic-systems.md#agentic-06-human-in-the-decision--ai-as-reasoning-partner) — Human-in-the-Decision  
-> **Dictionary**: [Accountability Gap](../reference-dictionary/ai-ml-llm.md#accountability-gap)
+> **Also see**: [agentic-06](agentic-ai/enterprise-strategic-systems.md#agentic-06-human-in-the-decision--ai-as-reasoning-partner) — Human-in-the-Decision  
+> **Dictionary**: [Accountability Gap](../../reference-dictionary/ai-ml-llm.md#accountability-gap)
 
 ---
 
 ## agentic-08: Context Freshness Checks
 
-> **Source**: [§"A Lightweight Ownership Pattern"](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#a-lightweight-ownership-pattern)
+> **Source**: [§"A Lightweight Ownership Pattern"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#a-lightweight-ownership-pattern)
 
 | | |
 |:---|:---|
@@ -68,14 +68,14 @@ timestamp: 2026-06-23T00:00:00Z
 
 **Tradeoff**: Freshness checks may block outputs that are still directionally correct but technically stale. Teams must define freshness SLAs by use case.
 
-> **Also see**: [ai-01](11-ai-ml-infrastructure.md#ai-01-rag-architecture--stopping-ai-hallucinations) — RAG grounding reduces hallucination but does not guarantee freshness  
-> **Dictionary**: [Context Freshness](../reference-dictionary/ai-ml-llm.md#context-freshness)
+> **Also see**: [ai-01](ai-ml-infrastructure/ai-ml-infrastructure.md#ai-01-rag-architecture--stopping-ai-hallucinations) — RAG grounding reduces hallucination but does not guarantee freshness  
+> **Dictionary**: [Context Freshness](../../reference-dictionary/ai-ml-llm.md#context-freshness)
 
 ---
 
 ## agentic-09: Owner Tag + Review Gate
 
-> **Source**: [§"What 'Quality First' Looks Like in Practice"](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#what-quality-first-looks-like-in-practice)
+> **Source**: [§"What 'Quality First' Looks Like in Practice"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#what-quality-first-looks-like-in-practice)
 
 | | |
 |:---|:---|
@@ -96,14 +96,14 @@ Every output gets an owner tag, and the review gate checks that the owner explic
 
 **Tradeoff**: Adds review latency and requires owner availability, but reduces production incidents caused by unowned, low-quality output.
 
-> **Also see**: [aidev-03](22-ai-assisted-development-five-levels.md#aidev-03-the-level-2-trap--feeling-done-is-not-being-done) — Level 3 is code review at scale; this pattern is the enforcement mechanism  
-> **Dictionary**: [Owner Tag](../reference-dictionary/ai-ml-llm.md#owner-tag), [Review Gate](../reference-dictionary/ai-ml-llm.md#review-gate)
+> **Also see**: [aidev-03](agentic-ai/ai-assisted-development.md#aidev-03-the-level-2-trap--feeling-done-is-not-being-done) — Level 3 is code review at scale; this pattern is the enforcement mechanism  
+> **Dictionary**: [Owner Tag](../../reference-dictionary/ai-ml-llm.md#owner-tag), [Review Gate](../../reference-dictionary/ai-ml-llm.md#review-gate)
 
 ---
 
 ## agentic-10: 2x with Accountability Beats 10x Volume
 
-> **Source**: [§"Why 2x Beats 10x"](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#why-2x-beats-10x)
+> **Source**: [§"Why 2x Beats 10x"](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md#why-2x-beats-10x)
 
 | | |
 |:---|:---|
@@ -114,8 +114,8 @@ Every output gets an owner tag, and the review gate checks that the owner explic
 
 **Tradeoff**: Lower peak generation volume, but fewer incidents, clearer post-mortems, and higher trust in AI-assisted tools.
 
-> **Also see**: [aidev-02](22-ai-assisted-development-five-levels.md#aidev-02-the-five-levels-framework) — Five-level maturity model; this is the governance layer above it  
-> **Dictionary**: [Human Ownership](../reference-dictionary/ai-ml-llm.md#human-ownership)
+> **Also see**: [aidev-02](agentic-ai/ai-assisted-development.md#aidev-02-the-five-levels-framework) — Five-level maturity model; this is the governance layer above it  
+> **Dictionary**: [Human Ownership](../../reference-dictionary/ai-ml-llm.md#human-ownership)
 
 ---
 
@@ -131,5 +131,5 @@ Every output gets an owner tag, and the review gate checks that the owner explic
 ---
 
 > **Taxonomy Reference**: §4.4 AI / ML Architecture · §8.1 DevOps Architecture  
-> **See also**: [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md) · [AI Agent Architecture](21-ai-agent-architecture-key-takeaways.md) · [AI-Assisted Development — Five Levels](22-ai-assisted-development-five-levels.md)  
-> **Source article**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)
+> **See also**: [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md) · [AI Agent Architecture](agentic-ai/ai-agent-architecture.md) · [AI-Assisted Development — Five Levels](agentic-ai/ai-assisted-development.md)  
+> **Source article**: [Quality First, Quantity Second: The Leadership Lesson Every Tech Team Needs](../../articles/medium/quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)

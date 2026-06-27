@@ -7,11 +7,11 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 25. CQRS for Fintech — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [CQRS For Fintech In 2026: Ledgers, Limits, Risk, And The Fight Over Truth](https://medium.com/@the_atomic_architect/cqrs-fintech-2026-ledger-truth-bdbbcfeb65dc) — The Atomic Architect, Apr 2026 · [Local copy](../articles/medium/cqrs-for-fintech-2026.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [CQRS For Fintech In 2026: Ledgers, Limits, Risk, And The Fight Over Truth](https://medium.com/@the_atomic_architect/cqrs-fintech-2026-ledger-truth-bdbbcfeb65dc) — The Atomic Architect, Apr 2026 · [Local copy](../../articles/medium/cqrs-for-fintech-2026.md)
 > **Purpose**: Extract practical CQRS boundaries for money-facing systems — separating command authority from query flexibility, protecting the ledger as the single source of financial truth, and preventing one model from becoming a junk drawer for the whole company.
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [Message Brokers & Async](05-message-brokers-async.md), [Resilience Patterns](10-resilience-patterns.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md)
-> **Dictionary**: [Reference Dictionary](../reference-dictionary/) — definitions for [projection](../reference-dictionary/cqrs-event-driven.md#projection), [read model](../reference-dictionary/cqrs-event-driven.md#read-model), [ledger](../reference-dictionary/cqrs-event-driven.md#ledger), [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [outbox pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), and other key terms
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [Message Brokers & Async](messaging/message-brokers-async.md), [Resilience Patterns](resilience/resilience-patterns.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md)
+> **Dictionary**: [Reference Dictionary](../../reference-dictionary/) — definitions for [projection](../../reference-dictionary/cqrs-event-driven.md#projection), [read model](../../reference-dictionary/cqrs-event-driven.md#read-model), [ledger](../../reference-dictionary/cqrs-event-driven.md#ledger), [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [outbox pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), and other key terms
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging, §7.1 Reliability & Resilience
 
 ---
@@ -40,7 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## cqrs-01: Commands Protect Truth, Queries Explain Truth
 
-> **Source**: [Article §"CQRS Is Not Fancy Here"](../articles/medium/cqrs-for-fintech-2026.md#cqrs-is-not-fancy-here)
+> **Source**: [Article §"CQRS Is Not Fancy Here"](../../articles/medium/cqrs-for-fintech-2026.md#cqrs-is-not-fancy-here)
 
 | | |
 |:---|:---|
@@ -76,20 +76,20 @@ support search, operations investigation, risk analytics, finance reports
 
 > **Key insight**: The command path is narrow. The read path is wide. That is the point. The command side protects correctness. The query side protects experience. If the read model is delayed, that is a product and communication problem. If the ledger is wrong, that is a trust problem. Those two problems are not equal.
 
-**Cross-reference**: This is the foundational boundary that `cqrs-03` through `cqrs-12` build upon. See also [Async & Concurrency Patterns](08-async-concurrency-patterns.md) for command processing patterns.
+**Cross-reference**: This is the foundational boundary that `cqrs-03` through `cqrs-12` build upon. See also [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md) for command processing patterns.
 
 ---
 
 ## cqrs-02: The Ledger Is Truth; Balance Is a Derived View
 
-> **Source**: [Article §"The Ledger Is Not A Balance Table"](../articles/medium/cqrs-for-fintech-2026.md#the-ledger-is-not-a-balance-table)
+> **Source**: [Article §"The Ledger Is Not A Balance Table"](../../articles/medium/cqrs-for-fintech-2026.md#the-ledger-is-not-a-balance-table)
 
 | | |
 |:---|:---|
 | **Problem** | A balance table (`account_id`, `balance`, `updated_at`) is treated as the source of truth, but fintech doesn't live in simple updates — money moves. |
 | **Root cause** | Confusing "current state" with "financial history" — one is a snapshot, the other is evidence.
 
-> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) · [Ledger](../reference-dictionary/cqrs-event-driven.md#ledger)
+> 📖 **Dictionary**: [Projection](../../reference-dictionary/cqrs-event-driven.md#projection) · [Ledger](../../reference-dictionary/cqrs-event-driven.md#ledger)
 
 ### Balance Table vs Proper Ledger
 
@@ -111,13 +111,13 @@ support search, operations investigation, risk analytics, finance reports
 
 > **The sentence every money-facing team should have on their wall**: "The ledger is the truth. The balance is a derived view."
 
-**Cross-reference**: See [Concurrency & Transactions](02-concurrency-transactions.md) for transaction isolation levels that protect ledger integrity.
+**Cross-reference**: See [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) for transaction isolation levels that protect ledger integrity.
 
 ---
 
 ## cqrs-03: Idempotency Before the Ledger Command
 
-> **Source**: [Article §"Idempotency Is A Fintech Seatbelt"](../articles/medium/cqrs-for-fintech-2026.md#idempotency-is-a-fintech-seatbelt)
+> **Source**: [Article §"Idempotency Is A Fintech Seatbelt"](../../articles/medium/cqrs-for-fintech-2026.md#idempotency-is-a-fintech-seatbelt)
 
 | | |
 |:---|:---|
@@ -149,13 +149,13 @@ I will not move money again.
 
 > **Key insight**: Idempotency is not a best-effort log check. It is a financial seatbelt that must be fastened before the engine starts.
 
-**Cross-reference**: See [Resilience Patterns](10-resilience-patterns.md) for retry strategies and idempotency in distributed systems.
+**Cross-reference**: See [Resilience Patterns](resilience/resilience-patterns.md) for retry strategies and idempotency in distributed systems.
 
 ---
 
 ## cqrs-04: Limits Belong on the Command Side
 
-> **Source**: [Article §"Limits Are Not Just Numbers"](../articles/medium/cqrs-for-fintech-2026.md#limits-are-not-just-numbers)
+> **Source**: [Article §"Limits Are Not Just Numbers"](../../articles/medium/cqrs-for-fintech-2026.md#limits-are-not-just-numbers)
 
 | | |
 |:---|:---|
@@ -183,13 +183,13 @@ I will not move money again.
 
 > **Key insight**: The read model can inform the customer. The command model must protect the system. That boundary matters.
 
-**Cross-reference**: See [Concurrency & Transactions](02-concurrency-transactions.md) for pessimistic locking patterns on limit rows.
+**Cross-reference**: See [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) for pessimistic locking patterns on limit rows.
 
 ---
 
 ## cqrs-05: Risk Creates Actions, Never Rewrites History
 
-> **Source**: [Article §"Risk Is Not The Ledger"](../articles/medium/cqrs-for-fintech-2026.md#risk-is-not-the-ledger)
+> **Source**: [Article §"Risk Is Not The Ledger"](../../articles/medium/cqrs-for-fintech-2026.md#risk-is-not-the-ledger)
 
 | | |
 |:---|:---|
@@ -220,7 +220,7 @@ Correction:         TRANSFER_REVERSED (new entry, new timestamp)
 
 ## cqrs-06: Outbox Pattern for Transaction-Event Atomicity
 
-> **Source**: [Article §"The Outbox Is Boring Until It Saves You"](../articles/medium/cqrs-for-fintech-2026.md#the-outbox-is-boring-until-it-saves-you)
+> **Source**: [Article §"The Outbox Is Boring Until It Saves You"](../../articles/medium/cqrs-for-fintech-2026.md#the-outbox-is-boring-until-it-saves-you)
 
 | | |
 |:---|:---|
@@ -255,20 +255,20 @@ SAFE:       Save ledger entries + Save outbox event  (same DB transaction)
 
 > **Key insight**: The event is not the source of truth. The ledger transaction is. The event tells other systems what the ledger already accepted. That order matters. A lot.
 
-**Cross-reference**: See [Message Brokers & Async](05-message-brokers-async.md) for Kafka integration patterns and exactly-once semantics.
+**Cross-reference**: See [Message Brokers & Async](messaging/message-brokers-async.md) for Kafka integration patterns and exactly-once semantics.
 
 ---
 
 ## cqrs-07: Read Models Are Replaceable; The Ledger Is Sacred
 
-> **Source**: [Article §"The Read Model Can Be Ugly"](../articles/medium/cqrs-for-fintech-2026.md#the-read-model-can-be-ugly)
+> **Source**: [Article §"The Read Model Can Be Ugly"](../../articles/medium/cqrs-for-fintech-2026.md#the-read-model-can-be-ugly)
 
 | | |
 |:---|:---|
 | **Problem** | Product changes (new dashboard, new support screen, new risk view, new mobile timeline) force changes to the ledger design or pollute financial records with display fields. |
 | **Root cause** | Treating read models as equally important as the ledger — they are not.
 
-> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) · [Read Model](../reference-dictionary/cqrs-event-driven.md#read-model)
+> 📖 **Dictionary**: [Projection](../../reference-dictionary/cqrs-event-driven.md#projection) · [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model)
 
 ### Sacred vs Replaceable
 
@@ -291,20 +291,20 @@ be rebuilt, be replaced, be optimized for one screen.
 
 > **Key insight**: Once you accept that read models are not sacred, product changes become less scary. A new dashboard card does not require changing ledger design. A new support screen does not require polluting the command model. You build the view that humans need — but you do not let that view become the authority.
 
-**Cross-reference**: See [Caching Architecture](03-caching-architecture.md) for read-model materialization strategies.
+**Cross-reference**: See [Caching Architecture](caching/caching-architecture.md) for read-model materialization strategies.
 
 ---
 
 ## cqrs-08: The Balance Screen Is a Story, Not Authority
 
-> **Source**: [Article §"The Balance Screen Is A Story"](../articles/medium/cqrs-for-fintech-2026.md#the-balance-screen-is-a-story)
+> **Source**: [Article §"The Balance Screen Is A Story"](../../articles/medium/cqrs-for-fintech-2026.md#the-balance-screen-is-a-story)
 
 | | |
 |:---|:---|
 | **Problem** | Teams build a fast read model → use it for display (good) → use it for support (still okay) → use it for limit checks (danger) → use it for final transfer approval (now the read side has become a hidden authority and CQRS collapses). |
 | **Root cause** | The boundary erodes incrementally — each step feels reasonable in isolation.
 
-> 📖 **Dictionary**: [Projection](../reference-dictionary/cqrs-event-driven.md#projection) — a balance screen is a projection; the command side is the truth.
+> 📖 **Dictionary**: [Projection](../../reference-dictionary/cqrs-event-driven.md#projection) — a balance screen is a projection; the command side is the truth.
 
 ### The Erosion Path
 
@@ -333,7 +333,7 @@ Safe        Tolerable     Dangerous          Catastrophic
 
 ## cqrs-09: Events Don't Fix a Confused Ledger
 
-> **Source**: [Article §"Kafka Does Not Fix A Confused Ledger"](../articles/medium/cqrs-for-fintech-2026.md#kafka-does-not-fix-a-confused-ledger)
+> **Source**: [Article §"Kafka Does Not Fix A Confused Ledger"](../../articles/medium/cqrs-for-fintech-2026.md#kafka-does-not-fix-a-confused-ledger)
 
 | | |
 |:---|:---|
@@ -362,7 +362,7 @@ WRONG:     Event fires     →  Ledger records as side effect
 
 ## cqrs-10: Reconciliation as a First-Class Concern
 
-> **Source**: [Article §"Reconciliation Is Where Architecture Meets Reality"](../articles/medium/cqrs-for-fintech-2026.md#reconciliation-is-where-architecture-meets-reality)
+> **Source**: [Article §"Reconciliation Is Where Architecture Meets Reality"](../../articles/medium/cqrs-for-fintech-2026.md#reconciliation-is-where-architecture-meets-reality)
 
 | | |
 |:---|:---|
@@ -390,13 +390,13 @@ Do my pending transactions eventually resolve?
 
 > **Key insight**: A serious fintech system should expect mismatch — not because engineers are careless, but because distributed systems are messy. The goal is not to pretend mismatch will never happen. The goal is to detect it, explain it, and correct it without damaging ledger truth.
 
-**Cross-reference**: See [Resilience Patterns](10-resilience-patterns.md) for failure detection and recovery strategies.
+**Cross-reference**: See [Resilience Patterns](resilience/resilience-patterns.md) for failure detection and recovery strategies.
 
 ---
 
 ## cqrs-11: Language Precision — Domain Modeling Through Words
 
-> **Source**: [Article §"The Words Matter Too"](../articles/medium/cqrs-for-fintech-2026.md#the-words-matter-too)
+> **Source**: [Article §"The Words Matter Too"](../../articles/medium/cqrs-for-fintech-2026.md#the-words-matter-too)
 
 | | |
 |:---|:---|
@@ -421,7 +421,7 @@ Do my pending transactions eventually resolve?
 
 ## cqrs-12: The One Rule — Command Data vs Display Data
 
-> **Source**: [Article §"The One Rule I Trust"](../articles/medium/cqrs-for-fintech-2026.md#the-one-rule-i-trust)
+> **Source**: [Article §"The One Rule I Trust"](../../articles/medium/cqrs-for-fintech-2026.md#the-one-rule-i-trust)
 
 | | |
 |:---|:---|
@@ -455,7 +455,7 @@ Do my pending transactions eventually resolve?
 
 ## cqrs-13: Command Side Boring, Query Side Helpful
 
-> **Source**: [Article §"The Command Side Should Be Boring" and "The Query Side Should Be Helpful"](../articles/medium/cqrs-for-fintech-2026.md#the-command-side-should-be-boring)
+> **Source**: [Article §"The Command Side Should Be Boring" and "The Query Side Should Be Helpful"](../../articles/medium/cqrs-for-fintech-2026.md#the-command-side-should-be-boring)
 
 | | |
 |:---|:---|
@@ -490,13 +490,13 @@ Commit transaction → Save outbox event → Return clear result
 
 > **Key insight**: A good fintech command side should not be exciting. It should not be clever. It should be the kind of boring that lets people sleep. Fast and wrong is still wrong.
 
-**Cross-reference**: See the full command flow code in the [source article](../articles/medium/cqrs-for-fintech-2026.md#the-code-i-would-put-near-the-money).
+**Cross-reference**: See the full command flow code in the [source article](../../articles/medium/cqrs-for-fintech-2026.md#the-code-i-would-put-near-the-money).
 
 ---
 
 ## cqrs-14: Almost-Correct Is the Most Dangerous
 
-> **Source**: [Article §"The Most Dangerous Architecture Is Almost Correct"](../articles/medium/cqrs-for-fintech-2026.md#the-most-dangerous-architecture-is-almost-correct)
+> **Source**: [Article §"The Most Dangerous Architecture Is Almost Correct"](../../articles/medium/cqrs-for-fintech-2026.md#the-most-dangerous-architecture-is-almost-correct)
 
 | | |
 |:---|:---|
@@ -519,13 +519,13 @@ Commit transaction → Save outbox event → Return clear result
 
 > **Key insight**: Architecture is not judged by the happy path. It is judged by the day when everything is half-working and everyone wants an answer. That is the day your CQRS boundary either protects you or exposes you.
 
-**Cross-reference**: See [Resilience Patterns](10-resilience-patterns.md) for designing systems that survive the ugly day.
+**Cross-reference**: See [Resilience Patterns](resilience/resilience-patterns.md) for designing systems that survive the ugly day.
 
 ---
 
 ## cqrs-15: Don't Overdo or Underdo CQRS
 
-> **Source**: [Article §"Where Teams Overdo CQRS" and "Where Teams Underdo CQRS"](../articles/medium/cqrs-for-fintech-2026.md#where-teams-overdo-cqrs)
+> **Source**: [Article §"Where Teams Overdo CQRS" and "Where Teams Underdo CQRS"](../../articles/medium/cqrs-for-fintech-2026.md#where-teams-overdo-cqrs)
 
 | | |
 |:---|:---|

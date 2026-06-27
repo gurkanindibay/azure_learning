@@ -7,12 +7,12 @@ timestamp: 2026-06-27T00:00:00Z
 
 # 59. Kafka Distributed Log Architecture — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second While Traditional Queues Collapse](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
 > **Purpose**: Extract the foundational architectural principles behind Kafka's throughput advantage — why log-based, coordination-free design outperforms centralized queue architectures at scale.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Stream Processing (Flink)](09-stream-processing-flink.md), [Kafka Design Patterns Overview](53-kafka-design-patterns-key-takeaways.md), [Kafka Reliability & Ordering](54-kafka-reliability-ordering-key-takeaways.md)
-> **Dictionary**: [Messaging](../reference-dictionary/messaging.md) — Partition, Consumer Group, Consumer Lag, Offset Commit; [Architecture Patterns](../reference-dictionary/architecture-patterns.md) — Zero-Copy Transfer, Distributed Commit Log, Message Batching
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Stream Processing (Flink)](stream-processing/stream-processing-flink.md), [Kafka Design Patterns Overview](messaging/kafka-design-patterns.md), [Kafka Reliability & Ordering](messaging/kafka-reliability-ordering.md)
+> **Dictionary**: [Messaging](../../reference-dictionary/messaging.md) — Partition, Consumer Group, Consumer Lag, Offset Commit; [Architecture Patterns](../../reference-dictionary/architecture-patterns.md) — Zero-Copy Transfer, Distributed Commit Log, Message Batching
 > **Taxonomy Reference**: §3 Integration & Communication Architecture
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-06-27T00:00:00Z
 
 ## broker-59: Distributed Commit Log vs Centralized Queue
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
 
 | | |
 |:---|:---|
@@ -53,13 +53,13 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 | **Replay** | Full history replay becomes trivial — rewind offsets and re-process |
 | **Complexity** | Moves coordination burden from broker to consumer; requires consumer discipline around offset management |
 
-> **Cross-reference**: [Distributed Commit Log](../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Partition](../reference-dictionary/messaging.md#partition) · [Kafka vs RabbitMQ](../reference-dictionary/messaging.md#kafka-vs-rabbitmq)
+> **Cross-reference**: [Distributed Commit Log](../../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Partition](../../reference-dictionary/messaging.md#partition) · [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq)
 
 ---
 
 ## broker-60: Consumer-Managed Offsets Remove Coordination Overhead
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
 
 | | |
 |:---|:---|
@@ -75,13 +75,13 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 | **Backpressure is natural** | Slow consumers simply fall behind (consumer lag); producers are unaffected |
 | **Replay is free** | Reset offsets to re-process the entire history without broker reconfiguration |
 
-> **Cross-reference**: [Offset Commit](../reference-dictionary/messaging.md#offset-commit) · [Consumer Lag](../reference-dictionary/messaging.md#consumer-lag) · [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Cross-reference**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
 
 ---
 
 ## broker-61: Partitions Physically Distributed Across Broker Nodes
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
 
 | | |
 |:---|:---|
@@ -116,13 +116,13 @@ Topic "orders" (3 partitions, 3 brokers):
 | **Ordering scope** | Strict ordering only within a partition; global ordering across the topic is not guaranteed |
 | **Follower reads (KIP-392)** | Consumer configured with `client.rack` + `RackAwareReplicaSelector` reads from the closest replica (leader or follower). Reduces cross-region network cost at the expense of reading slightly stale data (replication lag). Not about throughput — about locality. |
 
-> **Cross-reference**: [Partition](../reference-dictionary/messaging.md#partition) · [Rebalance](../reference-dictionary/messaging.md#rebalance) · [Hot Partition](../reference-dictionary/messaging.md#hot-partition) · [Partition Count Decision (broker-39)](54-kafka-reliability-ordering-key-takeaways.md#broker-39)
+> **Cross-reference**: [Partition](../../reference-dictionary/messaging.md#partition) · [Rebalance](../../reference-dictionary/messaging.md#rebalance) · [Hot Partition](../../reference-dictionary/messaging.md#hot-partition) · [Partition Count Decision (broker-39)](messaging/kafka-reliability-ordering.md#broker-39)
 
 ---
 
 ## broker-62: Zero-Copy, Batching, and Compression as First-Class Optimizations
 
-> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
+> **Source**: [3 Reason Kafka Laughs at 1 Million Messages Per Second](../../articles/medium/3%20Reason%20Kafka%20Laughs%20at%201%20Million%20Messages%20Per%20Second%20While%20Traditional%20Queues%20Collapse.md)
 
 | | |
 |:---|:---|
@@ -142,4 +142,4 @@ Topic "orders" (3 partitions, 3 brokers):
 | **Zero-copy constraints** | Only works when consuming from disk cache; messages not yet flushed to disk still involve memory copies |
 | **Not for low-latency use cases** | If messages must be delivered in single-digit milliseconds, batching and linger.ms must be minimized or disabled |
 
-> **Cross-reference**: [Zero-Copy Transfer](../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Message Batching](../reference-dictionary/architecture-patterns.md#message-batching)
+> **Cross-reference**: [Zero-Copy Transfer](../../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../../reference-dictionary/architecture-patterns.md#distributed-commit-log) · [Message Batching](../../reference-dictionary/architecture-patterns.md#message-batching)

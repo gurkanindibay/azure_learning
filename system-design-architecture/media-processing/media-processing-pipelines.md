@@ -7,9 +7,9 @@ timestamp: 2026-06-14T00:00:00Z
 
 # Media Processing Pipelines: Async Workflows at Scale
 
-> **Source**: [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenario #10  
+> **Source**: [22 Scenario-Based System Design Questions](../../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenario #10  
 > **Taxonomy Reference**: §2.2 Application Architecture, §3.3 Event-Driven & Messaging  
-> **Azure Mapping**: See [Azure Service Mapping](07-azure-service-mapping.md)
+> **Azure Mapping**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 
 ---
 
@@ -164,4 +164,4 @@ Can the work be split into independent units?
 ```
 
 > **Taxonomy Reference**: §2.2 Application Architecture, §3.3 Event-Driven & Messaging  
-> **Related**: [Stream Processing (Flink)](09-stream-processing-flink.md) | [Message Brokers & Async](05-message-brokers-async.md) | [Async & Concurrency Patterns](08-async-concurrency-patterns.md)
+> **Related**: [Stream Processing (Flink)](stream-processing/stream-processing-flink.md) | [Message Brokers & Async](messaging/message-brokers-async.md) | [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md)

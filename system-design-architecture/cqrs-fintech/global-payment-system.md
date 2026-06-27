@@ -7,13 +7,13 @@ timestamp: 2026-06-18T00:00:00Z
 
 # 37. Global Payment System — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
 > **Author**: Harsh Shukla
 > **Purpose**: Extract reusable architectural patterns from a global payment-system design: fintech service boundaries, async decoupling, idempotency, distributed transactions, and external-gateway resilience.
 
-> **Also see**: [CQRS for Fintech](25-cqrs-fintech-key-takeaways.md), [Message Brokers & Async](05-message-brokers-async.md), [Resilience Patterns](10-resilience-patterns.md), [Concurrency & Transactions](02-concurrency-transactions.md)
-> **Dictionary**: [Payment Gateway](../reference-dictionary/fintech.md#payment-gateway), [Payment Processor](../reference-dictionary/fintech.md#payment-processor), [KYC](../reference-dictionary/fintech.md#kyc-know-your-customer), [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction), [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker), [Exponential Backoff](../reference-dictionary/resilience.md#exponential-backoff)
+> **Also see**: [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md), [Message Brokers & Async](messaging/message-brokers-async.md), [Resilience Patterns](resilience/resilience-patterns.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
+> **Dictionary**: [Payment Gateway](../../reference-dictionary/fintech.md#payment-gateway), [Payment Processor](../../reference-dictionary/fintech.md#payment-processor), [KYC](../../reference-dictionary/fintech.md#kyc-know-your-customer), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker), [Exponential Backoff](../../reference-dictionary/resilience.md#exponential-backoff)
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging Architecture · §9.1.1 Financial Services Architecture (Payment Processing)
 
 ---
@@ -33,7 +33,7 @@ timestamp: 2026-06-18T00:00:00Z
 
 ## cqrs-16: Distinguish Payment Gateway from Payment Processor
 
-> **Source**: [§"First, Let’s Get Our Terms Straight"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#first-lets-get-our-terms-straight)
+> **Source**: [§"First, Let’s Get Our Terms Straight"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#first-lets-get-our-terms-straight)
 
 | | |
 |:---|:---|
@@ -49,13 +49,13 @@ timestamp: 2026-06-18T00:00:00Z
 
 **Tradeoff**: A separate gateway adds a network hop and operational surface, but it lets merchants plug into multiple processors and keeps PCI-DSS scope narrower for the front-end layer.
 
-> 📖 **Dictionary**: [Payment Gateway](../reference-dictionary/fintech.md#payment-gateway) · [Payment Processor](../reference-dictionary/fintech.md#payment-processor)
+> 📖 **Dictionary**: [Payment Gateway](../../reference-dictionary/fintech.md#payment-gateway) · [Payment Processor](../../reference-dictionary/fintech.md#payment-processor)
 
 ---
 
 ## cqrs-17: One Service, One Database in Fintech
 
-> **Source**: [§"Database Ownership: One Service, One Database"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#database-ownership-one-service-one-database)
+> **Source**: [§"Database Ownership: One Service, One Database"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#database-ownership-one-service-one-database)
 
 | | |
 |:---|:---|
@@ -75,13 +75,13 @@ timestamp: 2026-06-18T00:00:00Z
 
 **Tradeoff**: Distributed data complicates cross-service queries and transactions, but it lets each service scale and fail independently. The cost is justified by replacing cross-service joins with explicit APIs or events.
 
-> 📖 **Dictionary**: [Database Per Service](../reference-dictionary/architecture-patterns.md#database-per-service)
+> 📖 **Dictionary**: [Database Per Service](../../reference-dictionary/architecture-patterns.md#database-per-service)
 
 ---
 
 ## cqrs-18: Decouple Payment Flow with Async Messaging
 
-> **Source**: [§"The Kafka Topics: The Nervous System of the System"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#the-kafka-topics-the-nervous-system-of-the-system)
+> **Source**: [§"The Kafka Topics: The Nervous System of the System"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#the-kafka-topics-the-nervous-system-of-the-system)
 
 | | |
 |:---|:---|
@@ -102,13 +102,13 @@ timestamp: 2026-06-18T00:00:00Z
 
 **Tradeoff**: Async adds eventual consistency and requires idempotent consumers, but it prevents a slow notification or fraud service from stalling the entire payment flow.
 
-> 📖 **Dictionary**: [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics)
+> 📖 **Dictionary**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
 
 ---
 
 ## cqrs-19: Idempotency Keys Prevent Double Charging
 
-> **Source**: [§"A Transaction, Step by Step — Step 5: Recording the Transaction"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step)
+> **Source**: [§"A Transaction, Step by Step — Step 5: Recording the Transaction"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step)
 
 | | |
 |:---|:---|
@@ -126,13 +126,13 @@ Server: key seen → return stored result, do NOT charge again
 
 **Tradeoff**: Storing keys adds storage and lookup latency, but it is non-negotiable for safe retries in money-moving systems.
 
-> 📖 **Dictionary**: [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key)
+> 📖 **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 
 ---
 
 ## cqrs-20: Saga Pattern for Distributed Money Flows
 
-> **Source**: [§"Resilience Patterns — Saga Pattern"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
+> **Source**: [§"Resilience Patterns — Saga Pattern"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
 
 | | |
 |:---|:---|
@@ -151,13 +151,13 @@ Server: key seen → return stored result, do NOT charge again
 
 **Tradeoff**: Sagas are harder to reason about and debug than single transactions, and compensations must be designed for every irreversible step. They are the price of independent services and global scale.
 
-> 📖 **Dictionary**: [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern) · [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction)
+> 📖 **Dictionary**: [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern) · [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction)
 
 ---
 
 ## cqrs-21: Circuit Breaker and Backoff for External Gateways
 
-> **Source**: [§"A Transaction, Step by Step — Step 4: External Payment Processing"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step), [§"Resilience Patterns"](../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
+> **Source**: [§"A Transaction, Step by Step — Step 4: External Payment Processing"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#a-transaction-step-by-step), [§"Resilience Patterns"](../../articles/medium/How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md#resilience-patterns-that-deserve-more-credit-than-they-get)
 
 | | |
 |:---|:---|
@@ -178,7 +178,7 @@ Call gateway
 
 **Tradeoff**: Backoff increases latency for individual retries, and circuit breakers can temporarily reject valid payments; both are cheaper than a cascading outage.
 
-> 📖 **Dictionary**: [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker) · [Exponential Backoff](../reference-dictionary/resilience.md#exponential-backoff) · [Retry Amplification](../reference-dictionary/resilience.md#retry-amplification)
+> 📖 **Dictionary**: [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker) · [Exponential Backoff](../../reference-dictionary/resilience.md#exponential-backoff) · [Retry Amplification](../../reference-dictionary/resilience.md#retry-amplification)
 
 ---
 

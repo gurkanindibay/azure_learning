@@ -7,15 +7,15 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 1. Databases & Query Performance
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #1–4  
-> **Also see**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #1–4  
+> **Also see**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md) — Hot partitions, DB migration at scale
 
 ---
 
 ## db-01: Random UUID Indexing
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#1
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#1
 
 
 | | |
@@ -40,7 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## db-02: Keyset Pagination
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#2
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#2
 
 
 | | |
@@ -79,7 +79,7 @@ Fetch `LIMIT page_size + 1` to detect whether a next page exists — no `COUNT(*
 
 ## db-03: Composite Index vs. Separate Indexes
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#3
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#3
 
 
 | | |
@@ -110,7 +110,7 @@ Index on `(A, B)` can serve:
 
 ## db-04: N+1 Query Problem
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#4
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#4
 
 
 | | |
@@ -156,7 +156,7 @@ flowchart TD
 
 ## db-05: Hot Partition Problem
 
-> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -186,8 +186,8 @@ Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
 | Strategy | Mechanism | When to use |
 |:---|:---|:---|
 | **Partition key redesign** | Add high-cardinality component to spread load (e.g., `(channel_id, bucket, shard_id)`) | Can change schema |
-| **Request coalescing** | Intercept duplicate reads before they reach DB — only first query hits DB | Read-heavy hot partitions (see [cache-05: Request Coalescing](../03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) |
-| **Consistent hash routing** | Route same partition key to same service instance → maximize coalescing + isolate heat | Multi-instance service layer (see [api-05: Consistent Hash Routing](../04-api-network-design.md#api-05-consistent-hash-based-routing)) |
+| **Request coalescing** | Intercept duplicate reads before they reach DB — only first query hits DB | Read-heavy hot partitions (see [cache-05: Request Coalescing](../caching/caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication)) |
+| **Consistent hash routing** | Route same partition key to same service instance → maximize coalescing + isolate heat | Multi-instance service layer (see [api-05: Consistent Hash Routing](../api-network/api-network-design.md#api-05-consistent-hash-based-routing)) |
 | **Caching layer** | Cache hot partition results in Redis/Memcached | Read-heavy, can tolerate some staleness |
 | **Shard-per-core architecture** | Each CPU core owns its data slice independently — hot partition only burns one shard, not the whole node | Database engine selection (ScyllaDB vs Cassandra) |
 
@@ -199,7 +199,7 @@ Cassandra Cluster (quorum reads/writes — must wait for 2/3 nodes)
 
 ## db-06: Database Migration at Scale
 
-> **Source**: [Discord Data Architecture](../../articles/medium/discord-data-architecture-master-class.md)
+> **Source**: [Discord Data Architecture](../../../articles/medium/discord-data-architecture-master-class.md)
 
 
 | | |
@@ -278,7 +278,7 @@ CREATE TABLE checkpoint (
 
 ## db-07: PostgreSQL 18 Async I/O — When Sequential Scans Become the Right Plan
 
-> **Source**: [PostgreSQL 18’s Async I/O Isn’t Just Faster — It Changes How You Think About Slow Queries](../articles/medium/PostgreSQL%2018’s%20Async%20IO%20Isn’t%20Just%20Faster%20—%20It%20Changes%20How%20You%20Think%20About%20Slow%20Queries.md)
+> **Source**: [PostgreSQL 18’s Async I/O Isn’t Just Faster — It Changes How You Think About Slow Queries](../../articles/medium/PostgreSQL%2018’s%20Async%20IO%20Isn’t%20Just%20Faster%20—%20It%20Changes%20How%20You%20Think%20About%20Slow%20Queries.md)
 
 | | |
 |:---|:---|
@@ -291,20 +291,20 @@ PostgreSQL 18 introduces a native asynchronous I/O subsystem that queues multipl
 
 | Setting | Meaning | When to use |
 |:---|:---|:---|
-| [`io_method = 'worker'`](../reference-dictionary/databases.md#io-method) | Default: dedicated background I/O processes; runs everywhere | Safe default on any OS |
-| [`io_method = 'io_uring'`](../reference-dictionary/databases.md#io-uring) | Linux kernel async I/O interface; usually fastest on supported kernels | Recent Linux only; benchmark before committing |
-| [`io_method = 'sync'`](../reference-dictionary/databases.md#io-method) | Pre-18 synchronous behavior | Escape hatch for regression testing or compatibility |
-| [`effective_io_concurrency`](../reference-dictionary/databases.md#effective-io-concurrency) | Number of concurrent reads Postgres may issue (default 16 in 18) | Raise for high-latency cloud volumes; lower for single local NVMe |
+| [`io_method = 'worker'`](../../reference-dictionary/databases.md#io-method) | Default: dedicated background I/O processes; runs everywhere | Safe default on any OS |
+| [`io_method = 'io_uring'`](../../reference-dictionary/databases.md#io-uring) | Linux kernel async I/O interface; usually fastest on supported kernels | Recent Linux only; benchmark before committing |
+| [`io_method = 'sync'`](../../reference-dictionary/databases.md#io-method) | Pre-18 synchronous behavior | Escape hatch for regression testing or compatibility |
+| [`effective_io_concurrency`](../../reference-dictionary/databases.md#effective-io-concurrency) | Number of concurrent reads Postgres may issue (default 16 in 18) | Raise for high-latency cloud volumes; lower for single local NVMe |
 
-Monitoring: query [`pg_aios`](../reference-dictionary/databases.md#pg-aios) while a heavy query runs to observe in-flight async I/O.
+Monitoring: query [`pg_aios`](../../reference-dictionary/databases.md#pg-aios) while a heavy query runs to observe in-flight async I/O.
 
 **Tradeoff**:
 
-- ✅ Big wins only for **cold, scan-heavy, disk-bound reads** that exceed [`shared_buffers`](../reference-dictionary/databases.md#shared-buffers) / OS cache
+- ✅ Big wins only for **cold, scan-heavy, disk-bound reads** that exceed [`shared_buffers`](../../reference-dictionary/databases.md#shared-buffers) / OS cache
 - ❌ No benefit for cached data, plain index lookups, or writes (WAL is still synchronous)
 - ❌ `io_method` requires a config change and restart; not a runtime knob
 - ⚠️ Project benchmarks show 2–3× throughput in specific cases, but your number requires measurement on your data, your disks, and your queries
 
 > **Architect's rule**: The index reflex is still correct for transactional hot paths, but it is no longer automatically correct for large analytical reads. Let the execution plan and measured A/B test decide, not habit.
 
-> **Dictionary**: [io_method](../reference-dictionary/databases.md#io-method) · [io_uring](../reference-dictionary/databases.md#io-uring) · [effective_io_concurrency](../reference-dictionary/databases.md#effective-io-concurrency) · [pg_aios](../reference-dictionary/databases.md#pg-aios) · [shared_buffers](../reference-dictionary/databases.md#shared-buffers)
+> **Dictionary**: [io_method](../../reference-dictionary/databases.md#io-method) · [io_uring](../../reference-dictionary/databases.md#io-uring) · [effective_io_concurrency](../../reference-dictionary/databases.md#effective-io-concurrency) · [pg_aios](../../reference-dictionary/databases.md#pg-aios) · [shared_buffers](../../reference-dictionary/databases.md#shared-buffers)

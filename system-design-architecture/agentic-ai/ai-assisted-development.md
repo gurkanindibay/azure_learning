@@ -7,9 +7,9 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 22. AI-Assisted Software Development — The Five Levels
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [The Five Levels: From Spicy Autocomplete to the Dark Factory](../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md) — by Dan Shapiro (Jan 2026)  
-> **Also see**: [AI Agent Architecture](21-ai-agent-architecture-key-takeaways.md), [Agentic AI — Enterprise Strategic Systems](17-agentic-ai-enterprise-strategic-systems.md), [Pragmatic System Design](18-pragmatic-system-design-takeaways.md)  
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [The Five Levels: From Spicy Autocomplete to the Dark Factory](../../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md) — by Dan Shapiro (Jan 2026)  
+> **Also see**: [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [Agentic AI — Enterprise Strategic Systems](agentic-ai/enterprise-strategic-systems.md), [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md)  
 > **Purpose**: Extract the five-level maturity model for AI-assisted software development — from manual coding to fully autonomous "dark factory" — and the strategic implications for engineering teams navigating technical deflation.
 
 ---
@@ -56,7 +56,7 @@ Traditional system design assumes human throughput as the bottleneck. Under tech
 
 ## aidev-02: The Five Levels Framework
 
-> **Source**: [Article §"The Five Levels"](../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md)
+> **Source**: [Article §"The Five Levels"](../../../articles/personal-blogs/the-evolution-of-ai-assistend-software-development.md)
 
 The framework parallels the NHTSA's five levels of driving automation — providing a common language for where teams are and where they're heading.
 
@@ -227,12 +227,12 @@ The math: If AI makes code 100x cheaper over 12 months,
 
 | Concept | Related Takeaway |
 |:---|:---|
-| Specification as source of truth | [`prag-01`](18-pragmatic-system-design-takeaways.md#prag-01-start-with-user-metrics-not-architecture-diagrams) — Start with what matters, not diagrams |
-| Boring architecture wins at L5 | [`prag-08`](18-pragmatic-system-design-takeaways.md#prag-08-boring-architecture-wins) — Simple architectures are easier for AI to generate and validate |
-| AI agents as autonomous coders | [`agentarch-05`](21-ai-agent-architecture-key-takeaways.md#agentarch-05-agent-loop--continuous-decision-cycle) — The agent loop maps to Level 3+ |
-| Human-in-the-loop at L3 | [`agentarch-06`](21-ai-agent-architecture-key-takeaways.md#agentarch-06-guardrails--safety--control-layer) — Guardrails are the L3 safety driver |
-| Multi-agent specialization | [`agentic-03`](17-agentic-ai-enterprise-strategic-systems.md#agentic-03-multi-agent-specialization) — Dark factory may use specialized agents |
-| Solve today's problems | [`prag-06`](18-pragmatic-system-design-takeaways.md#prag-06-solve-todays-problems-not-tomorrows) — Don't over-engineer for L5 if you're at L1 |
+| Specification as source of truth | [`prag-01`](system-design-interview/pragmatic-takeaways.md#prag-01-start-with-user-metrics-not-architecture-diagrams) — Start with what matters, not diagrams |
+| Boring architecture wins at L5 | [`prag-08`](system-design-interview/pragmatic-takeaways.md#prag-08-boring-architecture-wins) — Simple architectures are easier for AI to generate and validate |
+| AI agents as autonomous coders | [`agentarch-05`](agentic-ai/ai-agent-architecture.md#agentarch-05-agent-loop--continuous-decision-cycle) — The agent loop maps to Level 3+ |
+| Human-in-the-loop at L3 | [`agentarch-06`](agentic-ai/ai-agent-architecture.md#agentarch-06-guardrails--safety--control-layer) — Guardrails are the L3 safety driver |
+| Multi-agent specialization | [`agentic-03`](agentic-ai/enterprise-strategic-systems.md#agentic-03-multi-agent-specialization) — Dark factory may use specialized agents |
+| Solve today's problems | [`prag-06`](system-design-interview/pragmatic-takeaways.md#prag-06-solve-todays-problems-not-tomorrows) — Don't over-engineer for L5 if you're at L1 |
 
 ---
 

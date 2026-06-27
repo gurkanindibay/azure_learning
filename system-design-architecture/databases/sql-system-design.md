@@ -7,10 +7,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 19. SQL System Design: From Fresher to Staff Engineer
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [SQL for System Design: From Fresher to Staff Engineer](../../articles/medium/sql-for-system-design.md) — The Latency Gambler, Mar 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [SQL for System Design: From Fresher to Staff Engineer](../../../articles/medium/sql-for-system-design.md) — The Latency Gambler, Mar 2026
 > **Purpose**: Extract system-design-level SQL principles — when to use SQL, how to scale it honestly, and the architectural patterns that make SQL the backbone of production systems.
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) (db-01–db-06), [SQL Query Optimization](14-sql-query-optimization.md) (sql-01–sql-05), [Concurrency & Transactions](02-concurrency-transactions.md) (tx-01–tx-04)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) (db-01–db-06), [SQL Query Optimization](databases/sql-query-optimization.md) (sql-01–sql-05), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) (tx-01–tx-04)
 
 ---
 
@@ -31,7 +31,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## sqld-01: The SQL Scaling Ladder
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §4
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §4
 
 
 | | |
@@ -95,13 +95,13 @@ flowchart TD
 
 A single well-tuned Postgres instance on modern hardware handles: **~10 TB** data, **~10,000 writes/sec**, **~100,000 reads/sec**. Steps 1–3 solve 90% of problems. Steps 4–6 solve the next 9%. Steps 7–9 are for the remaining 1%.
 
-**Cross-reference**: This is the database-specific scaling sequence. For the general principle of not over-engineering, see [`prag-06`: Solve Today's Problems, Not Tomorrow's](18-pragmatic-system-design-takeaways.md#prag-06-solve-todays-problems-not-tomorrows) and [`prag-08`: Boring Architecture Wins](18-pragmatic-system-design-takeaways.md#prag-08-boring-architecture-wins).
+**Cross-reference**: This is the database-specific scaling sequence. For the general principle of not over-engineering, see [`prag-06`: Solve Today's Problems, Not Tomorrow's](system-design-interview/pragmatic-takeaways.md#prag-06-solve-todays-problems-not-tomorrows) and [`prag-08`: Boring Architecture Wins](system-design-interview/pragmatic-takeaways.md#prag-08-boring-architecture-wins).
 
 ---
 
 ## sqld-02: SQL vs NoSQL Decision Framework
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §5
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §5
 
 
 | | |
@@ -143,7 +143,7 @@ A single well-tuned Postgres instance on modern hardware handles: **~10 TB** dat
 
 ## sqld-03: CQRS with SQL
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
 
 
 | | |
@@ -198,7 +198,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY order_summary;
 
 ## sqld-04: Event Sourcing with SQL
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
 
 
 | | |
@@ -240,7 +240,7 @@ ORDER BY id ASC;
 
 ## sqld-05: Row-Level Security for Multi-tenancy
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §6
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §6
 
 
 | | |
@@ -276,7 +276,7 @@ SELECT * FROM orders; -- only sees tenant 42's data
 
 ## sqld-06: Database per Service + Saga Pattern
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §7
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §7
 
 
 | | |
@@ -336,7 +336,7 @@ Order Service        Payment Service      Inventory Service
 
 ## sqld-07: Staff Engineer's 5 Questions
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §9
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §9
 
 
 | | |
@@ -358,13 +358,13 @@ Order Service        Payment Service      Inventory Service
 
 > At Staff level, the conversation is about system properties (consistency, operability, realistic scale), not query syntax or feature checklists.
 
-**Cross-reference**: Questions 1, 2, and 3 feed directly into the [`sqld-02` SQL vs NoSQL decision tree](#sqld-02-sql-vs-nosql-decision-framework). Question 5 aligns with [`prag-06`: Solve Today's Problems](18-pragmatic-system-design-takeaways.md#prag-06-solve-todays-problems-not-tomorrows).
+**Cross-reference**: Questions 1, 2, and 3 feed directly into the [`sqld-02` SQL vs NoSQL decision tree](#sqld-02-sql-vs-nosql-decision-framework). Question 5 aligns with [`prag-06`: Solve Today's Problems](system-design-interview/pragmatic-takeaways.md#prag-06-solve-todays-problems-not-tomorrows).
 
 ---
 
 ## sqld-08: Performance Checklist
 
-> **Source**: [SQL for System Design](../../articles/medium/sql-for-system-design.md) — §8
+> **Source**: [SQL for System Design](../../../articles/medium/sql-for-system-design.md) — §8
 
 
 | | |
@@ -392,7 +392,7 @@ SELECT * FROM orders WHERE id > :last_seen_id ORDER BY id LIMIT 20;
 ### Schema Level
 
 - [ ] Every foreign key has an index
-- [ ] Composite indexes match actual query patterns (see [`sql-01`: Index-Aware Query Design](14-sql-query-optimization.md#sql-01-index-aware-query-design))
+- [ ] Composite indexes match actual query patterns (see [`sql-01`: Index-Aware Query Design](databases/sql-query-optimization.md#sql-01-index-aware-query-design))
 - [ ] Unused indexes dropped — each one costs write performance
 - [ ] JSONB query columns have GIN indexes
 
@@ -405,7 +405,7 @@ SELECT * FROM orders WHERE id > :last_seen_id ORDER BY id LIMIT 20;
 
 > **The triage rule**: Fix query-level issues first (free, often 10× improvement), then schema (free, can be 10× more), then infrastructure (costs money and ops time). In that order.
 
-**Cross-reference**: For query-level patterns in depth, see [`sql-01` through `sql-05`](14-sql-query-optimization.md). For the scaling infrastructure sequence, see [`sqld-01`](#sqld-01-the-sql-scaling-ladder).
+**Cross-reference**: For query-level patterns in depth, see [`sql-01` through `sql-05`](databases/sql-query-optimization.md). For the scaling infrastructure sequence, see [`sqld-01`](#sqld-01-the-sql-scaling-ladder).
 
 ---
 

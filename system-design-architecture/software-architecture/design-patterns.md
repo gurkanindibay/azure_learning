@@ -7,8 +7,8 @@ timestamp: 2026-06-19T00:00:00Z
 
 # Software Design Patterns — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [The Architect's Secret: The Patterns That Solve 90% of Real-World Problems](../articles/medium/The%20Architect%E2%80%99s%20Secret%20The%20Patterns%20That%20Solve%2090%25%20of%20Real-World%20Problems.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [The Architect's Secret: The Patterns That Solve 90% of Real-World Problems](../../articles/medium/The%20Architect%E2%80%99s%20Secret%20The%20Patterns%20That%20Solve%2090%25%20of%20Real-World%20Problems.md)
 > **Taxonomy Reference**: §2.2 Software Design Patterns & Code Quality
 
 ---
@@ -57,7 +57,7 @@ public final class ConfigManager {
 
 **Tradeoff**: Enforces a single source-of-truth, but introduces hidden global state that makes unit testing harder and increases tight coupling. Prefer framework-managed singletons (Spring `@Bean`, CDI) over hand-rolled ones.
 
-**Cross-references**: [Architecture Patterns — Singleton](../reference-dictionary/architecture-patterns.md#singleton)
+**Cross-references**: [Architecture Patterns — Singleton](../../reference-dictionary/architecture-patterns.md#singleton)
 
 ---
 
@@ -84,7 +84,7 @@ public class NotificationFactory {
 
 **Tradeoff**: Decouples creation from usage and enables plugin-style extensibility, but adds an indirection layer. Avoid creating factories for trivial constructors — the overhead is not justified.
 
-**Cross-references**: [Architecture Patterns — Factory Method](../reference-dictionary/architecture-patterns.md#factory-method)
+**Cross-references**: [Architecture Patterns — Factory Method](../../reference-dictionary/architecture-patterns.md#factory-method)
 
 ---
 
@@ -103,7 +103,7 @@ User u = new User.Builder().name("Alice").email("a@x").age(30).build();
 
 **Tradeoff**: Produces clean, readable, safe construction and easy validation in `build()`. Can be boilerplate-heavy if not generated (Lombok `@Builder` mitigates this).
 
-**Cross-references**: [Architecture Patterns — Builder](../reference-dictionary/architecture-patterns.md#builder-pattern)
+**Cross-references**: [Architecture Patterns — Builder](../../reference-dictionary/architecture-patterns.md#builder-pattern)
 
 ---
 
@@ -128,7 +128,7 @@ class CSVReaderAdapter implements RowReader {
 
 **Tradeoff**: Encapsulates all legacy integration code in one place; keeps the new codebase clean and interface-driven. Adds an extra indirection layer — only justified when adapting truly incompatible interfaces.
 
-**Cross-references**: [Architecture Patterns — Adapter](../reference-dictionary/architecture-patterns.md#adapter-pattern)
+**Cross-references**: [Architecture Patterns — Adapter](../../reference-dictionary/architecture-patterns.md#adapter-pattern)
 
 ---
 
@@ -153,7 +153,7 @@ class LoggingStore implements DataStore {
 
 **Tradeoff**: Composable behaviors (logging, metrics, validation) that keep Single Responsibility intact. Deep decorator chains become hard to debug; trace the chain when diagnosing unexpected behavior.
 
-**Cross-references**: [Architecture Patterns — Decorator](../reference-dictionary/architecture-patterns.md#decorator-pattern)
+**Cross-references**: [Architecture Patterns — Decorator](../../reference-dictionary/architecture-patterns.md#decorator-pattern)
 
 ---
 
@@ -178,7 +178,7 @@ class ImageProxy implements Image {
 
 **Tradeoff**: Transparent lazy initialization and access control. Can obscure performance costs — a proxy that triggers a network call on `display()` surprises callers who expect a cheap local operation.
 
-**Cross-references**: [Architecture Patterns — Proxy](../reference-dictionary/architecture-patterns.md#proxy-pattern)
+**Cross-references**: [Architecture Patterns — Proxy](../../reference-dictionary/architecture-patterns.md#proxy-pattern)
 
 ---
 
@@ -201,7 +201,7 @@ class Checkout {
 
 **Tradeoff**: Open/Closed compliance; algorithm variants are independently testable. Unnecessary complexity when only one strategy will ever exist — prefer the inline implementation.
 
-**Cross-references**: [Architecture Patterns — Strategy](../reference-dictionary/architecture-patterns.md#strategy-pattern)
+**Cross-references**: [Architecture Patterns — Strategy](../../reference-dictionary/architecture-patterns.md#strategy-pattern)
 
 ---
 
@@ -224,7 +224,7 @@ class EventBus {
 
 **Tradeoff**: Loose coupling; easy to extend with new listeners without changing the publisher. Memory leaks occur if listeners are never removed. Unpredictable ordering and "control-flow spaghetti" can emerge in large systems — prefer an explicit message broker for cross-service events.
 
-**Cross-references**: [Architecture Patterns — Observer](../reference-dictionary/architecture-patterns.md#observer-pattern) · [Messaging Dictionary](../reference-dictionary/messaging.md)
+**Cross-references**: [Architecture Patterns — Observer](../../reference-dictionary/architecture-patterns.md#observer-pattern) · [Messaging Dictionary](../../reference-dictionary/messaging.md)
 
 ---
 
@@ -247,7 +247,7 @@ es.submit(() -> new SaveUserCommand(repo, user).execute());
 
 **Tradeoff**: Enables job scheduling, message-based work queues, GUI undo. Overhead of object creation is unjustified for trivial, synchronous, non-replayable operations.
 
-**Cross-references**: [Architecture Patterns — Command](../reference-dictionary/architecture-patterns.md#command-pattern)
+**Cross-references**: [Architecture Patterns — Command](../../reference-dictionary/architecture-patterns.md#command-pattern)
 
 ---
 
@@ -269,7 +269,7 @@ public interface UserRepository {
 
 **Tradeoff**: Single place to change persistence strategy; trivially mockable in tests. Anemic repositories that only mirror CRUD and leaky abstractions that expose DB internals (e.g., `EntityManager`) negate the benefit.
 
-**Cross-references**: [Architecture Patterns — Repository](../reference-dictionary/architecture-patterns.md#repository-pattern)
+**Cross-references**: [Architecture Patterns — Repository](../../reference-dictionary/architecture-patterns.md#repository-pattern)
 
 ---
 
@@ -284,7 +284,7 @@ public interface UserRepository {
 
 **Tradeoff**: Avoids 2PC; better availability and resilience under partial failure. Compensating transactions are sometimes hard to design (some actions are not reversible). Requires careful failure handling and observability into saga state.
 
-**Cross-references**: [Data Concurrency — Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern) · [CQRS for Fintech](25-cqrs-fintech-key-takeaways.md)
+**Cross-references**: [Data Concurrency — Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern) · [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md)
 
 ---
 
@@ -310,4 +310,4 @@ public interface UserRepository {
 
 **Tradeoff**: Principled pattern selection yields maintainable, testable, scalable systems. Undisciplined selection introduces complexity and hidden costs that outlast the original problem.
 
-**Cross-references**: [Resilience Patterns](10-resilience-patterns.md) · [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) · [Architecture Patterns Dictionary](../reference-dictionary/architecture-patterns.md)
+**Cross-references**: [Resilience Patterns](resilience/resilience-patterns.md) · [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) · [Architecture Patterns Dictionary](../../reference-dictionary/architecture-patterns.md)

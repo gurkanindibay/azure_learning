@@ -7,8 +7,8 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 57. Agentic Loop Engineering — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Loops explained: Claude, GPT, Mira and what actually works](../articles/personal-blogs/loops-explained-claude-gpt-mira-what-actually-works.md) — by @AnatoliKopadze (Jun 2026)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Loops explained: Claude, GPT, Mira and what actually works](../../articles/personal-blogs/loops-explained-claude-gpt-mira-what-actually-works.md) — by @AnatoliKopadze (Jun 2026)
 > **Purpose**: Reusable architectural patterns for designing, building, and evaluating agentic loops in AI-assisted workflows.
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 
@@ -49,13 +49,13 @@ Three phases do all the real work — Verify, State, and the Stop Condition. Ver
 **Tradeoff**: Every pass re-reads the full accumulated context. A loop of 10 iterations does not cost 10 equal prompts — it costs 10 prompts each growing larger than the last. A fleet of parallel agents multiplies this cost further.
 
 **Related files**:
-- [agentic-11 Two-Track Workflow](50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism) — the human-level attention model for running loops alongside spec work
-- [28-agent-harness-key-takeaways.md](28-agent-harness-key-takeaways.md) — the five building blocks (automation, skill, sub-agents, connectors, verifier) that implement a production loop
+- [agentic-11 Two-Track Workflow](agentic-ai/agentic-two-track-workflow.md#agentic-11-two-track-workflow--attention-weighted-parallelism) — the human-level attention model for running loops alongside spec work
+- [agentic-ai/agent-harness.md](agentic-ai/agent-harness.md) — the five building blocks (automation, skill, sub-agents, connectors, verifier) that implement a production loop
 
 **Dictionary terms**:
-- [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop)
-- [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
-- [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+- [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop)
+- [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
+- [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
 
 ---
 
@@ -77,14 +77,14 @@ Without one of these, the loop exits on the first result that looks plausible, n
 **Tradeoff**: No gate → silent billing with no progress. An LLM-as-judge gate adds token cost per iteration but catches semantic issues that deterministic checks miss. Rubric scoring is the weakest option because the grading model can be gamed by superficially polished output.
 
 **Related files**:
-- [28-agent-harness-key-takeaways.md](28-agent-harness-key-takeaways.md) — `harness-06`: verification loops improve output quality 2–3×
-- [23-circuit-breaker-key-takeaways.md](23-circuit-breaker-key-takeaways.md) — same core principle: a gate that stops the bad path early rather than letting it compound
+- [agentic-ai/agent-harness.md](agentic-ai/agent-harness.md) — `harness-06`: verification loops improve output quality 2–3×
+- [resilience/circuit-breaker-honesty.md](resilience/circuit-breaker-honesty.md) — same core principle: a gate that stops the bad path early rather than letting it compound
 
 **Dictionary terms**:
-- [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
-- [LLM-as-Judge](../reference-dictionary/ai-ml-llm.md#llm-as-judge)
-- [Review Gate](../reference-dictionary/ai-ml-llm.md#review-gate)
-- [Premature Loop Exit](../reference-dictionary/ai-ml-llm.md#premature-loop-exit)
+- [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+- [LLM-as-Judge](../../reference-dictionary/ai-ml-llm.md#llm-as-judge)
+- [Review Gate](../../reference-dictionary/ai-ml-llm.md#review-gate)
+- [Premature Loop Exit](../../reference-dictionary/ai-ml-llm.md#premature-loop-exit)
 
 ---
 
@@ -104,13 +104,13 @@ The maker never sees the checker's rubric. The checker never participates in pro
 **Tradeoff**: Doubles token cost because two models process the same context on each iteration. Justified when quality is the bottleneck and reject rate would otherwise be high. Not justified for high-volume, low-stakes work where accept rate is already above 80%.
 
 **Related files**:
-- [agentic-11 Two-Track Workflow](50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism) — same principle at the human level: separate the specifier from the implementer
-- [28-agent-harness-key-takeaways.md](28-agent-harness-key-takeaways.md) — `harness-06` verification loops and `harness-01` three-level engineering
+- [agentic-11 Two-Track Workflow](agentic-ai/agentic-two-track-workflow.md#agentic-11-two-track-workflow--attention-weighted-parallelism) — same principle at the human level: separate the specifier from the implementer
+- [agentic-ai/agent-harness.md](agentic-ai/agent-harness.md) — `harness-06` verification loops and `harness-01` three-level engineering
 
 **Dictionary terms**:
-- [LLM-as-Judge](../reference-dictionary/ai-ml-llm.md#llm-as-judge)
-- [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
-- [Agent Harness](../reference-dictionary/ai-ml-llm.md#agent-harness)
+- [LLM-as-Judge](../../reference-dictionary/ai-ml-llm.md#llm-as-judge)
+- [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+- [Agent Harness](../../reference-dictionary/ai-ml-llm.md#agent-harness)
 
 ---
 
@@ -135,13 +135,13 @@ Missing **one** condition means keeping it as a manual prompt. All four must hol
 **Tradeoff**: Honest application of this test eliminates most candidates. The gain is avoiding the class of loops that run indefinitely, produce low-accept-rate output, and drain token budgets before anyone notices.
 
 **Related files**:
-- [agentic-13 Spec Creation Is the Throughput Constraint](50-agentic-two-track-workflow-key-takeaways.md#agentic-13-spec-creation-is-the-throughput-constraint) — loops are bounded by their weakest condition; identify the bottleneck first
-- [21-ai-agent-architecture-key-takeaways.md](21-ai-agent-architecture-key-takeaways.md) — full agent architecture that underpins whether condition 3 (end-to-end capability) is met
+- [agentic-13 Spec Creation Is the Throughput Constraint](agentic-ai/agentic-two-track-workflow.md#agentic-13-spec-creation-is-the-throughput-constraint) — loops are bounded by their weakest condition; identify the bottleneck first
+- [agentic-ai/ai-agent-architecture.md](agentic-ai/ai-agent-architecture.md) — full agent architecture that underpins whether condition 3 (end-to-end capability) is met
 
 **Dictionary terms**:
-- [Loop Viability Test](../reference-dictionary/ai-ml-llm.md#loop-viability-test)
-- [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
-- [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop)
+- [Loop Viability Test](../../reference-dictionary/ai-ml-llm.md#loop-viability-test)
+- [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
+- [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop)
 
 ---
 
@@ -165,12 +165,12 @@ Missing **one** condition means keeping it as a manual prompt. All four must hol
 
 **Related files**:
 - [agentic-17](#agentic-17-verify-gate--the-heart-of-the-loop) — the gate that makes step 3 real
-- [28-agent-harness-key-takeaways.md](28-agent-harness-key-takeaways.md) — `harness-01` three-level engineering follows the same staged reliability-before-automation approach
+- [agentic-ai/agent-harness.md](agentic-ai/agent-harness.md) — `harness-01` three-level engineering follows the same staged reliability-before-automation approach
 
 **Dictionary terms**:
-- [Loop Build Order](../reference-dictionary/ai-ml-llm.md#loop-build-order)
-- [Premature Loop Exit](../reference-dictionary/ai-ml-llm.md#premature-loop-exit)
-- [Agent Harness](../reference-dictionary/ai-ml-llm.md#agent-harness)
+- [Loop Build Order](../../reference-dictionary/ai-ml-llm.md#loop-build-order)
+- [Premature Loop Exit](../../reference-dictionary/ai-ml-llm.md#premature-loop-exit)
+- [Agent Harness](../../reference-dictionary/ai-ml-llm.md#agent-harness)
 
 ---
 
@@ -196,6 +196,6 @@ Target threshold: keep accept rate above **50%**. Below that threshold, the loop
 - [agentic-18](#agentic-18-makerchecker-sub-agent-separation) — maker/checker raises quality at the cost of doubling per-iteration token spend; justified only if it raises the accept rate proportionally
 
 **Dictionary terms**:
-- [Cost Per Accepted Change](../reference-dictionary/ai-ml-llm.md#cost-per-accepted-change)
-- [Token](../reference-dictionary/ai-ml-llm.md#token)
-- [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+- [Cost Per Accepted Change](../../reference-dictionary/ai-ml-llm.md#cost-per-accepted-change)
+- [Token](../../reference-dictionary/ai-ml-llm.md#token)
+- [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)

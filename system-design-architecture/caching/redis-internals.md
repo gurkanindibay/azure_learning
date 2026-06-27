@@ -7,12 +7,12 @@ timestamp: 2026-06-15T00:00:00Z
 
 # 31. Redis Internals — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [If You Only Know 'Redis is Single-Threaded', You Know Nothing](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [If You Only Know 'Redis is Single-Threaded', You Know Nothing](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 > **Purpose**: Extract reusable architectural patterns from the Redis internals deep-dive.
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
-> **Dictionary**: [Caching](../reference-dictionary/caching.md) — TTL, eviction policies, cache-aside, cache stampede, request coalescing, PER algorithm
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md) — TTL, eviction policies, cache-aside, cache stampede, request coalescing, PER algorithm
 > **Taxonomy Reference**: §7.3 Caching Strategies
 
 ---
@@ -32,7 +32,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## cache-06: I/O Multiplexing — Single-Threaded Event Loop
 
-> **Source**: [§"1. Single-Threaded, But Not Blocking: I/O Multiplexing"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"1. Single-Threaded, But Not Blocking: I/O Multiplexing"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -63,8 +63,8 @@ context-switch, contend on locks             v
 | **Cannot exploit multi-core** | One event loop = one core for command processing; scaling requires multiple Redis instances or Redis Cluster |
 | **Predictable latency** | No thread-scheduling jitter — 99th percentile latency stays in microseconds |
 
-> **Also see**: [Async & Concurrency Patterns](08-async-concurrency-patterns.md) — Thread pool exhaustion, post-commit dispatch
-> **Dictionary**: [I/O Multiplexing](../reference-dictionary/caching.md#io-multiplexing)
+> **Also see**: [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md) — Thread pool exhaustion, post-commit dispatch
+> **Dictionary**: [I/O Multiplexing](../../reference-dictionary/caching.md#io-multiplexing)
 > **Azure**: Azure Cache for Redis uses the same event-loop architecture; Premium tier adds persistence via RDB/AOF
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -72,7 +72,7 @@ context-switch, contend on locks             v
 
 ## cache-07: Hash Slots — Fixed-Partition Data Distribution
 
-> **Source**: [§"2. Hash Slots, Not Consistent Hashing"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"2. Hash Slots, Not Consistent Hashing"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -99,8 +99,8 @@ context-switch, contend on locks             v
 | **No key rehashing** | Keys stay where they are; only slot->node mapping changes |
 | **Manual slot migration** | Unlike consistent hashing's automatic rebalancing, Redis Cluster requires explicit CLUSTER SETSLOT commands |
 
-> **Also see**: [API & Network Design](04-api-network-design.md) — Consistent hash routing for API gateways
-> **Dictionary**: [Hash Slots](../reference-dictionary/caching.md#hash-slots)
+> **Also see**: [API & Network Design](api-network/api-network-design.md) — Consistent hash routing for API gateways
+> **Dictionary**: [Hash Slots](../../reference-dictionary/caching.md#hash-slots)
 > **Azure**: Azure Cache for Redis Enterprise tier supports Redis Cluster with automatic sharding
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -108,7 +108,7 @@ context-switch, contend on locks             v
 
 ## cache-08: Copy-on-Write Persistence — Non-Blocking Snapshots
 
-> **Source**: [§"3. Fork + Copy-on-Write: How RDB Persistence Works Without Downtime"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"3. Fork + Copy-on-Write: How RDB Persistence Works Without Downtime"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -140,8 +140,8 @@ writes/reads normally        snapshot to disk (dump.rdb)
 | **fork() latency** | On large instances (tens of GB), fork() itself can take hundreds of milliseconds — mitigated by fork-time-sleep in Redis 7 |
 | **Zero service interruption** | The parent process never pauses — clients see no impact |
 
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md) — Isolation levels, distributed locks
-> **Dictionary**: [Copy-on-Write Persistence](../reference-dictionary/caching.md#copy-on-write-persistence)
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) — Isolation levels, distributed locks
+> **Dictionary**: [Copy-on-Write Persistence](../../reference-dictionary/caching.md#copy-on-write-persistence)
 > **Azure**: Azure Cache for Redis Premium supports RDB persistence with configurable backup frequency
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -149,7 +149,7 @@ writes/reads normally        snapshot to disk (dump.rdb)
 
 ## cache-09: Morris Probabilistic Counter — 8-Bit LFU Eviction
 
-> **Source**: [§"4. LFU With an 8-Bit Counter"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"4. LFU With an 8-Bit Counter"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -175,8 +175,8 @@ def morris_increment(counter: int) -> int:
 | **8-bit ceiling** | Max counter value is 255, representing ~2^255 accesses (far beyond practical need) |
 | **Memory: 1 byte per key** | vs 4-8 bytes for a standard counter — 4-8x memory savings |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-04-eviction-policies) — LRU vs LFU policy selection
-> **Dictionary**: [Morris Probabilistic Counter](../reference-dictionary/caching.md#morris-probabilistic-counter)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-04-eviction-policies) — LRU vs LFU policy selection
+> **Dictionary**: [Morris Probabilistic Counter](../../reference-dictionary/caching.md#morris-probabilistic-counter)
 > **Azure**: Azure Cache for Redis supports allkeys-lfu and volatile-lfu eviction policies using this counter
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -184,7 +184,7 @@ def morris_increment(counter: int) -> int:
 
 ## cache-10: UNLINK — Non-Blocking Key Deletion
 
-> **Source**: [§"5. UNLINK Is Not DEL"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"5. UNLINK Is Not DEL"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -212,8 +212,8 @@ UNLINK large_key:
 | **Redis 4.0+ only** | UNLINK was introduced in Redis 4.0; older versions only have DEL |
 | **Also applies to FLUSHDB/FLUSHALL** | FLUSHDB ASYNC and FLUSHALL ASYNC use the same lazy-free mechanism |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-02-cache-invalidation) — Cache-Aside with explicit delete on write
-> **Dictionary**: [UNLINK (Async Deletion)](../reference-dictionary/caching.md#unlink-async-deletion)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-02-cache-invalidation) — Cache-Aside with explicit delete on write
+> **Dictionary**: [UNLINK (Async Deletion)](../../reference-dictionary/caching.md#unlink-async-deletion)
 > **Azure**: Azure Cache for Redis 4.0+ supports UNLINK; use it for TTL-based eviction cleanup in production
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -221,7 +221,7 @@ UNLINK large_key:
 
 ## cache-11: Server-Assisted Client-Side Caching (TRACKING)
 
-> **Source**: [§"6. Client-Side Caching With Server Invalidation (Redis 6+)"](../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
+> **Source**: [§"6. Client-Side Caching With Server Invalidation (Redis 6+)"](../../articles/medium/If%20You%20Only%20Know%20%E2%80%98Redis%20is%20Single-Threaded%E2%80%99%2C%20You%20Know%20Nothing.md)
 
 | | |
 |:---|:---|
@@ -252,7 +252,7 @@ Result: zero stale reads, fewer round trips
 | **Broadcast mode alternative** | BCAST mode avoids the per-key invalidation table by broadcasting all key modifications — more memory-efficient but less precise |
 | **Opt-in** | Clients must explicitly enable tracking; no backward-compatibility impact |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-01-cache-stampede) — Cache stampede prevention, PER algorithm
-> **Dictionary**: [Server-Assisted Client-Side Caching](../reference-dictionary/caching.md#server-assisted-client-side-caching)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-01-cache-stampede) — Cache stampede prevention, PER algorithm
+> **Dictionary**: [Server-Assisted Client-Side Caching](../../reference-dictionary/caching.md#server-assisted-client-side-caching)
 > **Azure**: Azure Cache for Redis Enterprise tier supports RESP3 and TRACKING for low-latency client-side caching
 > **Taxonomy**: §7.3 Caching Strategies

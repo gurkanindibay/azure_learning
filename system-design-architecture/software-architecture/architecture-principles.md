@@ -7,12 +7,12 @@ timestamp: 2026-06-19T00:00:00Z
 
 # 40. Architecture Principles — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [The 11 Architecture Principles Every Senior Engineer Pretends to Know](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [The 11 Architecture Principles Every Senior Engineer Pretends to Know](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md)
 > **Purpose**: Extract reusable foundational principles and their failure modes so they can be checked during design reviews.
 
-> **Also see**: [Software Design Patterns](39-design-patterns-key-takeaways.md) · [Resilience Patterns](10-resilience-patterns.md) · [Auth Takeaways](36-auth-key-takeaways.md)
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md) · [Resilience](../reference-dictionary/resilience.md) · [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md)
+> **Also see**: [Software Design Patterns](software-architecture/design-patterns.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Auth Takeaways](security/authentication-authorization.md)
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md) · [Resilience](../../reference-dictionary/resilience.md) · [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md)
 > **Taxonomy Reference**: §2.6 Design Patterns
 
 ---
@@ -37,7 +37,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ## arch-01: Least Privilege
 
-> **Source**: [§"1. Least Privilege: More Access Equals More Risk"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#1-least-privilege-more-access-equals-more-risk)
+> **Source**: [§"1. Least Privilege: More Access Equals More Risk"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#1-least-privilege-more-access-equals-more-risk)
 
 | | |
 |:---|:---|
@@ -48,13 +48,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Tighter permissions increase setup and review effort, and can slow down ad-hoc debugging that previously relied on broad access.
 
-**Cross-reference**: [Zero Trust](#arch-11-zero-trust) · [RBAC](../reference-dictionary/architecture-patterns.md#rbac-role-based-access-control) · [mTLS](../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls)
+**Cross-reference**: [Zero Trust](#arch-11-zero-trust) · [RBAC](../../reference-dictionary/architecture-patterns.md#rbac-role-based-access-control) · [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls)
 
 ---
 
 ## arch-02: Separation of Concerns
 
-> **Source**: [§"2. Separation of Concerns: One Job, Done Right"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#2-separation-of-concerns-one-job-done-right)
+> **Source**: [§"2. Separation of Concerns: One Job, Done Right"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#2-separation-of-concerns-one-job-done-right)
 
 | | |
 |:---|:---|
@@ -65,13 +65,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Well-separated modules can introduce more interfaces and deployment units than a small team can operate effectively.
 
-**Cross-reference**: [Loose Coupling](#arch-06-loose-coupling) · [Software Design Patterns](39-design-patterns-key-takeaways.md) · [Hexagonal Architecture](../reference-dictionary/architecture-patterns.md)
+**Cross-reference**: [Loose Coupling](#arch-06-loose-coupling) · [Software Design Patterns](software-architecture/design-patterns.md) · [Hexagonal Architecture](../../reference-dictionary/architecture-patterns.md)
 
 ---
 
 ## arch-03: Defense in Depth
 
-> **Source**: [§"3. Defense in Depth: Don’t Rely on One Lock"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#3-defense-in-depth-dont-rely-on-one-lock)
+> **Source**: [§"3. Defense in Depth: Don’t Rely on One Lock"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#3-defense-in-depth-dont-rely-on-one-lock)
 
 | | |
 |:---|:---|
@@ -82,13 +82,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Each additional layer adds latency, operational complexity, and the risk that correlated layers share the same blind spot.
 
-**Cross-reference**: [Defense in Depth](../reference-dictionary/resilience.md#defense-in-depth) · [Zero Trust](#arch-11-zero-trust) · [Resilience Stack](../reference-dictionary/resilience.md#resilience-stack)
+**Cross-reference**: [Defense in Depth](../../reference-dictionary/resilience.md#defense-in-depth) · [Zero Trust](#arch-11-zero-trust) · [Resilience Stack](../../reference-dictionary/resilience.md#resilience-stack)
 
 ---
 
 ## arch-04: Fail Fast
 
-> **Source**: [§"4. Fail Fast: Early Warning Saves Everything"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#4-fail-fast-early-warning-saves-everything)
+> **Source**: [§"4. Fail Fast: Early Warning Saves Everything"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#4-fail-fast-early-warning-saves-everything)
 
 | | |
 |:---|:---|
@@ -99,13 +99,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Aggressive validation can reject marginally valid inputs and push clients to retry or add defensive code of their own.
 
-**Cross-reference**: [Circuit Breaker](23-circuit-breaker-key-takeaways.md) · [Resilience Patterns](10-resilience-patterns.md) · [Validation](../reference-dictionary/architecture-patterns.md)
+**Cross-reference**: [Circuit Breaker](resilience/circuit-breaker-honesty.md) · [Resilience Patterns](resilience/resilience-patterns.md) · [Validation](../../reference-dictionary/architecture-patterns.md)
 
 ---
 
 ## arch-05: Single Source of Truth
 
-> **Source**: [§"5. Single Source of Truth: Eliminate Conflicting Reports"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#5-single-source-of-truth-eliminate-conflicting-reports)
+> **Source**: [§"5. Single Source of Truth: Eliminate Conflicting Reports"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#5-single-source-of-truth-eliminate-conflicting-reports)
 
 | | |
 |:---|:---|
@@ -116,13 +116,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: A single writer can become a bottleneck or a contention hotspot for high-volume workloads.
 
-**Cross-reference**: [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md) · [Dual-Write Problem](../reference-dictionary/cqrs-event-driven.md#dual-write-problem) · [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture)
+**Cross-reference**: [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md) · [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem) · [Change Data Capture](../../reference-dictionary/data-concurrency.md#change-data-capture)
 
 ---
 
 ## arch-06: Loose Coupling
 
-> **Source**: [§"6. Loose Coupling: Connected, Not Tangled"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#6-loose-coupling-connected-not-tangled)
+> **Source**: [§"6. Loose Coupling: Connected, Not Tangled"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#6-loose-coupling-connected-not-tangled)
 
 | | |
 |:---|:---|
@@ -133,13 +133,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Loose coupling adds serialization, schema governance, and operational overhead that can be heavier than direct in-process calls.
 
-**Cross-reference**: [API Design Patterns](20-api-design-patterns-key-takeaways.md) · [Message Brokers](05-message-brokers-async.md) · [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
+**Cross-reference**: [API Design Patterns](api-network/api-design-patterns.md) · [Message Brokers](messaging/message-brokers-async.md) · [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
 
 ---
 
 ## arch-07: Immutability
 
-> **Source**: [§"7. Immutability: Save a New Document, Don’t Overwrite"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#7-immutability-save-a-new-document-dont-overwrite)
+> **Source**: [§"7. Immutability: Save a New Document, Don’t Overwrite"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#7-immutability-save-a-new-document-dont-overwrite)
 
 | | |
 |:---|:---|
@@ -150,13 +150,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Immutable data structures and append-only stores consume more storage and can complicate queries that expect a single current value.
 
-**Cross-reference**: [Event Sourcing](../reference-dictionary/cqrs-event-driven.md) · [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs-command-query-responsibility-segregation) · [Java JVM](../reference-dictionary/java-jvm.md)
+**Cross-reference**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md) · [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs-command-query-responsibility-segregation) · [Java JVM](../../reference-dictionary/java-jvm.md)
 
 ---
 
 ## arch-08: Idempotency
 
-> **Source**: [§"8. Idempotency: Consistency Equals Reliability"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#8-idempotency-consistency-equals-reliability)
+> **Source**: [§"8. Idempotency: Consistency Equals Reliability"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#8-idempotency-consistency-equals-reliability)
 
 | | |
 |:---|:---|
@@ -167,13 +167,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Idempotency keys require storage for outcomes and careful key scoping; overly broad keys can mask legitimate repeated actions.
 
-**Cross-reference**: [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Double-Booking Trap](02-concurrency-transactions.md#tx-01-double-booking) · [API Design Patterns](20-api-design-patterns-key-takeaways.md)
+**Cross-reference**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [Double-Booking Trap](concurrency-transactions/concurrency-transactions.md#tx-01-double-booking) · [API Design Patterns](api-network/api-design-patterns.md)
 
 ---
 
 ## arch-09: Scalability by Design
 
-> **Source**: [§"9. Scalability by Design: No Expensive Rebuilds Every Six Months"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#9-scalability-by-design-no-expensive-rebuilds-every-six-months)
+> **Source**: [§"9. Scalability by Design: No Expensive Rebuilds Every Six Months"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#9-scalability-by-design-no-expensive-rebuilds-every-six-months)
 
 | | |
 |:---|:---|
@@ -184,13 +184,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Horizontal patterns add operational complexity and may be overkill for products that never reach the projected scale.
 
-**Cross-reference**: [System Design Learning Roadmap](34-sdi-key-takeaways.md) · [Databases](01-databases-query-performance.md) · [Caching Architecture](03-caching-architecture.md)
+**Cross-reference**: [System Design Learning Roadmap](system-design-interview/interview-deep-dive.md) · [Databases](databases/query-performance.md) · [Caching Architecture](caching/caching-architecture.md)
 
 ---
 
 ## arch-10: Observability
 
-> **Source**: [§"10. Observability: You Can’t Fix What You Can’t See"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#10-observability-you-cant-fix-what-you-cant-see)
+> **Source**: [§"10. Observability: You Can’t Fix What You Can’t See"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#10-observability-you-cant-fix-what-you-cant-see)
 
 | | |
 |:---|:---|
@@ -201,13 +201,13 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: High-cardinality telemetry is powerful but expensive to store and query; retention policies and sampling are required to control cost.
 
-**Cross-reference**: [Observability](../reference-dictionary/resilience.md#observability) · [Golden Signals](../reference-dictionary/architecture-patterns.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
+**Cross-reference**: [Observability](../../reference-dictionary/resilience.md#observability) · [Golden Signals](../../reference-dictionary/architecture-patterns.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
 
 ---
 
 ## arch-11: Zero Trust
 
-> **Source**: [§"11. Zero Trust: Always Verify, Never Assume"](../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#11-zero-trust-always-verify-never-assume)
+> **Source**: [§"11. Zero Trust: Always Verify, Never Assume"](../../articles/medium/The%2011%20Architecture%20Principles%20Every%20Senior%20Engineer%20Pretends%20to%20Know%20%E2%80%94%20A%20Practical%20Guide%20for%20Java%20and%20AI%20Systems.md#11-zero-trust-always-verify-never-assume)
 
 | | |
 |:---|:---|
@@ -218,4 +218,4 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: Per-request authentication and authorization add latency and require robust identity infrastructure and certificate rotation.
 
-**Cross-reference**: [Zero Trust](../reference-dictionary/architecture-patterns.md#zero-trust) · [Auth Takeaways](36-auth-key-takeaways.md) · [Least Privilege](#arch-01-least-privilege)
+**Cross-reference**: [Zero Trust](../../reference-dictionary/architecture-patterns.md#zero-trust) · [Auth Takeaways](security/authentication-authorization.md) · [Least Privilege](#arch-01-least-privilege)

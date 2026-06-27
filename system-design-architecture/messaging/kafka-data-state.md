@@ -7,14 +7,14 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 55. Kafka Data & State Patterns — Production Deep-Dive Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md)
-> **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](53-kafka-design-patterns-key-takeaways.md)
-> **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](54-kafka-reliability-ordering-key-takeaways.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md)
+> **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
+> **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](messaging/kafka-reliability-ordering.md)
 > **Purpose**: Extract production-depth engineering insights from the Part 3 deep-dive covering Event Sourcing, CQRS, Compacted Topics, and Event Carried State Transfer.
 
-> **Also see**: [CQRS Fintech Takeaways](25-cqrs-fintech-key-takeaways.md), [Message Brokers & Async](05-message-brokers-async.md), [Concurrency & Transactions](02-concurrency-transactions.md)
-> **Dictionary**: [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md), [Messaging](../reference-dictionary/messaging.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Data & Concurrency](../reference-dictionary/data-concurrency.md)
+> **Also see**: [CQRS Fintech Takeaways](cqrs-fintech/cqrs-fintech.md), [Message Brokers & Async](messaging/message-brokers-async.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
+> **Dictionary**: [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [Messaging](../../reference-dictionary/messaging.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Data & Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture, §4.3 Streaming & Real-Time Architecture
 
 ---
@@ -37,7 +37,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-43: Aggregate Snapshot to Bound Replay Cost
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -57,14 +57,14 @@ Snapshot frequency: every N events (e.g., 1 000) or every M minutes (e.g., 5)
 | **Storage cost** | One snapshot per aggregate per interval; use S3 for low-cost durable storage |
 | **Snapshot consistency** | Snapshot must be atomic with the offset it captures; a partial snapshot is worse than no snapshot |
 
-> **Also see**: [Event Sourcing Overview — broker-24](53-kafka-design-patterns-key-takeaways.md#broker-24), [cqrs-01 to cqrs-07](25-cqrs-fintech-key-takeaways.md)
-> **Dictionary**: [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
+> **Also see**: [Event Sourcing Overview — broker-24](messaging/kafka-design-patterns.md#broker-24), [cqrs-01 to cqrs-07](cqrs-fintech/cqrs-fintech.md)
+> **Dictionary**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Projection](../../reference-dictionary/cqrs-event-driven.md#projection)
 
 ---
 
 ## broker-44: S3 Archiving for Infinite Event Retention
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -86,14 +86,14 @@ Replay path:
 | **Replay latency** | S3 reads are slower than Kafka reads; full history replay from S3 is an offline operation |
 | **Schema evolution** | S3-archived events must carry their schema version; use Glue Schema Registry references embedded in the message header |
 
-> **Also see**: [broker-43 Snapshots](#broker-43), [Event Sourcing Overview — broker-24](53-kafka-design-patterns-key-takeaways.md#broker-24)
-> **Dictionary**: [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Kafka Connect](../reference-dictionary/messaging.md#kafka-connect)
+> **Also see**: [broker-43 Snapshots](#broker-43), [Event Sourcing Overview — broker-24](messaging/kafka-design-patterns.md#broker-24)
+> **Dictionary**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect)
 
 ---
 
 ## broker-45: Cryptographic Erasure for GDPR-Compliant Event Logs
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Sourcing
 
 | | |
 |:---|:---|
@@ -108,14 +108,14 @@ Replay path:
 | **Key management overhead** | One encryption key per user; requires a robust key store with audit logging and TTL management |
 | **Performance cost** | Symmetric encryption (AES-256) overhead is minimal; key lookup adds one extra call per event write |
 
-> **Also see**: [Security Architecture — §6](../architecture-general/06-security-architecture/), [Event Sourcing — broker-24](53-kafka-design-patterns-key-takeaways.md#broker-24)
-> **Dictionary**: [Cryptographic Erasure](../reference-dictionary/cqrs-event-driven.md#cryptographic-erasure), [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing)
+> **Also see**: [Security Architecture — §6](../../architecture-general/06-security-architecture/), [Event Sourcing — broker-24](messaging/kafka-design-patterns.md#broker-24)
+> **Dictionary**: [Cryptographic Erasure](../../reference-dictionary/cqrs-event-driven.md#cryptographic-erasure), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing)
 
 ---
 
 ## broker-46: CQRS with Polyglot Persistence
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -137,14 +137,14 @@ Replay path:
 | **Operational complexity** | Multiple stores to provision, monitor, and keep in sync; each consumer group is a failure domain |
 | **Data freshness** | Each read model lags by its consumer's processing latency; reads are eventually consistent |
 
-> **Also see**: [CQRS Overview — broker-25](53-kafka-design-patterns-key-takeaways.md#broker-25), [CQRS Fintech — cqrs-01](25-cqrs-fintech-key-takeaways.md)
-> **Dictionary**: [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../reference-dictionary/cqrs-event-driven.md#read-model), [Polyglot Persistence](../reference-dictionary/architecture-patterns.md#polyglot-persistence)
+> **Also see**: [CQRS Overview — broker-25](messaging/kafka-design-patterns.md#broker-25), [CQRS Fintech — cqrs-01](cqrs-fintech/cqrs-fintech.md)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model), [Polyglot Persistence](../../reference-dictionary/architecture-patterns.md#polyglot-persistence)
 
 ---
 
 ## broker-47: Read-After-Write Consistency in CQRS
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -163,14 +163,14 @@ Replay path:
 | **UX smoothness** | Polling hides eventual consistency from the user but adds latency to the "happy path" |
 | **Coupling** | Session token approach couples the client to Kafka offset semantics — acceptable in internal services, not in public APIs |
 
-> **Also see**: [CQRS Fintech — cqrs-01](25-cqrs-fintech-key-takeaways.md), [broker-46 Polyglot Persistence](#broker-46)
-> **Dictionary**: [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../reference-dictionary/cqrs-event-driven.md#read-model)
+> **Also see**: [CQRS Fintech — cqrs-01](cqrs-fintech/cqrs-fintech.md), [broker-46 Polyglot Persistence](#broker-46)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model)
 
 ---
 
 ## broker-48: Handling Out-of-Order Events in Read Model Updaters
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — CQRS
 
 | | |
 |:---|:---|
@@ -193,14 +193,14 @@ Additionally, route all events for the same aggregate to the same partition (usi
 | **Correctness** | Upsert ensures no event is lost; a reconciliation job fills in missing fields later |
 | **Complexity** | Every updater must handle partial documents; schema must allow nullable fields for incomplete records |
 
-> **Also see**: [Partition Key — broker-32](53-kafka-design-patterns-key-takeaways.md#broker-32), [Idempotent Consumer — broker-29](53-kafka-design-patterns-key-takeaways.md#broker-29)
-> **Dictionary**: [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Rebalance](../reference-dictionary/messaging.md#rebalance)
+> **Also see**: [Partition Key — broker-32](messaging/kafka-design-patterns.md#broker-32), [Idempotent Consumer — broker-29](messaging/kafka-design-patterns.md#broker-29)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Rebalance](../../reference-dictionary/messaging.md#rebalance)
 
 ---
 
 ## broker-49: Snapshot + Delta Bootstrap for Large Compacted Topics
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Compacted Topic
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Compacted Topic
 
 | | |
 |:---|:---|
@@ -225,14 +225,14 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 | **Snapshot staleness** | Snapshot must be refreshed regularly; stale snapshots increase delta replay time |
 | **Operational overhead** | Requires a snapshot export job and coordination between snapshot offset and Kafka offsets |
 
-> **Also see**: [Compacted Topic Overview — broker-31](53-kafka-design-patterns-key-takeaways.md#broker-31), [broker-43 Event Sourcing Snapshots](#broker-43)
-> **Dictionary**: [Compacted Topic](../reference-dictionary/messaging.md#compacted-topic), [Partition](../reference-dictionary/messaging.md#partition)
+> **Also see**: [Compacted Topic Overview — broker-31](messaging/kafka-design-patterns.md#broker-31), [broker-43 Event Sourcing Snapshots](#broker-43)
+> **Dictionary**: [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic), [Partition](../../reference-dictionary/messaging.md#partition)
 
 ---
 
 ## broker-50: Fat Events — Eliminating the Fetcher Pattern
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
 
 | | |
 |:---|:---|
@@ -261,18 +261,18 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 
 | Tradeoff | Detail |
 |:---|:---|
-| **Payload size** | Fat events are larger; for payloads > 1 MB, combine with [Claim Check — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27) |
+| **Payload size** | Fat events are larger; for payloads > 1 MB, combine with [Claim Check — broker-27](messaging/kafka-design-patterns.md#broker-27) |
 | **Schema coupling** | All consumers depend on the event schema; breaking changes still require coordination via schema registry |
 | **Sensitive data** | Do not embed PII or secrets if all consumer topics lack access controls; selectively include fields |
 
-> **Also see**: [ECST Overview — broker-26](53-kafka-design-patterns-key-takeaways.md#broker-26), [Claim Check — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27)
-> **Dictionary**: [Event Carried State Transfer](../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
+> **Also see**: [ECST Overview — broker-26](messaging/kafka-design-patterns.md#broker-26), [Claim Check — broker-27](messaging/kafka-design-patterns.md#broker-27)
+> **Dictionary**: [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
 
 ---
 
 ## broker-51: ECST vs Fetcher Pattern Decision
 
-> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
+> **Source**: [11 Kafka Design Patterns - Data & State Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Data%20%26%20State%20Deep%20Dive.md) — Event Carried State Transfer
 
 | | |
 |:---|:---|
@@ -295,5 +295,5 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 | **ECST strength** | Decoupling, resilience to source outages, no load amplification |
 | **Fetcher strength** | Always-current data, smaller events, better for sensitive or dynamic fields |
 
-> **Also see**: [ECST Overview — broker-26](53-kafka-design-patterns-key-takeaways.md#broker-26), [Claim Check — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27), [broker-50 Fat Events](#broker-50)
-> **Dictionary**: [Event Carried State Transfer](../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
+> **Also see**: [ECST Overview — broker-26](messaging/kafka-design-patterns.md#broker-26), [Claim Check — broker-27](messaging/kafka-design-patterns.md#broker-27), [broker-50 Fat Events](#broker-50)
+> **Dictionary**: [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)

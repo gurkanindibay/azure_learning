@@ -7,10 +7,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 27. Apache Iggy — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [I Thought Apache Iggy Was Just Another Kafka Clone. I Was Wrong.](../articles/medium/apache-iggy.md) — The Atomic Architect, Jun 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [I Thought Apache Iggy Was Just Another Kafka Clone. I Was Wrong.](../../articles/medium/apache-iggy.md) — The Atomic Architect, Jun 2026
 > **Purpose**: Extract the architectural signals behind Apache Iggy — why Rust-based streaming platforms are emerging, what tradeoffs they make against Kafka, and where they fit in modern infrastructure decisions.
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md) (`broker-01`–`broker-07`), [Stream Processing (Flink)](09-stream-processing-flink.md) (`flink-01`–`flink-05`), [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) (`prag-01`–`prag-08`)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md) (`broker-01`–`broker-07`), [Stream Processing (Flink)](stream-processing/stream-processing-flink.md) (`flink-01`–`flink-05`), [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) (`prag-01`–`prag-08`)
 > **Taxonomy Reference**: §3.2 Message Brokers & Streaming, §5.1 Cloud Infrastructure Platform Architecture
 
 ---
@@ -32,7 +32,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## iggy-01: Not a Kafka Clone
 
-> **Source**: [Article §"What I Found Most Interesting: It's Not Trying to Be Kafka"](../articles/medium/apache-iggy.md#what-i-found-most-interesting-its-not-trying-to-be-kafka)
+> **Source**: [Article §"What I Found Most Interesting: It's Not Trying to Be Kafka"](../../articles/medium/apache-iggy.md#what-i-found-most-interesting-its-not-trying-to-be-kafka)
 
 | | |
 |:---|:---|
@@ -52,7 +52,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## iggy-02: Rust as an Infrastructure Decision
 
-> **Source**: [Article §"Why Rust Matters More Than Most People Realize"](../articles/medium/apache-iggy.md#why-rust-matters-more-than-most-people-realize)
+> **Source**: [Article §"Why Rust Matters More Than Most People Realize"](../../articles/medium/apache-iggy.md#why-rust-matters-more-than-most-people-realize)
 
 | | |
 |:---|:---|
@@ -74,7 +74,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## iggy-03: Performance Through Modern Hardware
 
-> **Source**: [Article §"The Numbers That Made Me Pay Attention"](../articles/medium/apache-iggy.md#the-numbers-that-made-me-pay-attention)
+> **Source**: [Article §"The Numbers That Made Me Pay Attention"](../../articles/medium/apache-iggy.md#the-numbers-that-made-me-pay-attention)
 
 | | |
 |:---|:---|
@@ -108,7 +108,7 @@ io_uring                   →  batch I/O requests, reduce overhead, move data f
 
 ## iggy-04: Simplicity Over Inherited Complexity
 
-> **Source**: [Article §"Why We Keep Looking for Kafka Alternatives"](../articles/medium/apache-iggy.md#why-we-keep-looking-for-kafka-alternatives)
+> **Source**: [Article §"Why We Keep Looking for Kafka Alternatives"](../../articles/medium/apache-iggy.md#why-we-keep-looking-for-kafka-alternatives)
 
 | | |
 |:---|:---|
@@ -136,7 +136,7 @@ Can we build a modern streaming platform without inheriting all the complexity o
 
 ## iggy-05: Use Cases That Fit
 
-> **Source**: [Article §"Where I Can See Apache Iggy Shining"](../articles/medium/apache-iggy.md#where-i-can-see-apache-iggy-shining)
+> **Source**: [Article §"Where I Can See Apache Iggy Shining"](../../articles/medium/apache-iggy.md#where-i-can-see-apache-iggy-shining)
 
 | | |
 |:---|:---|
@@ -163,7 +163,7 @@ Throughput + latency + resource efficiency = good Iggy candidate
 
 ## iggy-06: The Clustering Reality
 
-> **Source**: [Article §"The Biggest Limitation Nobody Should Ignore"](../articles/medium/apache-iggy.md#the-biggest-limitation-nobody-should-ignore)
+> **Source**: [Article §"The Biggest Limitation Nobody Should Ignore"](../../articles/medium/apache-iggy.md#the-biggest-limitation-nobody-should-ignore)
 
 | | |
 |:---|:---|
@@ -192,7 +192,7 @@ Throughput + latency + resource efficiency = good Iggy candidate
 
 ## iggy-07: The Broader Infrastructure Shift
 
-> **Source**: [Article §"What Apache Iggy Reveals About the Future of Infrastructure"](../articles/medium/apache-iggy.md#what-apache-iggy-reveals-about-the-future-of-infrastructure)
+> **Source**: [Article §"What Apache Iggy Reveals About the Future of Infrastructure"](../../articles/medium/apache-iggy.md#what-apache-iggy-reveals-about-the-future-of-infrastructure)
 
 | | |
 |:---|:---|
@@ -221,7 +221,7 @@ Throughput + latency + resource efficiency = good Iggy candidate
 
 ## iggy-08: Don't Dismiss It, Don't Overhype It
 
-> **Source**: [Article §"My Biggest Takeaway"](../articles/medium/apache-iggy.md#my-biggest-takeaway)
+> **Source**: [Article §"My Biggest Takeaway"](../../articles/medium/apache-iggy.md#my-biggest-takeaway)
 
 | | |
 |:---|:---|

@@ -7,12 +7,12 @@ timestamp: 2026-06-27T12:00:00Z
 
 # 61. Hot Keys & Skewed Workloads — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [How Do You Design a System Where 1% of Data Causes 90% of the Load?](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [How Do You Design a System Where 1% of Data Causes 90% of the Load?](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 > **Purpose**: Extract reusable strategies for taming hot keys, celebrity problems, and skewed cache/database workloads.
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
-> **Dictionary**: [Caching](../reference-dictionary/caching.md) — Hot key, cache stampede, request coalescing, counter sharding
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, anti-patterns, eviction, request coalescing
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md) — Hot key, cache stampede, request coalescing, counter sharding
 > **Taxonomy Reference**: §7.2 Performance Architecture
 
 ---
@@ -31,7 +31,7 @@ timestamp: 2026-06-27T12:00:00Z
 
 ## cache-12: Hot-Key Read Replication
 
-> **Source**: [§"Principle 1: Replicate Hot Data"](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 1: Replicate Hot Data"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 
 | | |
 |:---|:---|
@@ -55,8 +55,8 @@ def get_hot_key(key):
 | **Replica consistency** | Replicas may lag milliseconds behind the primary |
 | **Worse for write-heavy keys** | Counters, inventory, and rate limiters need a different strategy (see [cache-14](#cache-14)) |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication) — Request coalescing
-> **Dictionary**: [Hot Key](../reference-dictionary/caching.md#hot-key)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication) — Request coalescing
+> **Dictionary**: [Hot Key](../../reference-dictionary/caching.md#hot-key)
 > **Azure**: Azure Cache for Redis supports clustered read replicas; Premium/Enterprise tiers scale replica count independently
 > **Taxonomy**: §7.2 Performance Architecture
 
@@ -64,7 +64,7 @@ def get_hot_key(key):
 
 ## cache-13: Local (L1) In-Process Cache
 
-> **Source**: [§"Principle 2: Add a Local Cache Layer"](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 2: Add a Local Cache Layer"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 
 | | |
 |:---|:---|
@@ -90,8 +90,8 @@ def get_with_local_cache(key, ttl_seconds=5):
 | **Memory per instance** | Every app node holds its own copy — bounded by TTL and key cardinality |
 | **Best for immutable hot data** | Celebrity profiles, product pages, config flags |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-02-cache-invalidation) — Cache invalidation
-> **Dictionary**: [Hot Key](../reference-dictionary/caching.md#hot-key)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-02-cache-invalidation) — Cache invalidation
+> **Dictionary**: [Hot Key](../../reference-dictionary/caching.md#hot-key)
 > **Azure**: Azure Cache for Redis Enterprise supports RESP3 `CLIENT TRACKING` for server-assisted client-side caching
 > **Taxonomy**: §7.2 Performance Architecture
 
@@ -99,7 +99,7 @@ def get_with_local_cache(key, ttl_seconds=5):
 
 ## cache-14: Counter Sharding
 
-> **Source**: [§"Principle 3: Shard the Hot Key Itself"](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 3: Shard the Hot Key Itself"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 
 | | |
 |:---|:---|
@@ -129,8 +129,8 @@ def get_like_count(post_id):
 | **Not atomic** | Concurrent increments across shards still sum correctly, but the read is a point-in-time aggregate |
 | **Use only for write-heavy hot keys** | Read-heavy keys are cheaper to replicate (see [cache-12](#cache-12)) |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication) — Request coalescing
-> **Dictionary**: [Counter Sharding](../reference-dictionary/caching.md#counter-sharding)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication) — Request coalescing
+> **Dictionary**: [Counter Sharding](../../reference-dictionary/caching.md#counter-sharding)
 > **Azure**: Azure Cache for Redis Cluster distributes shards across nodes; choose shard count ≥ node count for even spread
 > **Taxonomy**: §7.2 Performance Architecture
 
@@ -138,7 +138,7 @@ def get_like_count(post_id):
 
 ## cache-15: Hot-Key Detection & Adaptive Request Routing
 
-> **Source**: [§"Principle 4: Detect and Adapt to Hot Spots"](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 4: Detect and Adapt to Hot Spots"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 
 | | |
 |:---|:---|
@@ -177,8 +177,8 @@ class HotKeyDetector:
 | **False positives** | A short burst can trigger unnecessary replication; add hysteresis or cooldown |
 | **Routing layer complexity** | The proxy or client must learn the hot-key registry and prefer replicas |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md#cache-01-cache-stampede) — Cache stampede prevention
-> **Dictionary**: [Hot Key Detection](../reference-dictionary/caching.md#hot-key-detection), [Adaptive Request Routing](../reference-dictionary/caching.md#adaptive-request-routing)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md#cache-01-cache-stampede) — Cache stampede prevention
+> **Dictionary**: [Hot Key Detection](../../reference-dictionary/caching.md#hot-key-detection), [Adaptive Request Routing](../../reference-dictionary/caching.md#adaptive-request-routing)
 > **Azure**: Azure Front Door + Azure Cache for Redis can route celebrity content to a dedicated edge/cache profile
 > **Taxonomy**: §7.2 Performance Architecture
 
@@ -186,7 +186,7 @@ class HotKeyDetector:
 
 ## cache-16: Dedicated Hot-Key Tier
 
-> **Source**: [§"Principle 5: Isolate Hot Paths"](../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
+> **Source**: [§"Principle 5: Isolate Hot Paths"](../../articles/medium/How%20Do%20You%20Design%20a%20System%20Where%201%25%20of%20Data%20Causes%2090%25%20of%20the%20Load.md)
 
 | | |
 |:---|:---|
@@ -211,7 +211,7 @@ class HotKeyDetector:
 | **Operational complexity** | Two tiers to monitor, deploy, and tune |
 | **Routing requirement** | Requests must be classified and sent to the correct tier |
 
-> **Also see**: [News Feed Takeaways](42-feed-key-takeaways.md#feed-01-hybrid-fanout-to-control-write-amplification) — Celebrity cache / hybrid fanout
-> **Dictionary**: [Dedicated Hot-Key Tier](../reference-dictionary/caching.md#dedicated-hot-key-tier)
+> **Also see**: [News Feed Takeaways](case-studies/news-feed.md#feed-01-hybrid-fanout-to-control-write-amplification) — Celebrity cache / hybrid fanout
+> **Dictionary**: [Dedicated Hot-Key Tier](../../reference-dictionary/caching.md#dedicated-hot-key-tier)
 > **Azure**: Azure Cache for Redis Enterprise supports multiple clusters; place hot data on a higher-tier cluster with more replicas
 > **Taxonomy**: §7.2 Performance Architecture

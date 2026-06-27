@@ -7,12 +7,12 @@ timestamp: 2026-06-20T00:00:00Z
 
 # 41. URL Shortener — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
+> **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [Question 1: Design a URL Shortener Service (like TinyURL)](../system-design-cases/cases/part-2-url-shortener-system-design.md)
 > **Purpose**: Extract reusable architectural patterns from designing a TinyURL-scale URL shortening service.
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, invalidation, eviction policies
-> **Dictionary**: [Caching](../reference-dictionary/caching.md), [API Design](../reference-dictionary/api-design.md)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, eviction policies
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md), [API Design](../../reference-dictionary/api-design.md)
 > **Taxonomy Reference**: §4.0.1 Database Performance & Caching
 
 ---
@@ -31,7 +31,7 @@ timestamp: 2026-06-20T00:00:00Z
 
 ## url-01: Unique Short-Code Generation at Scale
 
-> **Source**: [§"High‑Level Architecture"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"High‑Level Architecture"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -52,16 +52,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Coordinator as SPOF** | Standby coordinator with replicated sequence eliminates the single point of failure |
 | **Range size** | Larger ranges reduce coordinator chatter but increase ID waste on failure |
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — Back-of-the-envelope estimation
-> **Dictionary**: [Base62 Encoding](../reference-dictionary/architecture-patterns.md#base62-encoding), [Snowflake ID](../reference-dictionary/architecture-patterns.md#snowflake-id)
-> **Azure**: [Azure Cache for Redis](../architecture-azure/data/redis/) for hot-code serving, Cosmos DB (in `architecture-azure/data/databases/`) for durable mappings
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — Back-of-the-envelope estimation
+> **Dictionary**: [Base62 Encoding](../../reference-dictionary/architecture-patterns.md#base62-encoding), [Snowflake ID](../../reference-dictionary/architecture-patterns.md#snowflake-id)
+> **Azure**: [Azure Cache for Redis](../../architecture-azure/data/redis/) for hot-code serving, Cosmos DB (in `architecture-azure/data/databases/`) for durable mappings
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## url-02: Low-Latency Redirection via Cache-Aside
 
-> **Source**: [§"Redirect Flow with Cache‑Aside Pattern and Analytics"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Redirect Flow with Cache‑Aside Pattern and Analytics"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -82,16 +82,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Memory cost** | Hot-set caching adds Redis infrastructure but avoids billions of DB reads |
 | **Thundering herd** | Viral short codes can saturate a single cache key; mitigate with request coalescing or CDN edge caching |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, eviction policies
-> **Dictionary**: [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern), [TTL](../reference-dictionary/caching.md#ttl-time-to-live)
-> **Azure**: [Azure Cache for Redis](../architecture-azure/data/redis/), Azure Front Door for edge redirects
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, eviction policies
+> **Dictionary**: [Cache-Aside Pattern](../../reference-dictionary/caching.md#cache-aside-pattern), [TTL](../../reference-dictionary/caching.md#ttl-time-to-live)
+> **Azure**: [Azure Cache for Redis](../../architecture-azure/data/redis/), Azure Front Door for edge redirects
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## url-03: Atomic Custom Alias Reservation
 
-> **Source**: [§"Custom Alias Flow (Conflict Check)"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Custom Alias Flow (Conflict Check)"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -106,16 +106,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **User experience** | Immediate failure (409) is preferable to silently overwriting someone else's alias |
 | **No app locks** | Database-level atomicity avoids distributed locking complexity |
 
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md) — Double-booking, database invariants
-> **Dictionary**: [ACID](../reference-dictionary/data-concurrency.md#acid-transactions)
-> **Azure**: Cosmos DB unique keys; [Azure Cache for Redis](../architecture-azure/data/redis/) SET NX for pre-check
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) — Double-booking, database invariants
+> **Dictionary**: [ACID](../../reference-dictionary/data-concurrency.md#acid-transactions)
+> **Azure**: Cosmos DB unique keys; [Azure Cache for Redis](../../architecture-azure/data/redis/) SET NX for pre-check
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## url-04: Splitting CAP by Operation Type
 
-> **Source**: [§"Consistency vs. Availability Trade‑offs"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Consistency vs. Availability Trade‑offs"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -135,8 +135,8 @@ timestamp: 2026-06-20T00:00:00Z
 | **Failure mode** | DB outage can still serve redirects from cache; writes pause until coordinator recovers |
 | **Correctness** | No two long URLs ever share the same alias, even during partitions |
 
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — CAP theorem
-> **Dictionary**: [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) — CAP theorem
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem)
 > **Azure**: Cosmos DB consistency levels for tunable per-operation guarantees
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
@@ -144,7 +144,7 @@ timestamp: 2026-06-20T00:00:00Z
 
 ## url-05: Decoupled Click Analytics
 
-> **Source**: [§"Redirect Flow with Cache‑Aside Pattern and Analytics"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Redirect Flow with Cache‑Aside Pattern and Analytics"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -165,11 +165,11 @@ timestamp: 2026-06-20T00:00:00Z
 | **Cost** | Separate analytics pipeline adds infrastructure but keeps primary serving path cheap |
 | **Scalability** | Topic partitioning by alias shard balances load |
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md) — Producer durability, exactly-once semantics
-> **Dictionary**: [Apache Kafka](../reference-dictionary/messaging.md#apache-kafka)
-> **Azure**: [Azure Event Hubs](../architecture-azure/integration/event-hubs/) for click ingestion, [Azure Data Explorer](../architecture-azure/data/analytics/data-explorer/) for OLAP
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md) — Producer durability, exactly-once semantics
+> **Dictionary**: [Apache Kafka](../../reference-dictionary/messaging.md#apache-kafka)
+> **Azure**: [Azure Event Hubs](../../architecture-azure/integration/event-hubs/) for click ingestion, [Azure Data Explorer](../../architecture-azure/data/analytics/data-explorer/) for OLAP
 > **Taxonomy**: §4.2 Analytics Architecture
 
 ---
 
-> **Related topics**: [News Feed — Key Takeaways](42-feed-key-takeaways.md) — Hybrid fanout, timeline caches, celebrity problem
+> **Related topics**: [News Feed — Key Takeaways](case-studies/news-feed.md) — Hybrid fanout, timeline caches, celebrity problem

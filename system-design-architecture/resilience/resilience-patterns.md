@@ -7,9 +7,9 @@ timestamp: 2026-06-14T00:00:00Z
 
 # Resilience Patterns: Surviving Chaos at Scale
 
-> **Source**: [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #20, #21, #22  
+> **Source**: [22 Scenario-Based System Design Questions](../../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #20, #21, #22  
 > **Taxonomy Reference**: §7.1 Reliability & Resilience  
-> **Azure Mapping**: See [Azure Service Mapping](07-azure-service-mapping.md)
+> **Azure Mapping**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 
 ---
 
@@ -355,4 +355,4 @@ Each pattern addresses a different failure mode. Together they form a defense-in
 5. **Degrade gracefully** — partial service > no service
 
 > **Taxonomy Reference**: §7.1 Reliability & Resilience  
-> **Related**: [Concurrency & Transactions](02-concurrency-transactions.md) | [Message Brokers](05-message-brokers-async.md) | [Caching Architecture](03-caching-architecture.md) | [Checkpointing for Batch Jobs](13-large-data-processing-constraints.md#proc-02-checkpointing-for-fault-tolerant-batch-processing)
+> **Related**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) | [Message Brokers](messaging/message-brokers-async.md) | [Caching Architecture](caching/caching-architecture.md) | [Checkpointing for Batch Jobs](large-data-processing/large-data-constraints.md#proc-02-checkpointing-for-fault-tolerant-batch-processing)

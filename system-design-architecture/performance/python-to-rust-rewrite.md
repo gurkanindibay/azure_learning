@@ -7,10 +7,10 @@ timestamp: 2026-06-27T00:00:00Z
 
 # 60. Microservices Runtime Performance — Python to Rust Rewrite Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [We Rewrote a Python Service in Rust. Six Months Later, I’m Honestly Not Sure It Was Worth It](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md) — The Atomic Architect, Jun 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [We Rewrote a Python Service in Rust. Six Months Later, I’m Honestly Not Sure It Was Worth It](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md) — The Atomic Architect, Jun 2026
 > **Purpose**: Extract reusable decision rules for language rewrites, CPU-bound concurrency bottlenecks, and the hidden operational costs that benchmark decks usually omit.
-> **Also see**: [Microservices Runtime Performance — Java vs Go Benchmark](29-microservices-runtime-performance.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md), [Architecture Principles](40-arch-key-takeaways.md), [Pragmatic System Design](18-pragmatic-system-design-takeaways.md)
+> **Also see**: [Microservices Runtime Performance — Java vs Go Benchmark](performance/microservices-runtime-performance.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md), [Architecture Principles](software-architecture/architecture-principles.md), [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md)
 > **Taxonomy Reference**: §7 Reliability, Performance & Operations
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-06-27T00:00:00Z
 
 ## perf-07: GIL Bottleneck on CPU-Bound Concurrent Work
 
-> **Source**: [Article §"Why We Touched a Working Service at All"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#why-we-touched-a-working-service-at-all)
+> **Source**: [Article §"Why We Touched a Working Service at All"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#why-we-touched-a-working-service-at-all)
 
 | | |
 |:---|:---|
@@ -46,13 +46,13 @@ timestamp: 2026-06-27T00:00:00Z
 
 **Tradeoff**: A GIL-free runtime removes the serialization ceiling, but it introduces a new toolchain, build pipeline, and operational expertise. The win is real only when CPU concurrency is the actual bottleneck.
 
-> **Also see**: [Global Interpreter Lock](../../reference-dictionary/data-concurrency.md#global-interpreter-lock) · [Tokio](../../reference-dictionary/architecture-patterns.md#tokio) · [Virtual Threads](29-microservices-runtime-performance.md#perf-01-virtual-threads--concurrency-model-matters-more-than-language) · [async-01: Unbounded Thread Pool Exhaustion](08-async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
+> **Also see**: [Global Interpreter Lock](../../reference-dictionary/data-concurrency.md#global-interpreter-lock) · [Tokio](../../reference-dictionary/architecture-patterns.md#tokio) · [Virtual Threads](performance/microservices-runtime-performance.md#perf-01-virtual-threads--concurrency-model-matters-more-than-language) · [async-01: Unbounded Thread Pool Exhaustion](stream-processing/async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
 
 ---
 
 ## perf-08: The Velocity Tax of a Language Rewrite
 
-> **Source**: [Article §"The Velocity Tax Is Real and Nobody Warns You"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-velocity-tax-is-real-and-nobody-warns-you)
+> **Source**: [Article §"The Velocity Tax Is Real and Nobody Warns You"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-velocity-tax-is-real-and-nobody-warns-you)
 
 | | |
 |:---|:---|
@@ -68,13 +68,13 @@ timestamp: 2026-06-27T00:00:00Z
 
 **Tradeoff**: The operational savings must be large enough and durable enough to pay back the velocity tax. If the service changes weekly, the tax never amortizes.
 
-> **Also see**: [Pragmatic System Design — Start with User Metrics](18-pragmatic-system-design-takeaways.md#prag-01-start-with-user-metrics-not-architecture-diagrams) · [arch-04: Loose Coupling / High Cohesion](40-arch-key-takeaways.md#arch-04-loose-coupling--high-cohesion)
+> **Also see**: [Pragmatic System Design — Start with User Metrics](system-design-interview/pragmatic-takeaways.md#prag-01-start-with-user-metrics-not-architecture-diagrams) · [arch-04: Loose Coupling / High Cohesion](software-architecture/architecture-principles.md#arch-04-loose-coupling--high-cohesion)
 
 ---
 
 ## perf-09: Rust Compile-Time and Flow-State Cost
 
-> **Source**: [Article §"The Bill Nobody Put in the Proposal"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-bill-nobody-put-in-the-proposal)
+> **Source**: [Article §"The Bill Nobody Put in the Proposal"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-bill-nobody-put-in-the-proposal)
 
 | | |
 |:---|:---|
@@ -94,7 +94,7 @@ timestamp: 2026-06-27T00:00:00Z
 
 ## perf-10: Shared Mutable State in Async Rust
 
-> **Source**: [Article §"The Bill Nobody Put in the Proposal"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-bill-nobody-put-in-the-proposal)
+> **Source**: [Article §"The Bill Nobody Put in the Proposal"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-bill-nobody-put-in-the-proposal)
 
 | | |
 |:---|:---|
@@ -120,13 +120,13 @@ cache.lock().unwrap().insert(key.clone(), value.clone());
 
 **Tradeoff**: The Rust version is more verbose than five lines of Python, but it forces the team to pay the concurrency cost explicitly rather than charging it to a future outage.
 
-> **Also see**: [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking) · [Deadlock](../../reference-dictionary/dotnet-multithreading.md#deadlock) · [async-01: Unbounded Thread Pool Exhaustion](08-async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
+> **Also see**: [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking) · [Deadlock](../../reference-dictionary/dotnet-multithreading.md#deadlock) · [async-01: Unbounded Thread Pool Exhaustion](stream-processing/async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
 
 ---
 
 ## perf-11: Native Extension as Middle Path
 
-> **Source**: [Article §"When You Should Actually Reach for This"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#when-you-should-actually-reach-for-this)
+> **Source**: [Article §"When You Should Actually Reach for This"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#when-you-should-actually-reach-for-this)
 
 | | |
 |:---|:---|
@@ -145,7 +145,7 @@ cache.lock().unwrap().insert(key.clone(), value.clone());
 
 ## perf-12: Ego-Driven Rewrite Decisions
 
-> **Source**: [Article §"The Uncomfortable Question I Avoided for Months"](../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-uncomfortable-question-i-avoided-for-months)
+> **Source**: [Article §"The Uncomfortable Question I Avoided for Months"](../../articles/medium/We%20Rewrote%20a%20Python%20Service%20in%20Rust.%20Six%20Months%20Later%2C%20I%E2%80%99m%20Honestly%20Not%20Sure%20It%20Was%20Worth%20It.md#the-uncomfortable-question-i-avoided-for-months)
 
 | | |
 |:---|:---|
@@ -162,7 +162,7 @@ cache.lock().unwrap().insert(key.clone(), value.clone());
 
 **Tradeoff**: Honest decisions are less exciting than conference talks, but they are more likely to survive six months of production data.
 
-> **Also see**: [Golden Hammer](../../reference-dictionary/architecture-patterns.md#golden-hammer) · [Architecture Decision Record](../../reference-dictionary/architecture-patterns.md#architecture-decision-record) · [prag-07: Reversible Decisions](18-pragmatic-system-design-takeaways.md#prag-07-reversible-decisions)
+> **Also see**: [Golden Hammer](../../reference-dictionary/architecture-patterns.md#golden-hammer) · [Architecture Decision Record](../../reference-dictionary/architecture-patterns.md#architecture-decision-record) · [prag-07: Reversible Decisions](system-design-interview/pragmatic-takeaways.md#prag-07-reversible-decisions)
 
 ---
 

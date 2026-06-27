@@ -7,10 +7,10 @@ timestamp: 2026-06-16T00:00:00Z
 
 # 35. Data Mesh & Medallion Architecture — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Sources**: [Data Mesh Is Dead — And Here’s the Shockingly Better Way to Fix Your Data Chaos](../articles/medium/data-mesh-is-dead-practical-decentralization.md) — by Cloud With Azeem (2025) · [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md) — by Cloud With Azeem (2025)  
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Sources**: [Data Mesh Is Dead — And Here’s the Shockingly Better Way to Fix Your Data Chaos](../../articles/medium/data-mesh-is-dead-practical-decentralization.md) — by Cloud With Azeem (2025) · [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md) — by Cloud With Azeem (2025)  
 > **Purpose**: Extract reusable data-architecture patterns for decentralizing data ownership and evolving beyond Bronze-Silver-Gold toward product-oriented data platforms.  
-> **Also see**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md), [SQL System Design](19-sql-system-design-takeaways.md), [Large Data Processing Under Constraints](13-large-data-processing-constraints.md), [Stream Processing (Flink)](09-stream-processing-flink.md)  
+> **Also see**: [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md), [SQL System Design](databases/sql-system-design.md), [Large Data Processing Under Constraints](large-data-processing/large-data-constraints.md), [Stream Processing (Flink)](stream-processing/stream-processing-flink.md)  
 > **Taxonomy Reference**: §4 Data & Analytics, §11 Architectural Qualities
 
 ---
@@ -36,7 +36,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 ## mesh-01: Data Mesh Failure Modes — Maturity, Accountability, Governance
 
-> **Source**: [Why Data Mesh Failed](../articles/medium/data-mesh-is-dead-practical-decentralization.md#why-data-mesh-failed-the-overhyped-gospel-of-decentralization)
+> **Source**: [Why Data Mesh Failed](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#why-data-mesh-failed-the-overhyped-gospel-of-decentralization)
 
 | | |
 |:---|:---|
@@ -51,13 +51,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Decentralization promises speed and autonomy vs. the reality that decentralization without discipline becomes "chaos with documentation."
 
-> **Dictionary**: [Data Mesh](../reference-dictionary/architecture-patterns.md#data-mesh), [Data Product](../reference-dictionary/architecture-patterns.md#data-product), [Federated Governance](../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-02: Practical Decentralization — Central Platform + Domain Logic Ownership
 
-> **Source**: [A Smarter, Simpler Model](../articles/medium/data-mesh-is-dead-practical-decentralization.md#a-smarter-simpler-model-the-practical-decentralization-approach)
+> **Source**: [A Smarter, Simpler Model](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#a-smarter-simpler-model-the-practical-decentralization-approach)
 
 | | |
 |:---|:---|
@@ -72,13 +72,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Requires a strong platform team and clear RACI vs. the mess of ungoverned domain autonomy.
 
-> **Dictionary**: [Practical Decentralization](../reference-dictionary/architecture-patterns.md#practical-decentralization) · **Taxonomy**: §4 Data & Analytics, §5 Cloud Infrastructure & Platform
+> **Dictionary**: [Practical Decentralization](../../reference-dictionary/architecture-patterns.md#practical-decentralization) · **Taxonomy**: §4 Data & Analytics, §5 Cloud Infrastructure & Platform
 
 ---
 
 ## mesh-03: Semantic Layer — Shared Metrics Without Tribal Knowledge
 
-> **Source**: [Adopt a Semantic Layer](../articles/medium/data-mesh-is-dead-practical-decentralization.md#adopt-a-semantic-layer)
+> **Source**: [Adopt a Semantic Layer](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#adopt-a-semantic-layer)
 
 | | |
 |:---|:---|
@@ -93,13 +93,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Adds a central dependency and change-management process vs. metric chaos and duplicate logic.
 
-> **Dictionary**: [Semantic Layer](../reference-dictionary/architecture-patterns.md#semantic-layer) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Semantic Layer](../../reference-dictionary/architecture-patterns.md#semantic-layer) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-04: Federated Governance — Standards with Automation
 
-> **Source**: [Federated Governance — But Keep It Real](../articles/medium/data-mesh-is-dead-practical-decentralization.md#federated-governance--but-keep-it-real)
+> **Source**: [Federated Governance — But Keep It Real](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#federated-governance--but-keep-it-real)
 
 | | |
 |:---|:---|
@@ -114,13 +114,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Upfront investment in policy-as-code and tooling vs. reactive firefighting and audit risk.
 
-> **Dictionary**: [Federated Governance](../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics, §6 Security Architecture
+> **Dictionary**: [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics, §6 Security Architecture
 
 ---
 
 ## mesh-05: Data Fabric — Complement, Not Replacement
 
-> **Source**: [But Wait… What About Data Fabric?](../articles/medium/data-mesh-is-dead-practical-decentralization.md#but-wait-what-about-data-fabric)
+> **Source**: [But Wait… What About Data Fabric?](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#but-wait-what-about-data-fabric)
 
 | | |
 |:---|:---|
@@ -134,13 +134,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Multiple overlapping concepts can confuse stakeholders vs. forcing one paradigm to do everything.
 
-> **Dictionary**: [Data Fabric](../reference-dictionary/architecture-patterns.md#data-fabric) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Fabric](../../reference-dictionary/architecture-patterns.md#data-fabric) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-06: Operational Discipline — Orchestration, Quality, Versioning, Catalog
 
-> **Source**: [Bonus: Tools & Practices That Actually Help](../articles/medium/data-mesh-is-dead-practical-decentralization.md#bonus-tools--practices-that-actually-help)
+> **Source**: [Bonus: Tools & Practices That Actually Help](../../articles/medium/data-mesh-is-dead-practical-decentralization.md#bonus-tools--practices-that-actually-help)
 
 | | |
 |:---|:---|
@@ -157,13 +157,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Operational tooling and process add overhead vs. the hidden tax of untrustworthy, undocumented data.
 
-> **Dictionary**: [Data Catalog](../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics, §7 Reliability & Performance
+> **Dictionary**: [Data Catalog](../../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics, §7 Reliability & Performance
 
 ---
 
 ## mesh-07: Pipeline-Centric vs Business-Centric — Medallion Organizes Data, Not Ownership
 
-> **Source**: [§Medallion Architecture Limitations](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#medallion-architecture-limitations)
+> **Source**: [§Medallion Architecture Limitations](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#medallion-architecture-limitations)
 
 | | |
 |:---|:---|
@@ -178,13 +178,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Domain-aligned ownership simplifies accountability but requires cross-domain coordination on shared infrastructure (orchestration, catalog, security). Medallion-as-org-chart is simpler to set up initially but collapses under scale.
 
-> **Dictionary**: [Medallion Architecture](../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Mesh](../reference-dictionary/architecture-patterns.md#data-mesh), [Bounded Context](../reference-dictionary/architecture-patterns.md#bounded-context) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-08: Medallion Lasagna — Layer Proliferation Under Ambiguity
 
-> **Source**: [§Bronze-Silver-Gold Turns Into Bronze-Silver-Silver-Silver-Gold](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#bronze%E2%80%93silver%E2%80%93gold-turns-into-bronze%E2%80%93silver%E2%80%93silver%E2%80%93silver%E2%80%93gold)
+> **Source**: [§Bronze-Silver-Gold Turns Into Bronze-Silver-Silver-Silver-Gold](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#bronze%E2%80%93silver%E2%80%93gold-turns-into-bronze%E2%80%93silver%E2%80%93silver%E2%80%93silver%E2%80%93gold)
 
 | | |
 |:---|:---|
@@ -199,13 +199,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: More stages mean better clarity for producers vs. more surface area for consumers to navigate and for orchestration to manage. The three-layer simplicity is lost, but the alternative is undocumented chaos.
 
-> **Dictionary**: [Medallion Architecture](../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Catalog](../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Catalog](../../reference-dictionary/architecture-patterns.md#data-catalog) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-09: Tight Coupling — Cascade Failures Across Bronze→Silver→Gold
 
-> **Source**: [§Tight Coupling Everywhere (Surprise!)](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#tight-coupling-everywhere-surprise)
+> **Source**: [§Tight Coupling Everywhere (Surprise!)](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#tight-coupling-everywhere-surprise)
 
 | | |
 |:---|:---|
@@ -220,13 +220,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Contracts add upfront design cost and governance overhead vs. the "just write SQL" speed of direct coupling. The payoff is that a Bronze schema change no longer triggers a Slack fire drill.
 
-> **Dictionary**: [Medallion Architecture](../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Product](../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-10: Medallion + Streaming — Batch Architecture Meets Real-Time Data
 
-> **Source**: [§Streaming Data? Yeah... Good Luck](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#streaming-data-yeah%E2%80%A6-good-luck)
+> **Source**: [§Streaming Data? Yeah... Good Luck](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#streaming-data-yeah%E2%80%A6-good-luck)
 
 | | |
 |:---|:---|
@@ -241,13 +241,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Streaming Medallion requires different infrastructure (stream processors, event logs) and different skills (windowing, watermarking, state management) vs. the familiar batch ETL/ELT toolchain.
 
-> **Dictionary**: [Medallion Architecture](../reference-dictionary/architecture-patterns.md#medallion-architecture), [Kafka vs RabbitMQ](../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
 
 ---
 
 ## mesh-11: Data Products — Ownership, Contracts, Consumers
 
-> **Source**: [§What Comes After Medallion Architecture?](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#what-comes-after-medallion-architecture)
+> **Source**: [§What Comes After Medallion Architecture?](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#what-comes-after-medallion-architecture)
 
 | | |
 |:---|:---|
@@ -262,13 +262,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Product-oriented data management demands organizational maturity (stable teams, documentation discipline, governance) that many organizations lack. Without it, "data product" becomes a relabeling exercise.
 
-> **Dictionary**: [Data Product](../reference-dictionary/architecture-patterns.md#data-product), [Data Mesh](../reference-dictionary/architecture-patterns.md#data-mesh), [Federated Governance](../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Data Mesh](../../reference-dictionary/architecture-patterns.md#data-mesh), [Federated Governance](../../reference-dictionary/architecture-patterns.md#federated-governance) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-12: Semantic Layer — Shared Metrics Without SQL Chaos
 
-> **Source**: [§Semantic Layers](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#-semantic-layers)
+> **Source**: [§Semantic Layers](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#-semantic-layers)
 
 | | |
 |:---|:---|
@@ -283,13 +283,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: A semantic layer adds another system to maintain and requires the central team to keep up with domain change velocity. Without it, metric drift erodes trust in data.
 
-> **Dictionary**: [Semantic Layer](../reference-dictionary/architecture-patterns.md#semantic-layer), [Data Product](../reference-dictionary/architecture-patterns.md#data-product) · **Taxonomy**: §4 Data & Analytics
+> **Dictionary**: [Semantic Layer](../../reference-dictionary/architecture-patterns.md#semantic-layer), [Data Product](../../reference-dictionary/architecture-patterns.md#data-product) · **Taxonomy**: §4 Data & Analytics
 
 ---
 
 ## mesh-13: Contracts Over Conventions — Schema as a Promise
 
-> **Source**: [§Contracts Over Conventions](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#-contracts-over-conventions)
+> **Source**: [§Contracts Over Conventions](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#-contracts-over-conventions)
 
 | | |
 |:---|:---|
@@ -304,13 +304,13 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Contract enforcement adds pipeline latency (validation step) and governance overhead (contract maintenance). The alternative — runtime schema surprises — is cheaper to build but more expensive to operate.
 
-> **Dictionary**: [Data Product](../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
+> **Dictionary**: [Data Product](../../reference-dictionary/architecture-patterns.md#data-product), [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
 
 ---
 
 ## mesh-14: When Medallion Still Works — The Scaling Cliff
 
-> **Source**: [§When Medallion Architecture Does Work](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#when-medallion-architecture-does-work)
+> **Source**: [§When Medallion Architecture Does Work](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md#when-medallion-architecture-does-work)
 
 | | |
 |:---|:---|
@@ -325,7 +325,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 **Tradeoff**: Over-engineering from day one wastes time on problems you may never have. Under-engineering locks you into a model that's expensive to evolve. The sweet spot is building Medallion with extension points (contract boundaries between layers, domain-aligned naming) that make evolution cheaper later.
 
-> **Dictionary**: [Medallion Architecture](../reference-dictionary/architecture-patterns.md#medallion-architecture), [Practical Decentralization](../reference-dictionary/architecture-patterns.md#practical-decentralization), [Vertical vs Horizontal Scaling](../reference-dictionary/architecture-patterns.md#vertical-vs-horizontal-scaling) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/architecture-patterns.md#medallion-architecture), [Practical Decentralization](../../reference-dictionary/architecture-patterns.md#practical-decentralization), [Vertical vs Horizontal Scaling](../../reference-dictionary/architecture-patterns.md#vertical-vs-horizontal-scaling) · **Taxonomy**: §4 Data & Analytics, §11 Architectural Qualities
 
 ---
 
@@ -346,5 +346,5 @@ timestamp: 2026-06-16T00:00:00Z
 ---
 
 > **Taxonomy**: §4 Data & Analytics · §11 Architectural Qualities · §7 Reliability & Performance · §3.3 Event-Driven & Messaging  
-> **See also**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) · [SQL System Design](19-sql-system-design-takeaways.md) · [Large Data Processing Under Constraints](13-large-data-processing-constraints.md) · [Stream Processing (Flink)](09-stream-processing-flink.md)  
-> **Source articles**: [Data Mesh Is Dead — And Here’s the Shockingly Better Way to Fix Your Data Chaos](../articles/medium/data-mesh-is-dead-practical-decentralization.md) · [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md)
+> **See also**: [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) · [SQL System Design](databases/sql-system-design.md) · [Large Data Processing Under Constraints](large-data-processing/large-data-constraints.md) · [Stream Processing (Flink)](stream-processing/stream-processing-flink.md)  
+> **Source articles**: [Data Mesh Is Dead — And Here’s the Shockingly Better Way to Fix Your Data Chaos](../../articles/medium/data-mesh-is-dead-practical-decentralization.md) · [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](../../articles/medium/Medallion%20Architecture%20Is%20Not%20Enough%20%28And%20Your%20Data%20Team%20Knows%20It%29.md)

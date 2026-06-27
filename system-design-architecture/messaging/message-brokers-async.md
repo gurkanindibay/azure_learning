@@ -7,9 +7,9 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 5. Message Brokers & Asynchronous Processing
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #17–20  
-> **Also see**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md) — Producer acks, offset modes, rebalances, EOS
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Questions #17–20  
+> **Also see**: [Kafka Concepts Every Architect Must Master](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md) — Producer acks, offset modes, rebalances, EOS
 
 ---
 
@@ -35,7 +35,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## broker-01: Broker Selection
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#17
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#17
 
 
 | | |
@@ -77,7 +77,7 @@ flowchart TD
 >
 > **Full comparisons**: [Event Hubs vs Kafka](../../architecture-azure/integration/messaging-comparisons/eventhubs_vs_kafka_comparison.md) · [Service Bus vs Kafka](../../architecture-azure/integration/messaging-comparisons/servicebus_vs_kafka_comparison.md) · [Azure Event Services Full Doc](../../architecture-azure/integration/messaging-comparisons/azure_event_services_full_doc.md)
 >
-> **General**: [Messaging Patterns Overview](../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md)
+> **General**: [Messaging Patterns Overview](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md)
 
 ### Quick Decision Flowchart
 
@@ -98,8 +98,8 @@ flowchart TD
 
 ## broker-02: Offset Commit Failure
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#18
-> **Also see**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#18
+> **Also see**: [Kafka Concepts Every Architect Must Master](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
 
 
 | | |
@@ -168,13 +168,13 @@ consumer.commitAsync(new OffsetCommitCallback() {
 
 > **Architect's rule**: Always disable auto-commit. Use manual sync commits after **idempotent** processing (e.g., confirmed DB insert). Async is a performance optimization — only add it when sync becomes the bottleneck, and always handle commit failures.
 
-> **Azure**: Event Hubs uses offset/sequence number — same at-least-once semantics. Service Bus peek-lock provides at-least-once with built-in dead-lettering. | **General**: [Idempotency Store Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md)
+> **Azure**: Event Hubs uses offset/sequence number — same at-least-once semantics. Service Bus peek-lock provides at-least-once with built-in dead-lettering. | **General**: [Idempotency Store Pattern](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md)
 
 ---
 
 ## broker-03: Poison Messages
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#19
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#19
 
 
 | | |
@@ -217,13 +217,13 @@ Message processing decision tree:
 | Manual intervention | Complex business-logic failure |
 | Alert | DLQ depth > 0 for > 5 min → page on-call |
 
-> **Azure**: Service Bus auto dead-lettering after `MaxDeliveryCount` | **General**: [Dead Letter Queue Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md#2-dead-letter-queue-dlq)
+> **Azure**: Service Bus auto dead-lettering after `MaxDeliveryCount` | **General**: [Dead Letter Queue Pattern](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md#2-dead-letter-queue-dlq)
 
 ---
 
 ## broker-04: Message Ordering
 
-> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#20
+> **Source**: [20 Design Interview Questions](../../../articles/medium/20-design-interview-questions.md) — Q#20
 
 
 | | |
@@ -271,7 +271,7 @@ Entity-level ordering (scalable):
 
 ## broker-05: Stream Processing
 
-> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+> **Source**: [Kafka Concepts Every Architect Must Master](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
 
 
 > Covers Kafka consumer internals, rebalancing, Kafka Streams, and Apache Flink — extracted from P20 for clarity.
@@ -676,7 +676,7 @@ Use Kafka Streams when:                 Use Apache Flink when:
 
 ## broker-06: Producer Durability Tuning
 
-> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+> **Source**: [Kafka Concepts Every Architect Must Master](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
 
 
 | | |
@@ -734,7 +734,7 @@ Without idempotence:                    With idempotence:
 
 ## broker-07: Multi-Consumer-Group Duplicate Prevention
 
-> **Source**: [Kafka Concepts Every Architect Must Master](../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
+> **Source**: [Kafka Concepts Every Architect Must Master](../../../articles/medium/kafka-concepts-that-every-architect-should-master.md)
 
 
 | | |
@@ -807,7 +807,7 @@ MM2 auto-renames topics by prefixing with source cluster alias (`us-west.orders`
 
 ## broker-08: Common Kafka Anti-Patterns
 
-> **Source**: [Kafka Mistakes Breaking Your System](../../articles/medium/kafka-anti-patterns/01-kafka-mistakes-breaking-your-system.md)
+> **Source**: [Kafka Mistakes Breaking Your System](../../../articles/medium/kafka-anti-patterns/01-kafka-mistakes-breaking-your-system.md)
 
 ### broker-08a: Kafka as a Queue (Auto-Commit + No Error Handling)
 

@@ -7,15 +7,15 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 56. Kafka Performance & Integration Patterns — Production Deep-Dive Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md)
-> **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](53-kafka-design-patterns-key-takeaways.md)
-> **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](54-kafka-reliability-ordering-key-takeaways.md)
-> **Part 3**: [Kafka Data & State — broker-43 to broker-51](55-kafka-data-state-key-takeaways.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md)
+> **Overview (Part 1)**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
+> **Part 2**: [Kafka Reliability & Ordering — broker-35 to broker-42](messaging/kafka-reliability-ordering.md)
+> **Part 3**: [Kafka Data & State — broker-43 to broker-51](messaging/kafka-data-state.md)
 > **Purpose**: Extract production-depth engineering insights from the final part of the series, covering Claim Check, Stream-Table Duality, and Saga Choreography.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Concurrency & Transactions](02-concurrency-transactions.md)
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Messaging](../reference-dictionary/messaging.md), [Data & Concurrency](../reference-dictionary/data-concurrency.md)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Messaging](../../reference-dictionary/messaging.md), [Data & Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture, §4.3 Streaming & Real-Time Architecture
 
 ---
@@ -36,7 +36,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-52: Orphaned S3 Object Cleanup in Claim Check
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -73,14 +73,14 @@ Alternatively, use an S3 `temp/` prefix with a 1-day lifecycle policy for all up
 | **Cleanup latency** | Daily Lambda cleanup means orphaned PII data can persist up to 24 hours |
 | **Two-write atomicity** | Still not atomic; orphan record could also fail to write — accept this as a best-effort mechanism |
 
-> **Also see**: [Claim Check Overview — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27), [DLQ — broker-28](53-kafka-design-patterns-key-takeaways.md#broker-28)
-> **Dictionary**: [Claim Check](../reference-dictionary/architecture-patterns.md#claim-check)
+> **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [DLQ — broker-28](messaging/kafka-design-patterns.md#broker-28)
+> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check)
 
 ---
 
 ## broker-53: Lazy Loading vs Presigned URL Decision in Claim Check
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -118,14 +118,14 @@ The presigned URL lets downstream systems (video processors, ML inference engine
 | **URL expiry** | Presigned URLs must be consumed before expiry (typically 15 min – 1 hr); long-running downstream jobs need a fresh URL or an IAM-based approach |
 | **Caching** | Frequently accessed small payloads should be cached locally (TTL-backed file cache) to avoid repeated S3 downloads for the same claim check key |
 
-> **Also see**: [Claim Check Overview — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27), [broker-52 Orphaned Object Cleanup](#broker-52)
-> **Dictionary**: [Claim Check](../reference-dictionary/architecture-patterns.md#claim-check)
+> **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [broker-52 Orphaned Object Cleanup](#broker-52)
+> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check)
 
 ---
 
 ## broker-54: S3 Lifecycle Policies for Claim Check Cost Management
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Claim Check
 
 | | |
 |:---|:---|
@@ -170,14 +170,14 @@ S3 Standard is already ~**4.3× cheaper** than MSK EBS; Glacier is ~**25× cheap
 | **Glacier retrieval latency** | Glacier retrieval takes minutes to hours; only use for archival, not active processing |
 | **Lifecycle granularity** | Apply different rules per `prefix` to avoid archiving frequently accessed reference data |
 
-> **Also see**: [Claim Check Overview — broker-27](53-kafka-design-patterns-key-takeaways.md#broker-27), [S3 Archiving — broker-44](55-kafka-data-state-key-takeaways.md#broker-44)
-> **Dictionary**: [Claim Check](../reference-dictionary/architecture-patterns.md#claim-check), [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing)
+> **Also see**: [Claim Check Overview — broker-27](messaging/kafka-design-patterns.md#broker-27), [S3 Archiving — broker-44](messaging/kafka-data-state.md#broker-44)
+> **Dictionary**: [Claim Check](../../reference-dictionary/architecture-patterns.md#claim-check), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing)
 
 ---
 
 ## broker-55: Local RocksDB State Enables Zero-Network-Call Stream-Table Joins
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
 
 | | |
 |:---|:---|
@@ -212,14 +212,14 @@ KStream<String, EnrichedClick> enriched = clicks.leftJoin(
 | **Rebalance cost** | When a Streams instance restarts, it must restore its RocksDB from the changelog topic — can take seconds to minutes for large tables |
 | **Partition co-location requirement** | Stream and table topics must have the same partition count and key scheme; mismatches trigger a repartition step |
 
-> **Also see**: [Stream-Table Duality Overview — broker-33](53-kafka-design-patterns-key-takeaways.md#broker-33), [Compacted Topic — broker-31](53-kafka-design-patterns-key-takeaways.md#broker-31)
-> **Dictionary**: [Stream-Table Duality](../reference-dictionary/messaging.md#stream-table-duality), [KTable](../reference-dictionary/messaging.md#ktable), [Compacted Topic](../reference-dictionary/messaging.md#compacted-topic)
+> **Also see**: [Stream-Table Duality Overview — broker-33](messaging/kafka-design-patterns.md#broker-33), [Compacted Topic — broker-31](messaging/kafka-design-patterns.md#broker-31)
+> **Dictionary**: [Stream-Table Duality](../../reference-dictionary/messaging.md#stream-table-duality), [KTable](../../reference-dictionary/messaging.md#ktable), [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic)
 
 ---
 
 ## broker-56: Late Arriving Data Grace Period in Windowed Aggregations
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Stream-Table Duality
 
 | | |
 |:---|:---|
@@ -252,14 +252,14 @@ Events that arrive after the window closes but within the grace period are **re-
 | **State retention** | Kafka Streams must retain window state for the duration of the grace period; larger grace = more memory/disk |
 | **Downstream duplicates** | Downstream consumers of the aggregation receive multiple results per window (initial + each late update); must handle idempotently |
 
-> **Also see**: [Stream-Table Duality Overview — broker-33](53-kafka-design-patterns-key-takeaways.md#broker-33), [Idempotent Consumer — broker-29](53-kafka-design-patterns-key-takeaways.md#broker-29)
-> **Dictionary**: [Stream-Table Duality](../reference-dictionary/messaging.md#stream-table-duality), [Kafka Transactions](../reference-dictionary/messaging.md#kafka-transactions)
+> **Also see**: [Stream-Table Duality Overview — broker-33](messaging/kafka-design-patterns.md#broker-33), [Idempotent Consumer — broker-29](messaging/kafka-design-patterns.md#broker-29)
+> **Dictionary**: [Stream-Table Duality](../../reference-dictionary/messaging.md#stream-table-duality), [Kafka Transactions](../../reference-dictionary/messaging.md#kafka-transactions)
 
 ---
 
 ## broker-57: Compensating Transaction Design in Saga Choreography
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
 
 | | |
 |:---|:---|
@@ -293,14 +293,14 @@ Each compensation must also handle the case where the forward operation never co
 | **Idempotency requirement** | A service may receive the same failure event twice (rebalance, retry); `cancel_flight()` must be a no-op if already cancelled |
 | **Observability gap** | With pure choreography, no single component knows the full saga state; compensation debugging requires correlating events across multiple consumer group logs by `saga_id` |
 
-> **Also see**: [Saga Choreography Overview — broker-34](53-kafka-design-patterns-key-takeaways.md#broker-34), [Idempotent Consumer — broker-29](53-kafka-design-patterns-key-takeaways.md#broker-29)
-> **Dictionary**: [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga](../reference-dictionary/data-concurrency.md#saga-pattern), [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
+> **Also see**: [Saga Choreography Overview — broker-34](messaging/kafka-design-patterns.md#broker-34), [Idempotent Consumer — broker-29](messaging/kafka-design-patterns.md#broker-29)
+> **Dictionary**: [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga](../../reference-dictionary/data-concurrency.md#saga-pattern), [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
 
 ---
 
 ## broker-58: Choreography vs Orchestration — When to Use Each
 
-> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
+> **Source**: [11 Kafka Design Patterns - Performance & Integration Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Performance%20%26%20Integration%20Deep%20Dive.md) — Saga Choreography
 
 | | |
 |:---|:---|
@@ -341,5 +341,5 @@ Each compensation must also handle the case where the forward operation never co
 | **Choreography strength** | Pure Kafka path, no additional AWS service cost, lower latency per step, natural fit for event-driven teams |
 | **Orchestration strength** | Centralised state visibility, visual debugging, built-in retry and timeout management, handles compensation routing automatically |
 
-> **Also see**: [Saga Choreography Overview — broker-34](53-kafka-design-patterns-key-takeaways.md#broker-34), [broker-57 Compensating Transaction Design](#broker-57)
-> **Dictionary**: [Compensating Transaction](../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga](../reference-dictionary/data-concurrency.md#saga-pattern)
+> **Also see**: [Saga Choreography Overview — broker-34](messaging/kafka-design-patterns.md#broker-34), [broker-57 Compensating Transaction Design](#broker-57)
+> **Dictionary**: [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Saga](../../reference-dictionary/data-concurrency.md#saga-pattern)

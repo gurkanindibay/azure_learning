@@ -7,8 +7,8 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 58. Agentic Core Engineering — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [30 Core Agentic Engineering Concepts Every Developer Should Know](../articles/personal-blogs/30%20Core%20Agentic%20Engineering%20Concepts%20Every%20Developer%20Should%20Know.md) — by @sairahul1 (Jun 2026)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [30 Core Agentic Engineering Concepts Every Developer Should Know](../../articles/personal-blogs/30%20Core%20Agentic%20Engineering%20Concepts%20Every%20Developer%20Should%20Know.md) — by @sairahul1 (Jun 2026)
 > **Purpose**: Reusable architectural patterns for building, configuring, securing, and observing AI agents in production.
 > **Taxonomy Reference**: §12 AI Applications, §2 Application Software Architecture
 
@@ -56,8 +56,8 @@ Decision rule:
 **Tradeoff**: Every loop iteration costs time and tokens. The longer the loop, the harder it is to predict behavior or bound cost. Prefer simpler primitives until feedback-dependency is confirmed.
 
 **Dictionary terms**:
-- [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
-- [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop)
+- [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
+- [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop)
 
 ---
 
@@ -83,8 +83,8 @@ Two performance variants:
 **Tradeoff**: Start with blocking sequential execution. Add parallelism only when latency measurements justify it — parallel tool conflicts are difficult to debug.
 
 **Dictionary terms**:
-- [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop)
-- [Tool Calling](../reference-dictionary/ai-ml-llm.md#tool-calling)
+- [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop)
+- [Tool Calling](../../reference-dictionary/ai-ml-llm.md#tool-calling)
 
 ---
 
@@ -113,11 +113,11 @@ State storage guidelines:
 
 **Related files**:
 - [agentic-28: Context Rot](#agentic-28-context-rot--crowded-context-degrades-focus)
-- [Context Engineering](../reference-dictionary/ai-ml-llm.md#context-engineering)
+- [Context Engineering](../../reference-dictionary/ai-ml-llm.md#context-engineering)
 
 **Dictionary terms**:
-- [Context Rot](../reference-dictionary/ai-ml-llm.md#context-rot)
-- [Persistent Session Memory](../reference-dictionary/ai-ml-llm.md#persistent-session-memory)
+- [Context Rot](../../reference-dictionary/ai-ml-llm.md#context-rot)
+- [Persistent Session Memory](../../reference-dictionary/ai-ml-llm.md#persistent-session-memory)
 
 ---
 
@@ -141,12 +141,12 @@ The critical concern is the **handoff**: context passed between agents must be n
 **Tradeoff**: More agents = more handoff complexity and cost. Router/Specialist is the most predictable; Map-Reduce is the most expensive to debug when a reducer merges inconsistent outputs.
 
 **Related files**:
-- [agentic-01 Multi-Agent Specialization](17-agentic-ai-enterprise-strategic-systems.md#agentic-01-multi-agent-specialization-over-monolithic-ai)
-- [agentarch-01 Brain — LLM as Decision Maker](21-ai-agent-architecture-key-takeaways.md#agentarch-01-brain--llm-as-decision-maker)
+- [agentic-01 Multi-Agent Specialization](agentic-ai/enterprise-strategic-systems.md#agentic-01-multi-agent-specialization-over-monolithic-ai)
+- [agentarch-01 Brain — LLM as Decision Maker](agentic-ai/ai-agent-architecture.md#agentarch-01-brain--llm-as-decision-maker)
 
 **Dictionary terms**:
-- [Multi-Agent Coordination Patterns](../reference-dictionary/ai-ml-llm.md#multi-agent-coordination-patterns)
-- [Subagent](../reference-dictionary/ai-ml-llm.md#subagent)
+- [Multi-Agent Coordination Patterns](../../reference-dictionary/ai-ml-llm.md#multi-agent-coordination-patterns)
+- [Subagent](../../reference-dictionary/ai-ml-llm.md#subagent)
 
 ---
 
@@ -174,7 +174,7 @@ Config file rules:
 **Tradeoff**: AI-generated workflow files under-perform human-written ones. Generic instructions add noise rather than guidance. Write your own based on real work.
 
 **Dictionary terms**:
-- [Workflow Files](../reference-dictionary/ai-ml-llm.md#workflow-files)
+- [Workflow Files](../../reference-dictionary/ai-ml-llm.md#workflow-files)
 
 ---
 
@@ -198,8 +198,8 @@ Cache expiry: if the session pauses long enough for the cache to expire, the nex
 **Tradeoff**: Prompt caching rewards high-quality, stable context — it makes good context cheaper but does not make bad context better. Noisy, bloated config files still cost; they just cost slightly less per turn than without caching.
 
 **Dictionary terms**:
-- [Prompt Caching](../reference-dictionary/ai-ml-llm.md#prompt-caching)
-- [Token](../reference-dictionary/ai-ml-llm.md#token)
+- [Prompt Caching](../../reference-dictionary/ai-ml-llm.md#prompt-caching)
+- [Token](../../reference-dictionary/ai-ml-llm.md#token)
 
 ---
 
@@ -223,12 +223,12 @@ Cache expiry: if the session pauses long enough for the cache to expire, the nex
 **Tradeoff**: Aggressive compaction risks discarding context that was relevant to a later step. Use explicit checkpoints (summary notes, progress files) to preserve architectural decisions before compacting.
 
 **Related files**:
-- [agentic-16 Loop Anatomy](57-agentic-loop-engineering-key-takeaways.md#agentic-16-loop-anatomy--five-phase-self-running-cycle)
-- [harness-02 Context Rot](28-agent-harness-key-takeaways.md)
+- [agentic-16 Loop Anatomy](agentic-ai/agentic-loop-engineering.md#agentic-16-loop-anatomy--five-phase-self-running-cycle)
+- [harness-02 Context Rot](agentic-ai/agent-harness.md)
 
 **Dictionary terms**:
-- [Context Rot](../reference-dictionary/ai-ml-llm.md#context-rot)
-- [Context Engineering](../reference-dictionary/ai-ml-llm.md#context-engineering)
+- [Context Rot](../../reference-dictionary/ai-ml-llm.md#context-rot)
+- [Context Engineering](../../reference-dictionary/ai-ml-llm.md#context-engineering)
 
 ---
 
@@ -259,12 +259,12 @@ Conflict prevention: when subagents may edit the same files, use **Git worktrees
 **Tradeoff**: Subagent invocation adds latency for simple tasks. The context isolation benefit is only realized when subagent output is genuinely compressible to a short summary. If the parent needs every intermediate detail, subagents add cost without benefit.
 
 **Related files**:
-- [harness-07 Tool Scoping](28-agent-harness-key-takeaways.md)
-- [agentic-18 Maker/Checker](57-agentic-loop-engineering-key-takeaways.md#agentic-18-makerchecker-sub-agent-separation)
+- [harness-07 Tool Scoping](agentic-ai/agent-harness.md)
+- [agentic-18 Maker/Checker](agentic-ai/agentic-loop-engineering.md#agentic-18-makerchecker-sub-agent-separation)
 
 **Dictionary terms**:
-- [Subagent](../reference-dictionary/ai-ml-llm.md#subagent)
-- [Agent Harness](../reference-dictionary/ai-ml-llm.md#agent-harness)
+- [Subagent](../../reference-dictionary/ai-ml-llm.md#subagent)
+- [Agent Harness](../../reference-dictionary/ai-ml-llm.md#agent-harness)
 
 ---
 
@@ -303,8 +303,8 @@ deny:
 **Tradeoff**: Overly restrictive sandboxes break legitimate agent workflows (e.g., writing to build directories). Start with a permissive allow-list and tighten based on observed behavior. Sandbox escape via prompt injection is still possible — permissions complement but don't replace vigilance.
 
 **Dictionary terms**:
-- [Agent Sandboxing](../reference-dictionary/ai-ml-llm.md#agent-sandboxing)
-- [Agent Permissions](../reference-dictionary/ai-ml-llm.md#agent-permissions)
+- [Agent Sandboxing](../../reference-dictionary/ai-ml-llm.md#agent-sandboxing)
+- [Agent Permissions](../../reference-dictionary/ai-ml-llm.md#agent-permissions)
 
 ---
 
@@ -330,9 +330,9 @@ For shell (Bash) commands specifically, the hook should scan for:
 **Tradeoff**: Hooks can produce false positives, blocking legitimate commands. Pre-tool hooks don't replace sandboxing — if something bad does run, the sandbox limits damage. Use both layers: hooks try to stop the bad action; sandboxing limits the blast radius if a hook misses.
 
 **Dictionary terms**:
-- [Pre-Tool Hook](../reference-dictionary/ai-ml-llm.md#pre-tool-hook)
-- [Agent Sandboxing](../reference-dictionary/ai-ml-llm.md#agent-sandboxing)
-- [Guardrails (AI)](../reference-dictionary/ai-ml-llm.md#guardrails-ai)
+- [Pre-Tool Hook](../../reference-dictionary/ai-ml-llm.md#pre-tool-hook)
+- [Agent Sandboxing](../../reference-dictionary/ai-ml-llm.md#agent-sandboxing)
+- [Guardrails (AI)](../../reference-dictionary/ai-ml-llm.md#guardrails-ai)
 
 ---
 
@@ -361,7 +361,7 @@ Specific threat vectors and mitigations:
 - [agentic-30: Sandboxing + Permissions](#agentic-30-sandboxing--permissions--blast-radius-reduction)
 
 **Dictionary terms**:
-- [Prompt Injection](../reference-dictionary/ai-ml-llm.md#prompt-injection)
+- [Prompt Injection](../../reference-dictionary/ai-ml-llm.md#prompt-injection)
 
 ---
 
@@ -408,11 +408,11 @@ Track both. Proxy metrics surface runaway loops and stuck agents; outcome metric
 **Tradeoff**: Full tracing adds storage and latency overhead. In high-throughput agentic pipelines, sample traces rather than capturing 100%. Outcome metrics require CI/CD integration — lightweight teams often skip them in favor of proxy metrics alone, which only surfaces process failures, not output quality failures.
 
 **Related files**:
-- [agentic-17 Verify Gate](57-agentic-loop-engineering-key-takeaways.md#agentic-17-verify-gate--the-heart-of-the-loop)
-- [agentic-21 Cost Per Accepted Change](57-agentic-loop-engineering-key-takeaways.md#agentic-21-cost-per-accepted-change--the-loop-efficiency-metric)
+- [agentic-17 Verify Gate](agentic-ai/agentic-loop-engineering.md#agentic-17-verify-gate--the-heart-of-the-loop)
+- [agentic-21 Cost Per Accepted Change](agentic-ai/agentic-loop-engineering.md#agentic-21-cost-per-accepted-change--the-loop-efficiency-metric)
 
 **Dictionary terms**:
-- [Pre-Commit Gate](../reference-dictionary/ai-ml-llm.md#pre-commit-gate)
-- [Agent Tracing](../reference-dictionary/ai-ml-llm.md#agent-tracing)
-- [Agent Metrics](../reference-dictionary/ai-ml-llm.md#agent-metrics)
-- [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+- [Pre-Commit Gate](../../reference-dictionary/ai-ml-llm.md#pre-commit-gate)
+- [Agent Tracing](../../reference-dictionary/ai-ml-llm.md#agent-tracing)
+- [Agent Metrics](../../reference-dictionary/ai-ml-llm.md#agent-metrics)
+- [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)

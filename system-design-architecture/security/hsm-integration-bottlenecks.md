@@ -7,10 +7,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 24. HSM Integration Bottlenecks — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [HSM Integration Creates Architectural Bottlenecks](../../articles/medium/hsm-integration-creates-bottleneck.md) — Umut Akbulut, Mar 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [HSM Integration Creates Architectural Bottlenecks](../../../articles/medium/hsm-integration-creates-bottleneck.md) — Umut Akbulut, Mar 2026
 > **Purpose**: Extract the cryptographic hardware constraints that create architectural bottlenecks in high-volume payment systems — why HSM cannot be treated like any other software component.
-> **Also see**: [Resilience Patterns](10-resilience-patterns.md) (`resilience-01`–`resilience-06`), [Concurrency & Transactions](02-concurrency-transactions.md), [Azure Service Mapping](07-azure-service-mapping.md)
+> **Also see**: [Resilience Patterns](resilience/resilience-patterns.md) (`resilience-01`–`resilience-06`), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience, §6.3 Security Architecture — Cryptographic Controls
 
 ---
@@ -34,7 +34,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## hsm-01: HSM Cannot Horizontally Scale
 
-> **Source**: [Article §Introduction](../../articles/medium/hsm-integration-creates-bottleneck.md)
+> **Source**: [Article §Introduction](../../../articles/medium/hsm-integration-creates-bottleneck.md)
 
 | | |
 |:---|:---|
@@ -64,7 +64,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## hsm-02: Synchronous Calls Hit the Critical Path
 
-> **Source**: [Article §"The Synchronous Call Trap"](../../articles/medium/hsm-integration-creates-bottleneck.md#the-synchronous-call-trap)
+> **Source**: [Article §"The Synchronous Call Trap"](../../../articles/medium/hsm-integration-creates-bottleneck.md#the-synchronous-call-trap)
 
 | | |
 |:---|:---|
@@ -96,7 +96,7 @@ Other components can be optimized, but HSM contribution cannot be reduced to zer
 
 ## hsm-03: Isolate by Operation Type
 
-> **Source**: [Article §"Design Principle: Isolate by Operation Type"](../../articles/medium/hsm-integration-creates-bottleneck.md#design-principle-isolate-by-operation-type)
+> **Source**: [Article §"Design Principle: Isolate by Operation Type"](../../../articles/medium/hsm-integration-creates-bottleneck.md#design-principle-isolate-by-operation-type)
 
 | | |
 |:---|:---|
@@ -142,7 +142,7 @@ Other components can be optimized, but HSM contribution cannot be reduced to zer
 
 ## hsm-04: Connection Pool Exhaustion Is Silent
 
-> **Source**: [Article §"Connection Pool Exhaustion"](../../articles/medium/hsm-integration-creates-bottleneck.md#connection-pool-exhaustion)
+> **Source**: [Article §"Connection Pool Exhaustion"](../../../articles/medium/hsm-integration-creates-bottleneck.md#connection-pool-exhaustion)
 
 | | |
 |:---|:---|
@@ -165,7 +165,7 @@ Pool Full → Requests Queue → Latency ↑ → 200-300ms → Card Network Time
 
 ## hsm-05: PCI-DSS Restricts Caching
 
-> **Source**: [Article §"Caching vs. PCI-DSS"](../../articles/medium/hsm-integration-creates-bottleneck.md#caching-vs-pci-dss)
+> **Source**: [Article §"Caching vs. PCI-DSS"](../../../articles/medium/hsm-integration-creates-bottleneck.md#caching-vs-pci-dss)
 
 | | |
 |:---|:---|
@@ -194,7 +194,7 @@ Cache exists → Auditor asks questions → Compliance exposure
 
 ## hsm-06: LMK Ceremony Is Not a Deployment
 
-> **Source**: [Article §"LMK Ceremony: Not a Software Deployment"](../../articles/medium/hsm-integration-creates-bottleneck.md#lmk-ceremony-not-a-software-deployment)
+> **Source**: [Article §"LMK Ceremony: Not a Software Deployment"](../../../articles/medium/hsm-integration-creates-bottleneck.md#lmk-ceremony-not-a-software-deployment)
 
 | | |
 |:---|:---|
@@ -225,7 +225,7 @@ Cache exists → Auditor asks questions → Compliance exposure
 
 ## hsm-07: Cloud HSM — Latency vs Operational Simplicity
 
-> **Source**: [Article §"Cloud HSM: Latency vs. Operational Simplicity"](../../articles/medium/hsm-integration-creates-bottleneck.md#cloud-hsm-latency-vs-operational-simplicity)
+> **Source**: [Article §"Cloud HSM: Latency vs. Operational Simplicity"](../../../articles/medium/hsm-integration-creates-bottleneck.md#cloud-hsm-latency-vs-operational-simplicity)
 
 | | |
 |:---|:---|
@@ -260,7 +260,7 @@ Is your transaction volume high enough that ms-level latency matters?
 
 ## hsm-08: Mobile Wallet & Tokenization Add Hidden Load
 
-> **Source**: [Article §"Mobile Wallet & Tokenization: The Hidden Traffic"](../../articles/medium/hsm-integration-creates-bottleneck.md#mobile-wallet--tokenization-the-hidden-traffic)
+> **Source**: [Article §"Mobile Wallet & Tokenization: The Hidden Traffic"](../../../articles/medium/hsm-integration-creates-bottleneck.md#mobile-wallet--tokenization-the-hidden-traffic)
 
 | | |
 |:---|:---|
@@ -296,7 +296,7 @@ Apple Pay / Google Pay
 
 ## hsm-09: Software HSM — Scaling Solution with Compliance Gaps
 
-> **Source**: [Article §"Software HSM: Scaling Solution or Compliance Gap?"](../../articles/medium/hsm-integration-creates-bottleneck.md#software-hsm-scaling-solution-or-compliance-gap)
+> **Source**: [Article §"Software HSM: Scaling Solution or Compliance Gap?"](../../../articles/medium/hsm-integration-creates-bottleneck.md#software-hsm-scaling-solution-or-compliance-gap)
 
 | | |
 |:---|:---|
@@ -331,7 +331,7 @@ P2PE (Point-to-Point Encryption):
 
 ## hsm-10: Plan Post-Quantum Transition Now
 
-> **Source**: [Article §"Post-Quantum Cryptography: The Looming Tension"](../../articles/medium/hsm-integration-creates-bottleneck.md#post-quantum-cryptography-the-looming-tension)
+> **Source**: [Article §"Post-Quantum Cryptography: The Looming Tension"](../../../articles/medium/hsm-integration-creates-bottleneck.md#post-quantum-cryptography-the-looming-tension)
 
 | | |
 |:---|:---|
@@ -361,7 +361,7 @@ Protocol definitions ──▶ Card personalization ──▶ Key hierarchy desi
 
 ## The Architect's Summary
 
-> **Source**: [Article §"Summary for Architects"](../../articles/medium/hsm-integration-creates-bottleneck.md#summary-for-architects)
+> **Source**: [Article §"Summary for Architects"](../../../articles/medium/hsm-integration-creates-bottleneck.md#summary-for-architects)
 
 The HSM bottleneck **cannot be eliminated**. What can be done:
 

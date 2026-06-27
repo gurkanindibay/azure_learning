@@ -7,14 +7,14 @@ timestamp: 2026-06-25T00:00:00Z
 
 # 52. Causal Consistency — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Causal Consistency Model in System Design](../articles/personal-blogs/causal-consistency-model-in-system-design.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Causal Consistency Model in System Design](../../articles/personal-blogs/causal-consistency-model-in-system-design.md)
 > **Author**: GeeksforGeeks
 > **Purpose**: Extract reusable architectural patterns and key takeaways from the source article.
 
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md), [E-Commerce Checkout Consistency](44-tx-key-takeaways.md)
-> **Dictionary**: [Causal Consistency](../reference-dictionary/data-concurrency.md#causal-consistency), [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering), [Lamport Clocks](../reference-dictionary/data-concurrency.md#lamport-clocks), [Vector Clocks](../reference-dictionary/data-concurrency.md#vector-clocks)
-> **Azure Services**: [Azure Cosmos DB — Consistency Levels](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md)
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [E-Commerce Checkout Consistency](concurrency-transactions/transaction-patterns.md)
+> **Dictionary**: [Causal Consistency](../../reference-dictionary/data-concurrency.md#causal-consistency), [Causal Ordering](../../reference-dictionary/data-concurrency.md#causal-ordering), [Lamport Clocks](../../reference-dictionary/data-concurrency.md#lamport-clocks), [Vector Clocks](../../reference-dictionary/data-concurrency.md#vector-clocks)
+> **Azure Services**: [Azure Cosmos DB — Consistency Levels](../../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md)
 > **Taxonomy Reference**: §4.0 Data Architecture Fundamentals
 
 ---
@@ -32,7 +32,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## tx-01: Choosing the Right Consistency Model for Distributed Writes
 
-> **Source**: [§"Characteristics"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#characteristics)
+> **Source**: [§"Characteristics"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#characteristics)
 
 | | |
 |:---|:---|
@@ -43,30 +43,30 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Weaker than linearizability or serializability, but offers higher availability and lower latency than strong consistency.
 >
-> **Cross-reference**: See [Causal Consistency](../reference-dictionary/data-concurrency.md#causal-consistency) and [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering) in the dictionary. In Azure Cosmos DB, [Session consistency](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) provides the closest causal-ordering guarantees within a session.
+> **Cross-reference**: See [Causal Consistency](../../reference-dictionary/data-concurrency.md#causal-consistency) and [Causal Ordering](../../reference-dictionary/data-concurrency.md#causal-ordering) in the dictionary. In Azure Cosmos DB, [Session consistency](../../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) provides the closest causal-ordering guarantees within a session.
 
 ---
 
 ## tx-02: Tracking Causal Dependencies Across Nodes
 
-> **Source**: [§"Causal Relationships in Distributed Systems"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#causal-relationships-in-distributed-systems)
+> **Source**: [§"Causal Relationships in Distributed Systems"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#causal-relationships-in-distributed-systems)
 
 | | |
 |:---|:---|
 | **Problem** | Nodes in a distributed system must determine whether one event influenced another without relying on synchronized physical clocks. |
 | **Key Concept** | **Logical clocks** capture happens-before relationships independent of physical time. |
 
-> **Strategy**: Use [Lamport clocks](../reference-dictionary/data-concurrency.md#lamport-clocks) for simple partial ordering and [vector clocks](../reference-dictionary/data-concurrency.md#vector-clocks) when you must detect concurrency precisely. Increment local counters on events, propagate clocks with messages, and merge received clocks at the destination.
+> **Strategy**: Use [Lamport clocks](../../reference-dictionary/data-concurrency.md#lamport-clocks) for simple partial ordering and [vector clocks](../../reference-dictionary/data-concurrency.md#vector-clocks) when you must detect concurrency precisely. Increment local counters on events, propagate clocks with messages, and merge received clocks at the destination.
 >
 > **Tradeoff**: Vector clocks are precise but grow with process count and add metadata overhead; Lamport clocks are compact but cannot distinguish concurrent events.
 >
-> **Cross-reference**: See also [Isolation Levels](../reference-dictionary/data-concurrency.md#isolation-levels) and [Two-Phase Commit (2PC)](../reference-dictionary/data-concurrency.md#two-phase-commit-2pc) for stronger ordering guarantees.
+> **Cross-reference**: See also [Isolation Levels](../../reference-dictionary/data-concurrency.md#isolation-levels) and [Two-Phase Commit (2PC)](../../reference-dictionary/data-concurrency.md#two-phase-commit-2pc) for stronger ordering guarantees.
 
 ---
 
 ## tx-03: Preserving Meaningful Ordering in User-Facing Systems
 
-> **Source**: [§"Real-World Example"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#real-world-example)
+> **Source**: [§"Real-World Example"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#real-world-example)
 
 | | |
 |:---|:---|
@@ -77,13 +77,13 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Requires clients or intermediaries to track and forward causality metadata, and may increase perceived latency for dependent operations.
 >
-> **Cross-reference**: Relevant to collaborative editing, comment threads, and real-time messaging patterns in [Message Brokers & Async](05-message-brokers-async.md).
+> **Cross-reference**: Relevant to collaborative editing, comment threads, and real-time messaging patterns in [Message Brokers & Async](messaging/message-brokers-async.md).
 
 ---
 
 ## tx-04: Applying Causal Consistency to Databases, Logs, and Event Sourcing
 
-> **Source**: [§"Use-Cases and Applications"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#use-cases-and-applications)
+> **Source**: [§"Use-Cases and Applications"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#use-cases-and-applications)
 
 | | |
 |:---|:---|
@@ -94,13 +94,13 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Concurrent writes to the same entity still require conflict resolution (for example, last-write-wins, application merge, or CRDTs).
 >
-> **Cross-reference**: See [Event Sourcing](../architecture-general/02-application-software-architecture/06-design-patterns/event-sourcing-pattern.md), [Saga Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md), and [CRDT](../reference-dictionary/data-concurrency.md#crdt-conflict-free-replicated-data-type).
+> **Cross-reference**: See [Event Sourcing](../../architecture-general/02-application-software-architecture/06-design-patterns/event-sourcing-pattern.md), [Saga Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md), and [CRDT](../../reference-dictionary/data-concurrency.md#crdt-conflict-free-replicated-data-type).
 
 ---
 
 ## tx-05: Implementing Causal Consistency with Vector Clocks
 
-> **Source**: [§"Implementation of Causal Consistency"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#implementation-of-causal-consistency)
+> **Source**: [§"Implementation of Causal Consistency"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#implementation-of-causal-consistency)
 
 | | |
 |:---|:---|
@@ -111,13 +111,13 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Storage and network overhead increase with the number of processes; long-running systems need version-vector truncation or garbage collection.
 >
-> **Cross-reference**: Compare with [Lamport Clocks](../reference-dictionary/data-concurrency.md#lamport-clocks) for simpler use cases.
+> **Cross-reference**: Compare with [Lamport Clocks](../../reference-dictionary/data-concurrency.md#lamport-clocks) for simpler use cases.
 
 ---
 
 ## tx-06: Managing the Complexity of Causal Consistency at Scale
 
-> **Source**: [§"Challenges"](../articles/personal-blogs/causal-consistency-model-in-system-design.md#challenges)
+> **Source**: [§"Challenges"](../../articles/personal-blogs/causal-consistency-model-in-system-design.md#challenges)
 
 | | |
 |:---|:---|
@@ -128,6 +128,6 @@ timestamp: 2026-06-25T00:00:00Z
 >
 > **Tradeoff**: Reduced engineering cost may require weaker guarantees; causal consistency is not a drop-in replacement for strong consistency where invariants depend on global ordering.
 >
-> **Cross-reference**: See [Distributed Locks](../reference-dictionary/data-concurrency.md#distributed-lock), [Two-Phase Commit (2PC)](../reference-dictionary/data-concurrency.md#two-phase-commit-2pc), and [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern) for alternative coordination strategies.
+> **Cross-reference**: See [Distributed Locks](../../reference-dictionary/data-concurrency.md#distributed-lock), [Two-Phase Commit (2PC)](../../reference-dictionary/data-concurrency.md#two-phase-commit-2pc), and [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern) for alternative coordination strategies.
 
 ---

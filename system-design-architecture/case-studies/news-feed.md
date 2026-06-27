@@ -7,12 +7,12 @@ timestamp: 2026-06-20T00:00:00Z
 
 # 42. News Feed System — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
+> **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [Question 2: Design a Social Media News Feed System](../system-design-cases/cases/part-2-news-feed-system-design.md)
 > **Purpose**: Extract reusable architectural patterns from designing a social-media news feed at hundreds-of-millions-of-users scale.
 
-> **Also see**: [URL Shortener — Key Takeaways](41-url-key-takeaways.md) — Cache-aside, CAP split, unique key generation
-> **Dictionary**: [Caching](../reference-dictionary/caching.md), [Messaging](../reference-dictionary/messaging.md)
+> **Also see**: [URL Shortener — Key Takeaways](case-studies/url-shortener.md) — Cache-aside, CAP split, unique key generation
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md), [Messaging](../../reference-dictionary/messaging.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture
 
 ---
@@ -31,7 +31,7 @@ timestamp: 2026-06-20T00:00:00Z
 
 ## feed-01: Hybrid Fanout to Control Write Amplification
 
-> **Source**: [§"High‑Level Architecture"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"High‑Level Architecture"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -54,16 +54,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Cost reduction** | Eliminates ~90% of total fanout work vs push-all |
 | **Threshold** | 10k followers is a starting point; tune with production metrics |
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md) — Fanout-on-write vs fanout-on-read
-> **Dictionary**: [Fanout on Write](../reference-dictionary/architecture-patterns.md#fanout-on-write), [Fanout on Read](../reference-dictionary/architecture-patterns.md#fanout-on-read), [Hybrid Fanout](../reference-dictionary/architecture-patterns.md#hybrid-fanout)
-> **Azure**: [Azure Event Hubs](../architecture-azure/integration/event-hubs/) for high-throughput fanout events, [Azure Cache for Redis](../architecture-azure/data/redis/) for timeline storage
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md) — Fanout-on-write vs fanout-on-read
+> **Dictionary**: [Fanout on Write](../../reference-dictionary/architecture-patterns.md#fanout-on-write), [Fanout on Read](../../reference-dictionary/architecture-patterns.md#fanout-on-read), [Hybrid Fanout](../../reference-dictionary/architecture-patterns.md#hybrid-fanout)
+> **Azure**: [Azure Event Hubs](../../architecture-azure/integration/event-hubs/) for high-throughput fanout events, [Azure Cache for Redis](../../architecture-azure/data/redis/) for timeline storage
 > **Taxonomy**: §3 Integration & Communication Architecture
 
 ---
 
 ## feed-02: Pre-Computed Timeline Cache for Fast Reads
 
-> **Source**: [§"Timeline Cache (Redis Sorted Sets)"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Timeline Cache (Redis Sorted Sets)"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -85,16 +85,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Write amplification** | Paid during fanout so reads stay cheap |
 | **Pagination** | Cursor-based pagination by timestamp avoids offset duplication on live feeds |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Eviction, TTL
-> **Dictionary**: [Timeline Cache](../reference-dictionary/caching.md#timeline-cache)
-> **Azure**: [Azure Cache for Redis](../architecture-azure/data/redis/)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Eviction, TTL
+> **Dictionary**: [Timeline Cache](../../reference-dictionary/caching.md#timeline-cache)
+> **Azure**: [Azure Cache for Redis](../../architecture-azure/data/redis/)
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
 ---
 
 ## feed-03: Isolating Celebrity Load
 
-> **Source**: [§"Celebrity Post Cache (Redis List)"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Celebrity Post Cache (Redis List)"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -116,16 +116,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Staleness** | Celebrity cache refreshes eventually; acceptable for non-author viewers |
 | **Operational isolation** | Dedicated cluster allows independent scaling and blast-radius containment |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Hot partitions
-> **Dictionary**: [Celebrity Cache](../reference-dictionary/caching.md#celebrity-cache)
-> **Azure**: [Azure Cache for Redis](../architecture-azure/data/redis/) Enterprise tier for clustered isolation
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Hot partitions
+> **Dictionary**: [Celebrity Cache](../../reference-dictionary/caching.md#celebrity-cache)
+> **Azure**: [Azure Cache for Redis](../../architecture-azure/data/redis/) Enterprise tier for clustered isolation
 > **Taxonomy**: §7.2 Performance Architecture
 
 ---
 
 ## feed-04: Operation-Specific Consistency Model
 
-> **Source**: [§"Consistency vs. Availability Trade‑offs"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Consistency vs. Availability Trade‑offs"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -148,16 +148,16 @@ timestamp: 2026-06-20T00:00:00Z
 | **Availability** | Feed reads remain highly available because Redis has no cross-partition coordination |
 | **Complexity** | Two consistency paths require clear observability and alerts on fanout lag |
 
-> **Also see**: [Concurrency & Transactions](02-concurrency-transactions.md) — Consistency models
-> **Dictionary**: [CAP Theorem](../reference-dictionary/architecture-patterns.md#cap-theorem), [Write-Through](../reference-dictionary/caching.md#write-through)
-> **Azure**: [Azure Cosmos DB](../architecture-azure/data/databases/) consistency levels, [Azure Event Hubs](../architecture-azure/integration/event-hubs/) for fanout
+> **Also see**: [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md) — Consistency models
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/architecture-patterns.md#cap-theorem), [Write-Through](../../reference-dictionary/caching.md#write-through)
+> **Azure**: [Azure Cosmos DB](../../architecture-azure/data/databases/) consistency levels, [Azure Event Hubs](../../architecture-azure/integration/event-hubs/) for fanout
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
 ---
 
 ## feed-05: Regional Deployment Without Cross-Region Feed Latency
 
-> **Source**: [§"Deployment / CI‑CD"](../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
+> **Source**: [§"Deployment / CI‑CD"](../../articles/medium/PART%202%20%E2%80%94%20Distinguished%20Engineer%20%E2%80%94%20System%20Design%20Interview%20Questions%20%28URL%20Shortener%20%26%20News%20Feed%20Systems%29.md)
 
 | | |
 |:---|:---|
@@ -178,11 +178,11 @@ timestamp: 2026-06-20T00:00:00Z
 | **Cross-region fanout** | Avoided by regional fanout workers; reduces bandwidth |
 | **Disaster recovery** | Cassandra multi-DC replication preserves post durability; timelines can be rebuilt |
 
-> **Also see**: [Resilience Patterns](10-resilience-patterns.md) — Active-active, blast radius
-> **Dictionary**: [Active-Active](../reference-dictionary/architecture-patterns.md#active-active)
-> **Azure**: [Azure Traffic Manager](../architecture-azure/networking/) for geo-routing, [Azure Cosmos DB](../architecture-azure/data/databases/) multi-region writes, [Azure Cache for Redis](../architecture-azure/data/redis/) regional clusters
+> **Also see**: [Resilience Patterns](resilience/resilience-patterns.md) — Active-active, blast radius
+> **Dictionary**: [Active-Active](../../reference-dictionary/architecture-patterns.md#active-active)
+> **Azure**: [Azure Traffic Manager](../../architecture-azure/networking/) for geo-routing, [Azure Cosmos DB](../../architecture-azure/data/databases/) multi-region writes, [Azure Cache for Redis](../../architecture-azure/data/redis/) regional clusters
 > **Taxonomy**: §5.1 Cloud Architecture
 
 ---
 
-> **Related topics**: [URL Shortener — Key Takeaways](41-url-key-takeaways.md) — Cache-aside, CAP split, unique key generation
+> **Related topics**: [URL Shortener — Key Takeaways](case-studies/url-shortener.md) — Cache-aside, CAP split, unique key generation

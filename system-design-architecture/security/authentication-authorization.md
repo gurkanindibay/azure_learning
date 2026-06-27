@@ -7,13 +7,13 @@ timestamp: 2026-06-17T00:00:00Z
 
 # 36. Authentication & Authorization — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [If You Truly Understand These 8 Things, You’ll Never Be Confused About Auth Again](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [If You Truly Understand These 8 Things, You’ll Never Be Confused About Auth Again](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md)
 > **Author**: Lets Learn Now
 > **Purpose**: Extract reusable architectural patterns for identity, authentication, authorization, and secure service communication.
 
-> **Also see**: [API & Network Design](04-api-network-design.md), [Reverse Proxy, LB & API Gateway](16-reverse-proxy-lb-api-gateway.md), [HSM & Cryptography](../reference-dictionary/hsm-cryptography.md)
-> **Dictionary**: [Authentication](../reference-dictionary/architecture-patterns.md#authentication), [Authorization](../reference-dictionary/architecture-patterns.md#authorization), [JWT](../reference-dictionary/architecture-patterns.md#jwt-json-web-token), [OAuth2](../reference-dictionary/architecture-patterns.md#oauth2), [mTLS](../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls), [Zero Trust](../reference-dictionary/architecture-patterns.md#zero-trust)
+> **Also see**: [API & Network Design](api-network/api-network-design.md), [Reverse Proxy, LB & API Gateway](api-network/reverse-proxy-lb-gateway.md), [HSM & Cryptography](../../reference-dictionary/hsm-cryptography.md)
+> **Dictionary**: [Authentication](../../reference-dictionary/architecture-patterns.md#authentication), [Authorization](../../reference-dictionary/architecture-patterns.md#authorization), [JWT](../../reference-dictionary/architecture-patterns.md#jwt-json-web-token), [OAuth2](../../reference-dictionary/architecture-patterns.md#oauth2), [mTLS](../../reference-dictionary/hsm-cryptography.md#mtls-mutual-tls), [Zero Trust](../../reference-dictionary/architecture-patterns.md#zero-trust)
 > **Taxonomy Reference**: §6.1 Security Foundations · §6.2 Identity Architecture · §6.3 Network Security
 
 ---
@@ -34,7 +34,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-01: Identity, Authentication, and Authorization Are Separate Layers
 
-> **Source**: [Identity vs Authentication vs Authorization](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#identity-vs-authentication-vs-authorization)
+> **Source**: [Identity vs Authentication vs Authorization](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#identity-vs-authentication-vs-authorization)
 
 | | |
 |:---|:---|
@@ -49,7 +49,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-02: Server Sessions Don’t Scale to Microservices
 
-> **Source**: [The Original Way: Sessions](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#the-original-way:-sessions)
+> **Source**: [The Original Way: Sessions](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#the-original-way:-sessions)
 
 | | |
 |:---|:---|
@@ -64,7 +64,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-03: JWT Is Signed, Not Encrypted
 
-> **Source**: [JWT (The Most Misunderstood Thing)](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#jwt-the-most-misunderstood-thing)
+> **Source**: [JWT (The Most Misunderstood Thing)](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#jwt-the-most-misunderstood-thing)
 
 | | |
 |:---|:---|
@@ -79,7 +79,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-04: OAuth2 Is Delegated Authorization, Not Authentication
 
-> **Source**: [OAuth2 (Another Misunderstood Concept)](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#oauth2-another-misunderstood-concept)
+> **Source**: [OAuth2 (Another Misunderstood Concept)](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#oauth2-another-misunderstood-concept)
 
 | | |
 |:---|:---|
@@ -94,7 +94,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-05: Service-to-Service Communication Needs mTLS
 
-> **Source**: [mTLS (Critical for Microservices)](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#mtls-critical-for-microservices)
+> **Source**: [mTLS (Critical for Microservices)](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#mtls-critical-for-microservices)
 
 | | |
 |:---|:---|
@@ -109,7 +109,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-06: Perimeter Security Fails Inside Microservices
 
-> **Source**: [Zero Trust Architecture](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#zero-trust-architecture)
+> **Source**: [Zero Trust Architecture](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#zero-trust-architecture)
 
 | | |
 |:---|:---|
@@ -124,7 +124,7 @@ timestamp: 2026-06-17T00:00:00Z
 
 ## auth-07: External and Internal APIs Need Different Security Models
 
-> **Source**: [Internal vs External API Security](../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#internal-vs-external-api-security)
+> **Source**: [Internal vs External API Security](../../articles/medium/If%20You%20Truly%20Understand%20These%208%20Things%2C%20You%E2%80%99ll%20Never%20Be%20Confused%20About%20Auth%20Again.md#internal-vs-external-api-security)
 
 | | |
 |:---|:---|

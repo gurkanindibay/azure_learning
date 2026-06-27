@@ -7,12 +7,12 @@ timestamp: 2026-06-15T00:00:00Z
 
 # 30. Message Brokers & Async — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
 > **Purpose**: Kafka consumer reliability patterns for production messaging pipelines.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md)
-> **Dictionary**: [Consumer Lag](../reference-dictionary/messaging.md#consumer-lag), [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Kafka Connect](../reference-dictionary/messaging.md#kafka-connect), [Offset Commit](../reference-dictionary/messaging.md#offset-commit)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md)
+> **Dictionary**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect), [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)
 > **Taxonomy Reference**: §3.2 Messaging Patterns, §7.1 Reliability Architecture
 
 ---
@@ -29,7 +29,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## broker-01: Committing Offsets Before Processing
 
-> **Source**: [§"Mistake #1 — Committing Offsets Before Processing"](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-1--committing-offsets-before-processing)
+> **Source**: [§"Mistake #1 — Committing Offsets Before Processing"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-1--committing-offsets-before-processing)
 
 | | |
 |:---|:---|
@@ -40,13 +40,13 @@ timestamp: 2026-06-15T00:00:00Z
 >
 > **Tradeoff**: Committing after processing improves correctness but can cause reprocessing after a crash if the commit fails. Idempotent handlers are required for true at-least-once semantics.
 >
-> **Cross-reference**: [Offset Commit](../reference-dictionary/messaging.md#offset-commit) · [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Cross-reference**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
 
 ---
 
 ## broker-02: Not Monitoring Consumer Lag
 
-> **Source**: [§"Mistake #2 — Not Monitoring Consumer Lag"](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-2--not-monitoring-consumer-lag)
+> **Source**: [§"Mistake #2 — Not Monitoring Consumer Lag"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-2--not-monitoring-consumer-lag)
 
 | | |
 |:---|:---|
@@ -57,13 +57,13 @@ timestamp: 2026-06-15T00:00:00Z
 >
 > **Tradeoff**: Fine-grained lag alerts can be noisy during traffic spikes; pair with trend-based alerts and consumer autoscaling where possible.
 >
-> **Cross-reference**: [Consumer Lag](../reference-dictionary/messaging.md#consumer-lag) · [Consumer Group](../reference-dictionary/messaging.md#consumer-group)
+> **Cross-reference**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag) · [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)
 
 ---
 
 ## broker-03: Sharing Consumer Groups Across Regions
 
-> **Source**: [§"Mistake #3 — Using the Same Consumer Group Across Regions"](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-3--using-the-same-consumer-group-across-regions)
+> **Source**: [§"Mistake #3 — Using the Same Consumer Group Across Regions"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-3--using-the-same-consumer-group-across-regions)
 
 | | |
 |:---|:---|
@@ -74,13 +74,13 @@ timestamp: 2026-06-15T00:00:00Z
 >
 > **Tradeoff**: Independent regional groups process every message in every region, increasing total consumption cost and requiring downstream systems to handle regional duplicates if the topic is not region-partitioned.
 >
-> **Cross-reference**: [Consumer Group](../reference-dictionary/messaging.md#consumer-group) · [Partition](../reference-dictionary/messaging.md#partition)
+> **Cross-reference**: [Consumer Group](../../reference-dictionary/messaging.md#consumer-group) · [Partition](../../reference-dictionary/messaging.md#partition)
 
 ---
 
 ## broker-04: Short Kafka Retention
 
-> **Source**: [§"Mistake #4 — Short Kafka Retention"](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-4--short-kafka-retention)
+> **Source**: [§"Mistake #4 — Short Kafka Retention"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-4--short-kafka-retention)
 
 | | |
 |:---|:---|
@@ -91,13 +91,13 @@ timestamp: 2026-06-15T00:00:00Z
 >
 > **Tradeoff**: Longer retention increases storage cost and replay time. Archiving to object storage trades immediate random access for much lower cost and indefinite retention.
 >
-> **Cross-reference**: [Kafka Connect](../reference-dictionary/messaging.md#kafka-connect) · [Partition](../reference-dictionary/messaging.md#partition)
+> **Cross-reference**: [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect) · [Partition](../../reference-dictionary/messaging.md#partition)
 
 ---
 
 ## broker-05: Missing Dead Letter Topics
 
-> **Source**: [§"Mistake #5 — No Dead Letter Topics"](../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-5--no-dead-letter-topics)
+> **Source**: [§"Mistake #5 — No Dead Letter Topics"](../../articles/medium/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md#mistake-5--no-dead-letter-topics)
 
 | | |
 |:---|:---|
@@ -108,4 +108,4 @@ timestamp: 2026-06-15T00:00:00Z
 >
 > **Tradeoff**: DLTs add operational complexity (retry semantics, ordering changes, DLT reprocessing). Retries can also delay processing and violate ordering guarantees within a partition.
 >
-> **Cross-reference**: [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq) · [Poison Message](../reference-dictionary/messaging.md#poison-message)
+> **Cross-reference**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq) · [Poison Message](../../reference-dictionary/messaging.md#poison-message)

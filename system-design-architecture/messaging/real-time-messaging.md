@@ -7,12 +7,12 @@ timestamp: 2026-06-21T00:00:00Z
 
 # 43. Real-Time Messaging — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
+> **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [Question 1: Design a Real-Time Messaging System (like WhatsApp)](../system-design-cases/cases/part-3-real-time-messaging-system-design.md)
 > **Purpose**: Extract reusable messaging and streaming patterns from a global chat-system design.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Caching Architecture](03-caching-architecture.md)
-> **Dictionary**: [Messaging](../reference-dictionary/messaging.md), [Caching](../reference-dictionary/caching.md), [Data & Concurrency](../reference-dictionary/data-concurrency.md)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Caching Architecture](caching/caching-architecture.md)
+> **Dictionary**: [Messaging](../../reference-dictionary/messaging.md), [Caching](../../reference-dictionary/caching.md), [Data & Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture, §4.3 Streaming & Real-Time Architecture
 
 ---
@@ -51,8 +51,8 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Scalability** | Fixed partition count avoids partition sprawl at billions of conversations. |
 | **Hot partition risk** | A viral group chat can still saturate one partition; monitor partition-level throughput. |
 
-> **Also see**: [broker-04 Message Ordering](05-message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Partition](../reference-dictionary/messaging.md#partition), [Message Ordering](../reference-dictionary/messaging.md#message-ordering), [Consistent Hashing](../reference-dictionary/api-design.md#consistent-hashing)
+> **Also see**: [broker-04 Message Ordering](messaging/message-brokers-async.md#broker-04-message-ordering)
+> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering), [Consistent Hashing](../../reference-dictionary/api-design.md#consistent-hashing)
 > **Azure**: Event Hubs supports partition keys for per-entity ordering; Service Bus sessions enforce FIFO per session ID.
 
 ---
@@ -74,8 +74,8 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Memory cost** | Redis is not infinite; cap stream length or archive old entries to cold store. |
 | **At-least-once** | Network flakes cause redelivery; clients deduplicate by `message_id`. |
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md)
-> **Dictionary**: [Redis Streams](../reference-dictionary/messaging.md#redis-streams), [Per-Device Inbox](../reference-dictionary/messaging.md#per-device-inbox), [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md)
+> **Dictionary**: [Redis Streams](../../reference-dictionary/messaging.md#redis-streams), [Per-Device Inbox](../../reference-dictionary/messaging.md#per-device-inbox), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
 > **Azure**: Azure Cache for Redis supports Redis Streams; combine with Event Hubs for the durable ordered log.
 
 ---
@@ -97,8 +97,8 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Fan-out on read** | Lower write cost, higher and less predictable read latency. |
 | **Hybrid threshold** | Choose based on group size distribution and read/write ratio. |
 
-> **Also see**: [feed-01 Hybrid Fanout](42-feed-key-takeaways.md#feed-01-hybrid-fanout-to-control-write-amplification)
-> **Dictionary**: [Fanout on Write](../reference-dictionary/architecture-patterns.md#fanout-on-write), [Fanout on Read](../reference-dictionary/architecture-patterns.md#fanout-on-read), [Hybrid Fanout](../reference-dictionary/architecture-patterns.md#hybrid-fanout)
+> **Also see**: [feed-01 Hybrid Fanout](case-studies/news-feed.md#feed-01-hybrid-fanout-to-control-write-amplification)
+> **Dictionary**: [Fanout on Write](../../reference-dictionary/architecture-patterns.md#fanout-on-write), [Fanout on Read](../../reference-dictionary/architecture-patterns.md#fanout-on-read), [Hybrid Fanout](../../reference-dictionary/architecture-patterns.md#hybrid-fanout)
 > **Azure**: Cosmos DB change feed can push group messages to per-member materialized views; Azure Cache for Redis stores hot timelines.
 
 ---
@@ -121,7 +121,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Thundering herd** | Mass reconnects can hammer the presence store; use jittered reconnection and request coalescing. |
 
 > **Also see**: [broker-23 Reconnection Thundering Herd](#broker-23)
-> **Dictionary**: [Presence Service](../reference-dictionary/architecture-patterns.md#presence-service)
+> **Dictionary**: [Presence Service](../../reference-dictionary/architecture-patterns.md#presence-service)
 > **Azure**: Azure Cache for Redis with TTL keys; front with regional caches to reduce round trips.
 
 ---
@@ -143,8 +143,8 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Eventual device sync** | A device may lag milliseconds behind another; UI should not jump. |
 | **Causal consistency** | Replies are ordered after the messages they reference within a conversation. |
 
-> **Also see**: [Message Ordering](05-message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Causal Ordering](../reference-dictionary/data-concurrency.md#causal-ordering), [Message Ordering](../reference-dictionary/messaging.md#message-ordering)
+> **Also see**: [Message Ordering](messaging/message-brokers-async.md#broker-04-message-ordering)
+> **Dictionary**: [Causal Ordering](../../reference-dictionary/data-concurrency.md#causal-ordering), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
 > **Azure**: Event Hubs capture to Azure Storage lets late-joining devices replay the ordered log.
 
 ---
@@ -166,8 +166,8 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Rate admission** | Protects servers but may reject some clients temporarily. |
 | **Cache-first catch-up** | Fast for recent messages; long history remains slower. |
 
-> **Also see**: [cache-05 Request Coalescing](03-caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication), [resilience-01 Retry Storms](10-resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic)
-> **Dictionary**: [Thundering Herd](../reference-dictionary/resilience.md#thundering-herd), [Request Coalescing](../reference-dictionary/caching.md#request-coalescing)
+> **Also see**: [cache-05 Request Coalescing](caching/caching-architecture.md#cache-05-request-coalescing-in-flight-deduplication), [resilience-01 Retry Storms](resilience/resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic)
+> **Dictionary**: [Thundering Herd](../../reference-dictionary/resilience.md#thundering-herd), [Request Coalescing](../../reference-dictionary/caching.md#request-coalescing)
 > **Azure**: Azure Front Door / API Management for connection shaping; Azure Cache for Redis for hot catch-up data.
 
 ---

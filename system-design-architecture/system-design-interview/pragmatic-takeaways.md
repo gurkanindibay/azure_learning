@@ -7,8 +7,8 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 18. Pragmatic System Design: Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Why I Ignore Architecture Diagrams in System Design Reviews](../../articles/medium/why-I-ignore-architecture-diagrams-in-system-design-interviews.md) — by Bhavyansh Yadav (Feb 2026)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Why I Ignore Architecture Diagrams in System Design Reviews](../../../articles/medium/why-I-ignore-architecture-diagrams-in-system-design-interviews.md) — by Bhavyansh Yadav (Feb 2026)
 > **Purpose**: Extract reusable principles for cutting through "architecture theater" — focusing on user metrics, operational reality, and solving today's problems instead of imaginary future scale.
 
 ---
@@ -51,7 +51,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Case study**: A team proposed 2× API servers, Redis cache, 2× read replicas, and a load balancer ($350/month, +293%) for a system serving 423 users at 145ms p95. The existing single-server setup had zero incidents and cost $89/month.
 
-**Cross-reference**: This is the **requirements-gathering phase** — see [`sdi-01`](15-system-design-interview-roadmap.md#sdi-01-the-7-phase-interview-rhythm) for the structured interview rhythm and [`sdi-04`](15-system-design-interview-roadmap.md#sdi-04-nfr-quantification) for NFR quantification.
+**Cross-reference**: This is the **requirements-gathering phase** — see [`sdi-01`](system-design-interview/interview-roadmap.md#sdi-01-the-7-phase-interview-rhythm) for the structured interview rhythm and [`sdi-04`](system-design-interview/interview-roadmap.md#sdi-04-nfr-quantification) for NFR quantification.
 
 ---
 
@@ -77,7 +77,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Case study**: A checkout system's payment API responded in 80ms, but the full checkout took 6.3 seconds due to 14 sequential API calls. The team spent 3 weeks designing a new architecture when the fix was parallelizing independent calls and deferring non-blocking work.
 
-**Cross-reference**: For the parallelization pattern, see [`async-02`](08-async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel). For observability minimums, see [`sdi-14`](15-system-design-interview-roadmap.md#sdi-14-observability-minimum).
+**Cross-reference**: For the parallelization pattern, see [`async-02`](stream-processing/async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel). For observability minimums, see [`sdi-14`](system-design-interview/interview-roadmap.md#sdi-14-observability-minimum).
 
 ---
 
@@ -131,7 +131,7 @@ async function checkout(cart, user) {
 
 > Before adding a new service, cache, or queue, ask: "Can I fix this with better code?" Three weeks of architecture design was solved by `Promise.all` and removing one `await`.
 
-**Cross-reference**: For the full parallel I/O pattern with thread pools, see [`async-02`](08-async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel). For post-commit dispatch (deferring side effects), see [`async-03`](08-async-concurrency-patterns.md#async-03-side-effects-before-transaction-commit).
+**Cross-reference**: For the full parallel I/O pattern with thread pools, see [`async-02`](stream-processing/async-concurrency-patterns.md#async-02-sequential-io-calls-instead-of-parallel). For post-commit dispatch (deferring side effects), see [`async-03`](stream-processing/async-concurrency-patterns.md#async-03-side-effects-before-transaction-commit).
 
 ---
 
@@ -167,7 +167,7 @@ async function checkout(cart, user) {
 
 > If your architecture diagram doesn't come with failure mode documentation, you don't have an architecture. You have a wishlist. Point at any box and ask "What happens when this fails?" — if the answer isn't documented and tested, the architecture isn't real.
 
-**Cross-reference**: For circuit breaker and bulkhead implementation, see [`resilience-02`](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services) and [`resilience-03`](10-resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation). For the full resilience stack, see [`resilience-06`](10-resilience-patterns.md#resilience-06-the-resilience-stack).
+**Cross-reference**: For circuit breaker and bulkhead implementation, see [`resilience-02`](resilience/resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services) and [`resilience-03`](resilience/resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation). For the full resilience stack, see [`resilience-06`](resilience/resilience-patterns.md#resilience-06-the-resilience-stack).
 
 ---
 
@@ -202,7 +202,7 @@ async function checkout(cart, user) {
 - Another failure mode to understand
 - Another 3 AM wake-up call
 
-**Cross-reference**: For service decomposition strategy (when microservices ARE justified), see [`uber-01`](06-uber-architecture-case-study.md#uber-01-the-decomposition-principle) — decompose by consumer need, not by data shape.
+**Cross-reference**: For service decomposition strategy (when microservices ARE justified), see [`uber-01`](case-studies/uber-architecture.md#uber-01-the-decomposition-principle) — decompose by consumer need, not by data shape.
 
 ---
 
@@ -235,7 +235,7 @@ async function checkout(cart, user) {
 | Event-driven / message queues | Synchronous direct calls (until you need async decoupling) |
 | Read replicas | Single database (until read volume actually saturates it) |
 
-**Cross-reference**: For broker selection (when you DO need async messaging), see [`broker-01`](05-message-brokers-async.md#broker-01-broker-selection). For sharding key selection (when you DO need horizontal scaling), see [`sdi-11`](15-system-design-interview-roadmap.md#sdi-11-sharding-key-selection).
+**Cross-reference**: For broker selection (when you DO need async messaging), see [`broker-01`](messaging/message-brokers-async.md#broker-01-broker-selection). For sharding key selection (when you DO need horizontal scaling), see [`sdi-11`](system-design-interview/interview-roadmap.md#sdi-11-sharding-key-selection).
 
 ---
 
@@ -264,7 +264,7 @@ async function checkout(cart, user) {
 - Event-driven architecture enables loose coupling *(Cost: eventual consistency is hard to reason about)*
 - Read replicas enable horizontal scaling *(Cost: replication lag causes bugs)*
 
-**Cross-reference**: For the trade-off maturity differentiator in interviews, see [`sdi-15`](15-system-design-interview-roadmap.md#sdi-15-senior-differentiator-trade-off-maturity).
+**Cross-reference**: For the trade-off maturity differentiator in interviews, see [`sdi-15`](system-design-interview/interview-roadmap.md#sdi-15-senior-differentiator-trade-off-maturity).
 
 ---
 
@@ -295,7 +295,7 @@ async function checkout(cart, user) {
 - Team can explain every component's failure mode
 - Every component earns its place by solving a problem you have TODAY
 
-**Cross-reference**: This principle underpins every strategy in this reference. Start with [`sdi-01`](15-system-design-interview-roadmap.md#sdi-01-the-7-phase-interview-rhythm) for the structured approach that keeps designs grounded.
+**Cross-reference**: This principle underpins every strategy in this reference. Start with [`sdi-01`](system-design-interview/interview-roadmap.md#sdi-01-the-7-phase-interview-rhythm) for the structured approach that keeps designs grounded.
 
 ---
 

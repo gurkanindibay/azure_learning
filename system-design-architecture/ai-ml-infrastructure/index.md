@@ -1,0 +1,25 @@
+---
+type: Index
+title: "AI/ML Infrastructure"
+description: "System-design patterns for AI and machine learning infrastructure: RAG architecture, LLM cost optimization, and vector search performance."
+timestamp: 2026-06-27T00:00:00Z
+---
+
+# AI/ML Infrastructure
+
+> **Parent**: [System Design Interview Reference](../index.md)
+
+Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Generation (RAG) architecture, LLM cost optimization, and vector database performance.
+
+## Files
+
+| File | ID Range | Topics |
+|:---|:---|:---|
+| [ai-ml-infrastructure.md](ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
+
+## Cross-References
+
+- **Dictionary**: [AI/ML/LLM](../../reference-dictionary/ai-ml-llm.md)
+- **Azure**: [Azure AI Services](../../architecture-azure/compute/), [Azure Cognitive Search](../../architecture-azure/data/)
+- **Related**: [Agentic AI](../agentic-ai/), [Databases](../databases/)
+- **Taxonomy**: §4.2 Machine Learning & AI Infrastructure

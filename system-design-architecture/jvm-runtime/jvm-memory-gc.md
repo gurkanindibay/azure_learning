@@ -7,10 +7,10 @@ timestamp: 2026-06-15T00:00:00Z
 
 # 33. JVM Memory & GC — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md) — Hitesh Laxman, Jun 2026
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md) — Hitesh Laxman, Jun 2026
 > **Purpose**: Translate JVM memory internals into concrete production problems, debugging signals, and tuning tradeoffs for backend engineers running Java/Spring Boot services.
-> **Also see**: [Java JVM & Memory Management](../reference-dictionary/java-jvm.md), [Async & Concurrency Patterns](08-async-concurrency-patterns.md), [Microservices Runtime Performance](29-microservices-runtime-performance.md)
+> **Also see**: [Java JVM & Memory Management](../../reference-dictionary/java-jvm.md), [Async & Concurrency Patterns](stream-processing/async-concurrency-patterns.md), [Microservices Runtime Performance](performance/microservices-runtime-performance.md)
 > **Taxonomy Reference**: §7.2 Performance Architecture
 
 ---
@@ -33,7 +33,7 @@ timestamp: 2026-06-15T00:00:00Z
 
 ## jvm-01: Allocation Rate Outpaces Minor GC
 
-> **Source**: [Article §"Real Production Example — Heap Issue"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--heap-issue)
+> **Source**: [Article §"Real Production Example — Heap Issue"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--heap-issue)
 
 | | |
 |:---|:---|
@@ -60,13 +60,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: The failure is usually not "one big object" — it is millions of short-lived objects surviving too long.
 
-**Cross-reference**: See [`JVM Heap Memory`](../reference-dictionary/java-jvm.md#jvm-heap-memory), [`Young Generation`](../reference-dictionary/java-jvm.md#young-generation), [`G1GC`](../reference-dictionary/java-jvm.md#g1gc)
+**Cross-reference**: See [`JVM Heap Memory`](../../reference-dictionary/java-jvm.md#jvm-heap-memory), [`Young Generation`](../../reference-dictionary/java-jvm.md#young-generation), [`G1GC`](../../reference-dictionary/java-jvm.md#g1gc)
 
 ---
 
 ## jvm-02: Recursive Parsing Blows the Stack
 
-> **Source**: [Article §"Stack Overflow Error Example"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#stack-overflow-error-example)
+> **Source**: [Article §"Stack Overflow Error Example"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#stack-overflow-error-example)
 
 | | |
 |:---|:---|
@@ -94,13 +94,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: `StackOverflowError` is a memory error that lives outside the heap; it is often the first sign that input validation is missing.
 
-**Cross-reference**: See [`Stack Memory`](../reference-dictionary/java-jvm.md#stack-memory)
+**Cross-reference**: See [`Stack Memory`](../../reference-dictionary/java-jvm.md#stack-memory)
 
 ---
 
 ## jvm-03: Dynamic Proxies Leak Metaspace
 
-> **Source**: [Article §"Real Production Example — Metaspace Leak"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--metaspace-leak)
+> **Source**: [Article §"Real Production Example — Metaspace Leak"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--metaspace-leak)
 
 | | |
 |:---|:---|
@@ -127,13 +127,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: Metaspace lives outside the heap, so a heap-only monitoring dashboard will miss this failure mode entirely.
 
-**Cross-reference**: See [`Metaspace`](../reference-dictionary/java-jvm.md#metaspace), [`PermGen`](../reference-dictionary/java-jvm.md#permgen)
+**Cross-reference**: See [`Metaspace`](../../reference-dictionary/java-jvm.md#metaspace), [`PermGen`](../../reference-dictionary/java-jvm.md#permgen)
 
 ---
 
 ## jvm-04: Full GC Storms from Long-Lived Objects
 
-> **Source**: [Article §"Real Production GC Problem"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-gc-problem)
+> **Source**: [Article §"Real Production GC Problem"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-gc-problem)
 
 | | |
 |:---|:---|
@@ -160,13 +160,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: Full GC is a lagging indicator. By the time you see it, Old Generation is already mis-sized or your object retention is wrong.
 
-**Cross-reference**: See [`Full GC`](../reference-dictionary/java-jvm.md#full-gc), [`Major GC`](../reference-dictionary/java-jvm.md#major-gc), [`G1GC`](../reference-dictionary/java-jvm.md#g1gc), [`ZGC`](../reference-dictionary/java-jvm.md#zgc)
+**Cross-reference**: See [`Full GC`](../../reference-dictionary/java-jvm.md#full-gc), [`Major GC`](../../reference-dictionary/java-jvm.md#major-gc), [`G1GC`](../../reference-dictionary/java-jvm.md#g1gc), [`ZGC`](../../reference-dictionary/java-jvm.md#zgc)
 
 ---
 
 ## jvm-05: Static Collections and ThreadLocal Cause Memory Leaks
 
-> **Source**: [Article §"Memory Leaks in Java"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#memory-leaks-in-java)
+> **Source**: [Article §"Memory Leaks in Java"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#memory-leaks-in-java)
 
 | | |
 |:---|:---|
@@ -199,13 +199,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: "Java has GC, so it cannot leak memory" is a dangerous myth. Leaks happen when references outlive usefulness.
 
-**Cross-reference**: See [`Memory Leak`](../reference-dictionary/java-jvm.md#memory-leak), [`ThreadLocal`](../reference-dictionary/java-jvm.md#threadlocal), [`Heap Dump`](../reference-dictionary/java-jvm.md#heap-dump)
+**Cross-reference**: See [`Memory Leak`](../../reference-dictionary/java-jvm.md#memory-leak), [`ThreadLocal`](../../reference-dictionary/java-jvm.md#threadlocal), [`Heap Dump`](../../reference-dictionary/java-jvm.md#heap-dump)
 
 ---
 
 ## jvm-06: Unbounded Thread Creation Exhausts Native Memory
 
-> **Source**: [Article §"Real Production Example — Thread Explosion"](../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--thread-explosion)
+> **Source**: [Article §"Real Production Example — Thread Explosion"](../../articles/medium/JVM%20Memory%20Internals%20Explained%20for%20Backend%20Engineers%20(With%20Real%20Production%20Examples).md#real-production-example--thread-explosion)
 
 | | |
 |:---|:---|
@@ -233,13 +233,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: Threads are not free. At 1 MB stack each, 10,000 threads ≈ 10 GB of memory before your application does any work.
 
-**Cross-reference**: See [`OutOfMemoryError`](../reference-dictionary/java-jvm.md#outofmemoryerror)
+**Cross-reference**: See [`OutOfMemoryError`](../../reference-dictionary/java-jvm.md#outofmemoryerror)
 
 ---
 
 ## jvm-07: HashMap Lookups Degrade Under Adversarial Collisions
 
-> **Source**: [Article §"The Bucket Model"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-bucket-model-quick-refresher)
+> **Source**: [Article §"The Bucket Model"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-bucket-model-quick-refresher)
 
 | | |
 |:---|:---|
@@ -263,13 +263,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: HashMap is not inherently O(1); it is O(1) *on average* under uniform hashing. The worst case is a linked list.
 
-**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Hash Collision`](../reference-dictionary/databases.md#hash-collision)
+**Cross-reference**: See [`HashMap`](../../reference-dictionary/java-jvm.md#hashmap), [`Hash Collision`](../../reference-dictionary/databases.md#hash-collision)
 
 ---
 
 ## jvm-08: Treeification Has a Capacity Gate
 
-> **Source**: [Article §"The Treeification Rule Has a Catch"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-treeification-rule-has-a-catch)
+> **Source**: [Article §"The Treeification Rule Has a Catch"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#the-treeification-rule-has-a-catch)
 
 | | |
 |:---|:---|
@@ -293,13 +293,13 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: Treeification is a safety net, not a guarantee. The capacity gate means small HashMaps still degrade linearly under collisions.
 
-**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Treeification`](../reference-dictionary/java-jvm.md#treeification)
+**Cross-reference**: See [`HashMap`](../../reference-dictionary/java-jvm.md#hashmap), [`Treeification`](../../reference-dictionary/java-jvm.md#treeification)
 
 ---
 
 ## jvm-09: Poor hashCode and Undersized Capacity Hide Performance Cliffs
 
-> **Source**: [Article §"What This Means in Practice"](../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#what-this-means-in-practice)
+> **Source**: [Article §"What This Means in Practice"](../../articles/medium/Most%20Developers%20Think%20HashMap%20Is%20Always%20O(1).%20That%E2%80%99s%20Not%20True..md#what-this-means-in-practice)
 
 | | |
 |:---|:---|
@@ -323,4 +323,4 @@ timestamp: 2026-06-15T00:00:00Z
 
 > **Key insight**: "It's just a HashMap" is a performance anti-pattern. The real guarantee is conditional on hash distribution, capacity, and collision handling.
 
-**Cross-reference**: See [`HashMap`](../reference-dictionary/java-jvm.md#hashmap), [`Red-Black Tree`](../reference-dictionary/databases.md#red-black-tree)
+**Cross-reference**: See [`HashMap`](../../reference-dictionary/java-jvm.md#hashmap), [`Red-Black Tree`](../../reference-dictionary/databases.md#red-black-tree)

@@ -7,15 +7,15 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 20. API Design Patterns — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [The API Design Patterns Nobody Teaches You](../../articles/medium/api-design-patterns-nobody-teaches-you.md)  
-> **Also see**: [APIs & Network Design](04-api-network-design.md), [Reverse Proxy, LB & API Gateway](16-reverse-proxy-lb-api-gateway.md), [Concurrency & Transactions](02-concurrency-transactions.md)
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [The API Design Patterns Nobody Teaches You](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)  
+> **Also see**: [APIs & Network Design](api-network/api-network-design.md), [Reverse Proxy, LB & API Gateway](api-network/reverse-proxy-lb-gateway.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md)
 
 ---
 
 ## apipat-01: The Four Pillars of a Well-Designed API
 
-> **Source**: [Article §"What Makes an API Well-Designed"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"What Makes an API Well-Designed"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | Pillar | Meaning | Violation Example |
 |:---|:---|:---|
@@ -30,7 +30,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 ## apipat-02: API Versioning Strategies
 
-> **Source**: [Article §"Pattern 1 — API Versioning"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 1 — API Versioning"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 ### Strategy Comparison
 
@@ -79,7 +79,7 @@ When Stripe makes a change:
 
 ## apipat-03: Idempotency — Preventing Double Charges
 
-> **Source**: [Article §"Pattern 2 — Idempotency"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 2 — Idempotency"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | | |
 |:---|:---|
@@ -127,13 +127,13 @@ def handle_payment(request_body: dict, idempotency_key: str):
 | **Collision handling** | Return stored response | Safe — same logical action |
 | **Scope** | Per-endpoint or global | Define in API contract |
 
-> **Azure**: Azure Cache for Redis for idempotency key storage; Service Bus duplicate detection (configurable window). | **Also see**: [tx-03: Distributed Locks](02-concurrency-transactions.md#tx-03-distributed-locks)
+> **Azure**: Azure Cache for Redis for idempotency key storage; Service Bus duplicate detection (configurable window). | **Also see**: [tx-03: Distributed Locks](concurrency-transactions/concurrency-transactions.md#tx-03-distributed-locks)
 
 ---
 
 ## apipat-04: Pagination — Cursor vs Offset
 
-> **Source**: [Article §"Pattern 3 — Pagination"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 3 — Pagination"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | | |
 |:---|:---|
@@ -179,13 +179,13 @@ Result:   21 rows → has_more=true, return first 20
 Avoids an expensive COUNT(*) query.
 ```
 
-> **Azure**: Cosmos DB continuation tokens are a built-in cursor mechanism. | **Also see**: [db-02: Paginating Through Large Datasets](01-databases-query-performance.md#db-02-paginating-through-large-datasets)
+> **Azure**: Cosmos DB continuation tokens are a built-in cursor mechanism. | **Also see**: [db-02: Paginating Through Large Datasets](databases/query-performance.md#db-02-paginating-through-large-datasets)
 
 ---
 
 ## apipat-05: Error Design — RFC 7807
 
-> **Source**: [Article §"Pattern 4 — Error Design"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 4 — Error Design"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | | |
 |:---|:---|
@@ -246,7 +246,7 @@ Downstream service down?  ──▶ 503 Service Unavailable
 
 ## apipat-06: Rate Limiting — Communication Is Key
 
-> **Source**: [Article §"Pattern 5 — Rate Limiting & Throttling"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 5 — Rate Limiting & Throttling"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | | |
 |:---|:---|
@@ -283,13 +283,13 @@ Paid tier key:    10,000 req/min for /users/{id}
 
 For non-critical endpoints, serve **stale/cached data** with a `Warning` header instead of rejecting outright.
 
-> **Azure**: API Management rate-limit / quota policies, partitionable by key. | **Also see**: [api-02: Rate Limiting](04-api-network-design.md#api-02-rate-limiting)
+> **Azure**: API Management rate-limit / quota policies, partitionable by key. | **Also see**: [api-02: Rate Limiting](api-network/api-network-design.md#api-02-rate-limiting)
 
 ---
 
 ## apipat-07: Backward Compatibility & Expand-Contract
 
-> **Source**: [Article §"Pattern 6 — Backward Compatibility & Breaking Changes"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 6 — Backward Compatibility & Breaking Changes"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 ### Breaking vs Non-Breaking Changes
 
@@ -327,7 +327,7 @@ Phase 3 (CONTRACT): Old field removed
 
 ## apipat-08: Contract-First Design (OpenAPI)
 
-> **Source**: [Article §"Pattern 7 — API Contract-First Design"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Pattern 7 — API Contract-First Design"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 | | |
 |:---|:---|
@@ -390,7 +390,7 @@ paths:
 
 ## apipat-09: Bonus Patterns
 
-> **Source**: [Article §"Bonus: Six More API Patterns"](../../articles/medium/api-design-patterns-nobody-teaches-you.md)
+> **Source**: [Article §"Bonus: Six More API Patterns"](../../../articles/medium/api-design-patterns-nobody-teaches-you.md)
 
 ### Pattern Summary
 

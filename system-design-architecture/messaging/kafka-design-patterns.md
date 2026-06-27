@@ -7,12 +7,12 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 53. Kafka Design Patterns — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 > **Purpose**: Extract reusable Kafka architectural patterns from the overview article covering all 11 patterns.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Concurrency & Transactions](02-concurrency-transactions.md), [CQRS Fintech Takeaways](25-cqrs-fintech-key-takeaways.md)
-> **Dictionary**: [Messaging](../reference-dictionary/messaging.md), [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Data & Concurrency](../reference-dictionary/data-concurrency.md)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [CQRS Fintech Takeaways](cqrs-fintech/cqrs-fintech.md)
+> **Dictionary**: [Messaging](../../reference-dictionary/messaging.md), [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Data & Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture, §4.3 Streaming & Real-Time Architecture
 
 ---
@@ -37,7 +37,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-24: Event Sourcing on Kafka
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -52,14 +52,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Replay cost** | Rebuilding state from offset 0 grows linearly with event volume; use snapshots to bound cost |
 | **Schema evolution** | Breaking changes require careful versioning (Glue Schema Registry, Confluent Schema Registry) |
 
-> **Also see**: [CQRS Fintech — cqrs-01](25-cqrs-fintech-key-takeaways.md#cqrs-01), [SQL System Design — sqld-03](19-sql-system-design-takeaways.md#sqld-03)
-> **Dictionary**: [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Projection](../reference-dictionary/cqrs-event-driven.md#projection)
+> **Also see**: [CQRS Fintech — cqrs-01](cqrs-fintech/cqrs-fintech.md#cqrs-01), [SQL System Design — sqld-03](databases/sql-system-design.md#sqld-03)
+> **Dictionary**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Projection](../../reference-dictionary/cqrs-event-driven.md#projection)
 
 ---
 
 ## broker-25: CQRS on Kafka
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -74,14 +74,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Eventual consistency** | Reads lag behind writes by the consumer processing latency |
 | **Operational complexity** | Multiple stores to keep in sync; projection failures require replay |
 
-> **Also see**: [CQRS Fintech Takeaways](25-cqrs-fintech-key-takeaways.md), [Global Payment CQRS](37-cqrs-key-takeaways.md)
-> **Dictionary**: [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../reference-dictionary/cqrs-event-driven.md#read-model), [Command Side](../reference-dictionary/cqrs-event-driven.md#command-side)
+> **Also see**: [CQRS Fintech Takeaways](cqrs-fintech/cqrs-fintech.md), [Global Payment CQRS](cqrs-fintech/global-payment-system.md)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Read Model](../../reference-dictionary/cqrs-event-driven.md#read-model), [Command Side](../../reference-dictionary/cqrs-event-driven.md#command-side)
 
 ---
 
 ## broker-26: Event Carried State Transfer
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -96,14 +96,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Payload size** | Large payloads increase broker disk and network usage; combine with Claim Check for payloads > 1 MB |
 | **Schema coupling** | Consumers depend on the event schema; breaking changes still require coordination |
 
-> **Also see**: [Claim Check — broker-27](#broker-27), [Message Brokers & Async](05-message-brokers-async.md)
-> **Dictionary**: [Event Carried State Transfer](../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
+> **Also see**: [Claim Check — broker-27](#broker-27), [Message Brokers & Async](messaging/message-brokers-async.md)
+> **Dictionary**: [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
 
 ---
 
 ## broker-27: Claim Check Pattern
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -118,14 +118,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Extra latency** | Consumer must make a secondary fetch from object storage |
 | **Storage lifecycle** | Set expiry/lifecycle rules on the object store to prevent unbounded growth |
 
-> **Also see**: [Message Brokers & Async — broker-01](05-message-brokers-async.md#broker-01-broker-selection)
-> **Dictionary**: [Claim Check Pattern](../reference-dictionary/architecture-patterns.md#claim-check)
+> **Also see**: [Message Brokers & Async — broker-01](messaging/message-brokers-async.md#broker-01-broker-selection)
+> **Dictionary**: [Claim Check Pattern](../../reference-dictionary/architecture-patterns.md#claim-check)
 
 ---
 
 ## broker-28: Dead Letter Queue (DLQ)
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -140,14 +140,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Data loss risk** | DLQ messages are quarantined, not reprocessed automatically; requires operational attention |
 | **Observability** | DLQ message count is a leading indicator of upstream schema or logic issues |
 
-> **Also see**: [Message Brokers — broker-03](05-message-brokers-async.md#broker-03-poison-messages)
-> **Dictionary**: [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../reference-dictionary/messaging.md#poison-message)
+> **Also see**: [Message Brokers — broker-03](messaging/message-brokers-async.md#broker-03-poison-messages)
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message)
 
 ---
 
 ## broker-29: Idempotent Consumer
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -162,14 +162,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Extra I/O** | One idempotency check per message; use TTL to bound store size |
 | **Complexity** | Requires careful atomic check-and-mark; two-phase check with DB transactions |
 
-> **Also see**: [Message Brokers — broker-02](05-message-brokers-async.md#broker-02-offset-commit-failure), [Concurrency — tx-04](02-concurrency-transactions.md#tx-04-idempotency)
-> **Dictionary**: [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer), [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Also see**: [Message Brokers — broker-02](messaging/message-brokers-async.md#broker-02-offset-commit-failure), [Concurrency — tx-04](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency)
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
 
 ---
 
 ## broker-30: Transactional Outbox
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -184,14 +184,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Latency** | Adds poller delay (ms–s) between DB commit and Kafka message visibility |
 | **Operational overhead** | Outbox table must be monitored; growth indicates a publishing failure |
 
-> **Also see**: [Concurrency — tx-07](02-concurrency-transactions.md#tx-07-post-commit-confirmation-and-events), [CQRS Fintech — cqrs-07](25-cqrs-fintech-key-takeaways.md)
-> **Dictionary**: [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../reference-dictionary/cqrs-event-driven.md#dual-write-problem)
+> **Also see**: [Concurrency — tx-07](concurrency-transactions/concurrency-transactions.md#tx-07-post-commit-confirmation-and-events), [CQRS Fintech — cqrs-07](cqrs-fintech/cqrs-fintech.md)
+> **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem)
 
 ---
 
 ## broker-31: Compacted Topic
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -207,13 +207,13 @@ timestamp: 2026-06-26T00:00:00Z
 | **Compaction lag** | The dirty log is compacted asynchronously; very recent old values may still be visible briefly |
 
 > **Also see**: [Stream-Table Duality — broker-33](#broker-33), [Event Sourcing — broker-24](#broker-24)
-> **Dictionary**: [Compacted Topic](../reference-dictionary/messaging.md#compacted-topic)
+> **Dictionary**: [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic)
 
 ---
 
 ## broker-32: Partition Key / Ordering Pattern
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -228,14 +228,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **Hot partition risk** | Low-cardinality keys (e.g., `status=active`) cause skewed partition load |
 | **Consumer parallelism** | Max concurrency = partition count; add partitions before scaling consumers |
 
-> **Also see**: [Message Brokers — broker-04](05-message-brokers-async.md#broker-04-message-ordering), [Real-Time Messaging — broker-18](43-broker-key-takeaways.md#broker-18)
-> **Dictionary**: [Partition](../reference-dictionary/messaging.md#partition), [Message Ordering](../reference-dictionary/messaging.md#message-ordering)
+> **Also see**: [Message Brokers — broker-04](messaging/message-brokers-async.md#broker-04-message-ordering), [Real-Time Messaging — broker-18](messaging/real-time-messaging.md#broker-18)
+> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
 
 ---
 
 ## broker-33: Stream-Table Duality
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -250,14 +250,14 @@ timestamp: 2026-06-26T00:00:00Z
 | **State store size** | Reference tables that exceed available memory spill to disk (RocksDB); size appropriately |
 | **Reprocessing** | Stream-table joins are sensitive to table bootstrap order; replay requires coordinating both |
 
-> **Also see**: [Stream Processing — flink-01](09-stream-processing-flink.md), [Compacted Topic — broker-31](#broker-31)
-> **Dictionary**: [Stream-Table Duality](../reference-dictionary/messaging.md#stream-table-duality), [Compacted Topic](../reference-dictionary/messaging.md#compacted-topic)
+> **Also see**: [Stream Processing — flink-01](stream-processing/stream-processing-flink.md), [Compacted Topic — broker-31](#broker-31)
+> **Dictionary**: [Stream-Table Duality](../../reference-dictionary/messaging.md#stream-table-duality), [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic)
 
 ---
 
 ## broker-34: Saga (Choreography)
 
-> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
+> **Source**: [11 Kafka Design Patterns for Every Backend Engineer](../../articles/medium/11%20Kafka%20Design%20Patterns%20for%20Every%20Backend%20Engineer.md)
 
 | | |
 |:---|:---|
@@ -272,5 +272,5 @@ timestamp: 2026-06-26T00:00:00Z
 | **Debugging complexity** | A distributed transaction is visible only by correlating events across multiple topics |
 | **Compensation design** | Compensating transactions must be idempotent and must cover all failure modes upfront |
 
-> **Also see**: [Concurrency — tx-09](02-concurrency-transactions.md), [Design Patterns — dp-11](39-design-patterns-key-takeaways.md)
-> **Dictionary**: [Saga Pattern](../reference-dictionary/data-concurrency.md#saga-pattern)
+> **Also see**: [Concurrency — tx-09](concurrency-transactions/concurrency-transactions.md), [Design Patterns — dp-11](software-architecture/design-patterns.md)
+> **Dictionary**: [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern)

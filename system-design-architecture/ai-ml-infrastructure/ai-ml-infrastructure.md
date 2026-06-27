@@ -7,9 +7,9 @@ timestamp: 2026-06-14T00:00:00Z
 
 # AI/ML Infrastructure: Patterns for Production LLM Systems
 
-> **Source**: [22 Scenario-Based System Design Questions](../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #17, #18, #19  
+> **Source**: [22 Scenario-Based System Design Questions](../../articles/medium/22-design-interview-questions/01-22-scenario-based-system-design-questions.md) — Scenarios #17, #18, #19  
 > **Taxonomy Reference**: §12 AI Applications, §4.1 Data & Analytics  
-> **Azure Mapping**: See [Azure Service Mapping](07-azure-service-mapping.md)
+> **Azure Mapping**: See [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
 
 ---
 
@@ -276,4 +276,4 @@ High Recall (99%+)          Balanced (95-98%)          High Speed (90-95%)
 5. **Stream results progressively** — perceived speed > actual speed
 
 > **Taxonomy Reference**: §12 AI Applications, §4.1 Data & Analytics  
-> **Related**: [Databases & Query Performance](01-databases-query-performance.md) | [Caching Architecture](03-caching-architecture.md) | [Stream Processing](09-stream-processing-flink.md)
+> **Related**: [Databases & Query Performance](databases/query-performance.md) | [Caching Architecture](caching/caching-architecture.md) | [Stream Processing](stream-processing/stream-processing-flink.md)

@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 15. System Design Interview Roadmap: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [How to Structure Any System Design Interview in 45 Minutes](../../articles/medium/design-system-interviews.md) — by Kunal Sinha (Dec 2025)  
+> **Source**: [How to Structure Any System Design Interview in 45 Minutes](../../../articles/medium/design-system-interviews.md) — by Kunal Sinha (Dec 2025)  
 > **Purpose**: Extract a repeatable 7-phase interview framework with specific scripts, traps, and trade-off patterns that distinguish senior candidates.
 
 ---
@@ -84,7 +84,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Trap**: Only designing for the end user. When the interviewer asks "how does admin handle disputes?" you'll have nothing.
 
-> **Related**: [`db-01`](01-databases-query-performance.md) (UUID indexing), [`tx-01`](02-concurrency-transactions.md) (double-booking)
+> **Related**: [`db-01`](databases/query-performance.md) (UUID indexing), [`tx-01`](concurrency-transactions/concurrency-transactions.md) (double-booking)
 
 ---
 
@@ -118,7 +118,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Trap**: Only designing for success. Interviewers love asking "what if this fails?" — beat them to it.
 
-> **Related**: [`broker-01`](05-message-brokers-async.md) (broker selection), [`resilience-01`](10-resilience-patterns.md) (retry storms)
+> **Related**: [`broker-01`](messaging/message-brokers-async.md) (broker selection), [`resilience-01`](resilience/resilience-patterns.md) (retry storms)
 
 ---
 
@@ -172,7 +172,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Trap**: Calculating 86,400 seconds precisely. Use 100,000. Precision matters less than identifying the order of magnitude bottleneck.
 
-> **Related**: [`sdi-11`](#sdi-11-sharding-key-selection) (sharding), [`cache-01`](03-caching-architecture.md) (cache sizing)
+> **Related**: [`sdi-11`](#sdi-11-sharding-key-selection) (sharding), [`cache-01`](caching/caching-architecture.md) (cache sizing)
 
 ---
 
@@ -197,7 +197,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Trap**: Using auto-increment integers as public identifiers. Competitors can estimate your transaction volume from `order_id: 1042` vs `order_id: 98723`.
 
-> **Related**: [`db-01`](01-databases-query-performance.md) (UUID indexing), [`db-06`](01-databases-query-performance.md) (DB migration)
+> **Related**: [`db-01`](databases/query-performance.md) (UUID indexing), [`db-06`](databases/query-performance.md) (DB migration)
 
 ---
 
@@ -221,7 +221,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 **Trap**: Using offset-based pagination — inserts between requests cause items to be skipped or duplicated. Missing `request_id` in errors — debugging production becomes impossible.
 
-> **Related**: [`api-01`](04-api-network-design.md) (versioning), [`api-02`](04-api-network-design.md) (rate limiting), [`tx-04`](02-concurrency-transactions.md) (idempotency)
+> **Related**: [`api-01`](api-network/api-network-design.md) (versioning), [`api-02`](api-network/api-network-design.md) (rate limiting), [`tx-04`](concurrency-transactions/concurrency-transactions.md) (idempotency)
 
 ---
 
@@ -256,7 +256,7 @@ DNS → Load Balancer → API Gateway → Services
 
 **Trap**: Drawing one big box labeled "Server." The gateway is not a passthrough — it's your first line of defense.
 
-> **Related**: [`api-02`](04-api-network-design.md) (rate limiting), [`resilience-05`](10-resilience-patterns.md) (gateway bottleneck)
+> **Related**: [`api-02`](api-network/api-network-design.md) (rate limiting), [`resilience-05`](resilience/resilience-patterns.md) (gateway bottleneck)
 
 ---
 
@@ -304,7 +304,7 @@ API → Queue → Worker → Database
 
 **Trap**: Writing directly to Kafka for user-facing flows. The user asks "where's my payment?" and you have no record yet.
 
-> **Related**: [`broker-01`](05-message-brokers-async.md) (broker selection), [`broker-05`](05-message-brokers-async.md) (stream processing), [`async-03`](08-async-concurrency-patterns.md) (post-commit dispatch)
+> **Related**: [`broker-01`](messaging/message-brokers-async.md) (broker selection), [`broker-05`](messaging/message-brokers-async.md) (stream processing), [`async-03`](stream-processing/async-concurrency-patterns.md) (post-commit dispatch)
 
 ---
 
@@ -347,7 +347,7 @@ API → Queue → Worker → Database
 
 **Trap**: Using consensus for every write kills throughput. Quorum ensures overlap; consensus ensures agreement. Reserve consensus for critical paths.
 
-> **Related**: [`tx-02`](02-concurrency-transactions.md) (isolation levels), [`tx-03`](02-concurrency-transactions.md) (distributed locks)
+> **Related**: [`tx-02`](concurrency-transactions/concurrency-transactions.md) (isolation levels), [`tx-03`](concurrency-transactions/concurrency-transactions.md) (distributed locks)
 
 ---
 
@@ -372,7 +372,7 @@ API → Queue → Worker → Database
 
 **Sharding trigger**: `> 10k` write QPS.
 
-> **Related**: [`db-05`](01-databases-query-performance.md) (hot partitions), [`db-06`](01-databases-query-performance.md) (DB migration at scale)
+> **Related**: [`db-05`](databases/query-performance.md) (hot partitions), [`db-06`](databases/query-performance.md) (DB migration at scale)
 
 ---
 
@@ -411,7 +411,7 @@ API → Queue → Worker → Database
 
 **Trap**: Implementing idempotency in application code without database constraints. Race conditions will bite you.
 
-> **Related**: [`tx-04`](02-concurrency-transactions.md) (idempotency), [`tx-01`](02-concurrency-transactions.md) (double-booking)
+> **Related**: [`tx-04`](concurrency-transactions/concurrency-transactions.md) (idempotency), [`tx-01`](concurrency-transactions/concurrency-transactions.md) (double-booking)
 
 ---
 
@@ -444,7 +444,7 @@ Each layer's timeout must be **shorter** than the layer above it. This ensures t
 
 **Trap**: Unbounded retries can DDoS your own system. Setting DB timeout higher than client timeout wastes database resources on abandoned requests.
 
-> **Related**: [`resilience-02`](10-resilience-patterns.md) (circuit breaker), [`resilience-04`](10-resilience-patterns.md) (timeouts & retries), [`resilience-06`](10-resilience-patterns.md) (resilience stack)
+> **Related**: [`resilience-02`](resilience/resilience-patterns.md) (circuit breaker), [`resilience-04`](resilience/resilience-patterns.md) (timeouts & retries), [`resilience-06`](resilience/resilience-patterns.md) (resilience stack)
 
 ---
 
@@ -517,9 +517,9 @@ Each layer's timeout must be **shorter** than the layer above it. This ensures t
 | This Takeaway | Related Sections |
 |:---|:---|
 | `sdi-04` NFR Quantification | → `sdi-10` Quorum vs Consensus |
-| `sdi-06` ID Strategy | → [`db-01`](01-databases-query-performance.md) UUID indexing |
-| `sdi-07` API Design | → [`api-01`](04-api-network-design.md) versioning, [`tx-04`](02-concurrency-transactions.md) idempotency |
-| `sdi-09` Async Path | → [`broker-01`](05-message-brokers-async.md) broker selection, [`async-03`](08-async-concurrency-patterns.md) post-commit dispatch |
-| `sdi-10` Quorum vs Consensus | → [`tx-02`](02-concurrency-transactions.md) isolation levels |
-| `sdi-12` Idempotency | → [`tx-04`](02-concurrency-transactions.md) idempotency, [`tx-01`](02-concurrency-transactions.md) double-booking |
-| `sdi-13` Failure Handling | → [`resilience-02`](10-resilience-patterns.md) circuit breaker, [`resilience-04`](10-resilience-patterns.md) timeouts |
+| `sdi-06` ID Strategy | → [`db-01`](databases/query-performance.md) UUID indexing |
+| `sdi-07` API Design | → [`api-01`](api-network/api-network-design.md) versioning, [`tx-04`](concurrency-transactions/concurrency-transactions.md) idempotency |
+| `sdi-09` Async Path | → [`broker-01`](messaging/message-brokers-async.md) broker selection, [`async-03`](stream-processing/async-concurrency-patterns.md) post-commit dispatch |
+| `sdi-10` Quorum vs Consensus | → [`tx-02`](concurrency-transactions/concurrency-transactions.md) isolation levels |
+| `sdi-12` Idempotency | → [`tx-04`](concurrency-transactions/concurrency-transactions.md) idempotency, [`tx-01`](concurrency-transactions/concurrency-transactions.md) double-booking |
+| `sdi-13` Failure Handling | → [`resilience-02`](resilience/resilience-patterns.md) circuit breaker, [`resilience-04`](resilience/resilience-patterns.md) timeouts |

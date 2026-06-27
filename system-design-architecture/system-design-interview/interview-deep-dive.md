@@ -8,11 +8,11 @@ timestamp: 2026-06-16T00:00:00Z
 # 34. System Design Learning Roadmap — Key Takeaways
 
 > **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [How I Finally Learned System Design (After Feeling Totally Lost)](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [How I Finally Learned System Design (After Feeling Totally Lost)](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 > **Purpose**: Extract reusable architectural concepts and learning patterns from the system design self-study roadmap.
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — 7-phase interview structure, NFR quantification, quorum vs consensus
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Caching](../reference-dictionary/caching.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — 7-phase interview structure, NFR quantification, quorum vs consensus
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Caching](../../reference-dictionary/caching.md)
 > **Taxonomy Reference**: §2.1 Application Architecture Styles
 
 ---
@@ -38,7 +38,7 @@ timestamp: 2026-06-16T00:00:00Z
 
 ## sdi-16: Vertical vs Horizontal Scaling — The Pizza Shop Analogy
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -71,8 +71,8 @@ Vertical Scaling (scale up):         Horizontal Scaling (scale out):
 | **Vertical is not wrong** | For early-stage apps, a bigger server is simpler and faster to deploy |
 | **Horizontal requires redesign** | Session state, file storage, and database must be externalized |
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — NFR quantification, scaling assessment
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — NFR quantification, scaling assessment
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure VM scale sets (horizontal), Azure vertical scaling via resizing
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -80,7 +80,7 @@ Vertical Scaling (scale up):         Horizontal Scaling (scale out):
 
 ## sdi-17: Caching Fundamentals — Keep Popular Results Ready
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -109,8 +109,8 @@ Client -> Server -> DB (every time)   Client -> Cache (hit? return)
 | **Staleness** | Cached data may be out of date — TTL and invalidation are essential |
 | **Memory cost** | Cache uses RAM which is expensive — evict what's not used |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — Cache stampede, invalidation, eviction policies
-> **Dictionary**: [Caching](../reference-dictionary/caching.md)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — Cache stampede, invalidation, eviction policies
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md)
 > **Azure**: Azure Cache for Redis, Azure CDN
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -118,7 +118,7 @@ Client -> Server -> DB (every time)   Client -> Cache (hit? return)
 
 ## sdi-18: Latency vs Throughput — Two Different Goals
 
-> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"2. System Design for Beginners: The Stop Overcomplicating It Phase"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -139,15 +139,15 @@ Client -> Server -> DB (every time)   Client -> Cache (hit? return)
 | **Batching increases throughput** | Process 100 messages at once = higher throughput, but each message waits longer (higher latency) |
 | **Caching reduces latency** | Pre-computed results = faster response, but cache misses add latency variability (tail latency) |
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — NFR quantification
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — NFR quantification
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Taxonomy**: §2.1 Application Architecture Styles
 
 ---
 
 ## sdi-19: CAP Theorem — The Triangle of Sadness
 
-> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 2](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 2](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -183,8 +183,8 @@ AP: Sacrifice consistency during partition (Cassandra, DynamoDB, Cosmos DB)
 | **CAP is a spectrum** | Modern systems tune consistency levels (e.g., Cassandra's QUORUM gives tunable consistency) |
 | **PACELC extension** | When there IS a partition (P), choose A or C. Else (E), choose Latency or Consistency |
 
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — DB selection, CAP in practice
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) — DB selection, CAP in practice
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Cosmos DB offers 5 consistency levels from Strong to Eventual — tunable CAP
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -192,7 +192,7 @@ AP: Sacrifice consistency during partition (Cassandra, DynamoDB, Cosmos DB)
 
 ## sdi-20: Replication & Sharding — Scale Beyond One Database
 
-> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 3](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"3. How to Learn System Design from Scratch (The No-BS Roadmap)" / Phase 3](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -227,8 +227,8 @@ Reads: Any replica
 | **Sharding complexity** | Joins across shards are impossible; denormalize or use application-level joins |
 | **Both together** | Real systems use sharded primaries with replicated shard copies |
 
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — Hot partitions, DB migration at scale
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) — Hot partitions, DB migration at scale
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure SQL Database geo-replication, Cosmos DB automatic sharding, Hyperscale for large databases
 > **Taxonomy**: §4.0 Data Architecture Fundamentals
 
@@ -236,7 +236,7 @@ Reads: Any replica
 
 ## sdi-21: Design Tradeoffs — There Is No "Best" Design
 
-> **Source**: [§"4. Real-World Thinking" and "Final Thoughts"](../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
+> **Source**: [§"4. Real-World Thinking" and "Final Thoughts"](../../articles/medium/How%20I%20Finally%20Learned%20System%20Design%20%28After%20Feeling%20Totally%20Lost%29.md)
 
 | | |
 |:---|:---|
@@ -259,8 +259,8 @@ Reads: Any replica
 | **Theory vs practice** | You won't truly understand until you've seen a system fail in production |
 | **Start simple** | Don't design for Twitter-scale when you have 100 users — most complexity is premature |
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — Trade-off maturity, decision frameworks
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — Trade-off maturity, decision frameworks
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Well-Architected Framework — tradeoffs across Cost, Security, Reliability, Operations, Performance
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -268,7 +268,7 @@ Reads: Any replica
 
 ## sdi-22: Clarify Before You Draw
 
-> **Source**: [§"Mistake 1: They Start Drawing Before They Start Thinking"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 1: They Start Drawing Before They Start Thinking"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -289,8 +289,8 @@ Reads: Any replica
 | **Slower start, better fit** | Asking questions delays diagramming but produces an architecture that matches the actual constraints |
 | **Template dumping looks confident but fails** | Reciting a memorized stack signals pattern matching, not design thinking |
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — 7-phase interview structure
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — 7-phase interview structure
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure Well-Architected Framework — requirements drive service selection
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -298,7 +298,7 @@ Reads: Any replica
 
 ## sdi-23: Design for the Company, Not the Textbook
 
-> **Source**: [§"Mistake 2: They Ignore What the Company Actually Cares About"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 2: They Ignore What the Company Actually Cares About"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -319,8 +319,8 @@ Reads: Any replica
 | **Generic correctness vs contextual fit** | A textbook answer can be technically perfect and still fail because it does not address the interviewer's real concerns |
 | **Company-specific vocabulary matters** | Using the same terms the company uses (e.g., "blast radius," "error budget") signals preparation |
 
-> **Also see**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) — user metrics and operational reality
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) — user metrics and operational reality
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure Well-Architected Framework pillars — Cost Optimization, Reliability, Performance Efficiency
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -328,7 +328,7 @@ Reads: Any replica
 
 ## sdi-24: Design for Reality, Not Fantasy Scale
 
-> **Source**: [§"Mistake 3: They Optimize for Scale They’ll Never Reach"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 3: They Optimize for Scale They’ll Never Reach"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -349,8 +349,8 @@ Reads: Any replica
 | **Simplicity vs future-proofing** | Designing for +1 order of magnitude keeps the system evolvable without paying complexity costs today |
 | **Resume-driven design is a red flag** | Choosing trendy distributed tools for trivial scale signals poor judgment |
 
-> **Also see**: [Pragmatic System Design](18-pragmatic-system-design-takeaways.md) — solve today's problems
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Databases](../reference-dictionary/databases.md)
+> **Also see**: [Pragmatic System Design](system-design-interview/pragmatic-takeaways.md) — solve today's problems
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Databases](../../reference-dictionary/databases.md)
 > **Azure**: Azure Database for PostgreSQL, Azure Service Bus, Azure Container Apps — scale vertically first
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -358,7 +358,7 @@ Reads: Any replica
 
 ## sdi-25: Defend Every Decision with Trade-offs
 
-> **Source**: [§"Mistake 4: They Present Solutions Like They’re Facts"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 4: They Present Solutions Like They’re Facts"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -379,8 +379,8 @@ Reads: Any replica
 | **Conviction vs intellectual honesty** | Strong opinions need to be paired with the conditions under which they are wrong |
 | **Speed vs depth** | Justifying each choice takes longer but is the primary signal of seniority in system design |
 
-> **Also see**: [Databases & Query Performance](01-databases-query-performance.md) — SQL vs NoSQL, CAP in practice
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md), [Caching](../reference-dictionary/caching.md), [Messaging](../reference-dictionary/messaging.md)
+> **Also see**: [Databases & Query Performance](databases/query-performance.md) — SQL vs NoSQL, CAP in practice
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md), [Caching](../../reference-dictionary/caching.md), [Messaging](../../reference-dictionary/messaging.md)
 > **Azure**: Azure Cache for Redis, Azure Cosmos DB, Azure Service Bus, Azure Event Hubs
 > **Taxonomy**: §2.1 Application Architecture Styles
 
@@ -388,7 +388,7 @@ Reads: Any replica
 
 ## sdi-26: Explain the Why, Not Just the Where
 
-> **Source**: [§"Mistake 5: They Can’t Explain Why"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 5: They Can’t Explain Why"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -409,8 +409,8 @@ Reads: Any replica
 | **Diagram completeness vs operational depth** | A simple diagram with deep explanations beats a crowded diagram with shallow explanations |
 | **Memorization vs debugging skill** | In production, "that's where it goes" does not help when cache hit rate drops to 40% |
 
-> **Also see**: [Caching Architecture](03-caching-architecture.md) — cache invalidation, eviction, stampede
-> **Dictionary**: [Caching](../reference-dictionary/caching.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Caching Architecture](caching/caching-architecture.md) — cache invalidation, eviction, stampede
+> **Dictionary**: [Caching](../../reference-dictionary/caching.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure Cache for Redis, Azure Load Balancer, Azure SQL Database geo-replication
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -418,7 +418,7 @@ Reads: Any replica
 
 ## sdi-27: Pattern Matching Is Not Design
 
-> **Source**: [§"Mistake 6: They Memorized Patterns Instead of Learning to Think"](../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
+> **Source**: [§"Mistake 6: They Memorized Patterns Instead of Learning to Think"](../../articles/medium/I%E2%80%99ve%20Reviewed%2050%2B%20System%20Design%20Interviews.%20These%206%20Mistakes%20Eliminated%2090%25%20of%20Candidates..md)
 
 | | |
 |:---|:---|
@@ -447,7 +447,7 @@ Reads: Any replica
 5. Optimize with explicit trade-off discussions
 6. Explain why for every decision
 
-> **Also see**: [System Design Interview Roadmap](15-system-design-interview-roadmap.md) — trade-off maturity and decision frameworks
-> **Dictionary**: [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — trade-off maturity and decision frameworks
+> **Dictionary**: [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Azure**: Azure Well-Architected Framework — make trade-offs explicit across pillars
 > **Taxonomy**: §2.1 Application Architecture Styles

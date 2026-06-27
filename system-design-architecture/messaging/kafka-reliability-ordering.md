@@ -7,13 +7,13 @@ timestamp: 2026-06-26T00:00:00Z
 
 # 54. Kafka Reliability & Ordering — Production Deep-Dive Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md)
-> **Part 1 Overview**: [Kafka Design Patterns Overview — broker-24 to broker-34](53-kafka-design-patterns-key-takeaways.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md)
+> **Part 1 Overview**: [Kafka Design Patterns Overview — broker-24 to broker-34](messaging/kafka-design-patterns.md)
 > **Purpose**: Extract production-depth engineering insights from the Part 2 deep-dive that go beyond the high-level overview.
 
-> **Also see**: [Message Brokers & Async](05-message-brokers-async.md), [Concurrency & Transactions](02-concurrency-transactions.md), [Resilience Patterns](10-resilience-patterns.md)
-> **Dictionary**: [Messaging](../reference-dictionary/messaging.md), [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md), [Resilience](../reference-dictionary/resilience.md), [Data & Concurrency](../reference-dictionary/data-concurrency.md)
+> **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md), [Concurrency & Transactions](concurrency-transactions/concurrency-transactions.md), [Resilience Patterns](resilience/resilience-patterns.md)
+> **Dictionary**: [Messaging](../../reference-dictionary/messaging.md), [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [Resilience](../../reference-dictionary/resilience.md), [Data & Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §3 Integration & Communication Architecture, §7 Reliability, Performance & Operations
 
 ---
@@ -35,7 +35,7 @@ timestamp: 2026-06-26T00:00:00Z
 
 ## broker-35: Dual-Write Failure Modes
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
 
 | | |
 |:---|:---|
@@ -58,14 +58,14 @@ All three scenarios are reliably prevented only by the Transactional Outbox: wri
 | **Latency** | Introduces milliseconds to seconds of delay between DB commit and Kafka delivery |
 | **Simplicity** | Application code simplifies (no Kafka client in hot path), but infrastructure adds an outbox publisher |
 
-> **Also see**: [Transactional Outbox Overview — broker-30](53-kafka-design-patterns-key-takeaways.md#broker-30), [tx-07](02-concurrency-transactions.md#tx-07-post-commit-confirmation-and-events)
-> **Dictionary**: [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../reference-dictionary/cqrs-event-driven.md#dual-write-problem)
+> **Also see**: [Transactional Outbox Overview — broker-30](messaging/kafka-design-patterns.md#broker-30), [tx-07](concurrency-transactions/concurrency-transactions.md#tx-07-post-commit-confirmation-and-events)
+> **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem)
 
 ---
 
 ## broker-36: Outbox Publisher Selection
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Transactional Outbox
 
 | | |
 |:---|:---|
@@ -90,14 +90,14 @@ All three scenarios are reliably prevented only by the Transactional Outbox: wri
 | **Polling simplicity** | Lambda polling works with any database but introduces latency and polling-induced load |
 | **Scalability ceiling** | Both Debezium (single-task outbox router) and polling face a throughput limit; shard the outbox table to scale beyond it |
 
-> **Also see**: [broker-35 Dual-Write Failure Modes](#broker-35), [Message Brokers — broker-01](05-message-brokers-async.md#broker-01-broker-selection)
-> **Dictionary**: [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture)
+> **Also see**: [broker-35 Dual-Write Failure Modes](#broker-35), [Message Brokers — broker-01](messaging/message-brokers-async.md#broker-01-broker-selection)
+> **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Change Data Capture](../../reference-dictionary/data-concurrency.md#change-data-capture)
 
 ---
 
 ## broker-37: Atomic Idempotency Check with DynamoDB Conditional Writes
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Idempotent Consumer
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Idempotent Consumer
 
 | | |
 |:---|:---|
@@ -121,14 +121,14 @@ Set TTL to the replay window (typically 7 days) to auto-expire old markers witho
 | **Extra latency** | One DynamoDB write per message (single-digit ms); acceptable for most workloads |
 | **Cost** | DynamoDB on-demand mode scales cost with message volume; batch idempotency writes for very high throughput |
 
-> **Also see**: [Idempotent Consumer Overview — broker-29](53-kafka-design-patterns-key-takeaways.md#broker-29), [tx-04](02-concurrency-transactions.md#tx-04-idempotency)
-> **Dictionary**: [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer), [Exactly-Once Semantics](../reference-dictionary/messaging.md#exactly-once-semantics)
+> **Also see**: [Idempotent Consumer Overview — broker-29](messaging/kafka-design-patterns.md#broker-29), [tx-04](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency)
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
 
 ---
 
 ## broker-38: Hot Partition and Partition Key Salting
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
 
 | | |
 |:---|:---|
@@ -152,14 +152,14 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **Ordering vs distribution** | Salting sacrifices ordering to regain even load; only use when ordering is not required |
 | **Partition change risk** | Adding partitions changes which partition a key hashes to, breaking ordering for pre-change keys |
 
-> **Also see**: [Partition Key Overview — broker-32](53-kafka-design-patterns-key-takeaways.md#broker-32), [Message Brokers — broker-04](05-message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Hot Partition](../reference-dictionary/messaging.md#hot-partition), [Partition](../reference-dictionary/messaging.md#partition), [Message Ordering](../reference-dictionary/messaging.md#message-ordering)
+> **Also see**: [Partition Key Overview — broker-32](messaging/kafka-design-patterns.md#broker-32), [Message Brokers — broker-04](messaging/message-brokers-async.md#broker-04-message-ordering)
+> **Dictionary**: [Hot Partition](../../reference-dictionary/messaging.md#hot-partition), [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
 
 ---
 
 ## broker-39: Partition Count Decision Framework
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Partition Key / Ordering
 
 | | |
 |:---|:---|
@@ -182,14 +182,14 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **Adding partitions later** | Possible, but breaks key-to-partition mapping — all existing consumers must be able to handle out-of-order events during the transition |
 | **Over-partitioning cost** | Each partition has a memory footprint on brokers and coordinators; excessive partition count increases leader election time on broker failures |
 
-> **Also see**: [Message Brokers — broker-05](05-message-brokers-async.md#broker-05-stream-processing), [broker-32 Partition Key](53-kafka-design-patterns-key-takeaways.md#broker-32)
-> **Dictionary**: [Partition](../reference-dictionary/messaging.md#partition), [Consumer Group](../reference-dictionary/messaging.md#consumer-group)
+> **Also see**: [Message Brokers — broker-05](messaging/message-brokers-async.md#broker-05-stream-processing), [broker-32 Partition Key](messaging/kafka-design-patterns.md#broker-32)
+> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)
 
 ---
 
 ## broker-40: DLQ with Persistent Retry Tracking
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Dead Letter Queue
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Dead Letter Queue
 
 | | |
 |:---|:---|
@@ -208,14 +208,14 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **Replay ordering** | Replayed messages get new offsets and may arrive after newer events; design consumers to handle out-of-order replay or replay during a maintenance window |
 | **DLQ growth** | Set topic retention (e.g., 30 days) and CloudWatch alarms on DLQ lag; a growing DLQ is a signal of systemic upstream issues |
 
-> **Also see**: [DLQ Overview — broker-28](53-kafka-design-patterns-key-takeaways.md#broker-28), [Resilience Patterns — resilience-01](10-resilience-patterns.md)
-> **Dictionary**: [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../reference-dictionary/messaging.md#poison-message)
+> **Also see**: [DLQ Overview — broker-28](messaging/kafka-design-patterns.md#broker-28), [Resilience Patterns — resilience-01](resilience/resilience-patterns.md)
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message)
 
 ---
 
 ## broker-41: Retry Topics for Delayed Retry Without Consumer Sleep
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
 
 | | |
 |:---|:---|
@@ -241,14 +241,14 @@ The main consumer never sleeps — it commits the offset and routes the failed m
 | **Topic proliferation** | 3–4 extra topics per main topic; manageable with naming conventions |
 | **Ordering** | Retried messages arrive as new messages with new offsets; per-entity ordering is not preserved across retry tiers |
 
-> **Also see**: [DLQ — broker-40](#broker-40), [Resilience Patterns — resilience-01](10-resilience-patterns.md), [broker-28 DLQ Overview](53-kafka-design-patterns-key-takeaways.md#broker-28)
-> **Dictionary**: [Retry Topic](../reference-dictionary/messaging.md#retry-topic), [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **Also see**: [DLQ — broker-40](#broker-40), [Resilience Patterns — resilience-01](resilience/resilience-patterns.md), [broker-28 DLQ Overview](messaging/kafka-design-patterns.md#broker-28)
+> **Dictionary**: [Retry Topic](../../reference-dictionary/messaging.md#retry-topic), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
 
 ---
 
 ## broker-42: Exponential Backoff with Jitter (Thundering Herd Prevention)
 
-> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
+> **Source**: [11 Kafka Design Patterns - Reliability & Ordering Deep Dive](../../articles/medium/11%20Kafka%20Design%20Patterns%20-%20Reliability%20%26%20Ordering%20Deep%20Dive.md) — Retry with Backoff
 
 | | |
 |:---|:---|
@@ -272,5 +272,5 @@ Full jitter is preferred over additive jitter because it spreads retries over th
 | **Longer tail latency** | Some requests wait longer than the deterministic minimum; acceptable for transient failures |
 | **Retry budget** | `max_tries × max_delay` defines the total retry budget; size it to outlast the expected outage duration |
 
-> **Also see**: [Retry Topics — broker-41](#broker-41), [Resilience Patterns — resilience-01](10-resilience-patterns.md), [Circuit Breaker Honesty — cb-01](23-circuit-breaker-key-takeaways.md)
-> **Dictionary**: [Exponential Backoff](../reference-dictionary/resilience.md#exponential-backoff), [Thundering Herd](../reference-dictionary/resilience.md#thundering-herd)
+> **Also see**: [Retry Topics — broker-41](#broker-41), [Resilience Patterns — resilience-01](resilience/resilience-patterns.md), [Circuit Breaker Honesty — cb-01](resilience/circuit-breaker-honesty.md)
+> **Dictionary**: [Exponential Backoff](../../reference-dictionary/resilience.md#exponential-backoff), [Thundering Herd](../../reference-dictionary/resilience.md#thundering-herd)

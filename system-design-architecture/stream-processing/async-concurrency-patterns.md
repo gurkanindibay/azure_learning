@@ -7,14 +7,14 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 8. Async & Concurrency Patterns
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Sources**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md), [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md)
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Sources**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md), [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md)
 
 ---
 
 ## async-01: Unbounded Thread Pool Exhaustion
 
-> **Source**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 1, [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 1
+> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 1, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 1
 
 | | |
 |:---|:---|
@@ -33,14 +33,14 @@ timestamp: 2026-06-14T00:00:00Z
 **Simplest fix (Java)**: Configure a named `ThreadPoolTaskExecutor` bean with explicit pool limits.  
 **Simplest fix (.NET)**: Install Hangfire (3 lines of config). Replace `_ = Task.Run(...)` with `BackgroundJob.Enqueue(...)`.
 
-> **Azure**: Azure Functions host.json `maxConcurrentRequests` | **General**: [Bulkhead Pattern](../../architecture-general/07-reliability-performance-operations/bulkhead-pattern.md)  
-> **Related**: [Producer-Consumer with Backpressure](13-large-data-processing-constraints.md#proc-03-producer-consumer-with-backpressure) — bounded queues prevent memory exhaustion in data pipelines
+> **Azure**: Azure Functions host.json `maxConcurrentRequests` | **General**: [Bulkhead Pattern](../../../architecture-general/07-reliability-performance-operations/bulkhead-pattern.md)  
+> **Related**: [Producer-Consumer with Backpressure](large-data-processing/large-data-constraints.md#proc-03-producer-consumer-with-backpressure) — bounded queues prevent memory exhaustion in data pipelines
 
 ---
 
 ## async-02: Sequential I/O Calls Instead of Parallel
 
-> **Source**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 2, [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 2
+> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 2, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 2
 
 | | |
 |:---|:---|
@@ -64,13 +64,13 @@ Parallel:   var tA=A(); var tB=B(); var tC=C(); await Task.WhenAll(tA,tB,tC) = 3
 
 **Key insight**: For independent I/O calls, start all tasks before awaiting any. Each `await` before the next call is unnecessary latency the user pays for.
 
-> **Azure**: Azure Functions fan-out/fan-in pattern | **General**: [Scatter-Gather Pattern](../../architecture-general/03-integration-communication-architecture/scatter-gather-pattern.md)
+> **Azure**: Azure Functions fan-out/fan-in pattern | **General**: [Scatter-Gather Pattern](../../../architecture-general/03-integration-communication-architecture/scatter-gather-pattern.md)
 
 ---
 
 ## async-03: Side Effects Before Transaction Commit
 
-> **Source**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 3, [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 3
+> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 3, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 3
 
 | | |
 |:---|:---|
@@ -90,13 +90,13 @@ Parallel:   var tA=A(); var tB=B(); var tC=C(); await Task.WhenAll(tA,tB,tC) = 3
 
 **Simplest fix (.NET)**: Move `await _dbContext.SaveChangesAsync()` **above** the fire-and-forget line. Commit first, fire after — that's the entire fix.
 
-> **Azure**: Azure Service Bus transactions + deferred messages | **General**: [Saga Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
+> **Azure**: Azure Service Bus transactions + deferred messages | **General**: [Saga Pattern](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
 
 ---
 
 ## async-04: Silent Async Failures
 
-> **Source**: [Java Async Patterns](../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 4, [.NET Async Patterns](../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 4
+> **Source**: [Java Async Patterns](../../articles/medium/async-patterns-java/01-senior-java-concurrency-patterns.md) — Pattern 4, [.NET Async Patterns](../../articles/medium/async-patterns-java/02-dotnet-async-concurrency-patterns.md) — Pattern 4
 
 | | |
 |:---|:---|
@@ -114,7 +114,7 @@ Parallel:   var tA=A(); var tB=B(); var tC=C(); await Task.WhenAll(tA,tB,tC) = 3
 
 **Simplest fix (.NET)**: Put `try/catch` around the body of every background method. Log the exception. Hangfire's `[AutomaticRetry]` attribute gives retries for free.
 
-> **Azure**: Azure Functions retry policies + dead-letter queues | **General**: [Retry Pattern](../../architecture-general/07-reliability-performance-operations/retry-pattern.md), [Circuit Breaker](../../architecture-general/07-reliability-performance-operations/circuit-breaker-pattern.md)
+> **Azure**: Azure Functions retry policies + dead-letter queues | **General**: [Retry Pattern](../../../architecture-general/07-reliability-performance-operations/retry-pattern.md), [Circuit Breaker](../../../architecture-general/07-reliability-performance-operations/circuit-breaker-pattern.md)
 
 ---
 

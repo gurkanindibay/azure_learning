@@ -6,7 +6,7 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 7. Azure Service Mapping
 
-> **Parent**: [System Design Interview Reference](index.md)  
+> **Parent**: [System Design Interview Reference](../index.md)  
 > **Purpose**: Map each problem domain to the Azure service that solves it.
 
 ---
@@ -47,8 +47,8 @@ timestamp: 2026-06-14T00:00:00Z
 
 | Resource | Path |
 |:---|:---|
-| Messaging patterns overview | [`architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md) |
-| Idempotency store pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md) |
-| Saga pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
-| Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
+| Messaging patterns overview | [`architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md`](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/messaging-patterns-overview.md) |
+| Idempotency store pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md`](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md) |
+| Saga pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md`](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md) |
+| Outbox pattern | [`architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md`](../../../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md) |
 | .NET concurrency patterns | [`programming-languages/csharp/dotnet-multi-threading/`](../../programming-languages/csharp/dotnet-multi-threading/) |

@@ -7,14 +7,14 @@ timestamp: 2026-06-14T00:00:00Z
 
 # 2. Concurrency & Transactions
 
-> **Parent**: [System Design Interview Reference](index.md)  
-> **Source**: [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md) — Questions #5–8
+> **Parent**: [System Design Interview Reference](../index.md)  
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Questions #5–8
 
 ---
 
 ## tx-01: Double-Booking
 
-> **Source**: [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md) — Q#5
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#5
 
 
 | | |
@@ -31,13 +31,13 @@ timestamp: 2026-06-14T00:00:00Z
 | **Unique constraint** | `UNIQUE(seat_id, event_id)` — let the DB reject duplicates | Simple resources, no business logic needed |
 | **Serializable isolation** | `BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE` — retry on serialization failure | When multiple tables must stay consistent |
 
-> **Azure**: Service Bus duplicate detection + Cosmos DB optimistic concurrency (ETags) | **General**: [Saga Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
+> **Azure**: Service Bus duplicate detection + Cosmos DB optimistic concurrency (ETags) | **General**: [Saga Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/saga-pattern.md)
 
 ---
 
 ## tx-02: Isolation Levels
 
-> **Source**: [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md) — Q#6
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#6
 
 
 | | |
@@ -62,13 +62,13 @@ timestamp: 2026-06-14T00:00:00Z
 - You cannot redesign the access pattern to avoid the anomaly
 
 > **Azure**: Azure SQL supports all four isolation levels; Cosmos DB uses snapshot isolation by default  
-> **Also see**: [`sqld-07`: Staff Engineer's 5 Questions](19-sql-system-design-takeaways.md#sqld-07-staff-engineers-5-questions) — consistency requirements, and [`sqld-02`: SQL vs NoSQL](19-sql-system-design-takeaways.md#sqld-02-sql-vs-nosql-decision-framework) — ACID as decision factor
+> **Also see**: [`sqld-07`: Staff Engineer's 5 Questions](databases/sql-system-design.md#sqld-07-staff-engineers-5-questions) — consistency requirements, and [`sqld-02`: SQL vs NoSQL](databases/sql-system-design.md#sqld-02-sql-vs-nosql-decision-framework) — ACID as decision factor
 
 ---
 
 ## tx-03: Distributed Locks
 
-> **Source**: [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md) — Q#7
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#7
 
 
 | | |
@@ -113,7 +113,7 @@ Client A resumes → writes with token 17 → RESOURCE REJECTS (18 > 17)
 
 ## tx-04: Idempotency
 
-> **Source**: [20 Design Interview Questions](../articles/medium/20-design-interview-questions.md) — Q#8
+> **Source**: [20 Design Interview Questions](../../articles/medium/20-design-interview-questions.md) — Q#8
 
 
 | | |
@@ -140,14 +140,14 @@ Server → Check idempotency store for key "a1b2c3d4"
 | **Redis** | `SET key response NX EX 86400` (24h TTL) | Faster, but risk of eviction under memory pressure |
 | **API Gateway** | Built-in idempotency (Stripe-style) | Offload from application |
 
-> **Azure**: Service Bus duplicate detection (configurable window) | **General**: [Idempotency Store Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md)
+> **Azure**: Service Bus duplicate detection (configurable window) | **General**: [Idempotency Store Pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/idempotency-store-pattern.md)
 
 ---
 
 ## tx-05: Locks for Coordination, Database for Correctness
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
-> **Also see**: [Distributed Lock](../reference-dictionary/data-concurrency.md#distributed-lock), [Fencing Token](../reference-dictionary/data-concurrency.md#fencing-token)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Also see**: [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock), [Fencing Token](../../reference-dictionary/data-concurrency.md#fencing-token)
 
 | | |
 |:---|:---|
@@ -164,8 +164,8 @@ Server → Check idempotency store for key "a1b2c3d4"
 
 ## tx-06: Database Invariants Over Lock Timeouts
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
-> **Also see**: [Double-Booking Problem](../reference-dictionary/data-concurrency.md#double-booking-problem), [Exclusion Constraint](../reference-dictionary/data-concurrency.md#exclusion-constraint), [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Also see**: [Double-Booking Problem](../../reference-dictionary/data-concurrency.md#double-booking-problem), [Exclusion Constraint](../../reference-dictionary/data-concurrency.md#exclusion-constraint), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update)
 
 | | |
 |:---|:---|
@@ -190,15 +190,15 @@ Server → Check idempotency store for key "a1b2c3d4"
 
 ## tx-07: Post-Commit Confirmation and Events
 
-> **Source**: [The Double-Booking Trap in Distributed Systems](../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
-> **Also see**: [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture), [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key)
+> **Source**: [The Double-Booking Trap in Distributed Systems](../../articles/medium/The%20Double-Booking%20Trap%20in%20Distributed%20Systems%20Why%20Locks%20Alone%20Fail%20to%20Guarantee%20Correctness.md)
+> **Also see**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Change Data Capture](../../reference-dictionary/data-concurrency.md#change-data-capture), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 
 | | |
 |:---|:---|
 | **Problem** | A user receives a booking confirmation or a downstream event is emitted for a transaction that ultimately rolls back |
 | **Root cause** | Confirmations and events are sent before the database transaction commits, creating a window where the system state and external communication disagree |
 
-**Strategy**: Emit events and confirmations only after the transaction commits. Use the [transactional outbox pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md), [Change Data Capture (CDC)](../reference-dictionary/data-concurrency.md#change-data-capture), or post-commit hooks. Pair with idempotency keys so retries do not create duplicates.
+**Strategy**: Emit events and confirmations only after the transaction commits. Use the [transactional outbox pattern](../../architecture-general/03-integration-communication-architecture/messaging-patterns/outbox-pattern.md), [Change Data Capture (CDC)](../../reference-dictionary/data-concurrency.md#change-data-capture), or post-commit hooks. Pair with idempotency keys so retries do not create duplicates.
 
 **Tradeoff**: Post-commit dispatch adds a persistence and coordination step, but it prevents false positives and makes retries safe.
 

@@ -7,12 +7,12 @@ timestamp: 2026-06-25T00:00:00Z
 
 # 49. CQRS — Payment Gateway Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Designing a Payment Gateway System: Multi-Provider Aggregation, Smart Routing & Merchant Onboarding](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Designing a Payment Gateway System: Multi-Provider Aggregation, Smart Routing & Merchant Onboarding](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md)
 > **Purpose**: Extract reusable architectural patterns from payment gateway system design: intelligent provider routing, adapter-based multi-provider integration, dynamic pricing, automated reconciliation, and multi-layer caching for extreme scale.
 
-> **Also see**: [Global Payment System](37-cqrs-key-takeaways.md), [CQRS for Fintech](25-cqrs-fintech-key-takeaways.md), [Resilience Patterns](10-resilience-patterns.md), [API & Network Design](04-api-network-design.md), [Caching Architecture](03-caching-architecture.md)
-> **Dictionary**: [Payment Gateway](../reference-dictionary/fintech.md#payment-gateway), [Payment Processor](../reference-dictionary/fintech.md#payment-processor), [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker), [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
+> **Also see**: [Global Payment System](cqrs-fintech/global-payment-system.md), [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md), [Resilience Patterns](resilience/resilience-patterns.md), [API & Network Design](api-network/api-network-design.md), [Caching Architecture](caching/caching-architecture.md)
+> **Dictionary**: [Payment Gateway](../../reference-dictionary/fintech.md#payment-gateway), [Payment Processor](../../reference-dictionary/fintech.md#payment-processor), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging Architecture · §9.1.1 Financial Services Architecture (Payment Processing)
 
 ---
@@ -31,7 +31,7 @@ timestamp: 2026-06-25T00:00:00Z
 
 ## cqrs-22: Smart Routing with Multi-Factor Scoring
 
-> **Source**: [§"Part 4: Smart Routing Algorithm"](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-4-smart-routing-algorithm)
+> **Source**: [§"Part 4: Smart Routing Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-4-smart-routing-algorithm)
 
 | | |
 |:---|:---|
@@ -64,13 +64,13 @@ ProviderScore = (
 
 **Tradeoff**: Multi-factor scoring adds milliseconds of compute per transaction and requires continuous metrics collection, but it typically improves success rate by 2–5% and reduces cost by 5–15% compared to static routing.
 
-> 📖 **Dictionary**: [Payment Gateway](../reference-dictionary/fintech.md#payment-gateway) · [Payment Processor](../reference-dictionary/fintech.md#payment-processor)
+> 📖 **Dictionary**: [Payment Gateway](../../reference-dictionary/fintech.md#payment-gateway) · [Payment Processor](../../reference-dictionary/fintech.md#payment-processor)
 
 ---
 
 ## cqrs-23: Provider Adapter + Circuit Breaker for Failover
 
-> **Source**: [§"Part 5: Multi-Provider Integration & Failover"](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-5-multi-provider-integration--failover)
+> **Source**: [§"Part 5: Multi-Provider Integration & Failover"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-5-multi-provider-integration--failover)
 
 | | |
 |:---|:---|
@@ -100,13 +100,13 @@ ProviderScore = (
 
 **Tradeoff**: Maintaining adapters for 50+ providers is significant engineering overhead, and failover adds ~50–100ms latency; the alternative — provider downtime blocking revenue — is unacceptable for a 99.99% availability target.
 
-> 📖 **Dictionary**: [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker) · [Half-Open State](../reference-dictionary/resilience.md#half-open-state)
+> 📖 **Dictionary**: [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker) · [Half-Open State](../../reference-dictionary/resilience.md#half-open-state)
 
 ---
 
 ## cqrs-24: Dynamic Fee Calculation with Multiple Pricing Models
 
-> **Source**: [§"Part 6: Fee Calculation Algorithm"](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-6-fee-calculation-algorithm)
+> **Source**: [§"Part 6: Fee Calculation Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-6-fee-calculation-algorithm)
 
 | | |
 |:---|:---|
@@ -132,7 +132,7 @@ ProviderScore = (
 
 ## cqrs-25: Automated Reconciliation with Discrepancy Detection
 
-> **Source**: [§"Part 10: Reconciliation Algorithm"](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-10-reconciliation-algorithm)
+> **Source**: [§"Part 10: Reconciliation Algorithm"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-10-reconciliation-algorithm)
 
 | | |
 |:---|:---|
@@ -158,13 +158,13 @@ ProviderScore = (
 
 **Tradeoff**: Daily batch delays discrepancy detection by up to 24 hours, but it is efficient and cost-effective for high volume; real-time reconciliation adds cost and complexity and should be reserved for high-risk transactions.
 
-> 📖 **Dictionary**: [Reconciliation](../reference-dictionary/fintech.md#reconciliation)
+> 📖 **Dictionary**: [Reconciliation](../../reference-dictionary/fintech.md#reconciliation)
 
 ---
 
 ## cqrs-26: Multi-Layer Caching for Sub-50ms Routing Decisions
 
-> **Source**: [§"Part 12: Scaling Strategies — C. Caching Strategy"](../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-13-scaling-strategies)
+> **Source**: [§"Part 12: Scaling Strategies — C. Caching Strategy"](../../articles/medium/Designing%20a%20Payment%20Gateway%20System%20Multi-Provider%20Aggregation%2C%20Smart%20Routing%20%26%20Merchant%20Onboarding.md#part-13-scaling-strategies)
 
 | | |
 |:---|:---|
@@ -186,7 +186,7 @@ ProviderScore = (
 
 **Tradeoff**: Cached routing decisions can be slightly stale if a provider degrades between cache refreshes, but circuit breaker health checks (independent of cache) catch sudden outages; the <50ms p95 target is otherwise impossible at 20K TPS.
 
-> 📖 **Dictionary**: [Cache-Aside](../reference-dictionary/caching.md#cache-aside) · [TTL](../reference-dictionary/caching.md#ttl-time-to-live)
+> 📖 **Dictionary**: [Cache-Aside](../../reference-dictionary/caching.md#cache-aside) · [TTL](../../reference-dictionary/caching.md#ttl-time-to-live)
 
 ---
 

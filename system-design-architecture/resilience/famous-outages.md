@@ -7,11 +7,11 @@ timestamp: 2026-06-19T00:00:00Z
 
 # 39. Famous Outages — Resilience Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [What 5 Famous Outages Taught Me About System Design](../articles/medium/What%205%20Famous%20Outages%20Taught%20Me%20About%20System%20Design.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [What 5 Famous Outages Taught Me About System Design](../../articles/medium/What%205%20Famous%20Outages%20Taught%20Me%20About%20System%20Design.md)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
-> **Also see**: [Resilience Patterns](10-resilience-patterns.md), [Azure Service Mapping](07-azure-service-mapping.md)
-> **Dictionary**: [Resilience](../reference-dictionary/resilience.md), [Observability](../reference-dictionary/resilience.md#observability), [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker)
+> **Also see**: [Resilience Patterns](resilience/resilience-patterns.md), [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
+> **Dictionary**: [Resilience](../../reference-dictionary/resilience.md), [Observability](../../reference-dictionary/resilience.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
 
 ---
 
@@ -47,9 +47,9 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Observability](../reference-dictionary/resilience.md#observability), [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker)
-- **Azure Services**: [Azure Monitor](../architecture-azure/observability/), [Application Insights](../architecture-azure/observability/)
-- **Related Patterns**: [Resilience Patterns §resilience-03 (Bulkhead)](10-resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation)
+- **Dictionary**: [Observability](../../reference-dictionary/resilience.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
+- **Azure Services**: [Azure Monitor](../../architecture-azure/observability/), [Application Insights](../../architecture-azure/observability/)
+- **Related Patterns**: [Resilience Patterns §resilience-03 (Bulkhead)](resilience/resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation)
 
 ---
 
@@ -73,9 +73,9 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Blast Radius](../reference-dictionary/resilience.md#blast-radius), [Configuration Drift](../reference-dictionary/architecture-patterns.md#configuration-drift)
-- **Azure Services**: [Azure App Configuration](../architecture-azure/devops/), [Feature Flags](../architecture-azure/devops/)
-- **Related Patterns**: [Resilience Patterns §resilience-02 (Circuit Breaker)](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)
+- **Dictionary**: [Blast Radius](../../reference-dictionary/resilience.md#blast-radius), [Configuration Drift](../../reference-dictionary/architecture-patterns.md#configuration-drift)
+- **Azure Services**: [Azure App Configuration](../../architecture-azure/devops/), [Feature Flags](../../architecture-azure/devops/)
+- **Related Patterns**: [Resilience Patterns §resilience-02 (Circuit Breaker)](resilience/resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)
 
 ---
 
@@ -99,9 +99,9 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Bulkhead](../reference-dictionary/resilience.md#bulkhead), [Blast Radius](../reference-dictionary/resilience.md#blast-radius)
-- **Azure Services**: [Azure Regions & Availability Zones](../architecture-azure/networking/), [Update Management](../architecture-azure/governance/)
-- **Related Patterns**: [Resilience Patterns §resilience-03 (Bulkhead)](10-resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation)
+- **Dictionary**: [Bulkhead](../../reference-dictionary/resilience.md#bulkhead), [Blast Radius](../../reference-dictionary/resilience.md#blast-radius)
+- **Azure Services**: [Azure Regions & Availability Zones](../../architecture-azure/networking/), [Update Management](../../architecture-azure/governance/)
+- **Related Patterns**: [Resilience Patterns §resilience-03 (Bulkhead)](resilience/resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation)
 
 ---
 
@@ -125,9 +125,9 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Fail-safe vs Fail-secure](../reference-dictionary/resilience.md#fail-safe-vs-fail-secure), [DNS](../reference-dictionary/architecture-patterns.md)
-- **Azure Services**: [Azure DNS](../architecture-azure/networking/), [Azure Front Door](../architecture-azure/networking/)
-- **Related Patterns**: [Resilience Patterns §resilience-02 (Circuit Breaker)](10-resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)
+- **Dictionary**: [Fail-safe vs Fail-secure](../../reference-dictionary/resilience.md#fail-safe-vs-fail-secure), [DNS](../../reference-dictionary/architecture-patterns.md)
+- **Azure Services**: [Azure DNS](../../architecture-azure/networking/), [Azure Front Door](../../architecture-azure/networking/)
+- **Related Patterns**: [Resilience Patterns §resilience-02 (Circuit Breaker)](resilience/resilience-patterns.md#resilience-02-circuit-breaker--stop-calling-dead-services)
 
 ---
 
@@ -152,9 +152,9 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Blast Radius](../reference-dictionary/resilience.md#blast-radius), [Least Privilege](../reference-dictionary/security.md)
-- **Azure Services**: [Azure RBAC](../architecture-azure/security/), [Azure Policy](../architecture-azure/governance/)
-- **Related Patterns**: [Resilience Patterns §resilience-01 (Rate Limiting & Backpressure)](10-resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic)
+- **Dictionary**: [Blast Radius](../../reference-dictionary/resilience.md#blast-radius), [Least Privilege](../../reference-dictionary/security.md)
+- **Azure Services**: [Azure RBAC](../../architecture-azure/security/), [Azure Policy](../../architecture-azure/governance/)
+- **Related Patterns**: [Resilience Patterns §resilience-01 (Rate Limiting & Backpressure)](resilience/resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic)
 
 ---
 
