@@ -43,6 +43,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Direct Upload | [`#direct-upload`](#direct-upload) |
 | Pre-signed URL | [`#pre-signed-url`](#pre-signed-url) |
 | Checksum | [`#checksum`](#checksum) |
+| Backward Compatibility | [`#backward-compatibility`](#backward-compatibility) |
 
 ---
 
@@ -567,7 +568,34 @@ A technique for uploading large files by splitting them into smaller, independen
 - Single-shot uploads where the connection is guaranteed reliable
 
 ### Also see
-- [Resumable Upload](#resumable-upload) · [Upload Session](#upload-session) · [Direct Upload](#direct-upload)
+- [Resumable Upload](#resumable-upload) · [Upload Session](#upload-session)
+
+---
+
+## Backward Compatibility
+
+The discipline of ensuring that **a new version of an API, schema, or contract does not break existing consumers**. In API design, backward compatibility means existing clients continue to function without modification. In event-driven systems (Kafka), it means existing consumers can still deserialize and process events produced with a new schema version.
+
+Backward compatibility is not optional for shared contracts — it is a **hard requirement** when multiple independent teams depend on the same interface. Breaking backward compatibility silently is the fastest way to cause cascading production incidents across teams.
+
+### Key Characteristics
+- **Additive changes are safe**: Adding optional fields, new endpoints, or new event types does not break existing consumers
+- **Removal or redefinition is breaking**: Removing a field, changing its type, or redefining its semantics breaks consumers
+- **Enforced at registration time**: Schema registries reject incompatible schema changes before data is published
+- **Deprecation, not deletion**: Breaking changes follow a deprecate→migrate→remove lifecycle with a published window
+
+### When to Use
+- Any public API, shared event stream, or library interface with consumers outside your team
+- Kafka topics consumed by multiple independent teams — schema changes must be backward-compatible
+- REST/gRPC APIs where clients cannot be forced to upgrade simultaneously
+
+### When NOT to Use
+- Internal code with a single consumer owned by the same team
+- Prototypes where the interface is still evolving rapidly
+- When you control both producer and consumer and can deploy atomically
+
+### Also see
+- [Contract-First Design](#contract-first-design) · [API Versioning](#api-versioning) · [Expand-Contract Pattern](#expand-contract-pattern) · [Migration-Driven Deprecation](#migration-driven-deprecation) · [Schema Contract](../messaging.md#schema-contract-event-as-public-api) · [Direct Upload](#direct-upload)
 
 ---
 

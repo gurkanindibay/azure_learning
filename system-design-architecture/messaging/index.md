@@ -27,6 +27,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [kafka-producer-ack-idempotency.md](kafka-producer-ack-idempotency.md) | `broker-59` – `broker-65` | Producer ack failure, Idempotent consumer, Atomic deduplication, Shared dedup store, Effective exactly-once |
 | [senior-engineers-kafka-tradeoffs.md](senior-engineers-kafka-tradeoffs.md) | `broker-66` – `broker-71` | Requirements-first design, Read/write path separation, Idempotency, Kafka role clarity, Caching strategy, Design for failure |
 | [apache-iggy.md](apache-iggy.md) | `iggy-01` – `iggy-08` | Kafka alternative landscape, Rust in infrastructure, io_uring, Streaming use-case fit |
+| [kafka-user-activity-tracking.md](kafka-user-activity-tracking.md) | `broker-72` – `broker-76` | Constraints-first design, Async publishing degradation, Immutable event contracts, Consumer lag as design feature, Replay-safe idempotency |
 
 ## Cross-References
 

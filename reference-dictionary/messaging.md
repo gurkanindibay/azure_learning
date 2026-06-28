@@ -44,6 +44,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Deduplication Store | [`#deduplication-store`](#deduplication-store) |
 | Distributed Commit Log | [`#distributed-commit-log`](#distributed-commit-log) |
 | Message Batching | [`#message-batching`](#message-batching) |
+| Replay (Kafka Reprocessing) | [`#replay-kafka-reprocessing`](#replay-kafka-reprocessing) |
+| Producer Acknowledgement | [`#producer-acknowledgement`](#producer-acknowledgement) |
+| Schema Registry | [`#schema-registry`](#schema-registry) |
+| Schema Contract (Event as Public API) | [`#schema-contract-event-as-public-api`](#schema-contract-event-as-public-api) |
 
 ---
 
@@ -565,4 +569,115 @@ The practice of **accumulating multiple messages into a single batch** before wr
 
 ### Also see
 - [Zero-Copy Transfer](#zero-copy-transfer) · [Distributed Commit Log](#distributed-commit-log) · [Consumer Lag](messaging.md#consumer-lag)
+
+---
+
+## Replay (Kafka Reprocessing)
+
+The ability to **reset consumer offsets to an earlier point in the log** and reprocess historical events — for bug fixes, schema migrations, new business logic, or recovery from corruption. In Kafka, replay is possible because messages are retained based on a time/size policy rather than deleted after consumption, unlike traditional message queues.
+
+Replay is not an edge case or recovery mechanism — it is a **core design feature** of event-streaming systems. A system that cannot replay safely (without corruption, duplication, or side-effect damage) is not production-ready.
+
+### Key Characteristics
+- **Offset-based**: Consumers reset their position to an earlier offset and resume processing from that point
+- **Retention-dependent**: Replay window is bounded by the topic's retention policy (e.g., 7 days, 30 days, or forever for compacted topics)
+- **Requires idempotency**: Replaying the same events must produce the same outcome — idempotent consumers are a prerequisite
+- **Intentional, not accidental**: Replay is triggered deliberately for migrations or fixes, not as a crash-recovery mechanism (which offset commits handle)
+
+### When to Use
+- Deploying a new consumer with enriched logic that must backfill historical data
+- Fixing a processing bug where already-consumed events produced incorrect results
+- Schema migrations where events must be reprocessed against a new schema version
+- Rebuilding read models or projections from the event stream
+
+### When NOT to Use
+- As a substitute for proper error handling — replay is for intentional reprocessing, not crash recovery
+- When retention is too short to cover the needed replay window
+- When side effects are not idempotent and cannot be made idempotent
+
+### Also see
+- [Offset Commit](#offset-commit) · [Idempotent Consumer](#idempotent-consumer) · [Distributed Commit Log](#distributed-commit-log) · [Compacted Topic](#compacted-topic)
+
+---
+
+## Producer Acknowledgement
+
+The **confirmation from a Kafka broker to a producer** that a message has been successfully received and (depending on the `acks` setting) replicated. Producer acknowledgements are the bridge between async fire-and-forget publishing and guaranteed delivery.
+
+| `acks` Setting | Behaviour | Durability | Latency |
+|:---|:---|:---|:---|
+| `acks=0` | Producer does not wait for any acknowledgement | None — messages may be lost | Lowest |
+| `acks=1` | Leader broker acknowledges after writing to its local log | Leader-only — lost if leader fails before replication | Low |
+| `acks=all` (or `-1`) | Leader waits for all in-sync replicas to acknowledge | Highest — survives up to `min.insync.replicas - 1` failures | Highest |
+
+### Key Characteristics
+- **Durability-latency tradeoff**: Stronger acknowledgements (acks=all) increase durability at the cost of producer latency
+- **Bounded retries**: Failed acknowledgements trigger retries (configurable via `retries` and `delivery.timeout.ms`)
+- **Idempotent producer**: When combined with `enable.idempotence=true`, retries do not produce duplicates
+- **Async by default**: Producers send messages asynchronously; the acknowledgement arrives on a callback
+
+### When to Use
+- `acks=all` when data loss is unacceptable (financial events, audit logs, user activity with compliance needs)
+- `acks=1` when throughput matters more than absolute durability and occasional loss is tolerable
+- `acks=0` only for metrics or non-critical telemetry where throughput is paramount
+
+### When NOT to Use
+- `acks=0` for any data that feeds business decisions or analytics
+- Blindly setting `acks=all` without also configuring `min.insync.replicas` — the setting is meaningless if all replicas are not in-sync
+
+### Also see
+- [At-Least-Once Semantics](#at-least-once-semantics) · [Exactly-Once Semantics](#exactly-once-semantics) · [Idempotent Consumer](#idempotent-consumer) · [Message Batching](#message-batching)
+
+---
+
+## Schema Registry
+
+A **centralized service for managing and validating schemas** (Avro, Protobuf, JSON Schema) used by Kafka producers and consumers. The schema registry stores versioned schemas, enforces compatibility rules, and serializes/deserializes data — ensuring that producers and consumers agree on the structure of messages without embedding the schema in every payload.
+
+Without a schema registry, schema changes are silent and breaking — a consumer receives bytes it cannot parse. With a schema registry, incompatible schema changes are rejected at producer registration time, before any data is published.
+
+### Key Characteristics
+- **Compatibility enforcement**: BACKWARD, FORWARD, FULL, or NONE — checked at schema registration, not at runtime
+- **Schema evolution**: Each schema version is stored immutably; consumers can request the specific version they understand
+- **Reduced payload size**: The schema ID (4–8 bytes) is sent with each message instead of the full schema
+- **Language-agnostic**: Avro/Protobuf schemas generate code in multiple languages from the same schema definition
+
+### When to Use
+- Any Kafka topic consumed by multiple independent teams
+- Event streams where the producing service evolves independently of consumers
+- Systems with compliance or audit requirements that need a record of schema changes over time
+
+### When NOT to Use
+- Single-team internal topics where schema changes are coordinated directly
+- Prototypes where schema stability is not yet established
+- Very high-throughput topics where the registry lookup adds unacceptable latency (mitigated by client-side caching)
+
+### Also see
+- [Schema Contract](#schema-contract-event-as-public-api) · [Backward Compatibility](../api-design.md#backward-compatibility) · [Contract-First Design](../api-design.md#contract-first-design) · [Event Sourcing](../cqrs-event-driven.md#event-sourcing)
+
+---
+
+## Schema Contract (Event as Public API)
+
+The principle that **Kafka topic schemas are public, versioned contracts** between producers and consumers — not internal DTOs that can change freely. Once a topic has multiple independent consumer teams, its schema becomes a shared API with all the governance requirements of a REST or gRPC endpoint: backward compatibility, deprecation windows, and migration paths.
+
+> "Kafka topics become public APIs whether you want them to or not."
+
+### Key Characteristics
+- **Backward compatibility is mandatory**: New schema versions must not break existing consumers
+- **No downstream assumptions**: Events carry only the data the producer owns; consumers enrich from their own sources
+- **Versioned explicitly**: Schema changes are tracked through a schema registry (e.g., Confluent Schema Registry, AWS Glue)
+- **Breaking changes are migrations**: Removing or redefining a field is a migration with a planned window, not a code change
+
+### When to Use
+- Any Kafka topic consumed by more than one team or service
+- Event streams that feed multiple downstream systems (analytics, real-time dashboards, ML pipelines)
+- Systems where the producing service evolves independently of consumers
+
+### When NOT to Use
+- Internal topics with a single producer and single consumer owned by the same team
+- Prototypes or experiments where the schema is still unstable
+
+### Also see
+- [Schema Registry](#schema-registry) · [Event Sourcing](../cqrs-event-driven.md#event-sourcing) · [Contract-First Design](../api-design.md#contract-first-design) · [Backward Compatibility](../api-design.md#backward-compatibility)
 

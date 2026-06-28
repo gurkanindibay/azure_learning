@@ -27,3 +27,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [kafka-over-rabbitmq](kafka-over-rabbitmq.md)
 - [kafka-producer-acknowledgment-failure](kafka-producer-acknowledgment-failure.md)
 - [the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1](the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
+- [designing-user-activity-tracking-system-at-massive-scale](designing-user-activity-tracking-system-at-massive-scale.md)

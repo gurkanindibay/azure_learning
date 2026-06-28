@@ -1666,3 +1666,30 @@ A **tree-structured organizational model** for multi-tenant systems where tenant
 ### Also see
 - [Apache Cassandra](#apache-cassandra) · [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [Active-Active](#active-active)
 
+---
+
+## Write-Ahead Buffer
+
+A **local, durable staging area** placed between an application and a remote message broker (e.g., Kafka). Events are first written synchronously to this local buffer, then asynchronously published to the broker. If the broker is unavailable or the async publish fails, events remain safe in the local buffer and are retried later.
+
+> "Write to local disk first, publish to Kafka second."
+
+### Key Characteristics
+- **Durable before publish**: Events survive application crashes, restarts, and extended broker outages
+- **Decouples user latency from broker availability**: The user-facing request is acknowledged once the local write completes, not when Kafka confirms
+- **Append-only with compaction**: Events are appended, then compacted (deleted) after successful broker publish
+- **Common implementations**: Local file on disk, embedded SQLite, RocksDB, or a dedicated WAL library
+
+### When to Use
+- Zero-data-loss requirements where async publishing is used to avoid blocking user requests
+- Systems where Kafka may experience extended unavailability and in-memory buffers would overflow
+- High-throughput ingestion pipelines where every event must be accounted for
+
+### When NOT to Use
+- When the broker itself is the system of record and local durability adds unnecessary complexity
+- Low-throughput systems where synchronous producer acks with retries are sufficient
+- When disk I/O on the producer side would become a bottleneck (measure first)
+
+### Also see
+- [Producer Acknowledgement](../messaging.md#producer-acknowledgement) · [At-Least-Once Semantics](../messaging.md#at-least-once-semantics) · [Idempotent Consumer](../messaging.md#idempotent-consumer)
+
