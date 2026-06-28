@@ -84,6 +84,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Preemption | [`#preemption`](#preemption) |
 | Fair Sharing | [`#fair-sharing`](#fair-sharing) |
 | Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
+| Durability | [`#durability`](#durability) |
+| Read/Write Path Separation | [`#read-write-path-separation`](#read-write-path-separation) |
+| Apache Flink | [`#apache-flink`](#apache-flink) |
 
 ---
 
@@ -1507,4 +1510,79 @@ A **tree-structured organizational model** for multi-tenant systems where tenant
 
 ### Also see
 - [Fair Sharing](#fair-sharing) · [Preemption](#preemption) · [Cohort/ClusterQueue (Kueue concepts)](https://kueue.sigs.k8s.io/docs/concepts/)
+
+---
+
+## Durability
+
+**Durability** is the guarantee that once a write operation has been acknowledged as successful, the data will persist and survive system failures (power loss, crashes, restarts). It is the "D" in ACID transactions and a fundamental property of any system that cannot afford data loss.
+
+### Key Characteristics
+- **Write-ahead logging (WAL)**: Changes are recorded in an append-only log before being applied, enabling recovery after crashes
+- **Replication**: Data is copied to multiple nodes/disks so no single failure loses committed writes
+- **fsync/Flush**: The system forces data to durable storage (disk) before acknowledging the write to the client — in-memory acknowledgment is NOT durability
+- **Separate from availability**: A system can be durable but unavailable (e.g., during recovery); durability guarantees that data will eventually be accessible
+
+### When to Use
+- Financial systems where lost transactions are unacceptable
+- Event pipelines where every event must be recoverable (Kafka's `acks=all`, replication factor ≥ 3)
+- Any system where the cost of data loss exceeds the cost of durability mechanisms
+
+### When NOT to Use
+- Ephemeral caches where data is reconstructed from a durable source on restart (Redis as cache, not as primary store)
+- Real-time metrics where occasional data loss is acceptable and throughput is prioritized
+- Prototypes and experiments where simplicity outweighs data safety
+
+### Also see
+- [Idempotency](cqrs-event-driven.md#idempotency) · [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Consistency](data-concurrency.md)
+
+---
+
+## Read/Write Path Separation
+
+**Read/Write Path Separation** is an architectural pattern where the systems handling write operations are physically or logically separated from those handling read operations. Each path is optimized for fundamentally different concerns: the write path prioritizes durability, consistency, and correctness; the read path prioritizes low latency, massive throughput, and responsiveness.
+
+### Key Characteristics
+- **Write path** focuses on: durability, consistency, ordering, data correctness, transactional integrity
+- **Read path** focuses on: low latency, massive throughput, fast responses, eventual consistency
+- **Asymmetric scaling**: Read replicas can scale horizontally independently of the write master
+- **CQRS is the formalized version**: Command Query Responsibility Segregation explicitly separates command (write) models from query (read) models
+
+### When to Use
+- Read-heavy workloads where reads outnumber writes by 100:1 or more (e.g., election results, news feeds, leaderboards)
+- Systems where write consistency requirements conflict with read performance requirements
+- National-scale events where millions of concurrent reads would overwhelm a single database
+
+### When NOT to Use
+- Write-heavy OLTP systems where read volume is low and read-your-writes consistency is critical
+- Simple CRUD applications where the added complexity of separate paths exceeds the benefit
+- Early-stage products where the read/write ratio is unknown or unvalidated
+
+### Also see
+- [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Caching](caching.md) · [Database Per Service](#database-per-service)
+
+---
+
+## Apache Flink
+
+**Apache Flink** is an open-source, distributed stream processing framework designed for stateful computations over unbounded and bounded data streams. It provides exactly-once consistency guarantees, high throughput with low latency, and sophisticated state management — making it ideal for continuously evolving results like real-time aggregations, leaderboards, and fraud detection.
+
+### Key Characteristics
+- **Stateful processing**: Maintains and updates state over time (running totals, session windows, pattern detection) with exactly-once guarantees
+- **Event-time processing**: Handles out-of-order events correctly using watermarks, not just processing-time
+- **Checkpointing**: Asynchronous, incremental snapshots of operator state for failure recovery without reprocessing the entire stream
+- **Unified batch/streaming**: Batch is treated as a special case of streaming (bounded streams), enabling the same code for both paradigms
+
+### When to Use
+- Continuously changing results that depend on accumulated state (election totals, leaderboards, real-time dashboards)
+- Complex event processing with windowed aggregations, pattern matching (CEP), and multi-stream joins
+- Pipelines requiring exactly-once semantics end-to-end (with transactional sinks like Kafka or Iceberg)
+
+### When NOT to Use
+- Simple stateless transformations where Kafka Streams or a few Kafka consumers + a database suffice
+- When the team lacks operational experience with distributed stream processors — Flink's checkpointing and state backend configuration require expertise
+- Batch-only workloads where Spark or a SQL engine provides simpler alternatives
+
+### Also see
+- [Kafka (Decoupling)](messaging.md) · [Stream Processing](../system-design-architecture/stream-processing/) · [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
 
