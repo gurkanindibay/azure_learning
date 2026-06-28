@@ -30,6 +30,7 @@ This section covers data management, analytics platforms, and AI/ML architecture
 - [Real-Time Analytics Architecture](03-streaming-architecture/01-real-time-analytics-architecture.md) - Windowing, watermarks, exactly-once semantics
 - [Stream Processing Architecture](03-streaming-architecture/02-stream-processing-architecture.md) - Stream processors, topologies, state management
 - [Change Data Capture (CDC)](03-streaming-architecture/03-change-data-capture.md) - Database change propagation in real time
+- [Apache Flink Architecture](03-streaming-architecture/04-apache-flink-architecture.md) - Comprehensive guide to Flink use cases, sources/sinks, and production topologies
 
 ### 4.4 AI / ML Architecture
 - [Machine Learning Pipeline Architecture](04-ai-ml-architecture/01-machine-learning-pipeline-architecture.md) - End-to-end ML pipelines from data to deployment
