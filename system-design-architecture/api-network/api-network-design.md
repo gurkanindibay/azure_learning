@@ -612,3 +612,147 @@ The algorithm (token bucket, fixed window, etc.) remains identical; only the per
 
 > **Dictionary**: [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting)  
 > **General**: §8.3 API Design
+
+---
+
+## api-13: Upload Session & Resume Logic
+
+> **Source**: [Resumable Uploads for Huge Files](../../articles/system-design-interview/resumable-uploads-chunking-large-files.md)
+
+| | |
+|:---|:---|
+| **Problem** | User uploads 5 GB; network drops after 4.8 GB. Without resume, the entire upload must restart — most users abandon. |
+| **Root cause** | The naive approach treats the entire file as a single `POST /upload` operation. If the connection breaks, all progress is lost. |
+
+**Strategy — Upload Session with chunk tracking**:
+
+```
+Upload Session flow:
+  1. Client → Server: POST /upload/session  { fileName, totalSize }
+     Server → Client: { sessionId: "UPLOAD-12345" }
+
+  2. Client → Server: POST /upload/session/UPLOAD-12345/chunk  { chunkNumber: 1, data: <bytes> }
+     Server → Client: 200 OK
+
+  3. Network drops after chunk 512 of 640.
+
+  4. Client reconnects:
+     Client → Server: GET /upload/session/UPLOAD-12345
+     Server → Client: { uploadedChunks: [1..512], missingChunks: [513..640] }
+
+  5. Client resumes from chunk 513 — only missing chunks are uploaded.
+```
+
+**Progress persistence** — the session state must survive browser refresh, app restart, and laptop reboot:
+
+| Storage | Durability | Latency | Best for |
+|:---|:---|:---|:---|
+| **Local Storage** | Lost on device change | Instant | Prototyping only |
+| **Database** | Permanent | ~5 ms | Production — survives everything |
+| **Redis** | Volatile (configurable) | <1 ms | High-throughput with DB fallback |
+
+| Tradeoff | Description |
+|:---|:---|
+| **Failure isolation** | Only the failed chunk is retried, not the entire file |
+| **Session overhead** | Each chunk carries `sessionId` + `chunkNumber` metadata |
+| **Resume reliability** | Requires the session to be persisted server-side, not just in browser memory |
+
+> **Dictionary**: [Resumable Upload](../../reference-dictionary/api-design.md#resumable-upload), [Upload Session](../../reference-dictionary/api-design.md#upload-session)  
+> **Azure**: Blob Storage block blobs (staged upload with `Put Block` + `Put Block List`)  
+> **General**: §8.3 API Design
+
+---
+
+## api-14: Idempotent Chunk Uploads
+
+> **Source**: [Resumable Uploads for Huge Files](../../articles/system-design-interview/resumable-uploads-chunking-large-files.md)
+
+| | |
+|:---|:---|
+| **Problem** | Chunk 513 was uploaded successfully, but the acknowledgment was lost in transit. The client retries — the server now has a duplicate. |
+| **Root cause** | The client cannot distinguish between "chunk uploaded, ACK lost" and "chunk failed" — both look the same from the client side. |
+
+**Strategy** — make every chunk upload idempotent using `(sessionId, chunkNumber)` as a unique key:
+
+```
+Client sends chunk 513 again:
+  Server checks: (UPLOAD-12345, Chunk-513)
+    → Already stored → Return 200 OK (no duplicate write)
+    → Not stored     → Store and return 200 OK
+```
+
+| Approach | Mechanism | Tradeoff |
+|:---|:---|:---|
+| **Idempotency key** | `(sessionId, chunkNumber)` uniquely identifies each chunk | Simple; requires chunk numbering to be deterministic |
+| **Content hash dedup** | SHA-256 of chunk content as key | Handles reordered chunks; compute cost per chunk |
+| **Ignore duplicate** | Server returns success without re-storing | Fastest; requires chunk order to be fixed |
+
+> **Dictionary**: [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key), [Chunked Upload](../../reference-dictionary/api-design.md#chunked-upload)  
+> **General**: §8.3 API Design  
+> **Related**: [Idempotency in Payment Systems](../cqrs-fintech/cqrs-fintech.md) — same principle, different domain
+
+---
+
+## api-15: Chunk Size Selection
+
+> **Source**: [Resumable Uploads for Huge Files](../../articles/system-design-interview/resumable-uploads-chunking-large-files.md)
+
+| | |
+|:---|:---|
+| **Problem** | Choosing the wrong chunk size causes either excessive HTTP overhead (too small) or large rework on failure (too large). |
+| **Root cause** | Chunk size is a direct tradeoff between recovery granularity and request overhead — there is no universally optimal value. |
+
+**Tradeoff matrix**:
+
+| Chunk Size | Requests (5 GB file) | Recovery on Failure | Overhead |
+|:---|:---|:---|:---|
+| **1 MB** | 5,120 | ~1 MB re-uploaded | High metadata + connection overhead |
+| **5 MB** | 1,024 | ~5 MB re-uploaded | Moderate |
+| **8 MB** | 640 | ~8 MB re-uploaded | Good balance (AWS S3 default) |
+| **16 MB** | 320 | ~16 MB re-uploaded | Lower overhead |
+| **64 MB** | 80 | ~64 MB re-uploaded | Minimal overhead; painful on flaky networks |
+
+**Selection guidelines**:
+
+| Network Condition | Recommended Size | Rationale |
+|:---|:---|:---|
+| **Stable, high-bandwidth** | 16–64 MB | Minimize request count |
+| **Mobile / flaky** | 1–5 MB | Minimize rework per failure |
+| **General purpose** | 5–8 MB | Balanced (S3 multipart default: 5 MB) |
+
+> **Dictionary**: [Chunked Upload](../../reference-dictionary/api-design.md#chunked-upload)  
+> **Azure**: Blob Storage block blob maximum block size: 4,000 MiB (preview) / 100 MiB (GA)  
+> **General**: §8.3 API Design
+
+---
+
+## api-16: Direct-to-Storage Upload at Scale
+
+> **Source**: [Resumable Uploads for Huge Files](../../articles/system-design-interview/resumable-uploads-chunking-large-files.md)
+
+| | |
+|:---|:---|
+| **Problem** | 100,000 users uploading simultaneously would saturate application server bandwidth and CPU. |
+| **Root cause** | Routing all file bytes through application servers turns them into a bottleneck — file transfer is I/O-bound, not business-logic-bound. |
+
+**Strategy — Pre-signed URL / Direct Upload**:
+
+```
+Direct upload flow:
+  1. Client → App Server: POST /upload/initiate  { fileName, size }
+  2. App Server: Generates time-limited pre-signed URL to object storage
+  3. App Server → Client: { uploadUrl: "https://storage/...?token=...", sessionId }
+  4. Client → Object Storage: PUT chunks directly (app server sees zero bytes)
+  5. Client → App Server: POST /upload/complete  { sessionId }
+  6. App Server: Validates, triggers post-processing pipeline
+```
+
+| Component | Responsibility |
+|:---|:---|
+| **App Server** | Session management, metadata, authorization, post-processing orchestration |
+| **Object Storage** | File bytes, chunk assembly, replication, durability |
+| **CDN / Edge** | Multi-region upload termination close to users (upload to nearest PoP, replicate later) |
+
+> **Dictionary**: [Pre-signed URL](../../reference-dictionary/api-design.md#pre-signed-url), [Direct Upload](../../reference-dictionary/api-design.md#direct-upload)  
+> **Azure**: Blob Storage SAS (Shared Access Signature) tokens, Azure Front Door for edge upload termination  
+> **General**: §8.3 API Design

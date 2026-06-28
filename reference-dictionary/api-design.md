@@ -37,6 +37,12 @@ timestamp: 2026-06-14T00:00:00Z
 | API Gateway | [`#api-gateway`](#api-gateway) |
 | Hotlinking | [`#hotlinking`](#hotlinking) |
 | Faceted Search | [`#faceted-search`](#faceted-search) |
+| Chunked Upload | [`#chunked-upload`](#chunked-upload) |
+| Resumable Upload | [`#resumable-upload`](#resumable-upload) |
+| Upload Session | [`#upload-session`](#upload-session) |
+| Direct Upload | [`#direct-upload`](#direct-upload) |
+| Pre-signed URL | [`#pre-signed-url`](#pre-signed-url) |
+| Checksum | [`#checksum`](#checksum) |
 
 ---
 
@@ -538,4 +544,148 @@ A search interface that lets users refine results by applying multiple filters (
 
 ### Also see
 - [API Gateway](#api-gateway)
+
+---
+
+## Chunked Upload
+
+A technique for uploading large files by splitting them into smaller, independently uploaded pieces (chunks). Each chunk is a separate HTTP request, so failure of one chunk does not require restarting the entire file.
+
+### Key Characteristics
+- **Failure isolation**: Only the failed chunk is retried, not the entire file
+- **Resume capability**: Combined with an Upload Session, enables resumable uploads
+- **Parallel uploads**: Multiple chunks can be uploaded concurrently for faster throughput
+- **Common sizes**: 5–64 MB per chunk, depending on network conditions
+
+### When to Use
+- Files larger than 100 MB
+- Uploads over unreliable or mobile networks
+- Any scenario where upload progress must survive network interruptions
+
+### When NOT to Use
+- Small files (<1 MB) where chunking overhead exceeds the benefit
+- Single-shot uploads where the connection is guaranteed reliable
+
+### Also see
+- [Resumable Upload](#resumable-upload) · [Upload Session](#upload-session) · [Direct Upload](#direct-upload)
+
+---
+
+## Resumable Upload
+
+The ability to continue an upload from the point of interruption rather than restarting from the beginning. Built on chunked uploads and upload sessions, it ensures users never lose progress when networks fail.
+
+### Key Characteristics
+- **Requires chunking**: The file must be split into independent chunks
+- **Requires session tracking**: Server must persist which chunks have been received
+- **Resume query**: After reconnect, client queries `GET /upload/session/{id}` to discover missing chunks
+- **User-facing**: The primary UX benefit is that users never see "start over" after a network drop
+
+### When to Use
+- User-facing upload features (Google Drive, YouTube, Dropbox)
+- Mobile apps where connectivity is intermittent
+- Large file transfers (>100 MB) over the public internet
+
+### When NOT to Use
+- Server-to-server transfers over private, reliable networks
+- Tiny files where restart cost is negligible
+
+### Also see
+- [Chunked Upload](#chunked-upload) · [Upload Session](#upload-session) · [Direct Upload](#direct-upload)
+
+---
+
+## Upload Session
+
+A server-side state object that tracks the progress of a chunked upload. Identified by a unique session ID, it records which chunks have been received and which are still missing, enabling resume after interruption.
+
+### Key Characteristics
+- **Session ID**: A unique identifier (e.g., `UPLOAD-12345`) created at upload initiation
+- **Chunk tracking**: Maintains a list of uploaded chunk numbers and total expected chunks
+- **Persistent**: Survives browser refresh, app restart, and device reboot (stored in DB or Redis)
+- **Metadata**: Stores fileName, totalSize, totalChunks, uploadedChunks, and checksums
+
+### When to Use
+- Any chunked upload that must survive network interruption
+- Multi-session uploads where the same file is uploaded across multiple user sessions
+
+### When NOT to Use
+- Single-request uploads where the entire file fits in one HTTP request
+- Ephemeral uploads where restart-from-scratch is acceptable
+
+### Also see
+- [Chunked Upload](#chunked-upload) · [Resumable Upload](#resumable-upload) · [Idempotency-Key](#idempotency-key)
+
+---
+
+## Direct Upload
+
+A pattern where the client uploads file bytes directly to object storage (S3, Azure Blob, GCS) using a pre-signed URL, bypassing the application server entirely for the data transfer phase.
+
+### Key Characteristics
+- **Bypasses app servers**: Application servers never see file bytes — only metadata flows through them
+- **Scales independently**: Object storage handles bandwidth; app servers handle business logic
+- **Requires pre-signed URL**: A time-limited, cryptographically signed URL granting temporary write access
+- **Post-upload hook**: Client notifies the app server after upload completes for validation and processing
+
+### When to Use
+- High-throughput upload scenarios (100K+ concurrent users)
+- Files >100 MB where proxying through app servers would saturate bandwidth
+- Multi-region uploads where upload should terminate close to the user
+
+### When NOT to Use
+- Uploads requiring real-time server-side transformation during transfer
+- Scenarios where the storage layer cannot be exposed to clients (air-gapped environments)
+
+### Also see
+- [Pre-signed URL](#pre-signed-url) · [Chunked Upload](#chunked-upload) · [Resumable Upload](#resumable-upload)
+
+---
+
+## Pre-signed URL
+
+A time-limited, cryptographically signed URL that grants temporary access to a specific object storage operation (upload or download) without requiring the caller to have permanent credentials.
+
+### Key Characteristics
+- **Time-bound**: Expires after a configurable duration (typically minutes to hours)
+- **Scoped**: Limited to a single object and operation (GET, PUT)
+- **Signature-based**: Signed with the storage account's secret key; tampering invalidates the URL
+- **Azure equivalent**: Shared Access Signature (SAS) tokens
+- **AWS equivalent**: S3 Pre-signed URLs
+
+### When to Use
+- Direct upload from browser/mobile to object storage
+- Temporary read access to private objects (e.g., "Download report" links)
+- Avoiding credential distribution to client devices
+
+### When NOT to Use
+- Long-lived access (use IAM/managed identities instead)
+- Operations requiring audit of every access (pre-signed URLs are self-contained credentials)
+
+### Also see
+- [Direct Upload](#direct-upload) · [Chunked Upload](#chunked-upload)
+
+---
+
+## Checksum
+
+A fixed-size hash (e.g., SHA-256, MD5) computed from data to verify its integrity after transmission or storage. Used in upload systems to detect corruption before accepting a chunk.
+
+### Key Characteristics
+- **Deterministic**: Same input always produces the same checksum
+- **Tamper-evident**: Any change to the data produces a different checksum
+- **Per-chunk validation**: Each chunk carries its own checksum for independent verification
+- **Common algorithms**: SHA-256, MD5 (legacy), CRC32 (fast but weak)
+
+### When to Use
+- Verifying chunk integrity before assembly
+- Detecting transmission errors over unreliable networks
+- End-to-end data integrity from client to storage
+
+### When NOT to Use
+- As a security mechanism (checksums detect errors, not malicious tampering — use HMAC or digital signatures for security)
+- When the transport layer already provides integrity (TLS) and corruption risk is negligible
+
+### Also see
+- [Chunked Upload](#chunked-upload) · [ETag](#etag)
 
