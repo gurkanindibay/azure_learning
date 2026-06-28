@@ -34,6 +34,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Cryptographic Erasure | [`#cryptographic-erasure`](#cryptographic-erasure) |
 | Event ID | [`#event-id`](#event-id) |
 | Eventual Consistency | [`#eventual-consistency`](#eventual-consistency) |
+| Event Backbone | [`#event-backbone`](#event-backbone) |
 
 ---
 
@@ -420,3 +421,30 @@ A **globally unique identifier** assigned to every business event at production 
 
 ### Also see
 - [Masterless Architecture](../reference-dictionary/architecture-patterns.md#masterless-architecture) · [Apache Cassandra](../reference-dictionary/architecture-patterns.md#apache-cassandra) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [CQRS](#cqrs) · [Projection](#projection)
+
+---
+
+## Event Backbone
+
+An architectural pattern where **Kafka (or an equivalent distributed log) serves as the central nervous system** connecting all services in a domain. Services publish domain events to topics and react to events from other services — they never call each other directly via synchronous APIs. The log is the single source of truth for what happened in the system.
+
+> "Instead of services calling each other, they publish and react to events independently."
+
+### Key Characteristics
+- **Loose coupling**: Services don't know about each other — they only know about event types and topic names
+- **Independent deployability**: Each service can be deployed, scaled, and evolved independently
+- **Resilience through buffering**: Kafka absorbs downstream slowdowns; producers are never blocked by slow consumers
+- **Multi-consumer fan-out**: One event is consumed by N downstream services without additional producer effort
+
+### When to Use
+- Microservice ecosystems where synchronous call chains have become a distributed monolith
+- Domain-driven systems where bounded contexts produce and consume domain events
+- Organizations where different teams own different services and deploy independently
+
+### When NOT to Use
+- Simple systems with 2-3 services where direct REST calls are simpler and sufficient
+- Latency-sensitive request-response flows where eventual consistency is unacceptable
+- Systems where strict transactional consistency across services is required
+
+### Also see
+- [Event-Driven Architecture](#event-driven-architecture) · [Event Sourcing](#event-sourcing) · [Eventual Consistency](#eventual-consistency) · [CQRS](#cqrs)

@@ -48,6 +48,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Producer Acknowledgement | [`#producer-acknowledgement`](#producer-acknowledgement) |
 | Schema Registry | [`#schema-registry`](#schema-registry) |
 | Schema Contract (Event as Public API) | [`#schema-contract-event-as-public-api`](#schema-contract-event-as-public-api) |
+| Event-Time | [`#event-time`](#event-time) |
+| Processing-Time | [`#processing-time`](#processing-time) |
+| Watermarking | [`#watermarking`](#watermarking) |
+| Offset Alignment | [`#offset-alignment`](#offset-alignment) |
 
 ---
 
@@ -680,4 +684,98 @@ The principle that **Kafka topic schemas are public, versioned contracts** betwe
 
 ### Also see
 - [Schema Registry](#schema-registry) · [Event Sourcing](../cqrs-event-driven.md#event-sourcing) · [Contract-First Design](../api-design.md#contract-first-design) · [Backward Compatibility](../api-design.md#backward-compatibility)
+
+---
+
+## Event-Time
+
+The timestamp **when an event actually occurred** in the real world, embedded in the event payload by the producer. Contrast with processing-time, which is when the stream processor observed the event. Event-time is the authoritative time for correctness in stream processing.
+
+### Key Characteristics
+- **Producer-assigned**: The producing device or service sets the timestamp based on its local clock
+- **Immutable in transit**: Once set, event-time is never modified by brokers or consumers
+- **Clock skew risk**: Different devices may have different clocks — event-time is only as trustworthy as the producer's clock
+
+### When to Use
+- IoT/device data where network delays cause late arrival (event-time tells you *when it happened*, not when you received it)
+- Financial transactions where the transaction timestamp matters for regulatory compliance
+- Any streaming use case where the business question is "what happened at time T?" not "what did we observe at time T?"
+
+### When NOT to Use
+- When producers cannot provide reliable timestamps (no NTP sync, no clock at all)
+- Log ingestion where processing-time is sufficient (simple monitoring, debug logs)
+
+### Also see
+- [Processing-Time](#processing-time) · [Watermarking](#watermarking)
+
+---
+
+## Processing-Time
+
+The timestamp **when the stream processor receives or observes an event** — the wall-clock time of the processing node. Simpler than event-time but can produce incorrect results when events arrive late or out of order.
+
+### Key Characteristics
+- **System-assigned**: Set by the stream processor, not the producer
+- **Deterministic per run**: Given the same input stream replayed, processing-time windows produce different results
+- **Zero configuration**: No watermarking or lateness handling needed
+
+### When to Use
+- Best-effort monitoring dashboards where approximate counts are acceptable
+- Simple rate-limiting or throttling based on current throughput
+- Prototypes where correctness requirements are not yet defined
+
+### When NOT to Use
+- Any use case where "when did it happen?" matters more than "when did we see it?"
+- Financial, IoT, or compliance workloads where event-time semantics are required
+- Scenarios with significant network delays or batching that cause event-time/processing-time divergence
+
+### Also see
+- [Event-Time](#event-time) · [Watermarking](#watermarking)
+
+---
+
+## Watermarking
+
+A **threshold mechanism in stream processing** that defines how long to wait for late-arriving events before closing a time window and emitting results. A watermark with timestamp T declares: "all events with event-time < T have arrived; windows up to T can now be finalized."
+
+### Key Characteristics
+- **Lateness bound**: The watermark defines the maximum expected delay between event-time and processing-time
+- **Trade-off**: Longer watermark = more complete results but higher latency; shorter watermark = faster results but more missed late events
+- **Heuristic by nature**: Watermarks are a best-effort mechanism — some events may still arrive after the watermark
+
+### When to Use
+- Windowed aggregations where completeness matters (hourly/daily rollups, billing)
+- IoT pipelines where device data can be delayed by hours due to connectivity gaps
+- Any streaming use case with a defined SLA for result freshness vs completeness
+
+### When NOT to Use
+- Per-event processing with no windowing (each event is processed independently)
+- When all producers have guaranteed low-latency delivery (processing-time windows suffice)
+- When incomplete windows are acceptable and freshness is the priority
+
+### Also see
+- [Event-Time](#event-time) · [Processing-Time](#processing-time) · [Consumer Lag](#consumer-lag)
+
+---
+
+## Offset Alignment
+
+The process of **ensuring consumer offsets are consistent across two Kafka clusters** during multi-region disaster recovery or active-active replication. After failing over from a primary to a DR cluster, consumers must resume from the correct offset to avoid data loss or duplication.
+
+### Key Characteristics
+- **Cluster-specific offsets**: Offsets are local to each cluster — the offset for the same message differs between primary and DR
+- **Consumer offset translation**: Tools like MirrorMaker 2 emit offset translation records (`__consumer_offsets`) to map between clusters
+- **Failover window**: The gap between the last committed offset on the primary and the last replicated message on DR determines potential data loss
+
+### When to Use
+- Multi-region Kafka deployments with active-passive or active-active replication
+- Disaster recovery planning where consumers must fail over to a different cluster
+- Migration from one Kafka cluster to another without resetting consumer positions
+
+### When NOT to Use
+- Single-cluster deployments (no offset translation needed)
+- When consumers can safely start from the earliest or latest offset after failover (non-critical workloads)
+
+### Also see
+- [Offset Commit](#offset-commit) · [Consumer Group](#consumer-group) · [Rebalance](#rebalance)
 

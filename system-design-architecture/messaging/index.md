@@ -28,6 +28,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [senior-engineers-kafka-tradeoffs.md](senior-engineers-kafka-tradeoffs.md) | `broker-66` – `broker-71` | Requirements-first design, Read/write path separation, Idempotency, Kafka role clarity, Caching strategy, Design for failure |
 | [apache-iggy.md](apache-iggy.md) | `iggy-01` – `iggy-08` | Kafka alternative landscape, Rust in infrastructure, io_uring, Streaming use-case fit |
 | [kafka-user-activity-tracking.md](kafka-user-activity-tracking.md) | `broker-72` – `broker-76` | Constraints-first design, Async publishing degradation, Immutable event contracts, Consumer lag as design feature, Replay-safe idempotency |
+| [kafka-real-world-scenarios.md](kafka-real-world-scenarios.md) | `broker-77` – `broker-85` | Partition key design, Idempotency + offset coordination, Event backbone, Stream aggregation, CDC, Schema governance, Consumer lag, Event-time semantics, Kafka Connect hub |
 
 ## Cross-References
 
