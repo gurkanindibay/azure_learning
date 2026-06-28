@@ -756,3 +756,21 @@ Direct upload flow:
 > **Dictionary**: [Pre-signed URL](../../reference-dictionary/api-design.md#pre-signed-url), [Direct Upload](../../reference-dictionary/api-design.md#direct-upload)  
 > **Azure**: Blob Storage SAS (Shared Access Signature) tokens, Azure Front Door for edge upload termination  
 > **General**: §8.3 API Design
+
+---
+
+## Library Reference — Chunked & Resumable Uploads
+
+| Ecosystem | Library | Role | Notes |
+|:---|:---|:---|:---|
+| **React / JS** | [`tus-js-client`](https://github.com/tus/tus-js-client) | Client | Official TUS protocol client — chunking, resume, retry |
+| | [`Uppy`](https://uppy.io/) | UI + Core | Polished uploader with built-in `tus` plugin |
+| | `File.slice()` | Native | Built-in browser API — zero dependencies |
+| **Java** | [`tus-java-server`](https://github.com/tus/tus-java-server) | Server | TUS protocol for Spring Boot / Jakarta EE |
+| | Apache Commons `FileUpload` | Server | Streaming multipart parser |
+| | `HttpURLConnection` chunked mode | Client | `setChunkedStreamingMode(chunkSize)` |
+| **C# / .NET** | [`tusdotnet`](https://github.com/tusdotnet/tusdotnet) | Server | Full TUS protocol server for ASP.NET Core |
+| | [`Azure.Storage.Blobs`](https://www.nuget.org/packages/Azure.Storage.Blobs) | Client | `StageBlockAsync()` — staged chunk uploads to Blob Storage |
+| | ASP.NET Core `IFormFile` + streaming | Server | `CopyToAsync(stream)` with `[DisableRequestBuffering]` |
+
+> **Cross-platform recommendation**: Use the **[TUS protocol](https://tus.io/)** — mature client/server implementations exist for all three ecosystems, so a React frontend, Java middleware, and C# backend speak the same protocol.
