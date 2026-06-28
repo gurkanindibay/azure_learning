@@ -71,6 +71,7 @@ Some terms span multiple domains. They are **defined once** in their primary dom
 |:---|:---|:---|
 | Compensating Transaction | [`data-concurrency.md#compensating-transaction`](data-concurrency.md#compensating-transaction) | cqrs-event-driven, fintech |
 | Idempotency | [`cqrs-event-driven.md#idempotency`](cqrs-event-driven.md#idempotency) | resilience, messaging, api-design, data-concurrency, fintech |
+| Idempotency State Explosion | [`cqrs-event-driven.md#idempotency-state-explosion`](cqrs-event-driven.md#idempotency-state-explosion) | resilience, data-concurrency, fintech |
 | CQRS | [`cqrs-event-driven.md#cqrs`](cqrs-event-driven.md#cqrs) | fintech, data-concurrency, architecture-patterns |
 | Circuit Breaker | [`resilience.md#circuit-breaker`](resilience.md#circuit-breaker) | messaging, api-design, azure-services |
 | Rate Limiting | [`api-design.md#rate-limiting`](api-design.md#rate-limiting) | resilience, azure-services |

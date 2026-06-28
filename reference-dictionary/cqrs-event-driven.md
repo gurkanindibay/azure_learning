@@ -26,6 +26,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Outbox Pattern | [`#outbox-pattern`](#outbox-pattern) |
 | Post-Commit Dispatch | [`#post-commit-dispatch`](#post-commit-dispatch) |
 | Idempotency | [`#idempotency`](#idempotency) |
+| Idempotency State Explosion | [`#idempotency-state-explosion`](#idempotency-state-explosion) |
 | Dual-Write Problem | [`#dual-write-problem`](#dual-write-problem) |
 | Event-Driven Architecture | [`#event-driven-architecture`](#event-driven-architecture) |
 | Event Carried State Transfer | [`#event-carried-state-transfer`](#event-carried-state-transfer) |
@@ -229,7 +230,44 @@ Server checks:   Have I seen "txn-abc-123" before?
 
 > In fintech, idempotency is a financial seatbelt — fastened before the engine starts, not a best-effort log check.
 
-**Also see**: [Outbox Pattern](#outbox-pattern), [Dual-Write Problem](#dual-write-problem) · [API Design](api-design.md#idempotency-key) · [Data & Concurrency](data-concurrency.md)
+### Hidden Costs at Scale
+
+Idempotency does not remove complexity — it **moves it into time**. Instead of fast, visible failures, systems get slow, invisible ones.
+
+| Hidden Cost | Description |
+|:---|:---|
+| **State explosion** | Storing keys + outcomes + TTLs at scale creates a secondary datastore with independent failure modes |
+| **False confidence** | Teams add more retries once a system is "idempotent," amplifying risk instead of reducing it |
+| **Money bugs** | Compensating transactions and auto-reconciliation can temporarily violate financial invariants — the books look right eventually, but the path between states erodes trust |
+| **Observability gaps** | Idempotent retries produce successful responses, so standard dashboards show green while failures accumulate as support tickets |
+| **Incomplete execution** | A cached "success" response may be returned while downstream side effects are still in progress |
+
+> **Core insight**: If an operation cannot be safely replayed, do not pretend it can. Idempotency must be end-to-end with explicitly modeled side effects, and "success" must mean execution complete — not merely accepted.
+
+**Also see**: [Idempotency State Explosion](#idempotency-state-explosion), [Outbox Pattern](#outbox-pattern), [Dual-Write Problem](#dual-write-problem) · [API Design](api-design.md#idempotency-key) · [Data & Concurrency](data-concurrency.md) · [Reconciliation](fintech.md#reconciliation)
+
+---
+
+## Idempotency State Explosion
+
+The **hidden infrastructure cost** of idempotency at scale — storing every idempotency key, its outcome, and managing TTLs creates a secondary datastore that must be as reliable as the primary database.
+
+### Key Characteristics
+- **Linear growth**: Storage grows as `request volume × TTL duration` — every unique request consumes a row
+- **Independent failure domain**: When the idempotency store is unavailable, the system must either reject requests (fail closed) or risk double execution
+- **TTL is a correctness constraint**: Keys must live longer than the maximum retry window plus reconciliation lag; too-short TTLs reintroduce duplicate-processing risk
+- **Cleanup is non-trivial**: Premature key deletion is dangerous; deterministic GC processes are safer than request-time eviction
+
+### When to Use
+- Planning idempotency storage capacity and failure modes before deploying to production
+- Auditing existing idempotent systems for hidden operational risk
+
+### When NOT to Use
+- As a reason to avoid idempotency — the alternative (duplicate execution with no safety net) is worse
+- As justification for arbitrarily long TTLs — balance safety against storage cost
+
+### Also see
+- [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern)
 
 ---
 

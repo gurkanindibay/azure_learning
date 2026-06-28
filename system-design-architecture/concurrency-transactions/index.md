@@ -17,6 +17,7 @@ Problems and strategies for handling concurrent operations, distributed transact
 |:---|:---|:---|
 | [concurrency-transactions.md](concurrency-transactions.md) | `tx-01` – `tx-07` | Double-booking, Isolation levels, Distributed locks, Idempotency, Database invariants, Post-commit events |
 | [transaction-patterns.md](transaction-patterns.md) | `tx-08` – `tx-12` | Inventory reservation, Saga orchestration, Compensating transactions, Payment idempotency, Subdomain consistency |
+| [idempotency-hidden-costs.md](idempotency-hidden-costs.md) | `tx-13` – `tx-18` | Idempotency state explosion, False confidence, Money bugs, Observability gaps, End-to-end idempotency, Success semantics |
 | [causal-consistency.md](causal-consistency.md) | — | Causal ordering, Happens-before relationships, Vector clocks |
 
 ## Cross-References
