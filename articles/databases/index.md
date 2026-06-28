@@ -22,3 +22,4 @@ Source articles covering databases patterns, strategies, and case studies.
 - [sql-for-system-design](sql-for-system-design.md)
 - [sql-query-optimization-patterns](sql-query-optimization-patterns.md)
 - [your-system-design-is-fine-your-database-decisions-are-why-youre-failing](your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
+- [how-fintech-system-taught-me-why-netflix-uses-cassandra](how-fintech-system-taught-me-why-netflix-uses-cassandra.md)

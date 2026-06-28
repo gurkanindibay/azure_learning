@@ -308,3 +308,81 @@ Monitoring: query [`pg_aios`](../../reference-dictionary/databases.md#pg-aios) w
 > **Architect's rule**: The index reflex is still correct for transactional hot paths, but it is no longer automatically correct for large analytical reads. Let the execution plan and measured A/B test decide, not habit.
 
 > **Dictionary**: [io_method](../../reference-dictionary/databases.md#io-method) · [io_uring](../../reference-dictionary/databases.md#io-uring) · [effective_io_concurrency](../../reference-dictionary/databases.md#effective-io-concurrency) · [pg_aios](../../reference-dictionary/databases.md#pg-aios) · [shared_buffers](../../reference-dictionary/databases.md#shared-buffers)
+
+---
+
+## db-08: Primary Node as Single Point of Failure
+
+> **Source**: [How a Fintech System Taught Me Why Netflix Uses Cassandra](../../articles/databases/how-fintech-system-taught-me-why-netflix-uses-cassandra.md)
+
+| | |
+|:---|:---|
+| **Problem** | When a MongoDB primary node fails, leader election pauses all writes — the entire system stops accepting data until a new primary is elected |
+| **Root cause** | Single-master architectures concentrate write authority in one node; any disruption to that node blocks the entire write path |
+
+**Strategy**:
+
+| Approach | Mechanism | When to use |
+|:---|:---|:---|
+| **Masterless / peer-to-peer** | Every node accepts writes; no leader election needed — node failure only reduces capacity, not availability | Write-availability is paramount (Cassandra, ScyllaDB, DynamoDB) |
+| **Active-active replication** | Two primaries accept writes simultaneously with conflict resolution | Multi-region, can't tolerate any write downtime |
+| **Faster failover** | Tune election timeout, add dedicated arbiters, pre-warm secondaries | Stuck with single-master; minimize pause window |
+| **Queue-buffered writes** | Buffer writes in a queue (Kafka, SQS) during failover; replay when primary is back | Accepts eventual consistency; protects against data loss |
+
+**Tradeoff**: Masterless systems (Cassandra) trade strong consistency guarantees for continuous write availability. Single-master systems (MongoDB, PostgreSQL) guarantee consistency at the cost of availability during leader transitions. The choice depends on whether your business can tolerate brief write pauses vs. brief data inconsistency.
+
+> **Dictionary**: [Masterless Architecture](../../reference-dictionary/architecture-patterns.md#masterless-architecture) · [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../../reference-dictionary/databases.md#cap-theorem)
+
+---
+
+## db-09: Availability vs. Consistency — Business-Driven Tradeoff
+
+> **Source**: [How a Fintech System Taught Me Why Netflix Uses Cassandra](../../articles/databases/how-fintech-system-taught-me-why-netflix-uses-cassandra.md)
+
+| | |
+|:---|:---|
+| **Problem** | Different business domains require fundamentally different database guarantees — fintech cannot tolerate inconsistency, while media streaming cannot tolerate unavailability |
+| **Root cause** | The CAP theorem forces a choice: during a network partition, you pick either consistency (correct data) or availability (system stays up). The right answer depends on what your business considers failure. |
+
+**Strategy**:
+
+| Domain | Priority | Why | Database Choice |
+|:---|:---|:---|:---|
+| **Fintech / payments** | Consistency | Wrong balance = real money lost | SQL (PostgreSQL), MongoDB (strong reads) |
+| **Media streaming** | Availability | Off by a few seconds = invisible; down for 5 min = trending on Twitter | Cassandra, DynamoDB |
+| **Social media feeds** | Availability | Stale timelines > no timelines | Cassandra, eventual-consistent stores |
+| **E-commerce checkout** | Consistency | Double-charging destroys trust | SQL with strict serializability |
+
+> **Key insight**: Netflix chose Cassandra not because it has more features than MongoDB, but because its failure mode (graceful degradation) matches Netflix's business requirements (never pause). MongoDB's failure mode (write stall during election) is incompatible with always-on streaming.
+
+**Tradeoff**: Choosing availability means accepting that data may be briefly inconsistent across nodes. Choosing consistency means accepting that the system may briefly reject writes. There is no "best" database — only the database whose failure mode your business can survive.
+
+> **Dictionary**: [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../../reference-dictionary/databases.md#cap-theorem) · [Masterless Architecture](../../reference-dictionary/architecture-patterns.md#masterless-architecture)
+
+---
+
+## db-10: Database Selection by Failure Behavior
+
+> **Source**: [How a Fintech System Taught Me Why Netflix Uses Cassandra](../../articles/databases/how-fintech-system-taught-me-why-netflix-uses-cassandra.md)
+
+| | |
+|:---|:---|
+| **Problem** | Teams select databases based on feature checklists (document model, joins, query flexibility) while ignoring failure behavior — then discover the mismatch in production |
+| **Root cause** | Database marketing emphasizes features, not failure modes. The features that make development fast (schema flexibility, rich queries) often create operational fragility under load. |
+
+**Strategy — the failure-mode-first selection framework**:
+
+| Question | MongoDB answer | Cassandra answer |
+|:---|:---|:---|
+| What happens when a node dies? | Leader election pause (seconds) | Nothing — other nodes continue |
+| What happens under write spike? | Primary becomes bottleneck | Spread across all nodes |
+| What happens during network partition? | Partitioned side can't write | All sides can write (tunable consistency) |
+| Multi-region complexity? | High — primary must be in one region | Native — any region can serve writes |
+| Query flexibility? | Rich — joins, aggregations, ad-hoc | Limited — design queries first, then schema |
+
+> **Architect's rule**: Don't pick a database for what it can do when everything works. Pick it for how it degrades when things break. The feature you'll miss most in production isn't ad-hoc queries — it's the ability to keep accepting writes when a node catches fire.
+
+**Tradeoff**: Designing for failure behavior means accepting limitations during normal operation (Cassandra's restricted query model). Designing for developer velocity means accepting fragility during incidents (MongoDB's leader election pause). The right choice is the one whose *worst-case behavior* your business can tolerate.
+
+> **Dictionary**: [Masterless Architecture](../../reference-dictionary/architecture-patterns.md#masterless-architecture) · [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../../reference-dictionary/databases.md#cap-theorem)
+> **Azure**: Cosmos DB offers tunable consistency (5 levels from Strong to Eventual) — you can choose per-request whether to prioritize consistency or availability. This lets a single database serve both fintech (strong consistency) and streaming (eventual consistency) workloads.

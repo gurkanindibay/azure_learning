@@ -33,6 +33,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Aggregate Snapshot | [`#aggregate-snapshot`](#aggregate-snapshot) |
 | Cryptographic Erasure | [`#cryptographic-erasure`](#cryptographic-erasure) |
 | Event ID | [`#event-id`](#event-id) |
+| Eventual Consistency | [`#eventual-consistency`](#eventual-consistency) |
 
 ---
 
@@ -394,3 +395,28 @@ A **globally unique identifier** assigned to every business event at production 
 
 ### Also see
 - [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
+
+---
+
+## Eventual Consistency
+
+**Eventual Consistency** — a consistency model where updates to a distributed system propagate asynchronously. If no new updates are made, all replicas eventually converge to the same value. During the propagation window, different nodes may serve different (stale) values.
+
+### Key Characteristics
+- **Asynchronous replication**: Writes to one node are propagated to other nodes in the background — there is no synchronous quorum wait
+- **Convergence guarantee**: Given enough time without new writes, all replicas agree
+- **Staleness window**: The period between write and full propagation — milliseconds to seconds in practice
+- **Conflict resolution**: Requires a strategy (last-write-wins, CRDTs, application-level merge) when concurrent writes conflict
+
+### When to Use
+- High-availability systems where serving any data is better than serving no data (streaming, social feeds, CDN metadata)
+- Read-heavy workloads where occasional staleness is acceptable and low latency is paramount
+- Multi-region systems where synchronous cross-region writes would add unacceptable latency
+
+### When NOT to Use
+- Financial systems where showing a stale balance could mean approving a transaction the account cannot cover
+- Any system where consistency is a legal or compliance requirement (audit trails, medical records)
+- When the application cannot implement meaningful conflict resolution for concurrent writes
+
+### Also see
+- [Masterless Architecture](../reference-dictionary/architecture-patterns.md#masterless-architecture) · [Apache Cassandra](../reference-dictionary/architecture-patterns.md#apache-cassandra) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [CQRS](#cqrs) · [Projection](#projection)
