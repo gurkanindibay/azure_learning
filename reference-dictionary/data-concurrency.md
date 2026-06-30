@@ -40,6 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Sharding | [`#sharding`](#sharding) |
 | Vector Clocks | [`#vector-clocks`](#vector-clocks) |
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
+| Lock Contention | [`#lock-contention`](#lock-contention) |
 
 ---
 
@@ -593,3 +594,24 @@ A **mutex** in CPython that ensures only one thread executes Python bytecode at 
 - Do not assume asyncio solves CPU parallelism; it solves I/O concurrency.
 
 **Also see**: [asyncio](#asyncio) · [Pessimistic Locking](#pessimistic-locking) · [Two-Phase Commit (2PC)](#two-phase-commit-2pc)
+
+---
+
+## Lock Contention
+
+A performance bottleneck that occurs when **multiple threads compete for the same lock**. While one thread holds the lock, all other threads block — serializing execution that was intended to be parallel. High contention can make a multi-threaded program slower than its single-threaded equivalent.
+
+### Key Characteristics
+- **Serialization point**: the lock becomes a choke point — throughput is bounded by the critical section duration.
+- **Amplified by lock granularity**: coarse-grained locks (e.g., one lock for an entire data structure) increase contention; fine-grained locks reduce it but add complexity.
+- **Measurable**: high lock contention shows up as thread blocking time in profilers and elevated context-switch rates.
+
+### When to Use
+- The term is diagnostic. When profiling reveals threads spending significant time waiting for locks, reduce contention by: shrinking critical sections, using lock-free data structures, or switching to an actor/event-loop model.
+
+### When NOT to Use
+- Do not add more threads to a lock-contended system — it makes the problem worse.
+- Do not confuse lock contention with correctness bugs (race conditions).
+
+### Also see
+- [Race Condition](../architecture-patterns.md#race-condition) · [Mutex](../dotnet-multithreading.md#mutex) · [Pessimistic Locking](#pessimistic-locking) · [Actor Model](../architecture-patterns.md#actor-model)

@@ -78,6 +78,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Key Generation Service | [`#key-generation-service`](#key-generation-service) |
 | Fanout on Write | [`#fanout-on-write`](#fanout-on-write) |
 | Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
+| Context Switching | [`#context-switching`](#context-switching) |
+| Amdahl's Law | [`#amdahls-law`](#amdahls-law) |
+| Actor Model | [`#actor-model`](#actor-model) |
+| I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
+| Race Condition | [`#race-condition`](#race-condition) |
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Presence Service | [`#presence-service`](#presence-service) |
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
@@ -1692,4 +1697,115 @@ A **local, durable staging area** placed between an application and a remote mes
 
 ### Also see
 - [Producer Acknowledgement](../messaging.md#producer-acknowledgement) · [At-Least-Once Semantics](../messaging.md#at-least-once-semantics) · [Idempotent Consumer](../messaging.md#idempotent-consumer)
+
+---
+
+## Context Switching
+
+Also called **time-slicing** — the operating system's mechanism for achieving concurrency on a single CPU core. The OS assigns small time slots (quanta) to each task, pauses the task, saves its state (registers, program counter), and switches to the next task. From the outside it looks like parallel work; under the hood it is extremely fast turn-taking.
+
+### Key Characteristics
+- **Single-core**: only one instruction executes at any given clock cycle.
+- **Responsiveness, not throughput**: total wall-clock time is not reduced — tasks simply don't wait in line.
+- **Overhead**: each switch costs CPU cycles to save/restore context; excessive switching causes thrashing.
+
+### When to Use
+- I/O-bound workloads where the CPU would otherwise sit idle during waits.
+- Any modern OS scheduler — it is the default mechanism for multitasking.
+
+### When NOT to Use
+- As a replacement for true parallelism when CPU-bound work needs throughput, not just responsiveness.
+
+### Also see
+- [Concurrency](../databases.md#concurrency) · [Parallelism](../ai-ml-llm.md#parallelism) · [Event Loop](#event-loop)
+
+---
+
+## Amdahl's Law
+
+A formula that defines the **maximum theoretical speedup** achievable by parallelizing a program, given that a fraction of it remains serial. If fraction $p$ can be parallelized and $N$ processors are available, the speedup $S$ is:
+
+$$S = \frac{1}{(1-p) + \frac{p}{N}}$$
+
+### Key Characteristics
+- **Serial bottleneck**: the $(1-p)$ term dominates as $N \to \infty$.
+- **Hard ceiling**: if 50% of code is sequential, max speedup is **2×** — even with infinite cores.
+- **Profiling prerequisite**: you must measure the serial fraction before investing in parallelization.
+
+### When to Use
+- As a sanity check before any parallelization effort.
+- Capacity planning: estimate how many cores are worth paying for.
+
+### When NOT to Use
+- When the workload is I/O-bound — Amdahl's Law models CPU parallelism, not I/O concurrency.
+
+### Also see
+- [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound) · [Parallelism](../ai-ml-llm.md#parallelism) · [Concurrency](../databases.md#concurrency)
+
+---
+
+## Actor Model
+
+A concurrency model where **actors** are the universal primitives. Each actor has its own private state, processes messages sequentially from its mailbox, and communicates only via asynchronous message passing — never through shared memory. This eliminates shared-state concurrency bugs by design.
+
+### Key Characteristics
+- **No shared state**: each actor's state is private; messages are the only communication channel.
+- **Isolation**: actors can fail independently without corrupting other actors.
+- **Examples**: Erlang/Elixir processes, Akka (JVM), Ruby Ractors, Orleans (.NET).
+
+### When to Use
+- Systems requiring high fault tolerance and isolation (telecom, financial middleware).
+- Workloads with naturally independent units of work that communicate via messages.
+
+### When NOT to Use
+- Simple single-threaded applications where actor overhead adds complexity without benefit.
+- CPU-bound workflows that need shared-memory parallelism for maximum throughput.
+
+### Also see
+- [Ractor](#) (Ruby-specific) · [Concurrency](../databases.md#concurrency) · [Race Condition](#race-condition)
+
+---
+
+## I/O-bound vs CPU-bound
+
+A fundamental classification of workloads that determines which concurrency model to apply:
+
+| Type | Bottleneck | Best Approach |
+|:---|:---|:---|
+| **I/O-bound** | Waiting for disk, network, or database | Concurrency (async I/O, event loop) |
+| **CPU-bound** | Processor throughput | Parallelism (multiple cores, worker pools) |
+
+### Key Characteristics
+- **I/O-bound**: CPU sits idle during waits — measured by response time, not CPU utilization.
+- **CPU-bound**: CPU is the limiting resource — measured by throughput, not latency.
+- **Most web apps are I/O-bound**: database, cache, and external APIs account for 80–95% of response time.
+
+### When to Use
+- As the first diagnostic step in any performance investigation: profile to determine which bottleneck you have before choosing a concurrency model.
+
+### When NOT to Use
+- As a rigid rule — many real workloads are mixed. Profile, don't assume.
+
+### Also see
+- [Amdahl's Law](#amdahls-law) · [Concurrency](../databases.md#concurrency) · [Parallelism](../ai-ml-llm.md#parallelism)
+
+---
+
+## Race Condition
+
+A bug where the correctness of a program depends on the **relative timing or interleaving** of concurrent operations. When two threads or processes access shared mutable state without proper synchronization, the result is non-deterministic and depends on which operation "wins the race."
+
+### Key Characteristics
+- **Non-deterministic**: the same input can produce different outputs on different runs.
+- **Hard to reproduce**: timing-dependent bugs may pass unit tests and only appear under load.
+- **Caused by shared mutable state**: single-threaded event loops and actor models avoid this by design.
+
+### When to Use
+- The term is diagnostic, not prescriptive. Recognize race conditions as a signal to add synchronization (mutex, atomic operation) or to redesign to avoid shared state.
+
+### When NOT to Use
+- Do not accept race conditions as "rare" — they tend to manifest at the worst possible time (production peak load).
+
+### Also see
+- [Lock Contention](../data-concurrency.md#lock-contention) · [Actor Model](#actor-model) · [Mutex](../dotnet-multithreading.md#mutex)
 

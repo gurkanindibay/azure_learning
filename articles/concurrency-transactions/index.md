@@ -14,6 +14,7 @@ Source articles covering concurrency transactions patterns, strategies, and case
 
 ## Articles
 
+- [Concurrency, Parallelism, and Async: Three Ideas That Sound the Same But Aren't](concurrency-parallelism-async.md)
 - [The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness](The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness.md)
 - [causal-consistency-model-in-system-design](causal-consistency-model-in-system-design.md)
 - [The Hidden Cost of Idempotency Everyone Ignores](the-hidden-cost-of-idempotency.md)
