@@ -16,7 +16,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
+| Bank Adapter | [`#bank-adapter`](#bank-adapter) |
+| Debit Card Authorization | [`#debit-card-authorization`](#debit-card-authorization) |
 | Financial States | [`#financial-states`](#financial-states) |
+| ISO 8583 | [`#iso-8583`](#iso-8583) |
 | KYC (Know Your Customer) | [`#kyc-know-your-customer`](#kyc-know-your-customer) |
 | Ledger (Double-Entry) | [`#ledger-double-entry`](#ledger-double-entry) |
 | Limit Reservation | [`#limit-reservation`](#limit-reservation) |
@@ -24,10 +27,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Payment Gateway | [`#payment-gateway`](#payment-gateway) |
 | Payment Method Aggregation | [`#payment-method-aggregation`](#payment-method-aggregation) |
 | Payment Processor | [`#payment-processor`](#payment-processor) |
+| Real-Time Balance Checking | [`#real-time-balance-checking`](#real-time-balance-checking) |
 | Reconciliation | [`#reconciliation`](#reconciliation) |
 | Risk Actions | [`#risk-actions`](#risk-actions) |
 | Settlement | [`#settlement`](#settlement) |
 | Smart Routing | [`#smart-routing`](#smart-routing) |
+| Transaction Reversal | [`#transaction-reversal`](#transaction-reversal) |
 
 ---
 
@@ -79,6 +84,31 @@ The **back-end engine** that routes authorization and settlement messages betwee
 
 ---
 
+## ISO 8583
+
+The **international standard for financial transaction card-originated messages** — the binary protocol used by card networks and core banking systems to exchange authorization, financial, and reversal messages between acquirers and issuers.
+
+### Key Characteristics
+- **Binary protocol** — compact, fixed-format messages optimized for low-latency financial networks
+- **Standard message types**: 0100 (authorization request), 0110 (authorization response), 0200 (financial request), 0420 (reversal request)
+- **Bitmap-based fields**: each message includes a bitmap indicating which data elements are present
+- **Legacy but pervasive**: still used by most traditional banks' core banking systems worldwide
+
+### When to Use
+- Integrating with legacy core banking systems that speak ISO 8583 natively
+- High-volume payment switches where binary protocol efficiency matters
+- Debit card networks and ATM/POS transaction processing
+
+### When NOT to Use
+- Modern/digital-only banks that expose REST APIs — prefer JSON/HTTPS for simplicity
+- When the integration team lacks ISO 8583 expertise — the learning curve is steep
+
+### Also see
+- [Bank Adapter](#bank-adapter) — the abstraction layer that hides ISO 8583 complexity
+- [Debit Card Authorization](#debit-card-authorization) — the use case that drives ISO 8583 integration
+
+---
+
 ## KYC (Know Your Customer)
 
 The **regulatory process** of verifying a customer's identity before allowing them to use financial services. KYC reduces fraud, money laundering, and terrorist financing risk.
@@ -100,6 +130,31 @@ The **regulatory process** of verifying a customer's identity before allowing th
 ### Also see
 - [PCI-DSS](../reference-dictionary/hsm-cryptography.md#pci-dss-payment-card-industry-data-security-standard) — payment-card security standard
 - [Risk Actions](#risk-actions) — how risk decisions become new ledger entries
+
+---
+
+## Real-Time Balance Checking
+
+The **architectural requirement** that every debit card transaction authorization must verify the account balance against the issuing bank's live core banking system — never against a cached or projected balance. Cached balances serve only the non-critical balance inquiry API.
+
+### Key Characteristics
+- **Authorization path**: always fetches live balance from the bank; cache is never the authority for money movement
+- **Write-through cache for inquiries**: after a successful debit, immediately write the new balance to cache — the cache is always as fresh as the last transaction
+- **Cache key**: `balance:{account_number}` — per-account, distributed (Redis)
+- **Cache used only for display**: balance inquiry API reads from cache; if cache miss, falls back to bank
+
+### When to Use
+- Debit card systems where balance accuracy is non-negotiable for every transaction
+- High-volume systems that need fast balance inquiries without hitting the bank for every display
+
+### When NOT to Use
+- Credit card systems that check credit limits rather than account balances
+- Closed-loop wallet systems where the balance is internal and strongly consistent by design
+
+### Also see
+- [Debit Card Authorization](#debit-card-authorization) — the full authorization pipeline
+- [Write-Through Cache](../reference-dictionary/caching.md#write-through) — the caching pattern used
+- [CQRS: Ledger vs Balance](../reference-dictionary/cqrs-event-driven.md#ledger) — the deeper principle (ledger is truth, balance is derived)
 
 ---
 
@@ -180,6 +235,58 @@ TRANSFER_REVERSED ← Correction (new entry)
 > A system that deletes or mutates uncomfortable financial history is not clean. It is unsafe.
 
 **Also see**: [Financial States](#financial-states) · [CQRS & Event-Driven: Ledger](cqrs-event-driven.md#ledger)
+
+---
+
+## Bank Adapter
+
+An **architectural component** that abstracts differences between bank protocols (ISO 8583, REST, SOAP) behind a common interface, allowing the authorization service to communicate with any bank uniformly regardless of the underlying protocol.
+
+### Key Characteristics
+- **Common interface** — `verifyPIN`, `checkBalance`, `debitAccount`, `creditAccount`, `reverseTransaction`
+- **Protocol-specific handlers** — one implementation per protocol (ISO 8583 handler, REST handler, SOAP handler)
+- **Per-bank connection pooling** — 10–50 connections per bank, reused across requests
+- **Per-bank circuit breaker** — isolates bank failures so one slow bank doesn't degrade the entire system
+
+### When to Use
+- Integrating with multiple banks that use different protocols
+- When new banks must be onboarded without modifying the core authorization logic
+- Payment systems where bank protocol diversity is a given, not a design choice
+
+### When NOT to Use
+- Single-bank systems where protocol abstraction adds unnecessary complexity
+- When all banks use the same protocol and there is no diversity to abstract
+
+### Also see
+- [ISO 8583](#iso-8583) — one of the protocols the adapter abstracts
+- [Adapter Pattern](../reference-dictionary/architecture-patterns.md#adapter-pattern) — the generic GoF pattern this implements
+- [Circuit Breaker](resilience.md#circuit-breaker) — the per-bank failure isolation mechanism
+
+---
+
+## Debit Card Authorization
+
+The **real-time process** of validating a debit card transaction through multiple sequential gates: card status check, PIN verification, limit enforcement, balance inquiry, and bank debit — all within sub-second latency.
+
+### Key Characteristics
+- **Multi-stage pipeline**: card status → PIN → limits → balance → bank debit, in strict order
+- **Fail-fast rejection**: cheap, deterministic checks (card blocked, limit exceeded) run before expensive bank API calls
+- **PIN verification via HSM**: PIN never in plaintext; verified through encrypted comparison
+- **Real-time balance check**: always fetches live balance from the issuing bank, never authorizes against cache
+
+### When to Use
+- Debit card transactions at POS terminals, ATMs, and online gateways
+- Any payment flow requiring PIN + balance + limits in a single authorization decision
+
+### When NOT to Use
+- Credit card authorization, which involves credit limit checks rather than balance checks
+- Pre-authorized recurring payments where PIN is not required per transaction
+
+### Also see
+- [Real-Time Balance Checking](#real-time-balance-checking) — the balance verification step in the pipeline
+- [PIN Verification](../reference-dictionary/hsm-cryptography.md#pin-verification) — the PIN security component
+- [Limit Reservation](#limit-reservation) — the limit enforcement step
+- [Transaction Reversal](#transaction-reversal) — what happens when authorization succeeds but the transaction later fails
 
 ---
 
@@ -320,3 +427,30 @@ A **multi-factor scoring algorithm** that selects the optimal payment provider f
 
 ### Also see
 - [Payment Gateway](#payment-gateway) · [Circuit Breaker](resilience.md#circuit-breaker) · [Payment Method Aggregation](#payment-method-aggregation)
+
+---
+
+## Transaction Reversal
+
+The **corrective operation** that reverses a previously authorized debit when the downstream transaction fails after the bank has already debited the account. Reversals are posted as new ledger entries — never as deletions or mutations of the original transaction.
+
+### Key Characteristics
+- **Confirm before reversing**: on timeout or ambiguous bank response, poll the bank first — don't auto-reverse without knowing the outcome
+- **Idempotency guard**: each reversal has a unique `reversal_id`; duplicate reversal requests return the existing result
+- **Retry with backoff**: max 3 retries with 30-second timeout; if all fail, flag for manual intervention
+- **Reversal types**: FULL (entire amount) or PARTIAL (partial refund/correction)
+
+### When to Use
+- Debit card transactions that fail after the bank has debited (network error, merchant cancellation)
+- Dispute resolution where investigation finds in the customer's favor
+- Any money movement system where "the money left but the service wasn't delivered"
+
+### When NOT to Use
+- As a substitute for idempotency — reversals fix problems; idempotency prevents them
+- For transactions that were definitively declined by the bank (no money moved, nothing to reverse)
+
+### Also see
+- [Debit Card Authorization](#debit-card-authorization) — the authorization that may need reversing
+- [Risk Actions](#risk-actions) — reversals should be posted as new entries, not mutations
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) — the guard that prevents double reversals
+- [Settlement](#settlement) — reversals affect settlement calculations

@@ -22,6 +22,7 @@ timestamp: 2026-06-14T00:00:00Z
 | PCI-DSS | [`#pci-dss`](#pci-dss) |
 | Payment HSM | [`#payment-hsm`](#payment-hsm) |
 | PIN Block Translation | [`#pin-block-translation`](#pin-block-translation) |
+| PIN Verification | [`#pin-verification`](#pin-verification) |
 | Tokenization (DPAN) | [`#tokenization-dpan`](#tokenization-dpan) |
 | 3D Secure (3DS) | [`#3d-secure`](#3d-secure) |
 | Post-Quantum Cryptography | [`#post-quantum-cryptography`](#post-quantum-cryptography) |
@@ -88,6 +89,33 @@ A **specialized HSM** designed for financial and payment operations — PIN veri
 Converting a PIN between **encryption zones** via HSM. The PIN arrives encrypted under the terminal zone key; the HSM decrypts and re-encrypts it under the issuer zone key — the PIN is never in the clear.
 
 **Also see**: [Payment HSM](#payment-hsm), [HSM](#hsm)
+
+---
+
+## PIN Verification
+
+The **process of confirming a cardholder's identity** by comparing a PIN entered at a terminal/ATM against the PIN stored (as a one-way hash) in the issuing bank's system — without ever exposing the PIN in plaintext during transit or comparison.
+
+### Key Characteristics
+- **Never store plaintext PIN** — stored as a one-way hash (bcrypt, PBKDF2); hash comparison never reveals the original PIN
+- **End-to-end encryption** — PIN encrypted at terminal with terminal key, re-encrypted at gateway with bank-specific key, decrypted only inside the HSM
+- **Short-TTL caching** — PIN validation results cached for 5 minutes (with immediate invalidation on PIN change) to reduce HSM load at high TPS
+- **TLS 1.3 for transit** — all PIN-bearing communication over encrypted channels
+
+### When to Use
+- ATM and POS debit card transactions requiring cardholder authentication
+- PIN change and PIN reset operations
+- Any card-present or card-not-present transaction where PIN is the authentication factor
+
+### When NOT to Use
+- As the sole security control — daily limits and fraud detection act as secondary defenses
+- With reversible encryption for PIN storage — PIN must be hashed, not encrypted
+
+### Also see
+- [PIN Block Translation](#pin-block-translation) — the HSM operation that moves PIN between encryption zones
+- [Payment HSM](#payment-hsm) — the specialized HSM that performs PIN verification
+- [PCI-DSS](#pci-dss) — the compliance standard governing PIN security
+- [Debit Card Authorization](../reference-dictionary/fintech.md#debit-card-authorization) — the fintech process that depends on PIN verification
 
 ---
 
