@@ -23,3 +23,4 @@ Source articles covering system design interview patterns, strategies, and case 
 - [design-system-interviews](design-system-interviews.md)
 - [why-I-ignore-architecture-diagrams-in-system-design-interviews](why-I-ignore-architecture-diagrams-in-system-design-interviews.md)
 - [resumable-uploads-chunking-large-files](resumable-uploads-chunking-large-files.md)
+- [real-time-leaderboard-design](real-time-leaderboard-design.md)

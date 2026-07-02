@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Copy-on-Write Persistence | [`#copy-on-write-persistence`](#copy-on-write-persistence) |
 | Morris Probabilistic Counter | [`#morris-probabilistic-counter`](#morris-probabilistic-counter) |
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
+| Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
 | Write-Through | [`#write-through`](#write-through) |
 | Hot Key | [`#hot-key`](#hot-key) |
@@ -468,3 +469,29 @@ A separate cache or serving tier reserved for **hot keys only**, with its own re
 - When the classification/routing layer is more complex than the hot-key problem itself
 
 **Also see**: [Hot Key](#hot-key) · [Celebrity Cache](#celebrity-cache) · [Hot Key Detection](#hot-key-detection)
+
+---
+
+## Redis Sorted Sets
+
+A Redis data structure that stores unique members paired with a numeric score, maintaining them in sorted order via an internal skip-list. Unlike a regular set, sorted sets allow range queries (`ZRANGE`), rank lookups (`ZRANK`/`ZREVRANK`), and score-based retrieval — all in O(log N) time — making them the go-to choice for leaderboards, priority queues, and time-series indices.
+
+### Key Characteristics
+- **Automatic ordering**: Members are always sorted by score (and lexicographically for tied scores); no manual `ORDER BY` needed
+- **O(log N) operations**: `ZADD`, `ZREVRANK`, `ZREVRANGE` all operate in logarithmic time regardless of set size
+- **Score updates**: Changing a member's score re-positions it automatically — ideal for leaderboards with continuous score changes
+- **Range queries**: `ZREVRANGE 0 99` fetches Top 100 without scanning the entire set
+
+### When to Use
+- Real-time leaderboards and ranking systems with frequent score updates
+- Priority queues where items need to be processed in score order
+- Time-series data indexed by timestamp with range queries
+- Any workload requiring sorted retrieval without `ORDER BY` over millions of rows
+
+### When NOT to Use
+- When the dataset exceeds available memory (sorted sets are in-memory; use a disk-based indexed table instead)
+- When you need complex multi-column sorting (sorted sets sort by a single score)
+- When durability is the primary concern — pair with a persistent database as source of truth
+
+### Also see
+- [Cache-Aside Pattern](#cache-aside-pattern) · [TTL](#ttl-time-to-live) · [Sharding](../architecture-patterns.md#sharding) · [Leaderboard Pattern](../architecture-patterns.md#leaderboard-pattern)

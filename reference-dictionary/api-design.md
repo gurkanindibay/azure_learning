@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
 | Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm--tcp_nodelay`](#nagles-algorithm--tcp_nodelay) |
 | ETag | [`#etag`](#etag) |
+| WebSocket | [`#websocket`](#websocket) |
 | JSON Merge Patch | [`#json-merge-patch`](#json-merge-patch) |
 | Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
 | Migration-Driven Deprecation | [`#migration-driven-deprecation`](#migration-driven-deprecation) |
@@ -716,4 +717,31 @@ A fixed-size hash (e.g., SHA-256, MD5) computed from data to verify its integrit
 
 ### Also see
 - [Chunked Upload](#chunked-upload) · [ETag](#etag)
+
+---
+
+## WebSocket
+
+A full-duplex communication protocol over a single TCP connection, initiated by an HTTP upgrade handshake. Unlike HTTP's request-response model, WebSocket maintains a persistent connection where either the client or server can push data at any time — eliminating polling overhead for real-time applications.
+
+### Key Characteristics
+- **Full-duplex**: Both client and server can send messages independently after the handshake
+- **Persistent connection**: One TCP connection stays open, avoiding repeated TLS handshakes and HTTP headers
+- **Low latency**: Sub-millisecond message delivery after the initial connection — ideal for real-time updates
+- **Event-driven**: Server pushes updates to clients when state changes, rather than clients polling for changes
+
+### When to Use
+- Real-time leaderboards, live scores, and dashboards where polling would waste bandwidth
+- Chat applications, collaborative editing, and multi-player game state sync
+- Server-to-client push notifications (as an alternative to Server-Sent Events when bidirectional communication is needed)
+- Financial tickers and trading platforms requiring sub-second price updates
+
+### When NOT to Use
+- Infrequent updates (polling every 30s is simpler and more robust)
+- One-way server-to-client only (Server-Sent Events are simpler and auto-reconnect)
+- When the client or network doesn't support WebSocket (use long-polling or SSE as fallback)
+- When connection count scales to millions — connection management (heartbeats, reconnection, load balancer timeout tuning) becomes a significant operational burden
+
+### Also see
+- [Rate Limiting](#rate-limiting) · [Long-Running Operations](#long-running-operations) · [Leaderboard Pattern](../architecture-patterns.md#leaderboard-pattern)
 

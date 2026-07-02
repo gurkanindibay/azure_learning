@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Canary Deployment | [`#canary-deployment`](#canary-deployment) |
 | Blue-Green vs Canary Deployment | [`#blue-green-vs-canary-deployment`](#blue-green-vs-canary-deployment) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
+| Leaderboard Pattern | [`#leaderboard-pattern`](#leaderboard-pattern) |
 | CAF | [`#caf`](#caf) |
 | Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
@@ -1788,6 +1789,32 @@ A fundamental classification of workloads that determines which concurrency mode
 
 ### Also see
 - [Amdahl's Law](#amdahls-law) · [Concurrency](../databases.md#concurrency) · [Parallelism](../ai-ml-llm.md#parallelism)
+
+---
+
+## Leaderboard Pattern
+
+An architectural pattern for systems that rank entities by a mutable score and serve top-N or rank-of-entity queries at scale. Rather than sorting a full dataset on every request, the pattern separates persistence (database as source of truth), ranking computation (event-driven pipeline), and serving (in-memory sorted data structure).
+
+### Key Characteristics
+- **Ranking as a separate concern**: Ranking is computed asynchronously from game/application logic via an event stream (Kafka)
+- **Sorted data structure for serving**: Redis Sorted Sets maintain continuous ordering — O(log N) writes, O(log N) rank lookups
+- **Multi-dimension ranking**: Separate sorted sets per dimension (global, regional, friends, weekly) to avoid per-query filtering
+- **Optimistic concurrency**: Version/timestamp on score events to discard stale updates
+- **Push over poll**: WebSocket or SSE push ranking changes to connected clients rather than requiring polling
+
+### When to Use
+- Real-time leaderboards with millions of entities and thousands of score updates per second
+- Gaming platforms where players expect sub-second ranking updates after every action
+- Any system requiring top-N queries over a large, frequently mutating dataset
+
+### When NOT to Use
+- Static rankings or infrequent updates (a simple `ORDER BY` with a database index suffices)
+- Small datasets (<10K entities) — the architectural overhead outweighs the benefit
+- When strict transactional consistency between score and ranking is required (use a single transactional store instead)
+
+### Also see
+- [Redis Sorted Sets](../caching.md#redis-sorted-sets) · [Event-Driven Architecture](../cqrs-event-driven.md) · [WebSocket](../api-design.md#websocket) · [CQRS](../cqrs-event-driven.md#cqrs) · [Eventual Consistency](../data-concurrency.md#eventual-consistency)
 
 ---
 
