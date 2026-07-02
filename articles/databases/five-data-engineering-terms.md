@@ -1,4 +1,5 @@
 ---
+type: Article
 title: "If You Understand These 5 Data Engineering Terms, You’re Ahead of 90% of the Industry"
 source: "https://medium.com/towards-data-engineering/if-you-understand-these-5-data-engineering-terms-youre-ahead-of-90-of-the-industry-a2da363aa64d"
 author:
@@ -9,7 +10,7 @@ description: "Master the core physics of data architecture without getting lost 
 tags:
   - "clippings"
 ---
-## Master the core physics of data architecture without getting lost in the SaaS hype.
+# Master the core physics of data architecture without getting lost in the SaaS hype.
 
 ![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*ad_FdQioAr9cwIax7AFHgA.png)
 
