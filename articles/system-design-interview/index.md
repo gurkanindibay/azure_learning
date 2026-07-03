@@ -25,3 +25,4 @@ Source articles covering system design interview patterns, strategies, and case 
 - [complete-system-design-interview-guide-2026](complete-system-design-interview-guide-2026.md)
 - [resumable-uploads-chunking-large-files](resumable-uploads-chunking-large-files.md)
 - [real-time-leaderboard-design](real-time-leaderboard-design.md)
+- [system-design-preparation-master-sheet](system-design-preparation-master-sheet.md)

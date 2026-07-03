@@ -353,7 +353,7 @@ dictionary_domains:
       - hotlinking
       - faceted search
   architecture-patterns.md:
-    title: "Architecture & Design Patterns"
+    title: "Architecture & Cloud Patterns"
     keywords:
       - microservice
       - monolith
@@ -365,58 +365,6 @@ dictionary_domains:
       - strangler
       - bounded context
       - ubiquitous language
-      - blue-green
-      - canary
-      - deployment
-      - progressive delivery
-      - feature flag
-      - a/b testing
-      - active-active
-      - shadow testing
-      - goroutine
-      - go runtime
-      - gomaxprocs
-      - tokio
-      - event loop
-      - virtual file system
-      - vfs
-      - native extension
-      - technical debt
-      - upstream
-      - downstream
-      - circular dependency
-      - design pattern
-      - gof
-      - singleton
-      - factory
-      - builder
-      - adapter
-      - decorator
-      - proxy
-      - strategy
-      - observer
-      - command
-      - repository
-      - golden hammer
-      - yagni
-      - separation of concerns
-      - fail fast
-      - single source of truth
-      - loose coupling
-      - immutability
-      - scalability
-      - adr
-      - architecture decision record
-      - anti-pattern
-      - preemption
-      - fair sharing
-      - tenant hierarchy
-      - zero-copy
-      - url shortener
-      - snowflake
-      - key generation
-      - fanout
-      - presence
       - hub-and-spoke
       - dmz
       - well-architected
@@ -427,7 +375,29 @@ dictionary_domains:
       - database per service
       - distributed monolith
       - deployment coupling
+      - virtual file system
+      - vfs
+      - native extension
+      - technical debt
+      - upstream
+      - downstream
+      - circular dependency
+      - preemption
+      - fair sharing
+      - tenant hierarchy
+      - url shortener
+      - snowflake
+      - key generation
       - base62
+      - presence
+      - leaderboard
+      - read/write path
+      - cdn
+      - service mesh
+      - write-ahead buffer
+      - prg pattern
+      - hyperloglog
+      - back-of-the-envelope
   caching.md:
     title: "Caching"
     keywords:
@@ -512,6 +482,64 @@ dictionary_domains:
       - bitrate
       - hls
       - dash
+  deployment-patterns.md:
+    title: "Deployment & Release Patterns"
+    keywords:
+      - blue-green
+      - canary
+      - deployment
+      - progressive delivery
+      - feature flag
+      - a/b testing
+      - active-active
+      - shadow testing
+      - release
+      - rollout
+  design-patterns.md:
+    title: "Design Patterns & Software Engineering Principles"
+    keywords:
+      - design pattern
+      - gof
+      - gang of four
+      - singleton
+      - factory
+      - builder
+      - adapter
+      - decorator
+      - proxy
+      - strategy
+      - observer
+      - command
+      - repository
+      - golden hammer
+      - yagni
+      - separation of concerns
+      - fail fast
+      - single source of truth
+      - loose coupling
+      - immutability
+      - scalability
+      - adr
+      - architecture decision record
+      - anti-pattern
+  concurrency-runtimes.md:
+    title: "Concurrency Models & Language Runtimes"
+    keywords:
+      - goroutine
+      - go runtime
+      - gomaxprocs
+      - tokio
+      - event loop
+      - m:n scheduling
+      - actor model
+      - context switching
+      - amdahl
+      - io-bound
+      - cpu-bound
+      - race condition
+      - concurrency model
+      - async runtime
+      - rust async
   messaging.md:
     title: "Messaging"
     keywords:
@@ -532,6 +560,14 @@ dictionary_domains:
       - deduplication store
       - distributed commit log
       - message batching
+      - fanout
+      - fanout on write
+      - fanout on read
+      - hybrid fanout
+      - zero-copy
+      - apache flink
+      - flink
+      - stream processing
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:
@@ -604,6 +640,12 @@ dictionary_domains:
       - merkle tree
       - anti-entropy
       - nosql
+      - apache cassandra
+      - cassandra
+      - mongodb
+      - masterless
+      - masterless architecture
+      - durability
 
   security-iam.md:
     title: "Security, Identity & Access Management"
