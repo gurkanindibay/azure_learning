@@ -94,7 +94,7 @@ timestamp: 2026-07-03T00:00:00Z
 
 **Tradeoff**: State machines add upfront modeling effort and must be kept in sync with evolving business processes. But for payment, order, and fulfillment workflows where incorrect state transitions cause real financial damage, the cost is justified.
 
-> **Also see**: [Optimistic Locking](#apipat-17), [CQRS & Event Sourcing](../../reference-dictionary/cqrs-event-driven.md)
+> **Also see**: [Optimistic Locking](#apipat-17-optimistic-locking-for-concurrent-idempotency), [CQRS & Event Sourcing](../../reference-dictionary/cqrs-event-driven.md)
 > **Dictionary**: [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [Data Concurrency](../../reference-dictionary/data-concurrency.md)
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns
 
@@ -117,7 +117,7 @@ Only one of two concurrent requests succeeds — the other sees zero rows affect
 
 **Tradeoff**: Under extreme contention (100+ concurrent requests on the same row), retry storms can degrade throughput. For hot rows (flash sale items), consider pessimistic locking or a queue-based approach. Also, optimistic locking works at the database level — it doesn't prevent duplicate API calls from reaching the database in the first place; pair it with token-based idempotency.
 
-> **Also see**: [Token-Based Idempotency](#apipat-18), [State Machine](#apipat-16)
+> **Also see**: [Token-Based Idempotency](../../reference-dictionary/cqrs-event-driven.md#token-based-idempotency), [State Machine](#apipat-16-state-machine-for-idempotent-transitions)
 > **Dictionary**: [Data Concurrency](../../reference-dictionary/data-concurrency.md), [Databases](../../reference-dictionary/databases.md)
 > **Azure Services**: [Azure SQL](../../architecture-azure/data/), [Cosmos DB](../../architecture-azure/data/databases/azure_cosmosdb/) (optimistic concurrency via _etag)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
@@ -143,7 +143,7 @@ Redis executes Lua scripts as a single atomic unit — no other command can inte
 
 **Tradeoff**: Redis becomes a critical dependency — if Redis is unavailable, all mutating operations are blocked. Mitigate with Redis Cluster (high availability) and a fallback to database-level unique constraints (degraded but still safe). Also, Lua scripts must be kept simple — complex scripts block the Redis event loop.
 
-> **Also see**: [Unique Business Identifiers](#apipat-15), [Optimistic Locking](#apipat-17)
+> **Also see**: [Unique Business Identifiers](#apipat-15-unique-business-identifiers--database-constraints), [Optimistic Locking](#apipat-17-optimistic-locking-for-concurrent-idempotency)
 > **Dictionary**: [Caching](../../reference-dictionary/caching.md), [API Design](../../reference-dictionary/api-design.md)
 > **Azure Services**: [Azure Cache for Redis](../../architecture-azure/data/), [Event Hubs](../../architecture-azure/integration/event-hubs/)
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging, §7.1 Reliability & Resilience

@@ -248,7 +248,7 @@ Idempotency does not remove complexity — it **moves it into time**. Instead of
 
 > **Core insight**: If an operation cannot be safely replayed, do not pretend it can. Idempotency must be end-to-end with explicitly modeled side effects, and "success" must mean execution complete — not merely accepted.
 
-**Also see**: [Idempotency State Explosion](#idempotency-state-explosion), [Outbox Pattern](#outbox-pattern), [Dual-Write Problem](#dual-write-problem) · [API Design](api-design.md#idempotency-key) · [Data & Concurrency](data-concurrency.md) · [Reconciliation](fintech.md#reconciliation)
+**Also see**: [API Idempotency](#api-idempotency), [Token-Based Idempotency](#token-based-idempotency), [Idempotency State Explosion](#idempotency-state-explosion), [Outbox Pattern](#outbox-pattern), [Dual-Write Problem](#dual-write-problem) · [API Design](api-design.md#idempotency-key) · [Data & Concurrency](data-concurrency.md) · [Reconciliation](fintech.md#reconciliation)
 
 ---
 
@@ -397,7 +397,7 @@ A **globally unique identifier** assigned to every business event at production 
 - When the consumer can derive idempotency from natural business keys (e.g., `order_id` + `version`)
 
 ### Also see
-- [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
+- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
 
 ---
 
