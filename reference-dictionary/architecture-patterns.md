@@ -98,6 +98,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Apache Cassandra | [`#apache-cassandra`](#apache-cassandra) |
 | MongoDB | [`#mongodb`](#mongodb) |
 | Masterless Architecture | [`#masterless-architecture`](#masterless-architecture) |
+| CDN | [`#cdn`](#cdn) |
+| Service Mesh | [`#service-mesh`](#service-mesh) |
 
 ---
 
@@ -1889,4 +1891,54 @@ A **probabilistic cardinality estimator** that counts unique elements in a multi
 
 ### Also see
 - [Cardinality Estimation](../databases.md#cardinality-estimation) · [Bloom Filter](../databases.md#bloom-filter) · [Morris Probabilistic Counter](../caching.md#morris-probabilistic-counter) · [Redis Internals Takeaways](../../system-design-architecture/caching/redis-internals.md#cache-12)
+
+---
+
+## CDN
+
+A **Content Delivery Network** — a geographically distributed network of edge servers that cache static and dynamic content close to end users, reducing latency and offloading origin infrastructure.
+
+### Key Characteristics
+- **Edge caching**: Content replicated to points of presence (PoPs) worldwide; users fetch from the nearest edge
+- **Origin offload**: 90%+ of requests served from edge cache, never reaching origin servers
+- **DDoS absorption**: Distributed edge footprint absorbs volumetric attacks before they reach origin
+- **Modern capabilities**: Edge compute (Cloudflare Workers, AWS Lambda@Edge), image optimization, A/B testing, SSL termination
+
+### When to Use
+- Global user base where latency to a single origin region is unacceptable
+- Static assets (images, CSS, JS, videos) that benefit from caching at the edge
+- DDoS protection at the network edge before traffic reaches application infrastructure
+
+### When NOT to Use
+- Intranet applications with all users in one geographic region
+- Highly dynamic, personalized content that cannot be cached (though edge compute can help)
+- When TLS private keys must never leave your infrastructure (some CDNs require key sharing)
+
+**Also see**: [Edge Computing](#edge-computing) · [Caching](caching.md) · [Latency Optimization](#latency-optimization) · [Azure Front Door](../azure-services.md#azure-front-door)
+
+---
+
+## Service Mesh
+
+A **dedicated infrastructure layer** that handles service-to-service communication transparently, outside application code. Deployed as sidecar proxies alongside each service, providing observability, traffic management, and security without application changes.
+
+### Key Characteristics
+- **Sidecar proxy**: Each service instance gets a co-located proxy (Envoy, Linkerd-proxy) that intercepts all network traffic
+- **Control plane + data plane**: Control plane (Istiod, Linkerd control plane) configures the data plane proxies
+- **mTLS**: Automatic mutual TLS between services — encryption and identity without application code
+- **Traffic management**: Retries, timeouts, circuit breaking, traffic splitting (canary), fault injection
+- **Observability**: Automatic metrics (request rate, latency, error rate), distributed tracing, access logs
+
+### When to Use
+- Large microservice deployments (50+ services) where consistent observability and security are required
+- Organizations with a dedicated platform team that can operate the mesh
+- Compliance requirements mandating encryption-in-transit for all service-to-service traffic
+
+### When NOT to Use
+- Small deployments (under 10 services) — the operational overhead exceeds the benefit
+- Teams without platform engineering capacity to operate the control plane
+- When the extra latency hop per request (typically <1ms with Envoy) is unacceptable
+- Monoliths or services communicating over message queues rather than synchronous HTTP/gRPC
+
+**Also see**: [Sidecar Pattern](#sidecar-pattern) · [Microservices](#microservices) · [Circuit Breaker](resilience.md#circuit-breaker) · [Istio / Linkerd](https://istio.io/latest/about/service-mesh/)
 

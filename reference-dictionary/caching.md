@@ -33,6 +33,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
 | Write-Through | [`#write-through`](#write-through) |
+| Write-Behind | [`#write-behind`](#write-behind) |
 | Hot Key | [`#hot-key`](#hot-key) |
 | Counter Sharding | [`#counter-sharding`](#counter-sharding) |
 | Hot Key Detection | [`#hot-key-detection`](#hot-key-detection) |
@@ -430,6 +431,30 @@ A caching pattern where data is written to both the cache and the backing store 
 - Scenarios where cache failures should not block the primary write path
 
 **Also see**: [Cache-Aside Pattern](#cache-aside-pattern) · [Cache Invalidation](#cache-invalidation)
+
+---
+
+## Write-Behind
+
+A caching pattern where data is written to the cache **synchronously** and the write to the backing store is deferred — executed asynchronously on a background schedule. Maximizes write throughput but risks data loss if the cache fails before the flush completes.
+
+### Key Characteristics
+- **Async flush**: Cache acknowledges write immediately; DB update happens later
+- **Write batching**: Multiple writes can be coalesced into fewer DB operations
+- **Data loss risk**: Cache failure before flush = lost writes (unacceptable for transactional data)
+- **High write throughput**: Write latency is cache-only; DB is not on the critical path
+
+### When to Use
+- Write-heavy workloads where throughput trumps immediate durability (analytics counters, view counts, metrics)
+- Scenarios where the data can be reconstructed or is non-critical
+- When paired with a durable cache (Redis with AOF persistence) to reduce loss window
+
+### When NOT to Use
+- Financial transactions, inventory counts, or any data where loss is unacceptable
+- When the backing store cannot keep up with the async flush rate (builds unbounded backlog)
+- Without monitoring on the flush lag — unbounded lag means unbounded data loss on failure
+
+**Also see**: [Write-Through](#write-through) · [Cache-Aside Pattern](#cache-aside-pattern) · [Cache Invalidation](#cache-invalidation)
 
 ---
 

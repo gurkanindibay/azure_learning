@@ -22,5 +22,6 @@ Source articles covering system design interview patterns, strategies, and case 
 - [PART 1 — Distinguished Engineer — Behavioural Interview Questions](PART 1 — Distinguished Engineer — Behavioural Interview Questions.md)
 - [design-system-interviews](design-system-interviews.md)
 - [why-I-ignore-architecture-diagrams-in-system-design-interviews](why-I-ignore-architecture-diagrams-in-system-design-interviews.md)
+- [complete-system-design-interview-guide-2026](complete-system-design-interview-guide-2026.md)
 - [resumable-uploads-chunking-large-files](resumable-uploads-chunking-large-files.md)
 - [real-time-leaderboard-design](real-time-leaderboard-design.md)
