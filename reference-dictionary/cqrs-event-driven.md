@@ -27,6 +27,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Post-Commit Dispatch | [`#post-commit-dispatch`](#post-commit-dispatch) |
 | Idempotency | [`#idempotency`](#idempotency) |
 | Idempotency State Explosion | [`#idempotency-state-explosion`](#idempotency-state-explosion) |
+| API Idempotency | [`#api-idempotency`](#api-idempotency) |
+| Token-Based Idempotency | [`#token-based-idempotency`](#token-based-idempotency) |
 | Dual-Write Problem | [`#dual-write-problem`](#dual-write-problem) |
 | Event-Driven Architecture | [`#event-driven-architecture`](#event-driven-architecture) |
 | Event Carried State Transfer | [`#event-carried-state-transfer`](#event-carried-state-transfer) |
@@ -448,3 +450,53 @@ An architectural pattern where **Kafka (or an equivalent distributed log) serves
 
 ### Also see
 - [Event-Driven Architecture](#event-driven-architecture) · [Event Sourcing](#event-sourcing) · [Eventual Consistency](#eventual-consistency) · [CQRS](#cqrs)
+
+---
+
+## API Idempotency
+
+The guarantee that **multiple identical API requests produce the same side effect as a single request** — regardless of how many times the client sends them. API idempotency is enforced at the server boundary using idempotency keys, token validation, or natural business identifiers, and is essential for safe retries in distributed systems where network failures, timeouts, and at-least-once delivery are the norm.
+
+### Key Characteristics
+- **Client-supplied key**: The client generates a unique `Idempotency-Key` header per business action and reuses it across retries
+- **Server-enforced**: The server stores processed keys and returns cached results for duplicates — the client never decides "this is a duplicate"
+- **Time-bound**: Keys expire after a configurable window (typically 24 hours); retries outside the window are treated as new requests
+- **Atomic validation**: Key lookup and business execution must be atomic or use compare-and-swap to prevent race conditions under concurrency
+
+### When to Use
+- Payment APIs, order creation, inventory deductions — any mutating endpoint where double-execution causes financial or data corruption
+- Any API exposed to mobile clients, retry-happy SDKs, or unreliable networks
+- Message consumers processing at-least-once delivery from Kafka, RabbitMQ, or Event Hubs
+
+### When NOT to Use
+- Read-only GET endpoints (already idempotent by HTTP semantics)
+- Low-stakes operations where occasional duplicates are acceptable and cheaper to clean up than to prevent
+- When the idempotency store (Redis, DB) becomes a bigger reliability risk than the duplicate operations it prevents
+
+### Also see
+- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Idempotency-Key](../api-design.md#idempotency-key) · [PRG Pattern](../architecture-patterns.md#prg-pattern)
+
+---
+
+## Token-Based Idempotency
+
+A **concrete idempotency strategy** where each mutating request carries a unique, single-use token. The server atomically validates and consumes the token before executing business logic — if the token is missing or already consumed, the request is rejected. Under high concurrency, the token check-and-consume must be a single atomic operation (e.g., Redis Lua script, `SETNX`, or `SELECT FOR UPDATE`) to prevent race-condition-based double execution.
+
+### Key Characteristics
+- **Token lifecycle**: Generate → store with TTL → submit with request → atomically validate + delete → reject if missing
+- **Atomic consume**: Redis Lua scripts (`GET` + `DEL` in one operation) or database row-level locks prevent concurrent token reuse
+- **ULID preferred**: Universally Unique Lexicographically Sortable Identifiers provide time-sortable, globally unique tokens without coordination
+- **Short TTL**: Tokens typically expire in 5 minutes — long enough for a single request lifecycle, short enough to limit storage
+
+### When to Use
+- High-concurrency scenarios where simple database unique constraints are insufficient (e.g., flash sales, ticket booking)
+- APIs where the client cannot provide a natural business key (order creation before an order number exists)
+- Combined with state machines and optimistic locking as a defense-in-depth idempotency strategy
+
+### When NOT to Use
+- When a natural business key already provides idempotency (e.g., `transaction_id` from a payment gateway)
+- Low-throughput systems where a database unique constraint on `request_id` is simpler and sufficient
+- When Redis availability is lower than the service's availability target — a token store outage blocks all mutating operations
+
+### Also see
+- [API Idempotency](#api-idempotency) · [Idempotency](#idempotency) · [Idempotency-Key](../api-design.md#idempotency-key) · [Optimistic Locking](../data-concurrency.md#optimistic-locking)

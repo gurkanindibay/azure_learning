@@ -84,6 +84,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Actor Model | [`#actor-model`](#actor-model) |
 | I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
 | Race Condition | [`#race-condition`](#race-condition) |
+| PRG Pattern | [`#prg-pattern`](#prg-pattern) |
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Presence Service | [`#presence-service`](#presence-service) |
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
@@ -1835,4 +1836,28 @@ A bug where the correctness of a program depends on the **relative timing or int
 
 ### Also see
 - [Lock Contention](../data-concurrency.md#lock-contention) · [Actor Model](#actor-model) · [Mutex](../dotnet-multithreading.md#mutex)
+
+---
+
+## PRG Pattern
+
+The **POST-Redirect-GET** pattern — a web application design pattern that prevents duplicate form submissions caused by page refreshes. After processing a POST request, the server responds with a 302 redirect to a GET endpoint, so that subsequent page refreshes only repeat the safe GET request.
+
+### Key Characteristics
+- **Prevents double-submission on refresh**: The browser's address bar points to the GET URL after redirect, not the POST endpoint
+- **Two HTTP round-trips**: POST → 302 Redirect → GET (adds latency compared to a direct POST response)
+- **Server-side state needed**: The GET endpoint must have access to the result of the POST operation (via session, query params, or path params)
+- **UX improvement, not security**: PRG prevents accidental resubmissions from the same user on the same browser; it does NOT prevent duplicate requests from other clients, network retries, or API consumers
+
+### When to Use
+- Traditional server-rendered web applications with HTML form submissions
+- Any flow where the user might refresh the page after submitting (order confirmation, payment, registration)
+- Combined with token-based idempotency as a defense-in-depth strategy
+
+### When NOT to Use
+- SPAs and mobile apps — these use client-side routing and API calls, not browser form submissions; token-based idempotency is the primary mechanism
+- As the sole idempotency mechanism — it only protects against browser refresh, not against network retries, message queue redelivery, or concurrent API requests
+
+### Also see
+- [Idempotency-Key](../api-design.md#idempotency-key) · [API Idempotency](../cqrs-event-driven.md#api-idempotency) · [Token-Based Idempotency](../cqrs-event-driven.md#token-based-idempotency)
 
