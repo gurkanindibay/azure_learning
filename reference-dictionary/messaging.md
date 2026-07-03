@@ -52,6 +52,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Processing-Time | [`#processing-time`](#processing-time) |
 | Watermarking | [`#watermarking`](#watermarking) |
 | Offset Alignment | [`#offset-alignment`](#offset-alignment) |
+| Fanout on Write | [`#fanout-on-write`](#fanout-on-write) |
+| Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
+| Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
+| Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
+| Apache Flink | [`#apache-flink`](#apache-flink) |
 
 ---
 
@@ -778,4 +783,115 @@ The process of **ensuring consumer offsets are consistent across two Kafka clust
 
 ### Also see
 - [Offset Commit](#offset-commit) · [Consumer Group](#consumer-group) · [Rebalance](#rebalance)
+
+---
+
+## Fanout on Write
+
+A distribution model where a new event is propagated to all consumers at write time. In social media, posting a message writes the post ID into every follower's timeline cache immediately. Reads are fast because results are pre-computed.
+
+### Key Characteristics
+- **Read-optimized**: Feed loads are O(1)
+- **Write amplification**: Each post generates N writes for N followers
+- **Latency to readers**: Near zero (data is already present)
+
+### When to Use
+- Small-to-medium follower counts
+- Read latency is the dominant SLO
+
+### When NOT to Use
+- Celebrity accounts with millions of followers (write amplification explodes)
+- Systems where producers significantly outnumber consumers
+
+**Also see**: [Fanout on Read](#fanout-on-read) · [Hybrid Fanout](#hybrid-fanout) · [Timeline Cache](../reference-dictionary/caching.md#timeline-cache)
+
+---
+
+## Fanout on Read
+
+A distribution model where events are stored centrally and consumers collect relevant items at read time. In social media, a follower loads their feed by fetching recent posts from each account they follow. Writes are cheap; reads are more expensive.
+
+### Key Characteristics
+- **Write-optimized**: Each post generates O(1) writes
+- **Read cost grows with followees**: Feed load is O(followees)
+- **No write amplification**: Ideal for celebrity producers
+
+### When to Use
+- Highly skewed graphs where a few producers have massive audiences
+- Systems where reads are infrequent relative to writes
+
+### When NOT to Use
+- Feeds with strict latency SLOs and many followees
+- Uniform graphs where push would be simpler and faster
+
+**Also see**: [Fanout on Write](#fanout-on-write) · [Hybrid Fanout](#hybrid-fanout)
+
+---
+
+## Hybrid Fanout
+
+A distribution model that combines fanout-on-write for normal users and fanout-on-read for high-follower celebrities. Balances read latency against write amplification by choosing the fanout strategy per producer based on follower count.
+
+### Key Characteristics
+- **Threshold-based**: Users below a follower count are pushed; celebrities are pulled
+- **Best of both worlds**: Fast reads for most users, bounded write amplification
+- **Operational complexity**: Requires separate code paths and caches
+
+### When to Use
+- Social networks with highly skewed follower distributions
+- Any fanout problem where neither pure push nor pure pull is affordable
+
+### When NOT to Use
+- Simple graphs where one strategy clearly dominates
+- When operational complexity outweighs the fanout savings
+
+**Also see**: [Fanout on Write](#fanout-on-write) · [Fanout on Read](#fanout-on-read) · [Celebrity Cache](../reference-dictionary/caching.md#celebrity-cache)
+
+---
+
+## Zero-Copy Transfer
+
+An OS-level optimization that transfers data directly from **disk cache to the network socket** without copying it through application memory. In Kafka, the `sendfile()` system call eliminates CPU copies and context switches between kernel and user space, dramatically reducing CPU usage during high-throughput data serving.
+
+### Key Characteristics
+- Data path: disk → page cache → network socket (no application buffer involved)
+- Eliminates redundant CPU copies and kernel/user context switches
+- Available when data is served directly from the OS page cache (not from application-managed buffers)
+- Used by Kafka for consumer fetch requests; also employed by Nginx and other high-performance servers
+
+### When to Use
+- High-throughput streaming systems where CPU is the bottleneck for data serving
+- When consumers read data that is already in the OS page cache (recently produced or frequently read)
+
+### When NOT to Use
+- When messages require application-level transformation or encryption before sending
+- When data is not in the page cache (misses still require disk reads into application memory first)
+
+### Also see
+- [Distributed Commit Log](#distributed-commit-log) · [Message Batching](#message-batching) · [Partition](#partition)
+
+---
+
+## Apache Flink
+
+**Apache Flink** is an open-source, distributed stream processing framework designed for stateful computations over unbounded and bounded data streams. It provides exactly-once consistency guarantees, high throughput with low latency, and sophisticated state management — making it ideal for continuously evolving results like real-time aggregations, leaderboards, and fraud detection.
+
+### Key Characteristics
+- **Stateful processing**: Maintains and updates state over time (running totals, session windows, pattern detection) with exactly-once guarantees
+- **Event-time processing**: Handles out-of-order events correctly using watermarks, not just processing-time
+- **Checkpointing**: Asynchronous, incremental snapshots of operator state for failure recovery without reprocessing the entire stream
+- **Unified batch/streaming**: Batch is treated as a special case of streaming (bounded streams), enabling the same code for both paradigms
+
+### When to Use
+- Continuously changing results that depend on accumulated state (election totals, leaderboards, real-time dashboards)
+- Complex event processing with windowed aggregations, pattern matching (CEP), and multi-stream joins
+- Pipelines requiring exactly-once semantics end-to-end (with transactional sinks like Kafka or Iceberg)
+
+### When NOT to Use
+- Simple stateless transformations where Kafka Streams or a few Kafka consumers + a database suffice
+- When the team lacks operational experience with distributed stream processors — Flink's checkpointing and state backend configuration require expertise
+- Batch-only workloads where Spark or a SQL engine provides simpler alternatives
+
+### Also see
+- [Kafka (Decoupling)](#) · [Stream Processing](../system-design-architecture/stream-processing/) · [Event-Driven Architecture](../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)
 

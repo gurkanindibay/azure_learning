@@ -1,13 +1,13 @@
 ---
 type: Reference
-title: "Architecture & Design Patterns"
+title: "Architecture & Cloud Patterns"
 description: "**Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language."
-timestamp: 2026-06-14T00:00:00Z
+timestamp: 2026-07-04T00:00:00Z
 ---
 
-# Architecture & Design Patterns
+# Architecture & Cloud Patterns
 
-> **Domain**: Software architecture patterns, domain-driven design, cloud adoption frameworks, and migration strategies.
+> **Domain**: Software architecture patterns, cloud adoption frameworks, networking topology, system design concepts, and migration strategies.
 > **Parent**: [Reference Dictionary](index.md)
 
 ---
@@ -24,82 +24,38 @@ timestamp: 2026-06-14T00:00:00Z
 | Anti-Corruption Layer | [`#anti-corruption-layer`](#anti-corruption-layer) |
 | Sidecar Pattern | [`#sidecar-pattern`](#sidecar-pattern) |
 | Ambassador Pattern | [`#ambassador-pattern`](#ambassador-pattern) |
-| Blue-Green | [`#blue-green`](#blue-green) |
-| Canary Deployment | [`#canary-deployment`](#canary-deployment) |
-| Blue-Green vs Canary Deployment | [`#blue-green-vs-canary-deployment`](#blue-green-vs-canary-deployment) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
 | Leaderboard Pattern | [`#leaderboard-pattern`](#leaderboard-pattern) |
 | CAF | [`#caf`](#caf) |
 | Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
-| GOMAXPROCS | [`#gomaxprocs`](#gomaxprocs) |
-| Goroutine | [`#goroutine`](#goroutine) |
-| M:N Scheduling | [`#mn-scheduling`](#mn-scheduling) |
-| Tokio | [`#tokio`](#tokio) |
-| Event Loop | [`#event-loop`](#event-loop) |
 | Virtual File System (VFS) | [`#virtual-file-system-vfs`](#virtual-file-system-vfs) |
 | Microservices | [`#microservices`](#microservices) |
 | Monolith | [`#monolith`](#monolith) |
 | Distributed Monolith | [`#distributed-monolith`](#distributed-monolith) |
 | Deployment Coupling | [`#deployment-coupling`](#deployment-coupling) |
 | Native Extension | [`#native-extension`](#native-extension) |
-| Progressive Delivery | [`#progressive-delivery`](#progressive-delivery) |
-| Feature Flag | [`#feature-flag`](#feature-flag) |
-| A/B Testing | [`#ab-testing`](#ab-testing) |
-| Active-Active | [`#active-active`](#active-active) |
-| Shadow Testing | [`#shadow-testing`](#shadow-testing) |
 | Technical Debt | [`#technical-debt`](#technical-debt) |
 | Upstream System | [`#upstream-system`](#upstream-system) |
 | Downstream System | [`#downstream-system`](#downstream-system) |
 | Upstream/Downstream Relationship | [`#upstream-downstream-relationship`](#upstream-downstream-relationship) |
 | Circular Dependency | [`#circular-dependency`](#circular-dependency) |
-| Singleton | [`#singleton`](#singleton) |
-| Factory Method | [`#factory-method`](#factory-method) |
-| Builder Pattern | [`#builder-pattern`](#builder-pattern) |
-| Adapter Pattern | [`#adapter-pattern`](#adapter-pattern) |
-| Decorator Pattern | [`#decorator-pattern`](#decorator-pattern) |
-| Proxy Pattern | [`#proxy-pattern`](#proxy-pattern) |
-| Strategy Pattern | [`#strategy-pattern`](#strategy-pattern) |
-| Observer Pattern | [`#observer-pattern`](#observer-pattern) |
-| Command Pattern | [`#command-pattern`](#command-pattern) |
-| Repository Pattern | [`#repository-pattern`](#repository-pattern) |
-| Golden Hammer | [`#golden-hammer`](#golden-hammer) |
-| YAGNI | [`#yagni`](#yagni) |
-| Separation of Concerns | [`#separation-of-concerns`](#separation-of-concerns) |
-| Fail Fast | [`#fail-fast`](#fail-fast) |
-| Single Source of Truth | [`#single-source-of-truth`](#single-source-of-truth) |
-| Loose Coupling | [`#loose-coupling`](#loose-coupling) |
-| Immutability | [`#immutability`](#immutability) |
-| Scalability | [`#scalability`](#scalability) |
-| Architecture Decision Record | [`#architecture-decision-record`](#architecture-decision-record) |
-| Anti-pattern | [`#anti-pattern`](#anti-pattern) |
 | Base62 Encoding | [`#base62-encoding`](#base62-encoding) |
 | URL Shortener | [`#url-shortener`](#url-shortener) |
 | Snowflake ID | [`#snowflake-id`](#snowflake-id) |
 | Key Generation Service | [`#key-generation-service`](#key-generation-service) |
-| Fanout on Write | [`#fanout-on-write`](#fanout-on-write) |
-| Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
-| Context Switching | [`#context-switching`](#context-switching) |
-| Amdahl's Law | [`#amdahls-law`](#amdahls-law) |
-| Actor Model | [`#actor-model`](#actor-model) |
-| I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
-| Race Condition | [`#race-condition`](#race-condition) |
-| PRG Pattern | [`#prg-pattern`](#prg-pattern) |
-| HyperLogLog | [`#hyperloglog`](#hyperloglog) |
-| Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Presence Service | [`#presence-service`](#presence-service) |
-| Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
+| Read/Write Path Separation | [`#read-write-path-separation`](#read-write-path-separation) |
+| CDN | [`#cdn`](#cdn) |
+| Service Mesh | [`#service-mesh`](#service-mesh) |
 | Preemption | [`#preemption`](#preemption) |
 | Fair Sharing | [`#fair-sharing`](#fair-sharing) |
 | Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
-| Durability | [`#durability`](#durability) |
-| Read/Write Path Separation | [`#read-write-path-separation`](#read-write-path-separation) |
-| Apache Flink | [`#apache-flink`](#apache-flink) |
-| Apache Cassandra | [`#apache-cassandra`](#apache-cassandra) |
-| MongoDB | [`#mongodb`](#mongodb) |
-| Masterless Architecture | [`#masterless-architecture`](#masterless-architecture) |
-| CDN | [`#cdn`](#cdn) |
-| Service Mesh | [`#service-mesh`](#service-mesh) |
+| Write-Ahead Buffer | [`#write-ahead-buffer`](#write-ahead-buffer) |
+| PRG Pattern | [`#prg-pattern`](#prg-pattern) |
+| HyperLogLog | [`#hyperloglog`](#hyperloglog) |
+| Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
+| Load Balancer | [`#load-balancer`](#load-balancer) |
 
 ---
 
@@ -179,59 +135,6 @@ A **co-located helper container** that supports the main application. Deployed a
 A **proxy service** that handles connectivity concerns (retry, routing, authentication) on behalf of the main service. Offloads cross-cutting network concerns from the application.
 
 **Also see**: [Sidecar Pattern](#sidecar-pattern)
-
----
-
-## Blue-Green
-
-Two **identical environments** — Blue (current) and Green (new version). Traffic is switched from Blue to Green for zero-downtime deployments. Rollback is instant: switch back to Blue.
-
-**Also see**: [Canary Deployment](#canary-deployment)
-
----
-
-## Canary Deployment
-
-Route a **small percentage of traffic** to the new version before full rollout. If error rates spike, the canary is killed and traffic reverts. Safer than Blue-Green for high-risk changes.
-
-**Also see**: [Blue-Green](#blue-green)
-
----
-
-## Blue-Green vs Canary Deployment
-
-Both strategies separate **deployment** (installing the new version) from **release** (exposing it to users). The difference is how traffic moves:
-
-| Aspect | Blue-Green | Canary Deployment |
-|:---|:---|:---|
-| Traffic shift | Instant 0% → 100% | Gradual 0% → small % → 100% |
-| Rollback speed | Immediate (switch back) | Fast (drain canary) |
-| Blast radius | All users if the new version fails | Only canary users |
-| Best for | Low-risk changes, predictable rollbacks | High-risk changes, sensitive services |
-
-They are often combined: a Blue-Green pair gives you an isolated environment to canary into before committing all traffic.
-
-```mermaid
-graph LR
-    subgraph "Blue-Green"
-        B[Blue v1<br/>100% traffic] -->|instant cutover| G[Green v2<br/>100% traffic]
-        G -.->|rollback| B
-    end
-
-    subgraph "Canary"
-        O[Old v1<br/>100%] -->|shift 10%| OC[Old 90%<br/>Canary v2 10%]
-        OC -->|shift all| C[Canary v2<br/>100%]
-        OC -.->|revert| O
-    end
-
-    style B fill:#0984e3,color:#ffffff
-    style G fill:#27ae60,color:#ffffff
-    style O fill:#0984e3,color:#ffffff
-    style OC fill:#f39c12,color:#000000
-    style C fill:#27ae60,color:#ffffff
-```
-
-**Diagram description**: Two deployment patterns shown side by side. Blue-Green (left) switches all traffic instantly from Blue v1 (blue) to Green v2 (green) with a dashed rollback arrow. Canary (right) gradually shifts traffic from Old v1 (blue) to a mix of Old 90% + Canary v2 10% (yellow), then to Canary v2 100% (green), with a dashed revert arrow to the old version.
 
 ---
 
@@ -584,112 +487,6 @@ A **compiled module** (written in a language such as Rust, C, C++, or Cython) th
 
 ---
 
-## Progressive Delivery
-
-An umbrella term for **gradually exposing new code to users** using techniques such as canary releases, feature flags, blue-green deployments, A/B testing and load-balanced rollouts. It decouples deployment from release.
-
-### Key Characteristics
-- **Controlled blast radius**: new code reaches a small subset first
-- **Measurable gating**: promote or rollback based on error rates, latency and business metrics
-- **User segmentation**: target by region, device, customer tier or random percentage
-
-### When to Use
-- High-risk changes in large-scale services
-- Products where business metrics must validate a change before full rollout
-
-### When NOT to Use
-- For trivial changes where the overhead of gating exceeds the risk
-- Without automated rollback and clear success criteria
-
-**Also see**: [Canary Deployment](#canary-deployment), [Blue-Green](#blue-green), [Feature Flag](#feature-flag), [A/B Testing](#ab-testing)
-
----
-
-## Feature Flag
-
-A software development technique that wraps functionality in a **runtime-controllable toggle**, allowing teams to enable, disable or gradually roll out features without deploying new code.
-
-### Key Characteristics
-- **Decouples deploy from release**: code can ship dark and be enabled later
-- **Targeted rollout**: per user, per segment, per region or percentage-based
-- **Kill switch**: problematic features can be turned off instantly
-
-### When to Use
-- Long-running features that must be merged incrementally
-- High-risk changes requiring instant rollback
-- A/B tests and phased rollouts
-
-### When NOT to Use
-- As a substitute for branch-based development discipline (flag debt accumulates)
-- When the flag adds runtime complexity without clear value
-
-**Also see**: [Progressive Delivery](#progressive-delivery), [A/B Testing](#ab-testing)
-
----
-
-## A/B Testing
-
-A controlled experiment where **two or more variants of a product experience are served to different user groups** to measure the impact on a business or user-experience metric.
-
-### Key Characteristics
-- **Randomized assignment**: users are bucketed to reduce selection bias
-- **Hypothesis and metric**: every test has a primary success metric and stopping criteria
-- **Statistical rigor**: requires sufficient sample size and significance testing
-
-### When to Use
-- Validating product changes, algorithms or UI designs with real user behavior
-- Decisions where multiple options are defensible and data should break the tie
-
-### When NOT to Use
-- For changes with clear correctness or safety requirements (prefer canary metrics instead)
-- When sample sizes are too small to reach statistical significance
-
-**Also see**: [Feature Flag](#feature-flag), [Progressive Delivery](#progressive-delivery)
-
----
-
-## Active-Active
-
-A high-availability deployment pattern where **multiple data centers or regions actively serve traffic and accept writes simultaneously**, rather than one being on standby.
-
-### Key Characteristics
-- **Traffic served from multiple regions**: lower latency and better fault tolerance
-- **Data synchronization**: replicas exchange writes, requiring conflict resolution
-- **Complexity trade-off**: adds consistency challenges in exchange for resilience
-
-### When to Use
-- Globally distributed users requiring low-latency writes
-- Mission-critical systems where a single region failure must be transparent
-
-### When NOT to Use
-- When strong consistency is more important than availability during partitions
-- Without a clear conflict-resolution strategy (e.g., CRDTs, last-write-wins, custom merge)
-
-**Also see**: [CRDT](data-concurrency.md#crdt-conflict-free-replicated-data-type), [CAP Theorem](#cap-theorem)
-
----
-
-## Shadow Testing
-
-A validation technique where production traffic is **duplicated and sent to a new version or service without affecting real users**. Responses are compared between the old and new systems to detect regressions.
-
-### Key Characteristics
-- **Non-impactful**: users see only the production response; the shadow result is discarded
-- **High-fidelity workload**: tests against real traffic patterns, not synthetic loads
-- **Comparison metrics**: latency, errors, response payloads and resource usage
-
-### When to Use
-- Refactoring or re-platforming systems where behavioral equivalence must be proven
-- Load-testing new versions with production-scale traffic
-
-### When NOT to Use
-- When the operation has side effects (e.g., payments, writes) that cannot be isolated
-- Without a safe way to capture, compare and discard shadow responses
-
-**Also see**: [Canary Deployment](#canary-deployment), [Progressive Delivery](#progressive-delivery)
-
----
-
 ## Technical Debt
 
 The **accumulated cost of shortcuts or suboptimal design decisions** that make future changes slower, riskier or more expensive. Like financial debt, it can be strategic if it is tracked and paid down.
@@ -812,451 +609,6 @@ A situation where two or more components **mutually depend on each other**, dire
 
 ---
 
-## Singleton
-
-A **creational pattern** that ensures a class has only one instance and provides a global access point to it. Used for shared resources — configuration managers, connection pools, cache managers — where a single source-of-truth is required.
-
-### Key Characteristics
-- Private constructor prevents external instantiation
-- Static volatile field + double-checked locking for thread safety
-- Lazy initialization: instance created on first access
-
-### When to Use
-- JVM-scoped shared resources: feature-flag services, config managers
-- Framework-managed singletons (Spring `@Bean`, CDI) preferred over hand-rolled ones
-
-### When NOT to Use
-- When the "single instance" assumption will change (e.g., tests need separate instances)
-- For objects with mutable state accessed by many threads — leads to contention and hidden coupling
-
-### Also see
-- [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-01-shared-resource-multiple-instantiation)
-
----
-
-## Factory Method
-
-A **creational pattern** that defines an interface for creating objects but lets subclasses or a factory function decide which concrete class to instantiate. Clients are decoupled from the creation logic.
-
-### Key Characteristics
-- Static factory function or an abstract `createX()` method in a base class
-- Returns an interface type, not a concrete type
-- Creation logic is centralised — easy to extend via new cases
-
-### When to Use
-- Creating protocol-specific clients (HTTP/gRPC/Kafka) based on config
-- Plugin architectures where the set of implementations varies at runtime
-- When mocking in tests requires swapping implementations
-
-### When NOT to Use
-- For trivial, unconditional `new Foo()` calls — the indirection adds no value
-
-### Also see
-- [Builder Pattern](#builder-pattern) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-02-complex-object-creation-scattered-across-clients)
-
----
-
-## Builder Pattern
-
-A **creational pattern** that constructs complex objects step-by-step using a fluent API, separating construction from representation and enabling immutability.
-
-### Key Characteristics
-- Nested `Builder` class accumulates optional/required fields
-- `build()` validates and returns the fully constructed, immutable object
-- Eliminates telescoping constructors and invalid intermediate states
-
-### When to Use
-- Complex DTOs or value objects with many optional fields
-- Constructing requests to external services or configuration objects
-- When immutability is required and setter-based construction is unsafe
-
-### When NOT to Use
-- Simple objects with ≤2 fields — a plain constructor is clearer
-- When the object is mutable by design
-
-### Also see
-- [Factory Method](#factory-method) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-03-telescoping-constructors-for-complex-objects)
-
----
-
-## Adapter Pattern
-
-A **structural pattern** that converts the interface of an existing class into the interface that clients expect. Used to integrate legacy systems or third-party SDKs without modifying them.
-
-### Key Characteristics
-- Implements the target interface; holds a reference to the adaptee
-- Translates method calls from the target contract to the legacy API
-- Encapsulates all integration/translation code in one place
-
-### When to Use
-- Wrapping legacy `CSVReader`, third-party SDKs, or external APIs to match internal contracts
-- When a domain abstraction must remain clean and external changes should be isolated
-
-### When NOT to Use
-- When the interfaces are already compatible — adds unnecessary indirection
-- When the legacy code will be replaced soon and temporary coupling is acceptable
-
-### Also see
-- [Anti-Corruption Layer](#anti-corruption-layer) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-04-integrating-incompatible-interfaces)
-
----
-
-## Decorator Pattern
-
-A **structural pattern** that adds behavior to an object dynamically by wrapping it with another object that implements the same interface. Used for cross-cutting concerns (logging, caching, metrics) without modifying the original class.
-
-### Key Characteristics
-- Decorator implements the same interface as the wrapped component
-- Delegates the core operation to the inner component, adding behavior before/after
-- Decorators can be composed in chains
-
-### When to Use
-- Adding logging, metrics, caching, or audit to repository or service implementations
-- When subclassing would create class explosion for each combination of behaviors
-
-### When NOT to Use
-- Deep chains (>3 layers) — hard to debug; prefer an AOP framework instead
-- When the added behavior is unconditional and permanent — just modify the class
-
-### Also see
-- [Proxy Pattern](#proxy-pattern) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-05-adding-cross-cutting-behaviors-without-subclassing)
-
----
-
-## Proxy Pattern
-
-A **structural pattern** that provides a surrogate for another object to control access, enable lazy initialization, or intercept calls for security/logging. The proxy and the real object share the same interface.
-
-### Key Characteristics
-- Virtual proxy: defers creation of the real object until first use
-- Protection proxy: checks permissions before delegating
-- Remote proxy: marshals calls to a remote object (gRPC stubs)
-
-### When to Use
-- Lazy loading of expensive resources (images, large datasets)
-- Security checkpoints before delegating to a sensitive operation
-- gRPC/stub proxies and remote service clients
-
-### When NOT to Use
-- When the proxy introduces unexpected latency that callers cannot anticipate
-- When caching is the main goal — prefer the [Decorator Pattern](#decorator-pattern) for explicit caching wrappers
-
-### Also see
-- [Decorator Pattern](#decorator-pattern) · [Ambassador Pattern](#ambassador-pattern) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-06-controlling-access-and-lazy-initialization)
-
----
-
-## Strategy Pattern
-
-A **behavioral pattern** that defines a family of algorithms, encapsulates each as an object, and makes them interchangeable. Clients select or inject the desired strategy at construction or runtime.
-
-### Key Characteristics
-- Common interface implemented by each concrete strategy
-- Strategy is injected into the context (composition over inheritance)
-- Open/Closed Principle: add new strategies without modifying the client
-
-### When to Use
-- Payment routing: choose strategy based on currency, region, or dynamic rules
-- Discount calculation, sorting, risk scoring where the algorithm varies by context
-- When algorithm variants need independent testing
-
-### When NOT to Use
-- When only one strategy will ever exist — inline the algorithm
-- When the strategy selection logic itself becomes more complex than the algorithms
-
-### Also see
-- [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-07-swappable-algorithms-at-runtime)
-
----
-
-## Observer Pattern
-
-A **behavioral pattern** that defines a one-to-many dependency between objects so that when one object (the subject) changes state, all its dependents (observers) are notified automatically.
-
-### Key Characteristics
-- Subject maintains a list of observers (listeners); observers register/unregister
-- Decouples the event source from its handlers — the publisher knows nothing about consumers
-- `CopyOnWriteArrayList` or similar thread-safe collection for concurrent listener registration
-
-### When to Use
-- Domain events within a single JVM (user registered, payment processed)
-- Reactive UIs where model changes must propagate to multiple view components
-- Simple pub/sub within a monolith
-
-### When NOT to Use
-- Cross-service events — use an explicit message broker (Kafka, Service Bus) for durability, ordering, and replay
-- When listener ordering matters — Observer does not guarantee it
-- Watch for memory leaks: always deregister listeners when the consumer is destroyed
-
-### Also see
-- [Messaging Dictionary](messaging.md) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-08-decoupling-producers-from-consumers)
-
----
-
-## Command Pattern
-
-A **behavioral pattern** that encapsulates a request as a standalone object containing all information needed to execute the action. Enables queuing, scheduling, auditing, retry, and undo.
-
-### Key Characteristics
-- Command object holds the action, its parameters, and a reference to the receiver
-- Commands can be serialized, stored, and replayed
-- An `execute()` method is the single invocation point
-
-### When to Use
-- Job schedulers and message-based work queues
-- GUI actions with undo/redo support
-- Audit logs where each state-changing action must be persisted
-
-### When NOT to Use
-- Trivial, synchronous, non-replayable operations — the object creation overhead is not justified
-- When all you need is a `Runnable` lambda — avoid the formalism
-
-### Also see
-- [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-09-encapsulating-requests-for-queuing-and-undo)
-
----
-
-## Repository Pattern
-
-An **enterprise pattern** that abstracts data access behind a domain-oriented interface. The repository maps domain objects to and from the persistence store, keeping the domain model pure and decoupled from persistence technology.
-
-### Key Characteristics
-- Interface exposes domain-specific query methods (`findByEmail`, `findActiveOrders`)
-- The implementation encapsulates JPA/JDBC/NoSQL details
-- Trivially mockable in unit tests — swap with an in-memory implementation
-
-### When to Use
-- Any domain where you want to swap persistence technology without touching business logic
-- Domain-Driven Design contexts where the domain model must remain clean
-- When unit-testing domain logic without a database
-
-### When NOT to Use
-- Anemic repositories that only mirror CRUD add indirection with no benefit — use the ORM directly
-- Leaky abstractions that expose `EntityManager` or query builders negate the purpose
-
-### Also see
-- [DDD](#ddd) · [Database Per Service](#database-per-service) · [CQRS](cqrs-event-driven.md#cqrs) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-10-leaky-data-access-in-domain-logic)
-
----
-
-## Golden Hammer
-
-An **anti-pattern** where a familiar pattern or tool is applied to every problem regardless of fit. The name comes from "if all you have is a hammer, everything looks like a nail."
-
-### Key Characteristics
-- Pattern applied out of habit or comfort, not because it solves the current problem
-- Results in over-engineered, hard-to-understand codebases
-- Often accompanied by over-abstraction
-
-### When to Use
-- N/A — this is an anti-pattern. Recognise and avoid it.
-
-### When NOT to Use
-- Always — prefer matching the solution to the actual problem
-
-### Also see
-- [YAGNI](#yagni) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-12-choosing-the-right-pattern) · [Pragmatic System Design](../system-design-architecture/18-pragmatic-system-design-takeaways.md)
-
----
-
-## YAGNI
-
-**You Aren't Gonna Need It** — an extreme programming principle stating that a feature or abstraction should not be added until it is actually needed. Prevents speculative complexity.
-
-### Key Characteristics
-- Defer implementation until there is a concrete, current requirement
-- Refactor into a pattern when the need arises, not in anticipation of it
-- Pairs with KISS (Keep It Simple, Stupid) and incremental design
-
-### When to Use
-- When considering whether to add CQRS, Saga, or a complex pattern to a simple domain
-- When tempted to build a "framework" for a one-time use case
-
-### When NOT to Use
-- Security and compliance requirements — do not defer security controls under YAGNI
-- Public API contracts — breaking changes are expensive; design them carefully upfront
-
-### Also see
-- [Golden Hammer](#golden-hammer) · [Design Patterns Key Takeaways](../system-design-architecture/39-design-patterns-key-takeaways.md#dp-12-choosing-the-right-pattern)
-
----
-
-## Separation of Concerns
-
-A design principle that assigns each module, class, or service one well-defined responsibility, keeping internal cohesion high and external coupling low.
-
-### Key Characteristics
-- Each component has a single reason to change
-- Boundaries are drawn along responsibilities, not along implementation details
-- Changes in one concern do not cascade into unrelated concerns
-
-### When to Use
-- When a module grows large enough that its tests, reviews, and deployments span multiple teams
-- When business capabilities can be clearly distinguished
-
-### When NOT to Use
-- When over-separation creates more interfaces and deployment units than a small team can operate
-- When premature abstraction hides a simple, cohesive workflow
-
-### Also see
-- [Loose Coupling](#loose-coupling) · [Bounded Context](#bounded-context) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-02-separation-of-concerns)
-
----
-
-## Fail Fast
-
-A reliability principle that detects invalid state or unexpected conditions as early as possible, at the closest boundary to where the problem originates.
-
-### Key Characteristics
-- Validates inputs and assumptions at system boundaries
-- Rejects bad state before it can propagate downstream
-- Surfaces failures loudly rather than swallowing exceptions
-
-### When to Use
-- At API boundaries, message consumers, and dependency calls
-- In distributed systems where defect cost grows exponentially with distance from source
-
-### When NOT to Use
-- When aggressive failure prevents graceful degradation that users depend on
-- When it replaces proper error handling with panic-driven code
-
-### Also see
-- [Defense in Depth](resilience.md#defense-in-depth) · [Circuit Breaker](resilience.md#circuit-breaker) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-04-fail-fast)
-
----
-
-## Single Source of Truth
-
-A data principle stating that every important fact has exactly one authoritative location. Derived stores may cache or project the fact, but they do not redefine it.
-
-### Key Characteristics
-- One system owns writes for each fact
-- Read replicas, caches, search indices, and warehouses are fed from the source
-- Eliminates reconciliation drift between competing authorities
-
-### When to Use
-- When multiple teams or systems need consistent views of the same entity
-- In event-sourced or CDC-driven architectures
-
-### When NOT to Use
-- When the single writer becomes a contention or availability bottleneck that cannot be partitioned
-- When the domain genuinely requires independent bounded contexts with their own truths
-
-### Also see
-- [CQRS](cqrs-event-driven.md#cqrs-command-query-responsibility-segregation) · [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Dual-Write Problem](cqrs-event-driven.md#dual-write-problem) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-05-single-source-of-truth)
-
----
-
-## Loose Coupling
-
-An architectural principle in which components interact through stable, well-defined contracts so that changes to one component do not force changes in others.
-
-### Key Characteristics
-- Contracts are explicit: schemas, APIs, event schemas, or protocols
-- Components can be deployed, scaled, and replaced independently
-- Asynchronous communication is preferred where eventual consistency is acceptable
-
-### When to Use
-- Microservices, modular monoliths, and multi-team codebases
-- Any system where deployment independence is a goal
-
-### When NOT to Use
-- When a tightly-knit algorithm or transaction must remain consistent and fast
-- When contract governance overhead exceeds the value of independence
-
-### Also see
-- [Separation of Concerns](#separation-of-concerns) · [API Gateway](#api-gateway) · [Message Brokers](../system-design-architecture/05-message-brokers-async.md) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-06-loose-coupling)
-
----
-
-## Immutability
-
-A design principle that avoids mutating state in place by creating new versions of data and preserving history.
-
-### Key Characteristics
-- State changes produce new values rather than modifying existing ones
-- Eliminates a large class of concurrency bugs and reproducibility issues
-- Enables event sourcing, audit trails, and content-addressed artifacts
-
-### When to Use
-- Distributed systems with shared state
-- ML/AI pipelines where reproducibility depends on frozen datasets, models, and prompts
-
-### When NOT to Use
-- When storage cost or query patterns make append-only data impractical
-- When every operation must update a single current value and history adds no value
-
-### Also see
-- [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Immutability in Java](../reference-dictionary/java-jvm.md) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-07-immutability)
-
----
-
-## Scalability
-
-The ability of a system to absorb growth in load — 10x, 100x, or more — without requiring fundamental architectural changes.
-
-### Key Characteristics
-- Horizontal scale: add more nodes rather than bigger nodes
-- Stateless services, careful partitioning, and elastic resources
-- Caching, asynchronous processing, and database sharding planned before they are urgently needed
-
-### When to Use
-- Products with planned growth, viral potential, or seasonal spikes
-- Any architecture review that asks "what happens if this succeeds?"
-
-### When NOT to Use
-- As premature optimization for products with unproven demand
-- When horizontal elasticity adds more operational complexity than the team can support
-
-### Also see
-- [Vertical vs Horizontal Scaling](#vertical-vs-horizontal-scaling) · [Caching](caching.md) · [Sharding](#sharding) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md#arch-09-scalability-by-design)
-
----
-
-## Architecture Decision Record
-
-A **lightweight document** that captures a significant architectural decision, the context in which it was made, the options considered, and the consequences of the chosen option. Often abbreviated as **ADR**.
-
-### Key Characteristics
-- One ADR per decision, kept close to the code or in a dedicated `docs/adr/` folder
-- Explains not just *what* was decided but *why*, including rejected alternatives
-- Provides a durable record for future maintainers and reviewers
-
-### When to Use
-- When choosing between technologies, patterns, or tradeoffs that will be hard to reverse
-- When deliberately violating a standard principle, to document the rationale
-
-### When NOT to Use
-- For trivial decisions that are obvious to the whole team
-- As a substitute for discussion — ADRs capture consensus, not replace it
-
-### Also see
-- [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md) · [Technical Debt](#technical-debt)
-
----
-
-## Anti-pattern
-
-A **common response to a recurring problem** that is usually ineffective and risks being highly counterproductive. Anti-patterns look like solutions but create more problems than they solve.
-
-### Key Characteristics
-- Repeatedly observed in real systems
-- Often arises from deadline pressure, habit, or misunderstanding a pattern
-- Naming an anti-pattern helps teams recognize and avoid it
-
-### When to Use
-- In code reviews and architecture reviews to label recurring problematic solutions
-- When teaching patterns by contrasting them with what *not* to do
-
-### When NOT to Use
-- As a vague insult for any code you dislike — label only well-documented, recurring problems
-- To discourage pragmatic shortcuts that are explicitly temporary and tracked
-
-### Also see
-- [Golden Hammer](#golden-hammer) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md)
-
----
-
 ## Base62 Encoding
 
 A binary-to-text encoding scheme that uses 62 characters: `0-9`, `a-z`, and `A-Z`. It produces shorter strings than Base64 (which uses 64 characters including `+` and `/`) while remaining URL-safe and human-readable. Commonly used to compress large numeric IDs into short tokens.
@@ -1343,69 +695,6 @@ A dedicated service responsible for producing unique identifiers or tokens at sc
 
 ---
 
-## Fanout on Write
-
-A distribution model where a new event is propagated to all consumers at write time. In social media, posting a message writes the post ID into every follower's timeline cache immediately. Reads are fast because results are pre-computed.
-
-### Key Characteristics
-- **Read-optimized**: Feed loads are O(1)
-- **Write amplification**: Each post generates N writes for N followers
-- **Latency to readers**: Near zero (data is already present)
-
-### When to Use
-- Small-to-medium follower counts
-- Read latency is the dominant SLO
-
-### When NOT to Use
-- Celebrity accounts with millions of followers (write amplification explodes)
-- Systems where producers significantly outnumber consumers
-
-**Also see**: [Fanout on Read](#fanout-on-read) · [Hybrid Fanout](#hybrid-fanout) · [Timeline Cache](../reference-dictionary/caching.md#timeline-cache)
-
----
-
-## Fanout on Read
-
-A distribution model where events are stored centrally and consumers collect relevant items at read time. In social media, a follower loads their feed by fetching recent posts from each account they follow. Writes are cheap; reads are more expensive.
-
-### Key Characteristics
-- **Write-optimized**: Each post generates O(1) writes
-- **Read cost grows with followees**: Feed load is O(followees)
-- **No write amplification**: Ideal for celebrity producers
-
-### When to Use
-- Highly skewed graphs where a few producers have massive audiences
-- Systems where reads are infrequent relative to writes
-
-### When NOT to Use
-- Feeds with strict latency SLOs and many followees
-- Uniform graphs where push would be simpler and faster
-
-**Also see**: [Fanout on Write](#fanout-on-write) · [Hybrid Fanout](#hybrid-fanout)
-
----
-
-## Hybrid Fanout
-
-A distribution model that combines fanout-on-write for normal users and fanout-on-read for high-follower celebrities. Balances read latency against write amplification by choosing the fanout strategy per producer based on follower count.
-
-### Key Characteristics
-- **Threshold-based**: Users below a follower count are pushed; celebrities are pulled
-- **Best of both worlds**: Fast reads for most users, bounded write amplification
-- **Operational complexity**: Requires separate code paths and caches
-
-### When to Use
-- Social networks with highly skewed follower distributions
-- Any fanout problem where neither pure push nor pure pull is affordable
-
-### When NOT to Use
-- Simple graphs where one strategy clearly dominates
-- When operational complexity outweighs the fanout savings
-
-**Also see**: [Fanout on Write](#fanout-on-write) · [Fanout on Read](#fanout-on-read) · [Celebrity Cache](../reference-dictionary/caching.md#celebrity-cache)
-
----
-
 ## Presence Service
 
 A component that tracks which users are currently online, on which devices, and which server or gateway holds their active connection.
@@ -1425,29 +714,6 @@ A component that tracks which users are currently online, on which devices, and 
 
 ### Also see
 - [Redis Streams](messaging.md#redis-streams) · [Fanout on Write](#fanout-on-write)
-
----
-
-## Zero-Copy Transfer
-
-An OS-level optimization that transfers data directly from **disk cache to the network socket** without copying it through application memory. In Kafka, the `sendfile()` system call eliminates CPU copies and context switches between kernel and user space, dramatically reducing CPU usage during high-throughput data serving.
-
-### Key Characteristics
-- Data path: disk → page cache → network socket (no application buffer involved)
-- Eliminates redundant CPU copies and kernel/user context switches
-- Available when data is served directly from the OS page cache (not from application-managed buffers)
-- Used by Kafka for consumer fetch requests; also employed by Nginx and other high-performance servers
-
-### When to Use
-- High-throughput streaming systems where CPU is the bottleneck for data serving
-- When consumers read data that is already in the OS page cache (recently produced or frequently read)
-
-### When NOT to Use
-- When messages require application-level transformation or encryption before sending
-- When data is not in the page cache (misses still require disk reads into application memory first)
-
-### Also see
-- [Distributed Commit Log](#distributed-commit-log) · [Message Batching](#message-batching) · [Partition](messaging.md#partition)
 
 ---
 
@@ -1526,31 +792,6 @@ A **tree-structured organizational model** for multi-tenant systems where tenant
 
 ---
 
-## Durability
-
-**Durability** is the guarantee that once a write operation has been acknowledged as successful, the data will persist and survive system failures (power loss, crashes, restarts). It is the "D" in ACID transactions and a fundamental property of any system that cannot afford data loss.
-
-### Key Characteristics
-- **Write-ahead logging (WAL)**: Changes are recorded in an append-only log before being applied, enabling recovery after crashes
-- **Replication**: Data is copied to multiple nodes/disks so no single failure loses committed writes
-- **fsync/Flush**: The system forces data to durable storage (disk) before acknowledging the write to the client — in-memory acknowledgment is NOT durability
-- **Separate from availability**: A system can be durable but unavailable (e.g., during recovery); durability guarantees that data will eventually be accessible
-
-### When to Use
-- Financial systems where lost transactions are unacceptable
-- Event pipelines where every event must be recoverable (Kafka's `acks=all`, replication factor ≥ 3)
-- Any system where the cost of data loss exceeds the cost of durability mechanisms
-
-### When NOT to Use
-- Ephemeral caches where data is reconstructed from a durable source on restart (Redis as cache, not as primary store)
-- Real-time metrics where occasional data loss is acceptable and throughput is prioritized
-- Prototypes and experiments where simplicity outweighs data safety
-
-### Also see
-- [Idempotency](cqrs-event-driven.md#idempotency) · [Event Sourcing](cqrs-event-driven.md#event-sourcing) · [Consistency](data-concurrency.md)
-
----
-
 ## Read/Write Path Separation
 
 **Read/Write Path Separation** is an architectural pattern where the systems handling write operations are physically or logically separated from those handling read operations. Each path is optimized for fundamentally different concerns: the write path prioritizes durability, consistency, and correctness; the read path prioritizes low latency, massive throughput, and responsiveness.
@@ -1573,108 +814,6 @@ A **tree-structured organizational model** for multi-tenant systems where tenant
 
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Caching](caching.md) · [Database Per Service](#database-per-service)
-
----
-
-## Apache Flink
-
-**Apache Flink** is an open-source, distributed stream processing framework designed for stateful computations over unbounded and bounded data streams. It provides exactly-once consistency guarantees, high throughput with low latency, and sophisticated state management — making it ideal for continuously evolving results like real-time aggregations, leaderboards, and fraud detection.
-
-### Key Characteristics
-- **Stateful processing**: Maintains and updates state over time (running totals, session windows, pattern detection) with exactly-once guarantees
-- **Event-time processing**: Handles out-of-order events correctly using watermarks, not just processing-time
-- **Checkpointing**: Asynchronous, incremental snapshots of operator state for failure recovery without reprocessing the entire stream
-- **Unified batch/streaming**: Batch is treated as a special case of streaming (bounded streams), enabling the same code for both paradigms
-
-### When to Use
-- Continuously changing results that depend on accumulated state (election totals, leaderboards, real-time dashboards)
-- Complex event processing with windowed aggregations, pattern matching (CEP), and multi-stream joins
-- Pipelines requiring exactly-once semantics end-to-end (with transactional sinks like Kafka or Iceberg)
-
-### When NOT to Use
-- Simple stateless transformations where Kafka Streams or a few Kafka consumers + a database suffice
-- When the team lacks operational experience with distributed stream processors — Flink's checkpointing and state backend configuration require expertise
-- Batch-only workloads where Spark or a SQL engine provides simpler alternatives
-
-### Also see
-- [Kafka (Decoupling)](messaging.md) · [Stream Processing](../system-design-architecture/stream-processing/) · [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
-
----
-
-## Apache Cassandra
-
-**Apache Cassandra** — a distributed, masterless NoSQL database designed for high write throughput and continuous availability across multiple regions. Every node is equal: any node can accept writes, any node can serve reads, and there is no single point of failure. Node failures reduce capacity but do not halt the system.
-
-### Key Characteristics
-- **Masterless / peer-to-peer architecture**: No primary node — all nodes are equal peers in a ring topology
-- **Tunable consistency**: Per-operation consistency level (ANY, ONE, QUORUM, ALL) lets you trade consistency for availability at the query level
-- **Linear scalability**: Adding nodes increases capacity linearly; no single bottleneck
-- **Multi-region native**: Data can be replicated across regions with local reads and writes; no region is "in charge"
-- **Write-optimized**: Append-only commit log + memtable → SSTable design favors writes over complex reads
-
-### When to Use
-- High-write-throughput systems where write availability must never pause (streaming, IoT, time-series)
-- Multi-region deployments where users expect local-latency reads and writes
-- Workloads with known, simple access patterns (key-value lookups, time-range scans) — no ad-hoc joins or aggregations
-
-### When NOT to Use
-- Workloads requiring ad-hoc queries, complex joins, or rich aggregations (use SQL or MongoDB)
-- Systems where strong consistency is non-negotiable during network partitions (fintech, banking)
-- Small datasets where operational complexity of Cassandra outweighs its scaling benefits
-
-### Also see
-- [Masterless Architecture](#masterless-architecture) · [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [MongoDB](#mongodb)
-
----
-
-## MongoDB
-
-**MongoDB** — a document-oriented NoSQL database that uses a single-primary replication model. One primary node accepts all writes; secondary nodes replicate and can serve reads. When the primary fails, an election selects a new primary — during this pause, writes are blocked.
-
-### Key Characteristics
-- **Document model**: JSON-like documents (BSON) with schema flexibility — one document per entity with nested sub-documents
-- **Single-primary replication**: Writes always go to the primary; secondaries replicate via oplog
-- **Rich query language**: Supports joins (`$lookup`), aggregations, secondary indexes, and ad-hoc queries
-- **Leader election**: When the primary fails, an automated election (typically 5–30 seconds) selects a new primary; writes are unavailable during election
-- **Horizontal scaling via sharding**: Distributes data across shards by shard key; each shard is its own replica set
-
-### When to Use
-- Rapidly evolving schemas where business requirements change frequently
-- Document-shaped data (user profiles, loan applications, catalogs) where one document = one entity
-- Applications that benefit from rich ad-hoc queries and aggregations
-
-### When NOT to Use
-- Systems where write availability during node failure is critical — the election pause is a real operational concern
-- Multi-region write-everywhere deployments — primary must be in one region; cross-region writes add latency
-- Workloads requiring complex multi-document ACID transactions at high throughput (use SQL)
-
-### Also see
-- [Apache Cassandra](#apache-cassandra) · [Masterless Architecture](#masterless-architecture) · [Database Per Service](#database-per-service)
-
----
-
-## Masterless Architecture
-
-**Masterless Architecture** — a distributed system design where every node is an equal peer with no designated leader. Any node can accept writes and serve reads; node failures reduce total capacity but do not require leader election or halt operations.
-
-### Key Characteristics
-- **Peer-to-peer topology**: All nodes share the same role — no primary, no standby, no hierarchy
-- **No leader election**: When a node fails, the remaining nodes continue operating without pausing to elect a new leader
-- **Graceful degradation**: Failure reduces throughput by ~1/N (where N = node count) rather than causing a full write stall
-- **Gossip protocol**: Nodes discover topology and health via peer-to-peer gossip, not a central coordinator
-
-### When to Use
-- Write-availability-critical systems where any pause in write acceptance is unacceptable (streaming, CDN control planes)
-- Multi-region deployments where no single region can be the write authority
-- Systems that must survive arbitrary node failures without operator intervention
-
-### When NOT to Use
-- Systems requiring strong consistency guarantees (ACID transactions across nodes) during network partitions
-- Small deployments (3–5 nodes) where the operational complexity of masterless coordination outweighs the availability benefit
-- Workloads that depend on global ordering or strict serializability
-
-### Also see
-- [Apache Cassandra](#apache-cassandra) · [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [Active-Active](#active-active)
 
 ---
 
@@ -1702,143 +841,6 @@ A **local, durable staging area** placed between an application and a remote mes
 
 ### Also see
 - [Producer Acknowledgement](../messaging.md#producer-acknowledgement) · [At-Least-Once Semantics](../messaging.md#at-least-once-semantics) · [Idempotent Consumer](../messaging.md#idempotent-consumer)
-
----
-
-## Context Switching
-
-Also called **time-slicing** — the operating system's mechanism for achieving concurrency on a single CPU core. The OS assigns small time slots (quanta) to each task, pauses the task, saves its state (registers, program counter), and switches to the next task. From the outside it looks like parallel work; under the hood it is extremely fast turn-taking.
-
-### Key Characteristics
-- **Single-core**: only one instruction executes at any given clock cycle.
-- **Responsiveness, not throughput**: total wall-clock time is not reduced — tasks simply don't wait in line.
-- **Overhead**: each switch costs CPU cycles to save/restore context; excessive switching causes thrashing.
-
-### When to Use
-- I/O-bound workloads where the CPU would otherwise sit idle during waits.
-- Any modern OS scheduler — it is the default mechanism for multitasking.
-
-### When NOT to Use
-- As a replacement for true parallelism when CPU-bound work needs throughput, not just responsiveness.
-
-### Also see
-- [Concurrency](../databases.md#concurrency) · [Parallelism](../ai-ml-llm.md#parallelism) · [Event Loop](#event-loop)
-
----
-
-## Amdahl's Law
-
-A formula that defines the **maximum theoretical speedup** achievable by parallelizing a program, given that a fraction of it remains serial. If fraction $p$ can be parallelized and $N$ processors are available, the speedup $S$ is:
-
-$$S = \frac{1}{(1-p) + \frac{p}{N}}$$
-
-### Key Characteristics
-- **Serial bottleneck**: the $(1-p)$ term dominates as $N \to \infty$.
-- **Hard ceiling**: if 50% of code is sequential, max speedup is **2×** — even with infinite cores.
-- **Profiling prerequisite**: you must measure the serial fraction before investing in parallelization.
-
-### When to Use
-- As a sanity check before any parallelization effort.
-- Capacity planning: estimate how many cores are worth paying for.
-
-### When NOT to Use
-- When the workload is I/O-bound — Amdahl's Law models CPU parallelism, not I/O concurrency.
-
-### Also see
-- [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound) · [Parallelism](../ai-ml-llm.md#parallelism) · [Concurrency](../databases.md#concurrency)
-
----
-
-## Actor Model
-
-A concurrency model where **actors** are the universal primitives. Each actor has its own private state, processes messages sequentially from its mailbox, and communicates only via asynchronous message passing — never through shared memory. This eliminates shared-state concurrency bugs by design.
-
-### Key Characteristics
-- **No shared state**: each actor's state is private; messages are the only communication channel.
-- **Isolation**: actors can fail independently without corrupting other actors.
-- **Examples**: Erlang/Elixir processes, Akka (JVM), Ruby Ractors, Orleans (.NET).
-
-### When to Use
-- Systems requiring high fault tolerance and isolation (telecom, financial middleware).
-- Workloads with naturally independent units of work that communicate via messages.
-
-### When NOT to Use
-- Simple single-threaded applications where actor overhead adds complexity without benefit.
-- CPU-bound workflows that need shared-memory parallelism for maximum throughput.
-
-### Also see
-- [Ractor](#) (Ruby-specific) · [Concurrency](../databases.md#concurrency) · [Race Condition](#race-condition)
-
----
-
-## I/O-bound vs CPU-bound
-
-A fundamental classification of workloads that determines which concurrency model to apply:
-
-| Type | Bottleneck | Best Approach |
-|:---|:---|:---|
-| **I/O-bound** | Waiting for disk, network, or database | Concurrency (async I/O, event loop) |
-| **CPU-bound** | Processor throughput | Parallelism (multiple cores, worker pools) |
-
-### Key Characteristics
-- **I/O-bound**: CPU sits idle during waits — measured by response time, not CPU utilization.
-- **CPU-bound**: CPU is the limiting resource — measured by throughput, not latency.
-- **Most web apps are I/O-bound**: database, cache, and external APIs account for 80–95% of response time.
-
-### When to Use
-- As the first diagnostic step in any performance investigation: profile to determine which bottleneck you have before choosing a concurrency model.
-
-### When NOT to Use
-- As a rigid rule — many real workloads are mixed. Profile, don't assume.
-
-### Also see
-- [Amdahl's Law](#amdahls-law) · [Concurrency](../databases.md#concurrency) · [Parallelism](../ai-ml-llm.md#parallelism)
-
----
-
-## Leaderboard Pattern
-
-An architectural pattern for systems that rank entities by a mutable score and serve top-N or rank-of-entity queries at scale. Rather than sorting a full dataset on every request, the pattern separates persistence (database as source of truth), ranking computation (event-driven pipeline), and serving (in-memory sorted data structure).
-
-### Key Characteristics
-- **Ranking as a separate concern**: Ranking is computed asynchronously from game/application logic via an event stream (Kafka)
-- **Sorted data structure for serving**: Redis Sorted Sets maintain continuous ordering — O(log N) writes, O(log N) rank lookups
-- **Multi-dimension ranking**: Separate sorted sets per dimension (global, regional, friends, weekly) to avoid per-query filtering
-- **Optimistic concurrency**: Version/timestamp on score events to discard stale updates
-- **Push over poll**: WebSocket or SSE push ranking changes to connected clients rather than requiring polling
-
-### When to Use
-- Real-time leaderboards with millions of entities and thousands of score updates per second
-- Gaming platforms where players expect sub-second ranking updates after every action
-- Any system requiring top-N queries over a large, frequently mutating dataset
-
-### When NOT to Use
-- Static rankings or infrequent updates (a simple `ORDER BY` with a database index suffices)
-- Small datasets (<10K entities) — the architectural overhead outweighs the benefit
-- When strict transactional consistency between score and ranking is required (use a single transactional store instead)
-
-### Also see
-- [Redis Sorted Sets](../caching.md#redis-sorted-sets) · [Event-Driven Architecture](../cqrs-event-driven.md) · [WebSocket](../api-design.md#websocket) · [CQRS](../cqrs-event-driven.md#cqrs) · [Eventual Consistency](../data-concurrency.md#eventual-consistency)
-
----
-
-## Race Condition
-
-A bug where the correctness of a program depends on the **relative timing or interleaving** of concurrent operations. When two threads or processes access shared mutable state without proper synchronization, the result is non-deterministic and depends on which operation "wins the race."
-
-### Key Characteristics
-- **Non-deterministic**: the same input can produce different outputs on different runs.
-- **Hard to reproduce**: timing-dependent bugs may pass unit tests and only appear under load.
-- **Caused by shared mutable state**: single-threaded event loops and actor models avoid this by design.
-
-### When to Use
-- The term is diagnostic, not prescriptive. Recognize race conditions as a signal to add synchronization (mutex, atomic operation) or to redesign to avoid shared state.
-
-### When NOT to Use
-- Do not accept race conditions as "rare" — they tend to manifest at the worst possible time (production peak load).
-
-### Also see
-- [Lock Contention](../data-concurrency.md#lock-contention) · [Actor Model](#actor-model) · [Mutex](../dotnet-multithreading.md#mutex)
 
 ---
 
@@ -1941,4 +943,56 @@ A **dedicated infrastructure layer** that handles service-to-service communicati
 - Monoliths or services communicating over message queues rather than synchronous HTTP/gRPC
 
 **Also see**: [Sidecar Pattern](#sidecar-pattern) · [Microservices](#microservices) · [Circuit Breaker](resilience.md#circuit-breaker) · [Istio / Linkerd](https://istio.io/latest/about/service-mesh/)
+
+---
+
+## Back-of-the-Envelope Estimation
+
+A **rough, order-of-magnitude calculation** performed before designing any architecture. Uses simplified math to estimate traffic (QPS), storage, bandwidth, and memory requirements — typically converting DAU into reads/sec using the approximation `daily total / 86,400 ≈ average QPS`, then multiplying by a peak factor (3–5×) for worst-case planning.
+
+### Key Characteristics
+- **Order-of-magnitude precision**: The goal is within 2× of reality, not exact numbers — this is sufficient for architectural decisions
+- **Peak multiplier**: Average QPS × (3–5) for peak load; 80/20 rule for cache coverage estimation
+- **Guides component selection**: Tells you whether a single database, cache, queue, or CDN is plausible
+- **Prevents over-engineering**: If a single PostgreSQL instance can handle the load, don't propose sharding
+
+### When to Use
+- System design interviews: BEFORE drawing any architecture diagram
+- Early-stage capacity planning: do you need 1 server or 100?
+- Reality-checking architectural proposals: "We need multi-region active-active for 1K DAU" — the math says no
+
+### When NOT to Use
+- As a substitute for load testing with real traffic patterns
+- When exact numbers are available from production monitoring (use real data)
+- For latency guarantees (estimation covers throughput and storage, not p99 latency)
+
+### Also see
+- [Scalability Principles](#) · [Read/Write Path Separation](#read-write-path-separation) · [Latency vs Throughput](#)
+- [System Design Interview Roadmap](../system-design-architecture/system-design-interview/interview-roadmap.md#sdi-05-back-of-the-envelope-math)
+
+---
+
+## Load Balancer
+
+A **traffic distribution component** that sits between clients and backend servers, distributing incoming requests across multiple server instances to maximize throughput, minimize response time, and avoid overloading any single resource.
+
+### Key Characteristics
+- **L4 (Transport Layer)**: Operates on TCP/UDP — fast, no payload inspection, distributes by IP:port
+- **L7 (Application Layer)**: Operates on HTTP/HTTPS — can route by URL path, headers, cookies; supports TLS termination
+- **Health checks**: Continuously verifies backend health; removes unhealthy instances from the pool
+- **Algorithms**: Round-robin, least connections, IP hash, weighted, least response time
+- **Consistent hashing**: Minimizes rebalancing when servers are added/removed — critical for stateful backends and caching
+
+### When to Use
+- Any multi-instance service behind a single endpoint
+- SSL termination at the edge before traffic reaches application servers
+- Gradual traffic shifting during deployments (canary, blue-green)
+
+### When NOT to Use
+- Single-instance deployments (the load balancer itself becomes a single point of failure without HA pairs)
+- Peer-to-peer architectures where clients connect directly to any node
+- When request affinity (sticky sessions) is required but the balancer doesn't support it
+
+### Also see
+- [API Gateway](api-design.md#api-gateway) · [Reverse Proxy](#reverse-proxy) · [Consistent Hashing](api-design.md#consistent-hashing) · [Azure Load Balancer / Application Gateway](azure-services.md)
 

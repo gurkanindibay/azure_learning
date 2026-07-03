@@ -31,6 +31,10 @@ timestamp: 2026-06-18T00:00:00Z
 | Hash Collision | [`#hash-collision`](#hash-collision) |
 | Red-Black Tree | [`#red-black-tree`](#red-black-tree) |
 | Cardinality Estimation | [`#cardinality-estimation`](#cardinality-estimation) |
+| Apache Cassandra | [`#apache-cassandra`](#apache-cassandra) |
+| MongoDB | [`#mongodb`](#mongodb) |
+| Masterless Architecture | [`#masterless-architecture`](#masterless-architecture) |
+| Durability | [`#durability`](#durability) |
 
 ---
 
@@ -358,4 +362,106 @@ The problem of counting the number of **distinct elements** in a multiset (strea
 - When you need to list or retrieve the actual distinct elements
 
 ### Also see
-- [HyperLogLog](../architecture-patterns.md#hyperloglog) · [Bloom Filter](#bloom-filter) · [B-Tree](#b-tree)
+- [HyperLogLog](architecture-patterns.md#hyperloglog) · [Bloom Filter](#bloom-filter) · [B-Tree](#b-tree)
+
+---
+
+## Apache Cassandra
+
+**Apache Cassandra** — a distributed, masterless NoSQL database designed for high write throughput and continuous availability across multiple regions. Every node is equal: any node can accept writes, any node can serve reads, and there is no single point of failure. Node failures reduce capacity but do not halt the system.
+
+### Key Characteristics
+- **Masterless / peer-to-peer architecture**: No primary node — all nodes are equal peers in a ring topology
+- **Tunable consistency**: Per-operation consistency level (ANY, ONE, QUORUM, ALL) lets you trade consistency for availability at the query level
+- **Linear scalability**: Adding nodes increases capacity linearly; no single bottleneck
+- **Multi-region native**: Data can be replicated across regions with local reads and writes; no region is "in charge"
+- **Write-optimized**: Append-only commit log + memtable → SSTable design favors writes over complex reads
+
+### When to Use
+- High-write-throughput systems where write availability must never pause (streaming, IoT, time-series)
+- Multi-region deployments where users expect local-latency reads and writes
+- Workloads with known, simple access patterns (key-value lookups, time-range scans) — no ad-hoc joins or aggregations
+
+### When NOT to Use
+- Workloads requiring ad-hoc queries, complex joins, or rich aggregations (use SQL or MongoDB)
+- Systems where strong consistency is non-negotiable during network partitions (fintech, banking)
+- Small datasets where operational complexity of Cassandra outweighs its scaling benefits
+
+### Also see
+- [Masterless Architecture](#masterless-architecture) · [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [MongoDB](#mongodb)
+
+---
+
+## MongoDB
+
+**MongoDB** — a document-oriented NoSQL database that uses a single-primary replication model. One primary node accepts all writes; secondary nodes replicate and can serve reads. When the primary fails, an election selects a new primary — during this pause, writes are blocked.
+
+### Key Characteristics
+- **Document model**: JSON-like documents (BSON) with schema flexibility — one document per entity with nested sub-documents
+- **Single-primary replication**: Writes always go to the primary; secondaries replicate via oplog
+- **Rich query language**: Supports joins (`$lookup`), aggregations, secondary indexes, and ad-hoc queries
+- **Leader election**: When the primary fails, an automated election (typically 5–30 seconds) selects a new primary; writes are unavailable during election
+- **Horizontal scaling via sharding**: Distributes data across shards by shard key; each shard is its own replica set
+
+### When to Use
+- Rapidly evolving schemas where business requirements change frequently
+- Document-shaped data (user profiles, loan applications, catalogs) where one document = one entity
+- Applications that benefit from rich ad-hoc queries and aggregations
+
+### When NOT to Use
+- Systems where write availability during node failure is critical — the election pause is a real operational concern
+- Multi-region write-everywhere deployments — primary must be in one region; cross-region writes add latency
+- Workloads requiring complex multi-document ACID transactions at high throughput (use SQL)
+
+### Also see
+- [Apache Cassandra](#apache-cassandra) · [Masterless Architecture](#masterless-architecture) · [Database Per Service](architecture-patterns.md#database-per-service)
+
+---
+
+## Masterless Architecture
+
+**Masterless Architecture** — a distributed system design where every node is an equal peer with no designated leader. Any node can accept writes and serve reads; node failures reduce total capacity but do not require leader election or halt operations.
+
+### Key Characteristics
+- **Peer-to-peer topology**: All nodes share the same role — no primary, no standby, no hierarchy
+- **No leader election**: When a node fails, the remaining nodes continue operating without pausing to elect a new leader
+- **Graceful degradation**: Failure reduces throughput by ~1/N (where N = node count) rather than causing a full write stall
+- **Gossip protocol**: Nodes discover topology and health via peer-to-peer gossip, not a central coordinator
+
+### When to Use
+- Write-availability-critical systems where any pause in write acceptance is unacceptable (streaming, CDN control planes)
+- Multi-region deployments where no single region can be the write authority
+- Systems that must survive arbitrary node failures without operator intervention
+
+### When NOT to Use
+- Systems requiring strong consistency guarantees (ACID transactions across nodes) during network partitions
+- Small deployments (3–5 nodes) where the operational complexity of masterless coordination outweighs the availability benefit
+- Workloads that depend on global ordering or strict serializability
+
+### Also see
+- [Apache Cassandra](#apache-cassandra) · [Eventual Consistency](../reference-dictionary/cqrs-event-driven.md#eventual-consistency) · [CAP Theorem](../reference-dictionary/data-architecture.md#cap-theorem) · [Active-Active](deployment-patterns.md#active-active)
+
+---
+
+## Durability
+
+**Durability** is the guarantee that once a write operation has been acknowledged as successful, the data will persist and survive system failures (power loss, crashes, restarts). It is the "D" in ACID transactions and a fundamental property of any system that cannot afford data loss.
+
+### Key Characteristics
+- **Write-ahead logging (WAL)**: Changes are recorded in an append-only log before being applied, enabling recovery after crashes
+- **Replication**: Data is copied to multiple nodes/disks so no single failure loses committed writes
+- **fsync/Flush**: The system forces data to durable storage (disk) before acknowledging the write to the client — in-memory acknowledgment is NOT durability
+- **Separate from availability**: A system can be durable but unavailable (e.g., during recovery); durability guarantees that data will eventually be accessible
+
+### When to Use
+- Financial systems where lost transactions are unacceptable
+- Event pipelines where every event must be recoverable (Kafka's `acks=all`, replication factor ≥ 3)
+- Any system where the cost of data loss exceeds the cost of durability mechanisms
+
+### When NOT to Use
+- Ephemeral caches where data is reconstructed from a durable source on restart (Redis as cache, not as primary store)
+- Real-time metrics where occasional data loss is acceptable and throughput is prioritized
+- Prototypes and experiments where simplicity outweighs data safety
+
+### Also see
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Consistency](../reference-dictionary/data-concurrency.md)
