@@ -19,6 +19,7 @@ Problems and strategies for building resilient distributed systems: circuit brea
 | [circuit-breaker-honesty.md](circuit-breaker-honesty.md) | `cb-01` – `cb-07` | Slow-call rate, minimumNumberOfCalls, Breaker vs Bulkhead, Retry amplification, Honest resilience stack, Fallback ladder |
 | [famous-outages.md](famous-outages.md) | `resilience-07` – `resilience-11` | Roblox, Cloudflare, Datadog, Meta, Atlassian outages — circular dependencies, blast radius, correlated failures |
 | [defensive-coding.md](defensive-coding.md) | `arch-12` – `arch-15` | Input validation, Assertions, Fail-safe batch processing, Defensive dependency management |
+| [distributed-resilience-patterns.md](distributed-resilience-patterns.md) | `resilience-12` – `resilience-16` | Missing timeouts, Retry storms + idempotency, DLQ pipeline paralysis, Fallback observability, Resilience choreography |
 
 ## Cross-References
 

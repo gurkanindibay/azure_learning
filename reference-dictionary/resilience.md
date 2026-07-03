@@ -22,10 +22,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Aspect Order | [`#aspect-order`](#aspect-order) |
 | Retry Amplification | [`#retry-amplification`](#retry-amplification) |
 | Exponential Backoff | [`#exponential-backoff`](#exponential-backoff) |
+| Jitter | [`#jitter`](#jitter) |
 | Fallback | [`#fallback`](#fallback) |
 | Timeout | [`#timeout`](#timeout) |
 | Resilience Stack | [`#resilience-stack`](#resilience-stack) |
 | Graceful Degradation | [`#graceful-degradation`](#graceful-degradation) |
+| Partial Response | [`#partial-response`](#partial-response) |
 | Cascading Failure | [`#cascading-failure`](#cascading-failure) |
 | Thundering Herd | [`#thundering-herd`](#thundering-herd) |
 | Defense in Depth | [`#defense-in-depth`](#defense-in-depth) |
@@ -154,6 +156,30 @@ A retry strategy that **increases the wait time between retries exponentially** 
 
 ---
 
+## Jitter
+
+A **randomized delay** added to retry intervals or scheduled operations to desynchronize clients and prevent thundering-herd effects. Without jitter, clients using the same backoff algorithm retry at identical intervals, creating synchronized waves of traffic that overwhelm recovering systems.
+
+### Key Characteristics
+- **Random offset**: a random value (e.g., ±25% of the base interval) added to each retry delay
+- **Desynchronization**: prevents multiple clients from retrying at the same instant
+- **Works with any backoff strategy**: linear, exponential, or fixed intervals
+- **Low cost**: trivial to implement — a single random number per retry attempt
+
+### When to Use
+- Every retry implementation in distributed systems — without exception
+- Scheduled background jobs that run across multiple instances
+- Cache refresh or TTL-based operations where simultaneous expiration causes stampedes
+
+### When NOT to Use
+- When deterministic timing is required for correctness (rare in practice)
+- As a substitute for proper backoff — jitter alone without increasing intervals still causes storms
+
+### Also see
+- [Exponential Backoff](#exponential-backoff) · [Thundering Herd](#thundering-herd) · [Retry Amplification](#retry-amplification)
+
+---
+
 ## Fallback
 
 A **degraded but functional response** returned when the primary operation fails. Fallbacks protect user experience when the circuit breaker is OPEN.
@@ -206,6 +232,31 @@ TimeLimiter → CircuitBreaker → Bulkhead → Fallback
 The ability of a system to **continue operating at reduced functionality** rather than failing completely. When a dependency is unavailable, serve stale data, cached results, or limited functionality instead of errors.
 
 **Also see**: [Fallback](#fallback), [Circuit Breaker](#circuit-breaker)
+
+---
+
+## Partial Response
+
+A degraded result where the service returns **what it can produce** rather than failing entirely when one or more downstream dependencies are unavailable. Instead of returning a 500 error or an empty page, the system omits the broken section and delivers the rest — e.g., showing the user profile without "recent activity" because the activity-feed service is down.
+
+### Key Characteristics
+- **Selective omission**: broken subsections are dropped; healthy sections render normally
+- **Explicit signaling**: the UI should indicate what was omitted (e.g., "Recommendations unavailable right now") rather than silently hiding it
+- **Per-component fallback**: each page section or API response fragment has its own timeout + fallback, so one slow dependency doesn't block everything
+- **Sits between full response and full failure** on the fallback ladder
+
+### When to Use
+- Dashboards or feeds where multiple backend services contribute to a single view
+- API responses that aggregate data from several microservices (GraphQL, BFF pattern)
+- Any page where blank space with a note is better than a spinner or error page
+
+### When NOT to Use
+- When the missing data is critical to the response's meaning (e.g., a payment confirmation without the amount)
+- When partial data would be actively misleading (e.g., a compliance report showing "0 violations" because the audit service timed out)
+- As a substitute for fixing the underlying dependency — partial responses are a bridge, not a solution
+
+### Also see
+- [Fallback](#fallback) · [Graceful Degradation](#graceful-degradation) · [Circuit Breaker](#circuit-breaker)
 
 ---
 
