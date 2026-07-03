@@ -60,7 +60,7 @@ timestamp: 2026-07-03T00:00:00Z
 
 > **Also see**: [API Idempotency](../../reference-dictionary/cqrs-event-driven.md#api-idempotency)
 > **Dictionary**: [API Design](../../reference-dictionary/api-design.md)
-> **Azure Services**: [Azure Front Door](../../architecture-azure/networking/front-door/)
+> **Azure Services**: [Azure Front Door](../../architecture-azure/networking/)
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns
 
 ---
@@ -78,7 +78,7 @@ timestamp: 2026-07-03T00:00:00Z
 
 > **Also see**: [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key)
 > **Dictionary**: [API Design](../../reference-dictionary/api-design.md), [Databases](../../reference-dictionary/databases.md)
-> **Azure Services**: [Azure SQL](../../architecture-azure/data/), [Cosmos DB](../../architecture-azure/data/databases/cosmos-db/)
+> **Azure Services**: [Azure SQL](../../architecture-azure/data/), [Cosmos DB](../../architecture-azure/data/databases/azure_cosmosdb/)
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns
 
 ---
@@ -119,7 +119,7 @@ Only one of two concurrent requests succeeds — the other sees zero rows affect
 
 > **Also see**: [Token-Based Idempotency](#apipat-18), [State Machine](#apipat-16)
 > **Dictionary**: [Data Concurrency](../../reference-dictionary/data-concurrency.md), [Databases](../../reference-dictionary/databases.md)
-> **Azure Services**: [Azure SQL](../../architecture-azure/data/), [Cosmos DB](../../architecture-azure/data/databases/cosmos-db/) (optimistic concurrency via _etag)
+> **Azure Services**: [Azure SQL](../../architecture-azure/data/), [Cosmos DB](../../architecture-azure/data/databases/azure_cosmosdb/) (optimistic concurrency via _etag)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
 
 ---
