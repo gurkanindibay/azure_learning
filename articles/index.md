@@ -17,7 +17,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 |:---|:--|:---|
 | [agentic-ai/](agentic-ai/) | 7 | [agentic-ai/](../system-design-architecture/agentic-ai/) |
 | [api-network/](api-network/) | 4 | [api-network/](../system-design-architecture/api-network/) |
-| [caching/](caching/) | 2 | [caching/](../system-design-architecture/caching/) |
+| [caching/](caching/) | 3 | [caching/](../system-design-architecture/caching/) |
 | [case-studies/](case-studies/) | 8 | [case-studies/](../system-design-architecture/case-studies/) |
 | [concurrency-transactions/](concurrency-transactions/) | 2 | [concurrency-transactions/](../system-design-architecture/concurrency-transactions/) |
 | [cqrs-fintech/](cqrs-fintech/) | 3 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
@@ -31,4 +31,4 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [stream-processing/](stream-processing/) | 3 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 9 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 73 articles across 15 domains
+**Total**: 74 articles across 15 domains

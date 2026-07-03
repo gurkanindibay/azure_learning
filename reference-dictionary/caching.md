@@ -24,9 +24,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Request Coalescing | [`#request-coalescing`](#request-coalescing) |
 | PER Algorithm | [`#per-algorithm`](#per-algorithm) |
 | I/O Multiplexing | [`#io-multiplexing`](#io-multiplexing) |
+| Lua Scripting (Redis) | [`#lua-scripting-redis`](#lua-scripting-redis) |
 | Hash Slots | [`#hash-slots`](#hash-slots) |
 | Copy-on-Write Persistence | [`#copy-on-write-persistence`](#copy-on-write-persistence) |
 | Morris Probabilistic Counter | [`#morris-probabilistic-counter`](#morris-probabilistic-counter) |
+| MULTI/EXEC (Redis Transactions) | [`#multiexec-redis-transactions`](#multiexec-redis-transactions) |
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | Server-Assisted Client-Side Caching | [`#server-assisted-client-side-caching`](#server-assisted-client-side-caching) |
@@ -180,6 +182,57 @@ An OS-level mechanism (`epoll` on Linux, `kqueue` on BSD/macOS) that allows a si
 
 ---
 
+## Lua Scripting (Redis)
+
+Redis's built-in Lua interpreter that allows executing custom scripts atomically on the server. Scripts run inside `EVAL` / `EVALSHA` and execute as a single uninterruptible unit — no other Redis command can interleave. This is the foundation for building race-condition-free multi-step operations like token-bucket rate limiters, distributed locks, and atomic check-and-update workflows without relying on client-side coordination.
+
+### Key Characteristics
+- **Atomic execution**: The entire script runs without interruption; no other client's commands execute until the script completes
+- **Server-side logic**: Computation happens on the Redis server, eliminating network round-trips for multi-step operations
+- **Script caching**: `EVALSHA` caches the script by SHA1 hash, reducing bandwidth after the first invocation
+- **Sandboxed**: Lua scripts cannot access the filesystem, network, or external libraries — they can only call Redis commands
+
+### When to Use
+- Multi-step atomic operations where read and write must not be interleaved (e.g., token bucket check + deduct)
+- Complex conditional logic that can't be expressed as a single Redis command
+- Reducing round-trips: combine multiple GET/SET/INCR into one `EVAL` call
+
+### When NOT to Use
+- Simple single-command operations (`INCR`, `SET`, `ZADD` are already atomic individually)
+- Long-running scripts (block all other clients; keep scripts under a few milliseconds)
+- When the logic is better tested and maintained in application code and atomicity isn't required
+
+### Example: Atomic Token-Bucket Check-and-Deduct
+
+```lua
+-- EVAL this script: redis-cli EVAL "$(cat rate_limiter.lua)" 2 user:123:tokens user:123:ts 10 50 1719876543 1
+local tokens_key   = KEYS[1]
+local timestamp_key = KEYS[2]
+local rate      = tonumber(ARGV[1])  -- tokens/sec refill
+local capacity  = tonumber(ARGV[2])  -- max burst
+local now       = tonumber(ARGV[3])
+local requested = tonumber(ARGV[4])  -- usually 1
+
+local last_tokens = tonumber(redis.call("get", tokens_key)) or capacity
+local last_ts     = tonumber(redis.call("get", timestamp_key)) or 0
+local delta       = math.max(0, now - last_ts)
+local filled      = math.min(capacity, last_tokens + delta * rate)
+
+if filled >= requested then
+  redis.call("setex", tokens_key, 60, filled - requested)
+  redis.call("setex", timestamp_key, 60, now)
+  return {1, filled - requested}  -- allowed
+end
+return {0, filled}  -- rejected
+```
+
+> The entire read→calculate→decide→write runs atomically. No other client can interleave between the `get` and `set`.
+
+### Also see
+- [MULTI/EXEC (Redis Transactions)](#multiexec-redis-transactions) · [Atomic Conditional Update](../data-concurrency.md#atomic-conditional-update) · [Rate Limiting](../api-design.md#rate-limiting)
+
+---
+
 ## Hash Slots
 
 Redis Cluster's data distribution mechanism: **16,384 fixed slots** where keys are mapped via `CRC16(key) % 16384`. Each cluster node owns a contiguous range of slots. When rebalancing, slot ownership moves between nodes — keys are not rehashed, only the slot-to-node mapping changes.
@@ -241,6 +294,77 @@ An 8-bit probabilistic data structure used by Redis for LFU (Least Frequently Us
 - When access patterns are uniform (all keys equally likely — eviction policy doesn't matter)
 
 **Also see**: [Eviction Policies](#eviction-policies) · [Copy-on-Write Persistence](#copy-on-write-persistence)
+
+---
+
+## MULTI/EXEC (Redis Transactions)
+
+Redis's transaction mechanism that batches multiple commands into an **atomic, isolated** execution block. Commands between `MULTI` and `EXEC` are queued and executed sequentially without interleaving from other clients. Unlike SQL transactions, MULTI/EXEC does not support rollback — all queued commands execute, even if some fail. Used for atomic multi-step operations like rolling-window rate limiters and cache invalidation patterns.
+
+### Key Characteristics
+- **Atomic batch**: All commands in the block execute as one uninterrupted unit — no other client interleaves
+- **No rollback**: If one command fails (e.g., wrong type), remaining commands still execute — errors must be handled client-side
+- **Optimistic locking with WATCH**: `WATCH key` + `MULTI`/`EXEC` enables compare-and-set: the transaction aborts if watched keys are modified before EXEC
+- **Isolation only**: Provides isolation, not atomicity in the ACID sense — partial failures are possible
+
+### When to Use
+- Batching related operations that must not be interleaved (e.g., `ZREMRANGEBYSCORE` + `ZRANGE` + `ZADD` + `EXPIRE` for rolling-window rate limiting)
+- Implementing check-and-set with `WATCH` when Lua scripting is overkill
+- Simple transactional workflows where rollback isn't needed
+
+### When NOT to Use
+- When rollback on failure is required — use application-level compensating transactions instead
+- Complex conditional logic — Lua scripts are more expressive and avoid extra round-trips
+- When a single atomic command (`INCR`, `SETNX`, `HSET`) is sufficient
+
+### Example: Rolling-Window Rate Limiter (Node.js)
+
+```javascript
+// Atomic window: remove old entries → count remaining → record this request
+const key = `rate_limit:${userId}`;
+const now = Date.now();
+const windowStart = now - 60_000;  // 60-second rolling window
+
+const results = await client
+  .multi()
+  .zremrangebyscore(key, 0, windowStart)  // ① drop expired
+  .zrange(key, 0, -1)                     // ② fetch current window
+  .zadd(key, now, now.toString())          // ③ record this attempt
+  .expire(key, 60)                         // ④ auto-cleanup TTL
+  .exec();
+
+const requestCount = results[1].length;    // count from step ②
+const limited = requestCount >= 100;       // 100 req/min limit
+```
+
+**Java (Jedis)**:
+
+```java
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Transaction;
+import redis.clients.jedis.Response;
+
+boolean isRateLimited(Jedis jedis, String userId, int maxRequests, long windowMs) {
+    String key = "rate_limit:" + userId;
+    long now = System.currentTimeMillis();
+    long windowStart = now - windowMs;
+
+    Transaction tx = jedis.multi();
+    tx.zremrangeByScore(key, 0, windowStart);       // ① drop expired
+    Response<Set<String>> rangeResp = tx.zrange(key, 0, -1); // ② fetch window
+    tx.zadd(key, (double) now, String.valueOf(now)); // ③ record attempt
+    tx.expire(key, (int) (windowMs / 1000));          // ④ auto-cleanup TTL
+    tx.exec();
+
+    int requestCount = rangeResp.get().size();        // count from step ②
+    return requestCount >= maxRequests;
+}
+```
+
+> All four commands execute as one uninterrupted block — no race between `ZRANGE` and `ZADD`. Even if two requests arrive simultaneously, each sees the other's addition. The `Response<Set<String>>` is a future-like handle — its value is available only after `exec()` completes.
+
+### Also see
+- [Lua Scripting (Redis)](#lua-scripting-redis) · [Atomic Conditional Update](../data-concurrency.md#atomic-conditional-update) · [Rate Limiting](../api-design.md#rate-limiting)
 
 ---
 
