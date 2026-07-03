@@ -85,6 +85,7 @@ timestamp: 2026-06-14T00:00:00Z
 | I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
 | Race Condition | [`#race-condition`](#race-condition) |
 | PRG Pattern | [`#prg-pattern`](#prg-pattern) |
+| HyperLogLog | [`#hyperloglog`](#hyperloglog) |
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Presence Service | [`#presence-service`](#presence-service) |
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
@@ -1860,4 +1861,32 @@ The **POST-Redirect-GET** pattern — a web application design pattern that prev
 
 ### Also see
 - [Idempotency-Key](../api-design.md#idempotency-key) · [API Idempotency](../cqrs-event-driven.md#api-idempotency) · [Token-Based Idempotency](../cqrs-event-driven.md#token-based-idempotency)
+
+---
+
+## HyperLogLog {#hyperloglog}
+
+A **probabilistic cardinality estimator** that counts unique elements in a multiset using O(M) memory regardless of dataset size — typically ~12 KB for Redis-grade accuracy (<1% error). Based on the observation that the maximum number of leading zeros in hashed values estimates cardinality.
+
+### Key Characteristics
+- **Bounded memory**: Uses `M` buckets (e.g., 16,384 in Redis), each storing a small integer (6 bits); total memory is fixed regardless of input size
+- **Harmonic mean aggregation**: Uses harmonic mean across buckets to naturally dampen outlier bias — no need to discard extreme values like predecessor algorithms (SuperLogLog)
+- **Mergeable**: Multiple HLL structures can be combined (union) without loss of accuracy — PFMERGE takes the max of corresponding buckets
+- **Standard error**: $1.04 / \sqrt{M}$ — with M=16,384, approximately 0.81%
+- **Not enumerable**: You cannot retrieve which elements were added, only the estimated count
+
+### When to Use
+- Approximate unique counts over massive datasets (analytics dashboards, real-time monitoring)
+- When memory efficiency is critical and 1-2% error is acceptable
+- Merging unique counts across time windows or dimensions (daily → weekly → monthly)
+- Built-in support in Redis (PFADD/PFCOUNT/PFMERGE), PostgreSQL, and Cassandra
+
+### When NOT to Use
+- Exact counts required (billing, voting, legal compliance, financial ledgers)
+- Dataset is small enough to count exactly in memory (<100K unique items)
+- You need to enumerate or retrieve the actual unique elements
+- Error tolerance is below 0.5%
+
+### Also see
+- [Cardinality Estimation](../databases.md#cardinality-estimation) · [Bloom Filter](../databases.md#bloom-filter) · [Morris Probabilistic Counter](../caching.md#morris-probabilistic-counter) · [Redis Internals Takeaways](../../system-design-architecture/caching/redis-internals.md#cache-12)
 

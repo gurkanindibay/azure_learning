@@ -30,6 +30,7 @@ timestamp: 2026-06-18T00:00:00Z
 | NoSQL | [`#nosql`](#nosql) |
 | Hash Collision | [`#hash-collision`](#hash-collision) |
 | Red-Black Tree | [`#red-black-tree`](#red-black-tree) |
+| Cardinality Estimation | [`#cardinality-estimation`](#cardinality-estimation) |
 
 ---
 
@@ -332,3 +333,29 @@ A **self-balancing binary search tree** that guarantees O(log n) insert, delete,
 - When a simpler data structure already meets performance requirements.
 
 **Also see**: [HashMap](../reference-dictionary/java-jvm.md#hashmap), [Treeification](../reference-dictionary/java-jvm.md#treeification), [B-Tree](#b-tree)
+
+---
+
+## Cardinality Estimation {#cardinality-estimation}
+
+The problem of counting the number of **distinct elements** in a multiset (stream, table column, or dataset). Exact solutions require O(n) memory; probabilistic estimators like HyperLogLog achieve O(1) memory with ~1% error.
+
+### Key Characteristics
+- **Exact counting** requires storing every distinct element seen so far — memory scales linearly with cardinality
+- **Probabilistic estimation** uses hashing and statistical observation (e.g., leading zeros, bit patterns) to estimate count without storing elements
+- **Common estimators**: HyperLogLog (Redis, PostgreSQL), HyperLogLog++ (Google BigQuery), K-Minimum Values (KMV)
+- **Real-world use**: Every `COUNT(DISTINCT)` in analytics dashboards at scale is approximate
+
+### When to Use
+- Analytics dashboards showing unique users, sessions, or events
+- Database query planners estimating result set sizes (PostgreSQL uses HLL internally)
+- Network monitoring (unique IPs, unique endpoints)
+- Streaming data where buffering all distinct elements is impossible
+
+### When NOT to Use
+- Exact counts required for billing, compliance, or financial reporting
+- Small datasets where exact counting fits comfortably in memory
+- When you need to list or retrieve the actual distinct elements
+
+### Also see
+- [HyperLogLog](../architecture-patterns.md#hyperloglog) · [Bloom Filter](#bloom-filter) · [B-Tree](#b-tree)
