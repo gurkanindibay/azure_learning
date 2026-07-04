@@ -20,3 +20,4 @@ Source articles covering software architecture patterns, strategies, and case st
 - [docker-file-art](docker-file-art.md)
 - [quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs](quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)
 - [senior-engineers-dont-start-with-kafka](senior-engineers-dont-start-with-kafka.md)
+- [distributed-systems-data-flow-pattern](distributed-systems-data-flow-pattern.md)
