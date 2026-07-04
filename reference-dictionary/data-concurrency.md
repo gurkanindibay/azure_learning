@@ -614,4 +614,4 @@ A performance bottleneck that occurs when **multiple threads compete for the sam
 - Do not confuse lock contention with correctness bugs (race conditions).
 
 ### Also see
-- [Race Condition](../architecture-patterns.md#race-condition) · [Mutex](../dotnet-multithreading.md#mutex) · [Pessimistic Locking](#pessimistic-locking) · [Actor Model](../architecture-patterns.md#actor-model)
+- [Race Condition](../concurrency-runtimes.md#race-condition) · [Mutex](../dotnet-multithreading.md#mutex) · [Pessimistic Locking](#pessimistic-locking) · [Actor Model](../architecture-patterns.md#actor-model)

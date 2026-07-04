@@ -143,7 +143,7 @@ preemption:
 - **Configuration complexity**: Preemption policies must balance fairness with stability — overly aggressive preemption causes thrashing.
 
 > **Cross-reference**: [Resilience Patterns](../resilience/resilience-patterns.md)
-> **Dictionary**: [Preemption](../../reference-dictionary/architecture-patterns.md#preemption), [Fair Sharing](../../reference-dictionary/architecture-patterns.md#fair-sharing)
+> **Dictionary**: [Preemption](../../reference-dictionary/data-architecture.md#preemption), [Fair Sharing](../../reference-dictionary/data-architecture.md#fair-sharing)
 
 ---
 

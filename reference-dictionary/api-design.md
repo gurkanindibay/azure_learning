@@ -26,28 +26,29 @@ timestamp: 2026-06-14T00:00:00Z
 | Long-Running Operations | [`#long-running-operations`](#long-running-operations) |
 | Contract-First Design | [`#contract-first-design`](#contract-first-design) |
 | Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
-| Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm--tcp_nodelay`](#nagles-algorithm--tcp_nodelay) |
+| Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm-tcpnodelay`](#nagles-algorithm-tcpnodelay) |
 | ETag | [`#etag`](#etag) |
-| WebSocket | [`#websocket`](#websocket) |
 | JSON Merge Patch | [`#json-merge-patch`](#json-merge-patch) |
 | Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
 | Migration-Driven Deprecation | [`#migration-driven-deprecation`](#migration-driven-deprecation) |
-| Deprecation Header | [`#deprecation-header`](#deprecation-header) |
 | Hierarchical Rate Limiting | [`#hierarchical-rate-limiting`](#hierarchical-rate-limiting) |
+| Deprecation Header | [`#deprecation-header`](#deprecation-header) |
 | Sunset Header | [`#sunset-header`](#sunset-header) |
 | API Gateway | [`#api-gateway`](#api-gateway) |
 | Hotlinking | [`#hotlinking`](#hotlinking) |
 | Faceted Search | [`#faceted-search`](#faceted-search) |
 | Chunked Upload | [`#chunked-upload`](#chunked-upload) |
+| Backward Compatibility | [`#backward-compatibility`](#backward-compatibility) |
 | Resumable Upload | [`#resumable-upload`](#resumable-upload) |
 | Upload Session | [`#upload-session`](#upload-session) |
 | Direct Upload | [`#direct-upload`](#direct-upload) |
 | Pre-signed URL | [`#pre-signed-url`](#pre-signed-url) |
 | Checksum | [`#checksum`](#checksum) |
-| Backward Compatibility | [`#backward-compatibility`](#backward-compatibility) |
-
----
-
+| WebSocket | [`#websocket`](#websocket) |
+| PRG Pattern | [`#prg-pattern`](#prg-pattern) |
+| Load Balancer | [`#load-balancer`](#load-balancer) |
+| Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
+| Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
 ## API Versioning
 
 The mechanism for evolving an API without breaking existing clients.
@@ -744,4 +745,102 @@ A full-duplex communication protocol over a single TCP connection, initiated by 
 
 ### Also see
 - [Rate Limiting](#rate-limiting) · [Long-Running Operations](#long-running-operations) · [Leaderboard Pattern](../architecture-patterns.md#leaderboard-pattern)
+
+## PRG Pattern
+
+The **POST-Redirect-GET** pattern — a web application design pattern that prevents duplicate form submissions caused by page refreshes. After processing a POST request, the server responds with a 302 redirect to a GET endpoint, so that subsequent page refreshes only repeat the safe GET request.
+
+### Key Characteristics
+- **Prevents double-submission on refresh**: The browser's address bar points to the GET URL after redirect, not the POST endpoint
+- **Two HTTP round-trips**: POST → 302 Redirect → GET (adds latency compared to a direct POST response)
+- **Server-side state needed**: The GET endpoint must have access to the result of the POST operation (via session, query params, or path params)
+- **UX improvement, not security**: PRG prevents accidental resubmissions from the same user on the same browser; it does NOT prevent duplicate requests from other clients, network retries, or API consumers
+
+### When to Use
+- Traditional server-rendered web applications with HTML form submissions
+- Any flow where the user might refresh the page after submitting (order confirmation, payment, registration)
+- Combined with token-based idempotency as a defense-in-depth strategy
+
+### When NOT to Use
+- SPAs and mobile apps — these use client-side routing and API calls, not browser form submissions; token-based idempotency is the primary mechanism
+- As the sole idempotency mechanism — it only protects against browser refresh, not against network retries, message queue redelivery, or concurrent API requests
+
+### Also see
+- [Idempotency-Key](../api-design.md#idempotency-key) · [API Idempotency](../cqrs-event-driven.md#api-idempotency) · [Token-Based Idempotency](../cqrs-event-driven.md#token-based-idempotency)
+
+---
+
+## Load Balancer
+
+A **traffic distribution component** that sits between clients and backend servers, distributing incoming requests across multiple server instances to maximize throughput, minimize response time, and avoid overloading any single resource.
+
+### Key Characteristics
+- **L4 (Transport Layer)**: Operates on TCP/UDP — fast, no payload inspection, distributes by IP:port
+- **L7 (Application Layer)**: Operates on HTTP/HTTPS — can route by URL path, headers, cookies; supports TLS termination
+- **Health checks**: Continuously verifies backend health; removes unhealthy instances from the pool
+- **Algorithms**: Round-robin, least connections, IP hash, weighted, least response time
+- **Consistent hashing**: Minimizes rebalancing when servers are added/removed — critical for stateful backends and caching
+
+### When to Use
+- Any multi-instance service behind a single endpoint
+- SSL termination at the edge before traffic reaches application servers
+- Gradual traffic shifting during deployments (canary, blue-green)
+
+### When NOT to Use
+- Single-instance deployments (the load balancer itself becomes a single point of failure without HA pairs)
+- Peer-to-peer architectures where clients connect directly to any node
+- When request affinity (sticky sessions) is required but the balancer doesn't support it
+
+### Also see
+- [API Gateway](api-design.md#api-gateway) · [Reverse Proxy](#reverse-proxy) · [Consistent Hashing](api-design.md#consistent-hashing) · [Azure Load Balancer / Application Gateway](azure-services.md)
+
+---
+
+## Lazy Subscription
+
+A **presence and real-time subscription strategy** where clients subscribe only to the entities currently rendered on screen (visible friends, visible chunk of member list, active DMs) rather than subscribing to the entire social graph. When the user scrolls or opens a new DM, the subscription set updates dynamically.
+
+### Key Characteristics
+- **Viewport-bounded**: Subscriptions cover ~50–200 entities, not the full social graph (which may contain 100K+ entities per user)
+- **Dynamic**: Subscribe/unsubscribe as the UI changes (scroll, tab switch, DM open/close)
+- **Decouples fanout from graph size**: System load scales with concurrent user count, not with total social connections
+- **Client-driven**: The client tracks what's visible and issues subscribe/unsubscribe calls
+
+### When to Use
+- Presence systems where fanout would otherwise multiply by thousands of watchers per status change
+- Real-time indicators (typing, read receipts, live cursors, viewer counts) at scale
+- Any system where the set of "things I care about right now" is much smaller than "things I could theoretically care about"
+
+### When NOT to Use
+- Small social graphs where full subscription is simpler and the fanout is manageable
+- Systems where the full set of subscriptions must always be known (e.g., notification delivery to all followers)
+- When the subscription churn (rapid scroll, rapid tab switching) overwhelms the subscription management system
+
+### Also see
+- [Presence Service](#presence-service) · [Fanout on Write](messaging.md#fanout-on-write) · [Fanout on Read](messaging.md#fanout-on-read) · [WebSocket](api-design.md#websocket)
+
+---
+
+## Stateful Gateway
+
+A **connection-termination pattern** where each gateway server holds live session state in memory — which users are connected, their current status, and what subscriptions they hold. This is the opposite of a stateless gateway that must query a database or cache for every event.
+
+### Key Characteristics
+- **In-memory session state**: Connection, status, subscriptions held in process memory; no external lookup per event
+- **Connection affinity**: A user's WebSocket is pinned to one gateway for the session duration
+- **Pub/sub for cross-gateway communication**: Events are published to an internal message bus; other gateways subscribe to topics relevant to their connected clients
+- **No cross-gateway discovery needed**: Gateways only need to know what topics to subscribe to, not which other gateways exist
+
+### When to Use
+- Real-time systems with persistent connections (chat, presence, collaborative editing, gaming)
+- When per-event database lookups would bottleneck at scale
+- Platforms where connection count dominates event count (games, chat apps)
+
+### When NOT to Use
+- Request/response APIs where connections are ephemeral (stateless gateways are simpler)
+- When gateway failure would cause unacceptable data loss (stateful gateways risk losing session state on crash)
+- Small systems where the operational complexity of pub/sub coordination exceeds the benefit
+
+### Also see
+- [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](api-design.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
 

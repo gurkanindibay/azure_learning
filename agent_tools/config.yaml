@@ -352,6 +352,11 @@ dictionary_domains:
       - api gateway
       - hotlinking
       - faceted search
+      - prg pattern
+      - load balancer
+      - lazy subscription
+      - stateful gateway
+      - websocket
   architecture-patterns.md:
     title: "Architecture & Cloud Patterns"
     keywords:
@@ -382,9 +387,6 @@ dictionary_domains:
       - upstream
       - downstream
       - circular dependency
-      - preemption
-      - fair sharing
-      - tenant hierarchy
       - url shortener
       - snowflake
       - key generation
@@ -394,9 +396,6 @@ dictionary_domains:
       - read/write path
       - cdn
       - service mesh
-      - write-ahead buffer
-      - prg pattern
-      - hyperloglog
       - back-of-the-envelope
   caching.md:
     title: "Caching"
@@ -568,6 +567,7 @@ dictionary_domains:
       - apache flink
       - flink
       - stream processing
+      - write-ahead buffer
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:
@@ -646,6 +646,7 @@ dictionary_domains:
       - masterless
       - masterless architecture
       - durability
+      - hyperloglog
 
   security-iam.md:
     title: "Security, Identity & Access Management"
@@ -688,6 +689,9 @@ dictionary_domains:
       - distributed system
       - pg_aios
       - shared_buffers
+      - preemption
+      - fair sharing
+      - tenant hierarchy
 
 
 

@@ -451,7 +451,7 @@ try {
 ### Also see
 - [Virtual Threads](#virtual-threads) — the feature thread pinning undermines
 - [Carrier Thread](#carrier-thread) — the OS thread that gets pinned
-- [Goroutine](architecture-patterns.md#goroutine) — Go's scheduler-native alternative with no pinning concept
+- [Goroutine](concurrency-runtimes.md#goroutine) — Go's scheduler-native alternative with no pinning concept
 
 ---
 
@@ -485,5 +485,5 @@ Virtual Thread lifecycle on a carrier:
 ### Also see
 - [Virtual Threads](#virtual-threads) — the feature carrier threads support
 - [Thread Pinning](#thread-pinning) — failure mode where carrier threads get stuck
-- [Goroutine](architecture-patterns.md#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
+- [Goroutine](concurrency-runtimes.md#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
 

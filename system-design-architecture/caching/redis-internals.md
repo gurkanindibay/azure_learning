@@ -289,7 +289,7 @@ Input size → memory = O(n)             Input size → memory = O(M) ≈ 12 KB
 | **Small-set inaccuracy** | Below ~100 elements, error can be higher than the stated bound |
 
 > **Also see**: [Databases & Query Performance](../databases/query-performance.md) — COUNT(DISTINCT) optimization, query planning
-> **Dictionary**: [HyperLogLog](../../reference-dictionary/architecture-patterns.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation), [Bloom Filter](../../reference-dictionary/databases.md#bloom-filter)
+> **Dictionary**: [HyperLogLog](../../reference-dictionary/databases.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation), [Bloom Filter](../../reference-dictionary/databases.md#bloom-filter)
 > **Azure**: [Azure Cache for Redis](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/) supports PFADD/PFCOUNT/PFMERGE natively with ≤12 KB per HLL structure
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -325,7 +325,7 @@ Standard error comparison (M=1024):
 | **Near-optimal** | The 1.04/√M error bound is provably close to the theoretical minimum for this class of estimators |
 
 > **Also see**: [cache-12](#cache-12) — Full HyperLogLog algorithm description
-> **Dictionary**: [HyperLogLog](../../reference-dictionary/architecture-patterns.md#hyperloglog)
+> **Dictionary**: [HyperLogLog](../../reference-dictionary/databases.md#hyperloglog)
 > **Taxonomy**: §7.3 Caching Strategies
 
 ---
@@ -359,7 +359,7 @@ vs. storing all 11 user IDs per day × 7 days ≈ hundreds of MB
 | **Merge is O(M)** | PFMERGE iterates over all buckets; fast for M=16384 but not zero-cost |
 
 > **Also see**: [cache-12](#cache-12) — HyperLogLog algorithm, [cache-15](#cache-15) — Funnel analytics
-> **Dictionary**: [HyperLogLog](../../reference-dictionary/architecture-patterns.md#hyperloglog)
+> **Dictionary**: [HyperLogLog](../../reference-dictionary/databases.md#hyperloglog)
 > **Azure**: Azure Cache for Redis supports PFMERGE for combining HLL structures across time windows or dimensions
 > **Taxonomy**: §7.3 Caching Strategies
 
@@ -394,6 +394,6 @@ Total memory: 5 steps × 12 KB = 60 KB
 | **Per-step counters are independent** | Each step's HLL doesn't know about other steps — funnel coherence depends on consistent event instrumentation |
 
 > **Also see**: [cache-12](#cache-12) — HyperLogLog algorithm, [cache-14](#cache-14) — HLL merging
-> **Dictionary**: [HyperLogLog](../../reference-dictionary/architecture-patterns.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation)
+> **Dictionary**: [HyperLogLog](../../reference-dictionary/databases.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation)
 > **Azure**: Combine Azure Cache for Redis HLL with Azure Event Hubs for real-time funnel analytics at scale
 > **Taxonomy**: §7.3 Caching Strategies

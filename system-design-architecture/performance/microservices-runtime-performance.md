@@ -171,7 +171,7 @@ WebServer server = WebServer.builder()
 
 **Tradeoff**: Proper benchmark design takes more time and produces nuanced results (curves, not slogans) — harder to summarize in a tweet. But it prevents wrong architectural decisions based on flawed data.
 
-> **Dictionary**: [GOMAXPROCS](../../reference-dictionary/architecture-patterns.md#gomaxprocs)
+> **Dictionary**: [GOMAXPROCS](../../reference-dictionary/concurrency-runtimes.md#gomaxprocs)
 
 ---
 

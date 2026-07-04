@@ -584,5 +584,5 @@ Whether you're building an analytics dashboard, a real-time monitoring system, o
 - [Redis HyperLogLog Documentation](https://redis.io/docs/data-types/probabilistic/hyperloglogs/)
 - [HyperLogLog in Practice (Google)](https://research.google/pubs/hyperloglog-in-practice-algorithmic-engineering-of-a-state-of-the-art-cardinality-estimation-algorithm/) — Google's engineering improvements
 
-> **Related Dictionary Terms**: [HyperLogLog](../../reference-dictionary/architecture-patterns.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation), [Bloom Filter](../../reference-dictionary/databases.md#bloom-filter)
+> **Related Dictionary Terms**: [HyperLogLog](../../reference-dictionary/databases.md#hyperloglog), [Cardinality Estimation](../../reference-dictionary/databases.md#cardinality-estimation), [Bloom Filter](../../reference-dictionary/databases.md#bloom-filter)
 > **Takeaways**: [Redis Internals — Key Takeaways](../../system-design-architecture/caching/redis-internals.md)

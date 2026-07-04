@@ -228,7 +228,7 @@ Server → Check idempotency store for key "a1b2c3d4"
 **Tradeoff**: Concurrency improves responsiveness but not throughput. Parallelism improves throughput but introduces shared-state complexity (race conditions, lock contention). Async maximizes I/O efficiency on a single thread but offers zero benefit for CPU-intensive work. Real systems combine all three — async for connection handling, thread pools for blocking operations, worker pools for CPU-heavy jobs.
 
 > **Taxonomy**: §7.1 Reliability Architecture — Concurrency and threading models  
-> **Also see**: [Concurrency](../../reference-dictionary/databases.md#concurrency), [Parallelism](../../reference-dictionary/ai-ml-llm.md#parallelism), [Event Loop](../../reference-dictionary/architecture-patterns.md#event-loop), [Race Condition](../../reference-dictionary/architecture-patterns.md#race-condition), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [I/O-bound vs CPU-bound](../../reference-dictionary/architecture-patterns.md#io-bound-vs-cpu-bound)
+> **Also see**: [Concurrency](../../reference-dictionary/databases.md#concurrency), [Parallelism](../../reference-dictionary/ai-ml-llm.md#parallelism), [Event Loop](../../reference-dictionary/concurrency-runtimes.md#event-loop), [Race Condition](../../reference-dictionary/concurrency-runtimes.md#race-condition), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [I/O-bound vs CPU-bound](../../reference-dictionary/concurrency-runtimes.md#io-bound-vs-cpu-bound)
 
 ---
 
@@ -281,4 +281,4 @@ Where $p$ is the parallelizable fraction, $N$ is the number of processors, and $
 **Tradeoff**: A program that spends 90% of its time in a serial bottleneck cannot benefit meaningfully from parallelism, no matter how many cores. Profiling the serial fraction is cheaper than parallelizing the wrong code. For I/O-bound workloads, async and concurrency offer larger gains than parallelism.
 
 > **Taxonomy**: §7.1 Reliability Architecture — Performance optimization constraints  
-> **Also see**: [Amdahl's Law](../../reference-dictionary/architecture-patterns.md#amdahls-law), [I/O-bound vs CPU-bound](../../reference-dictionary/architecture-patterns.md#io-bound-vs-cpu-bound)
+> **Also see**: [Amdahl's Law](../../reference-dictionary/architecture-patterns.md#amdahls-law), [I/O-bound vs CPU-bound](../../reference-dictionary/concurrency-runtimes.md#io-bound-vs-cpu-bound)

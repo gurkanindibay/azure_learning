@@ -25,7 +25,6 @@ timestamp: 2026-07-04T00:00:00Z
 | Sidecar Pattern | [`#sidecar-pattern`](#sidecar-pattern) |
 | Ambassador Pattern | [`#ambassador-pattern`](#ambassador-pattern) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
-| Leaderboard Pattern | [`#leaderboard-pattern`](#leaderboard-pattern) |
 | CAF | [`#caf`](#caf) |
 | Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
@@ -38,29 +37,17 @@ timestamp: 2026-07-04T00:00:00Z
 | Technical Debt | [`#technical-debt`](#technical-debt) |
 | Upstream System | [`#upstream-system`](#upstream-system) |
 | Downstream System | [`#downstream-system`](#downstream-system) |
-| Upstream/Downstream Relationship | [`#upstream-downstream-relationship`](#upstream-downstream-relationship) |
+| Upstream/Downstream Relationship | [`#upstreamdownstream-relationship`](#upstreamdownstream-relationship) |
 | Circular Dependency | [`#circular-dependency`](#circular-dependency) |
 | Base62 Encoding | [`#base62-encoding`](#base62-encoding) |
 | URL Shortener | [`#url-shortener`](#url-shortener) |
 | Snowflake ID | [`#snowflake-id`](#snowflake-id) |
 | Key Generation Service | [`#key-generation-service`](#key-generation-service) |
 | Presence Service | [`#presence-service`](#presence-service) |
-| Read/Write Path Separation | [`#read-write-path-separation`](#read-write-path-separation) |
+| Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
 | CDN | [`#cdn`](#cdn) |
 | Service Mesh | [`#service-mesh`](#service-mesh) |
-| Preemption | [`#preemption`](#preemption) |
-| Fair Sharing | [`#fair-sharing`](#fair-sharing) |
-| Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
-| Write-Ahead Buffer | [`#write-ahead-buffer`](#write-ahead-buffer) |
-| PRG Pattern | [`#prg-pattern`](#prg-pattern) |
-| HyperLogLog | [`#hyperloglog`](#hyperloglog) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
-| Load Balancer | [`#load-balancer`](#load-balancer) |
-| Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
-| Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
-
----
-
 ## DDD
 
 **Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language.
@@ -180,162 +167,6 @@ A **network topology** where a central hub VNet hosts shared services (firewall,
 
 ---
 
-## GOMAXPROCS
-
-**GOMAXPROCS** — a Go runtime environment variable that sets the maximum number of OS threads that can execute Go code simultaneously. Controls the parallelism of the Go scheduler's work-stealing across goroutines.
-
-### Key Characteristics
-- Default: `runtime.NumCPU()` (all available CPUs)
-- Set via `GOMAXPROCS=N` environment variable or `runtime.GOMAXPROCS(n)` in code
-- Does NOT limit goroutine count (goroutines are multiplexed onto GOMAXPROCS OS threads)
-- Critical for containerized environments where the container's CPU limit is less than the host's CPU count
-
-### When to Use
-- Explicit CPU affinity in benchmarks (matching Java's `ActiveProcessorCount`)
-- Containerized Go services where `runtime.NumCPU()` sees the host CPUs, not container limits
-- Performance tuning: reducing GOMAXPROCS can reduce GC pressure in CPU-saturated services
-
-### When NOT to Use
-- Default is usually correct for non-containerized deployments on dedicated hardware
-- Setting GOMAXPROCS > actual available CPUs provides no benefit and may increase scheduling overhead
-
-### Also see
-- [Virtual Threads](#virtual-threads) — Java's concurrency model counterpart
-- [Azure Container Apps](azure-services.md#container-apps) — containerized deployment target
-
----
-
-## Goroutine
-
-**Goroutine** — Go's fundamental unit of concurrency. A goroutine is a user-space, lightweight execution context managed entirely by the Go runtime scheduler. It starts with a ~2 KB stack (compared to ~512 KB–1 MB for OS threads) and grows dynamically. When a goroutine blocks on I/O, the Go scheduler parks it and runs another goroutine on the same OS thread — no kernel context switch required.
-
-```go
-func getOrder(w http.ResponseWriter, r *http.Request) {
-    id := r.URL.Query().Get("id")
-    order := db.FindOrder(id) // goroutine yields here, does not block OS thread
-    json.NewEncoder(w).Encode(order)
-}
-// 10,000 of these running costs ~20 MB total stack
-// Java platform threads equivalent: ~10 GB
-```
-
-### Key Characteristics
-- Initial stack ~2 KB; grows in small increments as needed (unlike fixed OS thread stacks)
-- Multiplexed onto OS threads via the Go runtime's M:N scheduler (see [M:N Scheduling](#mn-scheduling))
-- Channels provide goroutine-safe communication and synchronization — no `synchronized` locks, no pinning risk
-- Count is not limited by OS constraints: 50,000+ goroutines is routine in production
-- Managed by `GOMAXPROCS` OS-thread pool (see [GOMAXPROCS](#gomaxprocs))
-
-### When to Use
-- Any concurrent I/O operation in Go — the idiomatic model is one goroutine per task
-- High-concurrency HTTP handlers, background workers, pipeline stages
-
-### When NOT to Use
-- Not applicable outside Go (Java equivalent: [Virtual Threads](#virtual-threads); .NET equivalent: async/await tasks)
-- Goroutines shared across FFI/CGo boundaries require extra care — CGo calls block the OS thread
-
-### Also see
-- [GOMAXPROCS](#gomaxprocs) — controls the OS-thread pool goroutines run on
-- [M:N Scheduling](#mn-scheduling) — the scheduling model behind goroutines
-- [Virtual Threads](#virtual-threads) — Java's closest equivalent
-
----
-
-## M:N Scheduling
-
-**M:N Scheduling** (also: *many-to-many threading*) — a concurrency model where M user-space execution contexts (goroutines, virtual threads, fibers) are multiplexed onto N OS threads, where M >> N. The user-space scheduler decides which lightweight context runs on which OS thread, yielding cooperatively or preemptively when a context blocks.
-
-```
-M:N Model (e.g., Go goroutines)
-================================
-Goroutine-1  ╲
-Goroutine-2   ╲
-Goroutine-3    ──▶  OS Thread-1  (user-space scheduling; no syscall on yield)
-Goroutine-4   ╱
-Goroutine-5  ╱
-
-vs.
-
-1:1 Model (Java platform threads, pre-Loom)
-============================================
-Request-1  ──▶  OS Thread-1  (kernel scheduler; syscall on every context switch)
-Request-2  ──▶  OS Thread-2
-Request-3  ──▶  OS Thread-3
-```
-
-### Key Characteristics
-- **Low memory footprint**: user-space contexts start at KBs vs OS thread stacks at hundreds of KBs
-- **Cheap context switch**: switching between user-space contexts is a function call, not a kernel syscall
-- **High multiplexing**: tens of thousands of logical tasks can share a handful of OS threads
-- **Implementations**: Go goroutines (runtime scheduler), Java Virtual Threads (JVM carrier threads), Erlang processes, Kotlin coroutines
-
-### When to Use
-- I/O-bound, high-concurrency services where tasks spend most of their time waiting
-- When per-task memory cost matters (microservices, serverless, embedded)
-
-### When NOT to Use
-- Pure CPU-bound workloads benefit more from N = CPU-count platform threads; extra scheduling overhead from M:N adds no value
-- When the runtime does not support M:N natively (pre-Loom Java with platform threads is 1:1)
-
-### Also see
-- [Goroutine](#goroutine) — Go's implementation of M:N scheduling
-- [Virtual Threads](#virtual-threads) — JVM's M:N implementation (Java 21+)
-- [GOMAXPROCS](#gomaxprocs) — controls N (OS thread count) in Go's M:N model
-
----
-
-## Tokio
-
-**Tokio** — Rust’s asynchronous runtime, providing the event loop, task scheduler, I/O driver, and timer infrastructure needed to run async Rust code in production.
-
-### Key Characteristics
-- **Work-stealing scheduler**: tasks are distributed across a pool of OS threads; idle threads steal work from busy threads.
-- **Async/await**: built on Rust `async`/`await` and `Future`; the runtime polls tasks to completion.
-- **Zero-cost abstractions**: async code compiles to state machines without pervasive runtime allocation.
-- **Ecosystem**: `tokio::sync` (channels, locks), `tokio::time`, `tokio::net`, and `tokio::task` cover most async service needs.
-
-### When to Use
-- High-concurrency network services in Rust where many connections are handled concurrently on a small thread pool.
-- CPU- and latency-sensitive services that benefit from Rust’s ownership model plus async I/O.
-
-### When NOT to Use
-- For blocking or CPU-bound work without spawning it on a dedicated thread pool (`spawn_blocking`), or it will stall the async runtime.
-- As a default choice when the team has no Rust operational experience; the safety gains come with a learning curve.
-
-### Also see
-- [Virtual Threads](#virtual-threads) · [Goroutine](#goroutine) · [Event Loop](#event-loop) · [Global Interpreter Lock](../reference-dictionary/data-concurrency.md#global-interpreter-lock)
-
----
-
-## Event Loop
-
-A concurrency pattern where a single thread continuously polls for and dispatches events or I/O operations, avoiding the need for locks by processing work sequentially. Redis's `ae.c` is a canonical example: ~300 lines of C that powers millions of production systems.
-
-### Key Characteristics
-
-- **Single-threaded by design**: Eliminates lock contention and race conditions entirely — complexity requires justification, not the other way around
-- **Event-driven polling**: Continuously checks for network I/O, timers, and signals in a main loop (`aeProcessEvents`)
-- **Non-blocking I/O**: Uses mechanisms like `epoll`/`kqueue`/`select` to handle many connections without thread-per-connection overhead
-
-### When to Use
-
-- CPU-light, I/O-heavy workloads where request processing is fast relative to I/O wait time
-- Systems where data structure access benefits from lock-free semantics (e.g., in-memory data stores)
-- When operational simplicity and debuggability outweigh raw throughput on multi-core machines
-
-### When NOT to Use
-
-- CPU-bound workloads that cannot saturate a single core fast enough for latency requirements
-- When vertical scaling limits are hit and horizontal scaling across cores is the only option
-- Systems with blocking operations that cannot be offloaded to background threads or async I/O
-
-### Also see
-
-- [Single-Threaded Architecture](../reference-dictionary/dotnet-multithreading.md#single-threaded-architecture)
-- [Async I/O patterns](../reference-dictionary/dotnet-multithreading.md)
-
----
-
 ## Virtual File System (VFS)
 
 A kernel-level abstraction layer in Linux that provides a single unified interface (`struct file_operations`) for all filesystem operations, allowing hundreds of different filesystem implementations (ext4, btrfs, NFS, etc.) to coexist behind a common contract. One of the most elegant examples of clean abstraction at scale.
@@ -360,14 +191,8 @@ A kernel-level abstraction layer in Linux that provides a single unified interfa
 
 ### Also see
 
-- [Event Loop](#event-loop) — another example of deliberate architectural simplicity
-- [Content-Addressable Storage](../reference-dictionary/ai-ml-llm.md) — Git's complementary data model
-
-- TODO: When Virtual File System (VFS) is the wrong choice
-
-### Also see
-
-- TODO: Related terms
+- [Event Loop](concurrency-runtimes.md#event-loop) — another example of deliberate architectural simplicity
+- [Content-Addressable Storage](ai-ml-llm.md) — Git's complementary data model
 
 ---
 
@@ -485,7 +310,7 @@ A **compiled module** (written in a language such as Rust, C, C++, or Cython) th
 - When the FFI and build-tooling complexity outweighs the savings (small or rarely executed functions).
 
 ### Also see
-- [Strangler Fig](#strangler-fig) · [Anti-Corruption Layer](#anti-corruption-layer) · [Tokio](#tokio) · [Microservices Runtime Performance — Python to Rust Rewrite Takeaways](../system-design-architecture/60-perf-key-takeaways.md#perf-11-native-extension-as-middle-path)
+- [Strangler Fig](#strangler-fig) · [Anti-Corruption Layer](#anti-corruption-layer) · [Tokio](concurrency-runtimes.md#tokio) · [Microservices Runtime Performance — Python to Rust Rewrite Takeaways](../system-design-architecture/60-perf-key-takeaways.md#perf-11-native-extension-as-middle-path)
 
 ---
 
@@ -719,81 +544,6 @@ A component that tracks which users are currently online, on which devices, and 
 
 ---
 
-## Preemption
-
-In batch scheduling, **preemption** is the ability to evict a running, lower-priority workload to admit a higher-priority one or to reclaim resources for their owning tenant. Unlike queuing (which decides admission order), preemption operates on already-running jobs — it forcibly stops and requeues them.
-
-### Key Characteristics
-- **Priority-based**: Higher-priority jobs can displace lower-priority ones already consuming resources
-- **Reclamation**: Idle reserved capacity lent to other tenants can be reclaimed when the owning tenant needs it
-- **Graceful vs forceful**: Preempted jobs may receive a SIGTERM with a grace period or an immediate kill
-- **Restartable workloads only**: Preemption is safe for batch/idempotent jobs but destructive for serving workloads
-
-### When to Use
-- Multi-tenant batch platforms where reserved capacity sits idle while other tenants starve
-- Systems requiring priority-based scheduling where business-critical jobs must jump the queue
-- Kubernetes-native batch scheduling via Kueue's `reclaimWithinCohort` and `withinClusterQueue` policies
-
-### When NOT to Use
-- Serving workloads (HTTP, gRPC) where eviction causes user-visible errors or data loss
-- Systems without checkpointing or idempotent job design — preempted jobs lose all progress
-- When preemption frequency causes thrashing (jobs repeatedly preempted before completion)
-
-### Also see
-- [Fair Sharing](#fair-sharing) · [Tenant Hierarchy](#tenant-hierarchy) · [Kueue (Kubernetes-native job queueing)](azure-services.md) · [Resilience Patterns](../reference-dictionary/resilience.md)
-
----
-
-## Fair Sharing
-
-A resource allocation strategy where **competing tenants receive a weighted share of available capacity** proportional to their configured weight. When demand exceeds supply, each tenant gets roughly `(weight / total_weight) × total_capacity`. Fair sharing prevents a single heavy tenant from starving others while allowing tenants to burst into unused capacity from others.
-
-### Key Characteristics
-- **Weighted allocation**: Tenants with higher weight get proportionally more resources under contention
-- **Work-conserving**: Idle capacity from one tenant is immediately available to others — no stranded resources
-- **Fairness over time**: Short-term unfairness is acceptable; the guarantee is long-term weighted proportionality
-- **With preemption**: When combined with preemption, fair sharing becomes dynamic — lower-priority work can be evicted to restore fair shares
-
-### When to Use
-- Multi-tenant platforms where capacity must be divided across teams or business units
-- Batch scheduling systems (Kueue, YARN, Mesos) managing heterogeneous workloads
-- Cloud resource management where cost attribution and fair access are both required
-
-### When NOT to Use
-- Single-tenant systems where the concept of "fairness across tenants" is meaningless
-- When strict capacity guarantees (not proportional sharing) are required — use reserved capacity instead
-- Very short-term allocation where the overhead of tracking weighted usage exceeds the fairness benefit
-
-### Also see
-- [Preemption](#preemption) · [Tenant Hierarchy](#tenant-hierarchy) · [Reserved Capacity](azure-services.md)
-
----
-
-## Tenant Hierarchy
-
-A **tree-structured organizational model** for multi-tenant systems where tenants are arranged in a parent-child hierarchy. Internal (non-leaf) tenants aggregate capacity for their subtree but don't accept work directly; leaf tenants accept jobs and have associated queues. Capacity can be reserved at any level of the tree.
-
-### Key Characteristics
-- **Tree topology**: Internal tenants group and aggregate; leaf tenants execute work
-- **Capacity inheritance**: Reserved capacity at an internal tenant is fair-shared across its subtree
-- **Organizational mapping**: The hierarchy reflects team structure — an org can use a flat tenant or a deep tree matching ownership boundaries
-- **Two capacity pools**: Reserved (partitioned, guaranteed) and Shared (global pool, burst-eligible)
-
-### When to Use
-- Large organizations with complex team structures needing hierarchical resource allocation
-- Platforms where different business units need guaranteed capacity while sharing a common pool
-- Batch compute platforms (Netflix CMB/Titus, Kueue Cohorts/ClusterQueues)
-
-### When NOT to Use
-- Small teams where a flat priority queue suffices
-- When organizational structure is too fluid — constant hierarchy changes create operational churn
-- Without preemption: hierarchical reserved capacity without preemption leaves idle resources stranded
-
-### Also see
-- [Fair Sharing](#fair-sharing) · [Preemption](#preemption) · [Cohort/ClusterQueue (Kueue concepts)](https://kueue.sigs.k8s.io/docs/concepts/)
-
----
-
 ## Read/Write Path Separation
 
 **Read/Write Path Separation** is an architectural pattern where the systems handling write operations are physically or logically separated from those handling read operations. Each path is optimized for fundamentally different concerns: the write path prioritizes durability, consistency, and correctness; the read path prioritizes low latency, massive throughput, and responsiveness.
@@ -816,85 +566,6 @@ A **tree-structured organizational model** for multi-tenant systems where tenant
 
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Caching](caching.md) · [Database Per Service](#database-per-service)
-
----
-
-## Write-Ahead Buffer
-
-A **local, durable staging area** placed between an application and a remote message broker (e.g., Kafka). Events are first written synchronously to this local buffer, then asynchronously published to the broker. If the broker is unavailable or the async publish fails, events remain safe in the local buffer and are retried later.
-
-> "Write to local disk first, publish to Kafka second."
-
-### Key Characteristics
-- **Durable before publish**: Events survive application crashes, restarts, and extended broker outages
-- **Decouples user latency from broker availability**: The user-facing request is acknowledged once the local write completes, not when Kafka confirms
-- **Append-only with compaction**: Events are appended, then compacted (deleted) after successful broker publish
-- **Common implementations**: Local file on disk, embedded SQLite, RocksDB, or a dedicated WAL library
-
-### When to Use
-- Zero-data-loss requirements where async publishing is used to avoid blocking user requests
-- Systems where Kafka may experience extended unavailability and in-memory buffers would overflow
-- High-throughput ingestion pipelines where every event must be accounted for
-
-### When NOT to Use
-- When the broker itself is the system of record and local durability adds unnecessary complexity
-- Low-throughput systems where synchronous producer acks with retries are sufficient
-- When disk I/O on the producer side would become a bottleneck (measure first)
-
-### Also see
-- [Producer Acknowledgement](../messaging.md#producer-acknowledgement) · [At-Least-Once Semantics](../messaging.md#at-least-once-semantics) · [Idempotent Consumer](../messaging.md#idempotent-consumer)
-
----
-
-## PRG Pattern
-
-The **POST-Redirect-GET** pattern — a web application design pattern that prevents duplicate form submissions caused by page refreshes. After processing a POST request, the server responds with a 302 redirect to a GET endpoint, so that subsequent page refreshes only repeat the safe GET request.
-
-### Key Characteristics
-- **Prevents double-submission on refresh**: The browser's address bar points to the GET URL after redirect, not the POST endpoint
-- **Two HTTP round-trips**: POST → 302 Redirect → GET (adds latency compared to a direct POST response)
-- **Server-side state needed**: The GET endpoint must have access to the result of the POST operation (via session, query params, or path params)
-- **UX improvement, not security**: PRG prevents accidental resubmissions from the same user on the same browser; it does NOT prevent duplicate requests from other clients, network retries, or API consumers
-
-### When to Use
-- Traditional server-rendered web applications with HTML form submissions
-- Any flow where the user might refresh the page after submitting (order confirmation, payment, registration)
-- Combined with token-based idempotency as a defense-in-depth strategy
-
-### When NOT to Use
-- SPAs and mobile apps — these use client-side routing and API calls, not browser form submissions; token-based idempotency is the primary mechanism
-- As the sole idempotency mechanism — it only protects against browser refresh, not against network retries, message queue redelivery, or concurrent API requests
-
-### Also see
-- [Idempotency-Key](../api-design.md#idempotency-key) · [API Idempotency](../cqrs-event-driven.md#api-idempotency) · [Token-Based Idempotency](../cqrs-event-driven.md#token-based-idempotency)
-
----
-
-## HyperLogLog {#hyperloglog}
-
-A **probabilistic cardinality estimator** that counts unique elements in a multiset using O(M) memory regardless of dataset size — typically ~12 KB for Redis-grade accuracy (<1% error). Based on the observation that the maximum number of leading zeros in hashed values estimates cardinality.
-
-### Key Characteristics
-- **Bounded memory**: Uses `M` buckets (e.g., 16,384 in Redis), each storing a small integer (6 bits); total memory is fixed regardless of input size
-- **Harmonic mean aggregation**: Uses harmonic mean across buckets to naturally dampen outlier bias — no need to discard extreme values like predecessor algorithms (SuperLogLog)
-- **Mergeable**: Multiple HLL structures can be combined (union) without loss of accuracy — PFMERGE takes the max of corresponding buckets
-- **Standard error**: $1.04 / \sqrt{M}$ — with M=16,384, approximately 0.81%
-- **Not enumerable**: You cannot retrieve which elements were added, only the estimated count
-
-### When to Use
-- Approximate unique counts over massive datasets (analytics dashboards, real-time monitoring)
-- When memory efficiency is critical and 1-2% error is acceptable
-- Merging unique counts across time windows or dimensions (daily → weekly → monthly)
-- Built-in support in Redis (PFADD/PFCOUNT/PFMERGE), PostgreSQL, and Cassandra
-
-### When NOT to Use
-- Exact counts required (billing, voting, legal compliance, financial ledgers)
-- Dataset is small enough to count exactly in memory (<100K unique items)
-- You need to enumerate or retrieve the actual unique elements
-- Error tolerance is below 0.5%
-
-### Also see
-- [Cardinality Estimation](../databases.md#cardinality-estimation) · [Bloom Filter](../databases.md#bloom-filter) · [Morris Probabilistic Counter](../caching.md#morris-probabilistic-counter) · [Redis Internals Takeaways](../../system-design-architecture/caching/redis-internals.md#cache-12)
 
 ---
 
@@ -973,78 +644,4 @@ A **rough, order-of-magnitude calculation** performed before designing any archi
 - [System Design Interview Roadmap](../system-design-architecture/system-design-interview/interview-roadmap.md#sdi-05-back-of-the-envelope-math)
 
 ---
-
-## Load Balancer
-
-A **traffic distribution component** that sits between clients and backend servers, distributing incoming requests across multiple server instances to maximize throughput, minimize response time, and avoid overloading any single resource.
-
-### Key Characteristics
-- **L4 (Transport Layer)**: Operates on TCP/UDP — fast, no payload inspection, distributes by IP:port
-- **L7 (Application Layer)**: Operates on HTTP/HTTPS — can route by URL path, headers, cookies; supports TLS termination
-- **Health checks**: Continuously verifies backend health; removes unhealthy instances from the pool
-- **Algorithms**: Round-robin, least connections, IP hash, weighted, least response time
-- **Consistent hashing**: Minimizes rebalancing when servers are added/removed — critical for stateful backends and caching
-
-### When to Use
-- Any multi-instance service behind a single endpoint
-- SSL termination at the edge before traffic reaches application servers
-- Gradual traffic shifting during deployments (canary, blue-green)
-
-### When NOT to Use
-- Single-instance deployments (the load balancer itself becomes a single point of failure without HA pairs)
-- Peer-to-peer architectures where clients connect directly to any node
-- When request affinity (sticky sessions) is required but the balancer doesn't support it
-
-### Also see
-- [API Gateway](api-design.md#api-gateway) · [Reverse Proxy](#reverse-proxy) · [Consistent Hashing](api-design.md#consistent-hashing) · [Azure Load Balancer / Application Gateway](azure-services.md)
-
----
-
-## Lazy Subscription
-
-A **presence and real-time subscription strategy** where clients subscribe only to the entities currently rendered on screen (visible friends, visible chunk of member list, active DMs) rather than subscribing to the entire social graph. When the user scrolls or opens a new DM, the subscription set updates dynamically.
-
-### Key Characteristics
-- **Viewport-bounded**: Subscriptions cover ~50–200 entities, not the full social graph (which may contain 100K+ entities per user)
-- **Dynamic**: Subscribe/unsubscribe as the UI changes (scroll, tab switch, DM open/close)
-- **Decouples fanout from graph size**: System load scales with concurrent user count, not with total social connections
-- **Client-driven**: The client tracks what's visible and issues subscribe/unsubscribe calls
-
-### When to Use
-- Presence systems where fanout would otherwise multiply by thousands of watchers per status change
-- Real-time indicators (typing, read receipts, live cursors, viewer counts) at scale
-- Any system where the set of "things I care about right now" is much smaller than "things I could theoretically care about"
-
-### When NOT to Use
-- Small social graphs where full subscription is simpler and the fanout is manageable
-- Systems where the full set of subscriptions must always be known (e.g., notification delivery to all followers)
-- When the subscription churn (rapid scroll, rapid tab switching) overwhelms the subscription management system
-
-### Also see
-- [Presence Service](#presence-service) · [Fanout on Write](messaging.md#fanout-on-write) · [Fanout on Read](messaging.md#fanout-on-read) · [WebSocket](api-design.md#websocket)
-
----
-
-## Stateful Gateway
-
-A **connection-termination pattern** where each gateway server holds live session state in memory — which users are connected, their current status, and what subscriptions they hold. This is the opposite of a stateless gateway that must query a database or cache for every event.
-
-### Key Characteristics
-- **In-memory session state**: Connection, status, subscriptions held in process memory; no external lookup per event
-- **Connection affinity**: A user's WebSocket is pinned to one gateway for the session duration
-- **Pub/sub for cross-gateway communication**: Events are published to an internal message bus; other gateways subscribe to topics relevant to their connected clients
-- **No cross-gateway discovery needed**: Gateways only need to know what topics to subscribe to, not which other gateways exist
-
-### When to Use
-- Real-time systems with persistent connections (chat, presence, collaborative editing, gaming)
-- When per-event database lookups would bottleneck at scale
-- Platforms where connection count dominates event count (games, chat apps)
-
-### When NOT to Use
-- Request/response APIs where connections are ephemeral (stateless gateways are simpler)
-- When gateway failure would cause unacceptable data loss (stateful gateways risk losing session state on crash)
-- Small systems where the operational complexity of pub/sub coordination exceeds the benefit
-
-### Also see
-- [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](api-design.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
 

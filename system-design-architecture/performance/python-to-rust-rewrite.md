@@ -41,12 +41,12 @@ timestamp: 2026-06-27T00:00:00Z
 **Strategy — Match the runtime to the bottleneck shape**:
 
 - Profile the workload first: is the pain CPU-bound, memory-bound, or I/O-bound?
-- For CPU-bound concurrent work, choose a runtime without a GIL: Rust ([Tokio](../../reference-dictionary/architecture-patterns.md#tokio)), Go goroutines, or Java virtual threads.
+- For CPU-bound concurrent work, choose a runtime without a GIL: Rust ([Tokio](../../reference-dictionary/concurrency-runtimes.md#tokio)), Go goroutines, or Java virtual threads.
 - Validate with production-like benchmarks on the same traffic shape and database load before committing to a rewrite.
 
 **Tradeoff**: A GIL-free runtime removes the serialization ceiling, but it introduces a new toolchain, build pipeline, and operational expertise. The win is real only when CPU concurrency is the actual bottleneck.
 
-> **Also see**: [Global Interpreter Lock](../../reference-dictionary/data-concurrency.md#global-interpreter-lock) · [Tokio](../../reference-dictionary/architecture-patterns.md#tokio) · [Virtual Threads](performance/microservices-runtime-performance.md#perf-01-virtual-threads--concurrency-model-matters-more-than-language) · [async-01: Unbounded Thread Pool Exhaustion](stream-processing/async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
+> **Also see**: [Global Interpreter Lock](../../reference-dictionary/data-concurrency.md#global-interpreter-lock) · [Tokio](../../reference-dictionary/concurrency-runtimes.md#tokio) · [Virtual Threads](performance/microservices-runtime-performance.md#perf-01-virtual-threads--concurrency-model-matters-more-than-language) · [async-01: Unbounded Thread Pool Exhaustion](stream-processing/async-concurrency-patterns.md#async-01-unbounded-thread-pool-exhaustion)
 
 ---
 

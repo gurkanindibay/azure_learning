@@ -106,7 +106,7 @@ Request-2  ──▶  OS Thread-2  (1 MB stack, blocked on DB)
 
 > **Key insight**: Go's performance advantage is not compiler quality — it is a fundamentally different concurrency architecture baked in before v1.0.
 
-**Cross-reference**: [Goroutine](../../reference-dictionary/architecture-patterns.md#goroutine) · [M:N Scheduling](../../reference-dictionary/architecture-patterns.md#mn-scheduling) · [GOMAXPROCS](../../reference-dictionary/architecture-patterns.md#gomaxprocs)
+**Cross-reference**: [Goroutine](../../reference-dictionary/concurrency-runtimes.md#goroutine) · [M:N Scheduling](../../reference-dictionary/concurrency-runtimes.md#mn-scheduling) · [GOMAXPROCS](../../reference-dictionary/concurrency-runtimes.md#gomaxprocs)
 
 ---
 

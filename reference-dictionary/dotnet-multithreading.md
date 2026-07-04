@@ -257,5 +257,5 @@ A deliberate architectural choice to process all work on a single thread, elimin
 
 ### Also see
 
-- [Event Loop](../reference-dictionary/architecture-patterns.md#event-loop) — the concurrency pattern that single-threaded architectures typically employ
+- [Event Loop](../reference-dictionary/concurrency-runtimes.md#event-loop) — the concurrency pattern that single-threaded architectures typically employ
 - [Thread-Safety patterns](../reference-dictionary/dotnet-multithreading.md)

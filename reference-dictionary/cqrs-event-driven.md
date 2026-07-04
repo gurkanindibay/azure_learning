@@ -474,7 +474,7 @@ The guarantee that **multiple identical API requests produce the same side effec
 - When the idempotency store (Redis, DB) becomes a bigger reliability risk than the duplicate operations it prevents
 
 ### Also see
-- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Idempotency-Key](../api-design.md#idempotency-key) · [PRG Pattern](../architecture-patterns.md#prg-pattern)
+- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Idempotency-Key](../api-design.md#idempotency-key) · [PRG Pattern](../api-design.md#prg-pattern)
 
 ---
 
