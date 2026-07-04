@@ -21,6 +21,9 @@ timestamp: 2026-04-03T00:00:00Z
 | [svc-01](#svc-01-distributed-monolith-anti-pattern) | Nine services, zero independence — shared schemas couple deployments | Distributed Monolith: shared data, coordinated deploys, cascading failures |
 | [svc-02](#svc-02-deployment-coupling-via-synchronous-call-chains) | Service A cannot deploy without Service B approval | Async events break synchronous deployment coupling |
 | [svc-03](#svc-03-recovery-via-strangler-fig-and-bounded-contexts) | Big-bang rewrite of a distributed monolith is too risky | Strangler Fig + Anti-Corruption Layer: incremental, bounded-context-first recovery |
+| [svc-04](#svc-04-modular-monolith-as-default-architecture) | New project drowns in microservice operational complexity before proving product-market fit | Modular Monolith: single deployment unit with strong internal module boundaries |
+| [svc-05](#svc-05-enforce-module-boundaries-at-compile-time) | Modular monolith slowly degrades into a tangled traditional monolith | Separate assemblies + architecture tests that fail CI on boundary violations |
+| [svc-06](#svc-06-cross-module-communication-via-contracts-and-events) | Direct database access across modules creates hidden coupling | Contracts project + in-memory event bus for decoupled in-process communication |
 
 ---
 
@@ -75,3 +78,57 @@ timestamp: 2026-04-03T00:00:00Z
 **Tradeoff**: The transition period requires maintaining both old and new code paths simultaneously — operational complexity is highest mid-migration. The ACL adds translation overhead (typically 1–5 ms per call) and must be maintained until the legacy path is fully retired. Teams must resist skipping the ACL for speed, or they will import the legacy model corruption into the new service.
 
 > **Also see**: [Strangler Fig](../../reference-dictionary/architecture-patterns.md#strangler-fig) · [Anti-Corruption Layer](../../reference-dictionary/architecture-patterns.md#anti-corruption-layer) · [dp-10: Leaky Data Access](software-architecture/design-patterns.md#dp-10-leaky-data-access-in-domain-logic) · [arch-02: Separation of Concerns](software-architecture/architecture-principles.md#arch-02-separation-of-concerns)
+
+---
+
+## svc-04: Modular Monolith as Default Architecture
+
+> **Source**: [Modular Monolith Architecture in C#: The Pragmatic Path to Scalable .NET Applications](../../articles/software-architecture/modular-monolith-architecture-dotnet.md)
+
+| | |
+|:---|:---|
+| **Problem** | A team starts a new SaaS project with fourteen microservices, each with its own database, CI pipeline and monitoring dashboard; six months later a two-day feature takes two weeks and a minor migration brings down three services |
+| **Root cause** | **Deployment boundaries are treated as logical boundaries** before the domain is understood. The organization lacks the operational maturity for dozens of services and pays network, observability and coordination overhead without receiving independent-team or independent-scaling benefits |
+| **Scale impact** | Engineering time shifts from shipping features to managing infrastructure; debugging spans seven services; the team cannot iterate fast enough to find product-market fit |
+
+**Strategy**: Default to a **modular monolith** — a single deployment unit organized into self-contained modules aligned to [bounded contexts](../../reference-dictionary/architecture-patterns.md#bounded-context). Each module owns its own entities, business logic, data access and API endpoints, but the application is still deployed as one unit. In-process method calls replace network calls, ACID transactions remain available, and the team can later extract a module into a real service only when operational data justifies the complexity.
+
+**Tradeoff**: You lose the ability to independently scale or deploy individual modules. If one module has very different scaling, technology or team-ownership needs from the rest, the single deployment unit becomes a constraint. The boundary design must be right: weak boundaries turn the modular monolith into a traditional tangled monolith.
+
+> **Also see**: [Modular Monolith](../../reference-dictionary/architecture-patterns.md#modular-monolith) · [Monolith](../../reference-dictionary/architecture-patterns.md#monolith) · [Microservices](../../reference-dictionary/architecture-patterns.md#microservices) · [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · [prag-06: Solve Today's Problems](system-design-interview/18-pragmatic-system-design-takeaways.md#prag-06-solve-todays-problems-not-tomorrows)
+
+---
+
+## svc-05: Enforce Module Boundaries at Compile Time
+
+> **Source**: [Modular Monolith Architecture in C#: The Pragmatic Path to Scalable .NET Applications](../../articles/software-architecture/modular-monolith-architecture-dotnet.md)
+
+| | |
+|:---|:---|
+| **Problem** | Six months after adopting a modular monolith, changing the customer module breaks the inventory system and business logic leaks into controllers because nobody knows where else to put it |
+| **Root cause** | Modules are logical but not **physical**. Without compile-time enforcement, developers reference internal implementations directly, share entities across modules and bypass the intended public contract |
+| **Scale impact** | The codebase reverts to the tangled-monolith state the modular monolith was meant to prevent; the promised option to extract services disappears because boundaries are no longer clean |
+
+**Strategy**: Enforce boundaries through project structure: each module has separate assemblies for `Core`, `Infrastructure`, `Api` and `Contracts`, and other modules may reference only the `Contracts` assembly. Add **architecture tests** that fail CI when a module references another module's internals. Treat boundary violations as build failures, not style suggestions.
+
+**Tradeoff**: The initial solution layout is more complex than a flat project structure. New team members need to understand the layering rules, and refactoring across module boundaries requires updating published contracts first. The discipline pays off only if the rules are enforced automatically.
+
+> **Also see**: [Architecture Tests](../../reference-dictionary/architecture-patterns.md#architecture-tests) · [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · [arch-02: Separation of Concerns](software-architecture/architecture-principles.md#arch-02-separation-of-concerns) · [arch-04: Loose Coupling](software-architecture/architecture-principles.md#arch-04-loose-coupling--high-cohesion)
+
+---
+
+## svc-06: Cross-Module Communication via Contracts and Events
+
+> **Source**: [Modular Monolith Architecture in C#: The Pragmatic Path to Scalable .NET Applications](../../articles/software-architecture/modular-monolith-architecture-dotnet.md)
+
+| | |
+|:---|:---|
+| **Problem** | The Orders module queries the Products table directly, the Inventory module depends on Catalog's internal entity classes, and a schema change in one module forces changes in three others |
+| **Root cause** | Modules **share database tables and domain entities** instead of exposing a stable public contract. Hidden coupling through the database is the fastest way to destroy module independence |
+| **Scale impact** | Schema ownership becomes unclear; deployments are no longer safe to perform independently; the data model becomes a single shared dependency graph |
+
+**Strategy**: Communicate between modules through two mechanisms: (1) **direct interface calls** against the `Contracts` project for synchronous, in-process requests that need an immediate answer, and (2) an **in-memory event bus** for true decoupling — when an order is confirmed the Orders module publishes an `OrderConfirmed` event and the Inventory module reacts, without Orders knowing Inventory exists. Both patterns keep communication inside the same process, avoiding network latency and distributed-transaction complexity while preserving clear module contracts.
+
+**Tradeoff**: Contract stability becomes critical — changing a public interface or event type may require updates in every consuming module. Event-driven flows inside a single process still require careful handling of transaction boundaries: subscribers should run in the same unit of work or use an [outbox pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern) if side effects must survive a crash.
+
+> **Also see**: [Shared Kernel](../../reference-dictionary/architecture-patterns.md#shared-kernel) · [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern) · [CQRS / Event-Driven Takeaways](../cqrs-fintech/cqrs-fintech.md) · [broker-05: Message Ordering](../messaging/05-message-brokers-async.md#broker-05-message-ordering)

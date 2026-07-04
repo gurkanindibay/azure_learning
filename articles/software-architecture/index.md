@@ -18,6 +18,7 @@ Source articles covering software architecture patterns, strategies, and case st
 - [The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems](The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md)
 - [When Microservices Become Distributed Monoliths Warning Signs and Recovery](When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 - [docker-file-art](docker-file-art.md)
+- [modular-monolith-architecture-dotnet](modular-monolith-architecture-dotnet.md)
 - [quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs](quality-first-quantity-second-the-leadership-lesson-every-tech-team-needs.md)
 - [senior-engineers-dont-start-with-kafka](senior-engineers-dont-start-with-kafka.md)
 - [distributed-systems-data-flow-pattern](distributed-systems-data-flow-pattern.md)

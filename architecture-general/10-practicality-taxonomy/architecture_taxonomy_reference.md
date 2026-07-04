@@ -4,7 +4,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 > **Auto-generated**: This file is automatically synchronized with index.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-06-17 22:37:12
+> **Last updated**: 2026-07-04 20:18:43
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 
@@ -252,6 +252,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Real-Time Analytics Architecture - Windowing, watermarks, exactly-once semantics
 - Stream Processing Architecture - Stream processors, topologies, state management
 - Change Data Capture (CDC) - Database change propagation in real time
+- Apache Flink Architecture - Comprehensive guide to Flink use cases, sources/sinks, and production topologies
 
 ### 4.4 AI / ML Architecture
 - Machine Learning Pipeline Architecture - End-to-end ML pipelines from data to deployment

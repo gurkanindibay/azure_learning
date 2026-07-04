@@ -22,6 +22,9 @@ timestamp: 2026-07-04T00:00:00Z
 | Database Per Service | [`#database-per-service`](#database-per-service) |
 | Strangler Fig | [`#strangler-fig`](#strangler-fig) |
 | Anti-Corruption Layer | [`#anti-corruption-layer`](#anti-corruption-layer) |
+| Architecture Tests | [`#architecture-tests`](#architecture-tests) |
+| Modular Monolith | [`#modular-monolith`](#modular-monolith) |
+| Shared Kernel | [`#shared-kernel`](#shared-kernel) |
 | Sidecar Pattern | [`#sidecar-pattern`](#sidecar-pattern) |
 | Ambassador Pattern | [`#ambassador-pattern`](#ambassador-pattern) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
@@ -107,6 +110,82 @@ An **incremental migration pattern** — gradually replace a legacy system by bu
 A **translation layer** that protects a bounded context from external model corruption. Translates between the external model and the internal domain model so neither leaks into the other.
 
 **Also see**: [Bounded Context](#bounded-context), [Strangler Fig](#strangler-fig)
+
+---
+
+## Architecture Tests
+
+Automated tests that verify a codebase obeys its declared **architectural boundaries** — for example, that a module's Core project does not reference another module's Infrastructure project. Often implemented with reflection or dependency-analysis libraries (NetArchTest, ArchUnit, NDepend).
+
+### Key Characteristics
+- **Rule-driven**: encode constraints such as "Catalog.Core may not reference Orders.Core"
+- **Fast feedback**: run in CI like unit tests and fail the build on violation
+- **Living documentation**: make the intended architecture explicit and enforceable
+- **Boundary preservation**: prevent the gradual erosion that turns a modular monolith into a big ball of mud
+
+### When to Use
+- Modular monoliths or layered architectures where compile-time project structure enforces boundaries
+- Codebases where implicit dependencies historically caused regressions
+- Teams that want architecture review to be automated and deterministic
+
+### When NOT to Use
+- Trivial prototypes where project structure overhead outweighs boundary risk
+- When rules are too coarse and produce false positives that teams bypass
+- As a substitute for clear domain modeling — tests cannot fix wrong boundaries
+
+### Also see
+- [Modular Monolith](#modular-monolith) · [Bounded Context](#bounded-context) · [Separation of Concerns](design-patterns.md#separation-of-concerns)
+
+---
+
+## Modular Monolith
+
+A **single deployment unit** organized internally into clear, self-contained modules aligned to business capabilities or bounded contexts. Each module owns its own domain logic, data access and public contract, but the application is built and deployed as one artifact.
+
+### Key Characteristics
+- **Single deployable unit**: one build, one deployment, one runtime process
+- **Strong internal boundaries**: modules communicate only through published contracts or events
+- **In-process performance**: cross-module calls are method calls, avoiding network latency and serialization
+- **Optional extraction path**: a well-isolated module can later be extracted into a separate service when scale or team autonomy demands it
+
+### When to Use
+- New products where domain boundaries are still emerging
+- Teams without the platform maturity to operate many services
+- Workloads where cross-module transactions and joins are common
+- Scenarios that need the simplicity of a monolith with the maintainability of clean boundaries
+
+### When NOT to Use
+- When independent scaling, deployment or technology choice for a module is already a hard requirement
+- Large organizations where multiple autonomous teams are blocked by a shared deployment cadence
+- When a single component must scale by orders of magnitude independently
+
+### Also see
+- [Monolith](#monolith) · [Microservices](#microservices) · [Bounded Context](#bounded-context) · [Shared Kernel](#shared-kernel) · [Architecture Tests](#architecture-tests)
+
+---
+
+## Shared Kernel
+
+A small, stable subset of the domain model that is **intentionally shared across bounded contexts** because duplicating it would be more costly than coordinating changes. Contains cross-cutting infrastructure, common data types and base classes — but never business logic that belongs inside a specific module.
+
+### Key Characteristics
+- **Minimal surface area**: only truly common concepts live in the shared kernel
+- **Stable and carefully governed**: changes affect every consumer, so they require coordination
+- **No domain logic**: business rules stay inside their owning bounded contexts
+- **Infrastructure-friendly**: authentication, logging, base entity types and common DTO primitives are typical residents
+
+### When to Use
+- Multiple bounded contexts need the same fundamental concepts (e.g., money, identifiers, base entity behavior)
+- Cross-cutting infrastructure concerns are genuinely reused and stable
+- The cost of coordination is lower than the cost of duplication and drift
+
+### When NOT to Use
+- As a dumping ground for code that does not clearly belong anywhere
+- To share business logic that should live inside one bounded context
+- When teams cannot agree on ownership and change governance
+
+### Also see
+- [Bounded Context](#bounded-context) · [DDD](#ddd) · [Ubiquitous Language](#ubiquitous-language) · [Modular Monolith](#modular-monolith)
 
 ---
 
@@ -219,7 +298,7 @@ A single deployable unit in which all functionality, data access and business lo
 - When multiple teams are blocked by a shared deployment cadence
 - When one component needs to scale independently by orders of magnitude
 
-**Also see**: [Microservices](#microservices), [Strangler Fig](#strangler-fig)
+**Also see**: [Microservices](#microservices), [Modular Monolith](#modular-monolith), [Strangler Fig](#strangler-fig)
 
 ---
 
