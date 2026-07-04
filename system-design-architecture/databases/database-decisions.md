@@ -167,7 +167,7 @@ There is no "CA" system in practice.
 | **Hotspots** | A skewed shard key can concentrate traffic on one shard, negating the benefit. |
 
 > **Also see**: [db-05: Hot Partition Problem](databases/query-performance.md#db-05-hot-partition-problem), [api-05: Consistent Hash-Based Routing](api-network/api-network-design.md#api-05-consistent-hash-based-routing)
-> **Dictionary**: [Sharding](../../reference-dictionary/data-concurrency.md#sharding), [Consistent Hashing](../../reference-dictionary/api-design.md#consistent-hashing)
+> **Dictionary**: [Sharding](../../reference-dictionary/data-concurrency.md#sharding), [Consistent Hashing](../../reference-dictionary/networking.md#consistent-hashing)
 > **Taxonomy**: §4.1 Data Architecture
 
 ---

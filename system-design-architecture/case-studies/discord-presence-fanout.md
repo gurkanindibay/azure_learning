@@ -83,7 +83,7 @@ Fanout approach (correct):
 
 **Tradeoff**: Stateful gateways mean gateway failure is expensive (session migration storms). This is accepted because the operational simplicity of in-memory state is worth the failure-mode complexity — see [feed-10](#feed-10-gateway-failure-storms).
 
-> **Also see**: [WebSocket](../../reference-dictionary/api-design.md#websocket), [Presence Service](../../reference-dictionary/architecture-patterns.md#presence-service), [API Gateway](../../reference-dictionary/api-design.md#api-gateway)
+> **Also see**: [WebSocket](../../reference-dictionary/api-design.md#websocket), [Presence Service](../../reference-dictionary/architecture-patterns.md#presence-service), [API Gateway](../../reference-dictionary/networking.md#api-gateway)
 
 ---
 

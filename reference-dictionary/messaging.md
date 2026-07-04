@@ -55,7 +55,6 @@ timestamp: 2026-06-14T00:00:00Z
 | Fanout on Write | [`#fanout-on-write`](#fanout-on-write) |
 | Fanout on Read | [`#fanout-on-read`](#fanout-on-read) |
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
-| Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
 | Apache Flink | [`#apache-flink`](#apache-flink) |
 | Write-Ahead Buffer | [`#write-ahead-buffer`](#write-ahead-buffer) |
 ## Kafka vs RabbitMQ
@@ -844,29 +843,6 @@ A distribution model that combines fanout-on-write for normal users and fanout-o
 - When operational complexity outweighs the fanout savings
 
 **Also see**: [Fanout on Write](#fanout-on-write) · [Fanout on Read](#fanout-on-read) · [Celebrity Cache](../reference-dictionary/caching.md#celebrity-cache)
-
----
-
-## Zero-Copy Transfer
-
-An OS-level optimization that transfers data directly from **disk cache to the network socket** without copying it through application memory. In Kafka, the `sendfile()` system call eliminates CPU copies and context switches between kernel and user space, dramatically reducing CPU usage during high-throughput data serving.
-
-### Key Characteristics
-- Data path: disk → page cache → network socket (no application buffer involved)
-- Eliminates redundant CPU copies and kernel/user context switches
-- Available when data is served directly from the OS page cache (not from application-managed buffers)
-- Used by Kafka for consumer fetch requests; also employed by Nginx and other high-performance servers
-
-### When to Use
-- High-throughput streaming systems where CPU is the bottleneck for data serving
-- When consumers read data that is already in the OS page cache (recently produced or frequently read)
-
-### When NOT to Use
-- When messages require application-level transformation or encryption before sending
-- When data is not in the page cache (misses still require disk reads into application memory first)
-
-### Also see
-- [Distributed Commit Log](#distributed-commit-log) · [Message Batching](#message-batching) · [Partition](#partition)
 
 ---
 

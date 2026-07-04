@@ -349,11 +349,9 @@ dictionary_domains:
       - rate limit
       - openapi
       - swagger
-      - api gateway
       - hotlinking
       - faceted search
       - prg pattern
-      - load balancer
       - lazy subscription
       - stateful gateway
       - websocket
@@ -370,8 +368,6 @@ dictionary_domains:
       - strangler
       - bounded context
       - ubiquitous language
-      - hub-and-spoke
-      - dmz
       - well-architected
       - caf
       - cloud adoption
@@ -394,9 +390,28 @@ dictionary_domains:
       - presence
       - leaderboard
       - read/write path
+      - back-of-the-envelope
+  networking.md:
+    title: "Networking"
+    keywords:
+      - hub-and-spoke
+      - dmz
       - cdn
       - service mesh
-      - back-of-the-envelope
+      - load balancer
+      - api gateway
+      - consistent hashing
+      - nagle
+      - tcp_nodelay
+      - tcp
+      - zero-copy
+      - network partition
+      - vnet
+      - dns
+      - firewall
+      - reverse proxy
+      - edge computing
+      - latency optimization
   caching.md:
     title: "Caching"
     keywords:
@@ -563,7 +578,6 @@ dictionary_domains:
       - fanout on write
       - fanout on read
       - hybrid fanout
-      - zero-copy
       - apache flink
       - flink
       - stream processing

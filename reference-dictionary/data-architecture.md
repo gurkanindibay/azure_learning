@@ -17,7 +17,6 @@ timestamp: 2026-06-28T00:00:00Z
 | Term | Anchor |
 |:---|:---|
 | CAP Theorem | [`#cap-theorem`](#cap-theorem) |
-| Network Partition | [`#network-partition`](#network-partition) |
 | Vertical vs Horizontal Scaling | [`#vertical-vs-horizontal-scaling`](#vertical-vs-horizontal-scaling) |
 | Replication | [`#replication`](#replication) |
 | Sharding | [`#sharding`](#sharding) |
@@ -48,46 +47,6 @@ In a distributed system, you can guarantee only **two of three**: **C**onsistenc
 - **Not binary**: CAP is a spectrum — most systems are neither purely CP nor purely AP
 
 **Also see**: [Network Partition](#network-partition) · [Replication](#replication) · [Sharding](#sharding) · [Vertical vs Horizontal Scaling](#vertical-vs-horizontal-scaling)
-
----
-
-## Network Partition
-
-A **network partition** occurs when some nodes in a distributed system cannot communicate with others due to a network failure — messages are dropped, delayed, or entirely blocked between subsets of nodes. The system is split into two or more isolated groups that cannot coordinate.
-
-```
-Normal operation:                    Network partition:
-┌───┐  ┌───┐  ┌───┐                 ┌───┐     ┌───┐  ┌───┐
-│ A │──│ B │──│ C │                 │ A │  ✗  │ B │──│ C │
-└───┘  └───┘  └───┘                 └───┘     └───┘  └───┘
-  All nodes can talk                  A is isolated from B and C
-```
-
-### Key Characteristics
-- **Inevitable**: In any distributed system, network partitions *will* happen — cables fail, switches reboot, DNS misbehaves, cloud regions become unreachable
-- **CAP's hidden constant**: The P in CAP is not optional — you cannot choose to avoid partitions; you can only choose how the system behaves *during* one
-- **Split-brain risk**: Each partition may believe it is the sole survivor and attempt to act independently — two partitions accepting writes creates irreconcilable divergence
-- **Detection is fuzzy**: Nodes cannot reliably distinguish "the other node is dead" from "the network between us is dead" — this is why timeouts are always a tradeoff (too short = false positives; too long = real failures go undetected)
-
-### What Happens During a Partition
-
-| Architecture | Behavior During Partition | Example |
-|:---|:---|:---|
-| **Single-primary (CP)** | The partitioned side without the primary **rejects writes** — system prioritizes consistency over availability | MongoDB, PostgreSQL with synchronous replication |
-| **Masterless (AP)** | Both sides **continue accepting writes** — system prioritizes availability over consistency; conflicts resolved later | Cassandra, DynamoDB (eventual consistency mode) |
-| **Multi-primary with conflict resolution** | Both sides accept writes; conflicts detected and resolved on reconciliation | CouchDB, CRDT-based systems |
-
-### When to Use
-- Designing distributed systems — always assume partitions will occur and plan the failure mode explicitly
-- Evaluating database tradeoffs — "what happens during a network partition?" is the most revealing question you can ask about a distributed database
-- Planning multi-region deployments — cross-region links partition far more often than intra-region ones
-
-### When NOT to Use
-- Single-node systems — a network partition is meaningless when there's only one node (though it's still a single point of failure)
-- As an excuse to avoid distribution — partitions are inevitable, not a reason to stay on a single machine forever
-
-### Also see
-- [CAP Theorem](#cap-theorem) · [Masterless Architecture](architecture-patterns.md#masterless-architecture) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [Replication](#replication)
 
 ---
 

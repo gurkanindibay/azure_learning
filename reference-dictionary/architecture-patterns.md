@@ -26,8 +26,6 @@ timestamp: 2026-07-04T00:00:00Z
 | Ambassador Pattern | [`#ambassador-pattern`](#ambassador-pattern) |
 | Well-Architected Framework | [`#well-architected-framework`](#well-architected-framework) |
 | CAF | [`#caf`](#caf) |
-| Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
-| DMZ | [`#dmz`](#dmz) |
 | Virtual File System (VFS) | [`#virtual-file-system-vfs`](#virtual-file-system-vfs) |
 | Microservices | [`#microservices`](#microservices) |
 | Monolith | [`#monolith`](#monolith) |
@@ -45,8 +43,6 @@ timestamp: 2026-07-04T00:00:00Z
 | Key Generation Service | [`#key-generation-service`](#key-generation-service) |
 | Presence Service | [`#presence-service`](#presence-service) |
 | Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
-| CDN | [`#cdn`](#cdn) |
-| Service Mesh | [`#service-mesh`](#service-mesh) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
 ## DDD
 
@@ -148,22 +144,6 @@ Azure's **five pillars** of architectural excellence:
 **Cloud Adoption Framework** — Microsoft's structured methodology for cloud adoption: Strategy → Plan → Ready → Adopt → Govern → Manage.
 
 **Also see**: [Well-Architected Framework](#well-architected-framework)
-
----
-
-## Hub-and-Spoke
-
-A **network topology** where a central hub VNet hosts shared services (firewall, gateway, DNS) and spoke VNets host workloads. All spoke-to-spoke traffic routes through the hub for inspection and control.
-
-**Also see**: [Azure Services: VNet](azure-services.md#vnet)
-
----
-
-## DMZ
-
-**Demilitarized Zone** — an isolated network segment between the untrusted internet and trusted internal network. Hosts internet-facing services that should not have direct access to internal systems.
-
-**Also see**: [Azure Services: Azure Firewall](azure-services.md#azure-firewall)
 
 ---
 
@@ -566,56 +546,6 @@ A component that tracks which users are currently online, on which devices, and 
 
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Caching](caching.md) · [Database Per Service](#database-per-service)
-
----
-
-## CDN
-
-A **Content Delivery Network** — a geographically distributed network of edge servers that cache static and dynamic content close to end users, reducing latency and offloading origin infrastructure.
-
-### Key Characteristics
-- **Edge caching**: Content replicated to points of presence (PoPs) worldwide; users fetch from the nearest edge
-- **Origin offload**: 90%+ of requests served from edge cache, never reaching origin servers
-- **DDoS absorption**: Distributed edge footprint absorbs volumetric attacks before they reach origin
-- **Modern capabilities**: Edge compute (Cloudflare Workers, AWS Lambda@Edge), image optimization, A/B testing, SSL termination
-
-### When to Use
-- Global user base where latency to a single origin region is unacceptable
-- Static assets (images, CSS, JS, videos) that benefit from caching at the edge
-- DDoS protection at the network edge before traffic reaches application infrastructure
-
-### When NOT to Use
-- Intranet applications with all users in one geographic region
-- Highly dynamic, personalized content that cannot be cached (though edge compute can help)
-- When TLS private keys must never leave your infrastructure (some CDNs require key sharing)
-
-**Also see**: [Edge Computing](#edge-computing) · [Caching](caching.md) · [Latency Optimization](#latency-optimization) · [Azure Front Door](../azure-services.md#azure-front-door)
-
----
-
-## Service Mesh
-
-A **dedicated infrastructure layer** that handles service-to-service communication transparently, outside application code. Deployed as sidecar proxies alongside each service, providing observability, traffic management, and security without application changes.
-
-### Key Characteristics
-- **Sidecar proxy**: Each service instance gets a co-located proxy (Envoy, Linkerd-proxy) that intercepts all network traffic
-- **Control plane + data plane**: Control plane (Istiod, Linkerd control plane) configures the data plane proxies
-- **mTLS**: Automatic mutual TLS between services — encryption and identity without application code
-- **Traffic management**: Retries, timeouts, circuit breaking, traffic splitting (canary), fault injection
-- **Observability**: Automatic metrics (request rate, latency, error rate), distributed tracing, access logs
-
-### When to Use
-- Large microservice deployments (50+ services) where consistent observability and security are required
-- Organizations with a dedicated platform team that can operate the mesh
-- Compliance requirements mandating encryption-in-transit for all service-to-service traffic
-
-### When NOT to Use
-- Small deployments (under 10 services) — the operational overhead exceeds the benefit
-- Teams without platform engineering capacity to operate the control plane
-- When the extra latency hop per request (typically <1ms with Envoy) is unacceptable
-- Monoliths or services communicating over message queues rather than synchronous HTTP/gRPC
-
-**Also see**: [Sidecar Pattern](#sidecar-pattern) · [Microservices](#microservices) · [Circuit Breaker](resilience.md#circuit-breaker) · [Istio / Linkerd](https://istio.io/latest/about/service-mesh/)
 
 ---
 

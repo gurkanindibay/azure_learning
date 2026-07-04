@@ -25,8 +25,6 @@ timestamp: 2026-06-14T00:00:00Z
 | HATEOAS | [`#hateoas`](#hateoas) |
 | Long-Running Operations | [`#long-running-operations`](#long-running-operations) |
 | Contract-First Design | [`#contract-first-design`](#contract-first-design) |
-| Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
-| Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm-tcpnodelay`](#nagles-algorithm-tcpnodelay) |
 | ETag | [`#etag`](#etag) |
 | JSON Merge Patch | [`#json-merge-patch`](#json-merge-patch) |
 | Sparse Fieldsets | [`#sparse-fieldsets`](#sparse-fieldsets) |
@@ -34,7 +32,6 @@ timestamp: 2026-06-14T00:00:00Z
 | Hierarchical Rate Limiting | [`#hierarchical-rate-limiting`](#hierarchical-rate-limiting) |
 | Deprecation Header | [`#deprecation-header`](#deprecation-header) |
 | Sunset Header | [`#sunset-header`](#sunset-header) |
-| API Gateway | [`#api-gateway`](#api-gateway) |
 | Hotlinking | [`#hotlinking`](#hotlinking) |
 | Faceted Search | [`#faceted-search`](#faceted-search) |
 | Chunked Upload | [`#chunked-upload`](#chunked-upload) |
@@ -46,7 +43,6 @@ timestamp: 2026-06-14T00:00:00Z
 | Checksum | [`#checksum`](#checksum) |
 | WebSocket | [`#websocket`](#websocket) |
 | PRG Pattern | [`#prg-pattern`](#prg-pattern) |
-| Load Balancer | [`#load-balancer`](#load-balancer) |
 | Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
 | Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
 ## API Versioning
@@ -220,46 +216,6 @@ Define the API contract (OpenAPI/Swagger) **before** writing implementation. The
 | **Validation** | Contract testing before integration |
 
 **Also see**: [API Versioning](#api-versioning), [Expand-Contract Pattern](#expand-contract-pattern)
-
----
-
-## Consistent Hashing
-
-A distributed hashing technique that minimizes key redistribution when nodes are added or removed. Used for request affinity, distributed caching, and partition assignment.
-
-| Property | Detail |
-|:---|:---|
-| **Ring structure** | Hash space organized as a circle |
-| **Node addition** | Only ~1/N keys remapped |
-| **Virtual nodes** | Multiple points per physical node for even distribution |
-
-**Also see**: [Caching](caching.md) · [Messaging: Partition](messaging.md#partition)
-
----
-
-## Nagle's Algorithm / TCP_NODELAY
-
-**Nagle's Algorithm** — a TCP optimization (RFC 896) that buffers small outgoing packets to coalesce them into larger segments before transmission. Disabled by setting the socket option `TCP_NODELAY=true`.
-
-### Key Characteristics
-- **Enabled by default** (`TCP_NODELAY=false`) on most platforms, including JVM sockets
-- Waits for ACK of previous packet OR until buffer fills to MSS (Maximum Segment Size) before sending
-- Reduces TCP header overhead for workloads that produce many small writes (e.g., telnet, character-by-character)
-- **Go's `net/http` disables Nagle by default** since Go 1.7 for HTTP servers
-- The interaction with HTTP/1.1 persistent connections and multi-write responses can add 40+ ms of artificial latency
-
-### When to Use (TCP_NODELAY=true)
-- HTTP services writing complete responses (headers + body) — the response is one logical unit; buffering adds latency
-- Latency-sensitive APIs where 40 ms is unacceptable
-- Services using persistent HTTP/1.1 connections with multi-write response patterns
-
-### When NOT to Use (TCP_NODELAY=false, Nagle enabled)
-- Workloads that produce many tiny writes where TCP header overhead dominates (rare for HTTP services)
-- Interactive terminal protocols (telnet, SSH) where the original optimization was designed
-
-### Also see
-- [Virtual Threads](../reference-dictionary/java-jvm.md#virtual-threads) — concurrency model that interacts with socket I/O
-- [Azure Services: Application Gateway](../reference-dictionary/azure-services.md#application-gateway) — L7 proxy that terminates TCP connections
 
 ---
 
@@ -477,34 +433,6 @@ Deprecation: Sat, 01 Jan 2026 00:00:00 GMT
 - [API Versioning](#api-versioning)
 - [Migration-Driven Deprecation](#migration-driven-deprecation)
 - [api-08: Security-Triggered Forced Sunset](../system-design-architecture/04-api-network-design.md#api-08-security-triggered-forced-sunset)
-
----
-
-## API Gateway
-
-An infrastructure component that sits between clients and backend services, providing cross-cutting concerns such as **authentication, rate limiting, request routing, SSL termination, and protocol translation**.
-
-### Key Characteristics
-
-- Single entry point for external clients
-- Centralizes auth validation, logging, and monitoring
-- Hides internal service topology
-- Often paired with load balancers and WAFs
-
-### When to Use
-
-- Multiple client types (mobile, web, third-party) access the same backend
-- Need centralized authentication, rate limiting, or routing
-
-### When NOT to Use
-
-- As a single point of failure without redundancy
-- For internal service-to-service communication (prefer service mesh or direct mTLS)
-
-### Also see
-
-- [Rate Limiting](api-design.md#rate-limiting)
-- [Reverse Proxy, LB & API Gateway](../system-design-architecture/16-reverse-proxy-lb-api-gateway.md)
 
 ---
 
@@ -770,32 +698,6 @@ The **POST-Redirect-GET** pattern — a web application design pattern that prev
 
 ---
 
-## Load Balancer
-
-A **traffic distribution component** that sits between clients and backend servers, distributing incoming requests across multiple server instances to maximize throughput, minimize response time, and avoid overloading any single resource.
-
-### Key Characteristics
-- **L4 (Transport Layer)**: Operates on TCP/UDP — fast, no payload inspection, distributes by IP:port
-- **L7 (Application Layer)**: Operates on HTTP/HTTPS — can route by URL path, headers, cookies; supports TLS termination
-- **Health checks**: Continuously verifies backend health; removes unhealthy instances from the pool
-- **Algorithms**: Round-robin, least connections, IP hash, weighted, least response time
-- **Consistent hashing**: Minimizes rebalancing when servers are added/removed — critical for stateful backends and caching
-
-### When to Use
-- Any multi-instance service behind a single endpoint
-- SSL termination at the edge before traffic reaches application servers
-- Gradual traffic shifting during deployments (canary, blue-green)
-
-### When NOT to Use
-- Single-instance deployments (the load balancer itself becomes a single point of failure without HA pairs)
-- Peer-to-peer architectures where clients connect directly to any node
-- When request affinity (sticky sessions) is required but the balancer doesn't support it
-
-### Also see
-- [API Gateway](api-design.md#api-gateway) · [Reverse Proxy](#reverse-proxy) · [Consistent Hashing](api-design.md#consistent-hashing) · [Azure Load Balancer / Application Gateway](azure-services.md)
-
----
-
 ## Lazy Subscription
 
 A **presence and real-time subscription strategy** where clients subscribe only to the entities currently rendered on screen (visible friends, visible chunk of member list, active DMs) rather than subscribing to the entire social graph. When the user scrolls or opens a new DM, the subscription set updates dynamically.
@@ -842,5 +744,5 @@ A **connection-termination pattern** where each gateway server holds live sessio
 - Small systems where the operational complexity of pub/sub coordination exceeds the benefit
 
 ### Also see
-- [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](api-design.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
+- [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](networking.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
 

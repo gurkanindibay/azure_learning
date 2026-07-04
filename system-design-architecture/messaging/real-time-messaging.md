@@ -52,7 +52,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Hot partition risk** | A viral group chat can still saturate one partition; monitor partition-level throughput. |
 
 > **Also see**: [broker-04 Message Ordering](messaging/message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering), [Consistent Hashing](../../reference-dictionary/api-design.md#consistent-hashing)
+> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering), [Consistent Hashing](../../reference-dictionary/networking.md#consistent-hashing)
 > **Azure**: Event Hubs supports partition keys for per-entity ordering; Service Bus sessions enforce FIFO per session ID.
 
 ---

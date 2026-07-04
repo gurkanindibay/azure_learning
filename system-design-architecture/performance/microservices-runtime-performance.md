@@ -137,7 +137,7 @@ WebServer server = WebServer.builder()
 
 **Tradeoff**: Disabling Nagle's algorithm may reduce throughput for workloads that send many small packets (more TCP segments, more header overhead). For HTTP services writing complete responses in one or two writes, the tradeoff is almost always worth it.
 
-> **Dictionary**: [Nagle's Algorithm / TCP_NODELAY](../../reference-dictionary/api-design.md#nagles-algorithm--tcp_nodelay)
+> **Dictionary**: [Nagle's Algorithm / TCP_NODELAY](../../reference-dictionary/networking.md#nagles-algorithm--tcp_nodelay)
 
 ---
 
