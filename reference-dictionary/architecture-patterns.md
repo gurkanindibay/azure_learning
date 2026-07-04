@@ -44,6 +44,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Presence Service | [`#presence-service`](#presence-service) |
 | Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
+| Business Boundary | [`#business-boundary`](#business-boundary) |
 ## DDD
 
 **Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language.
@@ -56,7 +57,9 @@ timestamp: 2026-07-04T00:00:00Z
 
 An **explicit boundary** around a domain model with its own ubiquitous language. Inside the boundary, terms have precise meanings. "Account" in Banking may differ from "Account" in CRM — bounded contexts resolve this.
 
-**Also see**: [DDD](#ddd), [Ubiquitous Language](#ubiquitous-language)
+> **Note**: A bounded context is a *design-time, semantic* boundary (what terms mean). A [Business Boundary](#business-boundary) is a *runtime, operational* boundary (where correctness is enforced). They complement each other: a Payments bounded context defines the language; the business boundary at the database enforces idempotency.
+
+**Also see**: [DDD](#ddd), [Ubiquitous Language](#ubiquitous-language), [Business Boundary](#business-boundary)
 
 ---
 
@@ -572,6 +575,34 @@ A **rough, order-of-magnitude calculation** performed before designing any archi
 ### Also see
 - [Scalability Principles](#) · [Read/Write Path Separation](#read-write-path-separation) · [Latency vs Throughput](#)
 - [System Design Interview Roadmap](../system-design-architecture/system-design-interview/interview-roadmap.md#sdi-05-back-of-the-envelope-math)
+
+---
+
+## Business Boundary
+
+The **layer or component within a distributed system where business correctness is enforced**. In event-driven payment systems, the business boundary is the database — not the message broker. Kafka provides delivery guarantees, but idempotency, deduplication, and transaction integrity must be enforced at the database/application layer, because exactly-once semantics stop at Kafka's boundary.
+
+> **Key insight**: "Kafka will deliver it once" is not a correctness guarantee. The question is always "What happens if it doesn't?"
+
+### Key Characteristics
+- **Separation of concerns**: Event delivery (messaging), business correctness (database), external side effects (gateway wrappers) are three independent responsibilities
+- **Database as authority**: The database's unique constraints on business identifiers are the single source of truth — not the message broker's delivery guarantees
+- **Offset-agnostic**: Offset management tracks progress, not correctness; idempotency must live outside the messaging layer
+- **Testable**: Correctness becomes independently verifiable without depending on the message broker
+
+### When to Use
+- Payment systems and financial applications where duplicate processing is unacceptable
+- Any distributed system where at-least-once delivery is the norm and consumers run in parallel
+- When integrating with external systems (payment gateways, ledgers) that may not be natively idempotent
+
+### When NOT to Use
+- Systems where the message broker and database are the same system (e.g., using Kafka Streams state stores exclusively)
+- Truly fire-and-forget workloads where duplicates have no business consequence
+- When the messaging infrastructure provides end-to-end transactional guarantees that extend to all external systems (rare in practice)
+
+### Also see
+- [Idempotency](cqrs-event-driven.md#idempotency) · [Exactly-Once Semantics](messaging.md#exactly-once-semantics) · [Idempotent Consumer](messaging.md#idempotent-consumer) · [At-Least-Once Delivery](messaging.md#at-least-once-delivery) · [Database-as-Guardrail Pattern](data-architecture.md#database-as-guardrail-pattern)
+- [Bounded Context](#bounded-context) — the semantic counterpart: bounded context defines *what terms mean*; business boundary defines *where correctness is enforced*
 
 ---
 

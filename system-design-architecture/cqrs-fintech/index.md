@@ -19,6 +19,7 @@ Problems and strategies for CQRS-based fintech systems: command/query separation
 | [global-payment-system.md](global-payment-system.md) | `cqrs-16` – `cqrs-21` | Gateway/processor boundary, Database per service, Async messaging, Idempotency, Saga, Circuit breaker + backoff |
 | [payment-gateway.md](payment-gateway.md) | `cqrs-22` – `cqrs-26` | Smart routing, Provider adapter + circuit breaker, Dynamic fee calculation, Automated reconciliation, Multi-layer caching |
 | [debit-card-processing.md](debit-card-processing.md) | `cqrs-27` – `cqrs-34` | Authorization pipeline, Bank adapter framework, Real-time balance accuracy, PIN security, Multi-dimensional limits, Transaction reversal, Per-bank circuit breaker, Database sharding |
+| [payment-events-duplicate-processing.md](payment-events-duplicate-processing.md) | `cqrs-35` – `cqrs-37` | Database-as-guardrail deduplication, Delivery vs business correctness separation, Payment state machine with idempotent transitions |
 
 ## Cross-References
 
