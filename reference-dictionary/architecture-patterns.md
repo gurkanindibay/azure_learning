@@ -56,6 +56,8 @@ timestamp: 2026-07-04T00:00:00Z
 | HyperLogLog | [`#hyperloglog`](#hyperloglog) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
 | Load Balancer | [`#load-balancer`](#load-balancer) |
+| Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
+| Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
 
 ---
 
@@ -995,4 +997,54 @@ A **traffic distribution component** that sits between clients and backend serve
 
 ### Also see
 - [API Gateway](api-design.md#api-gateway) · [Reverse Proxy](#reverse-proxy) · [Consistent Hashing](api-design.md#consistent-hashing) · [Azure Load Balancer / Application Gateway](azure-services.md)
+
+---
+
+## Lazy Subscription
+
+A **presence and real-time subscription strategy** where clients subscribe only to the entities currently rendered on screen (visible friends, visible chunk of member list, active DMs) rather than subscribing to the entire social graph. When the user scrolls or opens a new DM, the subscription set updates dynamically.
+
+### Key Characteristics
+- **Viewport-bounded**: Subscriptions cover ~50–200 entities, not the full social graph (which may contain 100K+ entities per user)
+- **Dynamic**: Subscribe/unsubscribe as the UI changes (scroll, tab switch, DM open/close)
+- **Decouples fanout from graph size**: System load scales with concurrent user count, not with total social connections
+- **Client-driven**: The client tracks what's visible and issues subscribe/unsubscribe calls
+
+### When to Use
+- Presence systems where fanout would otherwise multiply by thousands of watchers per status change
+- Real-time indicators (typing, read receipts, live cursors, viewer counts) at scale
+- Any system where the set of "things I care about right now" is much smaller than "things I could theoretically care about"
+
+### When NOT to Use
+- Small social graphs where full subscription is simpler and the fanout is manageable
+- Systems where the full set of subscriptions must always be known (e.g., notification delivery to all followers)
+- When the subscription churn (rapid scroll, rapid tab switching) overwhelms the subscription management system
+
+### Also see
+- [Presence Service](#presence-service) · [Fanout on Write](messaging.md#fanout-on-write) · [Fanout on Read](messaging.md#fanout-on-read) · [WebSocket](api-design.md#websocket)
+
+---
+
+## Stateful Gateway
+
+A **connection-termination pattern** where each gateway server holds live session state in memory — which users are connected, their current status, and what subscriptions they hold. This is the opposite of a stateless gateway that must query a database or cache for every event.
+
+### Key Characteristics
+- **In-memory session state**: Connection, status, subscriptions held in process memory; no external lookup per event
+- **Connection affinity**: A user's WebSocket is pinned to one gateway for the session duration
+- **Pub/sub for cross-gateway communication**: Events are published to an internal message bus; other gateways subscribe to topics relevant to their connected clients
+- **No cross-gateway discovery needed**: Gateways only need to know what topics to subscribe to, not which other gateways exist
+
+### When to Use
+- Real-time systems with persistent connections (chat, presence, collaborative editing, gaming)
+- When per-event database lookups would bottleneck at scale
+- Platforms where connection count dominates event count (games, chat apps)
+
+### When NOT to Use
+- Request/response APIs where connections are ephemeral (stateless gateways are simpler)
+- When gateway failure would cause unacceptable data loss (stateful gateways risk losing session state on crash)
+- Small systems where the operational complexity of pub/sub coordination exceeds the benefit
+
+### Also see
+- [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](api-design.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
 

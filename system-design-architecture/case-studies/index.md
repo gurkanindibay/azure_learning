@@ -19,6 +19,7 @@ Concrete system design case studies drawn from real-world architectures: Uber's 
 | [news-feed.md](news-feed.md) | `feed-01` – `feed-05` | Hybrid fanout, Timeline cache, Celebrity cache, CAP split, Regional deployment |
 | [url-shortener.md](url-shortener.md) | `url-01` – `url-05` | Pre-allocated ID ranges, Base62 encoding, Cache-aside redirection, Custom alias atomicity, Async analytics |
 | [data-mesh-medallion.md](data-mesh-medallion.md) | `mesh-01` – `mesh-14` | Data Mesh failure modes, Practical decentralization, Semantic layer, Federated governance, Data Fabric, Medallion Architecture |
+| [discord-presence-fanout.md](discord-presence-fanout.md) | `feed-06` – `feed-10` | Presence as fanout, 5-step architecture, Lazy subscriptions, Fanout formula, Gateway failure storms |
 
 ## Cross-References
 

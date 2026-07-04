@@ -22,3 +22,4 @@ Source articles covering case studies patterns, strategies, and case studies.
 - [uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream](uber-architecture/04-ring-buffer-and-cassandra-two-stores-one-stream.md)
 - [uber-architecture/05-the-dispatch-engine-and-map-rendering](uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
 - [Netflix Batch Compute with Kueue](netflix-batch-compute-kueue.md)
+- [discord-presence-200m-users](discord-presence-200m-users.md)
