@@ -37,6 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Event ID | [`#event-id`](#event-id) |
 | Eventual Consistency | [`#eventual-consistency`](#eventual-consistency) |
 | Event Backbone | [`#event-backbone`](#event-backbone) |
+| Async Workflow | [`#async-workflow`](#async-workflow) |
 
 ---
 
@@ -500,3 +501,33 @@ A **concrete idempotency strategy** where each mutating request carries a unique
 
 ### Also see
 - [API Idempotency](#api-idempotency) · [Idempotency](#idempotency) · [Idempotency-Key](../api-design.md#idempotency-key) · [Optimistic Locking](../data-concurrency.md#optimistic-locking)
+
+---
+
+## Async Workflow
+
+A **coordination pattern that breaks a long-running business process into independent steps executed in response to events**, rather than chaining them inside a single synchronous request. Each step publishes an event when it finishes, and downstream consumers subscribe to those events to perform the next action.
+
+### Key Characteristics
+
+- **Event-driven decomposition**: the initiating request only creates the initial record and publishes an event
+- **Loose coupling**: consumers evolve and fail independently without blocking the originating operation
+- **Eventual consistency**: downstream state catches up asynchronously rather than in the original transaction
+- **Failure isolation**: a failed consumer can retry or land in a DLQ without rolling back upstream work
+
+### When to Use
+
+- Multi-step workflows where steps have different reliability, latency, or scaling requirements
+- Cross-service processes where synchronous chaining creates cascading failures
+- Checkout, order fulfillment, billing, or notification pipelines
+
+### When NOT to Use
+
+- When the user must observe the final result before the API returns
+- When strong transactional consistency across steps is required and cannot be relaxed
+- Very short processes where synchronous handling is simpler and fast enough
+
+### Also see
+
+- [Outbox Pattern](#outbox-pattern) · [Event-Driven Architecture](#event-driven-architecture) · [Eventual Consistency](#eventual-consistency) · [CQRS](#cqrs)
+- [29-arch-key-takeaways.md](../system-design-architecture/29-arch-key-takeaways.md)

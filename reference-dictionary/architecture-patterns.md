@@ -48,6 +48,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
 | Business Boundary | [`#business-boundary`](#business-boundary) |
+| Coordination Cost | [`#coordination-cost`](#coordination-cost) |
+
 ## DDD
 
 **Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language.
@@ -685,3 +687,32 @@ The **layer or component within a distributed system where business correctness 
 
 ---
 
+
+---
+
+## Coordination Cost
+
+The **organizational and runtime overhead required to keep multiple components, services, or teams aligned** as a system grows. Coordination cost rises with the number of interaction paths — every new service, repository, or team boundary adds potential failure modes, communication delays, and deployment dependencies.
+
+### Key Characteristics
+
+- **Compounds through interactions**: complexity grows with relationships, not just component count
+- **Spans technology and people**: includes service-to-service contracts, cross-team approvals, and shared release schedules
+- **Hidden until it hurts**: often manifests as slow delivery, production incidents, or duplicated work rather than obvious technical debt
+- **Reduced by boundaries and contracts**: modular monoliths, stable APIs, and event-driven decoupling lower coordination pressure
+
+### When to Use
+
+- Evaluating whether to split a monolith or keep modules in-process
+- Designing ownership boundaries so teams can ship independently
+- Explaining why a "simple" microservice architecture is slowing the organization down
+
+### When NOT to Use
+
+- As an excuse to avoid necessary distribution when genuine scale, regulatory, or team-autonomy constraints exist
+- When the real bottleneck is implementation quality rather than cross-component coordination
+
+### Also see
+
+- [Modular Monolith](#modular-monolith) · [Distributed Monolith](#distributed-monolith) · [Microservices](#microservices) · [Loose Coupling](../design-patterns.md#loose-coupling)
+- [Architecture Principles](../system-design-architecture/software-architecture/architecture-principles.md) · [29-arch-key-takeaways.md](../system-design-architecture/29-arch-key-takeaways.md)
