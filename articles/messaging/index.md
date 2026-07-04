@@ -29,3 +29,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1](the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-1.md)
 - [designing-user-activity-tracking-system-at-massive-scale](designing-user-activity-tracking-system-at-massive-scale.md)
 - [10 Real-World Kafka Scenarios](10-real-world-kafka-scenarios.md)
+- [how-kafka-really-works-60m-events-pipeline](how-kafka-really-works-60m-events-pipeline.md)

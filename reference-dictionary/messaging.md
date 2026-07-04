@@ -57,6 +57,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Hybrid Fanout | [`#hybrid-fanout`](#hybrid-fanout) |
 | Apache Flink | [`#apache-flink`](#apache-flink) |
 | Write-Ahead Buffer | [`#write-ahead-buffer`](#write-ahead-buffer) |
+| Log Segment | [`#log-segment`](#log-segment) |
+| ISR (In-Sync Replica) | [`#isr-in-sync-replica`](#isr-in-sync-replica) |
+| Replication Factor | [`#replication-factor`](#replication-factor) |
 ## Kafka vs RabbitMQ
 
 | Aspect | Kafka (Log) | RabbitMQ (Queue) |
@@ -893,6 +896,81 @@ A **local, durable staging area** placed between an application and a remote mes
 
 ### Also see
 - [Producer Acknowledgement](../messaging.md#producer-acknowledgement) · [At-Least-Once Semantics](../messaging.md#at-least-once-semantics) · [Idempotent Consumer](../messaging.md#idempotent-consumer)
+
+---
+
+## Log Segment
+
+The **physical on-disk storage unit** of a Kafka partition. Each partition is composed of multiple log segment files, not a single monolithic file. Kafka appends records sequentially to the active segment and rolls to a new segment when the size limit is reached.
+
+Each segment consists of three files:
+- **`.log`** — Raw binary records appended sequentially; the data file.
+- **`.index`** — Sparse offset-to-position mapping for fast lookups (does not index every record).
+- **`.timeindex`** — Timestamp-to-offset mapping for time-based seek operations.
+
+### Key Characteristics
+- **Atomic records**: A record is never split across segments. If a record would overflow the current segment, Kafka closes the segment early and creates a new one.
+- **Immutable once rolled**: Once a segment is closed (rolled), it is never modified — only the active segment receives writes.
+- **Default size**: `log.segment.bytes` defaults to 1 GB; segments roll when this threshold is reached or `log.roll.ms` expires.
+- **Sparse index**: The `.index` file maps every Nth record to its byte position, not every record — keeps the index small at the cost of occasional in-segment scans.
+
+### When to Use
+- Understanding Kafka's disk I/O behavior for capacity planning and performance tuning
+- Debugging disk usage: large segments mean fewer files but longer recovery; small segments mean more file descriptors
+
+### When NOT to Use
+- Application-level concerns — segments are an internal Kafka implementation detail and should not drive business logic decisions
+
+### Also see
+- [Partition](#partition) · [Distributed Commit Log](#distributed-commit-log) · [Replication Factor](#replication-factor)
+
+---
+
+## ISR (In-Sync Replica)
+
+The **subset of partition replicas that are fully caught up with the leader**. An ISR is a follower that has replicated all committed messages from the leader within a configurable time window (`replica.lag.time.max.ms`, default 30 seconds). Only ISR members are eligible to become the new leader during failover.
+
+The ISR set is dynamic: followers that fall behind are removed from the ISR; followers that catch up are re-added. This mechanism ensures that leader election always promotes a replica with a complete copy of committed data.
+
+### Key Characteristics
+- **Dynamic membership**: Followers enter and leave the ISR based on replication lag — not a static configuration
+- **Lag threshold**: Controlled by `replica.lag.time.max.ms` — if a follower hasn't fetched from the leader within this window, it is removed from the ISR
+- **Durability contract**: `acks=all` means the leader waits for all ISR members (not all configured replicas) to acknowledge
+- **Minimum ISR**: `min.insync.replicas` sets the floor — if the ISR shrinks below this count, the broker rejects writes
+
+### When to Use
+- Configuring durability: `min.insync.replicas=2` with `replication_factor=3` means 2 ISRs must acknowledge each write
+- Monitoring cluster health: shrinking ISR count signals network issues or overloaded brokers
+
+### When NOT to Use
+- As a static configuration — the ISR is a runtime concept, not a setting you directly control (you control `min.insync.replicas` and `replica.lag.time.max.ms`)
+
+### Also see
+- [Replication Factor](#replication-factor) · [Producer Acknowledgement](#producer-acknowledgement) · [Partition](#partition)
+
+---
+
+## Replication Factor
+
+The **number of copies of each partition** maintained across the Kafka cluster. A replication factor of N means each partition has 1 leader and N-1 followers distributed across different brokers. This is the primary mechanism for Kafka's fault tolerance: the cluster can survive up to (replication_factor - 1) broker failures without data loss.
+
+### Key Characteristics
+- **Per-topic configuration**: Set at topic creation time via `--replication-factor`; cannot be changed for existing topics without a partition reassignment
+- **Common values**: `replication_factor=3` is the production standard — tolerates 2 broker failures while keeping storage cost manageable
+- **Storage multiplier**: Total disk usage = data size × replication_factor; plan capacity accordingly
+- **Broker distribution**: Followers are placed on different brokers from the leader to ensure broker failure doesn't eliminate all copies
+
+### When to Use
+- `replication_factor=3` for all production topics with durability requirements
+- `replication_factor=1` only for development or data that can be easily regenerated
+- Higher values (5+) for topics with extreme durability requirements and sufficient infrastructure budget
+
+### When NOT to Use
+- `replication_factor=1` in production — a single broker failure causes permanent data loss
+- Excessively high replication factors that consume storage without proportional durability gains beyond 3–5
+
+### Also see
+- [ISR (In-Sync Replica)](#isr-in-sync-replica) · [Producer Acknowledgement](#producer-acknowledgement) · [Partition](#partition) · [Log Segment](#log-segment)
 
 ---
 
