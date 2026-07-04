@@ -11,7 +11,7 @@ timestamp: 2026-06-19T00:00:00Z
 > **Source**: [What 5 Famous Outages Taught Me About System Design](../../articles/resilience/What 5 Famous Outages Taught Me About System Design.md)
 > **Taxonomy Reference**: §7.1 Reliability & Resilience
 > **Also see**: [Resilience Patterns](resilience/resilience-patterns.md), [Azure Service Mapping](azure-service-mapping/azure-service-mapping.md)
-> **Dictionary**: [Resilience](../../reference-dictionary/resilience.md), [Observability](../../reference-dictionary/resilience.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
+> **Dictionary**: [Resilience](../../reference-dictionary/resilience.md), [Observability](../../reference-dictionary/observability.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
 
 ---
 
@@ -47,7 +47,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 ### Cross-References
 
-- **Dictionary**: [Observability](../../reference-dictionary/resilience.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
+- **Dictionary**: [Observability](../../reference-dictionary/observability.md#observability), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker)
 - **Azure Services**: [Azure Monitor](../../architecture-azure/observability/), [Application Insights](../../architecture-azure/observability/)
 - **Related Patterns**: [Resilience Patterns §resilience-03 (Bulkhead)](resilience/resilience-patterns.md#resilience-03-bulkhead--thread-pool-isolation)
 

@@ -201,7 +201,7 @@ timestamp: 2026-06-19T00:00:00Z
 
 **Tradeoff**: High-cardinality telemetry is powerful but expensive to store and query; retention policies and sampling are required to control cost.
 
-**Cross-reference**: [Observability](../../reference-dictionary/resilience.md#observability) · [Golden Signals](../../reference-dictionary/resilience.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
+**Cross-reference**: [Observability](../../reference-dictionary/observability.md#observability) · [Golden Signals](../../reference-dictionary/observability.md#golden-signals) · [SRE Resources](../site-reliability-engineering/various-resources.md)
 
 ---
 

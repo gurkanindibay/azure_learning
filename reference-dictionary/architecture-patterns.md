@@ -412,7 +412,7 @@ A situation where two or more components **mutually depend on each other**, dire
 - Circular dependencies should be eliminated, not tolerated. Even "stable" circular dependencies create fragility under failure conditions.
 
 ### Also see
-- [Observability](../reference-dictionary/resilience.md#observability) · [Bulkhead](../reference-dictionary/resilience.md#bulkhead) · [Sidecar Pattern](#sidecar-pattern)
+- [Observability](../reference-dictionary/observability.md#observability) · [Bulkhead](../reference-dictionary/resilience.md#bulkhead) · [Sidecar Pattern](#sidecar-pattern)
 
 ---
 

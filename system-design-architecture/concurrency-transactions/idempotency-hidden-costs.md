@@ -11,7 +11,7 @@ timestamp: 2026-06-28T00:00:00Z
 > **Source**: [The Hidden Cost of Idempotency Everyone Ignores](../../articles/concurrency-transactions/the-hidden-cost-of-idempotency.md) — Adonis, 2026
 
 > **Also see**: [Concurrency & Transactions](concurrency-transactions.md) (tx-04 Idempotency), [Transaction Patterns](transaction-patterns.md) (tx-11 Payment Idempotency)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Reconciliation](../../reference-dictionary/fintech.md#reconciliation), [Observability](../../reference-dictionary/resilience.md#observability)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Reconciliation](../../reference-dictionary/fintech.md#reconciliation), [Observability](../../reference-dictionary/observability.md#observability)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -125,7 +125,7 @@ timestamp: 2026-06-28T00:00:00Z
 
 **Tradeoff**: These signals require additional instrumentation but surface problems that standard SLO dashboards miss. If your monitoring says everything is fine but support volume is rising, believe the support tickets.
 
-> **Dictionary**: [Observability](../../reference-dictionary/resilience.md#observability), [Golden Signals](../../reference-dictionary/resilience.md#golden-signals)
+> **Dictionary**: [Observability](../../reference-dictionary/observability.md#observability), [Golden Signals](../../reference-dictionary/observability.md#golden-signals)
 
 ---
 

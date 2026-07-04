@@ -598,6 +598,11 @@ dictionary_domains:
       - input validation
       - parameterized query
       - sql injection
+
+  observability.md:
+    title: "Observability"
+    keywords:
+      - observability
       - opentelemetry
       - golden signals
       - error budget
@@ -605,7 +610,13 @@ dictionary_domains:
       - real user monitoring
       - rum
       - configuration propagation
-      - observability
+      - distributed tracing
+      - metrics
+      - logging
+      - slo
+      - sli
+      - dashboard
+      - alerting
 
   azure-services.md:
     title: "Azure Services"
