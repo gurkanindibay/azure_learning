@@ -21,6 +21,7 @@ Frameworks, roadmaps, and practical strategies for system design interviews: int
 | [complete-system-design-interview-guide-2026-takeaways.md](complete-system-design-interview-guide-2026-takeaways.md) | `sdi-35` – `sdi-42` | Scaling decision framework, Monolith-to-microservices trigger, Cache strategy selection, Fan-out hybrid, Exactly-once processing, Rate limiting algorithms, Multi-tenancy models, CQRS decision framework |
 | [pragmatic-takeaways.md](pragmatic-takeaways.md) | `prag-01` – `prag-08` | User metrics first, UX > system metrics, Parallelize before re-architecting, Failure mode docs, Boring architecture |
 | [system-design-preparation-master-sheet-takeaways.md](system-design-preparation-master-sheet-takeaways.md) | `sdi-28` – `sdi-33` | Six abilities framework, 5-layer preparation model, 6-step answer framework, Back-of-envelope estimation, Highest-ROI study order, 9-step practice loop |
+| [system-design-review-plan.md](system-design-review-plan.md) | `sdi-43` – `sdi-71` | 29-check phase-by-phase review checklist for self-validation during practice; memorize until automatic |
 
 ## Cross-References
 
