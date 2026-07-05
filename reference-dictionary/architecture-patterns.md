@@ -49,6 +49,9 @@ timestamp: 2026-07-04T00:00:00Z
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
 | Business Boundary | [`#business-boundary`](#business-boundary) |
 | Coordination Cost | [`#coordination-cost`](#coordination-cost) |
+| Pod Affinity | [`#pod-affinity`](#pod-affinity) |
+| Node Affinity | [`#node-affinity`](#node-affinity) |
+| Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
 
 ## DDD
 
@@ -716,3 +719,77 @@ The **organizational and runtime overhead required to keep multiple components, 
 
 - [Modular Monolith](#modular-monolith) · [Distributed Monolith](#distributed-monolith) · [Microservices](#microservices) · [Loose Coupling](../design-patterns.md#loose-coupling)
 - [Architecture Principles](../system-design-architecture/software-architecture/architecture-principles.md) · [29-arch-key-takeaways.md](../system-design-architecture/29-arch-key-takeaways.md)
+
+---
+
+## Pod Affinity
+
+A **Kubernetes scheduling rule** that attracts pods to nodes where other specified pods are already running, based on label selectors. Used to colocate frequently communicating workloads on the same node to minimize network latency.
+
+### Key Characteristics
+- **Preferred vs Required**: Preferred affinity is a soft constraint (scheduler tries but falls back); Required affinity is a hard constraint (pod won't schedule if unmet)
+- **Label-selector based**: Uses `matchLabels` or `matchExpressions` to identify target pods
+- **Topology key**: Defines the scope of colocation — `kubernetes.io/hostname` (same node), `topology.kubernetes.io/zone` (same AZ)
+- **Namespaces**: Can match pods across namespaces via `namespaceSelector`
+
+### When to Use
+- Services that communicate with high frequency (gRPC, REST, caching, database proxies)
+- Latency-sensitive workloads where same-node communication (~tens of microseconds) is critical
+- Shared cache or sidecar patterns where data locality improves hit rates
+
+### When NOT to Use
+- When node failure would take down all colocated replicas of a critical service — prefer spreading across nodes
+- CPU or memory-intensive colocated services that would contend for the same node resources
+- When the scheduler cannot place pods due to overly restrictive affinity rules (pod starvation)
+
+### Also see
+- [Node Affinity](#node-affinity) · [Topology Spread Constraints](#topology-spread-constraints) · [Blast Radius](resilience.md#blast-radius)
+
+---
+
+## Node Affinity
+
+A **Kubernetes scheduling rule** that constrains which nodes a pod can be placed on, based on node labels. Used to target workloads to specific hardware (GPU, SSD, high-memory) or node pools.
+
+### Key Characteristics
+- **Preferred vs Required**: Same soft/hard semantics as Pod Affinity — `preferredDuringSchedulingIgnoredDuringExecution` vs `requiredDuringSchedulingIgnoredDuringExecution`
+- **Node-selector evolution**: More expressive than the older `nodeSelector` field; supports `In`, `NotIn`, `Exists`, `DoesNotExist`, `Gt`, `Lt` operators
+- **Static at schedule time**: Affinity is evaluated at scheduling time only; `IgnoredDuringExecution` means running pods are not evicted if node labels change
+
+### When to Use
+- GPU-accelerated inference or training workloads that require specific hardware
+- SSD-backed persistent storage nodes for database or stateful workloads
+- Dedicated node pools for compliance isolation (PCI-DSS, HIPAA)
+
+### When NOT to Use
+- When the required hardware type is available on all nodes — adds unnecessary scheduling constraints
+- For simple CPU/memory requirements — use resource `requests` and `limits` instead
+- When it limits the scheduler's ability to pack workloads efficiently across the cluster
+
+### Also see
+- [Pod Affinity](#pod-affinity) · [Topology Spread Constraints](#topology-spread-constraints)
+
+---
+
+## Topology Spread Constraints
+
+A **Kubernetes scheduling mechanism** that controls how pods are distributed across failure domains (nodes, zones, regions). Balances availability (spreading to survive domain failures) against latency (colocating to minimize network cost).
+
+### Key Characteristics
+- **maxSkew**: The maximum allowed imbalance — e.g., `maxSkew: 1` means no domain can have more than 1 extra pod vs the least-populated domain
+- **Topology key**: Defines the domain boundary — `topology.kubernetes.io/zone` (AZ-level), `kubernetes.io/hostname` (node-level)
+- **WhenUnsatisfiable**: `DoNotSchedule` (hard) or `ScheduleAnyway` (soft — schedules but skew may exceed maxSkew)
+- **Counterbalance to affinity**: Where Pod Affinity pulls pods together, Topology Spread pushes them apart
+
+### When to Use
+- Ensuring high availability by distributing replicas across availability zones
+- Preventing correlated failures where all replicas land on a single node
+- Multi-zone deployments where zone-level redundancy is required
+
+### When NOT to Use
+- When colocation is more important than spread (use Pod Affinity instead)
+- Small clusters where the number of domains exceeds the number of replicas
+- When `maxSkew: 1` is too strict for the workload and causes scheduling failures
+
+### Also see
+- [Pod Affinity](#pod-affinity) · [Node Affinity](#node-affinity) · [Correlated Failure Domain](resilience.md#correlated-failure-domain)

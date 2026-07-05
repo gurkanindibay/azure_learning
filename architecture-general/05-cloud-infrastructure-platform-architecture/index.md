@@ -26,6 +26,7 @@ This section covers cloud deployment models, infrastructure patterns, and platfo
 ## Contents
 
 - [networking/](./networking/) - Network topology, proxy, and load balancing patterns
+  - [Kubernetes Placement Ordering and Locality-Aware Routing](./networking/kubernetes-placement-ordering.md) - Pod scheduling and locality-aware request routing patterns
   - [Network Architecture Base Elements](./networking/network-architecture-base-elements.md)
   - [Hub-Spoke Network Architecture](./networking/hub_spoke_network_architecture.md)
   - [Proxy and Load Balancing Architecture](./networking/proxy-load-balancing-architecture.md)

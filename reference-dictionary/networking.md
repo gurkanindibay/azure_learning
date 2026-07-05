@@ -18,7 +18,9 @@ timestamp: 2026-07-04T00:00:00Z
 | DMZ | [`#dmz`](#dmz) |
 | CDN | [`#cdn`](#cdn) |
 | Service Mesh | [`#service-mesh`](#service-mesh) |
+| Smart Client | [`#smart-client`](#smart-client) |
 | Load Balancer | [`#load-balancer`](#load-balancer) |
+| Locality-Aware Routing | [`#locality-aware-routing`](#locality-aware-routing) |
 | API Gateway | [`#api-gateway`](#api-gateway) |
 | Consistent Hashing | [`#consistent-hashing`](#consistent-hashing) |
 | Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm-tcpnodelay`](#nagles-algorithm-tcpnodelay) |
@@ -246,4 +248,52 @@ Normal operation:                    Network partition:
 - [CAP Theorem](data-architecture.md#cap-theorem) · [Masterless Architecture](databases.md#masterless-architecture) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [Replication](data-architecture.md#replication)
 
 ---
+
+## Locality-Aware Routing
+
+A **request routing strategy** that directs traffic to the nearest healthy backend instance based on physical or network proximity (same pod → same node → same zone → same region → global). Minimizes network latency and cross-zone bandwidth by preferring local instances before falling back to remote ones.
+
+### Key Characteristics
+- **Tiered fallback**: Each locality tier is tried in order; if no healthy instance exists at one level, the algorithm proceeds to the next
+- **Load-aware within tiers**: Among instances at the same locality, selection favors the least loaded (lowest outstanding requests, lowest queue depth, or lowest response time)
+- **Topology key alignment**: Locality tiers map to Kubernetes topology keys — `kubernetes.io/hostname` (node), `topology.kubernetes.io/zone` (AZ), `topology.kubernetes.io/region`
+- **Implemented via service mesh or smart client**: Istio Locality Load Balancing, Linkerd, or custom client-side discovery
+
+### When to Use
+- Communication-intensive microservices where east-west traffic dominates (gRPC, REST, caching, database proxies)
+- Multi-zone clusters where cross-zone traffic incurs latency and cost penalties
+- AI inference pipelines where same-node GPU-to-GPU latency matters
+
+### When NOT to Use
+- Single-zone deployments where all instances are effectively at the same locality tier
+- Fan-out patterns where the client must reach all instances regardless of location
+- When uneven load distribution causes hotspots — locality can concentrate traffic on a few local instances
+
+### Also see
+- [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Smart Client](#smart-client) · [Pod Affinity](architecture-patterns.md#pod-affinity) · [Graceful Degradation](resilience.md#graceful-degradation)
+
+---
+
+## Smart Client
+
+A **client-side service discovery and load balancing pattern** where the client maintains its own endpoint registry, groups backends by locality, and selects the optimal instance using custom logic (locality preference + load metrics) rather than relying solely on server-side load balancing.
+
+### Key Characteristics
+- **Client-owned endpoint discovery**: The client queries the service registry (DNS, Kubernetes API, Consul) and maintains its own backend list
+- **Locality grouping**: Endpoints sorted into tiers — same node, same zone, same region — before applying load-based selection
+- **Custom selection logic**: Beyond round-robin or least-connections — combines locality preference with queue depth, outstanding requests, or response latency
+- **Tradeoff**: More client complexity in exchange for finer-grained routing control and elimination of the extra hop through a server-side load balancer
+
+### When to Use
+- gRPC clients that already use client-side load balancing via the gRPC resolver/balancer API
+- Services where eliminating the load balancer hop measurably improves tail latency
+- Environments where the client has richer health/load signals than a centralized load balancer can access
+
+### When NOT to Use
+- Simple HTTP services where Kubernetes Service + kube-proxy is sufficient
+- When the client language or framework lacks mature service discovery libraries
+- When centralized traffic management (TLS termination, rate limiting, auth) is needed at the edge
+
+### Also see
+- [Locality-Aware Routing](#locality-aware-routing) · [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Pod Affinity](architecture-patterns.md#pod-affinity)
 

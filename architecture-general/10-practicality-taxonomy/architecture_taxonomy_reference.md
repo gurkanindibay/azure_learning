@@ -4,7 +4,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 
 > **Auto-generated**: This file is automatically synchronized with index.md files in the architecture-general directory structure.
 > 
-> **Last updated**: 2026-07-04 20:18:43
+> **Last updated**: 2026-07-05 20:45:58
 > 
 > **To regenerate**: Run `python scripts/sync_taxonomy_reference.py`
 
@@ -285,6 +285,7 @@ This document is a **canonical markdown reference** for commonly recognized arch
 - Internal Developer Platform (IDP)
 - Platform Engineering Architecture
 - networking/ - Network topology, proxy, and load balancing patterns
+- Kubernetes Placement Ordering and Locality-Aware Routing - Pod scheduling and locality-aware request routing patterns
 - Network Architecture Base Elements
 - Hub-Spoke Network Architecture
 - Proxy and Load Balancing Architecture
