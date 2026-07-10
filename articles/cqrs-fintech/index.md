@@ -14,6 +14,8 @@ Source articles covering cqrs fintech patterns, strategies, and case studies.
 
 ## Articles
 
+- [CQRS in System Design: Why You Should Learn It First](cqrs-in-system-design-why-you-should-learn-it-first.md)
 - [Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding](Designing a Payment Gateway System Multi-Provider Aggregation, Smart Routing & Merchant Onboarding.md)
 - [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
-- [cqrs-for-fintech-2026](cqrs-for-fintech-2026.md)- [Designing a Debit Card Processing System: PIN Authentication, Bank Integration & Real-Time Balance Checks](designing-debit-card-processing-system.md)
+- [cqrs-for-fintech-2026](cqrs-for-fintech-2026.md)
+- [Designing a Debit Card Processing System: PIN Authentication, Bank Integration & Real-Time Balance Checks](designing-debit-card-processing-system.md)

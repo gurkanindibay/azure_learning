@@ -20,7 +20,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [caching/](caching/) | 4 | [caching/](../system-design-architecture/caching/) |
 | [case-studies/](case-studies/) | 8 | [case-studies/](../system-design-architecture/case-studies/) |
 | [concurrency-transactions/](concurrency-transactions/) | 2 | [concurrency-transactions/](../system-design-architecture/concurrency-transactions/) |
-| [cqrs-fintech/](cqrs-fintech/) | 3 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
+| [cqrs-fintech/](cqrs-fintech/) | 4 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
 | [databases/](databases/) | 9 | [databases/](../system-design-architecture/databases/) |
 | [jvm-runtime/](jvm-runtime/) | 1 | [jvm-runtime/](../system-design-architecture/jvm-runtime/) |
 | [messaging/](messaging/) | 12 | [messaging/](../system-design-architecture/messaging/) |
@@ -31,4 +31,4 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [stream-processing/](stream-processing/) | 3 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 9 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 77 articles across 15 domains
+**Total**: 78 articles across 15 domains

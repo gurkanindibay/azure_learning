@@ -18,7 +18,9 @@ timestamp: 2026-06-14T00:00:00Z
 |:---|:---|
 | CQRS | [`#cqrs`](#cqrs) |
 | Command Side | [`#command-side`](#command-side) |
+| Command Model | [`#command-model`](#command-model) |
 | Query Side | [`#query-side`](#query-side) |
+| Query Model | [`#query-model`](#query-model) |
 | Event Sourcing | [`#event-sourcing`](#event-sourcing) |
 | Projection | [`#projection`](#projection) |
 | Read Model | [`#read-model`](#read-model) |
@@ -77,6 +79,14 @@ Commit transaction → Save outbox event → Return result
 
 ---
 
+## Command Model
+
+The **write-side data model** in CQRS — the structure and validation rules optimized for accepting, validating, and persisting state-changing commands. The command model is the authoritative source of truth for business decisions and is usually strongly consistent.
+
+**Also see**: [Command Side](#command-side), [CQRS](#cqrs)
+
+---
+
 ## Query Side
 
 The **read path** in CQRS — responsible for serving data to humans, optimized for speed and UX. Query models can be denormalized, cached, and purpose-built. They are replaceable and eventually consistent.
@@ -86,6 +96,14 @@ The **read path** in CQRS — responsible for serving data to humans, optimized 
 **Must NOT**: Become the source of financial truth. Never use a query-side value to approve money movement.
 
 **Also see**: [CQRS](#cqrs), [Projection](#projection), [Read Model](#read-model)
+
+---
+
+## Query Model
+
+The **read-side data model** in CQRS — a structure optimized for serving queries quickly, often denormalized, cached, and purpose-built. In most CQRS discussions, "query model" is synonymous with [Read Model](#read-model) or [Projection](#projection).
+
+**Also see**: [Query Side](#query-side), [Read Model](#read-model), [Projection](#projection)
 
 ---
 
