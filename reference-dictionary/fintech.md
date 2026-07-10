@@ -17,6 +17,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Term | Anchor |
 |:---|:---|
 | Bank Adapter | [`#bank-adapter`](#bank-adapter) |
+| Business Identity | [`#business-identity`](#business-identity) |
 | Debit Card Authorization | [`#debit-card-authorization`](#debit-card-authorization) |
 | Financial States | [`#financial-states`](#financial-states) |
 | ISO 8583 | [`#iso-8583`](#iso-8583) |
@@ -24,11 +25,13 @@ timestamp: 2026-06-14T00:00:00Z
 | Ledger (Double-Entry) | [`#ledger-double-entry`](#ledger-double-entry) |
 | Limit Reservation | [`#limit-reservation`](#limit-reservation) |
 | Merchant Onboarding | [`#merchant-onboarding`](#merchant-onboarding) |
+| Merchant Transaction Identifier | [`#merchant-transaction-identifier`](#merchant-transaction-identifier) |
 | Payment Gateway | [`#payment-gateway`](#payment-gateway) |
 | Payment Method Aggregation | [`#payment-method-aggregation`](#payment-method-aggregation) |
 | Payment Processor | [`#payment-processor`](#payment-processor) |
 | Real-Time Balance Checking | [`#real-time-balance-checking`](#real-time-balance-checking) |
 | Reconciliation | [`#reconciliation`](#reconciliation) |
+| Retry Identity | [`#retry-identity`](#retry-identity) |
 | Risk Actions | [`#risk-actions`](#risk-actions) |
 | Settlement | [`#settlement`](#settlement) |
 | Smart Routing | [`#smart-routing`](#smart-routing) |
@@ -187,6 +190,31 @@ Do pending transactions eventually resolve?
 
 ---
 
+## Retry Identity
+
+A **per-execution identifier that represents one specific attempt of a business action** and is reused across retries of that same attempt. The most common implementation is an idempotency key.
+
+### Key Characteristics
+- **Generated once per attempt** and resent with every retry of that attempt
+- **Different from business identity**: a customer may create one `OrderId` but trigger multiple payment attempts with different retry identities
+- **Stored atomically** so that duplicate retries of the same attempt return the original result
+- **Has a defined lifetime** matching the client retry window; stale keys may be cleaned up
+
+### When to Use
+- Safe retries of mutating operations in distributed systems where timeouts and network failures are expected
+- Coordinating outcome with external payment gateways and providers
+
+### When NOT to Use
+- As a replacement for business-identifier uniqueness — a new retry identity for an already-completed order can still cause a duplicate charge
+- When the operation is inherently non-idempotent and replay would change the outcome
+
+### Also see
+- [Business Identity](#business-identity) — the stable business-object identifier
+- [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key) — a concrete retry-identity mechanism
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
+
+---
+
 ## Limit Reservation
 
 The **command-side operation** that atomically reserves a portion of a customer's limit before money moves. Limits must be reserved with strong consistency (pessimistic locking) — never checked from a projection or cache.
@@ -261,6 +289,31 @@ An **architectural component** that abstracts differences between bank protocols
 - [ISO 8583](#iso-8583) — one of the protocols the adapter abstracts
 - [Adapter Pattern](../reference-dictionary/architecture-patterns.md#adapter-pattern) — the generic GoF pattern this implements
 - [Circuit Breaker](resilience.md#circuit-breaker) — the per-bank failure isolation mechanism
+
+---
+
+## Business Identity
+
+A **stable identifier that represents what the customer is paying for** — independent of any single execution attempt or retry. Examples include `OrderId`, `PaymentIntentId`, `BookingId`, and `InvoiceId`.
+
+### Key Characteristics
+- **Tied to the business action**, not the HTTP request or message delivery
+- **Survives retries** because the customer intent does not change when the network times out
+- **Enforced at the database layer** through unique constraints that prevent the same business object from being processed twice
+- **Different from retry identity**: the same order may be retried many times, but it is still one order
+
+### When to Use
+- Payment, booking, and invoicing flows where the business object must be processed exactly once regardless of retries
+- As a defense-in-depth guard when the idempotency key may vary because of client bugs or different clients
+
+### When NOT to Use
+- As a substitute for retry identity when the goal is to replay the same execution attempt safely
+- When business rules intentionally allow multiple payments against the same order (e.g., partial payments with separate intents)
+
+### Also see
+- [Retry Identity](#retry-identity) — the execution-attempt identifier that complements business identity
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) — the property both identifiers help enforce
+- [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key) — a common retry-identity implementation
 
 ---
 
@@ -357,6 +410,31 @@ The **end-to-end process** of verifying a merchant's identity and business legit
 ### Also see
 - [KYC](#kyc-know-your-customer) — the identity-verification sub-process
 - [Payment Gateway](#payment-gateway) — the system merchants are onboarded into
+
+---
+
+## Merchant Transaction Identifier
+
+A **stable reference generated by the merchant and sent to the payment gateway or processor** so the provider can recognize retries of the same transaction and return the existing result instead of charging again.
+
+### Key Characteristics
+- **Generated by the merchant system**, not the provider
+- **Sent with every authorization or charge request** to the gateway
+- **Recognized by the gateway** across the provider's retention window, enabling idempotency even when the merchant loses local state
+- **Different from the provider's own transaction ID**: the merchant reference is known before the call and survives crashes
+
+### When to Use
+- Payment flows where the merchant service may crash after the gateway succeeds but before the result is persisted locally
+- Integrations with payment providers that support merchant-supplied transaction references
+
+### When NOT to Use
+- When the payment provider does not support or honor merchant transaction references
+- As the only duplicate guard — combine with local idempotency keys and business-identifier constraints for defense in depth
+
+### Also see
+- [Payment Gateway](#payment-gateway) — the component that receives the merchant transaction identifier
+- [Transaction Reversal](#transaction-reversal) — the corrective operation when the provider cannot deduplicate
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
 
 ---
 
