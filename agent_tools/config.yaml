@@ -195,7 +195,7 @@ takeaway_domains:
     file: "case-studies/news-feed.md"
     desc: "News Feed"
   svc:
-    file: "29-svc-key-takeaways.md"
+    file: "software-architecture/29-svc-key-takeaways.md"
     desc: "Microservices & Service Design"
     related_files:
       - "system-design-architecture/software-architecture/distributed-monolith.md"

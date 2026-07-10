@@ -33,6 +33,7 @@ timestamp: 2026-06-28T00:00:00Z
 | Fair Sharing | [`#fair-sharing`](#fair-sharing) |
 | Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
 | Database-as-Guardrail Pattern | [`#database-as-guardrail-pattern`](#database-as-guardrail-pattern) |
+| Database Unique Constraint | [`#database-unique-constraint`](#database-unique-constraint) |
 ## CAP Theorem
 
 In a distributed system, you can guarantee only **two of three**: **C**onsistency (all nodes see the same data), **A**vailability (every request gets a response), **P**artition Tolerance (system works despite network partitions). Since network partitions are inevitable, the real choice is CP (sacrifice availability during partition) or AP (sacrifice strong consistency during partition).
@@ -446,6 +447,29 @@ A **deduplication strategy** where the database's unique constraint on a busines
 
 ### Also see
 - [Idempotency](cqrs-event-driven.md#idempotency) · [Business Boundary](architecture-patterns.md#business-boundary) · [Deduplication](messaging.md#deduplication) · [At-Least-Once Delivery](messaging.md#at-least-once-delivery) · [Unique Constraint](databases.md)
+
+---
+
+## Database Unique Constraint
+
+A database-enforced rule that prevents two rows from sharing the same value, or combination of values, in a constrained column set. In retry-safe workflows, it can atomically reserve a business or idempotency key so only the first request is accepted.
+
+### Key Characteristics
+- Enforced by the database rather than by a best-effort application check
+- Safe against concurrent insert attempts when the transaction and constraint are correctly scoped
+- Requires a stable key whose uniqueness matches the business operation boundary
+
+### When to Use
+- Deduplicating commands, payments, or event deliveries with a durable relational store
+- Enforcing business invariants that must survive application restarts and retries
+
+### When NOT to Use
+- When the operation spans stores that cannot share a transaction or coordination boundary
+- When write throughput or global latency requires a purpose-built distributed idempotency store
+
+### Also see
+- [Database-as-Guardrail Pattern](#database-as-guardrail-pattern)
+- [Idempotency](cqrs-event-driven.md#idempotency)
 
 ---
 

@@ -55,6 +55,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Pod Affinity | [`#pod-affinity`](#pod-affinity) |
 | Node Affinity | [`#node-affinity`](#node-affinity) |
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
+| Replay Attack | [`#replay-attack`](#replay-attack) |
 
 ## Business Capability
 
@@ -862,3 +863,26 @@ A **Kubernetes scheduling mechanism** that controls how pods are distributed acr
 
 ### Also see
 - [Pod Affinity](#pod-affinity) · [Node Affinity](#node-affinity) · [Correlated Failure Domain](resilience.md#correlated-failure-domain)
+
+---
+
+## Replay Attack
+
+An attack in which an adversary captures a valid request or message and sends it again to repeat an operation or gain an unintended effect. Idempotency keys reduce accidental retries but do not replace authentication, authorization, expiry, or ownership checks.
+
+### Key Characteristics
+- Reuses a previously valid request rather than forging a new one
+- Can repeat a payment, state change, or privileged command if freshness is not verified
+- Requires a freshness or uniqueness control such as a nonce, timestamp window, sequence number, or operation key
+
+### When to Use
+- Reviewing authenticated APIs and event consumers that accept retried or delayed messages
+- Protecting financial operations and other non-idempotent commands from captured requests
+
+### When NOT to Use
+- As a substitute for authentication or authorization
+- As the sole protection when a client-generated key can be observed and reused by another principal
+
+### Also see
+- [Idempotency-Key](api-design.md#idempotency-key)
+- [Authentication and Authorization](security-iam.md)
