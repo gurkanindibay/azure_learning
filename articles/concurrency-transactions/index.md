@@ -14,6 +14,7 @@ Source articles covering concurrency transactions patterns, strategies, and case
 
 ## Articles
 
+- [A Race Condition in Our Payment Service Charged 14,000 Customers Twice](payment-service-race-condition-duplicate-charges.md)
 - [Concurrency, Parallelism, and Async: Three Ideas That Sound the Same But Aren't](concurrency-parallelism-async.md)
 - [The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness](The Double-Booking Trap in Distributed Systems Why Locks Alone Fail to Guarantee Correctness.md)
 - [causal-consistency-model-in-system-design](causal-consistency-model-in-system-design.md)

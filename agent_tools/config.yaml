@@ -89,6 +89,9 @@ takeaway_domains:
   tx:
     file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"
+    related_files:
+      - "system-design-architecture/concurrency-transactions/29-tx-key-takeaways.md"
+      - "articles/concurrency-transactions/payment-service-race-condition-duplicate-charges.md"
   api:
     file: "api-network/api-network-design.md"
     desc: "API & Network Design"
@@ -194,7 +197,6 @@ takeaway_domains:
   svc:
     file: "software-architecture/distributed-monolith.md"
     desc: "Microservices & Service Design"
-
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
@@ -717,14 +719,3 @@ dictionary_domains:
       - preemption
       - fair sharing
       - tenant hierarchy
-
-
-
-
-
-
-
-
-
-
-
