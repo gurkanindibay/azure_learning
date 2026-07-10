@@ -19,6 +19,7 @@ Patterns and principles for software architecture: classic design patterns (GoF)
 | [architecture-principles.md](architecture-principles.md) | `arch-01` – `arch-21` | Least privilege, Separation of concerns, Defense in depth, Fail fast, Single source of truth, Loose coupling, Immutability, Idempotency, Zero trust, Data flow as unifying pattern, Four-question framework, Bottleneck as data waiting, Scaling as removing waiting, Simplicity over completeness, Data flow first |
 | [29-arch-key-takeaways.md](29-arch-key-takeaways.md) | `arch-01` – `arch-07` | Coordination cost, Modular monolith, Idempotency, Async workflows, Outbox pattern, Observability, Developer productivity |
 | [distributed-monolith.md](distributed-monolith.md) | `svc-01` – `svc-06` | Distributed monolith anti-pattern, Deployment coupling via synchronous call chains, Strangler Fig + Anti-Corruption Layer recovery, Modular monolith as default, Compile-time module boundaries, In-process contracts and events |
+| [29-svc-key-takeaways.md](29-svc-key-takeaways.md) | `svc-07` – `svc-14` | Service decomposition, API gateway, service discovery, sync vs async communication, database per service, Saga, failure isolation, operational control |
 | [dockerfile-optimization.md](dockerfile-optimization.md) | `docker-01` – `docker-08` | Layer ordering, .dockerignore, Multi-stage builds, Cache mounts, Base-image pinning, Build profiling |
 
 ## Cross-References

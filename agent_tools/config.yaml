@@ -195,8 +195,10 @@ takeaway_domains:
     file: "case-studies/news-feed.md"
     desc: "News Feed"
   svc:
-    file: "software-architecture/distributed-monolith.md"
+    file: "29-svc-key-takeaways.md"
     desc: "Microservices & Service Design"
+    related_files:
+      - "system-design-architecture/software-architecture/distributed-monolith.md"
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
@@ -221,6 +223,14 @@ takeaway_keywords:
   reverse proxy: gw
   load balancer: gw
   api gateway: gw
+  microservices: svc
+  service decomposition: svc
+  service discovery: svc
+  distributed monolith: svc
+  microservices: svc
+  service decomposition: svc
+  service discovery: svc
+  distributed monolith: svc
   streaming: flink
   flink: flink
   async: async

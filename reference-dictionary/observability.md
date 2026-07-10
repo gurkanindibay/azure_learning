@@ -21,6 +21,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Blameless Postmortem | [`#blameless-postmortem`](#blameless-postmortem) |
 | Real User Monitoring (RUM) | [`#real-user-monitoring-rum`](#real-user-monitoring-rum) |
 | Configuration Propagation | [`#configuration-propagation`](#configuration-propagation) |
+| Centralized Logging | [`#centralized-logging`](#centralized-logging) |
+| Distributed Tracing | [`#distributed-tracing`](#distributed-tracing) |
 ## Observability
 
 The ability to **understand a system's internal state from its external outputs** — logs, metrics, and traces. Unlike monitoring (which tracks known failure modes), observability enables diagnosing unknown failure modes by letting operators ask arbitrary questions about system behavior without deploying new code.
@@ -172,4 +174,48 @@ The process by which a **configuration change in one location spreads across a d
 
 ### Also see
 - [Blast Radius](resilience.md#blast-radius) · [Canary Deployment](deployment-patterns.md#canary-deployment) · [Feature Flag](deployment-patterns.md#feature-flag) · [Progressive Delivery](deployment-patterns.md#progressive-delivery)
+
+---
+
+## Centralized Logging
+
+A logging arrangement that collects structured application and infrastructure logs in a shared searchable system so operators can investigate behavior across service boundaries.
+
+### Key Characteristics
+- Uses consistent fields such as timestamp, service, severity, request ID, and trace ID
+- Aggregates logs without requiring every operator to access every service instance
+- Requires retention, access control, sampling, and protection against sensitive-data leakage
+
+### When to Use
+- Distributed systems where a request crosses multiple processes or hosts
+- Incident investigation and correlation of failures across services
+
+### When NOT to Use
+- As a substitute for metrics and traces
+- Without structured fields, retention limits, and a cost budget
+
+### Also see
+- [Observability](#observability) · [Distributed Tracing](#distributed-tracing) · [OpenTelemetry](#opentelemetry)
+
+---
+
+## Distributed Tracing
+
+An observability technique that records the path and timing of one logical request across multiple services, using propagated trace and span context.
+
+### Key Characteristics
+- A trace groups spans from each participating service
+- Context propagation connects downstream work to the originating request
+- Sampling and high-cardinality storage require deliberate cost and retention policies
+
+### When to Use
+- Debugging latency, errors, and dependency behavior in distributed request paths
+- Validating asynchronous workflow handoffs and identifying bottleneck services
+
+### When NOT to Use
+- As the only telemetry signal; traces do not replace service-level metrics or structured logs
+- Without consistent propagation and instrumentation across service boundaries
+
+### Also see
+- [Observability](#observability) · [OpenTelemetry](#opentelemetry) · [Centralized Logging](#centralized-logging)
 

@@ -1,14 +1,19 @@
 ---
+type: Article
 title: "Microservices Patterns — Engineering Decision Framework"
+description: "A decision-driven guide to choosing microservices patterns for decomposition, communication, consistency, resilience, observability, and retries."
 source: "https://medium.com/codefarm-java-ecosystem/microservices-patterns-engineering-decision-framework-dbf56cf20c65"
-author:
-  - "[[Arvind Kumar]]"
+author: "Arvind Kumar"
 published: 2026-05-06
-created: 2026-07-10
-description: "More"
-tags:
-  - "clippings"
+timestamp: 2026-07-10T00:00:00Z
 ---
+
+# Microservices Patterns — Engineering Decision Framework
+
+> **Author**: Arvind Kumar  
+> **Published**: 2026-05-06  
+> **Source**: [Medium](https://medium.com/codefarm-java-ecosystem/microservices-patterns-engineering-decision-framework-dbf56cf20c65)
+
 Microservices patterns are not about splitting services.  
 They are about managing distributed system complexity.
 

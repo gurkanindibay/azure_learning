@@ -49,9 +49,78 @@ timestamp: 2026-07-04T00:00:00Z
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
 | Business Boundary | [`#business-boundary`](#business-boundary) |
 | Coordination Cost | [`#coordination-cost`](#coordination-cost) |
+| Business Capability | [`#business-capability`](#business-capability) |
+| Service Decomposition | [`#service-decomposition`](#service-decomposition) |
+| Service Discovery | [`#service-discovery`](#service-discovery) |
 | Pod Affinity | [`#pod-affinity`](#pod-affinity) |
 | Node Affinity | [`#node-affinity`](#node-affinity) |
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
+
+## Business Capability
+
+A cohesive area of business responsibility that delivers a recognizable outcome and can own its rules, data, and change decisions. Business capabilities are a useful starting point for service boundaries because they describe what the organization does rather than how the code is currently layered.
+
+### Key Characteristics
+- Has a clear business outcome and vocabulary
+- Can be assigned to an accountable team or domain owner
+- Groups related rules and data while minimizing cross-boundary coordination
+
+### When to Use
+- Decomposing a monolith into services or bounded contexts
+- Evaluating whether a proposed service boundary represents a meaningful business unit
+
+### When NOT to Use
+- As the only boundary signal; scaling, consistency, team ownership, and operational cost also matter
+- For technical utilities that do not represent independent business responsibility
+
+### Also see
+- [Bounded Context](#bounded-context) · [Microservices](#microservices) · [Service Decomposition](#service-decomposition)
+
+---
+
+## Service Decomposition
+
+The process of dividing a system into independently owned modules or services using boundaries such as business capabilities, bounded contexts, data ownership, and scaling needs. Good decomposition reduces coordination; splitting by technical layers usually creates a distributed monolith.
+
+### Key Characteristics
+- Starts from business responsibilities rather than controllers or implementation layers
+- Assigns ownership of behavior and data to one boundary
+- Measures coupling through synchronous calls, shared schemas, and coordinated releases
+
+### When to Use
+- When team ownership, independent scaling, or release coupling creates a demonstrated need for separate services
+- During incremental extraction from a monolith
+
+### When NOT to Use
+- Before the domain boundaries and operational requirements are understood
+- When a modular monolith can provide the needed boundaries with less operational overhead
+
+### Also see
+- [Business Capability](#business-capability) · [Bounded Context](#bounded-context) · [Distributed Monolith](#distributed-monolith)
+
+---
+
+## Service Discovery
+
+A runtime mechanism for locating healthy instances of a service as instances are created, removed, or moved. Discovery replaces hardcoded endpoints with a registry, platform naming layer, or client-side lookup process.
+
+### Key Characteristics
+- Tracks service membership and health
+- Resolves logical service names to reachable instances
+- Requires policies for stale registrations, timeouts, and registry failure
+
+### When to Use
+- Dynamically scaled or frequently redeployed service environments
+- Systems where static endpoint configuration cannot keep pace with instance changes
+
+### When NOT to Use
+- Small, static deployments where stable platform DNS or a load balancer already provides the needed resolution
+- Without health checks, timeouts, and a plan for stale discovery data
+
+### Also see
+- [Service Mesh](networking.md#service-mesh) · [Load Balancer](networking.md#load-balancer) · [Microservices](#microservices)
+
+---
 
 ## DDD
 

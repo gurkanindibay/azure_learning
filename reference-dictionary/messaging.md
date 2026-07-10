@@ -60,6 +60,109 @@ timestamp: 2026-06-14T00:00:00Z
 | Log Segment | [`#log-segment`](#log-segment) |
 | ISR (In-Sync Replica) | [`#isr-in-sync-replica`](#isr-in-sync-replica) |
 | Replication Factor | [`#replication-factor`](#replication-factor) |
+| Communication Pattern | [`#communication-pattern`](#communication-pattern) |
+| Choreography | [`#choreography`](#choreography) |
+| Orchestration | [`#orchestration`](#orchestration) |
+| Configuration Server | [`#configuration-server`](#configuration-server) |
+| Config Server | [`#config-server`](#config-server) |
+
+## Communication Pattern
+
+A deliberate choice of how components exchange requests or events, including synchronous request-response and asynchronous message-based communication. The choice should follow response-time, coupling, consistency, and throughput requirements.
+
+### Key Characteristics
+- Synchronous calls provide an immediate result but couple latency and availability
+- Asynchronous messages decouple producers and consumers but require eventual-consistency handling
+- The contract includes delivery, ordering, retry, timeout, and failure semantics
+
+### When to Use
+- To make communication trade-offs explicit at service boundaries
+- When deciding between REST/gRPC and events or queues for a workflow step
+
+### When NOT to Use
+- As a technology-first label without identifying the caller's response and consistency needs
+
+### Also see
+- [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture) · [Message Ordering](#message-ordering) · [Saga](data-concurrency.md#saga-pattern)
+
+---
+
+## Choreography
+
+A distributed workflow style in which services react to domain events and publish subsequent events without a central coordinator directing every step.
+
+### Key Characteristics
+- Each participant owns its local reaction and completion event
+- Coupling is expressed through event contracts rather than direct calls
+- Failure handling and workflow visibility must be designed explicitly
+
+### When to Use
+- Simple, stable workflows where participants can react independently
+- Event-driven integrations that benefit from loose temporal coupling
+
+### When NOT to Use
+- Long, branching workflows where global progress and compensation are difficult to observe
+- When no team can own event contracts and operational tracing
+
+### Also see
+- [Orchestration](#orchestration) · [Saga](data-concurrency.md#saga-pattern) · [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
+
+---
+
+## Orchestration
+
+A distributed workflow style in which a coordinator directs service actions, tracks progress, and decides how failures are compensated.
+
+### Key Characteristics
+- Centralizes workflow state and sequencing
+- Makes retries, timeouts, and compensation visible in one place
+- The coordinator can become a coupling or availability boundary
+
+### When to Use
+- Long-running, branching, or compensation-heavy workflows
+- Processes that need explicit progress, auditability, or operator control
+
+### When NOT to Use
+- Simple independent reactions where a coordinator adds more coupling than clarity
+- Without durable coordinator state and idempotent command handling
+
+### Also see
+- [Choreography](#choreography) · [Saga](data-concurrency.md#saga-pattern) · [Idempotency](cqrs-event-driven.md#idempotency)
+
+---
+
+## Configuration Server
+
+A centralized service or managed system that stores, versions, and distributes runtime configuration to multiple application services.
+
+### Key Characteristics
+- Separates configuration from application binaries
+- Supports versioning, environment-specific values, and controlled refresh
+- Requires access control, validation, secret handling, and rollback safeguards
+
+### When to Use
+- Many services share environment-specific settings or need coordinated configuration changes
+- Configuration must be audited and updated without rebuilding every service
+
+### When NOT to Use
+- Small applications where local, version-controlled configuration is simpler and sufficient
+- Without a plan for startup failure, stale values, or a bad configuration's blast radius
+
+### Also see
+- [Configuration Propagation](observability.md#configuration-propagation) · [Service Discovery](architecture-patterns.md#service-discovery)
+
+**Also known as**: Config Server.
+
+---
+
+## Config Server
+
+An alternate name for [Configuration Server](#configuration-server), the centralized store and distribution mechanism for runtime configuration.
+
+**Also see**: [Configuration Server](#configuration-server)
+
+---
+
 ## Kafka vs RabbitMQ
 
 | Aspect | Kafka (Log) | RabbitMQ (Queue) |
