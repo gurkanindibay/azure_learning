@@ -17,6 +17,7 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 |:---|:---|:---|
 | [query-performance.md](query-performance.md) | `db-01` – `db-07` | UUID indexing, Keyset pagination, Composite indexes, N+1 problem, Hot partitions, DB migration at scale, PostgreSQL 18 async I/O |
 | [database-decisions.md](database-decisions.md) | `db-08` – `db-17` | SQL vs NoSQL, ACID, Scaling reads/writes, CAP theorem, Sharding, Isolation levels, Storage internals, Distributed transactions, CDC |
+| [database-id-strategy.md](database-id-strategy.md) | `db-18` | External UUID/ULID vs internal auto-increment ID strategy |
 | [sql-query-optimization.md](sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 | [sql-system-design.md](sql-system-design.md) | `sqld-01` – `sqld-08` | Scaling ladder, SQL vs NoSQL, CQRS, Event Sourcing, Row-Level Security, DB per service + Saga, Performance checklist |
 

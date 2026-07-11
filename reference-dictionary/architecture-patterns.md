@@ -42,7 +42,6 @@ timestamp: 2026-07-04T00:00:00Z
 | Circular Dependency | [`#circular-dependency`](#circular-dependency) |
 | Base62 Encoding | [`#base62-encoding`](#base62-encoding) |
 | URL Shortener | [`#url-shortener`](#url-shortener) |
-| Snowflake ID | [`#snowflake-id`](#snowflake-id) |
 | Key Generation Service | [`#key-generation-service`](#key-generation-service) |
 | Presence Service | [`#presence-service`](#presence-service) |
 | Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
@@ -590,7 +589,7 @@ A binary-to-text encoding scheme that uses 62 characters: `0-9`, `a-z`, and `A-Z
 - When case insensitivity is required (use Base36)
 - When cryptographic entropy is required (use random tokens or hashes)
 
-**Also see**: [URL Shortener](#url-shortener) · [Snowflake ID](#snowflake-id)
+**Also see**: [URL Shortener](#url-shortener) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 
@@ -612,29 +611,29 @@ A system that maps long URLs to short, unique aliases and redirects users from t
 - When the original URL must be hidden from the service operator
 - When deterministic, collision-free generation is impossible to guarantee
 
-**Also see**: [Base62 Encoding](#base62-encoding) · [Key Generation Service](#key-generation-service) · [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern)
+**Also see**: [Base62 Encoding](#base62-encoding) · [Key Generation Service](#key-generation-service) · [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 
-## Snowflake ID
+## KSUID
 
-A distributed unique ID generation algorithm introduced by Twitter. Each ID is a 64-bit integer composed of a timestamp, datacenter ID, worker ID, and sequence number. IDs are roughly time-ordered and unique without coordination beyond worker registration.
+A K-Sortable Unique Identifier. A 20-byte identifier composed of a 4-byte timestamp (seconds since the KSUID epoch) and a 16-byte random payload. KSUIDs are time-sortable, require no worker coordination, and offer higher entropy than ULID.
 
 ### Key Characteristics
-- **64-bit**: Fits in a `BIGINT` / `long`
-- **Time-ordered**: High bits encode millisecond timestamp
-- **Distributed**: Datacenter and worker IDs allow independent generation
-- **Sequence number**: Handles up to 4096 IDs per worker per millisecond
+- **20 bytes**: Larger than UUIDs and Snowflake IDs
+- **Time-ordered**: First 4 bytes encode seconds since 2014-05-13
+- **No coordination**: Any node can generate KSUIDs independently
+- **High entropy**: 128 random bits per ID
 
 ### When to Use
-- Distributed systems needing unique, sortable IDs
-- Primary keys where monotonic time ordering aids indexing
+- Distributed systems needing sortable IDs without worker ID assignment
+- Event streams and distributed logs where higher entropy reduces guessability
 
 ### When NOT to Use
-- When strict global monotonicity is required (clock drift can break ordering)
-- When IDs must be unpredictable (Snowflake IDs are guessable)
+- When storage size is constrained (20 bytes per key)
+- When millisecond-level ordering is required
 
-**Also see**: [Key Generation Service](#key-generation-service) · [Base62 Encoding](#base62-encoding)
+**Also see**: [Base62 Encoding](#base62-encoding) · [URL Shortener](#url-shortener) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 
@@ -655,7 +654,7 @@ A dedicated service responsible for producing unique identifiers or tokens at sc
 - When UUIDs or database sequences are sufficient
 - When centralized ID assignment is acceptable and simpler
 
-**Also see**: [Snowflake ID](#snowflake-id) · [URL Shortener](#url-shortener)
+**Also see**: [URL Shortener](#url-shortener) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 

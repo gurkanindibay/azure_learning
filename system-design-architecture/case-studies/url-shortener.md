@@ -53,7 +53,7 @@ timestamp: 2026-06-20T00:00:00Z
 | **Range size** | Larger ranges reduce coordinator chatter but increase ID waste on failure |
 
 > **Also see**: [System Design Interview Roadmap](system-design-interview/interview-roadmap.md) — Back-of-the-envelope estimation
-> **Dictionary**: [Base62 Encoding](../../reference-dictionary/architecture-patterns.md#base62-encoding), [Snowflake ID](../../reference-dictionary/architecture-patterns.md#snowflake-id)
+> **Dictionary**: [Base62 Encoding](../../reference-dictionary/architecture-patterns.md#base62-encoding), [Snowflake ID](../../system-design-architecture/databases/database-id-strategy.md#snowflake-id)
 > **Azure**: [Azure Cache for Redis](../../architecture-azure/data/redis/) for hot-code serving, Cosmos DB (in `architecture-azure/data/databases/`) for durable mappings
 > **Taxonomy**: §4.0.1 Database Performance & Caching
 
