@@ -132,17 +132,17 @@ graph TB
 ### Database Evolution
 ```mermaid
 graph LR
-    subgraph "1K Users"
-        DB1[(Single DB)]
+    subgraph "10M Users"
+        S1[(Shard 1)]
+        S2[(Shard 2)]
+        S3[(Shard 3)]
     end
     subgraph "1M Users"
         DB2[(Primary)] --> RR1[(Read Replica)]
         DB2 --> RR2[(Read Replica)]
     end
-    subgraph "10M Users"
-        S1[(Shard 1)]
-        S2[(Shard 2)]
-        S3[(Shard 3)]
+    subgraph "1K Users"
+        DB1[(Single DB)]
     end
 ```
 
@@ -356,25 +356,25 @@ Basic Auth → JWT/OAuth + RBAC → Zero Trust + Secret Management + Compliance
 
 ```mermaid
 graph TB
-    subgraph "1K Users"
-        F1[Express/Flask/Spring Boot]
-        D1[PostgreSQL/MySQL]
-        H1[Single Server]
-    end
-    
-    subgraph "1M Users"
-        F2[+ Redis Cache]
-        D2[+ Read Replicas]
-        H2[+ Docker + Nginx]
-        Q2[+ Kafka/RabbitMQ]
-    end
-    
     subgraph "10M Users"
         F3[+ Service Mesh - Istio]
         D3[+ Distributed DB]
         H3[+ Kubernetes]
         O3[+ Prometheus/Datadog]
         C3[+ CDN - Cloudflare]
+    end
+
+    subgraph "1M Users"
+        F2[+ Redis Cache]
+        D2[+ Read Replicas]
+        H2[+ Docker + Nginx]
+        Q2[+ Kafka/RabbitMQ]
+    end
+
+    subgraph "1K Users"
+        F1[Express/Flask/Spring Boot]
+        D1[PostgreSQL/MySQL]
+        H1[Single Server]
     end
 ```
 
