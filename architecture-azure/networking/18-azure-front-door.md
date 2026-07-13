@@ -326,3 +326,8 @@ When using Azure Front Door to load balance traffic to VMs with public IP addres
 - [Azure load balancing overview](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview)
 - [Lock down access to Azure Front Door origins](https://learn.microsoft.com/en-us/azure/frontdoor/origin-security)
 - [Azure service tags overview](https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview)
+
+## Related Topics
+
+> **On-Premises Equivalent**: See [Replacing Azure Front Door in an On-Premises Environment](azure-frontdoor-on-premise-equivalent.md) for a capability mapping to F5 BIG-IP, CDN providers, and open-source alternatives.
+> **General Pattern**: [Proxy and Load Balancing Architecture](../../architecture-general/05-cloud-infrastructure-platform-architecture/networking/proxy-load-balancing-architecture.md)

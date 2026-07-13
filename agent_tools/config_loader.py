@@ -163,7 +163,7 @@ def _build_nested_yaml(lines: list[str]) -> dict[str, Any]:
         # Key: value (or key:)
         if ":" in stripped:
             key, _, val = stripped.partition(":")
-            key = key.strip()
+            key = key.strip().strip('"\'')
             val = val.strip()
 
             if not isinstance(parent_container, dict):

@@ -56,6 +56,7 @@ Follow the numbered guides in order, or jump to a specific topic.
 | 16 | [Azure Load Balancer](16-azure-load-balancer.md) | Layer 4, health probes, SKUs, SNAT, zone redundancy |
 | 17 | [Azure Application Gateway](17-azure-application-gateway.md) | Layer 7 proxy, WAF, URL routing, TLS termination |
 | 18 | [Azure Front Door](18-azure-front-door.md) | Global Layer 7, anycast, WAF, caching, multi-region |
+| 18b | [Azure Front Door On-Premises Equivalent](azure-frontdoor-on-premise-equivalent.md) | Map Front Door capabilities to F5 BIG-IP, CDN, and open-source alternatives |
 | 19 | [Azure Traffic Manager](19-azure-traffic-manager.md) | DNS-based global routing methods |
 | 20 | [Azure CDN](20-azure-cdn.md) | Content delivery, edge caching, HTTPS for Blob Storage |
 | 21 | [Azure Gateway Load Balancer](21-azure-gateway-load-balancer.md) | Transparent NVA insertion, VXLAN, security appliances |

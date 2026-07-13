@@ -1305,3 +1305,4 @@ Common architecture combinations:
 - [API Architecture Overview](../../03-integration-communication-architecture/api-architecture/api-architecture-overview.md) - API design and gateway patterns
 - [Network Security Architecture](../../06-security-architecture/6.3-network-security/) - Security controls and WAF
 - [Azure Load Balancing Comparison](../../../architecture-azure/networking/15-load-balancing-services-comparison.md) - Azure-specific service comparison
+- [Azure Front Door On-Premises Equivalent](../../../architecture-azure/networking/azure-frontdoor-on-premise-equivalent.md) - Mapping Azure Front Door capabilities to on-premises components
