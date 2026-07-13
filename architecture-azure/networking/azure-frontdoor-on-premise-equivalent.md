@@ -227,7 +227,43 @@ Health checks determine whether traffic should be directed to Datacenter A or Da
 
 ---
 
-## Comparison
+## Comparison: Azure Front Door vs. Cloudflare
+
+Both services are global edge Application Delivery Networks (ADNs). Azure Front Door is native to Azure; Cloudflare is cloud-agnostic and can sit in front of any origin.
+
+| Capability | Azure Front Door | Cloudflare |
+|------------|------------------|------------|
+| **Global anycast edge** | Microsoft global PoP network | Cloudflare global PoP network |
+| **Layer-7 load balancing** | ✅ URL/path/header-based rules | ✅ Load balancing + failover origins |
+| **Reverse proxy** | ✅ | ✅ |
+| **CDN / edge caching** | ✅ Built-in | ✅ Core strength; extensive cache controls |
+| **WAF** | ✅ Azure WAF (managed + custom rules) | ✅ Cloudflare WAF (managed + custom rulesets) |
+| **DDoS protection** | ✅ Azure DDoS Protection (Basic / Standard) | ✅ Always-on DDoS protection, larger historical network |
+| **SSL/TLS offloading** | ✅ Custom and managed certs | ✅ Custom and managed certs; more TLS options |
+| **Health monitoring** | ✅ Origin health probes | ✅ Health checks with failover pools |
+| **Rate limiting / bot management** | ✅ Premium tier | ✅ Rate limiting, Bot Management, Turnstile |
+| **Private Link origin** | ✅ Premium tier to Azure PaaS | ❌ Not available |
+| **Azure-native integration** | ✅ Tight integration with App Service, APIM, AKS, Monitor | ⚠️ Via public endpoints or Cloudflare tunnels |
+| **Developer platform / edge compute** | ⚠️ Rules engine only | ✅ Workers (edge compute), KV, R2, Pages |
+| **Zero Trust / access controls** | ⚠️ Partial via Microsoft Entra + WAF | ✅ Cloudflare Access, Tunnel, Gateway |
+| **Pricing model** | Base fee + outbound data transfer + requests + WAF add-ons | Flat-rate or usage-based plans; unlimited DDoS protection on most plans |
+| **Best fit** | Azure-first multi-region apps needing native Azure integration | Multi-cloud / on-premises origins needing broad edge platform |
+
+### When to prefer Azure Front Door
+- Your backends are in Azure (App Service, AKS, API Management, VMs).
+- You need **Private Link** to origins.
+- You want a single Azure support channel and unified billing.
+- You already use Azure Monitor, Azure WAF policies, and Entra ID.
+
+### When to prefer Cloudflare
+- You have origins outside Azure (AWS, GCP, on-premises, multi-cloud).
+- You want a richer edge platform (Workers, R2 object storage, Zero Trust suite).
+- You need broader TLS/certificate control or a flat-rate pricing model.
+- You want DDoS protection without a separate paid add-on tier.
+
+---
+
+## On-Premises Equivalent Comparison
 
 | Capability | Azure Front Door | On-Premises Solution |
 |------------|------------------|----------------------|
