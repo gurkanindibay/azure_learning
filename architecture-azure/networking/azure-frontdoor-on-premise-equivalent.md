@@ -22,7 +22,7 @@ Azure Front Door provides the following major capabilities:
 | Capability | Description |
 |------------|-------------|
 | Global Layer-7 Load Balancing | Routes users to the healthiest and closest application endpoint |
-| Global Anycast Entry Point | Users connect to the nearest Microsoft Edge POP |
+| [Global Anycast Entry Point](../../reference-dictionary/networking.md#anycast) | Users connect to the nearest Microsoft Edge POP |
 | Reverse Proxy | Terminates HTTP/HTTPS traffic |
 | SSL/TLS Offloading | Certificate management and TLS termination |
 | Web Application Firewall (WAF) | OWASP protection and custom security policies |
@@ -80,7 +80,7 @@ Application Pool       Application Pool
 
 | Azure Front Door Feature | On-Premises Replacement |
 |---------------------------|-------------------------|
-| Global Anycast Network | CDN Provider |
+| [Global Anycast Network](../../reference-dictionary/networking.md#anycast) | CDN Provider |
 | Edge POPs | CDN Provider |
 | CDN | Cloudflare / Akamai / Fastly |
 | Layer 7 Load Balancer | F5 BIG-IP LTM |
@@ -263,3 +263,4 @@ This layered architecture delivers capabilities that closely align with Azure Fr
 
 > **Azure Service**: See [Azure Front Door](18-azure-front-door.md) for service tiers, pricing, and Azure-native patterns.
 > **General Pattern**: [Proxy and Load Balancing Architecture](../../architecture-general/05-cloud-infrastructure-platform-architecture/networking/proxy-load-balancing-architecture.md)
+> **Dictionary**: [Anycast](../../reference-dictionary/networking.md#anycast) · [CDN](../../reference-dictionary/networking.md#cdn) · [Load Balancer](../../reference-dictionary/networking.md#load-balancer)

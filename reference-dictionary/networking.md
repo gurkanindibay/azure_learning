@@ -14,6 +14,7 @@ timestamp: 2026-07-04T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
+| Anycast | [`#anycast`](#anycast) |
 | Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
 | CDN | [`#cdn`](#cdn) |
@@ -26,6 +27,30 @@ timestamp: 2026-07-04T00:00:00Z
 | Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm-tcpnodelay`](#nagles-algorithm-tcpnodelay) |
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
 | Network Partition | [`#network-partition`](#network-partition) |
+## Anycast
+
+A **network routing technique** where the same IP address is announced from multiple physical locations (edge points of presence, or PoPs). Border Gateway Protocol (BGP) directs each user's traffic to the nearest/topologically closest announcement point, typically measured by AS-hop count or latency.
+
+### Key Characteristics
+- **Single IP, many locations**: One address is advertised from a distributed set of edge nodes.
+- **BGP-driven routing**: Internet routers choose the closest announced path; no DNS or application-layer decision is required.
+- **Automatic failover**: If a PoP withdraws its route, traffic shifts to the next-nearest healthy location using the same destination IP.
+- **Edge termination**: The first TCP/SSL handshake happens close to the user, reducing round-trip latency and hiding the origin infrastructure.
+
+### When to Use
+- Global HTTP/HTTPS services where users must reach a low-latency entry point from anywhere in the world
+- DDoS protection: attacks are absorbed at the distributed edge before reaching origin capacity
+- Simplifying client configuration by offering one hostname/IP instead of region-specific endpoints
+
+### When NOT to Use
+- Private datacenter-only deployments where you cannot announce IPs from global locations (an anycast IP requires a distributed edge or CDN)
+- Stateful TCP workloads that break when the same connection is rerouted to a different backend mid-session (use sticky sessions or application-layer affinity instead)
+- Scenarios requiring deterministic routing to a specific region regardless of user location
+
+**Also see**: [Azure Front Door](azure-services.md#azure-front-door) · [CDN](#cdn) · [Load Balancer](#load-balancer)
+
+---
+
 ## Hub-and-Spoke
 
 A **network topology** where a central hub VNet hosts shared services (firewall, gateway, DNS) and spoke VNets host workloads. All spoke-to-spoke traffic routes through the hub for inspection and control.
