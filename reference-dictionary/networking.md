@@ -15,6 +15,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Term | Anchor |
 |:---|:---|
 | Anycast | [`#anycast`](#anycast) |
+| BGP | [`#bgp`](#bgp) |
+| PoP | [`#pop`](#pop) |
 | Hub-and-Spoke | [`#hub-and-spoke`](#hub-and-spoke) |
 | DMZ | [`#dmz`](#dmz) |
 | CDN | [`#cdn`](#cdn) |
@@ -29,7 +31,35 @@ timestamp: 2026-07-04T00:00:00Z
 | Network Partition | [`#network-partition`](#network-partition) |
 ## Anycast
 
-A **network routing technique** where the same IP address is announced from multiple physical locations (edge points of presence, or PoPs). Border Gateway Protocol (BGP) directs each user's traffic to the nearest/topologically closest announcement point, typically measured by AS-hop count or latency.
+A **network routing technique** where the same IP address is announced from multiple physical locations (edge points of presence, or PoPs). [Border Gateway Protocol (BGP)](#bgp) directs each user's traffic to the nearest/topologically closest announcement point, typically measured by AS-hop count or latency.
+
+```text
+Same anycast IP (203.0.113.10)
+announced from multiple PoPs
+
+        User in Sydney
+              |
+              v
+   +----------------------+
+   |  Edge PoP: Sydney    |
+   |  AS-Path: short      |
+   +----------------------+
+              |
+              |   User in Berlin
+              |         |
+              |         v
+              |  +----------------------+
+              |  |  Edge PoP: Amsterdam |
+              |  |  AS-Path: short      |
+              |  +----------------------+
+              |         |
+              v         v
+        +--------------------+
+        |  Origin backends   |
+        +--------------------+
+```
+
+BGP routers on the internet pick the closest advertised path for that single IP, so the Sydney user lands in Sydney and the Berlin user lands in Amsterdam.
 
 ### Key Characteristics
 - **Single IP, many locations**: One address is advertised from a distributed set of edge nodes.
@@ -47,7 +77,113 @@ A **network routing technique** where the same IP address is announced from mult
 - Stateful TCP workloads that break when the same connection is rerouted to a different backend mid-session (use sticky sessions or application-layer affinity instead)
 - Scenarios requiring deterministic routing to a specific region regardless of user location
 
-**Also see**: [Azure Front Door](azure-services.md#azure-front-door) · [CDN](#cdn) · [Load Balancer](#load-balancer)
+**Also see**: [Azure Front Door](azure-services.md#azure-front-door) · [CDN](#cdn) · [Load Balancer](#load-balancer) · [BGP](#bgp)
+
+---
+
+## BGP
+
+The **Border Gateway Protocol** is the routing protocol that powers the global internet. It exchanges reachability information between autonomous systems (AS) and allows each AS to choose the best path to a destination IP prefix based on policies, path attributes, and topology rather than simple hop count.
+
+```text
+BGP speakers exchange routes over TCP/179
+
+       +-------------+                    +-------------+
+       |   AS 64500  |<------------------>|   AS 64501  |
+       |  Your Corp  |    advertise       |   ISP A     |
+       |             |   203.0.113.0/24   |             |
+       +-------------+                    +-------------+
+              ^                                ^
+              |                                |
+       +-------------+                  +-------------+
+       |   AS 64502  |<---------------->|   AS 64503  |
+       |   ISP B     |   peer link      |   ISP C     |
+       +-------------+                  +-------------+
+
+Each AS picks the best path using attributes:
+- Local Preference (internal policy)
+- AS-Path length
+- MED (suggested preference to neighbors)
+- Next-hop reachability
+```
+
+### Key Characteristics
+- **Path-vector protocol**: BGP routers advertise full AS-path information, so each router can avoid routing loops and apply policy preferences.
+- **Policy-driven routing**: Network operators can prefer or reject paths based on AS path length, local preference, MED, community tags, and business relationships (transit vs peer vs customer).
+- **Incremental updates**: Once a BGP session is established, only changed routes are advertised, not the full table.
+- **Internet scale**: The public internet is composed of tens of thousands of autonomous systems connected via BGP; without it, there is no global end-to-end routing.
+- **TCP-based**: BGP sessions run over TCP port 179, making them reliable and ordered.
+
+### Common BGP Use Cases in Cloud/Hybrid Architectures
+- **Internet-facing services**: Cloud providers announce anycast or regional IPs to the internet via BGP so users reach the closest PoP.
+- **ExpressRoute**: Microsoft peers with your on-premises network provider using BGP to exchange routes between your network and Azure VNets.
+- **VPN Gateway**: BGP can be enabled on Azure VPN Gateway to exchange routes dynamically over an IPsec tunnel instead of defining static routes.
+- **Traffic engineering**: Route selection can influence which path inbound or outbound traffic takes, balancing cost and latency.
+
+### When to Use
+- Connecting an enterprise network to the public internet or to another organization's network
+- Dynamic route exchange between on-premises and cloud networks (ExpressRoute, VPN with BGP)
+- Multihoming to multiple ISPs for resilience and traffic engineering
+- Building anycast or global load-balanced services that rely on distributed route announcements
+
+### When NOT to Use
+- Inside a single data center or small network where an IGP (OSPF, IS-IS, EIGRP) is simpler and converges faster
+- When you need sub-second failover — BGP convergence is typically measured in seconds, not milliseconds
+- For pure application-layer routing decisions (use a load balancer, API gateway, or service mesh instead)
+
+**Also see**: [Anycast](#anycast) · [Azure ExpressRoute](../architecture-azure/networking/07-expressroute-bgp-guide.md) · [Azure VPN Gateway](../architecture-azure/networking/05-azure-vpn-gateway.md) · [Network Partition](#network-partition)
+
+---
+
+## PoP
+
+A **Point of Presence (PoP)** is both a physical site and an architectural concept used to describe where a provider's network meets end users.
+
+- **Physical meaning**: a real facility — a datacenter, colocation room, or edge location — containing routers, caches, load balancers, compute, and optical gear. For example, a Cloudflare edge datacenter in Frankfurt or an Azure Front Door location in Singapore.
+- **Architectural / logical meaning**: an abstract edge node in diagrams and requirements. When architects say "traffic enters through the nearest PoP," they mean the closest logical termination point, regardless of which specific physical rack handles the request.
+
+PoPs are operated by CDNs, DNS providers, global load balancers, and cloud edge services so that requests do not have to travel all the way back to a central origin datacenter.
+
+```text
+User in Tokyo          User in São Paulo
+       |                       |
+       v                       v
++-------------+           +-------------+
+|  CDN PoP    |           |  CDN PoP    |
+|   Tokyo     |           |   São Paulo |
++-------------+           +-------------+
+       |                       |
+       | cache miss            | cache hit
+       |                       |
+       +----------+   +--------+------------+
+                  |   |
+                  v   v
+            +-----------------+
+            |  Origin / Core  |
+            |   Datacenter    |
+            +-----------------+
+```
+
+A Tokyo user hits the Tokyo PoP. If the content is cached, it is served locally; otherwise the PoP fetches from the origin and caches it. A São Paulo user on a later request may get the same content entirely from the local PoP.
+
+### Key Characteristics
+- **Edge location**: Usually deployed in major metro areas or inside ISP networks to minimize last-mile latency.
+- **Multi-function**: Can terminate TLS, cache content, run edge compute, apply WAF rules, or act as a BGP anycast router.
+- **Shared across services**: A provider like Cloudflare or Azure Front Door reuses the same global PoP footprint for DNS, CDN, WAF, and load balancing.
+- **Independent failover**: If one PoP becomes unreachable, routes or DNS can shift traffic to the next nearest PoP.
+
+### When to Use
+- Global services where latency to a single origin region is unacceptable
+- Caching static assets close to users
+- Absorbing DDoS and malicious traffic before it reaches origin capacity
+- Running lightweight edge logic (validation, redirects, A/B tests) near the user
+
+### When NOT to Use
+- Applications with all users in one region (a single origin is simpler and cheaper)
+- Stateful workloads that require all requests from a user to land in the same backend (PoPs distribute users; combine with session affinity or central state if needed)
+- Scenarios where data-residency rules prohibit storing or processing data outside specific geographies
+
+**Also see**: [Anycast](#anycast) · [CDN](#cdn) · [Azure Front Door](azure-services.md#azure-front-door)
 
 ---
 
