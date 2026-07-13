@@ -197,9 +197,67 @@ A **network topology** where a central hub VNet hosts shared services (firewall,
 
 ## DMZ
 
-**Demilitarized Zone** — an isolated network segment between the untrusted internet and trusted internal network. Hosts internet-facing services that should not have direct access to internal systems.
+**Demilitarized Zone** — an isolated network segment between the untrusted internet and the trusted internal network. It hosts internet-facing services that must be reachable from outside, while preventing direct access to internal systems.
 
-**Also see**: [Azure Services: Azure Firewall](azure-services.md#azure-firewall)
+```text
+Untrusted Internet
+         |
+         v
++-------------------+
+|  External firewall|
+|  (allow 80/443)   |
++-------------------+
+         |
+         v
++-------------------+        +-------------------+
+|      DMZ          |        |   Internal        |
+|  - Reverse proxy  |        |   network         |
+|  - Public web API |        |  - App servers    |
+|  - Bastion host   |        |  - Databases      |
+|  - WAF edge       |        |  - Internal APIs  |
++-------------------+        +-------------------+
+         |                            ^
+         |                            |
+         +----------+-----------------+
+                    |
+          +-------------------+
+          |  Internal firewall|
+          | (deny direct DMZ  |
+          |  to DB; allow     |
+          |  proxy → app)     |
+          +-------------------+
+```
+
+The DMZ acts as a buffer. Public services live there, but the crown jewels (databases, internal APIs, sensitive data) remain behind a second firewall in the internal network. If a DMZ host is compromised, the attacker still does not have direct access to the internal network.
+
+### Key Characteristics
+- **Two security boundaries**: traffic must cross an external firewall to enter the DMZ, and an internal firewall to reach the trusted network.
+- **Minimal privileges**: DMZ hosts run only the services required to face the internet; administrative access and sensitive data are kept internal.
+- **Bastion/ jump host**: administrative access to internal systems often goes through a hardened host in the DMZ, not directly from the internet.
+- **Not just on-premises**: the same concept applies in the cloud using public subnets, private subnets, NAT gateways, firewalls, and application gateways.
+
+### Common Scenarios
+
+| Scenario | DMZ role |
+|---|---|
+| **Public e-commerce site** | Web servers and reverse proxies sit in the DMZ; payment processing and order databases stay internal. |
+| **Corporate VPN / RDP gateway** | The VPN concentrator or Remote Desktop Gateway is in the DMZ; internal file servers and domain controllers are not exposed. |
+| **API gateway for partners** | The externally reachable API gateway lives in the DMZ; backend microservices and data stores remain behind the internal firewall. |
+| **Email / DNS relay** | MX and DNS servers are placed in the DMZ to receive external mail and queries, while internal mail stores stay protected. |
+| **Cloud hub-spoke with Azure Firewall** | Public-facing application gateway and Azure Firewall are in a hub DMZ-like subnet; spoke VNets containing workloads are private. |
+
+### When to Use
+- You have services that must be reachable from the internet
+- You want to contain the blast radius if a public-facing host is compromised
+- Compliance requires separation between public and private networks
+- You need controlled entry points (reverse proxy, VPN gateway, bastion) into the internal network
+
+### When NOT to Use
+- All workloads are internal-only SaaS or intranet apps with no public entry points
+- A single flat network is acceptable for the threat model (rare in production)
+- You replace the DMZ with "public subnet + private subnet" cloud constructs but forget to enforce firewall rules between them
+
+**Also see**: [Azure Services: Azure Firewall](azure-services.md#azure-firewall) · [Hub-and-Spoke](#hub-and-spoke) · [API Gateway](#api-gateway) · [Reverse Proxy](#reverse-proxy)
 
 ---
 
