@@ -15,7 +15,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 ## Correctness and concurrency
 
 - [x] **Explain how the Snowflake-style generator assigns unique worker/region IDs.** Without explicit region-ID assignment, two regions could theoretically issue overlapping IDs after clock skew or misconfiguration.
-- [ ] **State the uniqueness guarantee for custom aliases.** Custom aliases cannot come from the regional Snowflake pool; they need an authoritative region or a global conditional write. *(Mentioned CL=ALL and LWT, but the guarantee statement should be explicit.)*
+- [x] **State the uniqueness guarantee for custom aliases.** Custom aliases cannot come from the regional Snowflake pool; they need an authoritative region or a global conditional write.
 - [x] **Clarify the conditional-write strategy for custom aliases.** Is it a Cassandra LWT (`IF NOT EXISTS`), a global lock, or routing to a single owner region? What happens on collision?
 - [x] **Correct the statement that `CL=ONE` assures uniqueness.** The consistency level only controls acknowledgment; uniqueness comes from the disjoint ID allocation for generated codes and from conditional writes for custom aliases.
 - [x] **Describe creation idempotency.** If a client retries `POST /v1/urls` after a timeout, can it create two different short URLs for the same original URL? An idempotency key is needed.
@@ -28,8 +28,8 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Storage and data model
 
-- [ ] **Update storage estimates.** 50 million × 90 bytes is ~4.5 GB raw, not 2.4 GB. Include replication, compaction, bloom filters, and indexes.
-- [ ] **Update click-stat estimates.** 100 million × 40 bytes is ~4 GB raw per day. With replication and overhead, monthly storage is likely 500 GB–1 TB before compression and archival.
+- [x] **Update storage estimates.** 50 million × 90 bytes is ~4.5 GB raw, not 2.4 GB. Include replication, compaction, bloom filters, and indexes.
+- [x] **Update click-stat estimates.** 100 million × 40 bytes is ~4 GB raw per day. With replication and overhead, monthly storage is likely 500 GB–1 TB before compression and archival.
 - [ ] **Drop or justify the auto-incrementing bigint `id`.** It is not natural for active-active Cassandra and duplicates `public_id`/`url_part`.
 - [ ] **Choose one public identifier.** `public_id`, `url_part`, and `id` overlap. If `url_part` is the external key, the others may be redundant.
 - [ ] **Define the Cassandra table design.** Show partition keys, clustering columns, and how queries are satisfied.
@@ -39,7 +39,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 - [x] **Add explicit CDN/edge cache placement.** Redis alone cannot absorb a viral link.
 - [x] **Describe cache TTL strategy.** How long are redirects cached at the edge, in Redis, and in the browser?
-- [ ] **Add hot-key protection.** Include request coalescing, stale-while-revalidate, or hot-key replication for celebrity/campaign links. *(Thundering-herd note added, but explicit protection strategy is still missing.)*
+- [x] **Add hot-key protection.** Include request coalescing, stale-while-revalidate, or hot-key replication for celebrity/campaign links.
 - [ ] **Define cache-invalidation behavior.** What happens when a link is deleted, expires, or changes redirect type? *(Only `410` on expiry/delete is stated; CDN/Redis invalidation is not described.)*
 
 ## API and contracts
@@ -53,32 +53,32 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Multi-region and failover
 
-- [ ] **Explain regional ownership of a mapping.** If a user creates a link in region A and region B receives a redirect, where is the authoritative record?
-- [ ] **Describe failover behavior.** If the home region of a short code fails, how does another region serve redirects without strong consistency?
-- [ ] **State how new codes are allocated during regional failover.** Does the failed region's generator stop? Is there a quorum check?
+- [x] **Explain regional ownership of a mapping.** If a user creates a link in region A and region B receives a redirect, where is the authoritative record?
+- [x] **Describe failover behavior.** If the home region of a short code fails, how does another region serve redirects without strong consistency?
+- [x] **State how new codes are allocated during regional failover.** Does the failed region's generator stop? Is there a quorum check?
 
 ## Security and abuse
 
-- [ ] **Add destination URL validation.** Block unsafe schemes such as `javascript:`, `file:`, and private IP ranges.
-- [ ] **Add rate limiting per identity type.** Anonymous users, authenticated users, and IPs should have different quotas.
-- [ ] **Add per-account creation quotas.**
-- [ ] **Add malware/phishing checks.** At least mention URL reputation scanning or user reporting.
-- [ ] **Add abuse-reporting flow.** How does a link get flagged, reviewed, and blocked?
+- [ ] **Add destination URL validation.** Block unsafe schemes such as `javascript:`, `file:`, and private IP ranges. *(Threat-intelligence scanning is mentioned, but scheme/IP blocking is not explicit.)*
+- [x] **Add rate limiting per identity type.** Anonymous users, authenticated users, and IPs should have different quotas.
+- [x] **Add per-account creation quotas.**
+- [x] **Add malware/phishing checks.** At least mention URL reputation scanning or user reporting.
+- [ ] **Add abuse-reporting flow.** How does a link get flagged, reviewed, and blocked? *(Scheduled revalidation and block/delete is described, but explicit user-reporting flow is missing.)*
 
 ## Observability
 
-- [ ] **Distinguish service metrics from business metrics.** Redirect latency is a service metric; clicks per URL is a business metric.
-- [ ] **Add alerting thresholds.** When do rate-limit, abuse-block, or hot-key alerts fire?
+- [x] **Distinguish service metrics from business metrics.** Redirect latency is a service metric; clicks per URL is a business metric.
+- [x] **Add alerting thresholds.** When do rate-limit, abuse-block, or hot-key alerts fire?
 - [ ] **Add tracing across redirect, creation, and analytics paths.**
 
 ## Expiration semantics
 
-- [ ] **State the final reuse policy explicitly.** The case says never reuse after expiration, which is correct, but also mentions tombstone-based reuse as optional. Pick one for the MVP.
+- [x] **State the final reuse policy explicitly.** The case says never reuse after expiration, which is correct, but also mentions tombstone-based reuse as optional. Pick one for the MVP.
 - [ ] **Quantify the tombstone period if reuse is ever allowed.** It must exceed every possible cache lifetime.
 - [ ] **Align default TTL with redirect status code.** Default 30-day links should not use `301`; use `302`/`307` for expiring links and reserve `301` for explicitly permanent links.
 
 ## Interview presentation
 
-- [ ] **Lead with correctness invariants.** State explicitly: every active short code maps to exactly one destination; creation is idempotent; expired codes are not ambiguously reused; analytics cannot delay redirects.
-- [ ] **Estimate viral-link traffic.** A single popular link can create orders-of-magnitude higher per-key load than the average peak.
-- [ ] **Summarize MVP trade-offs.** What is kept for launch and what is deferred?
+- [x] **Lead with correctness invariants.** State explicitly: every active short code maps to exactly one destination; creation is idempotent; expired codes are not ambiguously reused; analytics cannot delay redirects.
+- [x] **Estimate viral-link traffic.** A single popular link can create orders-of-magnitude higher per-key load than the average peak.
+- [x] **Summarize MVP trade-offs.** What is kept for launch and what is deferred?
