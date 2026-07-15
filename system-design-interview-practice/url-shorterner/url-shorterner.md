@@ -228,6 +228,8 @@ All apis should be async and nonblocking to prevent thread pool exhaustion
 
 Unique url generation 
 
+Custom and non-custom urls will be stored in different tables and will be managed differently since they have different consistency and uniquness requirements accross regions.
+
 Non-custom Urls
 We will use 8 english characters to generate url. Url's will be created within the application servers and when we horizonrally scale each server. Therefore I will create a Snowflake like distributed Id generator which provides uniqueness across all servers globally. 
 
@@ -308,6 +310,10 @@ Regional failover event > 1 in one day
 Analytics lag > 10 min
 Cache stampede event/total requests > 10%
 
+Tracing Strategy
+
+A dynatrace or elastic APM like tool can be used to trace all the services and short_url requests. Since these tools has advanced tracing capabilities, it is very easy to trace all the services and even alarms can be defined to define and solve the problems proactively
+
 
 Expiration conflicts
 
@@ -336,6 +342,7 @@ Viral links should be handled specially to prevent thundering herd to database. 
 
 when cache is expired on CDN, request will be passed down and if found in Redis then original_url will be returned and this url will be cached on CDN as well
 When cache is expired on Redis, then the cache aside logic is executed and original_url is fetched from database and cached on Redis. To avoid thundering herd, the database fetvh process should be handled using a pool or a queue and only the first request should be sent to database and others should wait. After data written to redis, all others should be returned from Redis.
+when a link expiration or deletion happens, Redis and CDn caches should be deleted as well. Redis key will be deleted on the app server by the deletion code. The CDN cache could be deleted using the Cloudflare API
 
 
 

@@ -40,7 +40,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 - [x] **Add explicit CDN/edge cache placement.** Redis alone cannot absorb a viral link.
 - [x] **Describe cache TTL strategy.** How long are redirects cached at the edge, in Redis, and in the browser?
 - [x] **Add hot-key protection.** Include request coalescing, stale-while-revalidate, or hot-key replication for celebrity/campaign links.
-- [ ] **Define cache-invalidation behavior.** What happens when a link is deleted, expires, or changes redirect type? *(Only `410` on expiry/delete is stated; CDN/Redis invalidation is not described.)*
+- [x] **Define cache-invalidation behavior.** What happens when a link is deleted, expires, or changes redirect type? *(Only `410` on expiry/delete is stated; CDN/Redis invalidation is not described.)*
 
 ## API and contracts
 
@@ -49,7 +49,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 - [x] **Add `409 Conflict` semantics for custom-alias collisions.**
 - [x] **Add idempotency-key support to URL creation.**
 - [x] **Specify authorization rules for statistics.** Only the link owner (or an admin) should view stats; knowing the short code is not enough.
-- [ ] **Clarify whether custom aliases share the same 8-character namespace.** If not, define the allowed format. *(Only “up to 50 chars” is stated; namespace relationship is unclear.)*
+- [x] **Clarify whether custom aliases share the same 8-character namespace.** If not, define the allowed format. *(Only “up to 50 chars” is stated; namespace relationship is unclear.)*
 
 ## Multi-region and failover
 
@@ -69,7 +69,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 - [x] **Distinguish service metrics from business metrics.** Redirect latency is a service metric; clicks per URL is a business metric.
 - [x] **Add alerting thresholds.** When do rate-limit, abuse-block, or hot-key alerts fire?
-- [ ] **Add tracing across redirect, creation, and analytics paths.**
+- [x] **Add tracing across redirect, creation, and analytics paths.**
 
 ## Expiration semantics
 
