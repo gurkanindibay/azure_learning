@@ -22,18 +22,18 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Latency and targets
 
-- [ ] **Split the 10 ms p99 target by scope.** Distinguish between CDN/edge response time, regional service-processing time, and global end-to-end latency.
+- [x] **Split the 10 ms p99 target by scope.** Distinguish between CDN/edge response time, regional service-processing time, and global end-to-end latency.
 - [x] **State what happens during a cache miss.** Quantify the expected latency when neither CDN nor Redis has the mapping.
-- [ ] **Define the acceptable creation latency.** The case says there is no hard metric, but an interview answer should still give a reasonable target.
+- [x] **Define the acceptable creation latency.** The case says there is no hard metric, but an interview answer should still give a reasonable target.
 
 ## Storage and data model
 
 - [x] **Update storage estimates.** 50 million × 90 bytes is ~4.5 GB raw, not 2.4 GB. Include replication, compaction, bloom filters, and indexes.
 - [x] **Update click-stat estimates.** 100 million × 40 bytes is ~4 GB raw per day. With replication and overhead, monthly storage is likely 500 GB–1 TB before compression and archival.
-- [ ] **Drop or justify the auto-incrementing bigint `id`.** It is not natural for active-active Cassandra and duplicates `public_id`/`url_part`.
-- [ ] **Choose one public identifier.** `public_id`, `url_part`, and `id` overlap. If `url_part` is the external key, the others may be redundant.
+- [x] **Drop or justify the auto-incrementing bigint `id`.** It is not natural for active-active Cassandra and duplicates `public_id`/`url_part`.
+- [x] **Choose one public identifier.** `public_id`, `url_part`, and `id` overlap. If `url_part` is the external key, the others may be redundant.
 - [ ] **Define the Cassandra table design.** Show partition keys, clustering columns, and how queries are satisfied.
-- [ ] **Explain day/hour bucket strategy for analytics.** Avoid one unbounded partition per short code.
+- [x] **Explain day/hour bucket strategy for analytics.** Avoid one unbounded partition per short code.
 
 ## Caching and hot keys
 
@@ -59,11 +59,11 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Security and abuse
 
-- [ ] **Add destination URL validation.** Block unsafe schemes such as `javascript:`, `file:`, and private IP ranges. *(Threat-intelligence scanning is mentioned, but scheme/IP blocking is not explicit.)*
+- [x] **Add destination URL validation.** Block unsafe schemes such as `javascript:`, `file:`, and private IP ranges. *(Threat-intelligence scanning is mentioned, but scheme/IP blocking is not explicit.)*
 - [x] **Add rate limiting per identity type.** Anonymous users, authenticated users, and IPs should have different quotas.
 - [x] **Add per-account creation quotas.**
 - [x] **Add malware/phishing checks.** At least mention URL reputation scanning or user reporting.
-- [ ] **Add abuse-reporting flow.** How does a link get flagged, reviewed, and blocked? *(Scheduled revalidation and block/delete is described, but explicit user-reporting flow is missing.)*
+- [x] **Add abuse-reporting flow.** How does a link get flagged, reviewed, and blocked? *(Scheduled revalidation and block/delete is described, but explicit user-reporting flow is missing.)*
 
 ## Observability
 
@@ -74,8 +74,8 @@ This file lists the points that are still missing, unclear, or incomplete in the
 ## Expiration semantics
 
 - [x] **State the final reuse policy explicitly.** The case says never reuse after expiration, which is correct, but also mentions tombstone-based reuse as optional. Pick one for the MVP.
-- [ ] **Quantify the tombstone period if reuse is ever allowed.** It must exceed every possible cache lifetime.
-- [ ] **Align default TTL with redirect status code.** Default 30-day links should not use `301`; use `302`/`307` for expiring links and reserve `301` for explicitly permanent links.
+- [x] **Quantify the tombstone period if reuse is ever allowed.** It must exceed every possible cache lifetime.
+- [x] **Align default TTL with redirect status code.** Default 30-day links should not use `301`; use `302`/`307` for expiring links and reserve `301` for explicitly permanent links.
 
 ## Interview presentation
 
