@@ -14,16 +14,16 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Correctness and concurrency
 
-- [ ] **Explain how the Snowflake-style generator assigns unique worker/region IDs.** Without explicit region-ID assignment, two regions could theoretically issue overlapping IDs after clock skew or misconfiguration.
-- [ ] **State the uniqueness guarantee for custom aliases.** Custom aliases cannot come from the regional Snowflake pool; they need an authoritative region or a global conditional write.
-- [ ] **Clarify the conditional-write strategy for custom aliases.** Is it a Cassandra LWT (`IF NOT EXISTS`), a global lock, or routing to a single owner region? What happens on collision?
-- [ ] **Correct the statement that `CL=ONE` assures uniqueness.** The consistency level only controls acknowledgment; uniqueness comes from the disjoint ID allocation for generated codes and from conditional writes for custom aliases.
-- [ ] **Describe creation idempotency.** If a client retries `POST /v1/urls` after a timeout, can it create two different short URLs for the same original URL? An idempotency key is needed.
+- [x] **Explain how the Snowflake-style generator assigns unique worker/region IDs.** Without explicit region-ID assignment, two regions could theoretically issue overlapping IDs after clock skew or misconfiguration.
+- [ ] **State the uniqueness guarantee for custom aliases.** Custom aliases cannot come from the regional Snowflake pool; they need an authoritative region or a global conditional write. *(Mentioned CL=ALL and LWT, but the guarantee statement should be explicit.)*
+- [x] **Clarify the conditional-write strategy for custom aliases.** Is it a Cassandra LWT (`IF NOT EXISTS`), a global lock, or routing to a single owner region? What happens on collision?
+- [x] **Correct the statement that `CL=ONE` assures uniqueness.** The consistency level only controls acknowledgment; uniqueness comes from the disjoint ID allocation for generated codes and from conditional writes for custom aliases.
+- [x] **Describe creation idempotency.** If a client retries `POST /v1/urls` after a timeout, can it create two different short URLs for the same original URL? An idempotency key is needed.
 
 ## Latency and targets
 
 - [ ] **Split the 10 ms p99 target by scope.** Distinguish between CDN/edge response time, regional service-processing time, and global end-to-end latency.
-- [ ] **State what happens during a cache miss.** Quantify the expected latency when neither CDN nor Redis has the mapping.
+- [x] **State what happens during a cache miss.** Quantify the expected latency when neither CDN nor Redis has the mapping.
 - [ ] **Define the acceptable creation latency.** The case says there is no hard metric, but an interview answer should still give a reasonable target.
 
 ## Storage and data model
@@ -37,19 +37,19 @@ This file lists the points that are still missing, unclear, or incomplete in the
 
 ## Caching and hot keys
 
-- [ ] **Add explicit CDN/edge cache placement.** Redis alone cannot absorb a viral link.
-- [ ] **Describe cache TTL strategy.** How long are redirects cached at the edge, in Redis, and in the browser?
-- [ ] **Add hot-key protection.** Include request coalescing, stale-while-revalidate, or hot-key replication for celebrity/campaign links.
-- [ ] **Define cache-invalidation behavior.** What happens when a link is deleted, expires, or changes redirect type?
+- [x] **Add explicit CDN/edge cache placement.** Redis alone cannot absorb a viral link.
+- [x] **Describe cache TTL strategy.** How long are redirects cached at the edge, in Redis, and in the browser?
+- [ ] **Add hot-key protection.** Include request coalescing, stale-while-revalidate, or hot-key replication for celebrity/campaign links. *(Thundering-herd note added, but explicit protection strategy is still missing.)*
+- [ ] **Define cache-invalidation behavior.** What happens when a link is deleted, expires, or changes redirect type? *(Only `410` on expiry/delete is stated; CDN/Redis invalidation is not described.)*
 
 ## API and contracts
 
-- [ ] **Add HTTP methods and request/response bodies for all endpoints.**
-- [ ] **Define `404` vs `410` behavior.** A non-existent code returns `404`; an expired code should return `410 Gone` if the policy is never-reuse.
-- [ ] **Add `409 Conflict` semantics for custom-alias collisions.**
-- [ ] **Add idempotency-key support to URL creation.**
-- [ ] **Specify authorization rules for statistics.** Only the link owner (or an admin) should view stats; knowing the short code is not enough.
-- [ ] **Clarify whether custom aliases share the same 8-character namespace.** If not, define the allowed format.
+- [x] **Add HTTP methods and request/response bodies for all endpoints.**
+- [x] **Define `404` vs `410` behavior.** A non-existent code returns `404`; an expired code should return `410 Gone` if the policy is never-reuse.
+- [x] **Add `409 Conflict` semantics for custom-alias collisions.**
+- [x] **Add idempotency-key support to URL creation.**
+- [x] **Specify authorization rules for statistics.** Only the link owner (or an admin) should view stats; knowing the short code is not enough.
+- [ ] **Clarify whether custom aliases share the same 8-character namespace.** If not, define the allowed format. *(Only “up to 50 chars” is stated; namespace relationship is unclear.)*
 
 ## Multi-region and failover
 
