@@ -7,6 +7,7 @@ This section covers foundational concepts for understanding data systems archite
 ### Core Concepts
 
 - [ACID Properties](acid-properties.md) - Transaction guarantees in databases
+- [Apache Cassandra](cassandra.md) - Distributed, masterless NoSQL database features and consistency traits
 - [BASE Properties](base-properties.md) - Distributed systems availability approach
 - [CAP Theorem](cap-theorem.md) - Distributed systems trade-offs
 
