@@ -23,6 +23,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Configuration Propagation | [`#configuration-propagation`](#configuration-propagation) |
 | Centralized Logging | [`#centralized-logging`](#centralized-logging) |
 | Distributed Tracing | [`#distributed-tracing`](#distributed-tracing) |
+| Abuse-Block Counts | [`#abuse-block-counts`](#abuse-block-counts) |
+
 ## Observability
 
 The ability to **understand a system's internal state from its external outputs** — logs, metrics, and traces. Unlike monitoring (which tracks known failure modes), observability enables diagnosing unknown failure modes by letting operators ask arbitrary questions about system behavior without deploying new code.
@@ -218,4 +220,29 @@ An observability technique that records the path and timing of one logical reque
 
 ### Also see
 - [Observability](#observability) · [OpenTelemetry](#opentelemetry) · [Centralized Logging](#centralized-logging)
+
+---
+
+## Abuse-Block Counts
+
+A metric that tracks how many requests were rejected because they were classified as abusive by rate-limiting, fraud-detection, or content-policy checks. It is a security-oriented operational signal used to detect attacks, tune protection thresholds, and verify that abuse controls are active.
+
+### Key Characteristics
+- Counts **blocked** requests, not merely throttled or rate-limited ones
+- Usually emitted by gateways, WAFs, application-level guards, or anti-abuse services
+- Typically segmented by rule, client, endpoint, or region
+- Rising counts can indicate an attack, a policy mismatch, or overly aggressive protection
+
+### When to Use
+- Operational dashboards alongside [Golden Signals](#golden-signals)
+- Alerting on spikes or sustained increases in blocked traffic
+- Tuning and capacity planning for rate-limit and abuse-prevention rules
+
+### When NOT to Use
+- As a standalone health metric without context about legitimate traffic
+- To infer the number of distinct attackers — one actor may trigger many blocks
+- To replace detailed abuse investigation or request sampling
+
+### Also see
+- [Rate Limiting](api-design.md#rate-limiting) · [Golden Signals](#golden-signals) · [Load Shedding](resilience.md#load-shedding)
 
