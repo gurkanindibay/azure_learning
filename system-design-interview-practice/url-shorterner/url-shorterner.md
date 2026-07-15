@@ -96,21 +96,46 @@ Prioritization
 
 Core Entities
 
-Url {
-    url_part char(8),
-    original_url varchar(100)
-    expiration_date date (default 30 days),
-    user_region string (can be used as a part of shard key)
-    user_id number(12,0)=> anonymous user =>0,
-    idempotency_key varchar2(100)
-    create_date datetime
-}
+create table Url (
+    url_part text PRIMARY KEY,
+    original_url text,
+    redirect_type tinyint,
+    expiration_date timestamp,
+    user_id bigint,
+    user_region text,
+    idempotency_key text,
+    create_date timestamp
+)
 
-Click_Stat{
-    url_id bigint,
+create table Click_Stat{
     url_part char(8),
     click_date datetime
 }
+
+Click_Stats_hourly{
+    url_part char(8),
+    click_hour datetime,
+    region text,
+    count number
+}
+
+CREATE TABLE click_stats_hourly (
+    url_part text,
+    bucket_hour timestamp,      -- e.g. 2026-07-15 14:00:00
+    click_time timestamp,       -- exact click timestamp, e.g. 2026-07-15 14:23:17
+    region text,
+    count counter,
+    PRIMARY KEY ((url_part, bucket_hour), click_time, region)
+);
+CREATE TABLE click_stats_daily (
+    url_part text,
+    bucket_day date,            -- e.g. 2026-07-15
+    click_time timestamp,
+    region text,
+    count counter,
+    PRIMARY KEY ((url_part, bucket_day), click_time, region)
+);
+
 
 ---------------------------------------------------------------------------------
 
@@ -283,6 +308,13 @@ Failure analysis: If response times increases we can prioritize url redirection 
 In redirection most probably database will be the bottleneck. After getting some space to work, we can work on the db and address the issue. 
 
 Since cassandra is highly available we don't need to use an additional sharding
+
+Data access patterns
+
+While accessing Urls we will query by url_part for both custom and non-custom urls. We can use url_part for url tables
+For the statistics tavles for click_stats_hourly url_part and bucket_hour will be the partition keys and for click_stats_daily click_stats_daily and bucket_day will be partition keys
+
+We will use click_stats_daily for stats api and click_stats_hourly for heatmaps inside dashboards 
 
 
 Observability

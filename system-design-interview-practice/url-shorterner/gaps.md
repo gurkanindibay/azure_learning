@@ -32,7 +32,7 @@ This file lists the points that are still missing, unclear, or incomplete in the
 - [x] **Update click-stat estimates.** 100 million × 40 bytes is ~4 GB raw per day. With replication and overhead, monthly storage is likely 500 GB–1 TB before compression and archival.
 - [x] **Drop or justify the auto-incrementing bigint `id`.** It is not natural for active-active Cassandra and duplicates `public_id`/`url_part`.
 - [x] **Choose one public identifier.** `public_id`, `url_part`, and `id` overlap. If `url_part` is the external key, the others may be redundant.
-- [ ] **Define the Cassandra table design.** Show partition keys, clustering columns, and how queries are satisfied.
+- [x] **Define the Cassandra table design.** Show partition keys, clustering columns, and how queries are satisfied.
 - [x] **Explain day/hour bucket strategy for analytics.** Avoid one unbounded partition per short code.
 
 ## Caching and hot keys
