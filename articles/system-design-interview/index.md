@@ -26,3 +26,4 @@ Source articles covering system design interview patterns, strategies, and case 
 - [resumable-uploads-chunking-large-files](resumable-uploads-chunking-large-files.md)
 - [real-time-leaderboard-design](real-time-leaderboard-design.md)
 - [system-design-preparation-master-sheet](system-design-preparation-master-sheet.md)
+- [million-notifications-system-design](million-notifications-system-design.md)
