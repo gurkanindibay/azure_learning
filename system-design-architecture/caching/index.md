@@ -19,6 +19,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [redis-internals.md](redis-internals.md) | `cache-06` – `cache-11` | I/O multiplexing, Hash slots, COW persistence, Morris counter, UNLINK, TRACKING |
 | [hot-keys-skewed-workloads.md](hot-keys-skewed-workloads.md) | `cache-12` – `cache-16` | Hot-key replication, Local cache, Counter sharding, Hot-key detection, Dedicated hot-key tier |
 | [redis-rate-limiting-patterns.md](redis-rate-limiting-patterns.md) | `cache-17` – `cache-21` | Token bucket Lua, Sorted-set rolling windows, Concurrent limiting, Fail-open, Load shedding |
+| [idempotency-key-takeaways.md](idempotency-key-takeaways.md) | `cache-22` – `cache-25` | Operation identity, Atomic deduplication state, Key propagation, Idempotent consumers |
 
 ## Cross-References
 

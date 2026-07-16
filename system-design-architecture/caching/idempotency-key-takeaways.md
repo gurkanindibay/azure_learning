@@ -1,15 +1,15 @@
 ---
 type: System Design
-title: "Caching & Redis Internals — Idempotency Takeaways"
+title: "Cache Idempotency — Key Takeaways"
 description: "Reusable retry-safety and deduplication strategies for high-throughput services facing network timeouts."
 timestamp: 2026-07-10T00:00:00Z
 ---
 
-# 30. Caching & Redis Internals — Idempotency Takeaways
+# 30. Cache Idempotency — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Idempotency Keys Prevent Duplicate Side Effects](../articles/caching/idempotency-keys-prevent-duplicate-side-effects.md)
-> **Related**: [Caching Architecture](caching/index.md), [Concurrency & Transactions](concurrency-transactions/29-tx-key-takeaways.md), [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key), [Deduplication Store](../reference-dictionary/messaging.md#deduplication-store)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Idempotency Keys Prevent Duplicate Side Effects](../../articles/caching/idempotency-keys-prevent-duplicate-side-effects.md)
+> **Related**: [Caching Architecture](index.md), [Concurrency & Transactions](../concurrency-transactions/29-tx-key-takeaways.md), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key), [Deduplication Store](../../reference-dictionary/messaging.md#deduplication-store)
 > **Taxonomy Reference**: §7.3 Caching Strategies
 
 ## Contents
