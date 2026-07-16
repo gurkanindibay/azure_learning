@@ -9,7 +9,9 @@ timestamp: 2026-07-15T00:00:00Z
 
 Create a URL shortener. Users should shorten their URLs and use that shortener to access the link. Users can also create their own custom short URL. Users could also see the access statistics.
 
-## Requirements Clarification
+## Phase 1 — Requirements Clarification (~5 min)
+
+**Phase goal**: Confirm actors, P0 flows, failure paths, NFRs, and scope.
 
 **How many users are projected to use it?**
 
@@ -67,7 +69,11 @@ User base is global, hence we need low latency and high availability even if a w
 5. Statistics collection
 6. Statistics visualisation
 
-## Non-Functional Requirements
+## Phase 2 — Back-of-the-Envelope Math (~2 min)
+
+**Phase goal**: Estimate QPS, storage, cache size, and let math eliminate impossible options.
+
+### Traffic Estimates
 
 Each day 1 million URL creation is projected.
 
@@ -118,7 +124,9 @@ Reuse of expired links, advanced user dashboards, and social media integration w
 5. Statistics collection
 6. Statistics visualisation
 
-## Core Entities
+## Phase 3 — Core Entities (~3 min)
+
+**Phase goal**: Define the main entities, keys, relationships, and access patterns.
 
 ```sql
 create table Url (
@@ -163,7 +171,7 @@ CREATE TABLE click_stats_daily (
 );
 ```
 
-## Storage Requirements
+### Storage Estimates
 
 - URL record size: 90 bytes
 - Click stat record size: 40 bytes
@@ -172,7 +180,9 @@ CREATE TABLE click_stats_daily (
 
 **Stats**: 100 million clicks a day * 40 bytes => 4 GB/day => 120 GB/month. With indexes and replication overhead nearly 500 GB/month. Monthly archival: a backend process can create daily stats and record them in a separate table — deferred from this design review due to time constraints. With indexes and replicas it can be up to 315 GB/month.
 
-## API Design
+## Phase 4 — API Design (~5 min)
+
+**Phase goal**: Versioned endpoints with idempotency, pagination, and structured errors.
 
 We can use REST services. All connections will be HTTPS.
 
@@ -327,7 +337,9 @@ Return codes:
 - 409 => already subscribed
 - 500 => system error
 
-## High Level Design
+## Phase 5 — High-Level Design (5–7 min)
+
+**Phase goal**: Entry point, async path, database choice, caching, and load balancing.
 
 Security: OIDC Connect + OIDC with PKCE. Static pages will be SPA. JWT tokens will be validated on API Gateway.
 
@@ -419,6 +431,25 @@ For the statistics tables:
 
 We will use `click_stats_daily` for the stats API and `click_stats_hourly` for heatmaps inside dashboards.
 
+## Phase 6 — Deep Dive (~15 min)
+
+**Phase goal**: Consistency, scaling, latency, failures, observability, and the 10× scale check.
+
+The following deep-dive topics are covered in subsections below:
+
+- [Observability](#observability)
+- [Caching and Hot Keys](#caching-and-hot-keys)
+- [Expiration Conflicts](#expiration-conflicts)
+- [Security and Abuse Prevention](#security)
+- [Multi-Region and Failover](#multi-region-and-failover)
+
+The remaining deep-dive topics are covered inside Phase 5:
+
+- Unique URL generation and consistency → [Unique URL Generation](#unique-url-generation)
+- Statistics service and async analytics → [Statistics Service](#statistics-service)
+- Failure analysis → [Failure Analysis](#failure-analysis)
+- Data access patterns → [Data Access Patterns](#data-access-patterns)
+
 ## Observability
 
 Since p99 < 10 ms for redirection, we need to use full-fledged tools like Dynatrace to track, and if it passes a threshold, we can create alarms.
@@ -505,6 +536,17 @@ Links are created in their respective region. All links will be replicated and b
 If a region fails, the geographically closest region will be the failover region. It will serve both its own traffic and the failed region's traffic.
 
 During region failover, the failover region will use the failed region code while creating links for requests coming from the failed region.
+
+## Phase 7 — Trade-offs (2–3 min)
+
+**Phase goal**: Limitations, alternatives, deferred scope, and next bottleneck.
+
+### Trade-offs and MVP Scope
+
+- **Scoped out of MVP**: Reuse of expired links, advanced user dashboards, social media integration.
+- **Consistency vs latency**: Custom-alias writes use `CL=ALL` for global uniqueness; redirect reads use cache-first with eventual consistency for speed.
+- **Cost vs correctness**: Analytics are asynchronous and approximate where acceptable, keeping the redirect path cheap and fast.
+- **Next bottleneck**: As viral links grow, per-key hot-key load and cache-stampede events will likely be the first scaling challenge.
 
 
 
