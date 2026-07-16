@@ -419,6 +419,7 @@ graph TB
 - [Networking Patterns](networking/)
 - [Reliability & Performance](../07-reliability-performance-operations/)
 - [DevOps & Delivery](../08-devops-delivery-runtime-architecture/)
+- [System Design: Problem → Strategy Reference](../../../system-design-architecture/index.md)
 
 ---
 
