@@ -20,3 +20,4 @@ Source articles covering concurrency transactions patterns, strategies, and case
 - [causal-consistency-model-in-system-design](causal-consistency-model-in-system-design.md)
 - [The Hidden Cost of Idempotency Everyone Ignores](the-hidden-cost-of-idempotency.md)
 - [System Design Interview: How Would You Prevent a Payment from Being Processed Twice?](system-design-interview-prevent-payment-processed-twice.md)
+- [System Design Interview: How Would You Avoid Overselling Inventory During a Flash Sale?](avoid-overselling-inventory-flash-sale.md)
