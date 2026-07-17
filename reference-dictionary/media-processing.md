@@ -26,6 +26,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Embarrassingly Parallel | [`#embarrassingly-parallel`](#embarrassingly-parallel) |
 | Buffer-based Bitrate Adaptation | [`#buffer-based-bitrate-adaptation`](#buffer-based-bitrate-adaptation) |
 | Quality Ladder | [`#quality-ladder`](#quality-ladder) |
+| Adaptive Bitrate Streaming (ABR) | [`#adaptive-bitrate-streaming-abr`](#adaptive-bitrate-streaming-abr) |
 
 ---
 
@@ -101,6 +102,31 @@ Release the **lowest resolution first**, upgrade quality as higher resolutions c
 **First pass** analyzes video complexity frame-by-frame. **Second pass** encodes with optimal bit allocation based on the analysis. Produces better quality at the same bitrate — at the cost of encoding time.
 
 **Also see**: [Transcoding](#transcoding)
+
+---
+
+## Adaptive Bitrate Streaming (ABR)
+
+A **video delivery technique** where the source video is encoded at multiple bitrates and resolutions, and the player dynamically switches between quality levels based on the viewer's available bandwidth and device capabilities. Prevents buffering by degrading quality rather than stopping playback.
+
+### Key Characteristics
+- **Multiple renditions**: a single source produces 1080p, 720p, 480p, 360p, 240p variants
+- **Client-side decision**: the player monitors buffer level and download speed to choose the next chunk's quality
+- **Chunked delivery**: video is split into small segments (2-10 seconds); quality can change at chunk boundaries
+- **ABR ladder**: the set of available bitrate-resolution pairs, optimized per-title or per-genre
+
+### When to Use
+- Video streaming over variable network conditions (Netflix, YouTube)
+- Live streaming where real-time adaptation is essential
+- Any video delivery where users are on heterogeneous connections (mobile, WiFi, wired)
+
+### When NOT to Use
+- When all viewers have guaranteed, stable bandwidth (e.g., internal corporate streaming)
+- For short clips where encoding overhead exceeds the benefit
+- When storage cost for multiple renditions is prohibitive
+
+### Also see
+- [DASH / HLS](#dash-hls) · [Transcoding](#transcoding) · [Quality Ladder](#quality-ladder) · [Buffer-based Bitrate Adaptation](#buffer-based-bitrate-adaptation)
 
 ---
 

@@ -55,6 +55,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Node Affinity | [`#node-affinity`](#node-affinity) |
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
 | Replay Attack | [`#replay-attack`](#replay-attack) |
+| Flash Sale | [`#flash-sale`](#flash-sale) |
 
 ## Business Capability
 
@@ -572,6 +573,103 @@ A situation where two or more components **mutually depend on each other**, dire
 
 ---
 
+## Geohashing
+
+A **geospatial indexing technique** that encodes a latitude/longitude coordinate pair into a short alphanumeric string (geohash). Nearby locations share a common geohash prefix — the longer the shared prefix, the closer the points. Used for proximity searches, ride-matching, and location-based sharding.
+
+### Key Characteristics
+- **Hierarchical**: truncating a geohash gives a larger bounding box (less precision, wider area)
+- **Prefix-based proximity**: points with the same prefix are spatially close (with edge-case exceptions at cell boundaries)
+- **1D index for 2D space**: enables standard database indexes (B-tree) for spatial queries
+
+### When to Use
+- Proximity queries: "find all drivers within 2 km of this rider" (Uber)
+- Location-based sharding: partition data by geohash prefix so nearby entities land on the same shard
+- When a full spatial database (PostGIS) is overkill and approximate proximity is acceptable
+
+### When NOT to Use
+- When exact distance calculations are required — geohash is an approximation; use Haversine or PostGIS
+- For point-in-polygon queries (geofencing) — use a spatial library with proper polygon support
+
+### Also see
+- [Quadtree](#quadtree) · [Sharding Key Selection](../system-design-architecture/15-interview-roadmap.md#sdi-11-sharding-key-selection)
+
+---
+
+## Quadtree
+
+A **tree data structure** where each internal node has exactly four children, recursively subdividing a 2D space into quadrants. Used for spatial indexing, collision detection, and image compression. In system design, quadtrees enable efficient "find all points within a radius" queries without scanning the entire dataset.
+
+### Key Characteristics
+- **Recursive subdivision**: each node represents a rectangular region; split into 4 quadrants when capacity is exceeded
+- **Sparse storage**: dense areas get deeper trees; empty areas stay shallow
+- **O(log N) spatial queries**: prunes irrelevant branches early
+
+### When to Use
+- Ride-matching: find nearby drivers (Uber)
+- Map rendering: determine which map tiles to load at a given zoom level (Google Maps)
+- Collision detection in games and simulations
+
+### When NOT to Use
+- When the dataset is small enough for brute-force distance calculations
+- When the data is uniformly distributed — a grid-based spatial index may be simpler
+- When updates are frequent and the tree must be rebalanced — consider geohashing instead
+
+### Also see
+- [Geohashing](#geohashing) · [Sharding Key Selection](../system-design-architecture/15-interview-roadmap.md#sdi-11-sharding-key-selection)
+
+---
+
+## Selective Forwarding Unit (SFU)
+
+A **WebRTC media server architecture** where each participant sends their media stream to a central server, which selectively forwards it to other participants — without decoding or mixing. Unlike MCU (Multipoint Control Unit), the SFU does not transcode; it routes packets. This is the architecture behind Discord (2.5M+ concurrent voice users) and many modern video conferencing systems.
+
+### Key Characteristics
+- **Packet routing, not mixing**: the SFU forwards encoded packets; it does not decode or re-encode media
+- **Per-receiver bitrate adaptation**: sends different quality levels (simulcast) to participants based on their available bandwidth
+- **Lower CPU cost than MCU**: no transcoding means the server can handle many more concurrent streams
+- **End-to-end encryption compatible**: the SFU can forward encrypted packets it cannot read (E2EE with insertable streams)
+
+### When to Use
+- Group video/voice calls with >3 participants where peer-to-peer mesh would overwhelm each client's uplink
+- When different participants have heterogeneous bandwidth (mobile vs. desktop)
+- When end-to-end encryption is required and the server should not access raw media
+
+### When NOT to Use
+- For 1:1 calls — peer-to-peer WebRTC is simpler and avoids server cost
+- When all participants must receive identical media (e.g., live streaming to viewers) — use CDN/HLS instead
+- When legacy interop (PSTN/SIP) is required — MCU may be needed for transcoding
+
+### Also see
+- [Adaptive Bitrate Streaming](media-processing.md#adaptive-bitrate-streaming-abr) · [DASH / HLS](media-processing.md#dash-hls)
+
+---
+
+## Inverted Index
+
+A **search data structure** that maps each term (word, token) to the list of documents containing it. This is the foundational data structure behind full-text search engines (Google Search, Elasticsearch, Lucene). Instead of scanning every document for a query term, the inverted index provides O(1) lookup of the term followed by intersection/union of result lists.
+
+### Key Characteristics
+- **Term → Document mapping**: the inverse of a forward index (document → terms)
+- **Postings list**: each term maps to a sorted list of document IDs (and optionally positions, term frequency)
+- **Boolean query support**: AND/OR/NOT queries are implemented as set operations on postings lists
+- **Skip lists**: accelerate intersection by skipping over non-matching document IDs
+
+### When to Use
+- Full-text search over large document collections
+- Log search and observability (Elasticsearch, Splunk)
+- Any system where users need keyword-based retrieval from unstructured text
+
+### When NOT to Use
+- For exact-match lookups — a hash index or B-tree is simpler and faster
+- For relational queries with joins and aggregations — use a SQL database
+- When the corpus is small enough for brute-force scan
+
+### Also see
+- [MapReduce](data-architecture.md#mapreduce) · [Database Index Types](databases.md)
+
+---
+
 ## Base62 Encoding
 
 A binary-to-text encoding scheme that uses 62 characters: `0-9`, `a-z`, and `A-Z`. It produces shorter strings than Base64 (which uses 64 characters including `+` and `/`) while remaining URL-safe and human-readable. Commonly used to compress large numeric IDs into short tokens.
@@ -967,3 +1065,35 @@ A **prioritization framework** that classifies requirements into four buckets: *
 - [YAGNI](design-patterns.md#yagni)
 - [Separation of Concerns](design-patterns.md#separation-of-concerns)
 - [Technical Debt](#technical-debt)
+
+---
+
+## flash sale
+
+A time-limited, high-traffic sales event where a limited quantity of inventory is offered at significant discount, creating extreme concurrency contention as thousands of buyers compete for a small number of items simultaneously.
+
+### Key Characteristics
+
+- Extreme read/write contention on hot SKUs — orders of magnitude more requests than available inventory
+- Requires multi-layer defense: edge traffic shaping → queue serialization → atomic reservation → authoritative DB
+- Inventory correctness is paramount; selling the 101st of 100 items is worse than rejecting legitimate buyers
+- Typically paired with reservation-expiry workflows to handle payment failures and abandoned checkouts
+
+### When to Use
+
+- Time-limited promotional events with fixed, known inventory caps
+- Scenarios where inventory correctness trumps latency (selling too many is worse than being slow)
+- Systems that can preload inventory into a fast edge cache (Redis) before the event
+
+### When NOT to Use
+
+- Continuously available inventory with no time pressure — standard e-commerce patterns suffice
+- Unbounded or dynamically restocked inventory where exact counts are less critical
+- Low-traffic systems where the overhead of multi-layer defense outweighs the risk
+
+### Also see
+
+- [Overselling](data-concurrency.md#overselling)
+- [Inventory Reservation](data-concurrency.md#inventory-reservation)
+- [Atomic Conditional Update](data-concurrency.md#atomic-conditional-update)
+- [Cache-Aside Pattern](caching.md#cache-aside)
