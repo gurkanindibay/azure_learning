@@ -885,3 +885,85 @@ An attack in which an adversary captures a valid request or message and sends it
 ### Also see
 - [Idempotency-Key](api-design.md#idempotency-key)
 - [Authentication and Authorization](security-iam.md)
+
+---
+
+## Forward Deployed Engineer (FDE)
+
+An engineering role where the engineer **embeds directly within customer ecosystems**, writing production code alongside the customer's own engineering teams to customize solutions, perform intense troubleshooting, and accelerate product adoption in high-stakes environments — as opposed to providing professional services on an on-demand basis.
+
+### Key Characteristics
+- Works hand-in-hand with customer engineering teams rather than at arm's length
+- Writes production-grade code, not just demos or prototypes
+- Acts as enterprise architect, high-trust client partner, and hands-on engineer simultaneously
+- Tightly integrated into customer ecosystem to solve real-world problems realistically
+- Bridges the gap between customer deployment realities and long-term platform engineering health
+
+### When to Use
+- Enterprise SaaS/platform companies selling to B2B and B2C/B2B2C customers
+- High-stakes deployments with aggressive timelines and shifting requirements
+- When customers need deep technical customization beyond what professional services can provide
+
+### When NOT to Use
+- Simple product implementations that standard customer success teams can handle
+- When the customer does not have the engineering maturity to collaborate at a code level
+- Short-term, transactional engagements that don't require deep integration
+
+### Also see
+- [InnerSource](#innersource)
+- [Technical Debt](#technical-debt)
+- [Anti-Corruption Layer](#anti-corruption-layer)
+
+---
+
+## InnerSource
+
+Applying **open-source collaboration practices** (transparent code reviews, shared repositories, cross-team contributions) **within an organization's firewall**. InnerSource enables teams to contribute improvements back to core platforms rather than creating isolated forks or workarounds.
+
+### Key Characteristics
+- Code is visible and searchable across the organization
+- Contributions follow structured review processes like open-source pull requests
+- Encourages cross-team collaboration without sacrificing organizational boundaries
+- Reduces duplication by making platform improvements discoverable and reusable
+
+### When to Use
+- Large organizations with multiple engineering teams building on shared platforms
+- When forward-deployed or field teams need to upstream customer-driven improvements
+- Platform teams wanting to scale contributions beyond their immediate team
+
+### When NOT to Use
+- Tiny organizations where everyone already works in the same repo
+- Highly regulated environments where code visibility must be strictly compartmentalized
+- When the overhead of cross-team review outweighs the benefit of shared contributions
+
+### Also see
+- [Forward Deployed Engineer (FDE)](#forward-deployed-engineer)
+- [Shared Kernel](#shared-kernel)
+- [Single Source of Truth](design-patterns.md#single-source-of-truth)
+
+---
+
+## MoSCoW Method
+
+A **prioritization framework** that classifies requirements into four buckets: **M**ust have (non-negotiable), **S**hould have (high priority but can be deferred if necessary), **C**ould have (desirable but not critical), and **W**on't have (explicitly out of scope for the current iteration). Used to manage scope under tight deadlines.
+
+### Key Characteristics
+- Forces explicit trade-off discussions rather than treating all requirements as equal
+- Tier-1 (Must have) items represent the minimum viable delivery
+- Provides a structured vocabulary for negotiating scope with stakeholders
+- Can be applied to data attributes, features, or any decomposable requirement set
+
+### When to Use
+- High-pressure projects with aggressive, non-negotiable deadlines
+- When stakeholders keep adding requirements without acknowledging timeline impact
+- Data pipeline projects where some fields are compliance-critical and others are nice-to-have analytics
+
+### When NOT to Use
+- Exploratory projects where priorities are genuinely unknown and need discovery
+- When stakeholders will simply mark everything as "Must" — the framework only works with honest classification
+- Trivial projects with few requirements and no prioritization pressure
+
+### Also see
+- [YAGNI](design-patterns.md#yagni)
+- [Separation of Concerns](design-patterns.md#separation-of-concerns)
+- [Technical Debt](#technical-debt)

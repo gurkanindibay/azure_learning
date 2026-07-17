@@ -1034,3 +1034,31 @@ A **set of automated checks that block a commit from entering Git history** unle
 - [Agent Tracing](#agent-tracing)
 - [Cost Per Accepted Change](#cost-per-accepted-change)
 - [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Dual-Agent Framework
+
+An **AI agent architecture** where two specialized agents work in tandem: one acts as a **discovery agent** ("Archaeologist") that analyzes codebases, logs, and schemas to map implicit dependencies and generate integration topology maps, while the other acts as an **adversarial testing agent** ("Shadow Adversary") that morphs production traffic to test extreme boundary conditions. A deterministic HITL (Human-In-The-Loop) validation layer gates all state mutations.
+
+### Key Characteristics
+- Agent A (Discovery): Statically analyzes artifacts (DDLs, OpenAPI specs, Kafka schemas, log traces) to produce draft integration maps
+- Agent B (Adversarial): Replays morphed production traffic in a shadow environment, generating edge-case payloads traditional fuzzing would miss
+- The FDE/Human acts as orchestrator and ultimate validator, not just a consumer of agent output
+- State reconciliation is handled by a deterministic validation layer; LLM agents are triggered only on divergence to propose root-cause hypotheses
+
+### When to Use
+- Legacy system migrations with undocumented state transitions and zero data lineage
+- High-stakes cutovers requiring 99.99%+ data-migration accuracy
+- When manual debugging and test-script writing would take weeks
+
+### When NOT to Use
+- Simple migrations where source and target schemas are well-documented and aligned
+- When the agent orchestration overhead exceeds the time saved — a single developer can still be faster for small, well-understood systems
+- Environments where security policy prohibits replaying production data in test environments
+
+### Also see
+- [Agentic AI](#agentic-ai)
+- [Agent Harness](#agent-harness)
+- [Shadow Testing](resilience.md#shadow-testing)
+- [Verification Loop (AI)](#verification-loop-ai)

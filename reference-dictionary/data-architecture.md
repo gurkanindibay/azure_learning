@@ -34,6 +34,10 @@ timestamp: 2026-06-28T00:00:00Z
 | Tenant Hierarchy | [`#tenant-hierarchy`](#tenant-hierarchy) |
 | Database-as-Guardrail Pattern | [`#database-as-guardrail-pattern`](#database-as-guardrail-pattern) |
 | Database Unique Constraint | [`#database-unique-constraint`](#database-unique-constraint) |
+| Small File Problem | [`#small-file-problem`](#small-file-problem) |
+
+---
+
 ## CAP Theorem
 
 In a distributed system, you can guarantee only **two of three**: **C**onsistency (all nodes see the same data), **A**vailability (every request gets a response), **P**artition Tolerance (system works despite network partitions). Since network partitions are inevitable, the real choice is CP (sacrifice availability during partition) or AP (sacrifice strong consistency during partition).
@@ -470,6 +474,33 @@ A database-enforced rule that prevents two rows from sharing the same value, or 
 ### Also see
 - [Database-as-Guardrail Pattern](#database-as-guardrail-pattern)
 - [Idempotency](cqrs-event-driven.md#idempotency)
+
+---
+
+## Small File Problem
+
+A **performance degradation pattern in distributed storage** where systems handling millions of tiny files (e.g., from high-frequency micro-batch ingestion) experience metadata log thrashing, thread starvation on synchronous commit loops, and cascading I/O queue buildup. Each small file incurs metadata overhead disproportionate to its data size.
+
+### Key Characteristics
+- Caused by high-frequency, fragmented writes producing many files below the storage engine's optimal size threshold
+- Manifested as thread pool exhaustion when synchronous commit loops block on I/O for each small file
+- Exacerbated in object storage systems (S3, ADLS Gen2) where metadata operations (LIST, HEAD) are costly relative to data transfer
+- Often compounded by schema variations across micro-batches that prevent natural coalescing
+
+### When to Use
+- Diagnosing ingestion pipeline latency spikes in data lakehouse architectures
+- Tuning streaming ingestion when upstream systems produce highly fragmented micro-batches
+- Capacity planning for platforms handling multi-petabyte daily ingestion volumes
+
+### When NOT to Use
+- As a justification for premature compaction optimization in low-volume systems
+- When the root cause is actually network congestion or undersized compute, not storage metadata overhead
+
+### Also see
+- [CAP Theorem](#cap-theorem)
+- [Replication](#replication)
+- [Backpressure](resilience.md#backpressure)
+- [Adaptive In-Memory Commit Governance](../system-design-architecture/ai-ml-infrastructure/29-ai-key-takeaways.md#ai-13)
 
 ---
 

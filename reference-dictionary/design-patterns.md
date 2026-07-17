@@ -36,6 +36,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Scalability | [`#scalability`](#scalability) |
 | Architecture Decision Record | [`#architecture-decision-record`](#architecture-decision-record) |
 | Anti-pattern | [`#anti-pattern`](#anti-pattern) |
+| Service Provider Interface (SPI) | [`#service-provider-interface`](#service-provider-interface) |
 
 ---
 
@@ -481,3 +482,31 @@ A **common response to a recurring problem** that is usually ineffective and ris
 
 ### Also see
 - [Golden Hammer](#golden-hammer) · [Architecture Principles Key Takeaways](../system-design-architecture/40-arch-key-takeaways.md)
+
+---
+
+## Service Provider Interface (SPI)
+
+A **pluggable extension mechanism** where a platform defines a set of interfaces (the contract) and allows external modules to provide implementations that are discovered and loaded at runtime. SPIs enable platforms to remain pure and extensible while customer-specific or use-case-specific logic lives in isolated, decoupled modules.
+
+### Key Characteristics
+- The platform defines the *what* (interface/contract); extensions define the *how* (implementation)
+- Implementations are discovered via service loader mechanisms (e.g., Java `ServiceLoader`, .NET dependency injection conventions)
+- Clean API boundaries ensure that changes in extension modules do not ripple into the core platform
+- Enables zero-copy processing by exposing lifecycle hook points within the core engine
+
+### When to Use
+- Platforms that need to support custom processing logic without forking the core codebase
+- Enterprise products where different customers require different data transformation, security, or compliance rules
+- When you need to upstream field-driven innovations as first-class platform features
+
+### When NOT to Use
+- Simple applications where the overhead of a plugin architecture outweighs its benefits
+- When extensibility points are unlikely to ever vary across deployments
+- Performance-critical hot paths where even a virtual dispatch overhead is unacceptable
+
+### Also see
+- [Strategy Pattern](#strategy-pattern)
+- [Decorator Pattern](#decorator-pattern)
+- [Loose Coupling](#loose-coupling)
+- [Forward Deployed Engineer (FDE)](architecture-patterns.md#forward-deployed-engineer)

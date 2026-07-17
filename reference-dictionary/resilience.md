@@ -40,6 +40,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Defensive Programming | [`#defensive-programming`](#defensive-programming) |
 | Input Validation | [`#input-validation`](#input-validation) |
 | Parameterized Query | [`#parameterized-query`](#parameterized-query) |
+| Shadow Testing | [`#shadow-testing`](#shadow-testing) |
+
+---
+
 ## Circuit Breaker
 
 A resilience pattern that **prevvents cascading failures** by detecting when a downstream service is failing and temporarily stopping calls to it. States: **Closed** (normal), **Open** (failing, calls blocked), **Half-Open** (testing recovery).
@@ -493,4 +497,30 @@ A database query technique where **user-supplied values are passed as separate p
 - [Input Validation](#input-validation) · [Defensive Programming](#defensive-programming) · [Defensive Coding Key Takeaways](../system-design-architecture/51-defensive-coding-key-takeaways.md#arch-12-input-validation-as-security-boundary)
 
 ---
+
+## Shadow Testing
+
+A **validation technique** where production traffic is replicated and replayed in an isolated, non-production environment to compare the behavior of a legacy system against a new or modified system. Unlike traditional testing, shadow testing uses real production payloads — often morphed to test adversarial edge cases — without affecting live users.
+
+### Key Characteristics
+- Replays real production traffic (or morphed variants) against the new system in parallel
+- Compares outputs between old and new systems to identify state divergence
+- Does not affect production users — the shadow environment is fully isolated
+- Can be augmented by AI agents that morph traffic to generate extreme boundary-condition payloads
+
+### When to Use
+- Migrating critical systems where even a 0.01% error rate is unacceptable
+- Validating stateful systems (e.g., event-driven architectures, CQRS) where unit tests cannot capture real-world complexity
+- When you need to catch edge-case mismatches before production cutover
+
+### When NOT to Use
+- When production data cannot be replicated due to security, compliance, or PII constraints
+- Simple stateless services where integration tests already provide sufficient coverage
+- When the cost of running a full parallel environment outweighs the migration risk
+
+### Also see
+- [Circuit Breaker](#circuit-breaker)
+- [Chaos Engineering](#chaos-engineering)
+- [Defense in Depth](#defense-in-depth)
+- [Dual-Agent Framework](ai-ml-llm.md#dual-agent-framework)
 

@@ -17,6 +17,7 @@ Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Gen
 |:---|:---|:---|
 | [ai-ml-infrastructure.md](ai-ml-infrastructure.md) | `ai-01` – `ai-03` | RAG architecture, LLM cost optimization, Vector search performance |
 | [ai-batch-compute-kueue.md](ai-batch-compute-kueue.md) | `ai-04` – `ai-08` | Tenant hierarchy, Preemption-based fair sharing, Open-source adoption, Zero-lift migration, Kueue mapping |
+| [29-ai-key-takeaways.md](29-ai-key-takeaways.md) | `ai-09` – `ai-13` | Schema-invariant ingestion, Dual-agent framework, SPI/pluggable architecture, Async governance, Adaptive commit governance |
 
 ## Cross-References
 
