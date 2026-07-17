@@ -45,6 +45,7 @@ timestamp: 2026-06-14T00:00:00Z
 | PRG Pattern | [`#prg-pattern`](#prg-pattern) |
 | Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
 | Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
+| API Composition | [`#api-composition`](#api-composition) |
 ## API Versioning
 
 The mechanism for evolving an API without breaking existing clients.
@@ -745,4 +746,30 @@ A **connection-termination pattern** where each gateway server holds live sessio
 
 ### Also see
 - [Presence Service](#presence-service) · [WebSocket](api-design.md#websocket) · [API Gateway](networking.md#api-gateway) · [Load Balancer](#load-balancer) · [Exponential Backoff](resilience.md#exponential-backoff)
+
+---
+
+## API Composition
+
+A **microservices data aggregation pattern** where one service (the API Composer) calls multiple downstream services and assembles their responses in application memory, replacing the need for cross-database SQL JOINs. Each downstream call fetches data from a single service's domain; the composer merges results into a consolidated response.
+
+### Key Characteristics
+- **In-memory aggregation**: JOIN logic moves from the database layer to application code
+- **One composer per query**: A single service owns the orchestration responsibility for a given query shape
+- **Sequential or parallel fan-out**: Calls can be serial (simpler) or parallel (lower latency) depending on dependency order
+- **No additional infrastructure**: Uses existing service APIs — no event buses, CDC pipelines, or denormalized stores
+
+### When to Use
+- Simple cross-service queries involving a small, fixed set of services (detail pages, dashboards)
+- Moderate traffic where per-request fan-out latency is acceptable
+- Early-stage microservice decompositions where infrastructure simplicity is valued
+- When strong consistency is required (data is fetched live, not from a lagging read model)
+
+### When NOT to Use
+- Queries requiring cross-service filtering with pagination (use CQRS with a read model instead)
+- High-throughput systems where fan-out latency multiplies across many concurrent requests
+- When downstream services have high latency or low availability (the composer inherits all downstream failures)
+
+### Also see
+- [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [Denormalization](data-architecture.md#denormalization)
 

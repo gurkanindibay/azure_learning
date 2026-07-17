@@ -21,6 +21,7 @@ Problems and strategies for CQRS-based fintech systems: command/query separation
 | [debit-card-processing.md](debit-card-processing.md) | `cqrs-27` – `cqrs-34` | Authorization pipeline, Bank adapter framework, Real-time balance accuracy, PIN security, Multi-dimensional limits, Transaction reversal, Per-bank circuit breaker, Database sharding |
 | [payment-events-duplicate-processing.md](payment-events-duplicate-processing.md) | `cqrs-35` – `cqrs-37` | Database-as-guardrail deduplication, Delivery vs business correctness separation, Payment state machine with idempotent transitions |
 | [cqrs-in-system-design-key-takeaways.md](cqrs-in-system-design-key-takeaways.md) | `cqrs-38` – `cqrs-43` | Read/write model separation, Command intent, Query projections, Eventual consistency, Minimal CQRS adoption, When to introduce CQRS |
+| [microservices-join-queries-key-takeaways.md](microservices-join-queries-key-takeaways.md) | `cqrs-44` – `cqrs-46` | API Composition pattern, Cross-service filtering limits, CDC-backed read models for complex queries |
 
 ## Cross-References
 

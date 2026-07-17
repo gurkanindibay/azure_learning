@@ -35,6 +35,7 @@ timestamp: 2026-06-28T00:00:00Z
 | Database-as-Guardrail Pattern | [`#database-as-guardrail-pattern`](#database-as-guardrail-pattern) |
 | Database Unique Constraint | [`#database-unique-constraint`](#database-unique-constraint) |
 | Small File Problem | [`#small-file-problem`](#small-file-problem) |
+| Denormalization | [`#denormalization`](#denormalization) |
 
 ---
 
@@ -503,4 +504,29 @@ A **performance degradation pattern in distributed storage** where systems handl
 - [Adaptive In-Memory Commit Governance](../system-design-architecture/ai-ml-infrastructure/29-ai-key-takeaways.md#ai-13)
 
 ---
+
+## Denormalization
+
+The intentional introduction of **redundant data copies** shaped for specific read patterns, trading storage space and write complexity for faster, simpler queries. In microservice architectures, denormalization is the core mechanism behind CQRS read models: data from multiple source services is pre-joined into wide documents or tables so that queries hit a single store without runtime JOINs.
+
+### Key Characteristics
+- **Read-optimized shape**: Data is stored in the form the query needs, not the normalized form the write model enforces
+- **Derived, not authoritative**: Denormalized copies are projections — the source of truth remains the normalized write model or event log
+- **Event-driven synchronization**: Changes flow from write models to denormalized stores via CDC, Kafka, or event streams
+- **Rebuildable**: A denormalized store can be dropped and rebuilt from the authoritative source without data loss
+
+### When to Use
+- Cross-service queries that would otherwise require runtime JOINs across multiple APIs
+- Search, filtering, aggregations, and analytics over data owned by separate microservices
+- Read-heavy workloads where query latency must be minimized
+- CQRS architectures where the read model serves a fundamentally different shape than the write model
+
+### When NOT to Use
+- Simple CRUD applications where normalized queries perform adequately
+- When write throughput is extremely high and synchronization lag is unacceptable
+- Systems requiring strict read-your-writes consistency on every path
+- When the operational cost of maintaining CDC pipelines and additional stores exceeds the query-performance benefit
+
+### Also see
+- [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [API Composition](api-design.md#api-composition) · [Change Data Capture](data-concurrency.md#change-data-capture)
 

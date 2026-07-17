@@ -25,3 +25,4 @@ Source articles covering software architecture patterns, strategies, and case st
 - [distributed-systems-data-flow-pattern](distributed-systems-data-flow-pattern.md)
 - [software-engineering-quietly-becoming-coordination-problem](software-engineering-quietly-becoming-coordination-problem.md)
 - [forward-deployed-engineer-cultural-fit-interview-questions](forward-deployed-engineer-cultural-fit-interview-questions.md)
+- [microservices-join-queries-solutions](microservices-join-queries-solutions.md)
