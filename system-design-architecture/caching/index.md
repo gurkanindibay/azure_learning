@@ -20,6 +20,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [hot-keys-skewed-workloads.md](hot-keys-skewed-workloads.md) | `cache-12` – `cache-16` | Hot-key replication, Local cache, Counter sharding, Hot-key detection, Dedicated hot-key tier |
 | [redis-rate-limiting-patterns.md](redis-rate-limiting-patterns.md) | `cache-17` – `cache-21` | Token bucket Lua, Sorted-set rolling windows, Concurrent limiting, Fail-open, Load shedding |
 | [idempotency-key-takeaways.md](idempotency-key-takeaways.md) | `cache-22` – `cache-25` | Operation identity, Atomic deduplication state, Key propagation, Idempotent consumers |
+| [netflix-open-connect-takeaways.md](netflix-open-connect-takeaways.md) | `cache-26` – `cache-30` | Edge pre-positioning, Pre-warming, Control/data plane split, Buffer-aware ABR, Predict-and-pre-compute |
 
 ## Cross-References
 

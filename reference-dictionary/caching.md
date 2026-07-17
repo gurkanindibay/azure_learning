@@ -41,6 +41,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Dedicated Hot-Key Tier | [`#dedicated-hot-key-tier`](#dedicated-hot-key-tier) |
 | Timeline Cache | [`#timeline-cache`](#timeline-cache) |
 | Celebrity Cache | [`#celebrity-cache`](#celebrity-cache) |
+| Edge Pre-positioning | [`#edge-pre-positioning`](#edge-pre-positioning) |
 
 ---
 
@@ -644,3 +645,32 @@ A Redis data structure that stores unique members paired with a numeric score, m
 
 ### Also see
 - [Cache-Aside Pattern](#cache-aside-pattern) · [TTL](#ttl-time-to-live) · [Sharding](../architecture-patterns.md#sharding) · [Leaderboard Pattern](../architecture-patterns.md#leaderboard-pattern)
+
+---
+
+## Edge Pre-positioning
+
+Placing content at the **network edge before demand arrives**, so that the cache is already warm when the first user requests it. The opposite of lazy/pull-through caching, where the first request triggers the cache fill.
+
+> **Key insight**: At scale, reacting to demand is already too late. Pre-positioning decouples cache population from user requests, so peak demand does not coincide with peak system load.
+
+### Key Characteristics
+- **Predictive fill**: Content is copied to edge nodes during quiet hours based on demand forecasting
+- **ISP-level placement**: Appliances sit inside ISP data centers or internet exchange points, minimizing last-mile latency
+- **Region-specific catalog**: Each edge node holds only the slice of the catalog its region is most likely to request
+- **Zero cold-start for premieres**: New releases are pre-loaded before the launch window, eliminating the origin stampede
+
+### When to Use
+- Large-scale content delivery where central origin would be overwhelmed (streaming, software downloads, game updates)
+- Scheduled releases or premieres with predictable demand spikes
+- Read-heavy workloads where pre-computing results is cheaper than computing on every request
+- Bandwidth-sensitive deployments where egress costs from a central location are prohibitive
+
+### When NOT to Use
+- Highly dynamic content that changes unpredictably (real-time feeds, user-generated content with no release schedule)
+- Small catalogs where the storage cost of full replication outweighs the latency benefit
+- When demand is truly unpredictable and prediction accuracy would be too low to justify pre-filling
+- Low-traffic deployments where lazy caching is sufficient
+
+### Also see
+- [CDN](../networking.md#cdn) · [Cache-Aside Pattern](#cache-aside-pattern) · [Hot Key](#hot-key) · [Cache Stampede](#cache-stampede)
