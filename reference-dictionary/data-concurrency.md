@@ -40,6 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Sharding | [`#sharding`](#sharding) |
 | Vector Clocks | [`#vector-clocks`](#vector-clocks) |
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
+| Impossible State | [`#impossible-state`](#impossible-state) |
 | Lock Contention | [`#lock-contention`](#lock-contention) |
 
 ---
@@ -533,6 +534,7 @@ Temporarily setting aside stock for an in-flight checkout or order, reducing the
 
 ### Also see
 - [Atomic Conditional Update](#atomic-conditional-update) · [Overselling](#overselling) · [Saga Pattern](#saga-pattern)
+- **Caution**: the reservation expiry/cleanup mechanism is itself a distributed coordination problem. In multi-replica environments, a naive cron-based cleanup job will run N times and cause duplicate releases. Use leader election, distributed locks, or TTL-based expiration in the data store (Redis `EXPIRE`, `FOR UPDATE SKIP LOCKED`) to ensure only one process releases expired reservations.
 
 ---
 
@@ -594,6 +596,32 @@ A **mutex** in CPython that ensures only one thread executes Python bytecode at 
 - Do not assume asyncio solves CPU parallelism; it solves I/O concurrency.
 
 **Also see**: [asyncio](#asyncio) · [Pessimistic Locking](#pessimistic-locking) · [Two-Phase Commit (2PC)](#two-phase-commit-2pc)
+
+---
+
+## Impossible State
+
+A system state that must **never occur under any concurrency, failure, or retry scenario** — negative inventory, orders for nonexistent products, customers charged twice. Preventing impossible states, not maximizing throughput, is the primary architectural driver of high-traffic transactional systems.
+
+**Scaling handles volume. Impossible-state prevention handles correctness. They are orthogonal problems.**
+
+### Key Characteristics
+- **Cross-component**: impossible states arise from disagreement between independently-deployed services, not from bugs in any single service.
+- **Not a happy-path concern**: the happy path is easy. Every edge case — retry, timeout, crash, partition — can produce a path into an impossible state.
+- **Design inversion**: design from the impossible states outward. For each component, ask "what state must never exist here?" and build the guardrail that prevents it.
+- **Observable**: impossible states must be detectable. If you can't monitor for them, you can't be confident they're prevented.
+
+### When to Use
+- E-commerce checkout and inventory management
+- Payment and financial transaction systems
+- Any system where duplicate or phantom records cause real money loss
+
+### When NOT to Use
+- Read-heavy, eventually-consistent workloads where occasional duplicates are tolerable
+- Systems where all state is fully reconstructable from an authoritative source
+
+### Also see
+- [Double-Booking Problem](#double-booking-problem) · [Overselling](#overselling) · [Inventory Reservation](#inventory-reservation) · [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)
 
 ---
 

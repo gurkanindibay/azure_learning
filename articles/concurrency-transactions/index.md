@@ -21,3 +21,4 @@ Source articles covering concurrency transactions patterns, strategies, and case
 - [The Hidden Cost of Idempotency Everyone Ignores](the-hidden-cost-of-idempotency.md)
 - [System Design Interview: How Would You Prevent a Payment from Being Processed Twice?](system-design-interview-prevent-payment-processed-twice.md)
 - [System Design Interview: How Would You Avoid Overselling Inventory During a Flash Sale?](avoid-overselling-inventory-flash-sale.md)
+- [Amazon: 1 Million Users Clicked Checkout At Once — The Real Problem Wasn't Scaling](amazon-million-users-checkout-scaling.md)
