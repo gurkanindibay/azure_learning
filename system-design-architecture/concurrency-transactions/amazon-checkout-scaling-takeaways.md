@@ -10,7 +10,7 @@ timestamp: 2026-07-18T00:00:00Z
 > **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [Amazon: 1 Million Users Clicked Checkout At Once](../../articles/concurrency-transactions/amazon-million-users-checkout-scaling.md)
 > **Related**: [Concurrency & Transactions](concurrency-transactions.md), [Transaction Patterns](transaction-patterns.md), [Flash-Sale Takeaways](30-tx-key-takeaways.md)
-> **Dictionary**: [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock)
+> **Dictionary**: [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock), [Impossible State](../../reference-dictionary/data-concurrency.md#impossible-state)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -140,6 +140,6 @@ timestamp: 2026-07-18T00:00:00Z
 | **Simplicity** | Fewer components disagreeing = fewer impossible states. Decouple only when necessary. |
 
 > **Also see**: [tx-36 Layered Flash-Sale Defense](30-tx-key-takeaways.md#tx-36-layered-flash-sale-defense-architecture), [tx-01 Double-Booking](concurrency-transactions.md#tx-01-double-booking)
-> **Dictionary**: [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Double-Booking Problem](../../reference-dictionary/data-concurrency.md#double-booking-problem)
+> **Dictionary**: [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Double-Booking Problem](../../reference-dictionary/data-concurrency.md#double-booking-problem), [Impossible State](../../reference-dictionary/data-concurrency.md#impossible-state)
 
 ---

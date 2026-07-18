@@ -7,7 +7,7 @@ timestamp: 2026-07-18T00:00:00Z
 
 > **Source**: [Level Up Coding](https://levelup.gitconnected.com/amazon-1-million-users-clicked-checkout-at-once-the-real-problem-wasnt-scaling-f7956a102f9c) — Sagar Yadav, 2026-07-13  
 > **Related**: [System Design → Concurrency & Transactions](../../system-design-architecture/concurrency-transactions/)  
-> **Dictionary**: [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction)
+> **Dictionary**: [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Pessimistic Locking](../../reference-dictionary/data-concurrency.md#pessimistic-locking), [Lock Contention](../../reference-dictionary/data-concurrency.md#lock-contention), [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Compensating Transaction](../../reference-dictionary/data-concurrency.md#compensating-transaction), [Impossible State](../../reference-dictionary/data-concurrency.md#impossible-state)
 
 ---
 
