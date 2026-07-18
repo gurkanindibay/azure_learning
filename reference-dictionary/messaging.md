@@ -63,8 +63,56 @@ timestamp: 2026-06-14T00:00:00Z
 | Communication Pattern | [`#communication-pattern`](#communication-pattern) |
 | Choreography | [`#choreography`](#choreography) |
 | Orchestration | [`#orchestration`](#orchestration) |
+| Client-Side Deduplication | [`#client-side-deduplication`](#client-side-deduplication) |
+| Delivery Cursor | [`#delivery-cursor`](#delivery-cursor) |
 | Configuration Server | [`#configuration-server`](#configuration-server) |
 | Config Server | [`#config-server`](#config-server) |
+
+## Client-Side Deduplication
+
+A technique where the **message sender generates a unique message ID** and uses it as an idempotency key. If the send operation times out, the client retries with the **same ID** — enabling the server and receiver to recognize and discard duplicates.
+
+### Key Characteristics
+- **Unique ID per message**: Generated client-side (UUID, content hash, or sequence number) before the first send attempt
+- **Same ID on retry**: The critical invariant — retries must reuse the original ID, not generate a new one
+- **First layer of defense**: Prevents re-insertion at the server and re-display at the receiver
+
+### When to Use
+- Any messaging or API system where network timeouts can cause senders to retry
+- Multi-device messaging platforms (WhatsApp, Telegram, Signal)
+- Payment APIs and financial transactions where duplicate submission must be prevented
+
+### When NOT to Use
+- Fire-and-forget telemetry where duplicates are harmless
+- Systems where the server assigns message IDs and clients never retry
+
+### Also see
+- [Idempotent Consumer](#idempotent-consumer) · [At-Least-Once Semantics](#at-least-once-semantics) · [Producer Acknowledgement](#producer-acknowledgement) · [Idempotency](cqrs-event-driven.md#idempotency)
+
+---
+
+## Delivery Cursor
+
+A **server-side pointer** that tracks the last message successfully delivered to a specific client, enabling the client to catch up after reconnection without re-receiving already-processed messages. The server advances the cursor only after confirming delivery or receiving an ACK from the client.
+
+### Key Characteristics
+- **Per-client, per-conversation**: Each recipient has independent cursors for each conversation or channel
+- **Monotonic**: Cursors only move forward; a message with ID ≤ cursor value is already delivered
+- **Foundation for offline catch-up**: Clients request messages since their last cursor position after reconnecting
+
+### When to Use
+- Real-time messaging with multi-device support and offline catch-up
+- Any at-least-once delivery system where the server must track per-client progress
+- Replacement for per-message ACKs when batch acknowledgment is preferred
+
+### When NOT to Use
+- Pub/sub systems where subscribers are ephemeral and don't need catch-up (e.g., live sensor data)
+- Systems where the client can independently track and request missing ranges (Kafka consumer with offset management)
+
+### Also see
+- [At-Least-Once Semantics](#at-least-once-semantics) · [Per-Device Inbox](#per-device-inbox) · [Offset Commit](#offset-commit) · [Client-Side Deduplication](#client-side-deduplication)
+
+---
 
 ## Communication Pattern
 

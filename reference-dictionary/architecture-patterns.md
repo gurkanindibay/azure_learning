@@ -56,6 +56,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
 | Replay Attack | [`#replay-attack`](#replay-attack) |
 | Flash Sale | [`#flash-sale`](#flash-sale) |
+| Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
 
 ## Business Capability
 
@@ -1097,3 +1098,28 @@ A time-limited, high-traffic sales event where a limited quantity of inventory i
 - [Inventory Reservation](data-concurrency.md#inventory-reservation)
 - [Atomic Conditional Update](data-concurrency.md#atomic-conditional-update)
 - [Cache-Aside Pattern](caching.md#cache-aside)
+
+---
+
+## Three-Layer Deduplication
+
+A defense-in-depth pattern for distributed messaging systems that applies deduplication at three independent layers: **client-side** (idempotency key on send), **server-side** (unique constraint on message ID), and **receiver-side** (seen-ID cache). Each layer protects against a different failure mode — no single layer can catch all duplicates.
+
+### Key Characteristics
+- **Client layer**: Generates a unique message ID and reuses it on retry. Prevents the sender from creating duplicate payloads during timeout-based retries.
+- **Server layer**: Uses the message ID as a primary key or unique index. Duplicate INSERT attempts fail deterministically at the database level.
+- **Receiver layer**: Maintains a short-lived LRU cache (with TTL) of recently processed message IDs. Discards incoming messages whose ID is already present.
+- **Defense in depth**: If layer 1 misses (e.g., client crash and reinstall), layer 2 catches it. If layer 2 misses (e.g., server replication lag), layer 3 catches it.
+
+### When to Use
+- Real-time messaging platforms with at-least-once delivery guarantees (WhatsApp, Telegram, Signal)
+- Payment processing and financial systems where duplicate transactions are unacceptable
+- Any system where network retries can produce semantically identical requests that must not be processed twice
+
+### When NOT to Use
+- Append-only telemetry or logging where occasional duplicates are harmless
+- Systems with strict low-latency requirements where the storage/check overhead of all three layers is prohibitive — use two layers instead
+- Stateless request-response APIs where idempotency keys alone at the server layer suffice
+
+### Also see
+- [Client-Side Deduplication](../reference-dictionary/messaging.md#client-side-deduplication) · [Delivery Cursor](../reference-dictionary/messaging.md#delivery-cursor) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
