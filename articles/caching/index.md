@@ -18,3 +18,4 @@ Source articles covering caching patterns, strategies, and case studies.
 - [If You Only Know ‘Redis is Single-Threaded’, You Know Nothing](If You Only Know ‘Redis is Single-Threaded’, You Know Nothing.md)- [Redis Rate Limiting — Solving Distributed Race Conditions](redis-rate-limiting-distributed-race-conditions.md)
 - [Idempotency Keys Prevent Duplicate Side Effects](idempotency-keys-prevent-duplicate-side-effects.md)
 - [How Netflix Handles 260 Million Concurrent Streams Without Buffering](netflix-open-connect-edge-caching.md)
+- [URL Shortener Suddenly Crashes During IPL Finals: How Will You Fix?](url-shortener-viral-hotkey-cdn-caching.md)

@@ -42,6 +42,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Timeline Cache | [`#timeline-cache`](#timeline-cache) |
 | Celebrity Cache | [`#celebrity-cache`](#celebrity-cache) |
 | Edge Pre-positioning | [`#edge-pre-positioning`](#edge-pre-positioning) |
+| Redis Cluster | [`#redis-cluster`](#redis-cluster) |
+| Cache Hit Ratio | [`#cache-hit-ratio`](#cache-hit-ratio) |
 
 ---
 
@@ -674,3 +676,56 @@ Placing content at the **network edge before demand arrives**, so that the cache
 
 ### Also see
 - [CDN](../networking.md#cdn) · [Cache-Aside Pattern](#cache-aside-pattern) · [Hot Key](#hot-key) · [Cache Stampede](#cache-stampede)
+
+## Redis Cluster
+
+Redis's native sharding mechanism that distributes data across multiple Redis nodes using **hash slots** (CRC16). Each key is mapped to one of 16,384 hash slots, and each node in the cluster is responsible for a subset of those slots.
+
+> **Key insight**: Redis Cluster distributes _keys_ evenly across nodes, but not _load_. A single hot key maps to exactly one hash slot on one node — scaling the cluster size does not increase throughput for that key. This is why hot-key mitigation (replication, local cache, request coalescing) is required on top of Redis Cluster.
+
+### Key Characteristics
+- **Hash-slotted sharding**: CRC16(key) % 16384 determines the slot; slots are assigned to nodes in contiguous ranges
+- **Automatic failover**: Each shard can have replicas; if a primary fails, a replica is promoted
+- **Client-side routing**: Clients maintain a slot-to-node map and route directly to the correct node (no proxy)
+- **Hash tags**: `{user:123}:profile` and `{user:123}:settings` map to the same slot, enabling multi-key operations
+
+### When to Use
+- Horizontally scaling Redis beyond a single node's memory capacity
+- High-availability deployments requiring automatic failover
+- Workloads with high cardinality keys where load is naturally distributed
+- Multi-key operations that can be co-located using hash tags
+
+### When NOT to Use
+- Hot-key workloads where a single key dominates traffic — Redis Cluster alone will not help; combine with replication strategies
+- Write-heavy single-key workloads where the key must be the serialization point
+- Simple deployments where a single Redis instance with read replicas is sufficient
+- When cross-slot transactions are required (not supported in cluster mode)
+
+### Also see
+- [Hash Slots](#hash-slots) · [Hot Key](#hot-key) · [Cache Replication](../data-architecture.md#cache-replication) · [Request Coalescing](#request-coalescing)
+
+## Cache Hit Ratio
+
+The percentage of requests served directly from the cache without needing to query the backing store (database, origin server, etc.). Calculated as `hits / (hits + misses) × 100`.
+
+> **Key insight**: In read-heavy systems, the cache hit ratio is the single most important performance metric. A drop from 99% to 95% means the database sees 5× more traffic — enough to cascade into a full outage during viral events.
+
+### Key Characteristics
+- **Layered measurement**: Each caching layer (CDN → Redis → local in-memory) has its own hit ratio; each drop signals a different problem
+- **Inverse relationship with database load**: `database QPS = total requests × (1 - cache_hit_ratio)`
+- **TTL sensitivity**: Longer TTLs increase hit ratio but trade off freshness; shorter TTLs reduce hit ratio but keep data current
+- **Key distribution matters**: A 99% hit ratio on 1M unique keys behaves differently than a 99% hit ratio where 1% of keys have a 0% hit rate (hot-key skew)
+
+### When to Use
+- Monitoring the health of caching layers in production
+- Setting SLOs for cache performance (e.g., "CDN hit ratio must stay above 98%")
+- Capacity planning — determining how much database capacity is needed based on expected hit ratio and traffic
+- Debugging cache-related incidents: a sudden drop in hit ratio is the earliest signal of a problem
+
+### When NOT to Use
+- As a standalone metric without per-key granularity — overall hit ratio can hide hot-key problems
+- Write-heavy workloads where cache hit ratio is naturally low and not the primary concern
+- When cache performance is not the bottleneck (e.g., CPU-bound computation, not I/O-bound lookups)
+
+### Also see
+- [Hot Key](#hot-key) · [CDN](../networking.md#cdn) · [TTL](#ttl-time-to-live) · [Eviction Policies](#eviction-policies)

@@ -21,6 +21,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [redis-rate-limiting-patterns.md](redis-rate-limiting-patterns.md) | `cache-17` – `cache-21` | Token bucket Lua, Sorted-set rolling windows, Concurrent limiting, Fail-open, Load shedding |
 | [idempotency-key-takeaways.md](idempotency-key-takeaways.md) | `cache-22` – `cache-25` | Operation identity, Atomic deduplication state, Key propagation, Idempotent consumers |
 | [netflix-open-connect-takeaways.md](netflix-open-connect-takeaways.md) | `cache-26` – `cache-30` | Edge pre-positioning, Pre-warming, Control/data plane split, Buffer-aware ABR, Predict-and-pre-compute |
+| [url-shortener-viral-hotkey-cdn-takeaways.md](url-shortener-viral-hotkey-cdn-takeaways.md) | `cache-31` – `cache-33` | CDN edge caching for HTTP redirects, Redis Cluster hot-key limitation, Systematic troubleshooting order for read-heavy systems |
 
 ## Cross-References
 

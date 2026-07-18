@@ -21,6 +21,7 @@ Problems and strategies for handling concurrent operations, distributed transact
 | [29-tx-key-takeaways.md](29-tx-key-takeaways.md) | `tx-21` – `tx-24` | Check-then-act races, Concurrent-request testing, Atomic idempotency-key persistence, Idempotency state lifecycle |
 | [45-tx-key-takeaways.md](45-tx-key-takeaways.md) | `tx-25` – `tx-30` | Business vs. retry identity, Atomic insert-or-fail, Gateway transaction reference, Layered duplicate protection, Idempotent consumers, Exactly-once as idempotent outcome |
 | [30-tx-key-takeaways.md](30-tx-key-takeaways.md) | `tx-31` – `tx-36` | Redis edge protection, Queue-based serialization, Reservation-payment decoupling, Idempotency tokens, Multi-region inventory, Layered flash-sale defense |
+| [amazon-checkout-scaling-takeaways.md](amazon-checkout-scaling-takeaways.md) | `tx-37` – `tx-41` | Scaling vs. inventory protection, Pessimistic-lock contention cascade, Distributed reservation-expiry cleanup, Eventual consistency as product decision, Impossible-state prevention |
 | [causal-consistency.md](causal-consistency.md) | — | Causal ordering, Happens-before relationships, Vector clocks |
 
 ## Cross-References
