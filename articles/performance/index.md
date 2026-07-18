@@ -16,4 +16,5 @@ Source articles covering performance patterns, strategies, and case studies.
 
 - [Can Java Microservices Be As Fast As Go A 2026 Benchmark Update](Can Java Microservices Be As Fast As Go A 2026 Benchmark Update.md)
 - [Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking](Go Just Killed the Java Thread Model — And Spring Boot Developers Are Panicking.md)
-- [We Rewrote a Python Service in Rust. Six Months Later, I’m Honestly Not Sure It Was Worth It](We Rewrote a Python Service in Rust. Six Months Later, I’m Honestly Not Sure It Was Worth It.md)
+- [We Rewrote a Python Service in Rust. Six Months Later, I'm Honestly Not Sure It Was Worth It](We Rewrote a Python Service in Rust. Six Months Later, I'm Honestly Not Sure It Was Worth It.md)
+- [Torvalds Said Rust Doesn't Fix Logic Errors. Six Months Into My Own Rust Migration, I Think He's Right](torvalds-rust-doesnt-fix-logic-errors.md)

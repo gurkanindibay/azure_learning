@@ -22,10 +22,13 @@ timestamp: 2026-07-04T00:00:00Z
 | Tokio | [`#tokio`](#tokio) |
 | Event Loop | [`#event-loop`](#event-loop) |
 | Context Switching | [`#context-switching`](#context-switching) |
+| Borrow Checker | [`#borrow-checker`](#borrow-checker) |
+| Exhaustiveness Checking | [`#exhaustiveness-checking`](#exhaustiveness-checking) |
 | Amdahl's Law | [`#amdahls-law`](#amdahls-law) |
 | Actor Model | [`#actor-model`](#actor-model) |
 | I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
 | Race Condition | [`#race-condition`](#race-condition) |
+| Wildcard Match Arm | [`#wildcard-match-arm`](#wildcard-match-arm) |
 
 ---
 
@@ -204,6 +207,50 @@ Also called **time-slicing** — the operating system's mechanism for achieving 
 
 ---
 
+## Borrow Checker
+
+Rust's **borrow checker** is a compile-time analysis that enforces ownership, borrowing, and lifetime rules so invalid memory access and data races are rejected before execution.
+
+### Key Characteristics
+- Enforces aliasing and mutation constraints (`many readers` or `one writer`, not both simultaneously).
+- Validates reference lifetimes to prevent dangling pointers and use-after-free.
+- Runs at compile time and emits errors before binaries are produced.
+
+### When to Use
+- Building Rust services where memory safety and race safety need to be structural guarantees.
+- Refactoring unsafe pointer-heavy code paths into ownership-safe abstractions.
+
+### When NOT to Use
+- As a substitute for business-logic review; it verifies memory/concurrency safety, not policy correctness.
+- As a reason to skip domain-invariant tests on critical decision paths.
+
+### Also see
+- [Tokio](#tokio) · [Race Condition](#race-condition) · [Fail Fast](design-patterns.md#fail-fast)
+
+---
+
+## Exhaustiveness Checking
+
+**Exhaustiveness checking** is a compiler guarantee that pattern matching over enums/sum types covers every variant, preventing unhandled-case omissions at compile time.
+
+### Key Characteristics
+- Fails compilation when one or more variants are not matched explicitly.
+- Most effective when wildcard/catch-all branches are avoided in critical logic.
+- Converts "future enum expansion" from a runtime surprise into a compile-time decision point.
+
+### When to Use
+- Authorization, pricing, workflow-state, and compliance rules modeled with enums.
+- Evolving domains where new variants are expected over time.
+
+### When NOT to Use
+- As a blanket excuse to over-model simple two-state logic where explicit branching is already clear.
+- With permissive wildcard branches in policy-critical paths, because that bypasses the protection.
+
+### Also see
+- [Wildcard Match Arm](#wildcard-match-arm) · [Borrow Checker](#borrow-checker) · [Least Privilege](security-iam.md#least-privilege)
+
+---
+
 ## Amdahl's Law
 
 A formula that defines the **maximum theoretical speedup** achievable by parallelizing a program, given that a fraction of it remains serial. If fraction $p$ can be parallelized and $N$ processors are available, the speedup $S$ is:
@@ -291,3 +338,25 @@ A bug where the correctness of a program depends on the **relative timing or int
 
 ### Also see
 - [Lock Contention](data-concurrency.md#lock-contention) · [Actor Model](#actor-model) · [Mutex](dotnet-multithreading.md#mutex)
+
+---
+
+## Wildcard Match Arm
+
+A **wildcard match arm** (for example `_ => ...`) is a catch-all branch in pattern matching that handles all currently unmatched and future variants with one default behavior.
+
+### Key Characteristics
+- Reduces immediate code verbosity but hides domain intent for newly added variants.
+- Keeps compilation green when enum variants evolve, which can mask logic drift.
+- Useful for non-critical fallback behavior, risky for policy or entitlement logic.
+
+### When to Use
+- Non-critical display formatting or telemetry classification where generic fallback is acceptable.
+- Temporary compatibility shims with explicit follow-up cleanup.
+
+### When NOT to Use
+- Authorization, billing, risk, compliance, or routing decisions where each variant needs intentional handling.
+- Long-lived code paths where silent defaulting can become latent production defects.
+
+### Also see
+- [Exhaustiveness Checking](#exhaustiveness-checking) · [Defensive Programming](resilience.md#defensive-programming) · [Architecture Decision Record](design-patterns.md#architecture-decision-record)

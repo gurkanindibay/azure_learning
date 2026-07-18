@@ -24,11 +24,11 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [databases/](databases/) | 9 | [databases/](../system-design-architecture/databases/) |
 | [jvm-runtime/](jvm-runtime/) | 1 | [jvm-runtime/](../system-design-architecture/jvm-runtime/) |
 | [messaging/](messaging/) | 12 | [messaging/](../system-design-architecture/messaging/) |
-| [performance/](performance/) | 3 | [performance/](../system-design-architecture/performance/) |
+| [performance/](performance/) | 4 | [performance/](../system-design-architecture/performance/) |
 | [resilience/](resilience/) | 4 | [resilience/](../system-design-architecture/resilience/) |
 | [security/](security/) | 2 | [security/](../system-design-architecture/security/) |
 | [software-architecture/](software-architecture/) | 7 | [software-architecture/](../system-design-architecture/software-architecture/) |
 | [stream-processing/](stream-processing/) | 3 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 9 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 79 articles across 15 domains
+**Total**: 80 articles across 15 domains
