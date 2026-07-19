@@ -20,6 +20,7 @@ Problems and strategies for building resilient distributed systems: circuit brea
 | [famous-outages.md](famous-outages.md) | `resilience-07` – `resilience-11` | Roblox, Cloudflare, Datadog, Meta, Atlassian outages — circular dependencies, blast radius, correlated failures |
 | [defensive-coding.md](defensive-coding.md) | `arch-12` – `arch-15` | Input validation, Assertions, Fail-safe batch processing, Defensive dependency management |
 | [distributed-resilience-patterns.md](distributed-resilience-patterns.md) | `resilience-12` – `resilience-16` | Missing timeouts, Retry storms + idempotency, DLQ pipeline paralysis, Fallback observability, Resilience choreography |
+| [uber-load-shedding.md](uber-load-shedding.md) | `resilience-17` – `resilience-21` | Static rate limiting failure, CoDel/Adaptive LIFO, Priority-aware PID shedding, BYOS unified engine, Scorecard multitenant fairness |
 
 ## Cross-References
 

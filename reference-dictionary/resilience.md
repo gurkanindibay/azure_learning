@@ -41,6 +41,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Input Validation | [`#input-validation`](#input-validation) |
 | Parameterized Query | [`#parameterized-query`](#parameterized-query) |
 | Shadow Testing | [`#shadow-testing`](#shadow-testing) |
+| CoDel (Controlled Delay) | [`#codel-controlled-delay`](#codel-controlled-delay) |
+| Cinnamon Load Shedder | [`#cinnamon-load-shedder`](#cinnamon-load-shedder) |
+| PID-Based Load Shedding | [`#pid-based-load-shedding`](#pid-based-load-shedding) |
+| Adaptive LIFO | [`#adaptive-lifo`](#adaptive-lifo) |
+| Scorecard Engine | [`#scorecard-engine`](#scorecard-engine) |
 
 ---
 
@@ -523,4 +528,129 @@ A **validation technique** where production traffic is replicated and replayed i
 - [Chaos Engineering](#chaos-engineering)
 - [Defense in Depth](#defense-in-depth)
 - [Dual-Agent Framework](ai-ml-llm.md#dual-agent-framework)
+
+---
+
+## CoDel (Controlled Delay)
+
+A **queue management algorithm** borrowed from networking (designed to combat bufferbloat) that sheds requests based on **how long they have waited in the queue** rather than on queue length. Under normal load the queue behaves as FIFO; under pressure it switches to **Adaptive LIFO**, favoring newer requests that still have a chance to succeed and shedding stale work that clients have likely already abandoned or retried.
+
+### Key Characteristics
+- **Wait-time-based shedding**: tracks minimum queue sojourn time over a sliding interval; sheds when it exceeds the target
+- **Adaptive LIFO**: FIFO under normal load, LIFO under pressure — fresh requests jump ahead of stale ones
+- **Per-operation-type queues**: typically separated into read, write, and slow queues for workload isolation
+- **No static thresholds**: the algorithm self-tunes to observed latency, unlike fixed timeout approaches
+
+### When to Use
+- Stateful storage systems where queue buildup directly reflects resource saturation
+- Multitenant databases where different operation types (point reads vs. scans) have vastly different latency profiles
+- As a first line of defense before priority-aware shedding is implemented
+
+### When NOT to Use
+- When all requests have equal business criticality — CoDel is priority-agnostic and will drop critical traffic alongside background work
+- Systems where fixed, predictable shedding behavior is preferred over adaptive algorithms
+- When the queue is rarely the bottleneck (e.g., CPU-bound systems with negligible queuing)
+
+### Also see
+- [Load Shedding](#load-shedding) · [Adaptive LIFO](#adaptive-lifo) · [Cinnamon Load Shedder](#cinnamon-load-shedder) · [Thundering Herd](#thundering-herd)
+
+---
+
+## Cinnamon Load Shedder
+
+A **priority-aware load shedder** developed at Uber that replaces simple CoDel-based shedding with intelligent, ranked request shedding. Cinnamon makes admission decisions by combining **request rank** (derived from explicit priority or calling service identity, tiered t0–t5), **dynamic system state** (real-time latency and error rate signals), and **PID-based control** to adjust queue timeouts and inflight limits smoothly rather than reacting abruptly.
+
+### Key Characteristics
+- **Tiered priority model**: t0 (critical infrastructure) through t5 (least critical); t1 is user-facing online traffic
+- **PID-regulated**: proportional-integral-derivative control prevents overcorrection and premature shedding
+- **Auto Tuner**: dynamically adjusts inflight concurrency limits based on observed latency and error rates
+- **Simplified queue structure**: priority tags replace separate slow queues — long-running operations are marked low-priority instead
+
+### When to Use
+- Systems with heterogeneous traffic where dropping a ride request is far worse than delaying a background GC job
+- When static timeout/ inflight-limit tuning has become a source of operational toil
+- Multitenant platforms where fairness and priority must coexist
+
+### When NOT to Use
+- Homogeneous workloads where all requests are equally important — simpler shedders suffice
+- Systems without the observability infrastructure to support PID tuning
+- When the operational complexity of PID gain tuning outweighs the benefits of smoother shedding
+
+### Also see
+- [Load Shedding](#load-shedding) · [CoDel](#codel-controlled-delay) · [PID-Based Load Shedding](#pid-based-load-shedding) · [Scorecard Engine](#scorecard-engine) · [Thundering Herd](#thundering-herd)
+
+---
+
+## PID-Based Load Shedding
+
+A **control-theoretic approach to load shedding** that uses a Proportional-Integral-Derivative (PID) controller to dynamically adjust shedding thresholds — queue timeouts, inflight limits, or admission rates — based on real-time system signals (latency, error rate). Unlike simple threshold-based shedding that reacts abruptly, PID control incorporates **history (integral term)** and **trend (derivative term)** to make shedding smooth and anticipatory — like a dimmer switch rather than a hammer.
+
+### Key Characteristics
+- **Proportional (P)**: reacts to current error (e.g., how far latency is above target)
+- **Integral (I)**: corrects for sustained offset — prevents steady-state error where latency lingers slightly above target
+- **Derivative (D)**: dampens oscillation by anticipating the trend — prevents overcorrection
+- **Smooth shedding**: avoids the thundering-herd cycle caused by rejecting all requests at once and having them all retry simultaneously
+
+### When to Use
+- Systems where static shedding thresholds cause oscillation (shed → recover → overload → shed)
+- When premature shedding (rejecting before truly necessary) is causing unnecessary 429s and retry storms
+- As the control heart of a unified load shedding engine
+
+### When NOT to Use
+- Systems too small or too stable to justify PID tuning complexity
+- When the signal being controlled is too noisy for a PID loop to stabilize
+- As a standalone mechanism without priority-aware shedding — PID controls *how much* to shed, not *what* to shed
+
+### Also see
+- [Cinnamon Load Shedder](#cinnamon-load-shedder) · [Load Shedding](#load-shedding) · [CoDel](#codel-controlled-delay) · [Thundering Herd](#thundering-herd)
+
+---
+
+## Adaptive LIFO
+
+A **queue discipline strategy** where the queue switches from FIFO (First-In-First-Out) to LIFO (Last-In-First-Out) under overload. The insight is that during overload, older requests at the head of the queue have likely already timed out or been abandoned by the client — processing them wastes capacity. By switching to LIFO, the system favors newer requests that still have a chance to succeed, effectively failing fast on stale work.
+
+### Key Characteristics
+- **State-dependent discipline**: FIFO in normal operation, LIFO under pressure
+- **Transition trigger**: typically based on queue sojourn time exceeding a target (as in CoDel)
+- **Waste reduction**: avoids processing requests that clients have already abandoned or will retry
+- **Works with any backpressure mechanism**: complementary to rate limiting, circuit breaking, and load shedding
+
+### When to Use
+- Storage systems with significant queuing where client timeouts are shorter than queue wait times during overload
+- As part of a CoDel or similar adaptive queue management implementation
+- Any system where the cost of processing a stale request exceeds the cost of rejecting it
+
+### When NOT to Use
+- Systems where request ordering guarantees are required (e.g., strict FIFO queues for event sourcing)
+- When client timeout windows are much longer than queue wait times — LIFO provides little benefit
+- Standalone — Adaptive LIFO is a queue management tactic, not a complete overload protection strategy
+
+### Also see
+- [CoDel](#codel-controlled-delay) · [Load Shedding](#load-shedding) · [Backpressure](#backpressure)
+
+---
+
+## Scorecard Engine
+
+A **rule-based, deterministic admission control component** that enforces **per-tenant concurrency limits** in multitenant systems, operating independently of system-wide load. Unlike load shedding (which triggers only during overload), the Scorecard caps individual tenants at all times — preventing a single noisy neighbor from saturating shared resources without triggering global overload thresholds.
+
+### Key Characteristics
+- **Per-tenant concurrency caps**: each tenant has a fixed maximum number of in-flight operations
+- **Always-on enforcement**: operates during normal load and overload alike
+- **Deterministic rules**: simple, predictable configuration — no adaptive tuning
+- **Incident containment**: during outages, instantly pinpoints which tenant is driving excess load
+
+### When to Use
+- Multitenant databases or platforms where tenants share the same physical resources
+- When a single tenant's background job can saturate I/O without crossing global concurrency thresholds
+- As a complement to load shedding — Scorecard handles per-tenant fairness, shedder handles global overload
+
+### When NOT to Use
+- Single-tenant systems where per-tenant isolation is architectural rather than enforced
+- When tenant workloads are homogeneous and well-behaved — the overhead of per-tenant tracking may not justify the benefit
+- As a substitute for load shedding — Scorecard does not protect against system-wide overload
+
+### Also see
+- [Bulkhead](#bulkhead) · [Load Shedding](#load-shedding) · [Blast Radius](#blast-radius) · [Rate Limiting](api-design.md#rate-limiting)
 

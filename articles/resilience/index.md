@@ -17,4 +17,5 @@ Source articles covering resilience patterns, strategies, and case studies.
 - [What 5 Famous Outages Taught Me About System Design](What 5 Famous Outages Taught Me About System Design.md)
 - [defensive-coding-approach](defensive-coding-approach.md)
 - [resilience-patterns-in-distributed-systems](resilience-patterns-in-distributed-systems.md)
+- [uber-intelligent-load-management](uber-intelligent-load-management.md)
 - [your-circuit-breaker-lying-to-you](your-circuit-breaker-lying-to-you.md)
