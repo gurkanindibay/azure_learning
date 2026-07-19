@@ -20,6 +20,7 @@ timestamp: 2026-06-18T00:00:00Z
 | io_method | [`#iomethod`](#iomethod) |
 | io_uring | [`#iouring`](#iouring) |
 | pg_aios | [`#pgaios`](#pgaios) |
+| QPS (Queries Per Second) | [`#qps`](#qps) |
 | shared_buffers | [`#sharedbuffers`](#sharedbuffers) |
 | B-Tree | [`#b-tree`](#b-tree) |
 | Bloom Filter | [`#bloom-filter`](#bloom-filter) |
@@ -119,6 +120,31 @@ A system view introduced in PostgreSQL 18 that exposes runtime statistics about 
 - Not meaningful for workloads using `io_method = 'sync'`
 
 **Also see**: [io_method](#io-method), [effective_io_concurrency](#effective-io-concurrency)
+
+---
+
+## QPS (Queries Per Second) {#qps}
+
+A performance metric that measures how many database queries (reads, writes, or mixed) a system can handle per second. QPS is the primary throughput indicator for OLTP workloads and is commonly used in capacity planning, benchmarking, and SLO definitions.
+
+### Key Characteristics
+- **Read vs. write asymmetry**: read QPS and write QPS are measured separately because writes involve durability overhead (fsync, WAL, replication)
+- **Latency-dependent**: QPS is meaningful only when paired with a latency percentile (e.g., "10,000 QPS at p99 < 10 ms"); raw QPS without latency context is misleading
+- **Connection pooling matters**: max QPS is often gated by connection-pool size, not CPU; too few connections underutilize the database, too many cause contention
+- **Linear scaling range**: QPS scales near-linearly with resources until a bottleneck (CPU, disk I/O, lock contention) saturates
+
+### When to Use
+- Capacity planning: estimating how many instances are needed for a target workload
+- Benchmarking: comparing database engines, configurations, or hardware (e.g., `pgbench`, `sysbench`)
+- SLO/SLA definitions: committing to a throughput ceiling with an accompanying latency bound
+- Autoscaling triggers: scaling out when QPS approaches a predefined threshold
+
+### When NOT to Use
+- As a standalone metric without latency context — high QPS with high p99 latency is a failing system
+- For analytical/OLAP workloads where throughput is better measured in bytes scanned per second or query completion time
+- Comparing across fundamentally different workloads (point-lookup QPS ≠ join-heavy QPS)
+
+**Also see**: [shared_buffers](#shared-buffers), [effective_io_concurrency](#effective-io-concurrency), [Durability](#durability)
 
 ---
 
