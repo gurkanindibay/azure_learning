@@ -23,3 +23,4 @@ Source articles covering concurrency transactions patterns, strategies, and case
 - [System Design Interview: How Would You Avoid Overselling Inventory During a Flash Sale?](avoid-overselling-inventory-flash-sale.md)
 - [Amazon: 1 Million Users Clicked Checkout At Once — The Real Problem Wasn't Scaling](amazon-million-users-checkout-scaling.md)
 - [How Would You Design a Thread Pool to Send 10 Million SMS Messages in One Hour](thread-pool-design-10-million-sms.md)
+- [How Mastering Idempotency Saved Our Event-Driven System](how-mastering-idempotency-saved-event-driven-system.md)

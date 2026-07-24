@@ -19,10 +19,12 @@ timestamp: 2026-06-14T00:00:00Z
 | asyncio | [`#asyncio`](#asyncio) |
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
+| Atomic Increment | [`#atomic-increment`](#atomic-increment) |
 | Causal Consistency | [`#causal-consistency`](#causal-consistency) |
 | Causal Ordering | [`#causal-ordering`](#causal-ordering) |
 | Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
 | Compensating Transaction | [`#compensating-transaction`](#compensating-transaction) |
+| Deterministic Key | [`#deterministic-key`](#deterministic-key) |
 | Distributed Lock | [`#distributed-lock`](#distributed-lock) |
 | Double-Booking Problem | [`#double-booking-problem`](#double-booking-problem) |
 | Exclusion Constraint | [`#exclusion-constraint`](#exclusion-constraint) |
@@ -88,6 +90,38 @@ If one row is updated, the booking succeeded; if zero, the resource was already 
 - Complex business rules that cannot be expressed in a single predicate
 
 **Also see**: [Pessimistic Locking](#pessimistic-locking), [Optimistic Locking](#optimistic-locking), [Exclusion Constraint](#exclusion-constraint)
+
+---
+
+## Atomic Increment
+
+A database operation that modifies a numeric column in place (e.g., `SET counter = counter + 1`) as a single atomic action, without reading the current value into application memory first. Combined with deduplication, the increment fires only on the first observation of an event, preventing double-counting from retries.
+
+```sql
+-- Atomic increment: no read-before-write, no race condition
+UPDATE posts SET like_count = like_count + 1 WHERE id = ?;
+
+-- Atomic increment with dedup guard:
+-- Track processed eventId in same transaction
+INSERT INTO processed_events (event_id) VALUES (?);
+UPDATE posts SET like_count = like_count + 1 WHERE id = ?;
+```
+
+### Key Characteristics
+- **In-place mutation**: The database performs the arithmetic, not the application — eliminates the read-modify-write race window
+- **Affected-row count**: Zero rows affected means the WHERE predicate failed (e.g., row deleted), not a duplicate
+- **Dedup pairing**: Must be paired with deduplication tracking (idempotency key or event ID) to prevent the same increment from firing twice
+
+### When to Use
+- Counter updates in event-driven systems where retries can cause duplicate increments
+- Like counts, view counts, and engagement metrics that must remain accurate under at-least-once delivery
+- Any numeric column that should be mutated, not overwritten
+
+### When NOT to Use
+- When the increment requires complex business logic or conditional branching
+- When the counter must be part of a multi-row invariant (use serializable isolation instead)
+
+**Also see**: [Atomic Conditional Update](#atomic-conditional-update), [Idempotency](../cqrs-event-driven.md#idempotency), [Atomic Deduplication](../messaging.md#atomic-deduplication)
 
 ---
 
@@ -446,6 +480,29 @@ A consistency model for distributed systems that guarantees all nodes observe ca
 ### Also see
 - [Causal Ordering](#causal-ordering) · [Consistency Model](#consistency-model) · [Vector Clocks](#vector-clocks)
 - Azure implementation: [Azure Cosmos DB consistency levels](../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) — Session consistency is the closest match (causal-ordering guarantees scoped to a session)
+
+---
+
+## Deterministic Key
+
+A primary key or unique identifier derived from business data (e.g., `SHA256(userId + postId)`) rather than generated randomly or via auto-increment. For idempotent systems, deterministic keys ensure that all retries of the same logical action produce the same key, causing the database to safely reject duplicates via unique constraint violations.
+
+### Key Characteristics
+- **Business-derived**: The key is a function of the business identity — same action → same key across all retries
+- **Database-enforced uniqueness**: The storage engine, not application code, rejects duplicates
+- **Producer responsibility**: The producer must compute the key before the first publish attempt
+- **No central coordinator needed**: Each producer independently computes the same key for the same action
+
+### When to Use
+- Event-driven systems where at-least-once delivery can produce duplicate messages
+- Idempotent write paths where auto-increment keys would silently create duplicate rows
+- Systems where the business identity (userId + postId, orderId + version) is stable and known at event creation time
+
+### When NOT to Use
+- When the business identity is not known until after the database write (e.g., the DB assigns the ID)
+- When the key would be excessively large (hash it instead)
+
+**Also see**: [Idempotency](../cqrs-event-driven.md#idempotency), [Event ID](../cqrs-event-driven.md#event-id), [Atomic Conditional Update](#atomic-conditional-update)
 
 ---
 

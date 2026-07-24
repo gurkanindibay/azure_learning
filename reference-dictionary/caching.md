@@ -56,6 +56,7 @@ timestamp: 2026-06-14T00:00:00Z
 | MULTI/EXEC (Redis Transactions) | [`#multiexec-redis-transactions`](#multiexec-redis-transactions) |
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
+| SET NX (Redis) | [`#set-nx-redis`](#set-nx-redis) |
 
 ---
 
@@ -907,5 +908,35 @@ A Redis data structure that stores unique members paired with a numeric score, m
 
 ### Also see
 - [Cache-Aside Pattern](#cache-aside-pattern) · [TTL](#ttl-time-to-live) · [Sharding](../architecture-patterns.md#sharding) · [Leaderboard Pattern](../architecture-patterns.md#leaderboard-pattern)
+
+---
+
+## SET NX (Redis)
+
+The Redis `SET key value NX` command — "set if not exists." It atomically creates a key only if it does not already exist, returning `OK` on success and `(nil)` if the key was already present. This is the foundational primitive for building lightweight deduplication gatekeepers, distributed locks, and idempotency filters.
+
+```
+Consumer receives event with eventId = "abc-123"
+  → Redis: SET event:abc-123 "processing" NX EX 300
+    ├─ Returns OK     → First time seeing this event → process it
+    └─ Returns (nil)  → Duplicate → discard immediately
+```
+
+### Key Characteristics
+- **Atomic check-and-set**: The existence check and set happen in a single atomic operation — no race condition between check and write
+- **Always pair with TTL**: Use `EX` or `PX` to set an expiry; without it, keys accumulate indefinitely and cause memory leaks
+- **Sub-millisecond latency**: Redis serves SET NX in microseconds, making it suitable as a high-throughput pre-filter
+- **TTL should exceed retry window**: Set the TTL longer than the broker's maximum retry window to cover all possible duplicate deliveries
+
+### When to Use
+- Deduplication gatekeeper before expensive business logic in event-driven consumers
+- Lightweight distributed lock for non-critical operations (cache refresh, job dedup)
+- Ensuring only one consumer instance processes a given event at a time
+
+### When NOT to Use
+- As the sole deduplication mechanism — Redis can lose keys on eviction or restart; always pair with DB constraints
+- For correctness-critical locking (use Redlock or ZooKeeper with fencing tokens instead)
+
+**Also see**: [Deduplication Store](../messaging.md#deduplication-store), [Atomic Deduplication](../messaging.md#atomic-deduplication), [Idempotency](../cqrs-event-driven.md#idempotency), [TTL](#ttl-time-to-live)
 
 ---

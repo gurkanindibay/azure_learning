@@ -37,6 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Aggregate Snapshot | [`#aggregate-snapshot`](#aggregate-snapshot) |
 | Cryptographic Erasure | [`#cryptographic-erasure`](#cryptographic-erasure) |
 | Event ID | [`#event-id`](#event-id) |
+| Event Replay | [`#event-replay`](#event-replay) |
 | Eventual Consistency | [`#eventual-consistency`](#eventual-consistency) |
 | Event Backbone | [`#event-backbone`](#event-backbone) |
 | Async Workflow | [`#async-workflow`](#async-workflow) |
@@ -417,6 +418,30 @@ A **globally unique identifier** assigned to every business event at production 
 
 ### Also see
 - [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
+
+---
+
+## Event Replay
+
+A validation technique that replays captured production event logs through a system in a staging environment to prove idempotency holds under real failure conditions. The same batch of historical events is replayed multiple times with injected duplicates and out-of-order delivery, and the final database state must be identical after every replay.
+
+### Key Characteristics
+- **Production-scale data**: Uses real event volume and patterns, not synthetic test data
+- **Chaos injection**: Artificially duplicates events and shuffles delivery order to simulate network partitions
+- **Deterministic outcome**: Row counts, checksums, and counter values must match between replays
+- **Side-effect isolation**: Downstream notifications and external API calls are mocked to avoid impacting real users
+
+### When to Use
+- Validating that an event-driven system is truly idempotent before deploying to production
+- After retrofitting idempotency into an existing system that was not originally designed for it
+- As a regression test after changes to consumer logic or retry policies
+
+### When NOT to Use
+- As a substitute for unit and integration tests (it complements them, not replaces them)
+- When the staging environment cannot match production data volumes
+
+### Also see
+- [Idempotency](#idempotency) · [Event Sourcing](#event-sourcing) · [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture) · [Deduplication Store](../reference-dictionary/messaging.md#deduplication-store)
 
 ---
 
