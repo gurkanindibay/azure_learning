@@ -42,6 +42,7 @@ timestamp: 2026-06-14T00:00:00Z
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
 | Impossible State | [`#impossible-state`](#impossible-state) |
 | Lock Contention | [`#lock-contention`](#lock-contention) |
+| Task Claiming | [`#task-claiming`](#task-claiming) |
 
 ---
 
@@ -643,3 +644,40 @@ A performance bottleneck that occurs when **multiple threads compete for the sam
 
 ### Also see
 - [Race Condition](../concurrency-runtimes.md#race-condition) · [Mutex](../dotnet-multithreading.md#mutex) · [Pessimistic Locking](#pessimistic-locking) · [Actor Model](../architecture-patterns.md#actor-model)
+
+---
+
+## Task Claiming
+
+### task-claiming
+
+A distributed coordination pattern where multiple workers compete for tasks by atomically updating a shared state in the database. The worker whose UPDATE succeeds owns the task; all others move on. This provides **exactly-once task ownership** without a dedicated message broker or distributed lock service.
+
+```sql
+UPDATE sms_tasks
+SET status = 'PROCESSING', worker = 'server-3'
+WHERE id = ? AND status = 'PENDING';
+```
+
+If zero rows are updated, another worker already claimed the task.
+
+### Key Characteristics
+- **Atomic guard**: the `WHERE status = 'PENDING'` clause acts as an optimistic lock — only one worker can transition the row from PENDING to PROCESSING
+- **Database as coordination point**: no additional infrastructure needed beyond the existing database
+- **Self-healing**: stuck PROCESSING tasks can be recovered by a scheduled job that resets tasks older than a timeout back to PENDING
+- **Row-level locking**: the UPDATE acquires a brief row lock; at very high throughput this can create database contention
+
+### When to Use
+- Batch processing across multiple application servers where a message broker is not available
+- Work-queue patterns backed by a relational database (e.g., email delivery, SMS campaigns, report generation)
+- As a fallback when the primary message broker is unavailable
+
+### When NOT to Use
+- High-throughput systems (>10K tasks/sec) — database contention becomes a bottleneck; use Kafka/RabbitMQ with consumer groups instead
+- When tasks are stateless and idempotent (claiming adds unnecessary database writes)
+- When the database is already a scaling bottleneck (don't add more load to a struggling DB)
+
+### Also see
+- [Optimistic Locking](#optimistic-locking) — the underlying mechanism that makes task claiming atomic
+- [Pessimistic Locking](#pessimistic-locking) — the heavier alternative (SELECT FOR UPDATE)
+- [Distributed Lock](#distributed-lock) — a more general but heavier-weight alternative

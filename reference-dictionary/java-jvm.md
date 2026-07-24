@@ -41,6 +41,7 @@ timestamp: 2026-06-15T00:00:00Z
 | Helidon SE | [`#helidon-se`](#helidon-se) |
 | Thread Pinning | [`#thread-pinning`](#thread-pinning) |
 | Carrier Thread | [`#carrier-thread`](#carrier-thread) |
+| CallerRunsPolicy | [`#callerrunspolicy`](#callerrunspolicy) |
 
 ---
 
@@ -486,4 +487,42 @@ Virtual Thread lifecycle on a carrier:
 - [Virtual Threads](#virtual-threads) — the feature carrier threads support
 - [Thread Pinning](#thread-pinning) — failure mode where carrier threads get stuck
 - [Goroutine](concurrency-runtimes.md#goroutine) — Go's equivalent where OS threads are the implicit carrier pool
+
+---
+
+## CallerRunsPolicy
+
+### callerrunspolicy
+
+A `ThreadPoolExecutor` **rejection policy** in Java that, when the work queue is full and the pool is at maximum capacity, makes the **calling (producer) thread execute the task directly** instead of rejecting it or throwing an exception.
+
+```java
+new ThreadPoolExecutor(
+    corePoolSize, maxPoolSize,
+    keepAlive, TimeUnit.SECONDS,
+    new ArrayBlockingQueue<>(5000),
+    new ThreadPoolExecutor.CallerRunsPolicy()
+);
+```
+
+### Key Characteristics
+- **Automatic backpressure**: when the producer thread executes the task, it cannot submit more tasks until the current one completes — naturally slowing production
+- **No data loss**: tasks are never silently dropped or rejected; the caller absorbs the work
+- **Feedback loop**: the slowdown propagates upstream to the producer, which may be a batch loop, a message consumer, or a scheduler
+- **Thread context inversion**: the producer thread temporarily becomes a worker, which can cause unexpected behavior if the producer is a request-serving thread (e.g., Tomcat HTTP thread)
+
+### When to Use
+- Offline batch jobs, scheduled processing, data migration, and SMS/email campaigns where the producer is a dedicated worker thread
+- Bounded queue scenarios where you want flow control without additional coordination code
+- Systems where tasks must never be silently discarded
+
+### When NOT to Use
+- **Request-serving threads**: Tomcat, Jetty, or Netty HTTP threads — if they start executing batch work, the server stops accepting new HTTP requests, freezing the website
+- Low-latency APIs where the caller cannot afford to block on task execution
+- When the task execution time is unpredictable or unbounded (the caller may block indefinitely)
+
+### Also see
+- [Backpressure](resilience.md#backpressure) — the general pattern that CallerRunsPolicy implements locally
+- [Bounded Queue](resilience.md#backpressure) — the queue strategy that pairs with this policy
+- [Virtual Threads](#virtual-threads) — an alternative concurrency model that avoids thread-pool sizing entirely
 

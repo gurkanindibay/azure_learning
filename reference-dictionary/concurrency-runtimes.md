@@ -27,6 +27,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Amdahl's Law | [`#amdahls-law`](#amdahls-law) |
 | Actor Model | [`#actor-model`](#actor-model) |
 | I/O-bound vs CPU-bound | [`#io-bound-vs-cpu-bound`](#io-bound-vs-cpu-bound) |
+| Thread Pool Sizing Formula | [`#thread-pool-sizing-formula`](#thread-pool-sizing-formula) |
 | Race Condition | [`#race-condition`](#race-condition) |
 | Wildcard Match Arm | [`#wildcard-match-arm`](#wildcard-match-arm) |
 
@@ -360,3 +361,43 @@ A **wildcard match arm** (for example `_ => ...`) is a catch-all branch in patte
 
 ### Also see
 - [Exhaustiveness Checking](#exhaustiveness-checking) · [Defensive Programming](resilience.md#defensive-programming) · [Architecture Decision Record](design-patterns.md#architecture-decision-record)
+
+---
+
+## Thread Pool Sizing Formula
+
+### thread-pool-sizing-formula
+
+A heuristic for estimating the initial thread count for a thread pool based on the workload classification (I/O-bound vs CPU-bound) and the ratio of wait time to compute time.
+
+```text
+Threads = CPU Cores × Target CPU Utilization × (1 + Wait Time / Compute Time)
+```
+
+### Key Characteristics
+- **I/O-bound workloads**: the wait/compute ratio is high (e.g., 8:1 for network calls), so more threads than CPU cores make sense — threads spend most of their time blocked on I/O, not competing for CPU
+- **CPU-bound workloads**: the wait/compute ratio approaches 0, so threads ≈ CPU cores × utilization target
+- **Starting point only**: the formula provides a reasoned baseline; production values must come from load testing under realistic conditions
+- **Target utilization < 100%**: always leave headroom for GC, OS tasks, and workload spikes
+
+### Example
+
+| Parameter | Value |
+|:---|:---|
+| CPU cores | 16 |
+| Target utilization | 80% (0.8) |
+| Wait/Compute ratio | 8:1 |
+| **Result** | 16 × 0.8 × (1 + 8) ≈ **115 threads** |
+
+### When to Use
+- Initial capacity planning for thread pools before load testing
+- System design interviews and architecture discussions to justify thread count decisions
+- Comparing language runtimes (the formula is language-agnostic)
+
+### When NOT to Use
+- As a replacement for load testing — real systems have variable wait times, gateway throttling, and GC pauses the formula cannot capture
+- With virtual threads / goroutines (M:N scheduling) — the formula models OS-thread-level parallelism, not user-space task multiplexing
+- For dynamic workloads where thread counts should be runtime-adjustable
+
+### Also see
+- [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound) · [Amdahl's Law](#amdahls-law) · [Virtual Threads](java-jvm.md#virtual-threads) · [Backpressure](resilience.md#backpressure)
