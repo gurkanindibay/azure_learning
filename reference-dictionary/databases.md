@@ -37,6 +37,7 @@ timestamp: 2026-06-18T00:00:00Z
 | Masterless Architecture | [`#masterless-architecture`](#masterless-architecture) |
 | Durability | [`#durability`](#durability) |
 | HyperLogLog | [`#hyperloglog`](#hyperloglog) |
+| Upsert | [`#upsert`](#upsert) |
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -514,6 +515,31 @@ A **probabilistic cardinality estimator** that counts unique elements in a multi
 
 ### Also see
 - [Cardinality Estimation](../databases.md#cardinality-estimation) · [Bloom Filter](../databases.md#bloom-filter) · [Morris Probabilistic Counter](../caching.md#morris-probabilistic-counter) · [Redis Internals Takeaways](../../system-design-architecture/caching/redis-internals.md#cache-12)
+
+---
+
+## Upsert
+
+A database operation that **inserts a row if it does not exist, or updates it if it does** — a portmanteau of "update" and "insert." Upserts are a key building block for idempotent consumers because replaying the same upsert produces the same final state without errors or duplicate rows.
+
+### Key Characteristics
+- **Atomic**: The insert-or-update decision is made atomically at the database level — no read-modify-write race
+- **Conflict detection**: Uses a unique constraint or primary key to determine whether the row already exists
+- **SQL syntax**: `INSERT ... ON CONFLICT (key) DO UPDATE SET ...` (PostgreSQL/SQLite), `MERGE` (SQL Server), `REPLACE` (MySQL), `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL)
+- **Idempotent by design**: The same upsert executed N times produces the same row state — no constraint violations, no duplicates
+
+### When to Use
+- Idempotent event consumers where replay should overwrite state, not fail
+- Data synchronization pipelines where the source of truth is eventually reflected
+- Cache refresh patterns where missing entries are populated and stale entries are updated
+
+### When NOT to Use
+- When the target state is not stable across replays (e.g., `EXCLUDED.updated_at = NOW()` changes each time)
+- When the upsert would overwrite newer data with stale data from a delayed message — pair with version checks or `GREATEST` logic
+- When INSERT-only with constraint-violation handling provides clearer auditability of which events were duplicates
+
+### Also see
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
 
 ---
 

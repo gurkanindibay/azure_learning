@@ -57,6 +57,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Replay Attack | [`#replay-attack`](#replay-attack) |
 | Flash Sale | [`#flash-sale`](#flash-sale) |
 | Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
+| Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
+| Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
 
 ## Business Capability
 
@@ -1123,3 +1125,52 @@ A defense-in-depth pattern for distributed messaging systems that applies dedupl
 
 ### Also see
 - [Client-Side Deduplication](../reference-dictionary/messaging.md#client-side-deduplication) · [Delivery Cursor](../reference-dictionary/messaging.md#delivery-cursor) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
+
+---
+
+## Two Generals Problem
+
+A **fundamental thought experiment in distributed systems** that proves it is impossible for two parties to reach consensus over an unreliable communication channel with absolute certainty. Two generals must coordinate an attack via messengers who may be captured; no finite exchange of messages can guarantee both generals know the other received the plan — there is always a last message whose acknowledgment cannot be confirmed.
+
+### Key Characteristics
+- **Unsolvable in the general case**: No protocol can guarantee both parties agree with 100% certainty over an unreliable channel
+- **Maps to distributed systems**: Producer-consumer acknowledgment, two-phase commit, and TCP handshakes all face the same fundamental limitation — you can never be certain the last acknowledgment was received
+- **Practical mitigation**: Systems accept probabilistic guarantees (timeouts, retries, idempotency) rather than absolute certainty
+- **Originally formulated by Akkoyunlu et al. (1975) and named by Jim Gray (1978)**
+
+### When to Use
+- Understanding why exactly-once delivery is theoretically impossible in the general case
+- Explaining why at-least-once with idempotency is the pragmatic choice over exactly-once
+- Designing systems where the uncertainty of acknowledgment is explicitly accounted for
+
+### When NOT to Use
+- As an excuse to avoid building idempotency — the theoretical impossibility of perfect coordination is precisely why idempotency is mandatory
+- To argue that distributed systems are inherently unreliable and therefore not worth engineering rigorously
+
+### Also see
+- [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics) · [Exactly-Once Semantics](../reference-dictionary/messaging.md#exactly-once-semantics) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
+
+---
+
+## Deterministic Processing
+
+A design constraint on event-processing logic requiring that **the same input always produces the same output**, regardless of when or how many times processing occurs. Non-deterministic functions (`NOW()`, `UUID()`, external API calls) are replaced with values carried in the event payload or derived deterministically from it.
+
+### Key Characteristics
+- **Event-derived values only**: All processing inputs come from the event payload — no ambient state (clock, random, network)
+- **Replay-safe**: The same event stream replayed N times produces identical final state
+- **Enables event sourcing**: Deterministic processing is a prerequisite for event replay as a recovery and auditing mechanism
+- **Event-carried state transfer**: Events must carry sufficient data for consumers to process without external calls
+
+### When to Use
+- Event-sourced systems where replay is used for recovery, migration, or auditing
+- Idempotent consumers where non-determinism would break the idempotency guarantee
+- Systems requiring provable correctness through replay verification
+
+### When NOT to Use
+- When external API enrichment is essential and caching is not feasible (accept that replay may produce slightly different results)
+- Simple CRUD consumers where replay is never needed
+- When event size constraints prevent carrying all required data in the payload
+
+### Also see
+- [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Event Replay](../reference-dictionary/cqrs-event-driven.md#event-replay) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)

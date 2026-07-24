@@ -30,6 +30,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Kafka Connect | [`#kafka-connect`](#kafka-connect) |
 | Kafka Transactions | [`#kafka-transactions`](#kafka-transactions) |
 | Idempotent Consumer | [`#idempotent-consumer`](#idempotent-consumer) |
+| Idempotent Producer | [`#idempotent-producer`](#idempotent-producer) |
 | Auto Commit | [`#auto-commit`](#auto-commit) |
 | Redis Streams | [`#redis-streams`](#redis-streams) |
 | Per-Device Inbox | [`#per-device-inbox`](#per-device-inbox) |
@@ -42,6 +43,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Claim Check | [`#claim-check`](#claim-check) |
 | Atomic Deduplication | [`#atomic-deduplication`](#atomic-deduplication) |
 | Deduplication Store | [`#deduplication-store`](#deduplication-store) |
+| Deduplication Window | [`#deduplication-window`](#deduplication-window) |
 | Distributed Commit Log | [`#distributed-commit-log`](#distributed-commit-log) |
 | Message Batching | [`#message-batching`](#message-batching) |
 | Replay (Kafka Reprocessing) | [`#replay-kafka-reprocessing`](#replay-kafka-reprocessing) |
@@ -408,6 +410,29 @@ A consumer designed so that **processing the same message multiple times produce
 
 ---
 
+## Idempotent Producer
+
+A Kafka producer configured with `enable.idempotence=true` that ensures **no duplicate messages are written to the broker** despite producer retries. Kafka assigns the producer a unique Producer ID (PID) and each message a monotonically increasing sequence number. The broker tracks the last committed sequence number per partition and silently discards any message whose sequence number is less than or equal to the last committed one.
+
+### Key Characteristics
+- **PID + sequence number**: Each producer session gets a unique PID; each message within that session gets an incrementing sequence number
+- **Broker-side dedup**: The broker maintains a per-partition map of (PID → last committed sequence number) — duplicate writes are dropped before appending to the log
+- **Single-partition scope**: Idempotence applies within a single producer session to a single partition; across sessions or partitions, duplicates are still possible
+- **Enabled by default in Kafka ≥ 3.0**: `enable.idempotence` defaults to `true` since AK 3.0 (KIP-679)
+
+### When to Use
+- Any Kafka producer where duplicate messages would cause incorrect application state
+- When combined with `acks=all` for full durability guarantees
+- As a prerequisite for Kafka Exactly-Once Semantics (EOS) with transactions
+
+### When NOT to Use
+- When producer throughput is the top priority and occasional duplicates are acceptable (logging, metrics)
+- When the application layer already has robust idempotency (the producer-level dedup is redundant but harmless)
+
+**Also see**: [Exactly-Once Semantics](#exactly-once-semantics) · [Kafka Transactions](#kafka-transactions) · [Idempotent Consumer](#idempotent-consumer)
+
+---
+
 ## Auto Commit
 
 A Kafka consumer mode (`enable-auto-commit: true`) where offsets are **committed periodically on a timer**, independent of whether processing succeeded. The fastest strategy but also the most dangerous: if the consumer crashes after commit but before processing, those messages are **permanently lost**.
@@ -679,6 +704,30 @@ A **shared, external data store** used by idempotent consumers to track which ev
 
 ### Also see
 - [Atomic Deduplication](#atomic-deduplication) · [Event ID](../reference-dictionary/cqrs-event-driven.md#event-id) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern)
+
+---
+
+## Deduplication Window
+
+The **time period during which a messaging system retains deduplication state** to detect and discard duplicate messages. Infrastructure-level deduplication (Kafka idempotent producer, SQS FIFO) only works within this bounded window — once it expires, duplicates can pass through undetected.
+
+### Key Characteristics
+- **Bounded by retention**: The deduplication window should match or exceed the message retention period (e.g., Kafka retains 7 days → dedup keys kept for 7 days)
+- **System-specific**: SQS FIFO has a fixed 5-minute window; Kafka's window is configurable via `max.in.flight.requests` and producer session lifetime
+- **Cleanup required**: Stale deduplication records must be purged via scheduled jobs — unbounded growth degrades broker performance
+- **Not a substitute for application idempotency**: The window can expire; application-layer idempotency with durable storage is the only permanent guarantee
+
+### When to Use
+- Understanding the limits of broker-level deduplication guarantees
+- Sizing TTLs for Redis-based dedup stores at the application layer
+- Designing cleanup policies for deduplication state in long-running systems
+
+### When NOT to Use
+- As the sole deduplication mechanism — always pair with application-layer idempotency
+- When messages may be legitimately replayed beyond the window (event sourcing, audit replays)
+
+### Also see
+- [Deduplication Store](#deduplication-store) · [Idempotent Producer](#idempotent-producer) · [At-Least-Once Semantics](#at-least-once-semantics)
 
 ---
 
