@@ -19,3 +19,4 @@ Source articles covering caching patterns, strategies, and case studies.
 - [Idempotency Keys Prevent Duplicate Side Effects](idempotency-keys-prevent-duplicate-side-effects.md)
 - [How Netflix Handles 260 Million Concurrent Streams Without Buffering](netflix-open-connect-edge-caching.md)
 - [URL Shortener Suddenly Crashes During IPL Finals: How Will You Fix?](url-shortener-viral-hotkey-cdn-caching.md)
+- [Amazon Cart Shows Old Data — Cache Invalidation and Distributed Session Consistency](amazon-cart-cache-invalidation-deep-dive.md)

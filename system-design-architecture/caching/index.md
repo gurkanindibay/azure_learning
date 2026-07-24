@@ -22,6 +22,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [idempotency-key-takeaways.md](idempotency-key-takeaways.md) | `cache-22` – `cache-25` | Operation identity, Atomic deduplication state, Key propagation, Idempotent consumers |
 | [netflix-open-connect-takeaways.md](netflix-open-connect-takeaways.md) | `cache-26` – `cache-30` | Edge pre-positioning, Pre-warming, Control/data plane split, Buffer-aware ABR, Predict-and-pre-compute |
 | [url-shortener-viral-hotkey-cdn-takeaways.md](url-shortener-viral-hotkey-cdn-takeaways.md) | `cache-31` – `cache-33` | CDN edge caching for HTTP redirects, Redis Cluster hot-key limitation, Systematic troubleshooting order for read-heavy systems |
+| [amazon-cart-cache-invalidation-takeaways.md](amazon-cart-cache-invalidation-takeaways.md) | `cache-34` – `cache-38` | Three cache-invalidation failure modes, Event-driven invalidation + outbox, Cross-device session consistency, Invalidation observability |
 
 ## Cross-References
 
