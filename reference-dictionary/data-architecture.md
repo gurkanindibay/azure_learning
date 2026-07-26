@@ -36,6 +36,7 @@ timestamp: 2026-06-28T00:00:00Z
 | Database Unique Constraint | [`#database-unique-constraint`](#database-unique-constraint) |
 | Small File Problem | [`#small-file-problem`](#small-file-problem) |
 | Denormalization | [`#denormalization`](#denormalization) |
+| Data Skew | [`#data-skew`](#data-skew) |
 
 ---
 
@@ -529,4 +530,28 @@ The intentional introduction of **redundant data copies** shaped for specific re
 
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [API Composition](api-design.md#api-composition) · [Change Data Capture](data-concurrency.md#change-data-capture)
+
+---
+
+## Data Skew
+
+An uneven distribution of data or traffic across shards in a horizontally partitioned database. Data skew creates hot shards that become throughput bottlenecks — one shard saturates while others remain idle — negating the benefits of horizontal scaling.
+
+### Key Characteristics
+- **Hot shard**: A single shard receiving disproportionately more reads/writes than peers
+- **Causes**: Low-cardinality shard keys (`status`, `order_type`), natural entity hotspots (popular merchants during flash sales), or hash collisions
+- **Measurable**: Coefficient of variation (CV) of per-shard QPS or row count > 0.3 indicates problematic skew
+- **Self-reinforcing**: A hot shard slows down → more requests queue up → lag increases → the shard gets hotter
+
+### When to Use
+- Monitoring shard balance in production — target skew rate below 15%
+- Designing shard keys: evaluate candidate keys for dispersion before deployment
+- Capacity planning: assume worst-case skew when sizing shards
+
+### When NOT to Use
+- As a reason to avoid sharding — skew is manageable with composite keys and monitoring
+- Before understanding the actual access patterns (measure, don't assume)
+
+### Also see
+- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Composite Shard Key](../reference-dictionary/architecture-patterns.md#composite-shard-key) · [Sharding](#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 

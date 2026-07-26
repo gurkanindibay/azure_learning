@@ -28,6 +28,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Outbox Pattern | [`#outbox-pattern`](#outbox-pattern) |
 | Post-Commit Dispatch | [`#post-commit-dispatch`](#post-commit-dispatch) |
 | Idempotency | [`#idempotency`](#idempotency) |
+| Cross-Shard Query | [`#cross-shard-query`](#cross-shard-query) |
 | Idempotency State Explosion | [`#idempotency-state-explosion`](#idempotency-state-explosion) |
 | API Idempotency | [`#api-idempotency`](#api-idempotency) |
 | Token-Based Idempotency | [`#token-based-idempotency`](#token-based-idempotency) |
@@ -574,3 +575,26 @@ A **coordination pattern that breaks a long-running business process into indepe
 
 - [Outbox Pattern](#outbox-pattern) · [Event-Driven Architecture](#event-driven-architecture) · [Eventual Consistency](#eventual-consistency) · [CQRS](#cqrs)
 - [29-arch-key-takeaways.md](../system-design-architecture/29-arch-key-takeaways.md)
+
+---
+
+## Cross-Shard Query
+
+A database query that must read data from multiple shards to produce a complete result. Cross-shard queries occur when the query filter does not include the shard key — the database cannot determine which single shard holds the relevant data and must broadcast the query to all shards (scatter-gather).
+
+### Key Characteristics
+- **Scatter-gather execution**: Query is sent to every shard, partial results are merged at the coordinator or application layer
+- **Linear cost scaling**: Query latency and resource consumption grow proportionally with shard count
+- **Pagination complexity**: `LIMIT 10 OFFSET 100` across shards requires fetching `(OFFSET + LIMIT)` rows from every shard, merging, sorting, and slicing
+- **Mitigation strategies**: Secondary indexes (Elasticsearch), global secondary indexes, or denormalized query-specific tables
+
+### When to Use
+- Identifying queries that need cross-shard optimization before they become production bottlenecks
+- Designing secondary index strategies when the shard key cannot cover all query patterns
+
+### When NOT to Use
+- As the default query pattern — cross-shard queries should be the exception, not the norm
+- When a query can be restructured to include the shard key
+
+### Also see
+- [Global Secondary Index](../reference-dictionary/messaging.md#global-secondary-index) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)

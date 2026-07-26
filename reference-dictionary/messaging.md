@@ -69,6 +69,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Delivery Cursor | [`#delivery-cursor`](#delivery-cursor) |
 | Configuration Server | [`#configuration-server`](#configuration-server) |
 | Config Server | [`#config-server`](#config-server) |
+| Dual-Write Migration | [`#dual-write-migration`](#dual-write-migration) |
+| Global Secondary Index | [`#global-secondary-index`](#global-secondary-index) |
 
 ## Client-Side Deduplication
 
@@ -1171,6 +1173,54 @@ The **number of copies of each partition** maintained across the Kafka cluster. 
 
 ### Also see
 - [ISR (In-Sync Replica)](#isr-in-sync-replica) · [Producer Acknowledgement](#producer-acknowledgement) · [Partition](#partition) · [Log Segment](#log-segment)
+
+---
+
+## Dual-Write Migration
+
+A database migration strategy where the application writes to both the old (monolith) and new (sharded) systems simultaneously during a transition period. Dual-write enables zero-downtime migration with instant rollback capability — if the new system misbehaves, traffic is routed back to the old system without data loss.
+
+### Key Characteristics
+- **Concurrent writes**: Every write operation targets both old and new systems in the same request path
+- **Failure handling**: If the new-system write fails, the old-system write is rolled back or the request is rejected — data consistency across systems is preserved
+- **Four-phase process**: Dual-write → batch backfill of historical data → real-time reconciliation → controlled traffic rollout (1% → 10% → 50% → 100%)
+- **Rollback safety**: As long as dual-write is active, reverting is a config change, not a data migration
+
+### When to Use
+- Migrating a live, high-traffic database table to a sharded architecture without downtime
+- Any migration where a big-bang cutover is unacceptable due to 24/7 availability requirements
+
+### When NOT to Use
+- When the old and new systems have incompatible data models that cannot be reconciled in real time
+- Low-traffic systems where a brief maintenance window is acceptable and simpler
+- When write latency doubling (both systems must be written) exceeds the application's latency budget
+
+### Also see
+- [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern) · [Dual-Write Problem](../reference-dictionary/cqrs-event-driven.md#dual-write-problem) · [Strangler Fig](../reference-dictionary/architecture-patterns.md#strangler-fig) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+
+---
+
+## Global Secondary Index
+
+An index in a distributed database that spans all shards and enables efficient queries on non-shard-key columns without broadcasting to every shard. Unlike a local secondary index (which exists within a single shard), a global secondary index maintains its own sharded storage, mapping the indexed column values to the primary keys and shard locations.
+
+### Key Characteristics
+- **Cross-shard coverage**: Index entries are distributed across all shards independently of the base table's sharding scheme
+- **Asynchronous maintenance**: Index updates may lag behind base-table writes, introducing eventual consistency
+- **Middleware or database-native**: Implemented by ShardingSphere, Spanner, DynamoDB GSIs, or Cosmos DB composite indexes
+- **Storage overhead**: The index consumes additional disk and memory proportional to indexed column cardinality
+
+### When to Use
+- Query patterns that frequently filter by a non-shard-key column (e.g., `merchant_id` in a `user_id`-sharded orders table)
+- When the alternative — broadcasting queries to all shards and merging results — exceeds latency or resource budgets
+
+### When NOT to Use
+- When the indexed column has very low cardinality (e.g., `status`) — the index provides little filtering benefit
+- When write throughput is the bottleneck and the index update overhead is unacceptable
+- When cross-shard queries are rare and scatter-gather is acceptable
+
+### Also see
+- [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Cross-Shard Query](../reference-dictionary/cqrs-event-driven.md#cross-shard-query)
 
 ---
 

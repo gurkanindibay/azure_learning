@@ -24,3 +24,4 @@ Source articles covering databases patterns, strategies, and case studies.
 - [your-system-design-is-fine-your-database-decisions-are-why-youre-failing](your-system-design-is-fine-your-database-decisions-are-why-youre-failing.md)
 - [how-fintech-system-taught-me-why-netflix-uses-cassandra](how-fintech-system-taught-me-why-netflix-uses-cassandra.md)
 - [hyperloglog-cardinality-estimation](hyperloglog-cardinality-estimation.md)
+- [how-to-shard-and-partition-databases-for-1-billion-orders](how-to-shard-and-partition-databases-for-1-billion-orders.md)

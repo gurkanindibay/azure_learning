@@ -59,6 +59,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
 | Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
 | Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
+| Shard Key | [`#shard-key`](#shard-key) |
 
 ## Business Capability
 
@@ -1174,3 +1175,27 @@ A design constraint on event-processing logic requiring that **the same input al
 
 ### Also see
 - [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Event Replay](../reference-dictionary/cqrs-event-driven.md#event-replay) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
+
+---
+
+## Shard Key
+
+The column or combination of columns used to determine which shard a row belongs to in a horizontally partitioned database. The shard key is the single most important design decision in sharding — a poor choice creates hotspots, cross-shard queries, and migration pain.
+
+### Key Characteristics
+- **Routing function**: The shard key is fed into a hash or range function to produce the shard identifier
+- **Immutable**: Once chosen, changing the shard key requires a full data migration
+- **Query locality**: Queries that include the shard key target a single shard; queries without it must scatter-gather across all shards
+
+### When to Use
+- Selecting a shard key during database horizontal scaling design
+- Evaluating whether an existing key satisfies dispersion, business relevance, and stability requirements
+
+### When NOT to Use
+- When a single-column key cannot satisfy all access patterns — consider a composite shard key or gene-based sharding
+- Before understanding the full query workload (at least 80% of queries should include the key)
+
+### Also see
+- [Composite Shard Key](#composite-shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Sharding](../reference-dictionary/data-architecture.md#sharding)
+
+

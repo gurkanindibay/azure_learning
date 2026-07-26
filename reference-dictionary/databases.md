@@ -38,6 +38,8 @@ timestamp: 2026-06-18T00:00:00Z
 | Durability | [`#durability`](#durability) |
 | HyperLogLog | [`#hyperloglog`](#hyperloglog) |
 | Upsert | [`#upsert`](#upsert) |
+| Snowflake ID | [`#snowflake-id`](#snowflake-id) |
+| Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -540,6 +542,53 @@ A database operation that **inserts a row if it does not exist, or updates it if
 
 ### Also see
 - [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
+
+---
+
+## Snowflake ID
+
+A 64-bit distributed unique identifier originally developed by Twitter, composed of a timestamp (41 bits), a worker/node ID (10 bits), and a sequence number (12 bits). Snowflake IDs are time-sortable, require no central coordinator, and can be generated at very high throughput (~4M IDs/second per worker).
+
+### Key Characteristics
+- **64-bit integer**: Compact and index-friendly compared to UUID (128 bits)
+- **Time-sortable**: Roughly ordered by creation time — the timestamp is in the high bits
+- **Decentralized generation**: Each worker generates IDs independently using its assigned worker ID
+- **Customizable bit layout**: The standard layout can be modified — e.g., replacing worker bits with a shard "gene" for routing
+
+### When to Use
+- Distributed systems needing unique, roughly time-ordered IDs without coordination
+- Order systems, social media posts, any entity that benefits from sortable primary keys
+- When UUID size (128-bit) is too large for the storage/index budget
+
+### When NOT to Use
+- When cryptographically random IDs are required (use UUIDv4 or random tokens)
+- When global total ordering is needed (Snowflake IDs are roughly ordered, not strictly sequenced)
+- When worker ID assignment and clock synchronization are too operationally complex
+
+### Also see
+- [KSUID](../reference-dictionary/architecture-patterns.md#ksuid) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Database ID Strategy](../system-design-architecture/databases/database-id-strategy.md)
+
+---
+
+## Composite Shard Key
+
+A shard key composed of two or more columns combined to determine shard placement. Composite keys address the hotspot problem by spreading data from a high-traffic entity (e.g., a popular merchant) across multiple shards, while still allowing efficient single-shard queries when all key components are known.
+
+### Key Characteristics
+- **Multi-column routing**: `hash(column_a + column_b) % N` distributes data across shards
+- **Hotspot mitigation**: A single dimension (e.g., `merchant_id`) that would concentrate traffic is combined with a high-cardinality dimension (e.g., `user_id`)
+- **Query tradeoff**: Queries on the full composite key hit one shard; queries on only one component require scatter-gather
+
+### When to Use
+- Flash sale or peak-traffic scenarios where single-column shard keys create hotspots
+- Systems where one entity (merchant, tenant, region) generates disproportionate write volume
+
+### When NOT to Use
+- When all queries naturally include a single, well-distributed key — composite adds complexity with no benefit
+- When the composite key components are not available at query time for the dominant access pattern
+
+### Also see
+- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 ---
 

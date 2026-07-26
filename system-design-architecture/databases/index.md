@@ -20,6 +20,7 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [database-id-strategy.md](database-id-strategy.md) | `db-18` | External UUID/ULID vs internal auto-increment ID strategy |
 | [sql-query-optimization.md](sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 | [sql-system-design.md](sql-system-design.md) | `sqld-01` – `sqld-08` | Scaling ladder, SQL vs NoSQL, CQRS, Event Sourcing, Row-Level Security, DB per service + Saga, Performance checklist |
+| [sharding-partitioning-strategies.md](sharding-partitioning-strategies.md) | `db-19` – `db-24` | Vertical partitioning, Shard key selection, Gene-based sharding with Snowflake ID, Cross-shard queries, Dual-write migration, Composite shard keys |
 
 ## Cross-References
 
