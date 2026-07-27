@@ -45,6 +45,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Impossible State | [`#impossible-state`](#impossible-state) |
 | Lock Contention | [`#lock-contention`](#lock-contention) |
 | Task Claiming | [`#task-claiming`](#task-claiming) |
+| PACELC Theorem | [`#pacelc-theorem`](#pacelc-theorem) |
 
 ---
 
@@ -738,3 +739,36 @@ If zero rows are updated, another worker already claimed the task.
 - [Optimistic Locking](#optimistic-locking) — the underlying mechanism that makes task claiming atomic
 - [Pessimistic Locking](#pessimistic-locking) — the heavier alternative (SELECT FOR UPDATE)
 - [Distributed Lock](#distributed-lock) — a more general but heavier-weight alternative
+
+---
+
+## PACELC Theorem
+
+An **extension of the CAP theorem** that addresses its main limitation: CAP only describes the tradeoff during a network **P**artition (P). PACELC asks: "**E**lse" — when there is no partition, what is the tradeoff? The answer: **L**atency vs **C**onsistency. This means every distributed system makes two choices: (1) during a Partition: Availability or Consistency; (2) Else (normal operation): Latency or Consistency.
+
+```
+PACELC Decision Matrix:
+              ┌─ During Partition (P):
+              │   A (Availability) — continue serving, risk inconsistency
+              │   C (Consistency)  — block writes, ensure correctness
+System ───────┤
+              └─ Else (no partition):
+                  L (Latency)      — return quickly, risk staleness
+                  C (Consistency)  — coordinate, pay latency cost
+```
+
+### Key Characteristics
+- **Two-dimensional classification**: Systems are PC/EC (strong consistency always), PA/EL (available and fast), or PC/EL (consistent during partitions, fast during normal operation)
+- **Explains real-world database behavior**: DynamoDB is PA/EL (highly available, eventually consistent by default). Spanner is PC/EC (strongly consistent always, pays latency cost of TrueTime). Cosmos DB is tunable PA/EL–PC/EC.
+- **Bridges theory and practice**: Most candidates can recite CAP but cannot explain why their "strongly consistent" system with read replicas and async replication is actually PA/EL
+
+### When to Use (in system design)
+- When justifying database choice: "We chose Cosmos DB with session consistency because our users need read-your-own-writes but can tolerate cross-region staleness"
+- When explaining why a system with read replicas cannot claim strong consistency: "Async replication means our secondaries lag; during normal operation we traded consistency (C) for latency (L)"
+
+### When NOT to Use
+- In single-node systems — PACELC only applies to distributed (replicated/partitioned) databases
+- As a crutch to avoid concrete latency numbers — always quantify: "p99 write latency increases from 5ms to 50ms with synchronous replication"
+
+### Also see
+- [CAP Theorem](#cap-theorem) · [Consistency Models](#consistency-models) · [Eventual Consistency](#eventual-consistency) · [Strong Consistency](#strong-consistency) · [Quorum](#quorum)

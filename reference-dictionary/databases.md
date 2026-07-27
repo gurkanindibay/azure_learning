@@ -40,6 +40,8 @@ timestamp: 2026-06-18T00:00:00Z
 | Upsert | [`#upsert`](#upsert) |
 | Snowflake ID | [`#snowflake-id`](#snowflake-id) |
 | Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
+| Write Consolidation | [`#write-consolidation`](#write-consolidation) |
+| Key Salting | [`#key-salting`](#key-salting) |
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -591,4 +593,61 @@ A shard key composed of two or more columns combined to determine shard placemen
 - [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 ---
+
+## Write Consolidation
+
+A write-optimization pattern that **buffers and batches individual writes in application-layer memory** before executing a single bulk write to the database. Instead of issuing N individual INSERT/UPDATE statements for N events, the application accumulates them and flushes in batches — reducing database round-trips, connection overhead, and transaction count.
+
+### Key Characteristics
+- **Application-layer batching**: Writes are accumulated in an in-memory buffer (array, ring buffer) and flushed on a timer or threshold
+- **Reduced database load**: 1,000 individual INSERTs become 1 bulk INSERT, dramatically reducing I/O and transaction log overhead
+- **Tradeoff: durability window**: Data in the buffer but not yet flushed can be lost on process crash
+
+### When to Use
+- High-throughput write workloads where individual writes would overwhelm the database (e.g., clickstream ingestion, IoT telemetry, log collection)
+- Mitigating hot-partition write pressure — buffer writes to the hot shard and flush in controlled batches
+- Systems using LSM-Tree databases (Cassandra, RocksDB) where bulk writes leverage sequential I/O efficiency
+
+### When NOT to Use
+- When write durability is critical and loss of unflushed data is unacceptable — write directly to the database or use a write-ahead log
+- When write latency must be minimal (real-time systems) — batching adds intentional delay
+- When the database already has efficient client-side batching (many drivers batch automatically)
+
+### Also see
+- [Hot Partition](../messaging.md#hot-partition) · [Write-Ahead Buffer](../messaging.md#write-ahead-buffer) · [LSM-Tree](#lsm-tree) · [B-Tree](#b-tree)
+
+---
+
+## Key Salting
+
+A **partition-hotspot mitigation technique** where a random suffix ("salt") is appended to the partition key of high-traffic entities, causing their data to spread across multiple physical shards. Reads on a salted key require querying all possible salt values and merging results (scatter-gather). This trades read complexity for write distribution when a single logical key generates disproportionate load.
+
+```
+Without salting:
+  hash("celebrity_user_42") → Shard 3 (all load on one shard)
+
+With salting (salt range 0-3):
+  hash("celebrity_user_42#0") → Shard 3
+  hash("celebrity_user_42#1") → Shard 5
+  hash("celebrity_user_42#2") → Shard 7
+  hash("celebrity_user_42#3") → Shard 1
+```
+
+### Key Characteristics
+- **Salt cardinality tradeoff**: More salt values → better write distribution but more expensive reads (must query all salts)
+- **Hot-key identification prerequisite**: You must first detect which keys are hot before applying salting — salting every key wastes read performance
+- **Deterministic salt assignment**: The salt value for a given key must be consistent (e.g., `hash(key) % N`) so writes and reads route to the same shards
+
+### When to Use
+- Celebrity-user problems: a single user account generates orders of magnitude more traffic than average
+- Flash-sale or peak-traffic scenarios where specific product/merchant IDs become hot
+- Any partition-key distribution that appears uniform by key count but is skewed by per-key load
+
+### When NOT to Use
+- When the hot-key problem doesn't exist — salting adds unnecessary scatter-gather overhead
+- When reads must be single-shard for latency guarantees — the scatter-gather cost may be unacceptable
+- When the database natively handles hot partitions (e.g., Cosmos DB automatic partitioning, Cassandra virtual nodes)
+
+### Also see
+- [Hot Partition](../messaging.md#hot-partition) · [Composite Shard Key](#composite-shard-key) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 

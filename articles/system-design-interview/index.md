@@ -28,3 +28,4 @@ Source articles covering system design interview patterns, strategies, and case 
 - [system-design-preparation-master-sheet](system-design-preparation-master-sheet.md)
 - [million-notifications-system-design](million-notifications-system-design.md)
 - [every-system-design-interview-is-secretly-about-these-16-companies](every-system-design-interview-is-secretly-about-these-16-companies.md)
+- [why-standard-template-fails-system-design-interviews](why-standard-template-fails-system-design-interviews.md)

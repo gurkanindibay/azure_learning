@@ -23,6 +23,7 @@ Frameworks, roadmaps, and practical strategies for system design interviews: int
 | [system-design-preparation-master-sheet-takeaways.md](system-design-preparation-master-sheet-takeaways.md) | `sdi-28` – `sdi-33` | Six abilities framework, 5-layer preparation model, 6-step answer framework, Back-of-envelope estimation, Highest-ROI study order, 9-step practice loop |
 | [system-design-review-plan.md](system-design-review-plan.md) | `sdi-43` – `sdi-71` | 29-check phase-by-phase review checklist for self-validation during practice; memorize until automatic |
 | [29-sdi-key-takeaways.md](../29-sdi-key-takeaways.md) | `sdi-72` – `sdi-74` | Universal layered architecture across 16 at-scale systems, Fan-out on write vs read hybrid, Constraint-driven architecture internalization |
+| [31-sdi-key-takeaways.md](../31-sdi-key-takeaways.md) | `sdi-75` – `sdi-81` | Constraint-driven design over template memorization, Cache crash → DB cascade, Partition key hot spots (key salting), PACELC consistency accountability, Storage engine fundamentals (B-Tree vs LSM-Tree), Operational failure design (retry storms, DLQ), Five-phase senior interview framework |
 
 ## Cross-References
 

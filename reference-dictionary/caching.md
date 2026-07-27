@@ -57,6 +57,10 @@ timestamp: 2026-06-14T00:00:00Z
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | SET NX (Redis) | [`#set-nx-redis`](#set-nx-redis) |
+| **Advanced Mitigations** | |
+| Single-Flight Execution | [`#single-flight-execution`](#single-flight-execution) |
+| Soft TTL | [`#soft-ttl`](#soft-ttl) |
+| Probabilistic Early Invalidation | [`#probabilistic-early-invalidation`](#probabilistic-early-invalidation) |
 
 ---
 
@@ -940,3 +944,94 @@ Consumer receives event with eventId = "abc-123"
 **Also see**: [Deduplication Store](../messaging.md#deduplication-store), [Atomic Deduplication](../messaging.md#atomic-deduplication), [Idempotency](../cqrs-event-driven.md#idempotency), [TTL](#ttl-time-to-live)
 
 ---
+
+### Advanced Mitigations
+
+## Single-Flight Execution
+
+A cache-stampede mitigation pattern that **collapses concurrent duplicate requests for the same cache key into a single database query**. When multiple requests arrive simultaneously for a key that is not in cache, only one request is allowed to query the database; all other requests wait for and share that single result. Also known as request coalescing or deduplication-at-the-gate.
+
+```
+Requests A, B, C simultaneously request key "user:123"
+  → Cache miss for all three
+  → Request A acquires the "flight lock" for "user:123"
+  → Requests B, C wait on the lock
+  → Request A: SELECT * FROM users WHERE id=123
+  → Request A: SET user:123 <data> EX 300
+  → Requests B, C: receive the cached result from A
+```
+
+### Key Characteristics
+- **Lock-per-key granularity**: Only requests for the same key block each other; requests for different keys proceed independently
+- **Reduces DB load to O(1)**: Regardless of how many concurrent requests arrive, the database receives exactly one query per unique key
+- **In-memory coordination**: Typically implemented with an in-process lock or concurrent map, not an external service
+
+### When to Use
+- High-traffic endpoints where a cache miss would trigger hundreds of identical database queries
+- Cold-start scenarios after a cache flush or deployment restart
+- Any cache-aside pattern where the cache miss penalty is expensive (complex queries, external API calls)
+
+### When NOT to Use
+- When cache hit rates are already above 99% — the coordination overhead exceeds the benefit
+- When the database query is trivially cheap (e.g., primary key lookup on an indexed table)
+- Across service instances — in-process locks don't work across instances; use a distributed lock or let each instance query independently
+
+### Also see
+- [Cache Stampede](#cache-stampede) · [PER Algorithm](#per-algorithm) · [Request Coalescing](#request-coalescing) · [Cache-Aside Pattern](#cache-aside-pattern)
+
+---
+
+## Soft TTL
+
+A cache-freshness pattern where the **cache entry embeds its own logical expiration time** separately from Redis's physical TTL. A background worker detects entries approaching their soft expiry and proactively refreshes them before the hard TTL deletes the key. This prevents cache-stampede cold starts by ensuring popular keys never truly expire — they are refreshed in the background while still serving traffic.
+
+```
+Cache entry: { data: {...}, softExpiresAt: 1720000000 }
+Redis TTL:   EX 600 (10 minutes hard expiry)
+Soft TTL:    480 seconds (8 minutes — refresh before hard expiry)
+
+At t=480s: Background worker sees softExpiresAt is in the past
+  → Worker: SELECT * FROM users WHERE id=123
+  → Worker: SET user:123 <new_data> EX 600
+  → Meanwhile: existing (slightly stale) data is still served
+```
+
+### Key Characteristics
+- **Dual-expiry design**: Soft expiry triggers refresh; hard (Redis) TTL is the safety net
+- **No cache misses during refresh**: The old value remains available while the new value is being computed
+- **Requires background workers**: A scheduler or cron job must periodically scan for keys nearing soft expiry
+
+### When to Use
+- Keys that are expensive to compute and have predictable refresh cadences
+- Data where serving slightly stale data is acceptable but cache misses are not (e.g., user profiles, configuration, feature flags)
+- Hot keys that, if they expire, would trigger a stampede
+
+### When NOT to Use
+- When data freshness requirements are strict (e.g., financial balances, inventory counts)
+- When the dataset is too large to scan for soft-expiry — use event-driven invalidation instead
+- When the operational complexity of background workers outweighs the benefit
+
+### Also see
+- [TTL](#ttl-time-to-live) · [Cache Stampede](#cache-stampede) · [Event-Driven Invalidation](#event-driven-invalidation) · [Probabilistic Early Invalidation](#probabilistic-early-invalidation)
+
+---
+
+## Probabilistic Early Invalidation
+
+A cache-refresh optimization that uses an **algorithm to probabilistically refresh cache entries before they expire**, based on request frequency. The more often a key is accessed, the earlier it gets refreshed — spreading refresh load across time rather than concentrating it at expiration. This is also known as the XFetch algorithm or probabilistic recaching.
+
+### Key Characteristics
+- **Rate-adaptive**: Refresh probability increases as time-to-expiry decreases and as request rate increases
+- **No central coordinator**: Each cache read independently decides whether to trigger a refresh based on a probability function
+- **Smooths refresh spikes**: Instead of all hot keys refreshing at once, refreshes are distributed across the expiration window
+
+### When to Use
+- Systems with many hot keys that expire at similar times (scheduled cache rebuilds, TTL-aligned deployments)
+- When single-flight execution alone is insufficient because the stampede spans many different keys
+
+### When NOT to Use
+- When the dataset is small and refresh is cheap — the probabilistic logic adds unnecessary complexity
+- When strict consistency is required — probabilistic refresh always has a chance of serving stale data
+
+### Also see
+- [Cache Stampede](#cache-stampede) · [Soft TTL](#soft-ttl) · [PER Algorithm](#per-algorithm) · [Single-Flight Execution](#single-flight-execution)

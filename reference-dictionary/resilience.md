@@ -46,6 +46,7 @@ timestamp: 2026-06-14T00:00:00Z
 | PID-Based Load Shedding | [`#pid-based-load-shedding`](#pid-based-load-shedding) |
 | Adaptive LIFO | [`#adaptive-lifo`](#adaptive-lifo) |
 | Scorecard Engine | [`#scorecard-engine`](#scorecard-engine) |
+| Retry Storm | [`#retry-storm`](#retry-storm) |
 
 ---
 
@@ -653,4 +654,28 @@ A **rule-based, deterministic admission control component** that enforces **per-
 
 ### Also see
 - [Bulkhead](#bulkhead) · [Load Shedding](#load-shedding) · [Blast Radius](#blast-radius) · [Rate Limiting](api-design.md#rate-limiting)
+
+---
+
+## Retry Storm
+
+A **self-inflicted cascading failure** where upstream services repeatedly retry failed requests to a degraded downstream service, amplifying the load and turning a partial degradation into a full outage. Unlike a simple traffic spike, a retry storm compounds — every retry that also fails generates more retries, creating a positive feedback loop that acts as a self-inflicted Distributed Denial of Service (DDoS) attack on the recovering service.
+
+### Key Characteristics
+- **Amplification factor**: If service A calls service B 1 time but retries 3 times on failure, and every service in the call chain does the same, a single user request can become dozens of retries at the deepest layer
+- **Synchronization danger**: Without jitter, retries from many clients align in time, creating a thundering herd pattern that hits the degraded service in synchronized waves
+- **Blocks recovery**: The degraded service, already struggling, receives even more traffic from retries — preventing it from ever catching up
+
+### When to Use (mitigations)
+- Every retry logic in a distributed system must include **exponential backoff** (increasing wait times between retries) and **jitter** (randomized intervals to desynchronize retry waves)
+- **Circuit breakers** should be paired with retries — the breaker opens and blocks all calls before retries amplify the load
+- **Retry budgets** limit the total number of retries across all requests, preventing unbounded amplification
+
+### When NOT to Use (plain retries)
+- Never use fixed-interval retries without backoff — they guarantee a retry storm under degraded conditions
+- Never retry on non-idempotent write operations without idempotency keys
+- Never retry indefinitely — always set a maximum retry count or deadline
+
+### Also see
+- [Circuit Breaker](#circuit-breaker) · [Exponential Backoff](#exponential-backoff) · [Jitter](#jitter) · [Thundering Herd](#thundering-herd) · [Bulkhead](#bulkhead)
 
