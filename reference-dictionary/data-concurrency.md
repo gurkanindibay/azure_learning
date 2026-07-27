@@ -40,6 +40,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
+| Gene-Based Sharding | [`#gene-based-sharding`](#gene-based-sharding) |
 | Vector Clocks | [`#vector-clocks`](#vector-clocks) |
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
 | Impossible State | [`#impossible-state`](#impossible-state) |
@@ -390,6 +391,31 @@ Splitting a database into **independent partitions (shards)** based on a shard k
 > **Tradeoff**: Sharding adds operational complexity. Exhaust indexing, caching, read replicas, and vertical scaling first.
 
 **Also see**: [ACID Transactions](#acid-transactions)
+
+---
+
+## Gene-Based Sharding
+
+A sharding strategy where a routing "gene" — typically the low-order bits of a user or tenant identifier — is embedded directly into each record's primary key (e.g., a Snowflake ID). This enables **zero-lookup routing**: the shard location is deterministically extracted from the ID itself, without querying an external mapping service.
+
+### Key Characteristics
+- **Embedded routing**: Bits 10–21 of a 64-bit Snowflake ID carry the shard gene extracted from `user_id & 0xFFF`
+- **Co-location guarantee**: All records sharing the same gene map to the same shard — user-history queries hit exactly one shard
+- **Zero-lookup**: Given any record ID, the application computes `(id >> 10) & 0xFFF` to determine the shard — no external index needed
+- **Multi-pattern support**: Optimizes the primary access pattern (user-bound queries); secondary patterns (merchant, order-no lookup) use a secondary index
+
+### When to Use
+- Order management systems with multiple query patterns where one pattern dominates (~80% of queries)
+- When eliminating the latency and operational cost of an external shard-routing service is valuable
+- When the ID generation system can be modified to embed routing bits
+
+### When NOT to Use
+- When the dominant query pattern changes frequently — the gene is baked into every ID and is expensive to change
+- When ID opacity is a hard requirement (embedded genes reveal routing topology)
+- When multiple co-location dimensions are equally important — gene-based sharding optimizes for one dimension
+
+### Also see
+- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Composite Shard Key](../reference-dictionary/architecture-patterns.md#composite-shard-key) · [Snowflake ID](../reference-dictionary/architecture-patterns.md#snowflake-id) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 ---
 

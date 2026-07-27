@@ -60,6 +60,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
 | Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
 | Shard Key | [`#shard-key`](#shard-key) |
+| Snowflake ID | [`#snowflake-id`](#snowflake-id) |
+| Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
 
 ## Business Capability
 
@@ -1197,5 +1199,54 @@ The column or combination of columns used to determine which shard a row belongs
 
 ### Also see
 - [Composite Shard Key](#composite-shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Sharding](../reference-dictionary/data-architecture.md#sharding)
+
+---
+
+## Snowflake ID
+
+A 64-bit globally unique identifier format, originally developed by Twitter, that embeds a timestamp, machine ID, and sequence number into a single integer. Unlike UUIDs, Snowflake IDs are roughly time-sortable and only 8 bytes — making them B-tree-friendly for database primary keys.
+
+### Key Characteristics
+- **64-bit structure**: `[sign:1][timestamp:41][machine:10][sequence:12]` in the classic layout
+- **Time-sortable**: The timestamp in the high bits means IDs generated later are numerically larger — sequential inserts to B-tree indexes
+- **Decentralized generation**: No coordination needed between ID generators; each machine gets a unique machine ID
+- **Customizable layout**: Bits can be repurposed — e.g., gene-based sharding replaces machine bits with a shard-routing gene extracted from `user_id`
+
+### When to Use
+- Distributed systems that need unique, sortable IDs without a central coordinator
+- Database primary keys where B-tree locality matters and UUIDs would cause page splits
+- Order systems where the ID itself should encode routing information (gene-based sharding)
+
+### When NOT to Use
+- When IDs must be fully opaque (Snowflake IDs leak timestamp and machine origin)
+- When the 69-year timestamp range (from custom epoch) is insufficient
+- When coordination-free generation is not needed — auto-increment is simpler for single-instance databases
+
+### Also see
+- [Shard Key](#shard-key) · [Composite Shard Key](#composite-shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Database ID Strategies](../system-design-architecture/databases/database-id-strategy.md)
+
+---
+
+## Composite Shard Key
+
+A shard key composed of two or more columns combined via hashing or concatenation to distribute data more evenly than any single column can. Composite keys address hotspots by mixing a high-traffic dimension (e.g., `merchant_id`) with a high-cardinality dimension (e.g., `user_id`).
+
+### Key Characteristics
+- **Multi-column routing**: `hash(merchant_id + user_id) % N` or `(merchant_id + "_" + user_id) % N`
+- **Hotspot mitigation**: Spreads a popular merchant's traffic across shards by including the user dimension
+- **Tradeoff with query locality**: Merchant-level queries become cross-shard since the merchant's data is no longer co-located
+- **Alternative to gene-based sharding**: Composite keys work at the application-routing layer; gene-based sharding embeds routing in the ID itself
+
+### When to Use
+- Flash-sale or peak-traffic scenarios where a single entity (merchant, event, campaign) would saturate one shard
+- When no single column satisfies all three shard-key principles (dispersion, business relevance, stability)
+
+### When NOT to Use
+- When the secondary dimension has low cardinality — a two-column key with `(merchant_id, status)` still concentrates traffic
+- When all query patterns require co-location by the primary dimension — accept some hotspot risk
+- When gene-based sharding (embedding the routing gene in the ID) is feasible and preferred for zero-lookup routing
+
+### Also see
+- [Shard Key](#shard-key) · [Snowflake ID](#snowflake-id) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding)
 
 
