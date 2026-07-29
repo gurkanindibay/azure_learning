@@ -1062,3 +1062,131 @@ An **AI agent architecture** where two specialized agents work in tandem: one ac
 - [Agent Harness](#agent-harness)
 - [Shadow Testing](resilience.md#shadow-testing)
 - [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Plan and Execute
+
+An agent orchestration pattern where a **Planner** model first emits an immutable, structured plan (typically a Directed Acyclic Graph of execution steps in a strict JSON schema), and a separate deterministic **Executor** state machine walks through each step sequentially. Unlike raw ReAct loops, Plan & Execute separates planning from execution, enabling auditability, resumability, and prevention of infinite loop divergence.
+
+### Key Characteristics
+
+- **Plan-first, execute-second**: The Planner emits a DAG of steps before any tool is called; the Executor never deviates from the plan without invoking a Replanner
+- **Deterministic execution engine**: Steps are walked by a state machine (e.g., LangGraph-backed), not an LLM, ensuring predictable transitions
+- **Dynamic replanning on failure**: If a step fails or invalidates the plan, a Replanner node modifies the remaining DAG nodes rather than allowing an unbounded loop
+- **Inner ReAct for tool interactions**: Each DAG node may spin up a lightweight, context-confined ReAct agent for mechanical tool calls, but the outer orchestration remains deterministic
+
+### When to Use
+
+- When building production-grade agents for Tier 1 systems where non-deterministic loops are unacceptable (e.g., financial reconciliation, compliance automation)
+- When the problem space has a well-structured decomposition into discrete, verifiable steps
+- When you need audit trails and resumability after failures
+
+### When NOT to Use
+
+- For simple, single-step tool calls where the overhead of DAG construction outweighs the benefit
+- When the problem is highly exploratory and the plan cannot be determined upfront
+- When latency is critical and the Planner → Executor → Replanner pipeline adds unacceptable overhead
+
+### Also see
+
+- [Agentic AI](#agentic-ai)
+- [Agent Loop](#agent-loop)
+- [ReAct (Reasoning + Acting)](#react-reasoning--acting)
+- [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Memory Fabric
+
+A **hierarchical memory architecture** for AI agents that treats agent context like a classic computer memory hierarchy: Short-Term (in-flight execution state), Mid-Term (on-demand vector retrieval of relevant schemas/specs), and Long-Term (append-only audit logs). This keeps the active LLM context window slim and fast while providing compliance-grade traceability.
+
+### Key Characteristics
+
+- **Short-Term Memory (Graph State)**: Thread-safe state objects passed between orchestration nodes, holding only current execution telemetry (transaction IDs, discrepancies, tool logs)
+- **Mid-Term Memory (Vector RAG)**: A retrieval layer over the enterprise catalog — the agent queries a vector database to fetch only the relevant OpenAPI specs, DDLs, or documentation needed for the current execution branch
+- **Long-Term Memory (Audit Database)**: An append-only datastore (e.g., PostgreSQL) that asynchronously persists every state transition, LLM prompt token, tool payload, and internal thought trace for compliance and debugging
+- **Context window optimization**: By tiering memory, the active prompt context stays lean, avoiding model degradation and astronomical token costs from dumping entire enterprise state into one window
+
+### When to Use
+
+- When agents operate across multiple enterprise services with large, heterogeneous data schemas
+- When compliance requires full auditability of every agent decision and state transition
+- When cost control on LLM token usage is a priority
+
+### When NOT to Use
+
+- For simple, single-domain agents with small, static context requirements
+- When the added retrieval latency of mid-term vector queries outweighs the benefit
+- When audit logging overhead is unacceptable for high-frequency, low-value transactions
+
+### Also see
+
+- [Agentic AI](#agentic-ai)
+- [RAG (Retrieval-Augmented Generation)](#rag)
+- [Vector Database](#vector-database)
+- [Context Rot](#context-rot)
+
+---
+
+## ReAct (Reasoning + Acting)
+
+An agent loop pattern that interleaves **Reasoning** (the LLM thinks about what to do next) with **Acting** (the LLM calls a tool and observes the result) in a continuous cycle. The agent generates a thought, executes a tool, ingests the observation, and repeats. While simple and flexible, raw ReAct loops are non-deterministic, prone to infinite loops under tokenization noise, and suffer from cognitive drift over long tool execution traces.
+
+### Key Characteristics
+
+- **Interleaved think-act-observe cycle**: Each iteration produces a reasoning trace, a tool call, and an observation that feeds into the next cycle
+- **Non-deterministic**: The same input can produce different tool-call sequences across runs due to LLM stochasticity
+- **Prone to loop divergence**: Under high token noise or ambiguous observations, the agent may enter infinite loops or drift away from the original goal
+- **Self-correcting potential**: When wrapped with error injection (feeding stack traces back into context), ReAct agents can self-correct failed tool calls
+
+### When to Use
+
+- For exploratory or research tasks where flexibility is more important than determinism
+- As inner execution loops within a larger deterministic orchestration (e.g., Hybrid Plan & Execute)
+- When the problem space is open-ended and cannot be decomposed into a fixed plan upfront
+
+### When NOT to Use
+
+- For Tier 1 production systems where non-deterministic behavior is unacceptable (use Plan & Execute instead)
+- When the tool execution trace is long — cognitive drift and context rot degrade reliability
+- When strict auditability and reproducibility are required
+
+### Also see
+
+- [Agentic AI](#agentic-ai)
+- [Agent Loop](#agent-loop)
+- [Plan and Execute](#plan-and-execute)
+- [Tool Calling](#tool-calling)
+
+---
+
+## Agentic Engineering
+
+The practice of building software systems where AI agents function as non-deterministic, asynchronous co-processors within a larger deterministic enterprise architecture. Rather than treating LLMs as siloed magic boxes, agentic engineering focuses on building the **deterministic control planes, memory fabrics, and validation loops** that allow agents to operate autonomously, safely, and at enterprise scale.
+
+### Key Characteristics
+
+- **Deterministic wrappers around non-deterministic cores**: Type-safe schema boundaries, sandbox validation, and approval gates constrain agent outputs before they reach production
+- **Cognitive distributed architectures**: Agents handle high-verifiability, low-context tactical execution; humans retain strategic judgment, architectural boundary design, and client trust interfaces
+- **Compressed deployment lifecycles**: Agent-driven tooling for discovery, shadow testing, and state verification can compress multi-day refactoring efforts into hours of supervised execution
+- **Role transformation**: The engineer shifts from "writer of code" to "editor of intent" — spending cognitive energy on system-level optimization rather than mechanical boilerplate
+
+### When to Use
+
+- When integrating AI agents into enterprise production pipelines that require safety, auditability, and determinism
+- When scaling Forward Deployed Engineering teams that handle repetitive schema mapping, state reconciliation, and shadow testing
+- When the goal is to compress the software development lifecycle through agent-augmented workflows
+
+### When NOT to Use
+
+- For quick prototypes or throwaway scripts where the overhead of validation gates outweighs the benefit
+- When the team lacks the infrastructure maturity to build sandbox isolation and approval pipelines
+- When the problem is purely deterministic and traditional automation (without LLMs) is simpler and more reliable
+
+### Also see
+
+- [Agentic AI](#agentic-ai)
+- [Agent Harness](#agent-harness)
+- [Agent Loop](#agent-loop)
+- [Verification Loop (AI)](#verification-loop-ai)

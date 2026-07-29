@@ -37,6 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
 | Overselling | [`#overselling`](#overselling) |
 | Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
+| Read-Your-Own-Writes | [`#read-your-own-writes`](#read-your-own-writes) |
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
@@ -798,3 +799,27 @@ System ───────┤
 
 ### Also see
 - [CAP Theorem](#cap-theorem) · [Consistency Models](#consistency-models) · [Eventual Consistency](#eventual-consistency) · [Strong Consistency](#strong-consistency) · [Quorum](#quorum)
+
+---
+
+## Read-Your-Own-Writes
+
+A **session-level consistency guarantee** that ensures a user always sees the effects of their own updates after writing — even if other users may observe stale data. It is the minimum consistency level required for any user-facing system where a user expects to see their own changes reflected immediately.
+
+### Key Characteristics
+- **Per-session guarantee**: only the writing user is guaranteed to see their own writes; other users may see eventually consistent data
+- **Sticky connection**: typically implemented by routing a user's requests to the same replica (session stickiness) or by ensuring the write replica is consulted on subsequent reads
+- **Stronger than eventual, weaker than strong**: does not guarantee that User B sees User A's writes — only that each user sees their own
+
+### When to Use
+- User profile updates where the user expects to see their change immediately after saving
+- Social media posts where the author must see their own post appear, even if followers see it seconds later
+- E-commerce shopping carts — the user adding items must see them in their cart right away
+
+### When NOT to Use
+- Financial ledgers where all parties must see the same state atomically (use strong consistency)
+- Multi-user collaborative editing where everyone must see each other's changes in real time
+- Systems where session stickiness is infeasible (stateless serverless functions with no routing affinity)
+
+### Also see
+- [Causal Consistency](#causal-consistency) · [Consistency Model](#consistency-model) · [PACELC Theorem](#pacelc-theorem) · [Eventual Consistency](cqrs-event-driven.md)

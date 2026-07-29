@@ -21,3 +21,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [loops-explained-claude-gpt-mira-what-actually-works](loops-explained-claude-gpt-mira-what-actually-works.md)
 - [the-anatomy-of-agent-harness](the-anatomy-of-agent-harness.md)
 - [the-evolution-of-ai-assistend-software-development](the-evolution-of-ai-assistend-software-development.md)
+- [forward-deployed-engineer-ai-augmented-engineering-interview-questions](forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
