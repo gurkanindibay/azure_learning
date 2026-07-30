@@ -14,6 +14,7 @@ Source articles covering system design interview patterns, strategies, and case 
 
 ## Articles
 
+- [60+ Real-World System Design Scenarios — Part 1](real-world-system-design-scenarios-part-1.md)
 - [22-design-interview-questions/01-22-scenario-based-system-design-questions](22-design-interview-questions/01-22-scenario-based-system-design-questions.md)
 - [90-percent-system-design-questions](90-percent-system-design-questions.md)
 - [How I Finally Learned System Design (After Feeling Totally Lost)](How I Finally Learned System Design (After Feeling Totally Lost).md)

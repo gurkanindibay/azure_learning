@@ -42,6 +42,9 @@ timestamp: 2026-06-18T00:00:00Z
 | Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
 | Write Consolidation | [`#write-consolidation`](#write-consolidation) |
 | Key Salting | [`#key-salting`](#key-salting) |
+| Cursor Pagination | [`#cursor-pagination`](#cursor-pagination) |
+| Partial Index | [`#partial-index`](#partial-index) |
+| Connection Pooling | [`#connection-pooling`](#connection-pooling) |
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -651,3 +654,78 @@ With salting (salt range 0-3):
 ### Also see
 - [Hot Partition](../messaging.md#hot-partition) · [Composite Shard Key](#composite-shard-key) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
+
+---
+
+## Cursor Pagination
+
+A pagination technique that encodes the position of the last returned row into an opaque token (cursor) and uses it as the starting point for the next query — `WHERE (created_at, id) < (cursor_val1, cursor_val2) ORDER BY ... DESC LIMIT N`. Unlike offset pagination, cursor pagination uses an index seek rather than scanning and discarding earlier rows, providing stable O(log N) performance regardless of page depth.
+
+### Key Characteristics
+- **Stable performance**: Uses index seek — page 1 and page 1000 have the same query cost; no scanning of skipped rows
+- **Insert/delete stability**: A cursor points to a fixed position in the data; new rows inserted ahead of the cursor don't shift results (no duplicates or misses)
+- **Opaque token**: The cursor value is typically base64-encoded and should be treated as opaque by the client — the server owns cursor format and interpretation
+- **No jump-to-page-N**: Cursor pagination only supports forward/backward navigation; random page access requires keyset pagination or offset fallback
+
+### When to Use
+- Infinite scroll, live feeds, and real-time data streams where deep pages are common
+- APIs serving mobile clients that load data progressively
+- High-traffic endpoints where offset pagination would degrade at scale (50M+ rows)
+
+### When NOT to Use
+- Admin dashboards requiring jump-to-page-N navigation — use keyset pagination or accept offset for small datasets
+- Static datasets where offset pagination with a covering index is sufficient
+- When the sort column is not unique — add a tiebreaker column (e.g., `id`) to the cursor to avoid gaps
+
+### Also see
+- [Pagination (Cursor vs Offset)](../api-design.md#pagination-cursor-vs-offset) · [B-Tree](#b-tree) · [Index Scan](#index-scan)
+
+---
+
+## Partial Index
+
+A database index built over a filtered subset of rows defined by a `WHERE` clause — `CREATE INDEX ... ON events (tenant_id, created_at) WHERE event_type = 'signup' AND created_at > now() - interval '7 days'`. Only rows matching the predicate are indexed, so most writes bypass the index entirely while the frequently queried subset still benefits from fast index access.
+
+### Key Characteristics
+- **Conditional indexing**: Only rows satisfying the `WHERE` clause are included — reduces index size and write maintenance cost
+- **Query planner awareness**: The planner uses the partial index when the query's `WHERE` clause matches or is more restrictive than the index predicate
+- **Write bypass**: Rows not matching the predicate are inserted without updating the partial index — critical for high-ingest tables where full-index maintenance would bottleneck writes
+- **Predicate-dependent**: If query patterns change (e.g., 7-day window becomes 30-day), the index may need rebuilding with an updated predicate
+
+### When to Use
+- High-ingest tables (8K+ inserts/sec) where only a small subset of rows (~0.2%) is frequently queried
+- Soft-delete patterns: index only `WHERE deleted_at IS NULL` to keep active-row queries fast without indexing deleted rows
+- Multi-tenant systems where one tenant's data dominates queries but not writes
+
+### When NOT to Use
+- When the filtered subset represents a large fraction of the table — the index maintenance savings are negligible
+- When query patterns are diverse and unpredictable — a full composite index may serve more use cases
+- When the predicate changes frequently — rebuilding partial indexes adds operational overhead
+
+### Also see
+- [Composite Index](#composite-index) · [Covering Index](#covering-index) · [B-Tree](#b-tree) · [Write Amplification](#write-amplification)
+
+---
+
+## Connection Pooling
+
+A technique where a pool of pre-established database connections is maintained and reused across client requests, avoiding the overhead of opening a new TCP connection and performing authentication for every query. A pooler (e.g., PgBouncer) sits between the application and the database, multiplexing many lightweight client connections onto fewer heavyweight backend connections.
+
+### Key Characteristics
+- **Connection multiplexing**: Many client connections share a small pool of real database connections — critical when `max_connections` is limited (e.g., RDS defaults)
+- **Pool modes**: Transaction mode returns connections to the pool after each transaction (best for stateless REST); Session mode pins one client to one backend for the full session (required for temp tables, prepared statements, `SET` commands)
+- **Startup cost avoidance**: TCP handshake, TLS negotiation, and authentication are paid once at pool startup, not per request
+- **Resource bounding**: Prevents connection exhaustion — without pooling, N app servers × M connections each can easily exceed database limits
+
+### When to Use
+- Any production application with more than a handful of concurrent database clients
+- Serverless environments (Lambda) where cold starts would otherwise create connection storms
+- Mixed workloads (short REST requests + long analytics jobs) that need different pooling strategies
+
+### When NOT to Use
+- Single-user applications or scripts with one connection at a time
+- When the application already uses a framework-level connection pool (HikariCP, Sequelize pool) — add PgBouncer when you need cross-application multiplexing
+- Embedded databases (SQLite) where connections are in-process and pooling adds unnecessary indirection
+
+### Also see
+- [max_connections](#maxconnections) · [Transaction Mode](#transaction-mode) · [Session Mode](#session-mode)

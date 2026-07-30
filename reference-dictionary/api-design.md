@@ -46,6 +46,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Lazy Subscription | [`#lazy-subscription`](#lazy-subscription) |
 | Stateful Gateway | [`#stateful-gateway`](#stateful-gateway) |
 | API Composition | [`#api-composition`](#api-composition) |
+| Fixed Window | [`#fixed-window`](#fixed-window) |
+| Sliding Window Log | [`#sliding-window-log`](#sliding-window-log) |
+| Leaky Bucket | [`#leaky-bucket`](#leaky-bucket) |
+| Server-Sent Events | [`#server-sent-events`](#server-sent-events) |
 ## API Versioning
 
 The mechanism for evolving an API without breaking existing clients.
@@ -773,3 +777,106 @@ A **microservices data aggregation pattern** where one service (the API Composer
 ### Also see
 - [CQRS](cqrs-event-driven.md#cqrs) · [Read Model](cqrs-event-driven.md#read-model) · [Eventual Consistency](cqrs-event-driven.md#eventual-consistency) · [Denormalization](data-architecture.md#denormalization)
 
+
+---
+
+## Fixed Window
+
+A rate limiting algorithm that divides time into fixed, non-overlapping intervals (e.g., one minute) and counts requests within each interval. The counter resets to zero at the start of every new window regardless of when requests were actually made — creating a boundary-burst vulnerability.
+
+### Key Characteristics
+- **Boundary reset**: Counter drops to zero at each interval boundary (e.g., 13:00:00), allowing up to 2× the limit in a few seconds if bursts straddle the boundary
+- **O(1) storage**: One counter per key per window — the simplest and cheapest rate limiter to implement
+- **No sliding awareness**: Has no concept of when within the window requests occurred; 100 requests at 12:59:59 and 100 at 13:00:00 both pass a 100/min limit
+- **Easy to implement**: A Redis `INCR` + `EXPIRE` per key is sufficient
+
+### When to Use
+- Low-stakes rate limiting where occasional boundary bursts are acceptable
+- Prototypes and internal tools where simplicity outweighs accuracy
+- As a coarse first layer in a hierarchical rate limiting setup
+
+### When NOT to Use
+- Public APIs where customers actively exploit boundary resets to send double traffic
+- Protecting expensive downstream resources (databases, ML models) where burst tolerance is low
+- When the limit must be a true maximum over any rolling 60-second window
+
+### Also see
+- [Rate Limiting](#rate-limiting) · [Sliding Window Log](#sliding-window-log) · [Token Bucket](#token-bucket) · [Hierarchical Rate Limiting](#hierarchical-rate-limiting)
+
+---
+
+## Sliding Window Log
+
+A rate limiting algorithm that stores a timestamp for every request in a sorted set (typically Redis `ZSET`) and counts only those timestamps within the current sliding window (e.g., the last 60 seconds). It provides exact accuracy at the cost of memory proportional to request volume.
+
+### Key Characteristics
+- **Exact accuracy**: Counts only requests that occurred within the last N seconds — no boundary artifacts, no approximations
+- **Memory-intensive**: Stores one timestamp per request; at 10,000 req/s, storing 60s of timestamps requires ~600K entries per key
+- **Sorted-set cleanup**: Requires periodic removal of expired timestamps (`ZREMRANGEBYSCORE`) to prevent unbounded memory growth
+- **Atomic operations**: `ZADD` the current timestamp + `ZCOUNT` the window range in a single pipeline or Lua script
+
+### When to Use
+- When rate limit accuracy is critical (billing, quota enforcement, compliance)
+- Low-to-moderate traffic where per-request timestamp storage is affordable
+- Scenarios where the exact request pattern within the window matters for auditing
+
+### When NOT to Use
+- High-traffic APIs (10K+ req/s) where per-request timestamp storage becomes prohibitively expensive
+- When the operational cost of Redis memory exceeds the value of exact accuracy — use Sliding Window Counter instead
+- As the only rate limiter in a distributed system (memory cost multiplies across instances)
+
+### Also see
+- [Rate Limiting](#rate-limiting) · [Fixed Window](#fixed-window) · [Token Bucket](#token-bucket) · [Sliding Window Counter](#sliding-window-counter)
+
+---
+
+## Leaky Bucket
+
+A rate limiting algorithm modeled after a bucket with a hole in the bottom — requests enter the bucket (queue) and are processed at a constant, fixed rate. If the bucket fills up, excess requests are rejected. Unlike Token Bucket, Leaky Bucket enforces a strict constant output rate with no burst capability.
+
+### Key Characteristics
+- **Constant output rate**: Requests are processed at a fixed interval regardless of input pattern — smooths bursts into a steady drip
+- **FIFO queue**: Incoming requests are queued and processed in arrival order at the configured rate
+- **Burst rejection**: When the queue is full, new requests are immediately rejected — the bucket has a hard capacity limit
+- **Adds latency**: Requests may be delayed while waiting in the queue, even when the system is otherwise idle
+
+### When to Use
+- Protecting a fragile downstream system that cannot handle bursts of any kind
+- Traffic shaping where a smooth, predictable output rate is more important than low latency
+- Network traffic policing (the algorithm originated in ATM network design)
+
+### When NOT to Use
+- Public APIs where users expect near-instant responses — the added queuing delay degrades UX
+- When short bursts of traffic are legitimate (e.g., a user rapidly navigating through pages)
+- As the primary API rate limiter — Token Bucket provides a better balance of burst tolerance and average rate enforcement
+
+### Also see
+- [Rate Limiting](#rate-limiting) · [Token Bucket](#token-bucket) · [Fixed Window](#fixed-window) · [Backpressure](../resilience.md#backpressure)
+
+---
+
+## Server-Sent Events
+
+A unidirectional HTTP-based streaming protocol where the server pushes a continuous stream of text events to the client over a single long-lived HTTP connection. The client subscribes using the browser-native `EventSource` API — no protocol upgrade, no custom framing, and automatic reconnection with `Last-Event-ID` for stream resumption.
+
+### Key Characteristics
+- **One-way (server → client)**: The server pushes data; the client receives it. Client-to-server communication uses a separate HTTP request (typically POST)
+- **Native browser support**: The `EventSource` API is built into all modern browsers — no library required
+- **Automatic reconnection**: The browser automatically reconnects on connection loss and sends `Last-Event-ID` so the server can resume from where the client left off
+- **Plain text protocol**: Uses `Content-Type: text/event-stream` with simple `data:`, `id:`, `event:`, and `retry:` fields — human-readable and debuggable
+- **HTTP-native**: Traverses standard HTTP proxies, load balancers, and CDNs without special configuration (unlike WebSockets)
+
+### When to Use
+- AI token streaming (LLM responses) — OpenAI and Anthropic use SSE for their streaming APIs
+- Real-time dashboards, live scores, and notification feeds where data flows one way
+- Browser-based clients that need simple, auto-reconnecting server push without a library dependency
+- Mobile network environments (Wi-Fi ↔ LTE switches) where automatic reconnection is critical
+
+### When NOT to Use
+- Bidirectional communication (chat apps, collaborative editing) — use WebSockets instead
+- When the client must send frequent messages to the server over the same connection
+- Internet Explorer (not supported) — use polyfills or fall back to long polling
+- When connection count reaches millions — each SSE connection holds one HTTP connection open on the server
+
+### Also see
+- [WebSocket](#websocket) · [Long-Running Operations](#long-running-operations) · [Streaming](../ai-ml-llm.md#streaming) · [gRPC Server Streaming](../concurrency-runtimes.md)

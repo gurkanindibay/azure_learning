@@ -823,3 +823,5 @@ A **session-level consistency guarantee** that ensures a user always sees the ef
 
 ### Also see
 - [Causal Consistency](#causal-consistency) · [Consistency Model](#consistency-model) · [PACELC Theorem](#pacelc-theorem) · [Eventual Consistency](cqrs-event-driven.md)
+
+
