@@ -48,6 +48,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Lock Contention | [`#lock-contention`](#lock-contention) |
 | Task Claiming | [`#task-claiming`](#task-claiming) |
 | PACELC Theorem | [`#pacelc-theorem`](#pacelc-theorem) |
+| Quorum | [`#quorum`](#quorum) |
 
 ---
 
@@ -799,6 +800,36 @@ System ───────┤
 
 ### Also see
 - [CAP Theorem](#cap-theorem) · [Consistency Models](#consistency-models) · [Eventual Consistency](#eventual-consistency) · [Strong Consistency](#strong-consistency) · [Quorum](#quorum)
+
+---
+
+## Quorum
+
+A **minimum number of replicas that must acknowledge a read or write operation** for it to be considered successful in a distributed system. Quorum-based replication uses the formula **R + W > N** to ensure that read and write sets overlap, guaranteeing that at least one replica with the latest data is consulted on every read.
+
+Where:
+- **R**: number of replicas that must respond to a read
+- **W**: number of replicas that must acknowledge a write
+- **N**: total number of replica nodes
+
+### Key Characteristics
+- **R + W > N**: guarantees strong consistency — every read sees the latest write because the read and write quorums overlap by at least one node
+- **R + W ≤ N**: allows stale reads but reduces latency — reads may hit replicas that haven't received the latest write
+- **Tunable**: by adjusting R and W, you trade consistency for latency without changing the replication topology
+- **Quorum is per-operation**: a system can use different R/W values for different operations (e.g., strict quorum for payments, relaxed quorum for analytics)
+
+### When to Use
+- Distributed databases that need configurable consistency levels (Cassandra, DynamoDB, Cosmos DB)
+- Leaderless replication models where any replica can accept writes
+- Systems where you need to reason formally about consistency guarantees
+
+### When NOT to Use
+- Single-primary replication (master-slave) — the primary is the single source of truth, quorum is unnecessary
+- When strong consistency is always required — use synchronous replication or a consensus algorithm (Raft/Paxos) instead
+- Very small clusters (N ≤ 2) — quorum provides little benefit over simple primary-backup
+
+### Also see
+- [PACELC Theorem](#pacelc-theorem) · [Strong Consistency](#strong-consistency) · [Synchronous Replication](data-architecture.md#synchronous-replication) · [Asynchronous Replication](data-architecture.md#asynchronous-replication)
 
 ---
 

@@ -17,6 +17,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Observability | [`#observability`](#observability) |
 | OpenTelemetry | [`#opentelemetry`](#opentelemetry) |
 | Golden Signals | [`#golden-signals`](#golden-signals) |
+| Latency | [`#latency`](#latency) |
 | Error Budget | [`#error-budget`](#error-budget) |
 | Blameless Postmortem | [`#blameless-postmortem`](#blameless-postmortem) |
 | Real User Monitoring (RUM) | [`#real-user-monitoring-rum`](#real-user-monitoring-rum) |
@@ -88,6 +89,29 @@ The four key metrics that provide a **high-level view of system health** in prod
 - Without setting explicit SLO thresholds and alerting policies
 
 **Also see**: [Error Budget](#error-budget), [OpenTelemetry](#opentelemetry)
+
+---
+
+## Latency
+
+The **time delay between initiating a request and receiving a response**. In distributed systems, latency is always present — whether a network partition exists or not — and is one of the four Golden Signals. It is distinct from throughput: a system can have high throughput and high latency, or low throughput and low latency.
+
+### Key Characteristics
+- **Measured in percentiles**: p50 (median), p95, p99 are standard; averages hide tail-latency problems
+- **Sources**: network round-trip time, serialization/deserialization, disk I/O, lock contention, garbage collection pauses, queue wait time
+- **PACELC context**: when no network partition exists (the "E" — Else), the tradeoff is between Latency and Consistency, not Availability and Consistency
+
+### When to Use
+- Defining SLIs and SLOs for any user-facing service (latency is a Golden Signal)
+- Capacity planning: understanding how latency scales with load
+- Comparing synchronous vs. asynchronous replication strategies in distributed databases
+
+### When NOT to Use
+- As a standalone metric without throughput context — 5ms latency at 10 RPS is very different from 5ms at 10K RPS
+- Confusing latency with response time (response time = latency + processing time)
+
+### Also see
+- [Golden Signals](#golden-signals) · [PACELC Theorem](data-concurrency.md#pacelc-theorem) · [Synchronous Replication](data-architecture.md#synchronous-replication)
 
 ---
 
