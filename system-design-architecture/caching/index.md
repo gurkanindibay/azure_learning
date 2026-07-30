@@ -23,6 +23,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [netflix-open-connect-takeaways.md](netflix-open-connect-takeaways.md) | `cache-26` – `cache-30` | Edge pre-positioning, Pre-warming, Control/data plane split, Buffer-aware ABR, Predict-and-pre-compute |
 | [url-shortener-viral-hotkey-cdn-takeaways.md](url-shortener-viral-hotkey-cdn-takeaways.md) | `cache-31` – `cache-33` | CDN edge caching for HTTP redirects, Redis Cluster hot-key limitation, Systematic troubleshooting order for read-heavy systems |
 | [amazon-cart-cache-invalidation-takeaways.md](amazon-cart-cache-invalidation-takeaways.md) | `cache-34` – `cache-38` | Three cache-invalidation failure modes, Event-driven invalidation + outbox, Cross-device session consistency, Invalidation observability |
+| [redis-hash-encoding-optimization-takeaways.md](redis-hash-encoding-optimization-takeaways.md) | `cache-39` – `cache-42` | Hash grouping vs per-field keys, Encoding threshold tuning (ziplist/listpack), Lua batching, Protobuf compression + TTL |
 
 ## Cross-References
 

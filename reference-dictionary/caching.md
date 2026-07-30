@@ -57,6 +57,9 @@ timestamp: 2026-06-14T00:00:00Z
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | SET NX (Redis) | [`#set-nx-redis`](#set-nx-redis) |
+| ziplist | [`#ziplist`](#ziplist) |
+| listpack | [`#listpack`](#listpack) |
+| hash-max-ziplist-entries | [`#hash-max-ziplist-entries`](#hash-max-ziplist-entries) |
 | **Advanced Mitigations** | |
 | Single-Flight Execution | [`#single-flight-execution`](#single-flight-execution) |
 | Soft TTL | [`#soft-ttl`](#soft-ttl) |
@@ -1035,3 +1038,73 @@ A cache-refresh optimization that uses an **algorithm to probabilistically refre
 
 ### Also see
 - [Cache Stampede](#cache-stampede) · [Soft TTL](#soft-ttl) · [PER Algorithm](#per-algorithm) · [Single-Flight Execution](#single-flight-execution)
+
+---
+
+## ziplist
+
+A **compact, contiguous-memory encoding** used by Redis (pre-7.0) to store small Hashes, Lists, and Sorted Sets. Instead of a pointer-based hash table, a ziplist stores all entries sequentially in a single memory allocation — eliminating per-entry pointer overhead. Redis automatically promotes a key from ziplist to hashtable encoding when it exceeds the configured `hash-max-ziplist-entries` or `hash-max-ziplist-value` thresholds.
+
+### Key Characteristics
+- **Contiguous memory**: All fields and values stored back-to-back in one allocation; cache-friendly
+- **Linear scan for lookups**: O(N) field access — fast for small N, degrades as field count grows
+- **Automatic promotion**: Redis silently converts to hashtable when thresholds are crossed; no warning
+- **Replaced by listpack in Redis 7.0+**: Same concept, improved encoding format with fewer edge cases
+
+### When to Use
+- Hashes with predictable, small field counts (≤128 fields) where memory efficiency matters
+- Workloads where you've audited `OBJECT ENCODING` and confirmed keys are in the compact encoding
+
+### When NOT to Use
+- Hashes with large or unpredictable field counts — the linear scan cost outweighs memory savings
+- When migrating to Redis 7+ (use [listpack](#listpack) instead)
+
+### Also see
+- [listpack](#listpack) · [hash-max-ziplist-entries](#hash-max-ziplist-entries) · [Redis Cluster](#redis-cluster)
+
+---
+
+## listpack
+
+The **successor to ziplist** introduced in Redis 7.0. A compact, contiguous-memory encoding for small Hashes, Lists, and Sorted Sets that replaces ziplist with a more robust encoding format — eliminating cascading-update overhead and encoding ambiguities present in the original ziplist design.
+
+### Key Characteristics
+- **Backward-compatible replacement**: Same conceptual model as ziplist; new keys use listpack automatically
+- **No cascading updates**: Unlike ziplist, listpack entries carry their own length prefix — updating one entry doesn't require rewriting subsequent entries
+- **Configurable thresholds**: Controlled via `hash-max-listpack-entries` and `hash-max-listpack-value` (Redis 7+)
+- **Default encoding for small collections**: Redis 7+ uses listpack by default for hashes, lists, and sorted sets under threshold
+
+### When to Use
+- As the default compact encoding on Redis 7+ deployments — no migration needed for new keys
+- When you need the memory benefits of compact encoding without ziplist's edge cases
+
+### When NOT to Use
+- On Redis < 7.0 (use [ziplist](#ziplist) instead)
+- Same threshold caveats as ziplist: not for large or unpredictable field counts
+
+### Also see
+- [ziplist](#ziplist) · [hash-max-ziplist-entries](#hash-max-ziplist-entries) · [Redis Cluster](#redis-cluster)
+
+---
+
+## hash-max-ziplist-entries
+
+A **Redis configuration directive** that sets the threshold at which a Hash key is promoted from compact encoding (ziplist/listpack) to full hashtable encoding. When the number of fields in a Hash exceeds this value, Redis silently converts the internal representation — trading memory efficiency for O(1) field lookup. The Redis 7+ equivalent is `hash-max-listpack-entries`.
+
+### Key Characteristics
+- **Default value**: 512 in most Redis distributions (tunable in `redis.conf` or via `CONFIG SET`)
+- **Paired with size threshold**: Works alongside `hash-max-ziplist-value` (max bytes per field) — crossing either threshold triggers promotion
+- **Silent conversion**: No log, no metric, no warning when a Hash crosses the threshold
+- **Check with `OBJECT ENCODING <key>`**: Returns `"listpack"` or `"hashtable"` to reveal the current encoding
+
+### When to Use
+- Tune downward if your hashes have few fields and you want to guarantee compact encoding
+- Tune upward if your hashes have many small fields and the compact encoding scan cost is acceptable
+- Audit with `OBJECT ENCODING` before and after tuning to confirm the effect
+
+### When NOT to Use
+- Don't tune without measuring: a threshold too high causes slow writes; too low wastes memory
+- Don't set globally without checking per-key patterns — different key groups may need different thresholds
+
+### Also see
+- [ziplist](#ziplist) · [listpack](#listpack) · [Lua Scripting (Redis)](#lua-scripting-redis)
