@@ -64,6 +64,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Pre-Commit Gate | [`#pre-commit-gate`](#pre-commit-gate) |
 | Agent Tracing | [`#agent-tracing`](#agent-tracing) |
 | Agent Metrics | [`#agent-metrics`](#agent-metrics) |
+| Token Compression | [`#token-compression`](#token-compression) |
+| Type-Specific Compression | [`#type-specific-compression`](#type-specific-compression) |
+| Reversible Compression (LLM) | [`#reversible-compression-llm`](#reversible-compression-llm) |
 
 ---
 
@@ -1190,3 +1193,103 @@ The practice of building software systems where AI agents function as non-determ
 - [Agent Harness](#agent-harness)
 - [Agent Loop](#agent-loop)
 - [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Token Compression
+
+A **pre-processing technique that reduces the number of tokens sent to an LLM** by applying content-type-aware compression to tool outputs, logs, and retrieval chunks before they reach the model. Unlike prompt trimming or model switching, token compression inserts a layer between the agent and the model that reduces what gets billed without changing the agent's code.
+
+```
+Agent output (10K tokens) → Type detector → Compressor → LLM receives (1.2K tokens) → billed for 1.2K
+                                                                     ↓
+                                                            Original cached locally
+```
+
+### Key Characteristics
+- **Sits in the critical path** between the agent harness and the LLM API call
+- **Content-type-aware**: JSON, code, and prose each get compressed differently
+- **Non-destructive by design**: the original payload is cached and retrievable on demand
+- **Transparent to agent code**: wraps the existing call path with no agent rewrite required
+
+### When to Use
+- Agent pipelines where tool outputs, logs, or RAG chunks dominate token spend
+- Production workloads where 5–10× token savings on verbose inputs meaningfully reduce cost
+- When model quality is limited by context noise rather than model capability
+
+### When NOT to Use
+- Short prompts where compression overhead exceeds token savings
+- Workflows where every token of the original payload is genuinely needed for reasoning
+- When the added latency (~tens of milliseconds) is unacceptable for real-time use cases
+
+### Also see
+- [Type-Specific Compression](#type-specific-compression)
+- [Reversible Compression (LLM)](#reversible-compression-llm)
+- [Token](#token)
+- [Agent Harness](#agent-harness)
+
+---
+
+## Type-Specific Compression
+
+A **compression strategy that routes content through separate reduction paths based on detected content type** — structural deduplication for JSON, AST-aware reduction for source code, and semantic summarization for natural-language prose. Each path is tuned for that type's information density and structural redundancy.
+
+| Content Type | Compression Strategy | Example Reduction |
+|:---|:---|:---|
+| **JSON / Structured** | Collapse repeated keys, array sampling, field pruning | 10K → ~1K tokens |
+| **Source Code** | Strip comments, preserve function signatures, AST-aware reduction | 5K → ~800 tokens |
+| **Natural Language** | Semantic summarization, entity extraction, key-claim preservation | 3K → ~500 tokens |
+
+### Key Characteristics
+- Each compression path is independently tunable and benchmarkable
+- A content-type detector gates entry to the correct compression path
+- Compression quality is path-dependent — a JSON compressor misbehaves on free-form text
+- Modular design allows incremental improvement of individual compressors
+
+### When to Use
+- Pipelines that handle heterogeneous content (logs + code + prose) in a single agent workflow
+- When uniform compression produces uneven results across content types
+- When you need to benchmark compression quality per content type independently
+
+### When NOT to Use
+- Homogeneous pipelines where a single compression strategy is sufficient
+- When the added routing complexity outweighs the per-type optimization benefit
+- When content types cannot be reliably detected at runtime
+
+### Also see
+- [Token Compression](#token-compression)
+- [Chunking Strategy](#chunking-strategy)
+- [Context Rot](#context-rot)
+
+---
+
+## Reversible Compression (LLM)
+
+A **compression model where the original payload is cached locally and can be retrieved on demand by the LLM** — shifting compression from a destructive operation to a lazy-loading pattern. The model reasons over the compressed version first, requesting the full original only when the compressed form is insufficient for accurate reasoning.
+
+```
+Compressed payload → LLM reasons → Answer sufficient? → Yes → Done
+                                     → No → Model requests original → Retrieve from cache → Re-reason
+```
+
+### Key Characteristics
+- **Two-tier architecture**: compressed payload (tier 1) + cached original (tier 2)
+- **Model-initiated retrieval**: the LLM decides when it needs more detail, triggered by ambiguous references or missing values
+- **TTL-based eviction**: cached originals expire; storage cost is temporary and bounded
+- **Requires model awareness**: the model must be prompted or trained to recognize when compression caused information loss
+
+### When to Use
+- High-stakes agent reasoning where compression could cause silent errors if the model confidently answers from incomplete context
+- Workflows where the cost of an incorrect answer far exceeds the cost of occasional full-context retrieval
+- When you need to balance token savings against accuracy guarantees
+
+### When NOT to Use
+- When the model lacks the capability to reliably detect information loss from compressed context
+- For latency-critical paths where the round-trip for on-demand retrieval is unacceptable
+- When cache storage costs (even temporary) exceed token savings for the expected workload
+
+### Also see
+- [Token Compression](#token-compression)
+- [Type-Specific Compression](#type-specific-compression)
+- [Agent Loop](#agent-loop)
+- [Context Rot](#context-rot)

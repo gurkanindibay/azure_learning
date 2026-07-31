@@ -22,3 +22,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [the-anatomy-of-agent-harness](the-anatomy-of-agent-harness.md)
 - [the-evolution-of-ai-assistend-software-development](the-evolution-of-ai-assistend-software-development.md)
 - [forward-deployed-engineer-ai-augmented-engineering-interview-questions](forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
+- [Headroom — Content-Aware Token Compression for AI Agents](headroom-content-aware-token-compression.md)
