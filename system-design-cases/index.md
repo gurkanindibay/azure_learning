@@ -18,6 +18,10 @@ okf_version: "0.1"
 * [Question 1: Design a Real-Time Messaging System (like WhatsApp)](cases/part-3-real-time-messaging-system-design.md)
 * [Question 2: Design an E-Commerce Platform (like Amazon / Flipkart / eBay)](cases/part-3-e-commerce-platform-system-design.md)
 
+## ByteByteGo — System Design Interview
+
+* [ByteByteGo Case Studies](bytebytego/index.md) — 14 publicly accessible chapters from the ByteByteGo System Design Interview course by Alex Xu, including Scale From Zero To Millions Of Users, Design A Rate Limiter, Design YouTube, and more.
+
 ## Template
 
 * [System Design Case Template](templates/system-design-case-template.md)
