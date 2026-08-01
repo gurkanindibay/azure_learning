@@ -60,6 +60,16 @@ timestamp: 2026-06-14T00:00:00Z
 | ziplist | [`#ziplist`](#ziplist) |
 | listpack | [`#listpack`](#listpack) |
 | hash-max-ziplist-entries | [`#hash-max-ziplist-entries`](#hash-max-ziplist-entries) |
+| Redis Strings | [`#redis-strings`](#redis-strings) |
+| Redis Lists | [`#redis-lists`](#redis-lists) |
+| Redis Hashes | [`#redis-hashes`](#redis-hashes) |
+| Redis Sets | [`#redis-sets`](#redis-sets) |
+| Redis Bitmaps | [`#redis-bitmaps`](#redis-bitmaps) |
+| Cuckoo Filters | [`#cuckoo-filters`](#cuckoo-filters) |
+| Count-Min Sketch | [`#count-min-sketch`](#count-min-sketch) |
+| Top-K | [`#top-k`](#top-k) |
+| Redis Geospatial | [`#redis-geospatial`](#redis-geospatial) |
+| RedisTimeSeries | [`#redistimeseries`](#redistimeseries) |
 | **Advanced Mitigations** | |
 | Single-Flight Execution | [`#single-flight-execution`](#single-flight-execution) |
 | Soft TTL | [`#soft-ttl`](#soft-ttl) |
@@ -945,6 +955,247 @@ Consumer receives event with eventId = "abc-123"
 - For correctness-critical locking (use Redlock or ZooKeeper with fencing tokens instead)
 
 **Also see**: [Deduplication Store](../messaging.md#deduplication-store), [Atomic Deduplication](../messaging.md#atomic-deduplication), [Idempotency](../cqrs-event-driven.md#idempotency), [TTL](#ttl-time-to-live)
+
+---
+
+## Redis Strings
+
+Redis's simplest data type — a binary-safe sequence of bytes that can represent text, integers, floating-point numbers, or serialized objects up to 512 MB. Strings support atomic increment/decrement operations (INCR, DECR, INCRBY), making them ideal for counters, rate-limiters, and flags without requiring read-modify-write patterns.
+
+### Key Characteristics
+- **Binary-safe**: Stores any byte sequence including null bytes and binary data (images, serialized protobuf)
+- **512 MB max**: Single key can hold up to 512 MB, though typical usage is much smaller
+- **Atomic numeric ops**: INCR/DECR/INCRBY operate atomically — no race condition between read and write
+- **Expiry-aware**: SETEX combines set + TTL in one command
+
+### When to Use
+- Session tokens, HTML fragments, API response caching
+- Page-view counters, rate-limiting windows, feature-flag booleans
+- Distributed locks via `SET key value NX EX <ttl>`
+
+### When NOT to Use
+- Storing structured objects with many fields (use Hashes instead — more memory-efficient for small field counts)
+- Append-heavy workloads (Lists or Streams are more efficient)
+
+**Also see**: [Redis Hashes](#redis-hashes) · [SET NX (Redis)](#set-nx-redis) · [TTL](#ttl-time-to-live)
+
+---
+
+## Redis Lists
+
+An ordered collection of strings implemented as a linked list, providing O(1) push/pop at both ends. Lists retain insertion order and support blocking pop operations (BLPOP, BRPOP), making them a natural fit for task queues, message passing, and producer-consumer patterns.
+
+### Key Characteristics
+- **Double-ended**: LPUSH/RPUSH on head, LPOP/RPOP on tail — efficient for both FIFO queues and LIFO stacks
+- **Blocking pops**: BLPOP/BRPOP block until an element is available or timeout, enabling wait-free consumer loops
+- **Linked-list internals**: O(1) head/tail access but O(N) random access via LINDEX
+- **Trimmable**: LTRIM caps list length to prevent unbounded growth
+
+### When to Use
+- Task/job queues (work producer → list → worker consumer)
+- Recent-activity feeds (store last N items, trim to window)
+- Message buffering between services
+
+### When NOT to Use
+- Random-access lookups by index (use Sorted Sets or Hashes)
+- Large lists with frequent mid-list operations (O(N))
+- Persisted event logs requiring replay and consumer groups (use Redis Streams)
+
+**Also see**: [Redis Streams](../messaging.md#redis-streams) · [Redis Sorted Sets](#redis-sorted-sets)
+
+---
+
+## Redis Hashes
+
+A collection of field-value pairs stored under a single key, analogous to a dictionary or row in a relational table. Hashes are memory-optimized: Redis uses compact encodings (ziplist/listpack) for small hashes and promotes to hashtable encoding when thresholds are exceeded.
+
+### Key Characteristics
+- **Field-level atomicity**: HINCRBY, HSETNX operate on individual fields without touching others
+- **Compact encoding**: Small hashes use ziplist/listpack — contiguous memory, no per-field pointer overhead
+- **O(1) field access**: Once promoted to hashtable encoding (via hash-max-ziplist-entries threshold)
+- **No nesting**: Fields cannot contain sub-objects; use JSON or separate keys for hierarchical data
+
+### When to Use
+- User profiles, session data, configuration objects
+- Shopping cart items (product ID → quantity)
+- Incrementing per-field counters (HINCRBY for per-article view counts)
+
+### When NOT to Use
+- When you need to atomically update multiple hashes at once (use Lua scripting or MULTI/EXEC)
+- Storing deeply nested data (use RedisJSON module or serialize to String)
+- Hashes with hundreds of thousands of fields (promotion to hashtable can cause latency spikes)
+
+**Also see**: [ziplist](#ziplist) · [listpack](#listpack) · [hash-max-ziplist-entries](#hash-max-ziplist-entries) · [Redis Strings](#redis-strings)
+
+---
+
+## Redis Sets
+
+An unordered collection of unique strings with O(1) add/remove/contains operations. Sets support native set-algebra commands (SUNION, SINTER, SDIFF), making them the go-to choice for membership testing, deduplication, and computing relationships between collections.
+
+### Key Characteristics
+- **Uniqueness guaranteed**: Duplicate SADD calls are idempotent — no error, just no-op
+- **Set algebra built-in**: UNION, INTERSECTION, DIFFERENCE — executed server-side without data transfer
+- **Random extraction**: SPOP and SRANDMEMBER support probabilistic sampling
+- **Unordered**: Iteration order is not guaranteed and should not be relied upon
+
+### When to Use
+- Tracking unique visitors, active users, or online presence
+- Tagging systems (blog post → set of tags; tag → set of posts)
+- Computing mutual friends, common interests, or set differences via SINTER/SUNION/SDIFF
+- Random sampling (SRANDMEMBER for A/B test group assignment)
+
+### When NOT to Use
+- Ordered collections (use Sorted Sets or Lists)
+- Duplicate-allowing collections (use Lists)
+- Large sets with SMEMBERS — O(N) and blocks the event loop; use SSCAN for iteration
+
+**Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes) · [Bloom Filters](../databases.md#bloom-filter)
+
+---
+
+## Redis Bitmaps
+
+A space-efficient encoding where each bit in a String value represents a boolean state (0 or 1). Bitmaps allow tracking millions of flags in kilobytes and support bitwise operations (AND, OR, XOR) across multiple keys — ideal for feature flags, user-activity tracking, and A/B test cohort assignment.
+
+### Key Characteristics
+- **1 bit per state**: 1 MB stores 8 million boolean flags — orders of magnitude more efficient than Sets
+- **Bitwise ops across keys**: BITOP AND/OR/XOR combines multiple bitmaps into a single result
+- **Population counts**: BITCOUNT efficiently counts set bits over a byte range
+- **String-backed**: A bitmap is a String under the hood — any String command works (GET, SETBIT, BITCOUNT)
+
+### When to Use
+- Daily active user (DAU) tracking: one bitmap per day, bit offset = user ID
+- Feature-flag rollout: bit offset = user ID, bit value = feature enabled
+- A/B test cohort assignment in-memory without additional DB columns
+
+### When NOT to Use
+- Sparse data with very few set bits across a large offset range (wastes memory — use Sets or HyperLogLog)
+- When per-user metadata beyond a boolean is needed (use Hashes)
+- Offsets beyond 2^32 (practical limit of Redis string size)
+
+**Also see**: [Redis Sets](#redis-sets) · [HyperLogLog](../databases.md#hyperloglog) · [Bloom Filters](../databases.md#bloom-filter)
+
+---
+
+## Cuckoo Filters
+
+A probabilistic data structure (via RedisBloom module) for membership testing that supports **deletion** — unlike Bloom Filters which are add-only. Cuckoo Filters use cuckoo hashing: each item maps to two candidate buckets; if both are occupied, an existing item is relocated to its alternate bucket. Provides better performance for dynamic sets where items are frequently added and removed.
+
+### Key Characteristics
+- **Deletion-capable**: CF.DEL removes items — Bloom Filters cannot delete without rebuilding
+- **Cuckoo hashing**: Two candidate positions per item; insertion displaces existing items to alternate slots
+- **Lower false-positive rate**: For equivalent capacity and memory, Cuckoo Filters can achieve lower FPR than Bloom Filters
+- **Insertion can fail**: If both candidate slots are occupied and relocation chain is exhausted, insertion fails — `CF.INSERTNX` returns failure
+
+### When to Use
+- Dynamic blocklists where IPs/IDs are frequently added and removed
+- Caching recently-seen items with eviction-by-deletion
+- When deletion support is a hard requirement and Bloom Filter rebuild is impractical
+
+### When NOT to Use
+- Add-only workloads (Bloom Filters are simpler and more predictable)
+- Very high fill ratios (Cuckoo Filter insertion failure rates rise as the filter fills)
+- When exact membership is required (use Redis Sets)
+
+**Also see**: [Bloom Filters](../databases.md#bloom-filter) · [Count-Min Sketch](#count-min-sketch) · [Top-K](#top-k)
+
+---
+
+## Count-Min Sketch
+
+A probabilistic data structure (via RedisBloom module) for estimating **item frequency** in a stream with sub-linear memory. Uses multiple hash functions and a 2D counter array; each increment hashes to one counter per row, and queries return the minimum of the counters — hence "Count-Min." Overestimates frequency but never underestimates.
+
+### Key Characteristics
+- **One-sided error**: Query result ≥ true frequency (never undercounts); error bounded by sketch dimensions
+- **Sub-linear memory**: Memory depends on configured width × depth, not on the number of distinct items
+- **Merge-capable**: CMS.MERGE combines sketches for distributed counting
+- **No key storage**: Cannot enumerate stored items — queries require knowing the item in advance
+
+### When to Use
+- Real-time analytics: tracking top-N products, trending hashtags, most-visited URLs
+- Traffic monitoring: estimating request counts per endpoint or user
+- Rate-limiting with approximate counters where exact counts are unnecessary
+
+### When NOT to Use
+- Exact counting (use Redis Hashes with HINCRBY)
+- When you need to list all tracked items (Count-Min Sketch is a sketch, not a set)
+- Small cardinality workloads where exact counting is cheap
+
+**Also see**: [Top-K](#top-k) · [Bloom Filters](../databases.md#bloom-filter) · [Cuckoo Filters](#cuckoo-filters) · [HyperLogLog](../databases.md#hyperloglog)
+
+---
+
+## Top-K
+
+A probabilistic data structure (via RedisBloom module) that maintains the **top K items by frequency** in a stream with bounded memory. Uses a heavy-keeper algorithm: when a new item arrives, it either increments its counter (if tracked) or probabilistically evicts the least-frequent item. Provides approximate top-K with guaranteed recall of truly heavy hitters.
+
+### Key Characteristics
+- **Bounded memory**: Memory is O(K × width × depth), independent of the number of distinct items
+- **Heavy-keeper algorithm**: Probabilistic eviction ensures high-frequency items are never evicted; low-frequency items may be missed
+- **TOPK.LIST**: Returns current top-K with estimated counts
+- **Decay parameter**: Controls how aggressively old counters decay, balancing recency vs. history
+
+### When to Use
+- Leaderboards and trending rankings (top products, top articles, top users)
+- Real-time dashboards showing top-N metrics
+- Recommendation systems tracking most-interacted items
+
+### When NOT to Use
+- Exact rankings (use Sorted Sets with ZADD/ZRANGE)
+- When the full ranked list is needed beyond the top K (structure only tracks K items)
+- Infrequently updated leaderboards (Sorted Sets with periodic cleanup are simpler)
+
+**Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Count-Min Sketch](#count-min-sketch) · [Bloom Filters](../databases.md#bloom-filter)
+
+---
+
+## Redis Geospatial
+
+Redis's built-in support for storing and querying geographic coordinates (longitude, latitude) with radius-based and distance-based queries. Uses a Geohash-based encoding: coordinates are interleaved into a 52-bit integer, enabling sorted-set-style range queries. Ideal for location-based services, proximity search, and geofencing.
+
+### Key Characteristics
+- **Geohash encoding**: Coordinates stored as 52-bit integers in a Sorted Set — GEO commands are thin wrappers over ZSET operations
+- **Radius queries**: GEORADIUS and GEORADIUSBYMEMBER find points within a distance (m, km, mi, ft)
+- **Distance calculation**: GEODIST computes Haversine distance between two members
+- **Sorted Set compatible**: All ZSET commands work on GEO keys — ZRANGE, ZREM, ZCARD
+
+### When to Use
+- Find nearest drivers, stores, or ATMs to a user's location
+- Geofencing: detect when a device enters or leaves a radius
+- Location-based recommendations and proximity-based search
+
+### When NOT to Use
+- Complex spatial queries (polygon containment, bounding-box with filters — use PostGIS)
+- High-precision coordinate storage (Geohash loses precision at extreme latitudes)
+- When you need to query by both spatial and non-spatial attributes (use a spatial database)
+
+**Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes)
+
+---
+
+## RedisTimeSeries
+
+A Redis module that adds native time-series capabilities: ingesting timestamped data points, automatic downsampling (compaction rules), retention policies, and ranged aggregations. Optimized for high-ingest workloads (millions of data points per second) with efficient delta-of-delta compression.
+
+### Key Characteristics
+- **Automatic compaction**: TS.CREATERULE downsamples raw data into lower-resolution series (e.g., 1s → 1m avg)
+- **Retention policies**: TS.ALTER RETENTION auto-evicts data older than the policy
+- **Aggregation functions**: Avg, Sum, Min, Max, Range, Count, First, Last, Std.p, Std.s, Var.p, Var.s, TWA
+- **Label-based filtering**: TS.MGET and TS.MRANGE support querying across keys by label (e.g., `sensor_id=42`, `region=eu-west`)
+
+### When to Use
+- IoT sensor data: temperature, pressure, humidity readings from thousands of devices
+- Financial market data: stock/crypto price ticks with downsampling to OHLC candles
+- Application metrics: CPU, memory, request latency over time
+- Real-time dashboards with time-window aggregations
+
+### When NOT to Use
+- When you need relational joins with time-series data (use TimescaleDB or InfluxDB)
+- When the data volume is low and a simple Sorted Set with ZADD per timestamp suffices
+- When you need complex event processing or CEP (use a stream processor)
+
+**Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Streams](../messaging.md#redis-streams)
 
 ---
 
