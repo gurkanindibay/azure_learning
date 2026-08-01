@@ -1,0 +1,212 @@
+{
+  "main": {
+    "id": "07a6dd1455cabcee",
+    "type": "split",
+    "children": [
+      {
+        "id": "4ba4c17d683e0a2f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b6d68634151f112d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "articles/system-design-interview/22-design-interview-questions/01-22-scenario-based-system-design-questions.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "01-22-scenario-based-system-design-questions"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0fc0311ce9faa1eb",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "2a2d9789d5e8b0c3",
+        "type": "leaf",
+        "state": {
+          "type": "file-explorer",
+          "state": {
+            "sortOrder": "alphabetical",
+            "autoReveal": false
+          },
+          "icon": "lucide-folder-closed",
+          "title": "Files"
+        }
+      },
+      {
+        "id": "b3a77ee4251e22ed",
+        "type": "leaf",
+        "state": {
+          "type": "search",
+          "state": {
+            "query": "",
+            "matchingCase": false,
+            "explainSearch": false,
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical"
+          },
+          "icon": "lucide-search",
+          "title": "Search"
+        }
+      },
+      {
+        "id": "9bd3a90474a44b6b",
+        "type": "leaf",
+        "state": {
+          "type": "tag",
+          "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+          },
+          "icon": "lucide-tags",
+          "title": "Tags"
+        }
+      },
+      {
+        "id": "7e5b1fc9fbfe2786",
+        "type": "leaf",
+        "state": {
+          "type": "all-properties",
+          "state": {
+            "sortOrder": "frequency",
+            "showSearch": false,
+            "searchQuery": ""
+          },
+          "icon": "lucide-archive",
+          "title": "Tüm özellikler"
+        }
+      },
+      {
+        "id": "4d516297017cd843",
+        "type": "leaf",
+        "state": {
+          "type": "bookmarks",
+          "state": {},
+          "icon": "lucide-bookmark",
+          "title": "Yer İmleri"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "right": {
+    "id": "21aa24ba1faaef89",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "16a4153a49a7af52",
+        "type": "leaf",
+        "state": {
+          "type": "backlink",
+          "state": {
+            "file": "architecture-azure/container-registry/acr-service-tiers.md",
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-coming-in",
+          "title": "Backlinks"
+        }
+      },
+      {
+        "id": "a849899a9b95cfd3",
+        "type": "leaf",
+        "state": {
+          "type": "outgoing-link",
+          "state": {
+            "file": "system-design-architecture/01-databases-query-performance.md",
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-going-out",
+          "title": "Giden bağlantılar"
+        }
+      },
+      {
+        "id": "6224f5b16a2ab2f6",
+        "type": "leaf",
+        "state": {
+          "type": "outline",
+          "state": {
+            "file": "system-design-architecture/01-databases-query-performance.md",
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+          },
+          "icon": "lucide-list",
+          "title": "Anahat"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "b6d68634151f112d",
+  "lastOpenFiles": [
+    "system-design-interview-practice/url-shorterner/review.md",
+    "articles/system-design-interview/22-design-interview-questions/01-22-scenario-based-system-design-questions.md",
+    "backprocess.md",
+    "system-design-architecture/35-mesh-key-takeaways.md",
+    "system-design-cases/templates/system-design-case-template.md",
+    "system-design-cases/cases/part-3-real-time-messaging-system-design.md",
+    "system-design-cases/cases/part-3-e-commerce-platform-system-design.md",
+    "system-design-cases/cases/part-2-url-shortener-system-design.md",
+    "system-design-cases/cases/part-2-news-feed-system-design.md",
+    "system-design-cases/templates",
+    "system-design-cases/README.md",
+    "system-design-cases/index.md",
+    "system-design-cases/cases",
+    "system-design-cases/AGENTS.md",
+    "system-design-cases",
+    "system-design-architecture/system-design-interview/pragmatic-takeaways.md",
+    "system-design-architecture/system-design-interview/interview-roadmap.md",
+    "system-design-architecture/system-design-interview/interview-deep-dive.md",
+    "system-design-architecture/system-design-interview/index.md",
+    "system-design-architecture/system-design-interview",
+    "system-design-architecture/stream-processing/stream-processing-flink.md",
+    "system-design-architecture/stream-processing/index.md",
+    "system-design-architecture/stream-processing/async-concurrency-patterns.md",
+    "system-design-architecture/stream-processing",
+    "system-design-architecture/software-architecture/index.md",
+    "system-design-architecture/software-architecture/dockerfile-optimization.md",
+    "system-design-architecture/software-architecture/distributed-monolith.md",
+    "system-design-architecture/software-architecture/design-patterns.md",
+    "system-design-architecture/software-architecture/architecture-principles.md",
+    "system-design-architecture/software-architecture",
+    "system-design-architecture/security/index.md",
+    "system-design-architecture/security/hsm-integration-bottlenecks.md",
+    "system-design-architecture/security",
+    "system-design-architecture/resilience",
+    "system-design-architecture/performance",
+    "system-design-architecture/messaging",
+    "articles/medium/uber-architecture/images/uber-real-time-gps-load.png",
+    "Başlıksız.canvas"
+  ]
+}
