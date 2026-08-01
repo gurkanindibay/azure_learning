@@ -65,6 +65,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Redis Hashes | [`#redis-hashes`](#redis-hashes) |
 | Redis Sets | [`#redis-sets`](#redis-sets) |
 | Redis Bitmaps | [`#redis-bitmaps`](#redis-bitmaps) |
+| Bloom Filters (Redis) | [`#bloom-filters-redis`](#bloom-filters-redis) |
 | Cuckoo Filters | [`#cuckoo-filters`](#cuckoo-filters) |
 | Count-Min Sketch | [`#count-min-sketch`](#count-min-sketch) |
 | Top-K | [`#top-k`](#top-k) |
@@ -977,6 +978,11 @@ Redis's simplest data type — a binary-safe sequence of bytes that can represen
 - Storing structured objects with many fields (use Hashes instead — more memory-efficient for small field counts)
 - Append-heavy workloads (Lists or Streams are more efficient)
 
+### Real-World Examples
+- **GitHub API rate limiting**: Uses Redis INCR to track per-user API call counts per hour — atomic increment + TTL reset eliminates race conditions without locks.
+- **Twitter trending hashtags**: Stores per-hashtag occurrence counts as Strings with INCR on every tweet — millions of increments per second, no DB writes.
+- **Distributed session stores**: E-commerce sites store serialized user sessions (cart ID, auth token, preferences) as Redis Strings with 30-minute TTL.
+
 **Also see**: [Redis Hashes](#redis-hashes) · [SET NX (Redis)](#set-nx-redis) · [TTL](#ttl-time-to-live)
 
 ---
@@ -1001,6 +1007,10 @@ An ordered collection of strings implemented as a linked list, providing O(1) pu
 - Large lists with frequent mid-list operations (O(N))
 - Persisted event logs requiring replay and consumer groups (use Redis Streams)
 
+### Real-World Examples
+- **Celery task queue**: Celery (Python distributed task queue) uses Redis Lists as a broker backend — producers LPUSH tasks, workers BRPOP to consume, BLPOP timeout for idle polling without busy-waiting.
+- **Instagram notification delivery**: Stores pending notifications as Lists keyed by user ID — LPUSH new notifications, LTRIM to cap at 500, LRANGE for rendering the latest 20.
+
 **Also see**: [Redis Streams](../messaging.md#redis-streams) · [Redis Sorted Sets](#redis-sorted-sets)
 
 ---
@@ -1024,6 +1034,10 @@ A collection of field-value pairs stored under a single key, analogous to a dict
 - When you need to atomically update multiple hashes at once (use Lua scripting or MULTI/EXEC)
 - Storing deeply nested data (use RedisJSON module or serialize to String)
 - Hashes with hundreds of thousands of fields (promotion to hashtable can cause latency spikes)
+
+### Real-World Examples
+- **Uber driver profiles**: Each driver's location, status, rating, and vehicle info stored as fields in a single Hash — dispatch services HGET only the fields they need instead of deserializing a 5 KB JSON blob for every matching query.
+- **Shopify shopping carts**: Cart items stored as Hash fields (product_id → quantity) — atomic HINCRBY for quantity changes, HDEL for removals, expiry via key-level TTL matching session timeout.
 
 **Also see**: [ziplist](#ziplist) · [listpack](#listpack) · [hash-max-ziplist-entries](#hash-max-ziplist-entries) · [Redis Strings](#redis-strings)
 
@@ -1050,6 +1064,10 @@ An unordered collection of unique strings with O(1) add/remove/contains operatio
 - Duplicate-allowing collections (use Lists)
 - Large sets with SMEMBERS — O(N) and blocks the event loop; use SSCAN for iteration
 
+### Real-World Examples
+- **Twitter "Who to Follow"**: Computes mutual followers via SINTER between user A's followees and user B's followers — server-side intersection in milliseconds instead of transferring millions of IDs to the client.
+- **Medium article tags**: Each article has a Set of tags; each tag has a Set of articles — SUNION for "articles tagged 'redis' OR 'caching'", SINTER for "articles tagged 'redis' AND 'caching'" (AND-filtering).
+
 **Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes) · [Bloom Filters](../databases.md#bloom-filter)
 
 ---
@@ -1074,7 +1092,42 @@ A space-efficient encoding where each bit in a String value represents a boolean
 - When per-user metadata beyond a boolean is needed (use Hashes)
 - Offsets beyond 2^32 (practical limit of Redis string size)
 
+### Real-World Examples
+- **Reddit "users online today"**: One bitmap per day with bit offset = user ID — BITCOUNT for daily active users (DAU), BITOP AND between consecutive days to find users active on both days.
+- **GitHub feature flag rollout**: Bitmap keyed by feature name, bit offset = user ID — `SETBIT feature:dark_mode 42001 1` enables the flag for user 42001. BITOP OR across feature bitmaps computes user-feature matrix in one operation.
+
 **Also see**: [Redis Sets](#redis-sets) · [HyperLogLog](../databases.md#hyperloglog) · [Bloom Filters](../databases.md#bloom-filter)
+
+---
+
+## Bloom Filters (Redis)
+
+A RedisBloom module implementation of the Bloom Filter — a space-efficient probabilistic data structure for membership testing. Answers "is this item possibly in the set?" with configurable false-positive rate and **zero false negatives**: if it says an item is absent, it is guaranteed absent. Uses multiple hash functions and a bit array; each `BF.ADD` sets k bits at positions determined by the hash outputs.
+
+> **Already defined**: See [Bloom Filter](../databases.md#bloom-filter) for the general algorithm. This entry covers RedisBloom-specific usage.
+
+### Key Characteristics
+- **Zero false negatives**: `BF.EXISTS` returning 0 means the item was definitely never added — safe for cache-bypass decisions
+- **Configurable error rate**: `BF.RESERVE key 0.001 1000000000` creates a filter for 1B items at 0.1% false-positive rate
+- **Fixed memory**: Memory is determined at creation time (error rate × capacity) and does not grow with insertions
+- **No deletion**: Standard Bloom Filters cannot remove items — use Cuckoo Filters (`CF.DEL`) if deletion is required
+- **BF.INSERT**: RedisBloom 2.4+ supports creating and inserting in one command
+
+### When to Use
+- **Cache penetration prevention**: Before querying the DB, check the Bloom Filter — if it says "not present," skip the DB entirely (defense against cache-miss storms from nonexistent keys)
+- **Duplicate URL detection**: Crawlers check billions of URLs; `BF.EXISTS` in microseconds avoids storing the full URL set
+- **Username/existence pre-check**: At signup, rapid check if username might already be taken before querying the primary DB
+- **Recommendation de-duplication**: Track (user, article) pairs to avoid re-recommending content — false positives mean occasionally skipping an unseen article (~0.1% at standard config)
+
+### When NOT to Use
+- **When you need to enumerate members**: Bloom Filters cannot list contained items — use Sets
+- **When deletions are frequent**: Use Cuckoo Filters instead — rebuilding a Bloom Filter is expensive
+- **When exact membership is required**: Use Sets or a database query; Bloom Filters are inherently probabilistic
+- **When the set is small (<100K items)**: A Set at this scale uses negligible memory and gives exact answers
+
+**Real-world example**: **Medium** uses Redis Bloom Filters (via RedisBloom) for their recommendation system — at hundreds of millions of users × thousands of articles, storing every (user, article) pair would require petabytes. A Bloom Filter at 0.1% FPR uses ~1.8 GB. The false-positive rate means ~0.1% of users won't see an article they've never been shown — an acceptable UX tradeoff for 1000× memory savings.
+
+**Also see**: [Cuckoo Filters](#cuckoo-filters) · [Bloom Filter (General)](../databases.md#bloom-filter) · [Redis Sets](#redis-sets) · [Count-Min Sketch](#count-min-sketch)
 
 ---
 
@@ -1097,6 +1150,10 @@ A probabilistic data structure (via RedisBloom module) for membership testing th
 - Add-only workloads (Bloom Filters are simpler and more predictable)
 - Very high fill ratios (Cuckoo Filter insertion failure rates rise as the filter fills)
 - When exact membership is required (use Redis Sets)
+
+### Real-World Examples
+- **Cloudflare dynamic IP blocklists**: Uses Cuckoo Filters to maintain blocklists where IPs are frequently added (new threats) and removed (false positives cleared, blocks expired). Bloom Filters would require rebuilding; Cuckoo Filters support CF.DEL for instant removal.
+- **Netflix CDN content tracking**: Tracks which content chunks have been cached at each edge node — when a chunk is evicted from cache, CF.DEL removes it from the filter, ensuring the next request triggers a refetch.
 
 **Also see**: [Bloom Filters](../databases.md#bloom-filter) · [Count-Min Sketch](#count-min-sketch) · [Top-K](#top-k)
 
@@ -1122,6 +1179,10 @@ A probabilistic data structure (via RedisBloom module) for estimating **item fre
 - When you need to list all tracked items (Count-Min Sketch is a sketch, not a set)
 - Small cardinality workloads where exact counting is cheap
 
+### Real-World Examples
+- **Twitter trending topics**: Uses Count-Min Sketch to estimate hashtag frequencies across a firehose of 500M+ tweets/day — exact counting would require per-hashtag counters for millions of distinct hashtags; CMS uses fixed memory regardless of hashtag cardinality.
+- **YouTube view counting**: Tracks approximate view counts for billions of video-day combinations — CMS with 0.1% error gives trending dashboards near-exact rankings at a fraction of the memory.
+
 **Also see**: [Top-K](#top-k) · [Bloom Filters](../databases.md#bloom-filter) · [Cuckoo Filters](#cuckoo-filters) · [HyperLogLog](../databases.md#hyperloglog)
 
 ---
@@ -1145,6 +1206,10 @@ A probabilistic data structure (via RedisBloom module) that maintains the **top 
 - Exact rankings (use Sorted Sets with ZADD/ZRANGE)
 - When the full ranked list is needed beyond the top K (structure only tracks K items)
 - Infrequently updated leaderboards (Sorted Sets with periodic cleanup are simpler)
+
+### Real-World Examples
+- **Spotify Top-50 charts**: Uses Top-K to maintain the most-streamed tracks in real-time across millions of concurrent listeners — exact ranking with Sorted Sets would require storing and sorting every track; Top-K tracks only the heavy hitters with bounded memory.
+- **Reddit "Trending Today"**: Tracks which subreddits have the highest post velocity in the last hour — the heavy-keeper algorithm ensures truly popular subreddits are never evicted while flash-in-the-pan spikes decay naturally.
 
 **Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Count-Min Sketch](#count-min-sketch) · [Bloom Filters](../databases.md#bloom-filter)
 
@@ -1170,6 +1235,10 @@ Redis's built-in support for storing and querying geographic coordinates (longit
 - High-precision coordinate storage (Geohash loses precision at extreme latitudes)
 - When you need to query by both spatial and non-spatial attributes (use a spatial database)
 
+### Real-World Examples
+- **Uber Eats restaurant search**: Stores restaurant locations in a GEO key — `GEORADIUS` finds all restaurants within 3 km of a user in milliseconds. Driver locations stored in a separate GEO key for nearest-driver matching.
+- **Tinder proximity matching**: Stores user locations as GEO members — `GEORADIUSBYMEMBER` discovers potential matches within a configurable radius. All ZSET-compatible, so ZREM instantly removes users who log out.
+
 **Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes)
 
 ---
@@ -1194,6 +1263,10 @@ A Redis module that adds native time-series capabilities: ingesting timestamped 
 - When you need relational joins with time-series data (use TimescaleDB or InfluxDB)
 - When the data volume is low and a simple Sorted Set with ZADD per timestamp suffices
 - When you need complex event processing or CEP (use a stream processor)
+
+### Real-World Examples
+- **Tesla vehicle telemetry**: Each vehicle streams hundreds of sensor readings per second (speed, battery, temperature, GPS) — RedisTimeSeries stores raw second-level data, TS.CREATERULE downsamples to 1-minute averages for dashboards, and retention policies auto-delete raw data older than 7 days.
+- **Coinbase crypto price feeds**: BTC/USD price ticks ingested every 100 ms — TS.MRANGE with AGGREGATION produces 1-minute OHLC candles for trading charts; the delta-of-delta compression reduces storage by 90%+ for mostly-unchanging values.
 
 **Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Streams](../messaging.md#redis-streams)
 
