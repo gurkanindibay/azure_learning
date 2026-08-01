@@ -62,6 +62,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Shard Key | [`#shard-key`](#shard-key) |
 | Snowflake ID | [`#snowflake-id`](#snowflake-id) |
 | Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
+| Cooldown | [`#cooldown`](#cooldown) |
+| Surge Pricing | [`#surge-pricing`](#surge-pricing) |
 
 ## Business Capability
 
@@ -1250,3 +1252,61 @@ A shard key composed of two or more columns combined via hashing or concatenatio
 - [Shard Key](#shard-key) · [Snowflake ID](#snowflake-id) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding)
 
 
+
+---
+
+## Surge Pricing
+
+A dynamic pricing strategy that adjusts prices in real time based on the ratio of demand to supply within a geographic region. When demand exceeds supply, prices rise to incentivize more supply (drivers) and reduce demand (price-sensitive riders), clearing the market at a new equilibrium.
+
+### Key Characteristics
+
+- **Market-clearing mechanism**: Prices rise until supply matches demand — ensures service availability even during demand spikes
+- **Per-region computation**: Demand and supply are measured per geographic cell (geohash/H3), not globally — a rainstorm in one neighborhood does not affect prices city-wide
+- **Real-time feedback loop**: Rider acceptance rates and driver movement are continuously monitored to tune the multiplier — the system is constantly seeking equilibrium
+- **Smoothing required**: Without damping (EMA, cooldown, adjacency adjustment), aggressive price changes cause driver/rider oscillation and price whiplash
+
+### When to Use
+
+- Ride-hailing and delivery platforms where supply (drivers/couriers) is elastic but responds to price signals
+- Any marketplace with real-time supply-demand mismatch and elastic supply-side participation
+- Event-driven demand spikes (concerts, sports, weather) where fixed pricing would cause service degradation
+
+### When NOT to Use
+
+- Markets where supply is inelastic (cannot respond to price signals in relevant timeframe)
+- Essential services where price discrimination raises ethical or regulatory concerns (emergency services, healthcare)
+- Situations where the latency of price computation exceeds the event duration (pricing updates slower than the demand spike itself)
+
+### Also see
+
+- [Geohash](#geohash) · [Exponential Moving Average](../reference-dictionary/ai-ml-llm.md#exponential-moving-average) · [Cooldown](#cooldown) · [Sliding Window](../reference-dictionary/api-design.md#sliding-window)
+
+---
+
+## Cooldown
+
+A minimum interval between successive state changes in a control system. In dynamic pricing, a cooldown period (typically 2–5 minutes) prevents a surge multiplier from changing more than once per cycle — blocking rapid see-sawing caused by positive feedback between price signals and driver/rider behavior.
+
+### Key Characteristics
+
+- **Minimum hold time**: Once a value is set, it cannot change again until the cooldown interval elapses — regardless of new input
+- **Oscillation prevention**: Primary defense against control-system instability in feedback loops where output (price) influences input (driver/rider behavior)
+- **Configurable per domain**: Shorter cooldowns (2 min) for fast-moving urban markets; longer (5 min) for suburban areas with slower driver response
+- **Works with damping**: Typically paired with EMA smoothing — cooldown is a hard gate, EMA is a soft blend
+
+### When to Use
+
+- Dynamic pricing systems where user behavior creates a feedback loop with the pricing signal
+- Auto-scaling policies to prevent thrashing (scale-up followed immediately by scale-down)
+- Feature flag toggles or circuit breaker state transitions to prevent rapid flapping
+
+### When NOT to Use
+
+- Systems where instantaneous response to genuine state changes is safety-critical (e.g., emergency shutdown)
+- Low-latency trading systems where cooldown would create arbitrage opportunities
+- Situations where the cooldown duration exceeds the timescale of the phenomenon being controlled
+
+### Also see
+
+- [Exponential Moving Average](../reference-dictionary/ai-ml-llm.md#exponential-moving-average) · [Surge Pricing](#surge-pricing) · [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker)

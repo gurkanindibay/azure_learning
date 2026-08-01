@@ -8,7 +8,7 @@ timestamp: 2026-06-14T00:00:00Z
 # 6. Uber Architecture Case Study: Key Takeaways
 
 > **Parent**: [System Design Interview Reference](../index.md)  
-> **Source**: [Uber Architecture — 5-Part Series](../../../articles/case-studies/uber-architecture/) — by Simranjeet Singh (Mar 2026)  
+> **Source**: [Uber Architecture — 5-Part Series](../../../articles/case-studies/uber-architecture/) — by Simranjeet Singh (Mar 2026) + [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md) — by Arvind Kumar (Jul 2026)  
 > **Purpose**: Extract reusable architectural patterns, tradeoffs, and strategies from Uber's real-time GPS tracking system at 83,000 writes/sec.
 
 ---
@@ -26,6 +26,11 @@ timestamp: 2026-06-14T00:00:00Z
 - [uber-09: Adaptive Sampling — Server-Side Rate Control](#uber-09-adaptive-sampling--server-side-rate-control) — Closed-loop feedback for 20–30% write reduction
 - [uber-10: Partition Boundary Handoff](#uber-10-partition-boundary-handoff) — Dual-publish at H3 cell crossings
 - [uber-11: The Full Stack in One Breath](#uber-11-the-full-stack-in-one-breath) — End-to-end architecture summary
+- [uber-12: Surge Pricing as Real-Time Market Feedback System](#uber-12-surge-pricing-as-real-time-market-feedback-system) — Dynamic pricing as market-clearing mechanism
+- [uber-13: Per-Geohash Demand-Supply Computation with Sliding Windows](#uber-13-per-geohash-demand-supply-computation-with-sliding-windows) — Redis counters + 5-min sliding window
+- [uber-14: Oscillation Prevention via EMA Smoothing and Cooldown](#uber-14-oscillation-prevention-via-ema-smoothing-and-cooldown) — Two-layer damping: EMA + cooldown period
+- [uber-15: Adjacency Adjustment for Spatial Price Smoothing](#uber-15-adjacency-adjustment-for-spatial-price-smoothing) — Neighbor cell influence on surge multiplier
+- [uber-16: Surge Pricing Monitoring — 7 Key Metrics + Behavioral Feedback Loops](#uber-16-surge-pricing-monitoring--7-key-metrics--behavioral-feedback-loops) — Observability for a market-feedback system
 - [Azure Service Mapping](#azure-service-mapping)
 
 ---
@@ -663,3 +668,239 @@ GPS chip fires → WebSocket → Regional Edge Node (validate, dedup, <2ms)
 ---
 
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns, §3.3 Event-Driven & Messaging Architecture, §4.1 Data Storage Architecture, §7.3 Caching Strategies, §8.2 API Gateway & Edge Patterns
+
+---
+
+## uber-12: Surge Pricing as Real-Time Market Feedback System
+
+> **Source**: [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md)
+
+
+| | |
+|:---|:---|
+| **Problem** | Rain events simultaneously spike rider demand and suppress driver supply — creating a supply-demand mismatch that, without price adjustment, causes market failure (most riders cannot find a ride) |
+| **Root cause** | Fixed pricing cannot signal scarcity or incentivize supply-side response; the market needs a real-time price signal to reach equilibrium |
+
+**Strategy — Dynamic pricing as a market-clearing mechanism**:
+
+Surge pricing is not just an algorithm — it is a real-time market feedback system. The core economic loop:
+
+```mermaid
+graph LR
+    A[Rain Event] --> B[Demand ↑ / Supply ↓]
+    B --> C[Demand-Supply Ratio Computed per Geohash]
+    C --> D[Surge Multiplier Applied]
+    D --> E1[Some Riders Wait / Use Alternatives]
+    D --> E2[More Drivers Enter the Zone]
+    E1 --> F[Demand ↓]
+    E2 --> G[Supply ↑]
+    F --> H[New Equilibrium Reached]
+    G --> H
+```
+
+**The two-sided incentive structure**:
+
+| Side | Mechanism | Effect |
+|:---|:---|:---|
+| **Rider** | Higher price displayed before confirmation | Price-sensitive riders self-select out; those with urgent need still get rides |
+| **Driver** | Surge heatmap on driver app + higher earnings per trip | Drivers are incentivized to move toward high-demand zones |
+
+**Tradeoff**: Higher prices generate user complaints and regulatory scrutiny, but the alternative — no available rides during rain — is objectively worse for all participants.
+
+> **Key insight**: Surge pricing is not about maximizing revenue — it is about ensuring the market clears. Without it, the service degrades to the point where no one gets a ride.
+
+> **Dictionary**: [Surge Pricing](../../../reference-dictionary/architecture-patterns.md#surge-pricing) | **Azure**: [Event Hubs](../../../architecture-azure/integration/event-hubs/) (event ingestion) + [Azure Cache for Redis](../../../architecture-azure/data/redis/) (real-time counters) | **Taxonomy**: §3.3 Event-Driven & Messaging
+
+---
+
+## uber-13: Per-Geohash Demand-Supply Computation with Sliding Windows
+
+> **Source**: [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md)
+
+
+| | |
+|:---|:---|
+| **Problem** | Computing accurate demand-supply ratios across thousands of geographic cells at millions of events per second — global averages are useless because rain affects only specific neighborhoods |
+| **Root cause** | Demand and supply are inherently local phenomena; aggregating globally destroys the spatial signal needed for per-zone pricing |
+
+**Strategy — Geohash-partitioned counters with 5-minute sliding windows**:
+
+For every geohash cell, the pricing engine maintains two counters in Redis:
+
+| Counter | Definition | Source Events |
+|:---|:---|:---|
+| **Demand** | Riders who opened the app or requested a ride in the last 5 minutes | `rider.requests` topic |
+| **Supply** | Available drivers in the cell (online, not on a trip) | `driver.locations` + `driver.status` topics |
+
+The **surge multiplier** is the demand-supply ratio mapped to a price multiplier:
+
+```
+surge_multiplier = f(demand_count / supply_count)
+```
+
+**Sliding window rationale**: A 5-minute window smooths short-term noise. Even if 50 riders open the app in one second, the window captures them as a trend rather than an instantaneous spike. The window size is tunable — too small causes jitter, too large causes lag in responding to real changes.
+
+**Why Redis**: Per-geohash counters with TTL-based expiry. If a geohash stops receiving events (e.g., rain stops, riders disperse), its counters decay to zero naturally via TTL — no explicit cleanup job required.
+
+| Redis Operation | Purpose |
+|:---|:---|
+| `INCR geohash:{id}:demand` | Increment demand counter per rider event |
+| `EXPIRE geohash:{id}:demand 300` | TTL ensures automatic decay after 5 minutes of inactivity |
+| `GET geohash:{id}:demand` + `GET geohash:{id}:supply` | Compute ratio for pricing decision |
+
+**Tradeoff**: Window-based counting loses exact moment-by-moment precision but gains stability. The alternative — instantaneous counting — would produce wildly oscillating prices from single-second spikes.
+
+> **Dictionary**: [Geohash](../../../reference-dictionary/architecture-patterns.md#geohash), [Sliding Window](../../../reference-dictionary/api-design.md#sliding-window) | **Azure**: [Azure Cache for Redis](../../../architecture-azure/data/redis/) + [Event Hubs](../../../architecture-azure/integration/event-hubs/) | **Taxonomy**: §3.3 Event-Driven & Messaging, §7.3 Caching Strategies
+
+---
+
+## uber-14: Oscillation Prevention via EMA Smoothing and Cooldown
+
+> **Source**: [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md)
+
+
+| | |
+|:---|:---|
+| **Problem** | Aggressive price updates cause wild oscillations: drivers rush to a surge zone → supply overshoots → demand crashes → prices plummet → drivers leave → cycle repeats — a classic control system instability |
+| **Root cause** | Direct application of the computed multiplier without damping creates positive feedback loops between price signals and driver/rider behavior |
+
+**Strategy — Two-layer damping mechanism**:
+
+**Layer 1: Exponential Moving Average (EMA) smoothing**:
+
+The computed multiplier is not applied directly. Instead:
+
+```
+final_multiplier = (α × computed_multiplier) + ((1 − α) × previous_multiplier)
+```
+
+| Parameter | Typical Value | Effect |
+|:---|:---|:---|
+| α = 0.3 | More aggressive smoothing | Slower price changes, less responsive |
+| α = 0.5 | Moderate smoothing | Balanced responsiveness vs. stability |
+
+This creates an exponential moving average — prices change smoothly instead of jumping from 1× to 3× instantly. The higher the α, the more weight given to the latest computation.
+
+**Layer 2: Cooldown period**:
+
+Once a surge multiplier is set for a geohash, it cannot change more than once per pricing cycle (typically 2–5 minutes). This prevents rapid see-sawing by introducing a minimum hold time.
+
+```mermaid
+graph TD
+    A[Raw Computed Multiplier] --> B[EMA Smoothing: blend with previous]
+    B --> C[Cooldown Check: has min interval elapsed?]
+    C -->|Yes| D[Apply New Multiplier]
+    C -->|No| E[Keep Previous Multiplier]
+    D --> F[Push to Rider/Driver Apps]
+    E --> F
+```
+
+**Tradeoff**: Damping adds latency to price adjustments. During a sudden, genuine demand spike (e.g., stadium event ending), prices may lag 2–5 minutes behind reality. However, this is preferable to the alternative — price whiplash that erodes user trust in the platform.
+
+> **Dictionary**: [Exponential Moving Average](../../../reference-dictionary/ai-ml-llm.md#exponential-moving-average), [Cooldown](../../../reference-dictionary/architecture-patterns.md#cooldown) | **Azure**: [Azure Stream Analytics](../../../architecture-azure/data/) (stateful windowed computation) | **Taxonomy**: §3.3 Event-Driven & Messaging
+
+---
+
+## uber-15: Adjacency Adjustment for Spatial Price Smoothing
+
+> **Source**: [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md)
+
+
+| | |
+|:---|:---|
+| **Problem** | A single geohash cell with 3× surge surrounded by cells at 1× creates an artificial hot-spot: drivers flood in from all sides → supply normalizes in seconds → surge was a false signal that wasted driver movement |
+| **Root cause** | Computing surge multipliers in isolation ignores the spatial continuity of real-world driver behavior — drivers respond to price gradients, not absolute prices |
+
+**Strategy — Neighbor-aware multiplier computation**:
+
+Each cell's final multiplier is influenced by its neighboring cells:
+
+```
+adjusted_multiplier(cell) = β × local_multiplier + (1 − β) × avg(neighbor_multipliers)
+```
+
+| Parameter | Effect |
+|:---|:---|
+| β = 0.7 | 70% weight on local signal, 30% on neighbors — preserves local precision |
+| β = 0.5 | Equal weight — strong spatial smoothing for dense urban grids |
+
+**Why this matters**:
+
+| Without Adjacency Adjustment | With Adjacency Adjustment |
+|:---|:---|
+| Sharp price cliffs at cell boundaries | Smooth price gradients across neighborhoods |
+| Drivers overshoot from adjacent 1× zones | Graduated incentives — drivers see a gradient to follow |
+| False surge spikes that self-correct in seconds | Persistent, meaningful surge signals |
+
+This is analogous to **spatial anti-aliasing** in computer graphics — smoothing out artificial edges introduced by the discrete grid to better approximate the continuous reality.
+
+**Tradeoff**: Adjacency adjustment blurs the spatial precision of demand signals. A genuinely isolated demand spike (e.g., a single concert venue in one cell) will be partially dampened by its lower-demand neighbors. The β parameter controls this tradeoff.
+
+> **Dictionary**: [Geohash](../../../reference-dictionary/architecture-patterns.md#geohash) | **Taxonomy**: §3.3 Event-Driven & Messaging
+
+---
+
+## uber-16: Surge Pricing Monitoring — 7 Key Metrics + Behavioral Feedback Loops
+
+> **Source**: [Part 6 — Surge Pricing During Rain](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md)
+
+
+| | |
+|:---|:---|
+| **Problem** | Surge pricing is a black-box system from the outside — without comprehensive monitoring, it is impossible to distinguish between correct market behavior and a bug causing false surges |
+| **Root cause** | The system operates on market dynamics, not deterministic rules — behavioral metrics are the only way to validate correctness |
+
+**Strategy — Seven key metrics plus behavioral feedback loops**:
+
+| # | Metric | What It Tells You | Red Flag |
+|:---|:---|:---|:---|
+| 1 | **Surge multiplier distribution** | % of geohashes at 1×, 1.5×, 2×, 3×+ | Sudden spike in 3×+ zones without weather/event correlation |
+| 2 | **Rider acceptance rate** | % of riders who accept surge price and book | Dropping below historical baseline → surge is too aggressive |
+| 3 | **Driver movement into surge zones** | Are drivers responding to the price signal? | Surge multiplier rising but driver count unchanged → signal is ignored |
+| 4 | **End-to-end latency** | Time from rider opening app to seeing surge price | >10 seconds → pipeline bottleneck |
+| 5 | **Stream processing lag** | How far behind real-time is the Kafka consumer? | Growing lag → system falling behind, pricing based on stale data |
+| 6 | **Surge oscillation frequency** | How often multiplier changes >0.5× within 5 minutes per geohash | High frequency → inadequate EMA/cooldown tuning |
+| 7 | **False surge events** | Surge triggered but demand not actually high | Indicates bug, data pipeline glitch, or misconfigured threshold |
+
+**Behavioral feedback loops** (closed-loop control):
+
+```mermaid
+graph TD
+    A[Surge Multiplier Set] --> B[Rider Acceptance Rate Measured]
+    B -->|Acceptance Too Low| C[Algorithm Reduces Multiplier]
+    B -->|Acceptance Healthy| D[Multiplier Maintained]
+    A --> E[Driver Movement Measured]
+    E -->|Drivers Ignoring Zone| F[Algorithm Increases Multiplier]
+    E -->|Supply Normalizing| G[Multiplier Maintained]
+    C --> A
+    F --> A
+```
+
+**The system is constantly seeking equilibrium** — it is never "done." Each pricing cycle is a new experiment based on the previous cycle's outcome.
+
+**Tradeoff**: Seven metrics create alert fatigue if thresholds are too tight. Focus on metrics 2 (acceptance rate) and 6 (oscillation frequency) as leading indicators — they detect problems before users complain.
+
+> **Dictionary**: [Consumer Lag](../../../reference-dictionary/messaging.md#consumer-lag) | **Azure**: [Application Insights](../../../architecture-azure/observability/) (metrics, alerts, dashboards) + [Azure Monitor](../../../architecture-azure/observability/) | **Taxonomy**: §7.1 Observability & Monitoring, §3.3 Event-Driven & Messaging
+
+---
+
+## Cross-References (Surge Pricing)
+
+### Related System Design Strategies
+
+| This Takeaway | Related Reference |
+|:---|:---|
+| **uber-12** (Market feedback) | [`uber-01`](#uber-01-the-decomposition-principle) — Decomposition principle; each layer solves one problem |
+| **uber-13** (Sliding windows) | [`uber-03`](#uber-03-geo-partitioning-vs-identity-partitioning) — H3 geo-partitioning |
+| **uber-14** (EMA + cooldown) | [`cache-01`](../caching/caching-architecture.md#cache-01-cache-stampede) — Damping patterns for volatile data |
+| **uber-15** (Adjacency) | [`uber-10`](#uber-10-partition-boundary-handoff) — Spatial boundary handling |
+| **uber-16** (Monitoring) | [`resilience-03`](../resilience/resilience-patterns.md) — Health-check patterns |
+
+### Related Architecture Resources
+
+| Resource | Path |
+|:---|:---|
+| Surge Pricing Article | [`articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md`](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md) |
+| Uber Architecture — Full Series | [`articles/case-studies/uber-architecture/`](../../../articles/case-studies/uber-architecture/) |
+| Dictionary: Surge Pricing | [`reference-dictionary/architecture-patterns.md`](../../../reference-dictionary/architecture-patterns.md#surge-pricing) |
+| Dictionary: Geohash | [`reference-dictionary/architecture-patterns.md`](../../../reference-dictionary/architecture-patterns.md#geohash) |

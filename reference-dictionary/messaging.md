@@ -71,6 +71,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Config Server | [`#config-server`](#config-server) |
 | Dual-Write Migration | [`#dual-write-migration`](#dual-write-migration) |
 | Global Secondary Index | [`#global-secondary-index`](#global-secondary-index) |
+| Kafka Streams | [`#kafka-streams`](#kafka-streams) |
 
 ## Client-Side Deduplication
 
@@ -1224,3 +1225,35 @@ An index in a distributed database that spans all shards and enables efficient q
 
 ---
 
+
+---
+
+## Kafka Streams
+
+A Java library (part of Apache Kafka) for building real-time stream processing applications and microservices. It provides a high-level DSL for stateful operations (joins, aggregations, windowing) directly on Kafka topics, with exactly-once semantics and local state stores backed by RocksDB — no separate cluster required.
+
+### Key Characteristics
+
+- **Embedded library**: Runs inside your application JVM — no separate processing cluster (unlike Flink or Spark)
+- **KTable and KStream duality**: KStream is an append-only event log; KTable is a changelog representing the latest state per key — enables stream-table joins
+- **Local state with RocksDB**: Stateful operations (aggregations, joins) use embedded RocksDB instances for local state, with changelog topics in Kafka for fault tolerance
+- **Exactly-once semantics**: End-to-end exactly-once processing via Kafka transactions — no duplicate results even after consumer rebalances
+- **Partition-level parallelism**: Each partition is processed by one stream thread; scaling is achieved by adding threads or instances
+
+### When to Use
+
+- Real-time aggregations and windowed computations directly on Kafka topic data
+- Stream-table joins (e.g., enrich event stream with reference data from a compacted topic)
+- Applications that need exactly-once processing guarantees without external state stores
+- When operational simplicity matters — single library dependency, same Kafka cluster, no additional infrastructure
+
+### When NOT to Use
+
+- Complex event processing requiring advanced windowing semantics (session windows with late-arrival handling) — consider Apache Flink
+- SQL-based stream processing preferred by analysts — consider ksqlDB or Flink SQL
+- Non-JVM ecosystems where a polyglot processing framework is needed — consider Flink (supports Python, SQL, Java)
+- Batch+stream unification (Lambda architecture replacement) — consider Flink or Spark Structured Streaming
+
+### Also see
+
+- [Partition](#partition) · [Consumer Group](#consumer-group) · [KTable](#ktable) · [Exactly-Once Semantics](#exactly-once-semantics) · [Apache Flink](#apache-flink)
