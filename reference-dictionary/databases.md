@@ -45,6 +45,8 @@ timestamp: 2026-06-18T00:00:00Z
 | Cursor Pagination | [`#cursor-pagination`](#cursor-pagination) |
 | Partial Index | [`#partial-index`](#partial-index) |
 | Connection Pooling | [`#connection-pooling`](#connection-pooling) |
+| LSN (Log Sequence Number) | [`#lsn`](#lsn) |
+| WALSender | [`#walsender`](#walsender) |
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -729,3 +731,47 @@ A technique where a pool of pre-established database connections is maintained a
 
 ### Also see
 - [max_connections](#maxconnections) · [Transaction Mode](#transaction-mode) · [Session Mode](#session-mode)
+
+## LSN (Log Sequence Number) {#lsn}
+
+A monotonically increasing byte offset within PostgreSQL's Write-Ahead Log (WAL) stream that uniquely identifies the position of every WAL record. LSNs are the foundational coordination primitive for durability, replication, and crash recovery in PostgreSQL.
+
+### Key Characteristics
+- Represents a **byte offset** within the WAL stream, not a timestamp
+- Uniquely identifies the position of every change (INSERT, UPDATE, DELETE, COMMIT)
+- Used to coordinate **durability** (WAL must be flushed to at least the COMMIT record's LSN), **replication** (subscribers report their flushed LSN), and **recovery** (replay WAL from the last checkpoint's LSN)
+- Three critical LSNs govern replication slots: `confirmed_flush_lsn` (subscriber's durable point), `restart_lsn` (oldest WAL needed for safe decoding), and the commit LSN (the LSN of a transaction's COMMIT record)
+
+### When to Use
+- Debugging replication lag by comparing `confirmed_flush_lsn` to current WAL write position
+- Configuring point-in-time recovery (PITR) targets
+- Understanding WAL retention pressure: the gap between `restart_lsn` and `confirmed_flush_lsn` represents WAL that must be retained
+
+### When NOT to Use
+- As a timestamp replacement — LSN is a byte offset, not wall-clock time
+- For cross-cluster comparison — LSNs are local to each PostgreSQL cluster
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Replication Slot](../reference-dictionary/data-architecture.md#replication-slot) · [Logical Replication](../reference-dictionary/data-architecture.md#logical-replication)
+
+## WALSender {#walsender}
+
+A dedicated PostgreSQL backend process that drives logical (and physical) replication by reading WAL records from `pg_wal/`, passing them through the logical decoding machinery, and streaming decoded transactions to subscribers.
+
+### Key Characteristics
+- Spawned when a subscriber issues `START_REPLICATION SLOT <slot> LOGICAL <lsn>`
+- Reads WAL records **sequentially** from the slot's `confirmed_flush_lsn` using XLogReader
+- Passes each record to `LogicalDecodingProcessRecord()` for decoding
+- Processes subscriber **feedback messages** to advance the replication slot's `confirmed_flush_lsn`
+- One WALSender process per active replication connection
+
+### When to Use
+- Understanding replication throughput bottlenecks — the WALSender is the read side of the CDC pipeline
+- Debugging why replication has stalled: if the WALSender is active but not advancing, the bottleneck is likely downstream (ReorderBuffer spill, slow subscriber apply)
+
+### When NOT to Use
+- As a general-purpose WAL reader — WALSender is tied to a replication slot and streams to a specific subscriber
+- For offline WAL analysis — use `pg_waldump` instead
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [LSN](#lsn) · [Logical Replication](../reference-dictionary/data-architecture.md#logical-replication) · [Replication Slot](../reference-dictionary/data-architecture.md#replication-slot)

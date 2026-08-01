@@ -26,3 +26,4 @@ Source articles covering databases patterns, strategies, and case studies.
 - [hyperloglog-cardinality-estimation](hyperloglog-cardinality-estimation.md)
 - [how-to-shard-and-partition-databases-for-1-billion-orders](how-to-shard-and-partition-databases-for-1-billion-orders.md)
 - [pacelc-theorem-explained](pacelc-theorem-explained.md)
+- [postgresql-logical-replication-end-to-end-flow](postgresql-logical-replication-end-to-end-flow.md)
