@@ -23,6 +23,7 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [Kafka Offset Commit Strategies — What Actually Works in Production](Kafka Offset Commit Strategies — What Actually Works in Production.md)
 - [apache-iggy](apache-iggy.md)
 - [kafka-anti-patterns/01-kafka-mistakes-breaking-your-system](kafka-anti-patterns/01-kafka-mistakes-breaking-your-system.md)
+- [MICROSOFT: Process 10 Million Events Per Minute — The Real Problem Wasn't Processing Them](microsoft-10-million-events-per-minute.md)
 - [kafka-concepts-that-every-architect-should-master](kafka-concepts-that-every-architect-should-master.md)
 - [kafka-over-rabbitmq](kafka-over-rabbitmq.md)
 - [kafka-producer-acknowledgment-failure](kafka-producer-acknowledgment-failure.md)
