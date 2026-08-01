@@ -22,6 +22,7 @@ Problems and strategies for CQRS-based fintech systems: command/query separation
 | [payment-events-duplicate-processing.md](payment-events-duplicate-processing.md) | `cqrs-35` – `cqrs-37` | Database-as-guardrail deduplication, Delivery vs business correctness separation, Payment state machine with idempotent transitions |
 | [cqrs-in-system-design-key-takeaways.md](cqrs-in-system-design-key-takeaways.md) | `cqrs-38` – `cqrs-43` | Read/write model separation, Command intent, Query projections, Eventual consistency, Minimal CQRS adoption, When to introduce CQRS |
 | [microservices-join-queries-key-takeaways.md](microservices-join-queries-key-takeaways.md) | `cqrs-44` – `cqrs-46` | API Composition pattern, Cross-service filtering limits, CDC-backed read models for complex queries |
+| [payment-saga-pattern.md](payment-saga-pattern.md) | `cqrs-47` – `cqrs-53` | Saga pattern for payments, Orchestration vs choreography, Idempotency keys, Outbox pattern, Compensation workflows, Crash recovery, Saga monitoring |
 
 ## Cross-References
 

@@ -19,3 +19,4 @@ Source articles covering cqrs fintech patterns, strategies, and case studies.
 - [How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think](How I’d Design a Global Payment System — And Why It’s More Interesting Than You Think.md)
 - [cqrs-for-fintech-2026](cqrs-for-fintech-2026.md)
 - [Designing a Debit Card Processing System: PIN Authentication, Bank Integration & Real-Time Balance Checks](designing-debit-card-processing-system.md)
+- [Payment Deducted But Order Failed: System Design Deep Dive on the Saga Pattern and Distributed Transactions](payment-deducted-order-failed-saga-pattern.md)

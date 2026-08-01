@@ -53,6 +53,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Service Discovery | [`#service-discovery`](#service-discovery) |
 | Pod Affinity | [`#pod-affinity`](#pod-affinity) |
 | Node Affinity | [`#node-affinity`](#node-affinity) |
+| Orchestrator-based Saga | [`#orchestrator-based-saga`](#orchestrator-based-saga) |
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
 | Replay Attack | [`#replay-attack`](#replay-attack) |
 | Flash Sale | [`#flash-sale`](#flash-sale) |
@@ -943,6 +944,33 @@ A **Kubernetes scheduling rule** that constrains which nodes a pod can be placed
 
 ### Also see
 - [Pod Affinity](#pod-affinity) · [Topology Spread Constraints](#topology-spread-constraints)
+
+---
+
+## Orchestrator-based Saga
+
+A **Saga implementation pattern** where a central orchestrator service maintains the workflow state machine, issuing commands to participant services and handling failures through compensating transactions. Unlike choreography-based sagas where each service listens for events and decides its next action, the orchestrator explicitly knows which step is active, which steps completed, and which compensations to execute on failure.
+
+### Key Characteristics
+- **Centralized workflow logic**: The orchestrator owns the sequence, retry policies, timeout handling, and compensation triggers
+- **Durable state machine**: Saga state is persisted in a database — the orchestrator can crash and recover by scanning for incomplete sagas
+- **Explicit audit trail**: Every step, command, and compensation is recorded centrally, critical for payment and financial workflows
+- **Idempotency-gated commands**: Every command carries an idempotency key so retries never produce duplicate side effects
+- **Outbox pattern**: State updates and outgoing events are written in the same database transaction for atomic publication
+
+### When to Use
+- Payment workflows and financial systems where audit trails and explicit state tracking are mandatory
+- Sagas with complex branching, conditional steps, or partial-failure handling
+- When you need to pause, resume, retry, or manually intervene in an in-flight workflow
+- When the workflow logic changes frequently — centralized orchestration is easier to version and test
+
+### When NOT to Use
+- Simple, linear event chains where choreography's lower operational overhead is sufficient
+- When the orchestrator would become a scalability bottleneck (mitigate with partitioning by saga ID)
+- When the team lacks the operational maturity to manage an additional stateful service
+
+### Also see
+- [Saga Pattern](data-concurrency.md#saga-pattern) · [Compensating Transaction](data-concurrency.md#compensating-transaction) · [Idempotency Key](cqrs-event-driven.md#idempotency-key) · [Outbox Pattern](cqrs-event-driven.md#outbox-pattern) · [Choreography-based Saga](messaging.md#choreography-based-saga)
 
 ---
 
