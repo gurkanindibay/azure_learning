@@ -55,6 +55,7 @@ All content rights belong to ByteByteGo Inc.
 
 ## Related Areas
 
+* [ByteByteGo — Short-Form Blog Posts](blog-posts/index.md) — 74 focused system design articles from the ByteByteGo newsletter/blog compilation
 * [System Design Cases (home)](../index.md)
 * [System Design Architecture Reference](../../system-design-architecture/)
 * [Reference Dictionary](../../reference-dictionary/)

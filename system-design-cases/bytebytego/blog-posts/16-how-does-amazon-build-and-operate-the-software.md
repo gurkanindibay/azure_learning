@@ -1,0 +1,30 @@
+---
+okf_version: "0.1"
+type: concept
+---
+
+# How does Amazon build and operate the software?
+
+> **Source**: ByteByteGo — System Design compilation PDF
+
+![How does Amazon build and operate the software?](images/img-016.jpeg)
+
+In 2019, Amazon released The Amazon Builders' Library. It contains
+architecture-based articles that describe how Amazon architects,
+releases, and operates technology.
+As of today, it published 26 articles. It took me two weekends to go
+through all the articles. I’ve had great fun and learned a lot. Here are
+some of my favorites:
+🔹Making retries safe with idempotent APIs
+🔹Timeouts, retries, and backoff with jitter
+🔹Beyond five 9s: Lessons from our highest available data planes
+🔹Caching challenges and strategies
+🔹Ensuring rollback safety during deployments
+🔹Going faster with continuous delivery
+
+🔹Challenges with distributed systems
+🔹Amazon's approach to high-availability deployment
+Over to you: what’s your favorite place to learn system design and
+design principles?
+Link to The Amazon Builders' Library: aws.amazon.com/builders-library
+
