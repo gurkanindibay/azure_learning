@@ -36,6 +36,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Settlement | [`#settlement`](#settlement) |
 | Smart Routing | [`#smart-routing`](#smart-routing) |
 | Transaction Reversal | [`#transaction-reversal`](#transaction-reversal) |
+| Multi-Factor Model (Fama-French) | [`#multi-factor-model`](#multi-factor-model) |
+| Newey-West t-statistic | [`#newey-west-t-statistic`](#newey-west-t-statistic) |
+| Risk Parity | [`#risk-parity`](#risk-parity) |
+| Factor Decomposition | [`#factor-decomposition`](#factor-decomposition) |
+| Hidden Markov Model (Regime Detection) | [`#hidden-markov-model-regime`](#hidden-markov-model-regime) |
 
 ---
 
@@ -532,3 +537,136 @@ The **corrective operation** that reverses a previously authorized debit when th
 - [Risk Actions](#risk-actions) — reversals should be posted as new entries, not mutations
 - [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) — the guard that prevents double reversals
 - [Settlement](#settlement) — reversals affect settlement calculations
+
+---
+
+## Multi-Factor Model (Fama-French)
+
+A **quantitative finance model** that decomposes stock returns into systematic drivers plus a residual (alpha). The foundational Fama-French three-factor model (1993) uses market beta, size (SMB), and value (HML). Carhart added momentum (1997). Fama-French added profitability (RMW) and investment (CMA) in 2015. Modern hedge funds run seven-factor stacks.
+
+$$R_i - R_f = \alpha + \beta_1(R_m - R_f) + \beta_2(\text{SMB}) + \beta_3(\text{HML}) + \beta_4(\text{MOM}) + \beta_5(\text{RMW}) + \beta_6(\text{CMA}) + \epsilon$$
+
+### Key Characteristics
+- **Systematic factors**: Market, size, value, momentum, profitability, investment, low volatility
+- **Alpha (α)**: The residual the model cannot explain — what quantitative strategies hunt
+- **Factor construction**: Each factor computed independently from price and fundamental data
+- **Out-of-sample validation**: Factors must work across multiple market regimes, not just one
+
+### When to Use
+- Quantitative portfolio construction and risk decomposition
+- Backtesting trading strategies against known risk premia
+- Separating genuine alpha from repackaged style exposure
+
+### When NOT to Use
+- Short-horizon trading where factor premia may not materialize
+- Single-stock analysis without portfolio context
+- Markets where factor data is unavailable or unreliable
+
+### Also see
+- [Factor Decomposition](#factor-decomposition)
+- [Risk Parity](#risk-parity)
+
+---
+
+## Newey-West t-statistic
+
+A **statistical test with autocorrelation-robust standard errors**, used to assess whether a factor's returns are statistically significant after accounting for serial correlation in financial time series. Standard t-tests underestimate standard errors when returns are autocorrelated; Newey-West corrects for this.
+
+### Key Characteristics
+- **Autocorrelation-robust**: Accounts for serial correlation up to a specified lag
+- **Bootstrap validation**: Typically paired with 10,000-iteration bootstrap resampling for robustness
+- **Threshold**: Common significance threshold is t-stat > 2.5 for factor survival
+- **In-sample vs out-of-sample**: Degradation above 30% between in-sample and out-of-sample performance typically triggers factor rejection
+
+### When to Use
+- Evaluating factor performance in financial time series
+- Any statistical test on overlapping or serially correlated returns
+- Backtesting where standard errors must account for return autocorrelation
+
+### When NOT to Use
+- Independent, non-autocorrelated samples where standard t-tests suffice
+- Very short time series where autocorrelation estimation is unreliable
+- Non-financial data without serial dependence concerns
+
+### Also see
+- [Multi-Factor Model](#multi-factor-model)
+- [Factor Decomposition](#factor-decomposition)
+
+---
+
+## Risk Parity
+
+A **portfolio construction method** that allocates weights based on each asset's risk contribution rather than capital allocation. Equal risk contribution ensures no single factor or asset dominates portfolio volatility, even if capital weights are unequal.
+
+### Key Characteristics
+- **Risk-weighted, not capital-weighted**: Low-volatility assets get higher capital weights to equalize risk contribution
+- **Neutrality constraints**: Often combined with sector, beta, and dollar neutrality
+- **Long-short compatible**: Works for both long-only and long-short portfolios
+- **Factor-level application**: Applied to factor exposures as well as individual securities
+
+### When to Use
+- Multi-factor portfolios where factors have different volatility profiles
+- Portfolios requiring balanced risk exposure across diverse strategies
+- Institutional portfolios where risk budgeting is a formal constraint
+
+### When NOT to Use
+- Single-factor or concentrated portfolios where risk diversification is not the goal
+- When accurate covariance estimation is impossible (very short history, regime shifts)
+- High-frequency strategies where risk parity rebalancing costs exceed benefits
+
+### Also see
+- [Multi-Factor Model](#multi-factor-model)
+- [Factor Decomposition](#factor-decomposition)
+
+---
+
+## Factor Decomposition
+
+The process of **regressing portfolio returns against style and macro factors** to isolate what portion of returns comes from known risk premia versus genuine alpha. Only signals where residual alpha survives factor decomposition are considered new alpha; everything else is repackaged style exposure.
+
+### Key Characteristics
+- **Regress against known factors**: Market, size, value, momentum, profitability, investment, low volatility
+- **Style + macro factors**: Broader decomposition includes sector, currency, and macro-economic factors
+- **Residual alpha**: The intercept after controlling for all known factors — the true signal
+- **t-statistic threshold**: Residual alpha must exceed statistical significance threshold (typically t > 2.5)
+
+### When to Use
+- Validating that a trading strategy produces genuine alpha, not repackaged beta
+- Risk attribution in multi-strategy portfolios
+- Post-trade analysis to understand return sources
+
+### When NOT to Use
+- Single-factor strategies where the factor IS the strategy
+- Pre-trade signal generation (factor decomposition is a validation step, not a construction step)
+- When the factor set is incomplete and residual alpha may still contain unknown factor exposure
+
+### Also see
+- [Multi-Factor Model](#multi-factor-model)
+- [Newey-West t-statistic](#newey-west-t-statistic)
+- [Risk Parity](#risk-parity)
+
+---
+
+## Hidden Markov Model (Regime Detection)
+
+A **statistical model that segments time series into discrete hidden states (regimes)** based on observable data like volatility and returns. In quantitative finance, HMMs detect whether the market is in a low-volatility bull, high-volatility bear, or transition regime — and kill factors that only work in one regime.
+
+### Key Characteristics
+- **Hidden states**: The regime (bull, bear, transition) is not directly observable; inferred from data
+- **Observable emissions**: Volatility, returns, and other market data drive state inference
+- **Transition probabilities**: Model learns how likely the market is to switch between regimes
+- **Regime robustness gate**: A factor that only performs in one regime is beta to that regime, not alpha
+
+### When to Use
+- Validating strategy robustness across bull, bear, and sideways markets
+- Regime-aware portfolio construction and risk management
+- Detecting structural breaks that invalidate historical factor performance
+
+### When NOT to Use
+- Very short time series where regime estimation is unreliable
+- Strategies with holding periods shorter than the regime detection window
+- When regime transitions are too frequent for the HMM to stabilize
+
+### Also see
+- [Multi-Factor Model](#multi-factor-model)
+- [Factor Decomposition](#factor-decomposition)

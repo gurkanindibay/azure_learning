@@ -23,3 +23,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [the-evolution-of-ai-assistend-software-development](the-evolution-of-ai-assistend-software-development.md)
 - [forward-deployed-engineer-ai-augmented-engineering-interview-questions](forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
 - [Headroom — Content-Aware Token Compression for AI Agents](headroom-content-aware-token-compression.md)
+- [Graph Engineering — Multi-Factor Alpha Model](graph-engineering-multi-factor-alpha-model.md)

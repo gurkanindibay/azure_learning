@@ -67,6 +67,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Token Compression | [`#token-compression`](#token-compression) |
 | Type-Specific Compression | [`#type-specific-compression`](#type-specific-compression) |
 | Reversible Compression (LLM) | [`#reversible-compression-llm`](#reversible-compression-llm) |
+| Graph Engineering | [`#graph-engineering`](#graph-engineering) |
+| Maker-Checker Pattern (AI Agents) | [`#maker-checker-pattern-ai`](#maker-checker-pattern-ai) |
+| Loop Engineering | [`#loop-engineering`](#loop-engineering) |
+| Swarm (AI Agents) | [`#swarm-ai-agents`](#swarm-ai-agents) |
+| Agent Graph | [`#agent-graph`](#agent-graph) |
+| Multi-Model Tier Architecture | [`#multi-model-tier-architecture`](#multi-model-tier-architecture) |
 
 ---
 
@@ -1293,3 +1299,180 @@ Compressed payload → LLM reasons → Answer sufficient? → Yes → Done
 - [Type-Specific Compression](#type-specific-compression)
 - [Agent Loop](#agent-loop)
 - [Context Rot](#context-rot)
+
+---
+
+## Graph Engineering
+
+The practice of designing **AI agent coordination as a directed graph** where nodes are specialized agents and edges are data handoffs. Graph engineering is the fourth stage in the progression: Prompts → Loops → Swarms → Graphs. Unlike scripts, graphs make parallel execution native, state persistent, and failure scoped to individual nodes rather than the entire pipeline.
+
+```
+Prompts (human is the loop)
+  → Loops (script wraps prompt, fires on schedule)
+    → Swarms (multiple agents, hand-written glue code)
+      → Graphs (nodes=agents, edges=data handoffs, runtime coordinates)
+```
+
+### Key Characteristics
+- **Nodes are agents**: Each node owns one job and passes outputs through the graph
+- **Edges define data flow**: The runtime knows when to parallelize, wait, retry, or escalate
+- **Parallel is native**: Seven factor agents can fire simultaneously without hand-written concurrency code
+- **Node-scoped failure**: When a node breaks, the rest of the graph keeps running; you patch the broken node independently
+- **State persistence**: File system as shared memory across cycles (timestamped run directories)
+
+### When to Use
+- Multi-agent systems with 4+ agents that have inter-dependencies
+- Workloads that must run on a schedule (daily, hourly) with persistent state between cycles
+- Systems where coordination glue code has become the primary debugging surface
+
+### When NOT to Use
+- Single-agent workloads where a simple loop suffices
+- Ad-hoc, one-shot tasks that do not repeat
+- Systems where agents have no dependencies and can run independently
+
+### Also see
+- [Agent Loop](#agent-loop)
+- [Agentic AI](#agentic-ai)
+- [Agent Harness](#agent-harness)
+- [Swarm (AI Agents)](#swarm-ai-agents)
+
+---
+
+## Maker-Checker Pattern (AI Agents)
+
+An **AI agent coordination pattern** that assigns generation and validation to different nodes running on different model tiers, ensuring the maker never validates its own work. The checker runs statistical gates (t-tests, bootstrap resampling, factor decomposition) that the maker cannot bypass.
+
+### Key Characteristics
+- **Maker nodes**: Run on fast, cost-effective models for data processing and construction
+- **Checker nodes**: Run on stronger reasoning models for statistical validation and decomposition
+- **Gate mechanism**: If check fails, the graph loops back with specific mismatch as feedback
+- **Filtering effect**: ~80% of signals get rejected at validation gates — the checker processes filtered data, not raw data
+
+### When to Use
+- Quantitative or analytical pipelines where false positives are costly
+- Multi-stage agent workflows requiring independent verification
+- Systems where the generating model's blind spots would compound silently
+
+### When NOT to Use
+- Creative or subjective tasks where there is no objective correctness criterion
+- Single-model pipelines where the cost of a second model tier is not justified
+- Low-stakes generation where errors are acceptable
+
+### Also see
+- [LLM-as-Judge](#llm-as-judge)
+- [Verification Loop (AI)](#verification-loop-ai)
+- [Multi-Model Tier Architecture](#multi-model-tier-architecture)
+
+---
+
+## Loop Engineering
+
+The practice of **wrapping AI prompts in scheduled scripts with state persistence**, enabling an agent to survive after the laptop closes. Loop engineering is Stage 2 in the Prompts → Loops → Swarms → Graphs progression. One agent, one job, running forever on a schedule.
+
+### Key Characteristics
+- **Schedule-driven**: Fires on a timer (daily, hourly) rather than on human demand
+- **Stateful**: Maintains history across cycles via filesystem or database
+- **Survivable**: Continues running after the developer disconnects
+- **Single-agent**: One specialized agent per loop; parallelism requires Stage 3 (Swarms)
+
+### When to Use
+- Recurring analytical tasks (daily signal generation, periodic data extraction)
+- Any task where the human should not need to be at the keyboard for the system to run
+- First step beyond ad-hoc prompting before committing to full graph architecture
+
+### When NOT to Use
+- One-shot tasks that will never repeat
+- Tasks requiring multi-agent coordination (graduate to Swarms or Graphs)
+- Tasks where state persistence across cycles is not needed
+
+### Also see
+- [Graph Engineering](#graph-engineering)
+- [Agent Loop](#agent-loop)
+- [Swarm (AI Agents)](#swarm-ai-agents)
+
+---
+
+## Swarm (AI Agents)
+
+A **collection of specialized AI agents running in parallel**, coordinated by hand-written glue code. Swarms are Stage 3 in the Prompts → Loops → Swarms → Graphs progression. Multiple agents with distinct roles (signal generation, validation, execution) work together, but coordination logic is explicit Python code rather than declarative graph edges.
+
+### Key Characteristics
+- **Role specialization**: Each agent has one job (generator, validator, executor)
+- **Manual coordination**: Python glue code handles parallelism, sequencing, and error handling
+- **Debugging bottleneck**: As agent count grows, the glue code becomes the primary failure surface
+- **Transition point**: When debugging coordination exceeds time spent on research, graduate to Graphs
+
+### When to Use
+- 2-4 specialized agents that need parallel execution
+- When you have working single-agent loops and need to add complementary roles
+- Before investing in graph infrastructure — validate the multi-agent pattern first
+
+### When NOT to Use
+- Single-agent tasks (use Loops)
+- 5+ agents with inter-dependencies (graduate to Graphs)
+- When coordination glue code already dominates debugging time
+
+### Also see
+- [Graph Engineering](#graph-engineering)
+- [Loop Engineering](#loop-engineering)
+- [Agentic AI](#agentic-ai)
+
+---
+
+## Agent Graph
+
+A **coordination structure where nodes are AI agents and edges define data handoffs and execution order**. The graph runtime handles parallelism, sequencing, retries, and failure isolation — the developer describes the structure once and the graph runs itself on a schedule.
+
+### Key Characteristics
+- **Declarative coordination**: Describe graph structure in plain English; runtime generates the execution code
+- **Native parallelism**: Fan-out nodes run simultaneously without manual concurrency management
+- **Barrier synchronization**: Sequential nodes wait for all parallel predecessors to complete
+- **State persistence**: Filesystem as shared memory; each cycle reads prior cycle state
+- **Budget enforcement**: Per-run cost caps with explicit transparency about enforcement level
+
+### When to Use
+- Scheduled multi-agent pipelines (daily signal generation, periodic research)
+- Systems where failure in one agent should not kill the entire pipeline
+- Workloads requiring different model tiers for different task complexities
+
+### When NOT to Use
+- Ad-hoc, one-shot tasks
+- Simple linear pipelines without parallelism or failure isolation needs
+- When the runtime infrastructure cost exceeds the value of automation
+
+### Also see
+- [Graph Engineering](#graph-engineering)
+- [Multi-Model Tier Architecture](#multi-model-tier-architecture)
+- [Agent Harness](#agent-harness)
+
+---
+
+## Multi-Model Tier Architecture
+
+An **AI agent design pattern** that assigns different language model strengths to different agent nodes based on task complexity. Fast, cost-effective models handle data processing and construction; stronger reasoning models handle validation, decomposition, and statistical testing.
+
+| Tier | Model Type | Typical Tasks |
+|:---|:---|:---|
+| **Fast** | Cost-effective (e.g., Claude Sonnet) | Data retrieval, sorting, regression, spread computation |
+| **Strong** | Reasoning-heavy (e.g., Claude Opus) | Statistical testing, regime detection, factor decomposition |
+
+### Key Characteristics
+- **Task-complexity alignment**: Model strength matches node responsibility
+- **Cost optimization**: Strong models only run on filtered, smaller input sets
+- **Independent verification**: Different model tiers for maker vs checker prevent blind-spot compounding
+- **Cost profile**: Two separate model subscriptions with distinct per-token pricing
+
+### When to Use
+- Multi-stage agent pipelines where task complexity varies significantly across nodes
+- Systems where validation and quality gates must run on stronger reasoning than construction
+- When cost optimization matters and not all nodes need the most expensive model
+
+### When NOT to Use
+- Uniform-complexity tasks where all nodes need the same reasoning depth
+- Single-model pipelines where the operational overhead of multiple subscriptions isn't justified
+- When the cost difference between tiers is negligible for the workload
+
+### Also see
+- [Maker-Checker Pattern (AI Agents)](#maker-checker-pattern-ai)
+- [LLM-as-Judge](#llm-as-judge)
+- [Agent Graph](#agent-graph)
