@@ -9,40 +9,16 @@ type: concept
 
 ![Map rendering](images/img-055.jpeg)
 
-Google Maps Continued. Let’s take a look at 𝐌𝐚𝐩 𝐑𝐞𝐧𝐝𝐞𝐫𝐢𝐧𝐠 in this
-post.
-𝐏𝐫𝐞-𝐂𝐨𝐦𝐩𝐮𝐭𝐞𝐝 𝐓𝐢𝐥𝐞𝐬
-One foundational concept in map rendering is tiling. Instead of
-rendering the entire map as one large custom image, the world is
-broken up into smaller tiles. The client only downloads the relevant
-tiles for the area the user is in and stitches them together like a mosaic
-for display. The tiles are pre-computed at different zoom levels. Google
-Maps uses 21 zoom levels.
-For example, at zoom level 0, The entire map is represented by a
-single tile of size 256 * 256 pixels. Then at zoom level 1, the number of
-map tiles doubles in both north-south and east-west directions, while
-each tile stays at 256 * 256 pixels. So we have 4 tiles at zoom level 1,
-and the whole image of zoom level 1 is 512 * 512 pixels. With each
-increment, the entire set of tiles has 4x as many pixels as the previous
-level. The increased pixel count provides an increasing level of detail
-to the user.
-This allows the client to render the map at the best granularities
-depending on the client’s zoom level without consuming excessive
-bandwidth to download tiles with too much detail. This is especially
-important when we are loading the images from mobile clients.
-𝐑𝐨𝐚𝐝 𝐒𝐞𝐠𝐦𝐞𝐧𝐭𝐬
-Now that we have transformed massive maps into tiles, we also need
-to define a data structure for the roads. We divide the world of roads
-into small blocks. We call these blocks road segments. Each road
-segment contains multiple roads, junctions, and other metadata.
-We group nearby segments into super segments. This process can be
-applied repeatedly to meet the level of coverage required.
-We then transform the road segments into a data structure that the
-navigation algorithms can use. The typical approach is to convert the
-map into a 𝒈𝒓𝒂𝒑𝒉, where the nodes are road segments, and two nodes
-are connected if the corresponding road segments are reachable
+Google Maps Continued. Let’s take a look at
 
-neighbors. In this way, finding a path between two locations becomes a
-shortest-path problem, where we can leverage Dijkstra or A*
-algorithms.
+**Map Rendering**
 
+in this post.
+
+**Pre-Computed Tiles**
+
+One foundational concept in map rendering is tiling. Instead of rendering the entire map as one large custom image, the world is broken up into smaller tiles. The client only downloads the relevant tiles for the area the user is in and stitches them together like a mosaic for display. The tiles are pre-computed at different zoom levels. Google Maps uses 21 zoom levels. For example, at zoom level 0, The entire map is represented by a single tile of size 256 * 256 pixels. Then at zoom level 1, the number of map tiles doubles in both north-south and east-west directions, while each tile stays at 256 * 256 pixels. So we have 4 tiles at zoom level 1, and the whole image of zoom level 1 is 512 * 512 pixels. With each increment, the entire set of tiles has 4x as many pixels as the previous level. The increased pixel count provides an increasing level of detail to the user. This allows the client to render the map at the best granularities depending on the client’s zoom level without consuming excessive bandwidth to download tiles with too much detail. This is especially important when we are loading the images from mobile clients.
+
+**Road Segments**
+
+Now that we have transformed massive maps into tiles, we also need to define a data structure for the roads. We divide the world of roads into small blocks. We call these blocks road segments. Each road segment contains multiple roads, junctions, and other metadata. We group nearby segments into super segments. This process can be applied repeatedly to meet the level of coverage required. We then transform the road segments into a data structure that the navigation algorithms can use. The typical approach is to convert the map into a **graph**, where the nodes are road segments, and two nodes are connected if the corresponding road segments are reachable neighbors. In this way, finding a path between two locations becomes a shortest-path problem, where we can leverage Dijkstra or A* algorithms.
