@@ -21,7 +21,8 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [sql-query-optimization.md](sql-query-optimization.md) | `sql-01` – `sql-05` | Index-aware design, SELECT columns, N+1 elimination, CTEs vs subqueries, EXPLAIN ANALYZE |
 | [sql-system-design.md](sql-system-design.md) | `sqld-01` – `sqld-08` | Scaling ladder, SQL vs NoSQL, CQRS, Event Sourcing, Row-Level Security, DB per service + Saga, Performance checklist |
 | [sharding-partitioning-strategies.md](sharding-partitioning-strategies.md) | `db-19` – `db-24` | Vertical partitioning, Shard key selection, Gene-based sharding with Snowflake ID, Cross-shard queries, Dual-write migration, Composite shard keys |
-| [pacelc-theorem-key-takeaways.md](../34-db-key-takeaways.md) | `db-25` – `db-27` | PACELC theorem, Synchronous vs asynchronous replication, Quorum-based hybrid replication (R+W>N) |
+| [34-db-key-takeaways.md](34-db-key-takeaways.md) | `db-25` – `db-27` | PACELC theorem, Synchronous vs asynchronous replication, Quorum-based hybrid replication (R+W>N) |
+| [35-db-key-takeaways.md](35-db-key-takeaways.md) | `db-28` – `db-30` | WAL-based CDC state machine, Replication slot lifecycle, Publication/subscription model for selective CDC |
 
 ## Cross-References
 

@@ -7,12 +7,12 @@ timestamp: 2026-07-17T00:00:00Z
 
 # 29. 16 Companies Every System Design Interview Is Based On — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Every System Design Interview Is Secretly About These 16 Companies](../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Every System Design Interview Is Secretly About These 16 Companies](../../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md)
 > **Purpose**: Extract the universal layered architecture and fan-out tradeoff that recur across all 16 at-scale products.
 
 > **Also see**: [Interview Roadmap](interview-roadmap.md), [Pragmatic Takeaways](pragmatic-takeaways.md)
-> **Dictionary**: [Fan-out on Write / Fan-out on Read](../reference-dictionary/design-patterns.md#fan-out-on-write), [Geohashing / Quadtree](../reference-dictionary/architecture-patterns.md#geohashing), [SFU Architecture](../reference-dictionary/architecture-patterns.md#selective-forwarding-unit-sfu)
+> **Dictionary**: [Fan-out on Write / Fan-out on Read](../../reference-dictionary/design-patterns.md#fan-out-on-write), [Geohashing / Quadtree](../../reference-dictionary/architecture-patterns.md#geohashing), [SFU Architecture](../../reference-dictionary/architecture-patterns.md#selective-forwarding-unit-sfu)
 > **Taxonomy Reference**: §2.1 Application Architecture Styles (Layered Architecture), §3.3 Event-Driven & Messaging
 
 ---
@@ -29,7 +29,7 @@ timestamp: 2026-07-17T00:00:00Z
 
 ## sdi-72: Universal System Design Layering Pattern
 
-> **Source**: [§"The architecture hiding under all 16"](../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#the-architecture-hiding-under-all-16)
+> **Source**: [§"The architecture hiding under all 16"](../../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#the-architecture-hiding-under-all-16)
 
 | | |
 |:---|:---|
@@ -46,7 +46,7 @@ timestamp: 2026-07-17T00:00:00Z
 
 ## sdi-73: Fan-out on Write vs. Fan-out on Read
 
-> **Source**: [§"One pattern, worked in code: fan-out on write vs. fan-out on read"](../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#one-pattern,-worked-in-code:-fan-out-on-write-vs.-fan-out-on-read)
+> **Source**: [§"One pattern, worked in code: fan-out on write vs. fan-out on read"](../../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#one-pattern,-worked-in-code:-fan-out-on-write-vs.-fan-out-on-read)
 
 | | |
 |:---|:---|
@@ -63,7 +63,7 @@ timestamp: 2026-07-17T00:00:00Z
 
 ## sdi-74: Constraint-Driven Architecture Internalization
 
-> **Source**: [§"Why this list works as prep"](../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#why-this-list-works-as-prep)
+> **Source**: [§"Why this list works as prep"](../../articles/system-design-interview/every-system-design-interview-is-secretly-about-these-16-companies.md#why-this-list-works-as-prep)
 
 | | |
 |:---|:---|

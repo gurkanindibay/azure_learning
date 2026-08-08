@@ -7,12 +7,12 @@ timestamp: 2026-07-30T00:00:00Z
 
 # 33. System Design Interview — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](system-design-interview/index.md)
-> **Source**: [60+ Real-World System Design Scenarios to Prepare for Your Next Interview (Part 1)](../articles/system-design-interview/real-world-system-design-scenarios-part-1.md)
+> **Parent**: [System Design Interview Reference](index.md)
+> **Source**: [60+ Real-World System Design Scenarios to Prepare for Your Next Interview (Part 1)](../../articles/system-design-interview/real-world-system-design-scenarios-part-1.md)
 > **Taxonomy Reference**: §2.1 Application Architecture Patterns
 
-> **Also see**: [Interview Roadmap](system-design-interview/interview-roadmap.md), [Pragmatic Takeaways](system-design-interview/pragmatic-takeaways.md)
-> **Dictionary**: [API Gateway](../reference-dictionary/api-design.md#api-gateway), [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker), [Idempotency](../reference-dictionary/resilience.md#idempotency), [Bloom Filter](../reference-dictionary/caching.md#bloom-filter), [RAG](../reference-dictionary/ai-ml-llm.md#retrieval-augmented-generation)
+> **Also see**: [Interview Roadmap](interview-roadmap.md), [Pragmatic Takeaways](pragmatic-takeaways.md)
+> **Dictionary**: [API Gateway](../../reference-dictionary/api-design.md#api-gateway), [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker), [Idempotency](../../reference-dictionary/resilience.md#idempotency), [Bloom Filter](../../reference-dictionary/caching.md#bloom-filter), [RAG](../../reference-dictionary/ai-ml-llm.md#retrieval-augmented-generation)
 
 ## Contents
 
@@ -107,7 +107,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Requires durable idempotency-key storage and a TTL policy for key cleanup.
 
-> **Cross-reference**: [Idempotency](../reference-dictionary/resilience.md#idempotency), [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md)
+> **Cross-reference**: [Idempotency](../../reference-dictionary/resilience.md#idempotency), [CQRS for Fintech](cqrs-fintech/cqrs-fintech.md)
 
 ---
 
@@ -167,7 +167,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Write-through can't atomically update Redis + PostgreSQL — if Redis update fails, stale cache remains. Write-behind makes Redis the temporary source of truth (risk of data loss). Read-through doesn't handle multiple-writer invalidation.
 
-> **Cross-reference**: [Caching & Redis Internals](../reference-dictionary/caching.md#cache-aside), [Redis Internals](caching/redis-internals.md)
+> **Cross-reference**: [Caching & Redis Internals](../../reference-dictionary/caching.md#cache-aside), [Redis Internals](caching/redis-internals.md)
 
 ---
 
@@ -182,7 +182,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Read replicas reduce primary pressure but don't remove expensive joins. Denormalizing the write model damages the write path (duplicate data, write amplification). GraphQL/DataLoader can't eliminate expensive DB joins.
 
-> **Cross-reference**: [CQRS](../reference-dictionary/cqrs-event-driven.md#cqrs), [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Cross-reference**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 
 ---
 
@@ -197,7 +197,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Choreography spreads logic across services — hard to understand who owns the workflow. 2PC requires all participants to support the protocol (Stripe doesn't). Outbox Pattern ensures reliable event publishing but doesn't define workflow order or compensations.
 
-> **Cross-reference**: [Saga Pattern](../reference-dictionary/cqrs-event-driven.md#saga), [Distributed Transactions](concurrency-transactions/concurrency-transactions.md)
+> **Cross-reference**: [Saga Pattern](../../reference-dictionary/cqrs-event-driven.md#saga), [Distributed Transactions](concurrency-transactions/concurrency-transactions.md)
 
 ---
 
@@ -212,7 +212,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Idempotency key + deduplication table alone doesn't solve the architectural problem — the handler is still synchronous on Stripe's critical path. The idempotency layer should exist inside the async processing flow, not as a replacement for it.
 
-> **Cross-reference**: [Idempotency](../reference-dictionary/resilience.md#idempotency), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
+> **Cross-reference**: [Idempotency](../../reference-dictionary/resilience.md#idempotency), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
 
 ---
 
@@ -257,7 +257,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Canary deployment routes by request, not customer — a single B2B billing job may hit the new version repeatedly. Payment bugs may return 200 OK while charging incorrectly, so standard error-rate alarms are unreliable. Blue/Green switches 100% of traffic at once, creating cross-version race conditions with in-flight webhooks. Rolling deployment mixes old and new versions writing to the same state, risking inconsistency.
 
-> **Cross-reference**: [Deployment Patterns](../reference-dictionary/deployment-patterns.md#feature-flag)
+> **Cross-reference**: [Deployment Patterns](../../reference-dictionary/deployment-patterns.md#feature-flag)
 
 ---
 
@@ -272,7 +272,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Redis SET per user provides exact answers but at 4TB across 50M users. Cassandra migration solves storage but not the 120K-RPS point-lookup pattern. Read replicas add capacity but each lookup still requires a DB round trip. This is an efficiency problem, not a capacity problem.
 
-> **Cross-reference**: [Bloom Filter](../reference-dictionary/caching.md#bloom-filter), [Caching & Redis Internals](caching/redis-internals.md)
+> **Cross-reference**: [Bloom Filter](../../reference-dictionary/caching.md#bloom-filter), [Caching & Redis Internals](caching/redis-internals.md)
 
 ---
 
@@ -302,7 +302,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Blocking the producer doesn't work in Kafka's decoupled, pull-based model — there's no direct socket-level backpressure signal. Dropping events violates the SLA. Larger buffers only delay the problem (~4 minutes for 1M buffer at 4,200 events/sec deficit). More consumers may not help if the bottleneck is the downstream DB/HTTP service.
 
-> **Cross-reference**: [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md), [Backpressure](../reference-dictionary/messaging.md#backpressure)
+> **Cross-reference**: [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md), [Backpressure](../../reference-dictionary/messaging.md#backpressure)
 
 ---
 
@@ -317,7 +317,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Request coalescing coordinates only within one process — at 50 instances, you still get 50 DB queries per expiry. Mutex lock blocks thousands of waiting requests (P99 spikes to seconds). Probabilistic early expiry reduces the chance but doesn't eliminate the possibility of a stampede.
 
-> **Cross-reference**: [Cache Stampede](../reference-dictionary/caching.md#cache-stampede), [Caching & Redis Internals](caching/redis-internals.md)
+> **Cross-reference**: [Cache Stampede](../../reference-dictionary/caching.md#cache-stampede), [Caching & Redis Internals](caching/redis-internals.md)
 
 ---
 
@@ -332,7 +332,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Routing "critical" reads to primary is fragile — what's "critical" is not consistently defined across a growing codebase. Synchronous replication adds 80-120ms to every write and couples primary availability to replica health. Monitoring replica lag doesn't solve the immediate post-write read problem (200ms lag is normal, but the read happens 50ms after the write).
 
-> **Cross-reference**: [Data Consistency](../reference-dictionary/data-concurrency.md#read-your-writes), [Databases & Query Performance](databases/query-performance.md)
+> **Cross-reference**: [Data Consistency](../../reference-dictionary/data-concurrency.md#read-your-writes), [Databases & Query Performance](databases/query-performance.md)
 
 ---
 
@@ -347,7 +347,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Circuit Breaker alone doesn't open instantly — before the threshold is reached, the shared pool can still exhaust. Bulkhead alone contains the blast radius but still wastes 10 connections on 30s timeouts. Shorter timeout + retries creates a retry storm against the already degraded service, extending the outage.
 
-> **Cross-reference**: [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker), [Bulkhead](../reference-dictionary/resilience.md#bulkhead), [Resilience Patterns](resilience/resilience-patterns.md)
+> **Cross-reference**: [Circuit Breaker](../../reference-dictionary/resilience.md#circuit-breaker), [Bulkhead](../../reference-dictionary/resilience.md#bulkhead), [Resilience Patterns](resilience/resilience-patterns.md)
 
 ---
 
@@ -377,7 +377,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Retry-until-ack creates an infinite regress (what if the ack's ack is lost?). 2PC introduces coordinator as a single point of failure and requires all participants to support the protocol. Outbox Pattern is correct but heavier (CDC pipeline, relay process, cleanup, monitoring) — use when strict DB-level atomicity is required.
 
-> **Cross-reference**: [Idempotency](../reference-dictionary/resilience.md#idempotency), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
+> **Cross-reference**: [Idempotency](../../reference-dictionary/resilience.md#idempotency), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
 
 ---
 
@@ -422,7 +422,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Scaling consumers horizontally when the DB is at 95% CPU sends even more concurrent work to an overloaded database. Visibility timeouts and DLQs handle failure, not backpressure — the producer rate is unchanged. SQS delay queues postpone visibility but don't reduce the incoming rate — messages surge when delays expire.
 
-> **Cross-reference**: [Backpressure](../reference-dictionary/messaging.md#backpressure), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
+> **Cross-reference**: [Backpressure](../../reference-dictionary/messaging.md#backpressure), [Message Brokers & Kafka](messaging/kafka-consumer-mistakes.md)
 
 ---
 
@@ -437,7 +437,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Write-through couples the write path to Redis availability (if Redis is slow/down, profile updates fail). Write-behind makes Redis the temporary source of truth (risk of data loss). Write-around avoids dual-write risk but can serve stale data until TTL expires and reduces cache hit ratio for frequently updated data.
 
-> **Cross-reference**: [Outbox Pattern](../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Caching & Redis Internals](caching/redis-internals.md)
+> **Cross-reference**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Caching & Redis Internals](caching/redis-internals.md)
 
 ---
 
@@ -452,7 +452,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Fine-tuning stores knowledge in model weights — needs repeated training cycles when docs change weekly, risks catastrophic forgetting. Fine-tuning + RAG is powerful but overkill as a first step (months of work for a mid-sized startup). Prompt engineering alone can't fit hundreds of pages of docs into context windows.
 
-> **Cross-reference**: [RAG](../reference-dictionary/ai-ml-llm.md#retrieval-augmented-generation), [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md)
+> **Cross-reference**: [RAG](../../reference-dictionary/ai-ml-llm.md#retrieval-augmented-generation), [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md)
 
 ---
 
@@ -467,7 +467,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: pgvector works for <500K vectors and low concurrency — beyond that, it competes with transactional workload. Pinecone is fully managed but serverless pricing at sustained 300-900 QPS becomes expensive with proprietary lock-in. Weaviate's Kubernetes footprint is heavier than needed for dense-vector search with metadata filtering.
 
-> **Cross-reference**: [Vector Databases](../reference-dictionary/ai-ml-llm.md#vector-database), [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md)
+> **Cross-reference**: [Vector Databases](../../reference-dictionary/ai-ml-llm.md#vector-database), [AI/ML Infrastructure](ai-ml-infrastructure/ai-ml-infrastructure.md)
 
 ---
 
@@ -482,7 +482,7 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: Centralized orchestrator is sequential by default — parallel execution requires manual code. Choreography via event bus makes "wait for these two agents" hard to express — agents handle orchestration logic themselves, increasing coupling. Supervisor pattern adds latency (every decision passes through the meta-agent) and becomes a central point of failure.
 
-> **Cross-reference**: [Multi-Agent Systems](../reference-dictionary/ai-ml-llm.md#multi-agent), [Agentic AI](agentic-ai/enterprise-strategic-systems.md)
+> **Cross-reference**: [Multi-Agent Systems](../../reference-dictionary/ai-ml-llm.md#multi-agent), [Agentic AI](agentic-ai/enterprise-strategic-systems.md)
 
 ---
 
@@ -497,4 +497,4 @@ timestamp: 2026-07-30T00:00:00Z
 
 > **Tradeoff**: EBS is a block disk attached to one EC2 instance — doesn't work with horizontal scaling or multi-service access. EFS provides shared POSIX filesystem but at ~$30,000/month for 100TB (13× more than S3) — pays for filesystem behavior the app doesn't need. Self-hosted MinIO shifts reliability responsibility to your team (disk failures, replication, backups, 3am incidents).
 
-> **Cross-reference**: [Azure Services](../reference-dictionary/azure-services.md)
+> **Cross-reference**: [Azure Services](../../reference-dictionary/azure-services.md)

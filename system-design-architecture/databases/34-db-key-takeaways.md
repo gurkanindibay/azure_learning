@@ -7,13 +7,13 @@ timestamp: 2026-07-31T00:00:00Z
 
 # 34. PACELC Theorem — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [PACELC Theorem Explained — Distributed Systems Series](../articles/databases/pacelc-theorem-explained.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [PACELC Theorem Explained — Distributed Systems Series](../../articles/databases/pacelc-theorem-explained.md)
 > **Author**: Lohith Chittineni
 > **Purpose**: Extract the PACELC theorem, synchronous vs asynchronous replication tradeoffs, and quorum-based hybrid strategies from this distributed systems article.
 
-> **Also see**: [Database Decisions](databases/database-decisions.md) (db-08–db-17), [Query Performance](databases/query-performance.md) (db-01–db-07)
-> **Dictionary**: [PACELC Theorem](../reference-dictionary/data-concurrency.md#pacelc-theorem), [Quorum](../reference-dictionary/data-concurrency.md#quorum), [Latency](../reference-dictionary/observability.md#latency), [Synchronous Replication](../reference-dictionary/data-architecture.md#synchronous-replication), [Asynchronous Replication](../reference-dictionary/data-architecture.md#asynchronous-replication)
+> **Also see**: [Database Decisions](database-decisions.md) (db-08–db-17), [Query Performance](query-performance.md) (db-01–db-07)
+> **Dictionary**: [PACELC Theorem](../../reference-dictionary/data-concurrency.md#pacelc-theorem), [Quorum](../../reference-dictionary/data-concurrency.md#quorum), [Latency](../../reference-dictionary/observability.md#latency), [Synchronous Replication](../../reference-dictionary/data-architecture.md#synchronous-replication), [Asynchronous Replication](../../reference-dictionary/data-architecture.md#asynchronous-replication)
 > **Taxonomy Reference**: §3.3 Data Architecture
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-07-31T00:00:00Z
 
 ## db-25: PACELC — The Missing Half of CAP
 
-> **Source**: [§"What Is PACELC Theorem?"](../articles/databases/pacelc-theorem-explained.md#what-is-pacelc-theorem), [§"Why PACELC Exists"](../articles/databases/pacelc-theorem-explained.md#why-pacelc-exists)
+> **Source**: [§"What Is PACELC Theorem?"](../../articles/databases/pacelc-theorem-explained.md#what-is-pacelc-theorem), [§"Why PACELC Exists"](../../articles/databases/pacelc-theorem-explained.md#why-pacelc-exists)
 
 | | |
 |:---|:---|
@@ -41,13 +41,13 @@ timestamp: 2026-07-31T00:00:00Z
 
 **Tradeoff**: PACELC is a classification framework, not a prescription. It tells you what tradeoffs exist but not which to choose — that depends on your specific latency budget, consistency requirements, and user expectations. Additionally, PACELC assumes a binary choice (L or C) during normal operation, but real systems often implement graded consistency models (session consistency, causal consistency) that blur the line between the two poles.
 
-> **Cross-reference**: [CAP Theorem — Partition Tradeoffs §db-12](databases/database-decisions.md#db-12-cap-theorem--partition-tradeoffs) | **Azure**: [Cosmos DB consistency levels](../../architecture-azure/data/databases/cosmos-db/)
+> **Cross-reference**: [CAP Theorem — Partition Tradeoffs §db-12](database-decisions.md#db-12-cap-theorem--partition-tradeoffs) | **Azure**: [Cosmos DB consistency levels](../../architecture-azure/data/databases/cosmos-db/)
 
 ---
 
 ## db-26: Synchronous vs Asynchronous Replication — Consistency vs Latency
 
-> **Source**: [§"Synchronous vs. Asynchronous Communication"](../articles/databases/pacelc-theorem-explained.md#synchronous-vs.-asynchronous-communication), [§"Data Replication Strategies"](../articles/databases/pacelc-theorem-explained.md#data-replication-strategies)
+> **Source**: [§"Synchronous vs. Asynchronous Communication"](../../articles/databases/pacelc-theorem-explained.md#synchronous-vs.-asynchronous-communication), [§"Data Replication Strategies"](../../articles/databases/pacelc-theorem-explained.md#data-replication-strategies)
 
 | | |
 |:---|:---|
@@ -58,13 +58,13 @@ timestamp: 2026-07-31T00:00:00Z
 
 **Tradeoff**: The geographical distance between replicas amplifies the synchronous latency penalty. Multi-region synchronous replication can add 100–300ms per write. Asynchronous replication avoids this but creates a **replication lag window** during which reads are stale — the longer the lag, the higher the probability a user sees outdated data. There is no free lunch: you either pay the latency cost at write time (synchronous) or the inconsistency cost at read time (asynchronous).
 
-> **Cross-reference**: [Scaling Reads — Read Replicas §db-11](databases/database-decisions.md#db-11-scaling-reads--read-replicas--caching) | **Dictionary**: [Synchronous Replication](../reference-dictionary/data-architecture.md#synchronous-replication), [Asynchronous Replication](../reference-dictionary/data-architecture.md#asynchronous-replication) | **Azure**: [Azure SQL — Active Geo-Replication](../../architecture-azure/data/databases/), [Cosmos DB — Multi-Region Writes](../../architecture-azure/data/databases/cosmos-db/)
+> **Cross-reference**: [Scaling Reads — Read Replicas §db-11](database-decisions.md#db-11-scaling-reads--read-replicas--caching) | **Dictionary**: [Synchronous Replication](../../reference-dictionary/data-architecture.md#synchronous-replication), [Asynchronous Replication](../../reference-dictionary/data-architecture.md#asynchronous-replication) | **Azure**: [Azure SQL — Active Geo-Replication](../../architecture-azure/data/databases/), [Cosmos DB — Multi-Region Writes](../../architecture-azure/data/databases/cosmos-db/)
 
 ---
 
 ## db-27: Quorum-Based Hybrid Replication — R+W>N
 
-> **Source**: [§"Data Replication Strategies — Asynchronous III"](../articles/databases/pacelc-theorem-explained.md#5-asynchronous-data-replication-iii--hybrid-medium-consistency-medium-latency)
+> **Source**: [§"Data Replication Strategies — Asynchronous III"](../../articles/databases/pacelc-theorem-explained.md#5-asynchronous-data-replication-iii--hybrid-medium-consistency-medium-latency)
 
 | | |
 |:---|:---|
@@ -75,4 +75,4 @@ timestamp: 2026-07-31T00:00:00Z
 
 **Tradeoff**: Quorum-based systems add operational complexity. You must reason about R and W values for every operation, monitor replication lag for quorum-weak configurations, and handle the edge case where a write succeeds on W replicas but a subsequent read hits the N-W replicas that missed the update (when R+W ≤ N). For very small clusters (N ≤ 2), quorum provides little benefit over simple primary-backup. Additionally, quorum writes are not atomic across replicas — a write may succeed on W replicas and fail on the rest, requiring read-repair mechanisms to reconcile divergent copies.
 
-> **Cross-reference**: [CAP Theorem §db-12](databases/database-decisions.md#db-12-cap-theorem--partition-tradeoffs), [Sharding Strategies](databases/sharding-partitioning-strategies.md) | **Dictionary**: [Quorum](../reference-dictionary/data-concurrency.md#quorum), [PACELC Theorem](../reference-dictionary/data-concurrency.md#pacelc-theorem) | **Azure**: [Cosmos DB — Consistency Levels](../../architecture-azure/data/databases/cosmos-db/) (Session, Bounded Staleness, Strong, Eventual map to different R/W quorum configurations)
+> **Cross-reference**: [CAP Theorem §db-12](database-decisions.md#db-12-cap-theorem--partition-tradeoffs), [Sharding Strategies](sharding-partitioning-strategies.md) | **Dictionary**: [Quorum](../../reference-dictionary/data-concurrency.md#quorum), [PACELC Theorem](../../reference-dictionary/data-concurrency.md#pacelc-theorem) | **Azure**: [Cosmos DB — Consistency Levels](../../architecture-azure/data/databases/cosmos-db/) (Session, Bounded Staleness, Strong, Eventual map to different R/W quorum configurations)

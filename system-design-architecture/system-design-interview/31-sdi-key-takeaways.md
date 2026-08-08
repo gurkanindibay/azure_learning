@@ -7,12 +7,12 @@ timestamp: 2026-07-26T00:00:00Z
 
 # 31. Why the Standard Template Fails — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Why the "Standard Template" Gets You Rejected in System Design Interviews](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Why the "Standard Template" Gets You Rejected in System Design Interviews](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md)
 > **Purpose**: Extract the architectural thinking patterns that distinguish senior engineers from template-memorizers in system design interviews.
 
-> **Also see**: [Interview Roadmap](system-design-interview/interview-roadmap.md), [Pragmatic Takeaways](system-design-interview/pragmatic-takeaways.md), [Caching Architecture](caching/caching-architecture.md), [Databases & Query Performance](01-databases-query-performance.md), [Resilience Patterns](10-resilience-patterns.md)
-> **Dictionary**: [Cache Stampede](../reference-dictionary/caching.md#cache-stampede), [Partition Key Hot Spot](../reference-dictionary/databases.md#hot-partition), [PACELC Theorem](../reference-dictionary/data-concurrency.md#pacelc-theorem), [Retry Storm](../reference-dictionary/resilience.md#retry-storm), [Dead-Letter Queue](../reference-dictionary/messaging.md#dead-letter-queue), [B-Tree vs LSM-Tree](../reference-dictionary/databases.md#b-tree-lsm-tree)
+> **Also see**: [Interview Roadmap](interview-roadmap.md), [Pragmatic Takeaways](pragmatic-takeaways.md), [Caching Architecture](../caching/caching-architecture.md), [Databases & Query Performance](../01-databases-query-performance.md), [Resilience Patterns](../10-resilience-patterns.md)
+> **Dictionary**: [Cache Stampede](../../reference-dictionary/caching.md#cache-stampede), [Partition Key Hot Spot](../../reference-dictionary/databases.md#hot-partition), [PACELC Theorem](../../reference-dictionary/data-concurrency.md#pacelc-theorem), [Retry Storm](../../reference-dictionary/resilience.md#retry-storm), [Dead-Letter Queue](../../reference-dictionary/messaging.md#dead-letter-queue), [B-Tree vs LSM-Tree](../../reference-dictionary/databases.md#b-tree-lsm-tree)
 > **Taxonomy Reference**: §2.1 Application Architecture Styles, §3.3 Event-Driven & Messaging, §7.1 Reliability & Resilience
 
 ---
@@ -33,7 +33,7 @@ timestamp: 2026-07-26T00:00:00Z
 
 ## sdi-75: Constraint-Driven Design over Template Memorization
 
-> **Source**: [§"The failure of the box-and-arrow checklist"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#the-failure-of-the-box-and-arrow-checklist)
+> **Source**: [§"The failure of the box-and-arrow checklist"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#the-failure-of-the-box-and-arrow-checklist)
 
 | | |
 |:---|:---|
@@ -44,13 +44,13 @@ timestamp: 2026-07-26T00:00:00Z
 
 **Tradeoff**: Constraint-driven design takes more interview time upfront (asking questions about scale, write-to-read ratio, latency percentiles) but produces an architecture that actually fits the problem. Template-based designs are faster to draw but fail under any interviewer probe deeper than "what does each box do?"
 
-> **Cross-reference**: [Pragmatic Takeaways §prag-01](system-design-interview/pragmatic-takeaways.md#prag-01-start-with-user-metrics-not-system-metrics) | **Azure**: This is a methodology pattern, not tied to a specific Azure service.
+> **Cross-reference**: [Pragmatic Takeaways §prag-01](pragmatic-takeaways.md#prag-01-start-with-user-metrics-not-system-metrics) | **Azure**: This is a methodology pattern, not tied to a specific Azure service.
 
 ---
 
 ## sdi-76: Cache Crash → Database Cascade
 
-> **Source**: [§"What happens when the cache goes down?"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#1-what-happens-when-the-cache-goes-down)
+> **Source**: [§"What happens when the cache goes down?"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#1-what-happens-when-the-cache-goes-down)
 
 | | |
 |:---|:---|
@@ -64,13 +64,13 @@ timestamp: 2026-07-26T00:00:00Z
 
 **Tradeoff**: Single-flight adds coordination overhead on the application layer. Soft TTL requires background workers that add operational complexity. Probabilistic invalidation can serve slightly stale data. The choice depends on the consistency tolerance of the read path.
 
-> **Cross-reference**: [Cache Stampede §cache-01](caching/caching-architecture.md#cache-01-cache-stampede), [Redis Internals](caching/redis-internals.md) | **Azure**: [Azure Cache for Redis](../../architecture-azure/data/databases/azure-cache-for-redis/)
+> **Cross-reference**: [Cache Stampede §cache-01](../caching/caching-architecture.md#cache-01-cache-stampede), [Redis Internals](../caching/redis-internals.md) | **Azure**: [Azure Cache for Redis](../../architecture-azure/data/databases/azure-cache-for-redis/)
 
 ---
 
 ## sdi-77: Partition Key Hot Spots
 
-> **Source**: [§"How does the system scale under a partition key hot spot?"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#2-how-does-the-system-scale-under-a-partition-key-hot-spot)
+> **Source**: [§"How does the system scale under a partition key hot spot?"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#2-how-does-the-system-scale-under-a-partition-key-hot-spot)
 
 | | |
 |:---|:---|
@@ -90,7 +90,7 @@ timestamp: 2026-07-26T00:00:00Z
 
 ## sdi-78: Consistency Model Accountability
 
-> **Source**: [§"What consistency model does your architecture support, and why?"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#3-what-consistency-model-does-your-architecture-support-and-why)
+> **Source**: [§"What consistency model does your architecture support, and why?"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#3-what-consistency-model-does-your-architecture-support-and-why)
 
 | | |
 |:---|:---|
@@ -103,13 +103,13 @@ timestamp: 2026-07-26T00:00:00Z
 
 **Tradeoff**: Strong consistency simplifies application logic but limits write throughput and adds latency. Eventual consistency scales writes but shifts complexity to the application layer for conflict resolution. The choice must be justified by the business requirement — a payment system needs different guarantees than a social media feed.
 
-> **Cross-reference**: [CAP Theorem §sdi-10](system-design-interview/interview-roadmap.md), [Isolation Levels §tx-02](02-concurrency-transactions.md#tx-02-isolation-levels) | **Azure**: [Cosmos DB — Consistency Levels](../../architecture-azure/data/databases/cosmos-db/)
+> **Cross-reference**: [CAP Theorem §sdi-10](interview-roadmap.md), [Isolation Levels §tx-02](02-concurrency-transactions.md#tx-02-isolation-levels) | **Azure**: [Cosmos DB — Consistency Levels](../../architecture-azure/data/databases/cosmos-db/)
 
 ---
 
 ## sdi-79: Storage Engine Fundamentals
 
-> **Source**: [§"The critical importance of data modeling"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#the-critical-importance-of-data-modeling)
+> **Source**: [§"The critical importance of data modeling"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#the-critical-importance-of-data-modeling)
 
 | | |
 |:---|:---|
@@ -133,7 +133,7 @@ timestamp: 2026-07-26T00:00:00Z
 
 ## sdi-80: Operational Failure Design
 
-> **Source**: [§"Designing for operational failure"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#designing-for-operational-failure)
+> **Source**: [§"Designing for operational failure"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#designing-for-operational-failure)
 
 | | |
 |:---|:---|
@@ -152,7 +152,7 @@ timestamp: 2026-07-26T00:00:00Z
 
 ## sdi-81: Five-Phase Senior Interview Framework
 
-> **Source**: [§"A tactical framework for a senior design loop"](../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#a-tactical-framework-for-a-senior-design-loop)
+> **Source**: [§"A tactical framework for a senior design loop"](../../articles/system-design-interview/why-standard-template-fails-system-design-interviews.md#a-tactical-framework-for-a-senior-design-loop)
 
 | | |
 |:---|:---|
@@ -168,4 +168,4 @@ timestamp: 2026-07-26T00:00:00Z
 
 **Tradeoff**: This framework requires discipline — it's tempting to skip ahead to drawing boxes. But phases 1–2 (constraints + schema) are the highest-leverage minutes of the interview; skipping them guarantees a shallow design. The framework leaves only 5 minutes for failure analysis, so candidates must internalize failure modes to discuss them fluently.
 
-> **Cross-reference**: [Interview Roadmap §sdi-01](system-design-interview/interview-roadmap.md), [Pragmatic Takeaways §prag-07](system-design-interview/pragmatic-takeaways.md) | **Azure**: This is a methodology pattern, not tied to a specific Azure service.
+> **Cross-reference**: [Interview Roadmap §sdi-01](interview-roadmap.md), [Pragmatic Takeaways §prag-07](pragmatic-takeaways.md) | **Azure**: This is a methodology pattern, not tied to a specific Azure service.

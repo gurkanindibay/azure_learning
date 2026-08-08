@@ -7,10 +7,10 @@ timestamp: 2026-07-18T00:00:00Z
 
 # 30. Concurrency & Transactions — Flash-Sale Inventory Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [System Design Interview: How Would You Avoid Overselling Inventory During a Flash Sale?](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
-> **Related**: [Atomic Inventory Reservation](concurrency-transactions/transaction-patterns.md#tx-08-atomic-inventory-reservation), [Database Invariants](concurrency-transactions/concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
-> **Dictionary**: [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Inventory Reservation](../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../reference-dictionary/data-concurrency.md#overselling), [Race Condition](../reference-dictionary/concurrency-runtimes.md#race-condition), [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [Flash Sale](../reference-dictionary/architecture-patterns.md#flash-sale)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [System Design Interview: How Would You Avoid Overselling Inventory During a Flash Sale?](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Related**: [Atomic Inventory Reservation](transaction-patterns.md#tx-08-atomic-inventory-reservation), [Database Invariants](concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
+> **Dictionary**: [Atomic Conditional Update](../../reference-dictionary/data-concurrency.md#atomic-conditional-update), [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Overselling](../../reference-dictionary/data-concurrency.md#overselling), [Race Condition](../../reference-dictionary/concurrency-runtimes.md#race-condition), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Flash Sale](../../reference-dictionary/architecture-patterns.md#flash-sale)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-07-18T00:00:00Z
 
 ## tx-31: Redis Edge Protection for Flash-Sale Traffic
 
-> **Source**: [§"The Interview Trap" and §"Redis Atomic Decrement"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"The Interview Trap" and §"Redis Atomic Decrement"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -45,15 +45,15 @@ timestamp: 2026-07-18T00:00:00Z
 | **Consistency** | Redis is eventually consistent with the database; if Redis crashes mid-sale, the DB remains authoritative once recovered. |
 | **Complexity** | Adds a cache invalidation and reconciliation path between Redis and the database. |
 
-> **Also see**: [tx-08 Atomic Inventory Reservation](concurrency-transactions/transaction-patterns.md#tx-08-atomic-inventory-reservation)
-> **Dictionary**: [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside), [Overselling](../reference-dictionary/data-concurrency.md#overselling)
+> **Also see**: [tx-08 Atomic Inventory Reservation](transaction-patterns.md#tx-08-atomic-inventory-reservation)
+> **Dictionary**: [Cache-Aside Pattern](../../reference-dictionary/caching.md#cache-aside), [Overselling](../../reference-dictionary/data-concurrency.md#overselling)
 > **Azure**: Azure Cache for Redis with active geo-replication; combine with Azure SQL for the authoritative inventory store.
 
 ---
 
 ## tx-32: Queue-Based Serialization for Inventory Contention
 
-> **Source**: [§"The Next Scaling Problem" and §"Queue-Based Processing"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"The Next Scaling Problem" and §"Queue-Based Processing"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -68,15 +68,15 @@ timestamp: 2026-07-18T00:00:00Z
 | **Correctness** | For flash sales, correctness matters more than shaving off milliseconds — selling the 101st item is worse than a slightly slower response. |
 | **Scale** | Partition by product SKU so contention for different products is isolated. |
 
-> **Also see**: [tx-06 Database Invariants](concurrency-transactions/concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
-> **Dictionary**: [Message Queue](../reference-dictionary/messaging.md#message-queue), [Backpressure](../reference-dictionary/messaging.md#backpressure)
+> **Also see**: [tx-06 Database Invariants](concurrency-transactions.md#tx-06-database-invariants-over-lock-timeouts)
+> **Dictionary**: [Message Queue](../../reference-dictionary/messaging.md#message-queue), [Backpressure](../../reference-dictionary/messaging.md#backpressure)
 > **Azure**: Azure Event Hubs or Service Bus for the queue layer; Azure Functions or AKS for workers.
 
 ---
 
 ## tx-33: Reservation-Payment Decoupling with Expiry
 
-> **Source**: [§"Inventory Reservation," §"Reservation Workflow," and §"Reservation Expiry"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"Inventory Reservation," §"Reservation Workflow," and §"Reservation Expiry"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -91,15 +91,15 @@ timestamp: 2026-07-18T00:00:00Z
 | **TTL tuning** | Too short: legitimate buyers lose reservations before completing payment. Too long: abandoned carts hold inventory hostage. |
 | **Reconciliation** | Requires a background job or scheduled task to release expired reservations reliably. |
 
-> **Also see**: [tx-08 Atomic Inventory Reservation](concurrency-transactions/transaction-patterns.md#tx-08-atomic-inventory-reservation), [tx-09 Saga Orchestration for Checkout](concurrency-transactions/transaction-patterns.md#tx-09-saga-orchestration-for-checkout)
-> **Dictionary**: [Inventory Reservation](../reference-dictionary/data-concurrency.md#inventory-reservation), [Saga Pattern](../reference-dictionary/cqrs-event-driven.md#saga-pattern)
+> **Also see**: [tx-08 Atomic Inventory Reservation](transaction-patterns.md#tx-08-atomic-inventory-reservation), [tx-09 Saga Orchestration for Checkout](transaction-patterns.md#tx-09-saga-orchestration-for-checkout)
+> **Dictionary**: [Inventory Reservation](../../reference-dictionary/data-concurrency.md#inventory-reservation), [Saga Pattern](../../reference-dictionary/cqrs-event-driven.md#saga-pattern)
 > **Azure**: Azure SQL Database with row-level locking for the reservation table; Azure Durable Functions for saga orchestration and expiry scheduling.
 
 ---
 
 ## tx-34: Idempotency Token for Duplicate Purchase Prevention
 
-> **Source**: [§"Preventing Duplicate Purchases"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"Preventing Duplicate Purchases"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -114,15 +114,15 @@ timestamp: 2026-07-18T00:00:00Z
 | **State management** | Idempotency records need a retention policy; keeping them forever accumulates storage, deleting them too early allows replays. |
 | **Pending state** | While the first request is in-flight, duplicates must either block or receive a "processing" response — not silently create a second reservation. |
 
-> **Also see**: [tx-23 Atomic Idempotency-Key Persistence](concurrency-transactions/29-tx-key-takeaways.md#tx-23-atomic-idempotency-key-persistence), [tx-24 Idempotency State Lifecycle](concurrency-transactions/29-tx-key-takeaways.md#tx-24-idempotency-state-lifecycle)
-> **Dictionary**: [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency Key](../reference-dictionary/api-design.md#idempotency-key)
+> **Also see**: [tx-23 Atomic Idempotency-Key Persistence](29-tx-key-takeaways.md#tx-23-atomic-idempotency-key-persistence), [tx-24 Idempotency State Lifecycle](29-tx-key-takeaways.md#tx-24-idempotency-state-lifecycle)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency Key](../../reference-dictionary/api-design.md#idempotency-key)
 > **Azure**: Use Azure Cosmos DB with unique-key constraints for idempotency-key storage; combine with Azure API Management for idempotency header enforcement.
 
 ---
 
 ## tx-35: Multi-Region Inventory Consistency
 
-> **Source**: [§"Multi-Region Challenge"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"Multi-Region Challenge"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -137,15 +137,15 @@ timestamp: 2026-07-18T00:00:00Z
 | **Centralized** | Guarantees correctness but introduces cross-region latency and a single point of failure. |
 | **Tokens** | Balances distribution and correctness but requires token generation and global uniqueness enforcement. |
 
-> **Also see**: [tx-12 Strong vs Eventual Consistency by Subdomain](concurrency-transactions/transaction-patterns.md#tx-12-strong-vs-eventual-consistency-by-subdomain)
-> **Dictionary**: [CAP Theorem](../reference-dictionary/data-concurrency.md#cap-theorem), [Distributed Transactions](../reference-dictionary/data-concurrency.md#distributed-transactions)
+> **Also see**: [tx-12 Strong vs Eventual Consistency by Subdomain](transaction-patterns.md#tx-12-strong-vs-eventual-consistency-by-subdomain)
+> **Dictionary**: [CAP Theorem](../../reference-dictionary/data-concurrency.md#cap-theorem), [Distributed Transactions](../../reference-dictionary/data-concurrency.md#distributed-transactions)
 > **Azure**: Azure Cosmos DB with multi-region writes for token storage; Azure Front Door for global routing.
 
 ---
 
 ## tx-36: Layered Flash-Sale Defense Architecture
 
-> **Source**: [§"The Real Production Design" and §"Lets Conclude"](../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
+> **Source**: [§"The Real Production Design" and §"Lets Conclude"](../../articles/concurrency-transactions/avoid-overselling-inventory-flash-sale.md)
 
 | | |
 |:---|:---|
@@ -166,6 +166,6 @@ timestamp: 2026-07-18T00:00:00Z
 | **Latency** | Each layer adds overhead, but the alternative — overselling — is catastrophic for customer trust. |
 | **Cost** | Additional infrastructure (Redis, queue, idempotency store) increases operational cost. |
 
-> **Also see**: All tx-31 through tx-35 above; [tx-25 Layered Duplicate Protection](concurrency-transactions/45-tx-key-takeaways.md#tx-25-business-vs-retry-identity)
-> **Dictionary**: [Flash Sale](../reference-dictionary/architecture-patterns.md#flash-sale), [Defense in Depth](../reference-dictionary/security-iam.md#defense-in-depth)
+> **Also see**: All tx-31 through tx-35 above; [tx-25 Layered Duplicate Protection](45-tx-key-takeaways.md#tx-25-business-vs-retry-identity)
+> **Dictionary**: [Flash Sale](../../reference-dictionary/architecture-patterns.md#flash-sale), [Defense in Depth](../../reference-dictionary/security-iam.md#defense-in-depth)
 > **Azure**: Azure Cache for Redis → Event Hubs → Azure SQL (with row-level locking) → Cosmos DB (idempotency); Azure Monitor for cross-layer observability.

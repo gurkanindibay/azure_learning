@@ -7,12 +7,12 @@ timestamp: 2026-08-08T00:00:00Z
 
 # 37. Agentic AI — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](../articles/agentic-ai/harness-loop-graph-engineering.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](../../articles/agentic-ai/harness-loop-graph-engineering.md)
 > **Purpose**: Extract reusable architectural patterns for agent system design: the six harness component groupings, evidence-based loop engineering with loop contracts, graph-based control flow, and a diagnostic framework for identifying which layer owns a failure.
 
-> **Also see**: [Agent Harness](agentic-ai/agent-harness.md), [Agentic Loop Engineering](agentic-ai/agentic-loop-engineering.md), [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [Agentic Core Engineering](agentic-ai/agentic-core-engineering.md)
-> **Dictionary**: [AI/ML/LLM](../reference-dictionary/ai-ml-llm.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Agent Harness](agent-harness.md), [Agentic Loop Engineering](agentic-loop-engineering.md), [AI Agent Architecture](ai-agent-architecture.md), [Agentic Core Engineering](agentic-core-engineering.md)
+> **Dictionary**: [AI/ML/LLM](../../reference-dictionary/ai-ml-llm.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Taxonomy Reference**: §12.1 AI Application Patterns
 
 ---
@@ -30,7 +30,7 @@ timestamp: 2026-08-08T00:00:00Z
 
 ## agentic-42: Harness Engineering — Six Component Groupings for Agent Scaffolding
 
-> **Source**: [§Layer 1: Agent Harness Engineering](../articles/agentic-ai/harness-loop-graph-engineering.md#layer-1-agent-harness-engineering)
+> **Source**: [§Layer 1: Agent Harness Engineering](../../articles/agentic-ai/harness-loop-graph-engineering.md#layer-1-agent-harness-engineering)
 
 | | |
 |:---|:---|
@@ -56,7 +56,7 @@ timestamp: 2026-08-08T00:00:00Z
 
 ## agentic-43: Loop Engineering — Evidence-Based Stopping, Not Confidence-Based Stopping
 
-> **Source**: [§Layer 2: Loop Engineering](../articles/agentic-ai/harness-loop-graph-engineering.md#layer-2-loop-engineering)
+> **Source**: [§Layer 2: Loop Engineering](../../articles/agentic-ai/harness-loop-graph-engineering.md#layer-2-loop-engineering)
 
 | | |
 |:---|:---|
@@ -85,7 +85,7 @@ timestamp: 2026-08-08T00:00:00Z
 
 ## agentic-44: Graph Engineering — Explicit Control Flow as Nodes and Edges
 
-> **Source**: [§Layer 3: Graph Engineering](../articles/agentic-ai/harness-loop-graph-engineering.md#layer-3-graph-engineering)
+> **Source**: [§Layer 3: Graph Engineering](../../articles/agentic-ai/harness-loop-graph-engineering.md#layer-3-graph-engineering)
 
 | | |
 |:---|:---|
@@ -114,7 +114,7 @@ timestamp: 2026-08-08T00:00:00Z
 
 ## agentic-45: Diagnostic Triage — Which Layer Owns the Failure
 
-> **Source**: [§Diagnosing a failure: which layer do you actually fix?](../articles/agentic-ai/harness-loop-graph-engineering.md#diagnosing-a-failure-which-layer-do-you-actually-fix)
+> **Source**: [§Diagnosing a failure: which layer do you actually fix?](../../articles/agentic-ai/harness-loop-graph-engineering.md#diagnosing-a-failure-which-layer-do-you-actually-fix)
 
 | | |
 |:---|:---|

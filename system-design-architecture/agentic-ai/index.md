@@ -23,8 +23,9 @@ Problems and strategies for designing agentic AI systems: enterprise multi-agent
 | [ai-agent-architecture.md](ai-agent-architecture.md) | `agentarch-01` – `agentarch-06` | Brain (LLM), Planning (CoT/ReAct), Tools (MCP/APIs), Memory (RAG/Vector DB), Guardrails |
 | [ai-assisted-development.md](ai-assisted-development.md) | `aidev-01` – `aidev-06` | Five levels (L0–L5), Level 2 trap, Role transformation, Dark factory, Strategic deferral |
 | [agent-harness.md](agent-harness.md) | `harness-01` – `harness-10` | Three-level engineering, Context rot, Verification loops, Thin vs thick harness, Error compounding |
-| [32-agentic-key-takeaways.md](../32-agentic-key-takeaways.md) | `agentic-34` – `agentic-41` | Multi-agent orchestration, Three-tier AI loop, Autonomous refactoring, Saga+Idempotency, FDE Allocation Matrix, Plan & Execute, Memory Fabric, Dry-Run Sandbox |
-| [37-agentic-key-takeaways.md](../37-agentic-key-takeaways.md) | `agentic-42` – `agentic-45` | Harness six components, Evidence-based loop stopping, Graph control flow, Diagnostic triage |
+| [32-agentic-key-takeaways.md](32-agentic-key-takeaways.md) | `agentic-34` – `agentic-41` | Multi-agent orchestration, Three-tier AI loop, Autonomous refactoring, Saga+Idempotency, FDE Allocation Matrix, Plan & Execute, Memory Fabric, Dry-Run Sandbox |
+| [36-agentarch-key-takeaways.md](36-agentarch-key-takeaways.md) | `agentarch-07` – `agentarch-12` | Graph engineering progression, Maker-checker, Parallel factor fanout, Node-scoped failure isolation, Multi-model tier, Budget transparency |
+| [37-agentic-key-takeaways.md](37-agentic-key-takeaways.md) | `agentic-42` – `agentic-45` | Harness six components, Evidence-based loop stopping, Graph control flow, Diagnostic triage |
 
 ## Cross-References
 

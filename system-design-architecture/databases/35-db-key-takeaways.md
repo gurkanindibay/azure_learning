@@ -7,13 +7,13 @@ timestamp: 2026-08-01T00:00:00Z
 
 # 35. PostgreSQL Logical Replication Internals — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Understanding PostgreSQL Logical Replication: The Complete End-to-End Flow](../articles/databases/postgresql-logical-replication-end-to-end-flow.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Understanding PostgreSQL Logical Replication: The Complete End-to-End Flow](../../articles/databases/postgresql-logical-replication-end-to-end-flow.md)
 > **Author**: Nadeem Khan (NK), published 2026-02-14
 > **Purpose**: Extract the WAL-based CDC state machine, replication slot lifecycle management, and publication/subscription model from this PostgreSQL internals deep-dive.
 
-> **Also see**: [Database Decisions](databases/database-decisions.md) (db-08–db-17), [Query Performance](databases/query-performance.md) (db-01–db-07)
-> **Dictionary**: [Write-Ahead Log (WAL)](../reference-dictionary/databases.md#write-ahead-log), [Change Data Capture (CDC)](../reference-dictionary/data-concurrency.md#change-data-capture), [Logical Replication](../reference-dictionary/data-architecture.md#logical-replication), [Replication Slot](../reference-dictionary/data-architecture.md#replication-slot)
+> **Also see**: [Database Decisions](database-decisions.md) (db-08–db-17), [Query Performance](query-performance.md) (db-01–db-07)
+> **Dictionary**: [Write-Ahead Log (WAL)](../../reference-dictionary/databases.md#write-ahead-log), [Change Data Capture (CDC)](../../reference-dictionary/data-concurrency.md#change-data-capture), [Logical Replication](../../reference-dictionary/data-architecture.md#logical-replication), [Replication Slot](../../reference-dictionary/data-architecture.md#replication-slot)
 > **Taxonomy Reference**: §3.3 Data Architecture
 
 ---
@@ -65,7 +65,7 @@ flowchart LR
 |:---|:---|
 | **Tradeoff** | Logical decoding adds CPU and memory overhead on the primary (ReorderBuffer spills to disk if `logical_decoding_work_mem` is exceeded). The benefit is row-level CDC without triggers or polling — the WAL is already there, you're just reading it differently. |
 
-> **Cross-reference**: [Change Data Capture §db-17](databases/database-decisions.md#db-17-change-data-capture-cdc) | **Dictionary**: [Write-Ahead Log](../reference-dictionary/databases.md#write-ahead-log), [Logical Replication](../reference-dictionary/data-architecture.md#logical-replication) | **Azure**: [Azure Database for PostgreSQL — Logical Replication](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)
+> **Cross-reference**: [Change Data Capture §db-17](database-decisions.md#db-17-change-data-capture-cdc) | **Dictionary**: [Write-Ahead Log](../../reference-dictionary/databases.md#write-ahead-log), [Logical Replication](../../reference-dictionary/data-architecture.md#logical-replication) | **Azure**: [Azure Database for PostgreSQL — Logical Replication](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)
 
 ---
 
@@ -98,7 +98,7 @@ flowchart LR
 |:---|:---|
 | **Tradeoff** | Replication slots guarantee exactly-once delivery and crash-safe resume, but they create a **hard dependency** — if the subscriber disappears without dropping the slot, WAL accumulates indefinitely. In production, you must monitor `pg_replication_slots` and alert on growing `pg_wal` size. |
 
-> **Cross-reference**: [Scaling Reads — Read Replicas §db-11](databases/database-decisions.md#db-11-scaling-reads--read-replicas--caching), [PACELC Theorem — Sync vs Async §db-26](../34-db-key-takeaways.md#db-26-synchronous-vs-asynchronous-replication--consistency-vs-latency) | **Dictionary**: [Replication Slot](../reference-dictionary/data-architecture.md#replication-slot) | **Azure**: [Azure Database for PostgreSQL — Read Replicas](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-read-replicas)
+> **Cross-reference**: [Scaling Reads — Read Replicas §db-11](database-decisions.md#db-11-scaling-reads--read-replicas--caching), [PACELC Theorem — Sync vs Async §db-26](../34-db-key-takeaways.md#db-26-synchronous-vs-asynchronous-replication--consistency-vs-latency) | **Dictionary**: [Replication Slot](../../reference-dictionary/data-architecture.md#replication-slot) | **Azure**: [Azure Database for PostgreSQL — Read Replicas](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-read-replicas)
 
 ---
 
@@ -150,4 +150,4 @@ flowchart TD
 |:---|:---|
 | **Tradeoff** | Publications give you surgical control over what gets replicated, but they introduce a **schema contract** — if you add a column to a published table without updating the publication, the new column is silently dropped in transit. Replica Identity configuration is mandatory for UPDATE/DELETE and choosing FULL (entire row) creates WAL bloat on the primary. |
 
-> **Cross-reference**: [CQRS with SQL §sqld-03](databases/sql-system-design.md#sqld-03-cqrs-with-sql), [Change Data Capture §db-17](databases/database-decisions.md#db-17-change-data-capture-cdc) | **Dictionary**: [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture) | **Azure**: [Azure Database for PostgreSQL — Logical Replication and CDC](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)
+> **Cross-reference**: [CQRS with SQL §sqld-03](sql-system-design.md#sqld-03-cqrs-with-sql), [Change Data Capture §db-17](database-decisions.md#db-17-change-data-capture-cdc) | **Dictionary**: [Change Data Capture](../../reference-dictionary/data-concurrency.md#change-data-capture) | **Azure**: [Azure Database for PostgreSQL — Logical Replication and CDC](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)

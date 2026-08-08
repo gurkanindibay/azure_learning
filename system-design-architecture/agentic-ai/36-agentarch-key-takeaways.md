@@ -7,10 +7,10 @@ timestamp: 2026-08-06T00:00:00Z
 
 # 36. AI Agent Architecture — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [How to Use Graph Engineering to Build a Multi-Factor Alpha Model](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md)
-> **Also see**: [AI Agent Architecture — Core Patterns](agentic-ai/ai-agent-architecture.md), [Agent Harness](agentic-ai/agent-harness.md), [Agentic Loop Engineering](agentic-ai/agentic-loop-engineering.md)
-> **Dictionary**: [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai), [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop), [Verification Loop](../reference-dictionary/ai-ml-llm.md#verification-loop-ai), [LLM-as-Judge](../reference-dictionary/ai-ml-llm.md#llm-as-judge)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [How to Use Graph Engineering to Build a Multi-Factor Alpha Model](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md)
+> **Also see**: [AI Agent Architecture — Core Patterns](ai-agent-architecture.md), [Agent Harness](agent-harness.md), [Agentic Loop Engineering](agentic-loop-engineering.md)
+> **Dictionary**: [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai), [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop), [Verification Loop](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai), [LLM-as-Judge](../../reference-dictionary/ai-ml-llm.md#llm-as-judge)
 > **Taxonomy Reference**: §12 AI Applications
 
 ---
@@ -28,7 +28,7 @@ timestamp: 2026-08-06T00:00:00Z
 
 ## agentarch-07: Graph Engineering — Agent Coordination as a Graph
 
-> **Source**: [§"Part 1: What Graph Engineering Actually Is"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-1-what-graph-engineering-actually-is)
+> **Source**: [§"Part 1: What Graph Engineering Actually Is"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-1-what-graph-engineering-actually-is)
 
 | | |
 |:---|:---|
@@ -50,13 +50,13 @@ A graph makes parallel execution native, state persistent, and failure scoped to
 
 **Tradeoff**: Graph-based coordination requires a runtime that can execute the graph (e.g., Slate Programs). The infrastructure investment pays off when the number of agents exceeds what a single developer can manually coordinate — roughly 4+ agents with inter-dependencies.
 
-> **Dictionary**: [Agent Loop](../reference-dictionary/ai-ml-llm.md#agent-loop), [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
+> **Dictionary**: [Agent Loop](../../reference-dictionary/ai-ml-llm.md#agent-loop), [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
 
 ---
 
 ## agentarch-08: Maker-Checker Pattern — Separate Generation from Validation
 
-> **Source**: [§"Part 2: The Tool That Runs The Graph"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-2-the-tool-that-runs-the-graph), [§"Part 3: The Multi-Factor Alpha Graph"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph)
+> **Source**: [§"Part 2: The Tool That Runs The Graph"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-2-the-tool-that-runs-the-graph), [§"Part 3: The Multi-Factor Alpha Graph"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph)
 
 | | |
 |:---|:---|
@@ -73,13 +73,13 @@ This is the `/goal` pattern: one node writes, another verifies, a third runs bot
 
 **Tradeoff**: Stronger reasoning models cost more per token. However, the cost is amortized because the checker only runs after all parallel maker nodes complete — it processes a smaller, filtered input set. In practice, ~80% of promising signals get rejected at the validation gate, so the checker is filtering, not generating.
 
-> **Dictionary**: [LLM-as-Judge](../reference-dictionary/ai-ml-llm.md#llm-as-judge), [Verification Loop](../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
+> **Dictionary**: [LLM-as-Judge](../../reference-dictionary/ai-ml-llm.md#llm-as-judge), [Verification Loop](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
 
 ---
 
 ## agentarch-09: Parallel Agent Fanout with Sequential Coordination
 
-> **Source**: [§"Part 3: The Multi-Factor Alpha Graph"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph)
+> **Source**: [§"Part 3: The Multi-Factor Alpha Graph"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph)
 
 | | |
 |:---|:---|
@@ -115,13 +115,13 @@ This is the `/goal` pattern: one node writes, another verifies, a third runs bot
 
 **Tradeoff**: This pattern requires all parallel nodes to complete before any coordination begins. If one factor agent is slow (e.g., rate-limited on balance sheet parsing), it becomes the critical path. Mitigation: per-node timeouts with graceful degradation (the graph runs with partial factor sets rather than dying entirely).
 
-> **Dictionary**: [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
+> **Dictionary**: [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
 
 ---
 
 ## agentarch-10: Node-Scoped Failure Isolation
 
-> **Source**: [§"Part 1: What Graph Engineering Actually Is"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-1-what-graph-engineering-actually-is), [§"Step 11: Debug When It Breaks"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#step-11-debug-when-it-breaks)
+> **Source**: [§"Part 1: What Graph Engineering Actually Is"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-1-what-graph-engineering-actually-is), [§"Step 11: Debug When It Breaks"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#step-11-debug-when-it-breaks)
 
 | | |
 |:---|:---|
@@ -140,13 +140,13 @@ In a graph, when a node breaks, the rest of the graph keeps running. The failed 
 
 **Tradeoff**: Node-scoped failure means partial results can propagate (a missing factor). The downstream coordination nodes must be designed to handle incomplete inputs — the validator already rejects factors, so a missing factor is treated the same as a rejected one. This requires explicit handling, not implicit assumptions.
 
-> **Dictionary**: [Resilience Stack](../reference-dictionary/resilience.md) — related: circuit breaker, graceful degradation
+> **Dictionary**: [Resilience Stack](../../reference-dictionary/resilience.md) — related: circuit breaker, graceful degradation
 
 ---
 
 ## agentarch-11: Multi-Model Tier Architecture
 
-> **Source**: [§"Part 3: The Multi-Factor Alpha Graph"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph), [§"Step 5: Connect Your Models"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#step-5-connect-your-models)
+> **Source**: [§"Part 3: The Multi-Factor Alpha Graph"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-3-the-multi-factor-alpha-graph), [§"Step 5: Connect Your Models"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#step-5-connect-your-models)
 
 | | |
 |:---|:---|
@@ -164,13 +164,13 @@ In a graph, when a node breaks, the rest of the graph keeps running. The failed 
 
 **Tradeoff**: Multi-tier architectures increase operational complexity (two model subscriptions, two cost profiles). The cost is justified when validation gates reject ~80% of signals — the strong tier processes filtered data, not raw data. If rejection rates drop below 30%, the architecture may be over-engineered for the problem.
 
-> **Dictionary**: [LLM-as-Judge](../reference-dictionary/ai-ml-llm.md#llm-as-judge), [Agentic AI](../reference-dictionary/ai-ml-llm.md#agentic-ai)
+> **Dictionary**: [LLM-as-Judge](../../reference-dictionary/ai-ml-llm.md#llm-as-judge), [Agentic AI](../../reference-dictionary/ai-ml-llm.md#agentic-ai)
 
 ---
 
 ## agentarch-12: Budget Transparency in Agent Systems
 
-> **Source**: [§"Part 5: What Actually Happened When I Ran It"](../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-5-what-actually-happened-when-i-ran-it)
+> **Source**: [§"Part 5: What Actually Happened When I Ran It"](../../articles/agentic-ai/graph-engineering-multi-factor-alpha-model.md#part-5-what-actually-happened-when-i-ran-it)
 
 | | |
 |:---|:---|
@@ -186,4 +186,4 @@ The Slate runtime explicitly told the author: the $30/run cap is advisory (state
 
 **Tradeoff**: Hard abort mechanisms add complexity (real-time cost tracking, mid-run cancellation with state preservation). Advisory caps are simpler but require operator discipline. The right choice depends on whether cost overruns are a financial risk or an inconvenience.
 
-> **Dictionary**: [Guardrails (AI)](../reference-dictionary/ai-ml-llm.md#guardrails-ai)
+> **Dictionary**: [Guardrails (AI)](../../reference-dictionary/ai-ml-llm.md#guardrails-ai)

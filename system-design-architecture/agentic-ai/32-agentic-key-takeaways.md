@@ -6,12 +6,12 @@ timestamp: 2026-07-29T00:00:00Z
 
 # 32. Agentic AI — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Forward Deployed Engineer — AI-Augmented Engineering Interview Questions](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Forward Deployed Engineer — AI-Augmented Engineering Interview Questions](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
 > **Purpose**: Extract reusable architectural patterns for agentic engineering: multi-agent orchestration, Plan & Execute, hierarchical memory fabrics, Saga-based FinTech integration, and agent-vs-human judgment boundaries.
 
-> **Also see**: [Agentic AI Systems](agentic-ai/), [AI Agent Architecture](agentic-ai/ai-agent-architecture.md), [Agent Harness](agentic-ai/agent-harness.md)
-> **Dictionary**: [AI/ML/LLM](../reference-dictionary/ai-ml-llm.md), [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md), [Architecture Patterns](../reference-dictionary/architecture-patterns.md)
+> **Also see**: [Agentic AI Systems](index.md), [AI Agent Architecture](ai-agent-architecture.md), [Agent Harness](agent-harness.md)
+> **Dictionary**: [AI/ML/LLM](../../reference-dictionary/ai-ml-llm.md), [CQRS & Event-Driven](../../reference-dictionary/cqrs-event-driven.md), [Architecture Patterns](../../reference-dictionary/architecture-patterns.md)
 > **Taxonomy Reference**: §12.1 AI Application Patterns
 
 ---
@@ -33,7 +33,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-34: Hierarchical Multi-Agent Orchestration with Deterministic Validation
 
-> **Source**: [§Autonomous Schema Mapping & State Reconciliation](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#case-study:-autonomous-schema-mapping-&-state-reconciliation)
+> **Source**: [§Autonomous Schema Mapping & State Reconciliation](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#case-study:-autonomous-schema-mapping-&-state-reconciliation)
 
 | | |
 |:---|:---|
@@ -50,7 +50,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-35: Three-Tier AI Development Loop (Tactical → Semantic → Agentic)
 
-> **Source**: [§Three-Tier AI Development Loop](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#three-tier-ai-development-loop)
+> **Source**: [§Three-Tier AI Development Loop](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#three-tier-ai-development-loop)
 
 | | |
 |:---|:---|
@@ -67,7 +67,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-36: Agentic Autonomous Refactoring with Self-Correcting Build Loops
 
-> **Source**: [§Case Study: High-Throughput Pipeline Optimization](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#case-study:-high-throughput-pipeline-optimization)
+> **Source**: [§Case Study: High-Throughput Pipeline Optimization](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#case-study:-high-throughput-pipeline-optimization)
 
 | | |
 |:---|:---|
@@ -84,7 +84,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-37: Event-Driven Saga with Deterministic Idempotency for Multi-Product FinTech
 
-> **Source**: [§Core Integration Pillars](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#core-integration-pillars)
+> **Source**: [§Core Integration Pillars](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#core-integration-pillars)
 
 | | |
 |:---|:---|
@@ -101,7 +101,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-38: FDE Allocation Matrix — Agent Domain vs. Human Judgment
 
-> **Source**: [§FDE Allocation Matrix](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#fde-allocation-matrix)
+> **Source**: [§FDE Allocation Matrix](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#fde-allocation-matrix)
 
 | | |
 |:---|:---|
@@ -118,7 +118,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-39: Hybrid Plan & Execute Architecture for Production-Grade Agents
 
-> **Source**: [§Orchestration Pattern: Plan & Execute State Graph](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#orchestration-pattern:-plan-&-execute-state-graph)
+> **Source**: [§Orchestration Pattern: Plan & Execute State Graph](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#orchestration-pattern:-plan-&-execute-state-graph)
 
 | | |
 |:---|:---|
@@ -135,7 +135,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-40: Hierarchical Memory Fabric for Agent Context Management
 
-> **Source**: [§Multi-Step Reasoning & Context Management](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#multi-step-reasoning-&-context-management)
+> **Source**: [§Multi-Step Reasoning & Context Management](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#multi-step-reasoning-&-context-management)
 
 | | |
 |:---|:---|
@@ -152,7 +152,7 @@ timestamp: 2026-07-29T00:00:00Z
 
 ## agentic-41: Deterministic Sandbox with Dry-Run Principle for Agent Safety
 
-> **Source**: [§Deterministic Sandbox (Dry-Run Principle)](../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#deterministic-sandbox-(dry-run-principle))
+> **Source**: [§Deterministic Sandbox (Dry-Run Principle)](../../articles/agentic-ai/forward-deployed-engineer-ai-augmented-engineering-interview-questions.md#deterministic-sandbox-(dry-run-principle))
 
 | | |
 |:---|:---|
