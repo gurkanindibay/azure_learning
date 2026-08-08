@@ -73,6 +73,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Swarm (AI Agents) | [`#swarm-ai-agents`](#swarm-ai-agents) |
 | Agent Graph | [`#agent-graph`](#agent-graph) |
 | Multi-Model Tier Architecture | [`#multi-model-tier-architecture`](#multi-model-tier-architecture) |
+| Context Injection | [`#context-injection`](#context-injection) |
+| Action Surfaces | [`#action-surfaces`](#action-surfaces) |
+| Loop Contract | [`#loop-contract`](#loop-contract) |
+| Evidence-Based Stopping | [`#evidence-based-stopping`](#evidence-based-stopping) |
 
 ---
 
@@ -1476,3 +1480,111 @@ An **AI agent design pattern** that assigns different language model strengths t
 - [Maker-Checker Pattern (AI Agents)](#maker-checker-pattern-ai)
 - [LLM-as-Judge](#llm-as-judge)
 - [Agent Graph](#agent-graph)
+
+---
+
+## Context Injection
+
+The **harness component that assembles and delivers the information an agent needs before it starts a task** — system instructions, retrieved documents, prior conversation turns, loaded skills, and any task-specific policy. Context injection determines what the model sees at the start of each turn, shaping its behavior before any tool is called.
+
+### Key Characteristics
+- **Pre-turn assembly**: All relevant context is gathered and injected before the model is invoked
+- **Multi-source**: Draws from instructions, RAG retrieval, session memory, skill files, and policy documents
+- **Selective**: Injects only what is relevant to the current task — over-injection causes context rot
+- **Stateless by default**: Each turn starts fresh; persistence across turns requires explicit state management
+
+### When to Use
+- Any multi-turn agent where the model needs task-specific knowledge before acting
+- When the agent's behavior depends on retrieved documents or prior conversation state
+- When you need to inject guardrails or policy constraints before the model reasons
+
+### When NOT to Use
+- Single-call LLM usage where the prompt alone carries all needed context
+- When injection overhead (RAG latency, file reads) exceeds the value of the context
+
+### Also see
+- [Agent Harness](#agent-harness)
+- [Context Engineering](#context-engineering)
+- [Context Rot](#context-rot)
+- [RAG](#rag)
+
+---
+
+## Action Surfaces
+
+The **set of external capabilities an agent is permitted to invoke** — APIs, browser control, shell access, code execution sandboxes, database connections, and MCP-style tools. Action surfaces define the boundary between what the agent can think and what it can actually do in the world.
+
+### Key Characteristics
+- **Schema-defined**: Each action surface has a typed interface (function signature, OpenAPI spec, MCP tool schema)
+- **Permission-gated**: Not all surfaces are available to all agents — access is scoped by role and task
+- **Observable**: Every invocation is logged with inputs, outputs, and timing for auditability
+- **Bounded blast radius**: Surfaces should grant the minimum capability needed (read-only replica, not production write)
+
+### When to Use
+- Any agent that needs to act beyond text generation
+- When designing the tool layer of an agent harness
+- When you need to reason about what an agent can and cannot do
+
+### When NOT to Use
+- Read-only agents that only generate text — no action surfaces needed
+- When a single, well-scoped tool call is simpler than a full surface abstraction
+
+### Also see
+- [Agent Harness](#agent-harness)
+- [Tool Calling](#tool-calling)
+- [MCP](#mcp)
+- [Agent Sandboxing](#agent-sandboxing)
+
+---
+
+## Loop Contract
+
+A **written specification defined before an agentic loop starts** that captures the goal, scope, verifier, state, stop condition, escalation path, and budget. The loop contract turns implicit stopping logic into an explicit, checkable agreement — preventing the pattern of discovering the stopping logic by watching the agent run forever in a terminal.
+
+### Key Characteristics
+- **Pre-defined, not discovered**: Written before the loop starts, not inferred from observing its behavior
+- **Seven components**: Goal, scope, verifier, state, stop condition, escalation path, budget
+- **Operator test**: If the agent cannot produce proof that it has met the contract, the loop is not done
+- **Escalation-aware**: Specifies who or what gets control when the loop cannot resolve on its own
+
+### When to Use
+- Any production agentic loop where unbounded execution is unacceptable
+- When multiple team members need a shared understanding of loop completion criteria
+- Before deploying a loop that will run unsupervised
+
+### When NOT to Use
+- Exploratory or one-shot tasks where the stopping condition is self-evident
+- Loops so simple that a contract would cost more to write than the loop costs to run
+
+### Also see
+- [Loop Engineering](#loop-engineering)
+- [Agent Loop](#agent-loop)
+- [Loop Viability Test](#loop-viability-test)
+- [Verification Loop (AI)](#verification-loop-ai)
+
+---
+
+## Evidence-Based Stopping
+
+The **core discipline of loop engineering**: stop a loop only when external, checkable evidence confirms the work is done — not when the model claims confidence. Evidence can be passing tests, valid schema output, resolvable citations, metrics above threshold, clean diffs, or human sign-off. "The agent says it's finished" is not a stopping condition.
+
+### Key Characteristics
+- **External verification**: Stopping conditions are checked outside the model, not by the model
+- **Deterministic gates**: Prefer tests, schemas, and linters over model self-assessment
+- **Specific feedback**: When evidence fails, the loop receives a concrete explanation of what went wrong (not just pass/fail)
+- **Budget-aware**: Evidence checks are gated by cost — add verification only where the cost of a bad output exceeds the cost of checking
+
+### When to Use
+- Any agentic loop where correctness matters more than speed
+- When the model's self-assessment of "done" has proven unreliable
+- As a design principle for all verification loops
+
+### When NOT to Use
+- Exploratory or creative tasks where there is no objective correctness criterion
+- When deterministic checks are impossible and only human judgment can determine completion
+
+### Also see
+- [Loop Engineering](#loop-engineering)
+- [Verification Loop (AI)](#verification-loop-ai)
+- [Loop Contract](#loop-contract)
+- [LLM-as-Judge](#llm-as-judge)

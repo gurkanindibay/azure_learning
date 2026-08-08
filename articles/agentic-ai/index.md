@@ -24,3 +24,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [forward-deployed-engineer-ai-augmented-engineering-interview-questions](forward-deployed-engineer-ai-augmented-engineering-interview-questions.md)
 - [Headroom — Content-Aware Token Compression for AI Agents](headroom-content-aware-token-compression.md)
 - [Graph Engineering — Multi-Factor Alpha Model](graph-engineering-multi-factor-alpha-model.md)
+- [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](harness-loop-graph-engineering.md)
