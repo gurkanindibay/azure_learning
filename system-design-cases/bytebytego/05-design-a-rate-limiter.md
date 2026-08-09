@@ -141,6 +141,18 @@ The token bucket algorithm work as follows:
 
 * A token bucket is a container that has pre-defined capacity. Tokens are put in the bucket at preset rates periodically. Once the bucket is full, no more tokens are added. As shown in Figure 4, the token bucket capacity is 4. The refiller puts 2 tokens into the bucket every second. Once the bucket is full, extra tokens will overflow.
 
+```mermaid
+flowchart TD
+    REFILL["🪙 Token Refiller<br/>(adds tokens at fixed rate)"] -->|periodic refill| BUCKET["🪣 Token Bucket<br/>(capacity: max tokens)"]
+    BUCKET -->|overflow| OVERFLOW["🗑️ Excess tokens discarded"]
+    REQUEST["📨 Incoming Request"] --> CHECK{"🔍 Enough<br/>tokens?"}
+    BUCKET --> CHECK
+    CHECK -->|"✅ Yes: consume 1 token"| ALLOW["✔️ Request allowed"]
+    CHECK -->|"❌ No: bucket empty"| REJECT["⛔ Request rejected<br/>(HTTP 429)"]
+```
+
+*The token bucket lifecycle: tokens are continuously refilled into the bucket up to its capacity. Each incoming request checks the bucket — if a token is available, it's consumed and the request proceeds; otherwise the request is rejected.*
+
 ![Image represents a simplified system illustrating a resource management concept, possibly related to buffer management or rate limiting in system design.  A vertical, dark-bordered rectangle depicts a source, containing three stacked, gold coin-like icons representing units of a resource.  A downward-pointing arrow labeled 'refill...' connects this source to a dark-green bucket, symbolizing a storage or buffer.  Inside the bucket are four stacked coins, indicating the existing resource level.  A horizontal arrow labeled 'overfill...' extends from the bucket to a single coin outside the bucket, suggesting an overflow mechanism where excess resources beyond the bucket's capacity are expelled.  The overall arrangement shows a resource being added to a limited-capacity container ('refill'), with excess resources being discarded ('overfill') when the container's capacity is exceeded. The text 'Viewer does not support full SVG 1.1' at the bottom is a browser-related message unrelated to the diagram's core meaning.](images/images-courses-system-design-interview-design-a-rate-limiter-figure-4-4-37HFRAED.svg)
 
 Figure 4
@@ -188,6 +200,17 @@ The leaking bucket algorithm is similar to the token bucket except that requests
 * Otherwise, the request is dropped.
 * Requests are pulled from the queue and processed at regular intervals.
 
+```mermaid
+flowchart TD
+    REQUEST["📨 Incoming Request"] --> CHECK{"🔍 Queue<br/>full?"}
+    CHECK -->|"❌ Yes: bucket overflow"| DROP["⛔ Request dropped<br/>(HTTP 429)"]
+    CHECK -->|"✅ No: space available"| QUEUE["📋 FIFO Queue<br/>(bounded capacity)"]
+    QUEUE -->|dequeue at fixed rate| PROCESS["⚙️ Process request<br/>(steady outflow)"]
+    PROCESS --> ALLOW["✔️ Request completed"]
+```
+
+*The leaking bucket flow: requests enter a bounded FIFO queue. If the queue is full, new requests are dropped. A separate drain process pulls requests from the queue at a constant, fixed rate — regardless of how bursty the arrival pattern is.*
+
 Figure 7 explains how the algorithm works.
 
 ![Image represents a system for processing requests using a rate-limiting mechanism.  A group of incoming requests, depicted as several light-blue rectangles within a dashed box labeled 'requests,' are fed into a decision diamond labeled 'bucket full?'. If the bucket is not full ('no' branch), the requests enter a queue represented as a rectangle divided into sections, some filled light-blue and some white, labeled 'queue.'  This queue suggests a buffer holding requests before processing.  From the queue, requests are 'processed at a fixed rate,' indicated by an arrow leading to another group of light-blue rectangles within a dashed box labeled 'requests go through,' signifying processed requests. If the bucket is full ('yes' branch), the requests are directed to a grayed-out area at the bottom, labeled with the text 'Viewer does not support full SVG 1.1,' suggesting a rejection or alternative handling path due to a limitation.  The overall diagram illustrates a system that manages incoming requests, buffering them in a queue, and processing them at a controlled rate to prevent overload.](images/images-courses-system-design-interview-design-a-rate-limiter-figure-4-7-AI26NI2Y.svg)
@@ -218,6 +241,30 @@ Fixed window counter algorithm works as follows:
 * The algorithm divides the timeline into fix-sized time windows and assign a counter for each window.
 * Each request increments the counter by one.
 * Once the counter reaches the pre-defined threshold, new requests are dropped until a new time window starts.
+
+```mermaid
+---
+title: Fixed Window Counter — Limit 3 requests/sec
+---
+flowchart LR
+    subgraph W1["🪟 Window 1 (1:00:00 – 1:00:01)"]
+        R1["📨 Req"] --> C1["Counter: 1"]
+        R2["📨 Req"] --> C2["Counter: 2"]
+        R3["📨 Req"] --> C3["Counter: 3"]
+    end
+    subgraph W2["🪟 Window 2 (1:00:01 – 1:00:02)"]
+        R4["📨 Req"] --> C4["Counter: 1"]
+        R5["📨 Req"] --> C5["Counter: 2"]
+        R6["📨 Req"] --> C6["Counter: 3"]
+        R7["📨 Req"] --> DROP2["⛔ Dropped (limit=3)"]
+    end
+    subgraph W3["🪟 Window 3 (1:00:02 – 1:00:03)"]
+        R8["📨 Req"] --> C7["Counter: 1"]
+    end
+    W1 -->|"counter resets"| W2 -->|"counter resets"| W3
+```
+
+*Each fixed window has its own counter that starts at zero. Requests increment the counter; the 4th request in Window 2 is dropped. At the window boundary, the counter resets — which is why bursts at window edges can slip through (see Figure 9).*
 
 Let us use a concrete example to see how it works. In Figure 8, the time unit is 1 second and the system allows a maximum of 3 requests per second. In each second window, if more than 3 requests are received, extra requests are dropped as shown in Figure 8.
 
@@ -252,6 +299,20 @@ As discussed previously, the fixed window counter algorithm has a major issue: i
 * Add timestamp of the new request to the log.
 * If the log size is the same or lower than the allowed count, a request is accepted. Otherwise, it is rejected.
 
+```mermaid
+---
+title: Sliding Window Log — Limit 2 requests/min, window slides continuously
+---
+flowchart TD
+    REQ["📨 New request<br/>arrives at T=now"] --> CLEAN["🧹 Step 1: Remove timestamps<br/>older than (now − 60s)"]
+    CLEAN --> ADD["📝 Step 2: Add current<br/>timestamp to log"]
+    ADD --> COUNT{"🔍 Step 3: Log size<br/>≤ 2?"}
+    COUNT -->|"✅ Yes (size ≤ 2)"| ALLOW["✔️ Allow"]
+    COUNT -->|"❌ No (size > 2)"| REJECT["⛔ Reject<br/>(timestamp stays in log)"]
+```
+
+*The sliding window log in action: on every request, stale timestamps are purged, the new timestamp is appended, and the log count is checked against the limit. The window is truly continuous — it's always "the last N seconds" rather than fixed clock-aligned boundaries.*
+
 We explain the algorithm with an example as revealed in Figure 10.
 
 ![Image represents a flowchart illustrating a rate-limiting system that allows only two requests per minute.  The flowchart shows four stages (numbered 1-4).  Each stage is a rectangular box representing a processing unit.  Arrows indicate the flow of requests, with timestamps indicating the time of each request. Stage 1 receives a request at 1:00:01 and forwards it. Stage 2 receives this request at 1:00:30 (implying a processing delay) and forwards it.  Stage 3 receives a request at 1:00:50 and forwards it. Stage 4 receives requests at 1:00:01 and 1:00:30 (highlighted in red to indicate they are within the rate limit), and then receives another request at 1:01:40, which is processed.  The timestamps within each stage show the arrival times of requests at that stage. The title 'Allow 2 requests per minute' clarifies the system's constraint.  The diagram demonstrates how the system handles requests within and exceeding the rate limit, showing that requests exceeding the limit are still processed but with a delay.](images/images-courses-system-design-interview-design-a-rate-limiter-figure-4-10-AI6H6IIX.svg)
@@ -277,6 +338,25 @@ Cons:
 
 The sliding window counter algorithm is a hybrid approach that combines the fixed window counter and sliding window log. The algorithm can be implemented by two different approaches. We will explain one implementation in this section and provide reference for the other implementation at the end of the section. Figure 11 illustrates how this algorithm works.
 
+```mermaid
+---
+title: Sliding Window Counter — Limit 7 requests/min
+---
+flowchart LR
+    subgraph PREV["⬅️ Previous Minute<br/>Counter: 5 requests"]
+        P1["📨"]; P2["📨"]; P3["📨"]; P4["📨"]; P5["📨"]
+    end
+    subgraph CURR["➡️ Current Minute<br/>Counter: 3 requests"]
+        C1["📨"]; C2["📨"]; C3["📨"]
+    end
+    CALC["🧮 Weighted sum:<br/>3 + (5 × 0.70) = 6.5 → 6<br/>6 &lt; 7 → ✅ Allow"]
+    PREV -->|"70% overlap"| CALC
+    CURR -->|"100% weight"| CALC
+    CALC --> RESULT["✔️ Request allowed"]
+```
+
+*The sliding window counter calculation: at 30% into the current minute, 70% of the rolling window overlaps with the previous minute. The weighted count is 3 + (5 × 0.70) = 6.5, rounded down to 6 — still under the limit of 7. This approximation uses only two counters but achieves near-perfect accuracy.*
+
 ![Image represents a graphical depiction of a rolling rate limiter.  The horizontal axis represents time, divided into 'previous minute' and 'current minute' segments. The vertical axis represents the number of requests. A light-green rectangle labeled 'Rolling minute' spans across the boundary of the previous and current minutes, with 70% of its area in the previous minute and 30% in the current minute. This represents a rolling window of one minute. Within the rolling minute rectangle, several light-blue rectangles represent individual requests. A black rectangle encloses the requests within the previous minute, while a light-blue rectangle encloses the requests within the current minute. An arrow points from the top to the 'Rolling minute' rectangle, labeled 'Current time,' indicating the current position within the rolling window.  A text annotation states 'Rate limit: 5 requests/min,' indicating the maximum allowed requests per minute.  The diagram visually demonstrates how requests are counted within a rolling one-minute window to enforce the rate limit.](images/images-courses-system-design-interview-design-a-rate-limiter-figure-4-11-R2MDCFXL.svg)
 
 Figure 11
@@ -298,6 +378,203 @@ Pros
 Cons
 
 * It only works for not-so-strict look back window. It is an approximation of the actual rate because it assumes requests in the previous window are evenly distributed. However, this problem may not be as bad as it seems. According to experiments done by Cloudflare [10], only 0.003% of requests are wrongly allowed or rate limited among 400 million requests.
+
+#### Algorithm comparison
+
+| Algorithm | Burst Handling | Memory Efficiency | Accuracy | Implementation Complexity | Best For |
+|:---|:---|:---|:---|:---|:---|
+| Token Bucket | Allows short bursts | High — single counter per bucket | Accurate per-bucket | Low | General-purpose API throttling (Amazon, Stripe) |
+| Leaking Bucket | No bursts — fixed outflow | High — bounded queue size | Accurate at queue level | Low | Stable outflow use cases (Shopify) |
+| Fixed Window Counter | Burst at window edges | High — single counter per window | Inaccurate at edges | Low | Simple quotas that reset at round time boundaries |
+| Sliding Window Log | Accurate per sliding window | Low — stores all timestamps | Very accurate | Medium | Strict rate enforcement with sliding window |
+| Sliding Window Counter | Smooths bursts (average-based) | High — two counters only | ~99.997% accurate (Cloudflare) | Medium | Best balance of accuracy and memory (Cloudflare) |
+
+#### Choosing the right algorithm
+
+The choice of algorithm depends on your specific requirements. Use the following decision framework:
+
+1. **Do you need to allow short bursts of traffic?**
+   - **Yes** → Token Bucket. It is the most flexible and widely adopted algorithm. Both Amazon and Stripe use it because it handles organic traffic spikes gracefully while respecting long-term rate limits.
+   - **No** → Consider Leaking Bucket or Sliding Window variants.
+
+2. **Do you need strict rate enforcement at every sliding time window?**
+   - **Yes, and memory is not a concern** → Sliding Window Log. It is the most accurate but consumes the most memory since every request timestamp is stored.
+   - **Yes, but memory is a concern** → Sliding Window Counter. It approximates the sliding window with only two counters (previous and current window), achieving ~99.997% accuracy at a fraction of the memory cost.
+
+3. **Is implementation simplicity your top priority?**
+   - Fixed Window Counter is the easiest to implement but suffers from edge-case burst issues. It works well for non-critical quotas where occasional over-limit traffic is acceptable (e.g., daily account creation limits).
+
+4. **Do you need a constant, predictable outflow rate?**
+   - Leaking Bucket guarantees a steady processing rate, making it ideal for scenarios where downstream systems have fixed capacity (e.g., database write throughput, third-party API call budgets).
+
+**Combined approaches**: In practice, many production systems combine algorithms. For example:
+- **Token Bucket at the edge** (per-user/IP burst allowance) → **Sliding Window Counter at the service level** (global rate enforcement)
+- **Fixed Window for coarse-grained quotas** (daily limits) → **Token Bucket for fine-grained throttling** (per-second limits)
+
+#### Deeper dive: Token Bucket implementation in Redis
+
+A production-grade token bucket can be implemented in Redis using a Lua script to guarantee atomicity. The algorithm tracks two values per bucket: the current token count and the last refill timestamp. On each request:
+
+1. Calculate elapsed time since the last refill.
+2. Add `elapsed_time × refill_rate` tokens (capped at bucket capacity).
+3. If `tokens ≥ 1`, decrement by 1 and allow the request.
+4. Otherwise, reject the request.
+
+```lua
+-- Redis Lua script for atomic token bucket
+local tokens_key = KEYS[1]
+local timestamp_key = KEYS[2]
+local rate = tonumber(ARGV[1])        -- tokens per second
+local capacity = tonumber(ARGV[2])     -- max tokens
+local now = tonumber(ARGV[3])          -- current timestamp in seconds
+local requested = tonumber(ARGV[4])    -- tokens requested (usually 1)
+
+local fill_time = capacity / rate
+local ttl = math.floor(fill_time * 2)
+
+local last_tokens = tonumber(redis.call("get", tokens_key))
+if last_tokens == nil then
+    last_tokens = capacity
+end
+
+local last_refreshed = tonumber(redis.call("get", timestamp_key))
+if last_refreshed == nil then
+    last_refreshed = 0
+end
+
+local delta = math.max(0, now - last_refreshed)
+local filled_tokens = math.min(capacity, last_tokens + (delta * rate))
+local allowed = filled_tokens >= requested
+local new_tokens = filled_tokens
+
+if allowed then
+    new_tokens = filled_tokens - requested
+end
+
+redis.call("setex", tokens_key, ttl, new_tokens)
+redis.call("setex", timestamp_key, ttl, now)
+
+return {allowed, new_tokens}
+```
+
+**Key design decisions in this implementation:**
+
+- **Two-key approach**: Storing tokens and timestamp separately allows independent TTL management.
+- **TTL = 2 × fill_time**: Ensures idle buckets are garbage-collected by Redis after roughly two full-refill cycles of inactivity, preventing memory leaks.
+- **Atomic Lua execution**: The entire check-and-update runs as a single Redis command, eliminating race conditions between read and write.
+- **Fractional token accumulation**: Using `delta * rate` allows sub-second refill granularity even when requests are sparse.
+
+#### Deeper dive: Leaking Bucket implementation in Redis
+
+Unlike the token bucket, the leaking bucket processes requests at a **fixed outflow rate** using a FIFO queue. In a distributed setting, maintaining an actual queue with a background drain worker is impractical. Instead, the algorithm can be modeled by tracking the **next available processing slot** — a technique known as the Generic Cell Rate Algorithm (GCRA), which is mathematically equivalent to a leaky bucket.
+
+The implementation tracks a single timestamp per bucket: `next_allowed_time`, representing the earliest moment the next request can be processed. On each request:
+
+1. Calculate the expected arrival gap: `1 / outflow_rate` (e.g., 200 ms if the rate is 5 requests/second).
+2. Compare the current time with `next_allowed_time`:
+   - If `now ≥ next_allowed_time`, the request is **on time or late** — process immediately and set `next_allowed_time = now + gap`.
+   - If `now < next_allowed_time` but the delay is within the queue capacity, the request is **queued** — set `next_allowed_time = next_allowed_time + gap` and allow it.
+   - If the delay exceeds the queue capacity (i.e., the bucket would overflow), **reject** the request.
+
+```lua
+-- Redis Lua script for atomic leaking bucket (GCRA variant)
+local key = KEYS[1]
+local outflow_rate = tonumber(ARGV[1])  -- requests processed per second
+local capacity = tonumber(ARGV[2])       -- max queue size (bucket depth)
+local now = tonumber(ARGV[3])            -- current timestamp in seconds (float)
+
+local emission_interval = 1.0 / outflow_rate
+local bucket_lifetime = (capacity + 1) * emission_interval
+local ttl = math.ceil(bucket_lifetime * 2)
+
+-- TAT = Theoretical Arrival Time: when the next request would be allowed
+local tat = tonumber(redis.call("get", key))
+if tat == nil or tat < now then
+    tat = now
+end
+
+-- Calculate the new TAT if this request is admitted
+local new_tat = tat + emission_interval
+
+-- How late would this request be? (in seconds)
+-- If new_tat - now > capacity * emission_interval, the bucket overflows
+local allow_at = new_tat - emission_interval
+local delay = allow_at - now
+
+if delay > capacity * emission_interval then
+    -- Bucket would overflow → reject
+    redis.call("setex", key, ttl, tat)
+    return {0, math.ceil(delay - capacity * emission_interval)}
+else
+    -- Admit the request
+    redis.call("setex", key, ttl, new_tat)
+    return {1, new_tat}
+end
+```
+
+**How this maps to the classic leaking bucket:**
+
+| Classic Concept | GCRA Equivalent |
+|:---|:---|
+| FIFO queue | Implicit — `next_allowed_time` (TAT) encodes the queue drain schedule |
+| Queue size (bucket capacity) | `capacity * emission_interval` = max tolerable delay |
+| Outflow rate | `1 / emission_interval` = requests/second drained |
+| Dropped request | Occurs when `delay > capacity × emission_interval` |
+| Steady-state drain | Each admitted request pushes `next_allowed_time` forward by exactly `emission_interval` |
+
+**Key design decisions:**
+
+- **Single-key storage**: Only `TAT` (Theoretical Arrival Time) is persisted, making this extremely memory-efficient — one Redis key per bucket, versus the queue-based approach that would store every pending request.
+- **No background worker needed**: Unlike a traditional leaking bucket that requires a separate process to drain the queue, the GCRA approach computes the drain schedule lazily on each request. This makes it suitable for horizontally scaled, stateless rate-limiter middleware.
+- **Burst behavior**: A leaking bucket **rejects bursts outright** — if 10 requests arrive simultaneously against a capacity-5 bucket at rate 1/s, only the first 5 are admitted (spread 1 second apart) and the remaining 5 are dropped. This contrasts with the token bucket, which would allow all 10 if enough tokens were accumulated.
+- **TTL = 2 × bucket_lifetime**: Ensures that keys for idle clients are garbage-collected. The multiplier of 2 provides a safety margin so that keys don't expire while burst recovery is still in progress.
+- **Return values**: The script returns `{admitted_flag, next_allowed_time_or_retry_seconds}`. When rejected, the second value tells the client how many seconds to wait before retrying — useful for populating the `Retry-After` header.
+
+**When to prefer Leaking Bucket over Token Bucket:**
+
+| Scenario | Preferred Algorithm | Reason |
+|:---|:---|:---|
+| Downstream DB has fixed write capacity (e.g., 100 writes/s) | Leaking Bucket | Prevents queue buildup at the DB — outflow matches DB capacity exactly |
+| Third-party API charges per call and has a hard rate cap | Leaking Bucket | Smooth, predictable call pattern avoids accidental bursts that trigger provider bans |
+| User-facing API that should feel responsive under load | Token Bucket | Allows organic bursts (e.g., a user opening multiple tabs) while respecting long-term limits |
+| E-commerce checkout during flash sales | Token Bucket | Burst tolerance prevents losing legitimate purchases during traffic spikes |
+
+#### Deeper dive: Sliding Window Log with Redis Sorted Sets
+
+The sliding window log can be efficiently implemented using Redis sorted sets, where each member is a unique request identifier and the score is the request timestamp (in milliseconds):
+
+```lua
+-- Redis Lua script for sliding window log
+local key = KEYS[1]
+local now = tonumber(ARGV[1])          -- current timestamp in ms
+local window = tonumber(ARGV[2])       -- window size in ms
+local limit = tonumber(ARGV[3])        -- max requests per window
+local request_id = ARGV[4]             -- unique request ID
+
+-- Remove all timestamps outside the current window
+local window_start = now - window
+redis.call("ZREMRANGEBYSCORE", key, 0, window_start)
+
+-- Count requests in current window
+local current_count = redis.call("ZCARD", key)
+
+if current_count < limit then
+    -- Add current request with a unique score+member to avoid duplicates
+    redis.call("ZADD", key, now, request_id)
+    -- Set TTL to prevent memory leaks from idle keys
+    redis.call("PEXPIRE", key, window)
+    return {1, current_count + 1}  -- allowed
+else
+    return {0, current_count}      -- rejected
+end
+```
+
+**Key design decisions:**
+
+- **Sorted set scores as timestamps**: The `ZREMRANGEBYSCORE` operation removes outdated entries in O(log N) time, where N is the number of members in the set.
+- **Unique request IDs as members**: Prevents duplicate counting if the same request is retried. The member could be a UUID or a hash of the client identifier + timestamp.
+- **Memory trade-off**: Each entry consumes ~72 bytes in Redis (member + score + overhead). For 1M requests/minute with a 1-minute window, this means ~72 MB of memory per window. This is why the algorithm is memory-intensive — use it only when strict accuracy is required and the request volume is manageable.
+- **PEXPIRE on every write**: Ensures that keys for inactive clients are eventually cleaned up, even if the client stops sending requests abruptly.
 
 ### High-level architecture
 
