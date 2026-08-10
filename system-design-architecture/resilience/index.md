@@ -21,6 +21,7 @@ Problems and strategies for building resilient distributed systems: circuit brea
 | [defensive-coding.md](defensive-coding.md) | `arch-12` – `arch-15` | Input validation, Assertions, Fail-safe batch processing, Defensive dependency management |
 | [distributed-resilience-patterns.md](distributed-resilience-patterns.md) | `resilience-12` – `resilience-16` | Missing timeouts, Retry storms + idempotency, DLQ pipeline paralysis, Fallback observability, Resilience choreography |
 | [uber-load-shedding.md](uber-load-shedding.md) | `resilience-17` – `resilience-21` | Static rate limiting failure, CoDel/Adaptive LIFO, Priority-aware PID shedding, BYOS unified engine, Scorecard multitenant fairness |
+| [resilience-curriculum-tr.md](resilience-curriculum-tr.md) | — | 🇹🇷 Türkçe müfredat: Temelden ileri seviyeye dayanıklılık kalıpları, pratik alıştırmalar ve öğrenme yolu |
 
 ## Cross-References
 
