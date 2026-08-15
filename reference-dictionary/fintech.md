@@ -303,21 +303,35 @@ An **architectural component** that abstracts differences between bank protocols
 
 A periodic, materialized point-in-time record of an account's balance anchored to a specific ledger entry (`as_of_entry_id`). Used to accelerate derived balance computations in append-only ledgers by summing only the unaggregated tail entries (`snapshot.balance + SUM(tail entries)`), without treating the snapshot as the authoritative source of truth.
 
+### How Balance Snapshots Are Maintained
+1. **Trigger Strategies**:
+   - **Threshold-Based (Tail Count)**: Workers monitor entry volume and trigger a snapshot whenever an account accumulates more than $N$ unaggregated entries (e.g., every 500 or 1,000 entries).
+   - **Time-Based (Periodic/EOD)**: Scheduled jobs (hourly or daily End-of-Day) create regular balance checkpoints across all active accounts.
+   - **Asynchronous Event-Driven (CDC)**: A Change Data Capture stream (e.g., Debezium, Kafka) consumes append-only entries and incrementally advances snapshots in worker queues without impacting the write path.
+2. **Maintenance & Monotonic Advancement**:
+   - The worker calculates the delta from the last snapshot point: `new_balance = snapshot.balance + SUM(entries WHERE id > snapshot.as_of_entry_id)` and records the new high-water mark `MAX(entry_id)`.
+   - Updates enforce monotonicity (`WHERE new_as_of_entry_id > current_as_of_entry_id`), ensuring background workers remain idempotent and immune to out-of-order execution.
+3. **Rolling vs. Historical Snapshots**:
+   - **Rolling Operational Snapshot**: A single mutable record per account (`balance_snapshots`) updated continuously to keep live balance reads $O(1)$.
+   - **Historical EOD Snapshots**: Immutable daily audit records (`daily_balance_snapshots(account_id, date, closing_balance, eod_entry_id)`) used for regulatory compliance, statement generation, and point-in-time time-travel queries.
+
 ### Key Characteristics
 - **Performance optimization, not source of truth**: If the snapshot is deleted, corrupted, or stale, the exact authoritative balance is always recoverable from the immutable ledger entries
 - **Asynchronous generation**: Materialized via background jobs or worker queues without blocking write transactions
 - **Bounded query overhead**: Keeps balance query latency $O(1)$ by constraining the number of entries summed in the query tail
+- **Monotonic watermarking**: Anchored to immutable entry IDs (`as_of_entry_id`), ensuring deterministic re-calculation
 
 ### When to Use
 - Append-only ledgers and event-sourced accounts with high transaction volume
 - Read-heavy account dashboard views in banking and digital wallet platforms
+- Financial systems requiring point-in-time historical balance lookups for month-end close and audit reports
 
 ### When NOT to Use
 - Systems storing mutable balances directly on the account entity row
 - Accounts with very low transaction volume where on-demand aggregation of all entries is already instantaneous
 
 ### Also see
-- [Ledger (Double-Entry)](#ledger-double-entry) · [Append-Only Ledger](data-concurrency.md#append-only-ledger) · [Clearing Account](#clearing-account)
+- [Ledger (Double-Entry)](#ledger-double-entry) · [Append-Only Ledger](data-concurrency.md#append-only-ledger) · [Clearing Account](#clearing-account) · [Reconciliation](#reconciliation)
 
 ---
 

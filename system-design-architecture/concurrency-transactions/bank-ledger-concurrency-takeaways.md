@@ -234,10 +234,75 @@ SELECT s.balance_minor + COALESCE(SUM(e.amount_minor), 0) AS current_balance
 **Core Safety Principle**:
 The snapshot is **strictly an optimization, not the source of truth**. If a snapshot is corrupt, stale, or lost, the exact authoritative balance is 100% reconstructible from the immutable append-only ledger entries.
 
+### How Balance Snapshots Are Maintained in Practice
+
+```mermaid
+flowchart TD
+    subgraph WritePath["Write Path (Fast & Lock-Free)"]
+        TX["Transfer / Payment"] -->|Atomic Append| ENTRIES[("entries (Immutable Log)")]
+    end
+
+    subgraph TriggerLayer["Snapshot Trigger Mechanisms"]
+        T1["1. Threshold-Based: Tail count > 500"]
+        T2["2. Time-Based: Cron / EOD Nightly Close"]
+        T3["3. Streaming / CDC: Kafka / Debezium Consumer"]
+    end
+
+    ENTRIES -.-> TriggerLayer
+    TriggerLayer --> WORKER["Background Snapshot Worker"]
+
+    subgraph SnapshotStores["Snapshot Storage Layer"]
+        WORKER -->|Atomic Monotonic Upsert| ROLLING[("balance_snapshots (Live R/W)<br/>as_of_entry_id, balance_minor")]
+        WORKER -->|Nightly EOD Checkpoint| HISTORICAL[("daily_balance_snapshots<br/>snapshot_date, closing_balance")]
+    end
+
+    subgraph ReadPath["Live Balance Query"]
+        QUERY["Client Balance Request"] --> ROLLING
+        QUERY -->|Sum tail: id > as_of_entry_id| ENTRIES
+        ROLLING & ENTRIES --> RESULT["Fast O(1) Current Balance"]
+    end
+```
+
+#### 1. Trigger Strategies
+- **Volume / Threshold-Based**: An asynchronous worker evaluates active accounts and triggers a snapshot when the number of unaggregated tail entries exceeds a threshold (e.g., $N > 500$ entries). This ensures high-velocity accounts (like merchant accounts) are checkpointed frequently.
+- **Time-Based (Periodic & EOD)**: Scheduled batch jobs (e.g., hourly sweeps or midnight End-of-Day EOD accounting jobs) scan accounts with active entries since the last checkpoint.
+- **Streaming / CDC-Driven**: A Change Data Capture pipeline (e.g., Debezium streaming from PostgreSQL WAL into Kafka) reads appended entries and buffers micro-batches to update snapshot tables asynchronously without impacting write latency.
+
+#### 2. Atomic, Monotonic Snapshot Upsert
+Background workers compute the delta after `as_of_entry_id` and advance the snapshot monotonically, ensuring safe concurrent worker execution:
+
+```sql
+-- Step 1: Calculate the new snapshot point from the previous anchor
+WITH new_checkpoint AS (
+    SELECT e.account_id,
+           COALESCE(s.balance_minor, 0) + SUM(e.amount_minor) AS new_balance,
+           MAX(e.id) AS new_as_of_entry_id
+      FROM entries e
+      LEFT JOIN balance_snapshots s ON s.account_id = e.account_id
+     WHERE e.account_id = :account_id
+       AND e.id > COALESCE(s.as_of_entry_id, 0)
+     GROUP BY e.account_id, s.balance_minor, s.as_of_entry_id
+    HAVING COUNT(e.id) > 0
+)
+-- Step 2: Idempotent monotonic upsert (only advance forward)
+INSERT INTO balance_snapshots (account_id, as_of_entry_id, balance_minor, updated_at)
+SELECT account_id, new_as_of_entry_id, new_balance, NOW()
+  FROM new_checkpoint
+ON CONFLICT (account_id) DO UPDATE
+SET as_of_entry_id = EXCLUDED.as_of_entry_id,
+    balance_minor  = EXCLUDED.balance_minor,
+    updated_at     = EXCLUDED.updated_at
+WHERE EXCLUDED.as_of_entry_id > balance_snapshots.as_of_entry_id;
+```
+
+#### 3. Rolling vs. Historical EOD Snapshots
+- **Rolling Operational Snapshot (`balance_snapshots`)**: A single mutable record per account updated continuously to keep live API balance queries strictly bounded to $O(1)$ latency.
+- **Historical Daily Snapshots (`daily_balance_snapshots`)**: Immutable historical records created at midnight EOD (`account_id, snapshot_date, closing_balance_minor, eod_entry_id`). These power accounting audits, monthly statements, and historical time-travel queries without re-scanning years of raw entries.
+
 **Tradeoff**: Requires a background snapshotting worker to periodically checkpoint active accounts, but keeps read queries bounded at constant time ($O(1)$) without compromising auditability.
 
 > **Dictionary**: [Balance Snapshot](../../reference-dictionary/fintech.md#balance-snapshot), [Append-Only Ledger](../../reference-dictionary/data-concurrency.md#append-only-ledger)
-> **Azure**: Azure Functions Timer Trigger for snapshot generation; Azure SQL indexed views
+> **Azure**: Azure Functions Timer Trigger for snapshot generation; Azure SQL indexed views; Azure Event Hubs / Kafka for CDC streaming
 
 ---
 
