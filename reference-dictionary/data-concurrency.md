@@ -18,6 +18,7 @@ timestamp: 2026-06-14T00:00:00Z
 |:---|:---|
 | asyncio | [`#asyncio`](#asyncio) |
 | ACID Transactions | [`#acid-transactions`](#acid-transactions) |
+| Append-Only Ledger | [`#append-only-ledger`](#append-only-ledger) |
 | Atomic Conditional Update | [`#atomic-conditional-update`](#atomic-conditional-update) |
 | Atomic Increment | [`#atomic-increment`](#atomic-increment) |
 | Causal Consistency | [`#causal-consistency`](#causal-consistency) |
@@ -34,6 +35,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Isolation Levels | [`#isolation-levels`](#isolation-levels) |
 | Lamport Clocks | [`#lamport-clocks`](#lamport-clocks) |
 | Lease-Based Lock | [`#lease-based-lock`](#lease-based-lock) |
+| Lock Contention | [`#lock-contention`](#lock-contention) |
+| Lock Ordering | [`#lock-ordering`](#lock-ordering) |
+| Lost Update | [`#lost-update`](#lost-update) |
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
 | Overselling | [`#overselling`](#overselling) |
 | Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
@@ -43,9 +47,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Sharding | [`#sharding`](#sharding) |
 | Gene-Based Sharding | [`#gene-based-sharding`](#gene-based-sharding) |
 | Vector Clocks | [`#vector-clocks`](#vector-clocks) |
+| Wait-For Graph | [`#wait-for-graph`](#wait-for-graph) |
 | CRDT (Conflict-free Replicated Data Type) | [`#crdt-conflict-free-replicated-data-type`](#crdt-conflict-free-replicated-data-type) |
 | Impossible State | [`#impossible-state`](#impossible-state) |
-| Lock Contention | [`#lock-contention`](#lock-contention) |
 | Task Claiming | [`#task-claiming`](#task-claiming) |
 | PACELC Theorem | [`#pacelc-theorem`](#pacelc-theorem) |
 | Quorum | [`#quorum`](#quorum) |
@@ -126,6 +130,29 @@ UPDATE posts SET like_count = like_count + 1 WHERE id = ?;
 - When the counter must be part of a multi-row invariant (use serializable isolation instead)
 
 **Also see**: [Atomic Conditional Update](#atomic-conditional-update), [Idempotency](../cqrs-event-driven.md#idempotency), [Atomic Deduplication](../messaging.md#atomic-deduplication)
+
+---
+
+## Append-Only Ledger
+
+An immutable data store architecture where financial or state transitions are recorded strictly as chronological, signed entry rows (inserts) rather than in-place updates. The current state (e.g., account balance) is derived by aggregating historical entries (`SUM(amount)`), eliminating lost updates and lock contention by construction.
+
+### Key Characteristics
+- **No in-place updates**: Writes are strictly append-only `INSERT` operations; existing rows are never modified or deleted
+- **Complete audit trail**: Full historical lineage and point-in-time reconstructibility are built into the data model
+- **Invariant enforcement**: Entries are created in balanced pairs (double-entry bookkeeping) where debits and credits sum to zero
+- **Eliminates write-write conflicts**: Concurrent inserts do not block or deadlock on row-level update locks
+
+### When to Use
+- Core banking, ledger, and payment accounting systems requiring strict auditability and compliance
+- High-write environments where row locks on mutable balances create unacceptable latency and contention
+- Systems where historical point-in-time balance reconstruction is a regulatory requirement
+
+### When NOT to Use
+- Low-complexity CRUD applications where mutable entities with simple audit logs are sufficient
+- Extremely read-heavy workloads without snapshotting or caching infrastructure (where raw aggregation on massive tables would degrade latency)
+
+**Also see**: [Ledger (Double-Entry)](fintech.md#ledger-double-entry), [Balance Snapshot](fintech.md#balance-snapshot), [Lost Update](#lost-update)
 
 ---
 
@@ -733,6 +760,67 @@ A performance bottleneck that occurs when **multiple threads compete for the sam
 
 ---
 
+## Lock Ordering
+
+A deterministic concurrency control technique where all transactions acquire locks on multiple resources in a globally agreed-upon total order (such as ascending primary key or resource ID). Because every concurrent transaction acquires resources in identical sequence, circular wait conditions in the transaction wait-for graph become mathematically impossible, eliminating deadlocks.
+
+```sql
+-- Acquire row locks in strict ascending ID order
+SELECT id, balance_minor
+  FROM accounts
+ WHERE id = ANY(:sorted_ids)
+ ORDER BY id
+   FOR UPDATE;
+```
+
+### Key Characteristics
+- **Mathematical deadlock immunity**: Prevents cycles in the database's wait-for graph by enforcing an acyclic lock dependency tree
+- **Universal requirement**: Must be enforced across all code paths, background batch jobs, and administrative scripts touching the resources
+- **Application vs database ordering**: Sorting IDs in application code before locking guarantees total ordering independent of query planner optimizations
+
+### When to Use
+- Multi-resource transactions (e.g., transferring funds between Account A and Account B, or reserving multiple inventory items)
+- Bidirectional concurrent operations where Transaction 1 accesses (A then B) while Transaction 2 accesses (B then A)
+- Systems experiencing deadlock errors under high concurrency
+
+### When NOT to Use
+- Single-resource mutations where deadlocks are impossible
+- Workloads using optimistic concurrency control (OCC) or append-only architectures where exclusive locks are avoided entirely
+
+**Also see**: [Wait-For Graph](#wait-for-graph), [Pessimistic Locking](#pessimistic-locking), [Lock Contention](#lock-contention)
+
+---
+
+## Lost Update
+
+A concurrency race condition where two or more transactions concurrently read the same baseline state, compute a new state independently, and overwrite the row sequentially without mutual exclusion. The later write obliterates the modification made by the earlier transaction without detecting the intervening change.
+
+```sql
+-- Lost update scenario under READ COMMITTED:
+-- T1 reads balance = 500
+-- T2 reads balance = 500
+-- T1 writes balance = 400 (deducting 100)
+-- T2 writes balance = 400 (deducting 100)
+-- Result: 200 withdrawn, but balance shows 400 instead of 300!
+```
+
+### Key Characteristics
+- **Silent data corruption**: Neither transaction throws an error or fails validation, masking the failure from logs and monitoring
+- **Standard isolation vulnerability**: Occurs by default in `READ COMMITTED` isolation because transactions provide atomicity, not mutual exclusion
+- **Mitigation spectrum**: Solved via atomic conditional updates, pessimistic locks (`SELECT ... FOR UPDATE`), optimistic locking (`version` checks), or append-only ledgers
+
+### When to Address
+- Any read-modify-write workflow involving shared counters, balances, inventory quantities, or state flags
+- Financial and billing services where missed updates lead directly to financial loss
+
+### When NOT a Problem
+- Workloads using atomic in-place expressions (`UPDATE ... SET val = val + :delta`)
+- Systems operating under true `SERIALIZABLE` isolation with retry loops on serialization failures
+
+**Also see**: [Atomic Conditional Update](#atomic-conditional-update), [Optimistic Locking](#optimistic-locking), [Pessimistic Locking](#pessimistic-locking), [Append-Only Ledger](#append-only-ledger)
+
+---
+
 ## Task Claiming
 
 ### task-claiming
@@ -854,5 +942,22 @@ A **session-level consistency guarantee** that ensures a user always sees the ef
 
 ### Also see
 - [Causal Consistency](#causal-consistency) · [Consistency Model](#consistency-model) · [PACELC Theorem](#pacelc-theorem) · [Eventual Consistency](cqrs-event-driven.md)
+
+---
+
+## Wait-For Graph
+
+A directed dependency graph maintained internally by database transaction managers to detect deadlocks. Nodes represent active transactions, and directed edges ($T_1 \to T_2$) indicate that transaction $T_1$ is blocked waiting for a lock currently held by transaction $T_2$.
+
+### Key Characteristics
+- **Cycle detection**: A directed cycle in the graph ($T_1 \to T_2 \to T_1$) indicates an unresolvable deadlock
+- **Victim termination**: When the database deadlock detector identifies a cycle (after a configurable timeout like Postgres `deadlock_timeout`), it aborts one transaction (the "victim") and rolls it back
+- **Acyclic enforcement via lock ordering**: If all transactions acquire locks in total order, incoming edges only point from lower-order to higher-order resources, making cycles structurally impossible
+
+### When to Use / Consider
+- Tuning database engine timeout parameters (`deadlock_timeout`, `innodb_lock_wait_timeout`)
+- Diagnosing database locks, latency spikes, and aborted transactions under high load
+
+**Also see**: [Lock Ordering](#lock-ordering), [Lock Contention](#lock-contention), [Pessimistic Locking](#pessimistic-locking)
 
 

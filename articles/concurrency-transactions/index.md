@@ -25,3 +25,4 @@ Source articles covering concurrency transactions patterns, strategies, and case
 - [How Would You Design a Thread Pool to Send 10 Million SMS Messages in One Hour](thread-pool-design-10-million-sms.md)
 - [How Mastering Idempotency Saved Our Event-Driven System](how-mastering-idempotency-saved-event-driven-system.md)
 - [Idempotency and Deduplication in Distributed Systems](idempotency-deduplication-distributed-systems.md)
+- [Coinbase Interview Question — Building a Bank Ledger: Concurrency, Locks, and Race Conditions](coinbase-building-bank-ledger-concurrency-locks.md)

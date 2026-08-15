@@ -25,6 +25,7 @@ Problems and strategies for handling concurrent operations, distributed transact
 | [thread-pool-sms-takeaways.md](thread-pool-sms-takeaways.md) | `tx-42` – `tx-47` | Thread pool sizing for I/O-bound workloads, Bounded queue + CallerRunsPolicy backpressure, Task state persistence for crash recovery, Message broker decoupling, Thread pool monitoring, Atomic task claiming |
 | [idempotency-event-driven-system-takeaways.md](idempotency-event-driven-system-takeaways.md) | `tx-48` – `tx-52` | Deterministic keys, Atomic state changes, Redis SET NX gatekeeper, Dual-layer deduplication, Event replay auditing |
 | [idempotency-deduplication-distributed-systems-takeaways.md](idempotency-deduplication-distributed-systems-takeaways.md) | `tx-53` – `tx-58` | Three-layer defense model, Idempotency keys with unique constraints, Upsert-based idempotency, SET-over-INCREMENT, Deterministic processing, Critical operation protection |
+| [bank-ledger-concurrency-takeaways.md](bank-ledger-concurrency-takeaways.md) | `tx-59` – `tx-66` | Concurrency races (lost updates vs deadlocks vs double spend), Atomic conditional updates, Lock ordering, OCC retry storms, Append-only double-entry ledger, Balance snapshots, DB unique constraints, Clearing accounts |
 | [causal-consistency.md](causal-consistency.md) | — | Causal ordering, Happens-before relationships, Vector clocks |
 
 ## Cross-References

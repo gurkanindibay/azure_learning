@@ -91,7 +91,9 @@ takeaway_domains:
     desc: "Concurrency & Transactions"
     related_files:
       - "system-design-architecture/concurrency-transactions/29-tx-key-takeaways.md"
+      - "system-design-architecture/concurrency-transactions/bank-ledger-concurrency-takeaways.md"
       - "articles/concurrency-transactions/payment-service-race-condition-duplicate-charges.md"
+      - "articles/concurrency-transactions/coinbase-building-bank-ledger-concurrency-locks.md"
   api:
     file: "api-network/api-network-design.md"
     desc: "API & Network Design"

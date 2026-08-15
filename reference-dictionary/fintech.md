@@ -16,8 +16,10 @@ timestamp: 2026-06-14T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
+| Balance Snapshot | [`#balance-snapshot`](#balance-snapshot) |
 | Bank Adapter | [`#bank-adapter`](#bank-adapter) |
 | Business Identity | [`#business-identity`](#business-identity) |
+| Clearing Account | [`#clearing-account`](#clearing-account) |
 | Debit Card Authorization | [`#debit-card-authorization`](#debit-card-authorization) |
 | Financial States | [`#financial-states`](#financial-states) |
 | ISO 8583 | [`#iso-8583`](#iso-8583) |
@@ -297,6 +299,28 @@ An **architectural component** that abstracts differences between bank protocols
 
 ---
 
+## Balance Snapshot
+
+A periodic, materialized point-in-time record of an account's balance anchored to a specific ledger entry (`as_of_entry_id`). Used to accelerate derived balance computations in append-only ledgers by summing only the unaggregated tail entries (`snapshot.balance + SUM(tail entries)`), without treating the snapshot as the authoritative source of truth.
+
+### Key Characteristics
+- **Performance optimization, not source of truth**: If the snapshot is deleted, corrupted, or stale, the exact authoritative balance is always recoverable from the immutable ledger entries
+- **Asynchronous generation**: Materialized via background jobs or worker queues without blocking write transactions
+- **Bounded query overhead**: Keeps balance query latency $O(1)$ by constraining the number of entries summed in the query tail
+
+### When to Use
+- Append-only ledgers and event-sourced accounts with high transaction volume
+- Read-heavy account dashboard views in banking and digital wallet platforms
+
+### When NOT to Use
+- Systems storing mutable balances directly on the account entity row
+- Accounts with very low transaction volume where on-demand aggregation of all entries is already instantaneous
+
+### Also see
+- [Ledger (Double-Entry)](#ledger-double-entry) · [Append-Only Ledger](data-concurrency.md#append-only-ledger) · [Clearing Account](#clearing-account)
+
+---
+
 ## Business Identity
 
 A **stable identifier that represents what the customer is paying for** — independent of any single execution attempt or retry. Examples include `OrderId`, `PaymentIntentId`, `BookingId`, and `InvoiceId`.
@@ -318,6 +342,33 @@ A **stable identifier that represents what the customer is paying for** — inde
 ### Also see
 - [Retry Identity](#retry-identity) — the execution-attempt identifier that complements business identity
 - [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) — the property both identifiers help enforce
+
+---
+
+## Clearing Account
+
+A dedicated intermediate ledger account used in multi-step, multi-currency, or distributed cross-shard transactions to represent funds in transit. In a distributed Saga (e.g., transferring funds across database shards), money is first transferred from the sender to the clearing account on Shard A, then from the clearing account to the recipient on Shard B.
+
+```text
+Step 1 (Shard A): Alice Account: -$100 | In-Flight Clearing Account: +$100 (Sum = 0)
+Step 2 (Shard B): In-Flight Clearing Account: -$100 | Bob Account: +$100 (Sum = 0)
+```
+
+### Key Characteristics
+- **Continuous zero-sum balance invariant**: Every partial transaction step writes a valid debit-credit pair summing to zero, preventing "disappearing" or untracked money
+- **Auditable in-flight visibility**: In-flight capital is a queryable balance rather than an ephemeral network state; non-zero clearing balances trending upward immediately alert on stuck transactions
+- **Eliminates 2PC distributed locks**: Replaces blocking two-phase commit across shards with an asynchronous, eventually consistent Saga backed by double-entry ledger reconciliation
+
+### When to Use
+- Distributed banking architectures where payer and payee accounts reside on separate database shards
+- Payment gateway settlements, FX conversions, and inter-bank clearing operations
+
+### When NOT to Use
+- Single-database systems where atomic local transactions span both accounts simultaneously
+- Non-financial messaging workflows where strict balance preservation is not applicable
+
+### Also see
+- [Ledger (Double-Entry)](#ledger-double-entry) · [Reconciliation](#reconciliation) · [Saga Pattern](data-concurrency.md#saga-pattern)
 - [Idempotency-Key](../reference-dictionary/api-design.md#idempotency-key) — a common retry-identity implementation
 
 ---
