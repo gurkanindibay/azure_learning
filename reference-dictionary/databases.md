@@ -47,6 +47,13 @@ timestamp: 2026-06-18T00:00:00Z
 | Connection Pooling | [`#connection-pooling`](#connection-pooling) |
 | LSN (Log Sequence Number) | [`#lsn`](#lsn) |
 | WALSender | [`#walsender`](#walsender) |
+| Buffer Pool | [`#buffer-pool`](#buffer-pool) |
+| B-Tree Page Split | [`#b-tree-page-split`](#b-tree-page-split) |
+| UUIDv4 | [`#uuidv4`](#uuidv4) |
+| UUIDv7 | [`#uuidv7`](#uuidv7) |
+| ULID | [`#ulid`](#ulid) |
+| TSID | [`#tsid`](#tsid) |
+
 ## effective_io_concurrency {#effective-io-concurrency}
 
 A PostgreSQL configuration parameter that tells the query planner how many disk I/O operations the storage layer can execute concurrently. In PostgreSQL 18 the default changed from `1` to `16`, reflecting the assumption that asynchronous I/O can overlap multiple reads.
@@ -775,3 +782,145 @@ A dedicated PostgreSQL backend process that drives logical (and physical) replic
 
 ### Also see
 - [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [LSN](#lsn) · [Logical Replication](../reference-dictionary/data-architecture.md#logical-replication) · [Replication Slot](../reference-dictionary/data-architecture.md#replication-slot)
+
+---
+
+## Buffer Pool {#buffer-pool}
+
+A dedicated region of system memory (RAM) managed directly by a database engine (e.g., PostgreSQL `shared_buffers`, MySQL `innodb_buffer_pool_size`) used to cache data pages and index pages, avoiding physical disk I/O for read and write operations.
+
+### Key Characteristics
+- Caches fixed-size data and index pages (typically 8 KB in PostgreSQL, 16 KB in MySQL InnoDB)
+- Employs eviction algorithms (LRU, Clock-sweep) to maintain hot pages in memory
+- Modifies pages in-memory as "dirty pages" while logging changes to the Write-Ahead Log (WAL) before flushing to disk asynchronously
+- Cache hit ratio (typically >99%) directly dictates transactional query latency and throughput
+
+### When to Use
+- Sizing database instances to ensure the active working set (frequently accessed tables and indexes) fits within RAM
+- Monitoring database health via buffer pool hit rates (`pg_stat_database.blks_hit / (blks_hit + blks_read)`)
+
+### When NOT to Use
+- As a substitute for an external caching layer (Redis) when caching deserialized API responses or cross-service aggregates
+- For raw analytical streaming scans that would otherwise sweep and pollute transactional cache pages
+
+### Also see
+- [shared_buffers](#shared-buffers) · [B-Tree](#b-tree) · [B-Tree Page Split](#b-tree-page-split) · [Write-Ahead Log (WAL)](#write-ahead-log-wal)
+
+---
+
+## B-Tree Page Split {#b-tree-page-split}
+
+An internal storage operation in B-Tree and B+ Tree indexes where a full data/index page is split into two separate pages (usually moving ~50% of the entries to a newly allocated page) to accommodate an incoming insertion.
+
+### Key Characteristics
+- Occurs when an insertion targets a leaf page that has exceeded its page capacity (8 KB / 16 KB)
+- Allocates a new physical disk page, rebalances entries, and updates parent branch nodes up the tree
+- Causes index fragmentation and drops average page fill factor from ~90–95% down to ~50–60%
+- Heavily triggered by random primary keys (e.g., UUIDv4), leading to index bloat and high write amplification
+
+### When to Use
+- Diagnosing database write latency degradation and unexplained index file bloat
+- Tuning index fill factors (`WITH (fillfactor = 70)`) on tables with heavy random inserts or frequent `UPDATE`s
+
+### When NOT to Use
+- Not an application-level API; managed autonomously by the storage engine
+- Not problematic for sequential append-only keys where new pages are allocated cleanly at the tail
+
+### Also see
+- [B-Tree](#b-tree) · [Buffer Pool](#buffer-pool) · [UUIDv4](#uuidv4) · [UUIDv7](#uuidv7)
+
+---
+
+## UUIDv4 {#uuidv4}
+
+A Universally Unique Identifier generated using 122 bits of pseudo-random or cryptographically secure random entropy (with 6 bits reserved for version `0100` and variant `10`).
+
+### Key Characteristics
+- 128-bit identifier formatted as `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`
+- Generated client-side in application code without central coordination or database locks
+- Non-enumerable: protects against business metrics leakage and scraping attacks
+- Completely un-ordered: causes severe B-tree page splits, buffer pool churn, and index bloat when used as a clustered primary key
+
+### When to Use
+- Ephemeral tokens, session identifiers, and API correlation IDs
+- Distributed tracing span/trace IDs
+- Non-indexed unique attributes or columns indexed via hash indexes
+
+### When NOT to Use
+- Clustered primary keys in high-volume relational database tables (PostgreSQL, MySQL InnoDB, SQL Server)
+- Foreign keys where sequential join locality and index compactness are required
+
+### Also see
+- [UUIDv7](#uuidv7) · [ULID](#ulid) · [TSID](#tsid) · [B-Tree Page Split](#b-tree-page-split)
+
+---
+
+## UUIDv7 {#uuidv7}
+
+A standardized (RFC 9562) Universally Unique Identifier that embeds a 48-bit Unix millisecond timestamp in the leading bits, followed by 12 bits of sub-millisecond precision/counter and 62 bits of random entropy.
+
+### Key Characteristics
+- 128-bit standard UUID format natively supported by SQL `UUID` data types
+- Lexicographically and chronologically sortable (monotonically increasing over time)
+- Preserves B-Tree index append locality, virtually eliminating page splits and buffer pool thrashing
+- Decentralized: multiple microservices and client applications generate unique IDs concurrently without collision
+
+### When to Use
+- Recommended default primary key strategy for modern relational database tables requiring decentralized ID generation
+- Distributed event stores and audit logs requiring time-ordered unique record identifiers
+- Multi-region database replication where primary key generation cannot rely on centralized auto-increment sequences
+
+### When NOT to Use
+- High-volume systems with extreme memory constraints where 16 bytes per key causes excessive secondary index bloat compared to 64-bit alternatives (TSID/Snowflake)
+- Security contexts where exposing record creation timestamps in the identifier leaks business intelligence
+
+### Also see
+- [UUIDv4](#uuidv4) · [ULID](#ulid) · [TSID](#tsid) · [Snowflake ID](#snowflake-id) · [B-Tree](#b-tree)
+
+---
+
+## ULID {#ulid}
+
+Universally Unique Lexicographically Sortable Identifier, combining a 48-bit Unix millisecond timestamp with 80 bits of cryptographic randomness, encoded as a 26-character string using Crockford's Base32 alphabet.
+
+### Key Characteristics
+- 128-bit binary representation, formatted as a 26-character human-readable string
+- Crockford's Base32 alphabet excludes confusing characters (`I`, `L`, `O`, `U`) to prevent human transcription errors
+- Monotonically increasing per millisecond (with an incrementing random component within the same millisecond)
+- Case-insensitive string sorting matches chronological creation order
+
+### When to Use
+- Public-facing URLs, REST API route parameters, and human-readable identifiers
+- Document and NoSQL databases (MongoDB, DynamoDB) using string keys
+- High-concurrency event ingestion pipelines where string sorting aligns with time ordering
+
+### When NOT to Use
+- Relational databases with native 128-bit `UUID` data types (where UUIDv7 is standardized via RFC 9562)
+- Systems where case-sensitive Base64 encoding is preferred for shorter character lengths
+
+### Also see
+- [UUIDv7](#uuidv7) · [TSID](#tsid) · [UUIDv4](#uuidv4) · [Snowflake ID](#snowflake-id)
+
+---
+
+## TSID {#tsid}
+
+Time-Sorted Unique Identifier, a 64-bit distributed identifier combining a 42-bit millisecond timestamp, a 10-bit Node/Worker ID, and a 12-bit sequence counter.
+
+### Key Characteristics
+- 64-bit size fits natively into a standard SQL `BIGINT` / `INT8` (8 bytes vs. 16 bytes for UUIDs)
+- Generates up to 4,096 unique IDs per millisecond per node
+- Retains sequential B-Tree append locality while halving secondary index and foreign-key storage overhead
+- Can be formatted as a compact 13-character Crockford Base32 string for external API exposure
+
+### When to Use
+- Ultra-high-volume relational databases where foreign-key storage and RAM consumption are critical bottlenecks
+- High-QPS distributed transactional tables needing time-sorted locality within standard 64-bit integer columns
+
+### When NOT to Use
+- Multi-service architectures where configuring and managing unique Node/Worker IDs is impractical or adds operational overhead
+- Environments requiring zero coordination and collision resistance solely through high random entropy (use UUIDv7 instead)
+
+### Also see
+- [Snowflake ID](#snowflake-id) · [UUIDv7](#uuidv7) · [ULID](#ulid) · [B-Tree](#b-tree)
+

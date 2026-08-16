@@ -23,6 +23,8 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [sharding-partitioning-strategies.md](sharding-partitioning-strategies.md) | `db-19` – `db-24` | Vertical partitioning, Shard key selection, Gene-based sharding with Snowflake ID, Cross-shard queries, Dual-write migration, Composite shard keys |
 | [34-db-key-takeaways.md](34-db-key-takeaways.md) | `db-25` – `db-27` | PACELC theorem, Synchronous vs asynchronous replication, Quorum-based hybrid replication (R+W>N) |
 | [35-db-key-takeaways.md](35-db-key-takeaways.md) | `db-28` – `db-30` | WAL-based CDC state machine, Replication slot lifecycle, Publication/subscription model for selective CDC |
+| [36-db-key-takeaways.md](36-db-key-takeaways.md) | `db-31` – `db-33` | Random UUIDv4 B-tree fragmentation, Time-ordered keys (UUIDv7/ULID), 64-bit TSID/Snowflake vs 128-bit UUID trade-offs |
+
 
 ## Cross-References
 

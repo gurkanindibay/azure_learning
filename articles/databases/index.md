@@ -27,3 +27,5 @@ Source articles covering databases patterns, strategies, and case studies.
 - [how-to-shard-and-partition-databases-for-1-billion-orders](how-to-shard-and-partition-databases-for-1-billion-orders.md)
 - [pacelc-theorem-explained](pacelc-theorem-explained.md)
 - [postgresql-logical-replication-end-to-end-flow](postgresql-logical-replication-end-to-end-flow.md)
+- [the-database-architecture-trap-almost-everyone-falls-for](the-database-architecture-trap-almost-everyone-falls-for.md)
+
