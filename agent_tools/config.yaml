@@ -686,6 +686,10 @@ dictionary_domains:
       - masterless architecture
       - durability
       - hyperloglog
+      - connection pooling
+      - connection storm
+      - connection acquisition latency
+      - database backpressure
 
   security-iam.md:
     title: "Security, Identity & Access Management"

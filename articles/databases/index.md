@@ -16,7 +16,7 @@ Source articles covering databases patterns, strategies, and case studies.
 
 - [10gb-csv-512mb-ram-interview-question](10gb-csv-512mb-ram-interview-question.md)
 - [20-design-interview-questions](20-design-interview-questions.md)
-- [Most Developers Think HashMap Is Always O(1). That’s Not True.](Most Developers Think HashMap Is Always O(1). That’s Not True..md)
+- [Most Developers Think HashMap Is Always O(1). That’s Not True.](<Most Developers Think HashMap Is Always O(1). That’s Not True..md>)
 - [PostgreSQL 18’s Async IO Isn’t Just Faster — It Changes How You Think About Slow Queries](PostgreSQL 18’s Async IO Isn’t Just Faster — It Changes How You Think About Slow Queries.md)
 - [discord-data-architecture-master-class](discord-data-architecture-master-class.md)
 - [sql-for-system-design](sql-for-system-design.md)
@@ -28,4 +28,5 @@ Source articles covering databases patterns, strategies, and case studies.
 - [pacelc-theorem-explained](pacelc-theorem-explained.md)
 - [postgresql-logical-replication-end-to-end-flow](postgresql-logical-replication-end-to-end-flow.md)
 - [the-database-architecture-trap-almost-everyone-falls-for](the-database-architecture-trap-almost-everyone-falls-for.md)
+- [why-did-our-database-collapse-after-we-migrated-to-virtual-threads](why-did-our-database-collapse-after-we-migrated-to-virtual-threads.md)
 

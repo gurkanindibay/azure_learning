@@ -53,6 +53,9 @@ timestamp: 2026-06-18T00:00:00Z
 | UUIDv7 | [`#uuidv7`](#uuidv7) |
 | ULID | [`#ulid`](#ulid) |
 | TSID | [`#tsid`](#tsid) |
+| Connection Storm | [`#connection-storm`](#connection-storm) |
+| Connection Acquisition Latency | [`#connection-acquisition-latency`](#connection-acquisition-latency) |
+| Database Backpressure | [`#database-backpressure`](#database-backpressure) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -923,4 +926,77 @@ Time-Sorted Unique Identifier, a 64-bit distributed identifier combining a 42-bi
 
 ### Also see
 - [Snowflake ID](#snowflake-id) · [UUIDv7](#uuidv7) · [ULID](#ulid) · [B-Tree](#b-tree)
+
+---
+
+## Connection Storm {#connection-storm}
+
+A catastrophic failure mode where a sudden surge of concurrent application threads, autoscaling compute instances, or uncoordinated retries attempts to establish or acquire database connections simultaneously, exhausting database connection limits (`max_connections`) and causing connection acquisition timeouts, memory thrashing, and cascading system outages.
+
+### Key Characteristics
+- **Amplification by compute concurrency**: Lightweight thread runtimes (Java virtual threads, Go goroutines) can spawn thousands of concurrent tasks that overwhelm physical connection pools
+- **Autoscaling multiplication**: Rapid horizontal scaling of app servers multiplies total open connections across instances ($\text{Instances} \times \text{Pool Size}$), easily breaching database session limits
+- **Cascading retry storm**: Connection acquisition timeouts trigger upstream retries, which generate additional connection requests and accelerate database collapse
+- **Memory pressure**: In PostgreSQL, every backend connection allocates private memory (work_mem, backend process footprint), leading to OS OOM-kills when connections spike
+
+### When to Use / How to Prevent
+- Implement intermediate connection pooling proxies (PgBouncer, AWS RDS Proxy, Azure Database for PostgreSQL built-in PgBouncer)
+- Set strict client-side semaphores / bulkheads to limit concurrent database access
+- Use exponential backoff with jitter on database connection retry policies
+- Downsize per-instance application connection pools (e.g., HikariCP `maximumPoolSize`)
+
+### When NOT to Use / Anti-patterns
+- Do not attempt to fix a connection storm by blindly increasing database `max_connections` (this increases lock contention and context switching overhead)
+- Do not allow background threads or async batch jobs to share the primary transaction pool without rate limits
+
+### Also see
+- [Connection Pooling](#connection-pooling) · [Connection Acquisition Latency](#connection-acquisition-latency) · [Database Backpressure](#database-backpressure)
+
+---
+
+## Connection Acquisition Latency {#connection-acquisition-latency}
+
+The duration an application thread or task waits in a connection pool queue (e.g., HikariCP wait queue) to borrow an active database connection. It is the primary leading indicator of database capacity exhaustion before query latency or CPU saturation becomes visible.
+
+### Key Characteristics
+- **Leading health indicator**: Spikes in connection acquisition latency occur before downstream query latency degrades, providing early warning of pending pool exhaustion
+- **Pool queue depth**: Reflects the ratio of concurrent database callers to available pool capacity
+- **Metric keys**: Commonly exposed as `hikaricp.connections.acquire` (duration), `hikaricp.connections.pending` (threads awaiting a connection), and `hikaricp.connections.timeout` (failed acquisitions)
+- **Fast-fail trigger**: When acquisition latency exceeds configured `connectionTimeout`, the pool throws an exception to fail fast rather than hanging indefinitely
+
+### When to Use
+- Baseline alerting in APM and observability dashboards (alert when P95 acquisition latency exceeds 50–100ms)
+- Capacity planning for connection pool sizing and microservice replica autoscaling
+- Diagnosing thread starvation and long-running transaction leaks
+
+### When NOT to Use
+- Do not use acquisition latency as a substitute for query execution time monitoring; monitor both together to differentiate pool contention from slow queries
+
+### Also see
+- [Connection Pooling](#connection-pooling) · [Connection Storm](#connection-storm) · [Database Backpressure](#database-backpressure)
+
+---
+
+## Database Backpressure {#database-backpressure}
+
+A concurrency control mechanism applied at the application or gateway layer to explicitly throttle and bound the number of concurrent tasks allowed to interact with the database, protecting backend connection pools and database processes from saturation.
+
+### Key Characteristics
+- **Resource isolation**: Decouples unbounded compute concurrency (e.g., virtual threads, event loops) from strictly bounded database connection and transaction resources
+- **Implementation mechanisms**: Built using client-side semaphores (`java.util.concurrent.Semaphore`), Resilience4j Bulkheads, bounded token buckets, or reactive backpressure (`Flow`, Reactive Streams)
+- **Fast rejection & load shedding**: Excess requests queue gracefully up to a configured threshold or fail immediately with HTTP 429 / 503 instead of creating connection queue bloat
+- **Protects multi-region clusters**: Enforces local concurrency ceilings per instance, preventing distributed autoscaling from generating a connection flood
+
+### When to Use
+- Lightweight thread runtimes (Java virtual threads, Go goroutines, Kotlin coroutines) executing high-volume database operations
+- Concurrent fan-out workflows where a single API request executes multiple parallel database queries
+- Peak load events (Black Friday, flash sales) to preserve system stability under extreme traffic surges
+
+### When NOT to Use
+- Low-throughput or single-threaded background jobs where concurrency naturally remains below pool capacity
+- When an intermediate proxy (e.g., PgBouncer in transaction mode) already reliably multiplexes and queues client connections without application-level overhead
+
+### Also see
+- [Connection Pooling](#connection-pooling) · [Connection Storm](#connection-storm) · [Connection Acquisition Latency](#connection-acquisition-latency)
+
 
