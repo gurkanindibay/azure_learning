@@ -122,6 +122,12 @@ takeaway_domains:
   ai:
     file: "ai-ml-infrastructure/ai-ml-infrastructure.md"
     desc: "AI/ML Infrastructure"
+    related_files:
+      - "system-design-architecture/ai-ml-infrastructure/29-ai-key-takeaways.md"
+      - "system-design-architecture/ai-ml-infrastructure/35-ai-key-takeaways.md"
+      - "system-design-architecture/ai-ml-infrastructure/36-ai-key-takeaways.md"
+      - "system-design-architecture/ai-ml-infrastructure/37-ai-key-takeaways.md"
+      - "articles/agentic-ai/our-rag-got-better-when-we-fixed-chunking-not-embeddings.md"
   media:
     file: "media-processing/media-processing-pipelines.md"
     desc: "Media Processing"
@@ -386,6 +392,10 @@ takeaway_keywords:
   acceptance-delivery separation: broker
   notification at scale: broker
   bulk notification: broker
+  chunking: ai
+  structure-aware chunking: ai
+  semantic chunking: ai
+
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
@@ -411,6 +421,9 @@ dictionary_domains:
       - training
       - langchain
       - agent
+      - chunking
+      - chunk
+      - structure-aware
   api-design.md:
     title: "API Design"
     keywords:

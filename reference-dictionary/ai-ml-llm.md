@@ -77,6 +77,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Action Surfaces | [`#action-surfaces`](#action-surfaces) |
 | Loop Contract | [`#loop-contract`](#loop-contract) |
 | Evidence-Based Stopping | [`#evidence-based-stopping`](#evidence-based-stopping) |
+| Structure-Aware Chunking | [`#structure-aware-chunking`](#structure-aware-chunking) |
+| Semantic Chunking | [`#semantic-chunking`](#semantic-chunking) |
+| Chunk Inspection Audit | [`#chunk-inspection-audit`](#chunk-inspection-audit) |
 
 ---
 
@@ -1588,3 +1591,81 @@ The **core discipline of loop engineering**: stop a loop only when external, che
 - [Verification Loop (AI)](#verification-loop-ai)
 - [Loop Contract](#loop-contract)
 - [LLM-as-Judge](#llm-as-judge)
+
+---
+
+## Structure-Aware Chunking
+
+A **document decomposition strategy** for vector indexing that splits text along syntactic and structural document boundaries (such as paragraphs, section headers, list blocks, or Markdown headings) and maintains a calibrated sliding overlap window, rather than cutting blindly across fixed character or token counts. This ensures condition-consequence clauses, full ideas, and complete assertions remain intact within individual retrieved chunks.
+
+### Key Characteristics
+- **Structure-respecting**: Uses natural text delimiters (`\n\n`, header hierarchy, table bounds) instead of arbitrary offsets
+- **Semantic integrity**: Prevents splitting conditional clauses away from their outcomes or qualifiers
+- **Sliding overlap buffer**: Retains a small cross-boundary buffer (e.g. 50–100 characters) across consecutive chunks to preserve boundary context
+- **Empirical quality gains**: Slashes chunk count requirements while significantly improving retrieval accuracy and human-rated answer relevance
+
+### When to Use
+- Production RAG pipelines indexing structured or formatted prose (policy documents, legal agreements, technical documentation, knowledge base articles)
+- When character- or fixed-token-based chunking produces disjointed chunks that degrade retrieval precision
+- To reduce total chunks needed per LLM prompt while improving answer groundedness
+
+### When NOT to Use
+- Unstructured single-line log streams, raw memory dumps, or binary blobs without document hierarchy
+- Extremely short texts (e.g. single tweets or SMS) where the entire document already fits in a single chunk
+
+### Also see
+- [Chunking Strategy](#chunking-strategy)
+- [Semantic Chunking](#semantic-chunking)
+- [Chunk Inspection Audit](#chunk-inspection-audit)
+- [RAG](#rag)
+
+---
+
+## Semantic Chunking
+
+A **dynamic chunking technique** that determines document cut boundaries based on embedding distance or semantic similarity between neighboring sentences, placing split points where the semantic meaning between adjacent sentences drifts beyond a calibrated threshold.
+
+### Key Characteristics
+- **Distance-based splitting**: Computes sentence-level embeddings and splits when cosine distance exceeds a dynamic or static threshold
+- **Adaptive chunk lengths**: Produces variable-sized chunks corresponding to natural topic shifts in text
+- **Sensitivity to input noise**: Highly vulnerable to OCR artifacts, malformed line breaks, and missing punctuation, which cause spurious over-fragmentation
+- **Requires size clamping**: Demands explicit minimum (floor) and maximum (ceiling) size constraints to prevent ultra-thin or overly bloated chunks
+
+### When to Use
+- Long-form, cleanly edited narrative essays, research papers, or transcriptions with pristine punctuation and clear topical shifts
+- Scenarios where explicit document headers or paragraph breaks are absent or unreliable
+
+### When NOT to Use
+- Noisy OCR outputs, scanned PDFs, or uncleaned HTML with erratic line breaks (where simpler structure-aware paragraph chunking performs significantly better)
+- Latency-sensitive ingestion pipelines where computing per-sentence embeddings adds prohibitive computational cost
+
+### Also see
+- [Structure-Aware Chunking](#structure-aware-chunking)
+- [Chunking Strategy](#chunking-strategy)
+- [Embedding](#embedding)
+- [RAG](#rag)
+
+---
+
+## Chunk Inspection Audit
+
+A **systematic qualitative debugging methodology** for RAG pipelines where engineers inspect the raw, unadorned text of retrieved chunks for failing queries sentence-by-sentence, rather than relying solely on aggregate similarity scores or reflexively migrating embedding models.
+
+### Key Characteristics
+- **Data-first diagnostics**: Focuses on whether the required factual context was fully present inside any single retrieved chunk
+- **Prevents model churn**: Eliminates premature engineering cycles spent swapping embedding models when the true defect is severed chunk text
+- **Failure-mode isolation**: Separates chunking defects (half-thoughts indexed) from retriever defects (wrong chunks ranked) and generation defects (hallucination despite good context)
+
+### When to Use
+- Whenever a RAG system performs poorly or hits an accuracy plateau in production despite tuning similarity thresholds
+- When evaluating the top 20–50 failing queries during offline RAG evaluation cycles
+- Before undertaking any embedding model migration or vector database re-indexing initiative
+
+### When NOT to Use
+- Automated real-time online query serving (use lightweight cross-encoder rerankers or retrieval validation guards for inline gating)
+
+### Also see
+- [Structure-Aware Chunking](#structure-aware-chunking)
+- [RAG](#rag)
+- [Guardrails (AI)](#guardrails-ai)
+- [Context Engineering](#context-engineering)

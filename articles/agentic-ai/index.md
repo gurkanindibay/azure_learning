@@ -25,3 +25,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [Headroom — Content-Aware Token Compression for AI Agents](headroom-content-aware-token-compression.md)
 - [Graph Engineering — Multi-Factor Alpha Model](graph-engineering-multi-factor-alpha-model.md)
 - [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](harness-loop-graph-engineering.md)
+- [Our RAG Got Better When We Fixed Chunking, Not Embeddings](our-rag-got-better-when-we-fixed-chunking-not-embeddings.md)
