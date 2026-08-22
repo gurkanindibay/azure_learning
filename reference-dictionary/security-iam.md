@@ -24,6 +24,9 @@ timestamp: 2026-06-28T00:00:00Z
 | RBAC (Role-Based Access Control) | [`#rbac-role-based-access-control`](#rbac-role-based-access-control) |
 | ABAC (Attribute-Based Access Control) | [`#abac-attribute-based-access-control`](#abac-attribute-based-access-control) |
 | Least Privilege | [`#least-privilege`](#least-privilege) |
+| Argon2 | [`#argon2`](#argon2) |
+| Salt and Pepper | [`#salt-and-pepper`](#salt-and-pepper) |
+| Replay Attack | [`#replay-attack`](#replay-attack) |
 
 ---
 
@@ -245,4 +248,78 @@ A security principle stating that every component, service, credential, or user 
 
 ---
 
+## Argon2
+
+A **state-of-the-art cryptographic key derivation and password hashing function** (winner of the open Password Hashing Competition in 2015, standardized in RFC 9106) designed to resist brute-force cracking attacks conducted on high-performance GPUs, ASICs, and custom FPGA hardware.
+
+### Key Characteristics
+- **Memory-Hard Design**: Forces verification algorithms to fill and repeatedly shuffle large configurable blocks of RAM, neutralizing GPU/ASIC parallelization where fast on-chip memory is severely constrained
+- **Three Variants**:
+  - `Argon2d`: Maximizes resistance against GPU cracking using data-dependent memory access (optimal for cryptocurrencies)
+  - `Argon2i`: Uses data-independent memory addressing to eliminate side-channel and cache-timing attacks (optimal for password authentication)
+  - `Argon2id`: Hybrid standard combining `Argon2i` for initial passes and `Argon2d` for subsequent passes (recommended default)
+- **Tunable Work Cost Parameters**: Configurable Memory Cost ($m$), Time Cost iterations ($t$), and Parallelism threads ($p$) allowing security calibration as hardware advances
+
+### When to Use
+- Primary password storage and credential hashing in all new applications and identity providers
+- Deriving cryptographic encryption keys from master passwords (e.g., password managers)
+
+### When NOT to Use
+- Fast message integrity verification or API token hashing (where SHA-256 or HMAC are appropriate)
+- Severely memory-constrained microcontrollers (where bcrypt or PBKDF2 with lower memory footprint may be required)
+
+### Also see
+- [Salt and Pepper](#salt-and-pepper) · [Authentication](#authentication)
+
+---
+
+## Salt and Pepper
+
+A **defense-in-depth cryptographic password protection pattern** that combines two distinct random secret values to defend stored password hashes against rainbow table attacks and database compromise leaks.
+
+### Key Characteristics
+- **Salt (Per-User Public Secret)**:
+  - Cryptographically random unique string (at least 16 bytes) generated per user upon registration
+  - Stored in plaintext alongside the password hash in the user database record
+  - Ensures two users with identical passwords have completely different hashes, rendering precomputed rainbow tables useless
+- **Pepper (Global Application Secret)**:
+  - Secret cryptographic key (at least 32 bytes) appended to passwords before hashing or used as an HMAC key
+  - Stored **separately from the database** (in a secure Key Management Service / KMS, AWS Secrets Manager, or Hardware Security Module / HSM)
+  - If the database is compromised via SQL injection or backup leak, attackers cannot crack hashes without also breaching the isolated KMS/HSM holding the pepper
+
+### When to Use
+- Enterprise identity and authentication systems storing user passwords
+- High-security financial and healthcare identity stores meeting strict compliance standards
+
+### When NOT to Use
+- Storing high-entropy API keys or pre-shared bearer tokens (which should be hashed with SHA-256 without user salts)
+
+### Also see
+- [Argon2](#argon2) · [Authentication](#authentication) · [Least Privilege](#least-privilege)
+
+---
+
+## Replay Attack
+
+A **network security attack** where an attacker intercepts a valid data transmission or API request and maliciously repeats or delays it to perform an unauthorized action (e.g., executing duplicate payments, resubmitting login forms, or reusing valid session tokens).
+
+### Key Characteristics
+- **Payload authenticity**: The payload is unaltered and cryptographically valid, bypassing standard signature and integrity checks unless freshness mechanisms are present
+- **Eavesdropping vector**: Exploits insecure transport layers or compromised intermediaries to capture valid traffic
+- **Mitigation primitives**: Nonces, request timestamps with tight drift windows, cryptographically signed sequence numbers, TLS/mTLS session integrity, and idempotency keys
+
+### When to Use
+(Threat model identification)
+- Securing public API endpoints, financial transaction APIs, and webhook consumers against eavesdropping replay
+- Designing authentication protocols (e.g., OAuth 2.0 PKCE, Kerberos, SAML assertion freshness)
+
+### When NOT to Use
+- Not applicable (threat model)
+
+### Also see
+- [Authentication](#authentication) · [Zero Trust](#zero-trust) · [Idempotency](cqrs-event-driven.md#idempotency) · [mTLS (Mutual TLS)](hsm-cryptography.md#mtls-mutual-tls)
+
+---
+
 > **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.
+
