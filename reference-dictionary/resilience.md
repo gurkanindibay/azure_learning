@@ -47,6 +47,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Adaptive LIFO | [`#adaptive-lifo`](#adaptive-lifo) |
 | Scorecard Engine | [`#scorecard-engine`](#scorecard-engine) |
 | Retry Storm | [`#retry-storm`](#retry-storm) |
+| Virtual Waiting Room | [`#virtual-waiting-room`](#virtual-waiting-room) |
 
 ---
 
@@ -316,7 +317,7 @@ The practice of **deliberately injecting failures** into a production-like syste
 - As a one-off stunt without follow-up remediation
 
 ### Also see
-- [Defense in Depth](#defense-in-depth) · [Canary Deployment](../reference-dictionary/architecture-patterns.md#canary-deployment)
+- [Defense in Depth](#defense-in-depth) · [Canary Deployment](deployment-patterns.md#canary-deployment)
 
 ---
 
@@ -383,7 +384,7 @@ The **scope of impact** when a component fails or a change goes wrong — measur
 - Without considering correlated failure domains that amplify a small event
 
 ### Also see
-- [Bulkhead](#bulkhead) · [Correlated Failure Domain](#correlated-failure-domain) · [Circuit Breaker](#circuit-breaker) · [Canary Deployment](../reference-dictionary/architecture-patterns.md#canary-deployment)
+- [Bulkhead](#bulkhead) · [Correlated Failure Domain](#correlated-failure-domain) · [Circuit Breaker](#circuit-breaker) · [Canary Deployment](deployment-patterns.md#canary-deployment)
 
 ---
 
@@ -678,4 +679,29 @@ A **self-inflicted cascading failure** where upstream services repeatedly retry 
 
 ### Also see
 - [Circuit Breaker](#circuit-breaker) · [Exponential Backoff](#exponential-backoff) · [Jitter](#jitter) · [Thundering Herd](#thundering-herd) · [Bulkhead](#bulkhead)
+
+---
+
+## Virtual Waiting Room
+
+A **traffic shaping and admission control architecture pattern** that intercepts extreme surges of incoming web traffic during high-demand events (flash sales, concert ticketing, limited product drops) and offloads excess users into a queue before they can reach transactional backend databases.
+
+### Key Characteristics
+- **Edge interception**: Implemented at the CDN/Edge layer (Cloudflare Waiting Room, AWS CloudFront + Lambda@Edge) before requests hit origin infrastructure
+- **First-In, First-Out (FIFO) or Randomized queuing**: Users receive a cryptographically signed queue pass token with an estimated wait time and position
+- **Controlled admission throttle**: Origin servers set a maximum throughput rate (e.g., 500 users/minute); the waiting room admits only that number of authenticated queue tokens into the checkout flow
+- **Database protection**: Completely eliminates database connection exhaustion, row locking contention, and cascading service outages during traffic spikes
+
+### When to Use
+- Flash sales, Black Friday e-commerce events, and concert ticket sales (Ticketmaster, Shopify)
+- Government portals handling sudden massive public enrollment deadlines
+- Vaccine appointment booking and high-demand product releases
+
+### When NOT to Use
+- Standard steady-state web applications where autoscaling compute resources handle organic demand
+- Essential financial trading systems where placing user orders in artificial queues violates market fairness regulations
+
+### Also see
+- [Load Shedding](#load-shedding) · [Rate Limiting](api-design.md#rate-limiting) · [Cascading Failure](#cascading-failure) · [Flash Sale](architecture-patterns.md#flash-sale)
+
 
