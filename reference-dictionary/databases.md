@@ -56,6 +56,12 @@ timestamp: 2026-06-18T00:00:00Z
 | Connection Storm | [`#connection-storm`](#connection-storm) |
 | Connection Acquisition Latency | [`#connection-acquisition-latency`](#connection-acquisition-latency) |
 | Database Backpressure | [`#database-backpressure`](#database-backpressure) |
+| Skip List | [`#skip-list`](#skip-list) |
+| Ticket Server | [`#ticket-server`](#ticket-server) |
+| Inverted Index | [`#inverted-index`](#inverted-index) |
+| KSUID | [`#ksuid`](#ksuid) |
+| Trie (Prefix Tree) | [`#trie-prefix-tree`](#trie-prefix-tree) |
+| SimHash | [`#simhash`](#simhash) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -583,7 +589,7 @@ A 64-bit distributed unique identifier originally developed by Twitter, composed
 - When worker ID assignment and clock synchronization are too operationally complex
 
 ### Also see
-- [KSUID](../reference-dictionary/architecture-patterns.md#ksuid) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Database ID Strategy](../system-design-architecture/databases/database-id-strategy.md)
+- [KSUID](#ksuid) · [Shard Key](data-concurrency.md#shard-key) · [Gene-Based Sharding](data-concurrency.md#gene-based-sharding) · [Database ID Strategy](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 
@@ -605,7 +611,7 @@ A shard key composed of two or more columns combined to determine shard placemen
 - When the composite key components are not available at query time for the dominant access pattern
 
 ### Also see
-- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+- [Shard Key](data-concurrency.md#shard-key) · [Data Skew](data-architecture.md#data-skew) · [Sharding](data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 ---
 
@@ -664,7 +670,7 @@ With salting (salt range 0-3):
 - When the database natively handles hot partitions (e.g., Cosmos DB automatic partitioning, Cassandra virtual nodes)
 
 ### Also see
-- [Hot Partition](../messaging.md#hot-partition) · [Composite Shard Key](#composite-shard-key) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+- [Hot Partition](messaging.md#hot-partition) · [Composite Shard Key](#composite-shard-key) · [Shard Key](data-concurrency.md#shard-key) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 
 ---
@@ -998,5 +1004,148 @@ A concurrency control mechanism applied at the application or gateway layer to e
 
 ### Also see
 - [Connection Pooling](#connection-pooling) · [Connection Storm](#connection-storm) · [Connection Acquisition Latency](#connection-acquisition-latency)
+
+---
+
+## Skip List
+
+A **probabilistic multi-level linked list data structure** (invented by William Pugh) that provides $O(\log N)$ search, insertion, and deletion times without requiring complex tree rotations or balance operations. Skip lists power **Redis Sorted Sets (`ZSET`)** and in-memory Memtables in LSM-tree databases (e.g., LevelDB, RocksDB).
+
+### Key Characteristics
+- **Hierarchical express lanes**: The bottom layer is a standard sorted linked list containing all elements. Higher levels contain a probabilistic subset of elements (promoted with probability $p=1/2$ or $1/4$), acting as fast-forward express skips
+- **Simple lock-free concurrency**: Far easier to implement lock-free concurrent updates (via atomic CAS on pointers) than self-balancing binary search trees (AVL or Red-Black trees)
+- **Range query efficiency**: Scanning ranges (`ZRANGEBYSCORE`) is a simple pointer traversal along the bottom linked list once the start node is located
+- **Memory footprint**: Consumes approximately $1 / (1 - p)$ pointers per node on average (e.g., ~1.33 pointers per node with $p=1/4$)
+
+### When to Use
+- Real-time gaming leaderboards and ranking systems requiring high-frequency rank and score updates
+- In-memory sorted index structures in storage engines (Memtables in RocksDB)
+- Concurrency runtimes requiring lock-free concurrent ordered maps (`ConcurrentSkipListMap` in Java)
+
+### When NOT to Use
+- Disk-based persistent index storage (where B-Trees minimize expensive disk seeks via wide fan-out pages)
+- Simple unsorted key-value caching where standard Hash Tables provide $O(1)$ lookup with less memory
+
+### Also see
+- [B-Tree](#b-tree) · [Red-Black Tree](#red-black-tree) · [LSM-Tree](#lsm-tree) · [Redis Sorted Sets](caching.md#redis-sorted-sets)
+
+---
+
+## Ticket Server
+
+A **centralized distributed sequence generation architecture pattern** (popularized by Flickr) that uses dedicated relational database instances with auto-increment primary keys to generate globally unique, 64-bit monotonically increasing numerical IDs.
+
+### Key Characteristics
+- **`REPLACE INTO` idiom**: Employs SQL replacement logic (e.g., `REPLACE INTO Tickets64 (stub) VALUES ('a'); SELECT LAST_INSERT_ID();`) on a dedicated single-row table to advance the sequence without accumulating dead table rows
+- **Multi-master parity distribution**: To prevent a single point of failure (SPOF), two or more ticket servers are deployed with differing `auto_increment_increment` and `auto_increment_offset` parameters (e.g., Server 1 generates odd IDs $1, 3, 5, \dots$ and Server 2 generates even IDs $2, 4, 6, \dots$)
+- **Monotonically increasing**: Guarantees strictly increasing integer IDs, making them optimal for database B-Tree index insertions without page fragmentation
+
+### When to Use
+- Monolithic systems requiring strictly ordered 64-bit numerical IDs without coordinating complex distributed consensus
+- Medium-scale systems where snowflake time-synchronization (NTP clock drift) introduces operational complexity
+
+### When NOT to Use
+- Ultra-high throughput distributed systems (>100,000 IDs/sec) where network round-trips to a centralized database create bottlenecks (prefer Twitter Snowflake ID)
+- Systems requiring zero dependency on centralized database state
+
+### Also see
+- [Snowflake ID](#snowflake-id) · [UUIDv7](#uuidv7) · [ULID](#ulid) · [TSID](#tsid)
+
+---
+
+## Inverted Index
+
+A **search data structure** that maps each term (word, token) to the list of documents containing it. This is the foundational data structure behind full-text search engines (Google Search, Elasticsearch, Lucene). Instead of scanning every document for a query term, the inverted index provides O(1) lookup of the term followed by intersection/union of result lists.
+
+### Key Characteristics
+- **Term → Document mapping**: The inverse of a forward index (document → terms)
+- **Postings list**: Each term maps to a sorted list of document IDs (and optionally positions, term frequency)
+- **Boolean query support**: AND/OR/NOT queries are implemented as set operations on postings lists
+- **Skip lists**: Accelerate intersection by skipping over non-matching document IDs
+
+### When to Use
+- Full-text search over large document collections
+- Log search and observability (Elasticsearch, Splunk)
+- Any system where users need keyword-based retrieval from unstructured text
+
+### When NOT to Use
+- For exact-match lookups — a hash index or B-tree is simpler and faster
+- For relational queries with joins and aggregations — use a SQL database
+- When the corpus is small enough for brute-force scan
+
+### Also see
+- [B-Tree](#b-tree) · [Skip List](#skip-list) · [Bloom Filter](#bloom-filter)
+
+---
+
+## KSUID
+
+A K-Sortable Unique Identifier. A 20-byte identifier composed of a 4-byte timestamp (seconds since the KSUID epoch) and a 16-byte random payload. KSUIDs are time-sortable, require no worker coordination, and offer higher entropy than ULID.
+
+### Key Characteristics
+- **20 bytes**: Larger than UUIDs and Snowflake IDs
+- **Time-ordered**: First 4 bytes encode seconds since 2014-05-13
+- **No coordination**: Any node can generate KSUIDs independently
+- **High entropy**: 128 random bits per ID
+
+### When to Use
+- Distributed systems needing sortable IDs without worker ID assignment
+- Event streams and distributed logs where higher entropy reduces guessability
+
+### When NOT to Use
+- When storage size is constrained (20 bytes per key)
+- When millisecond-level ordering is required
+
+### Also see
+- [Snowflake ID](#snowflake-id) · [UUIDv7](#uuidv7) · [ULID](#ulid) · [TSID](#tsid) · [Database ID Strategy](../system-design-architecture/databases/database-id-strategy.md)
+
+---
+
+## Trie (Prefix Tree)
+
+A **tree data structure** where keys are usually strings, and each node represents a common character prefix. Rather than storing entire keys in individual nodes, a key's position in the tree defines its string value, enabling fast prefix lookups and autocomplete queries in $O(L)$ time, where $L$ is the length of the search string.
+
+### Key Characteristics
+- **Prefix sharing**: Common prefixes are stored once, reducing storage redundancy for dictionaries with high shared prefix ratios
+- **$O(L)$ search time**: Lookup, insertion, and deletion times depend strictly on key length $L$, completely independent of the total number of keys $N$ in the dataset
+- **Branching factor**: Each node contains an array or hash map of child pointers corresponding to the alphabet size (e.g., 26 for lowercase English, 256 for ASCII)
+- **Compact representation**: Can be optimized as a Radix Tree (Patricia Trie) by compressing single-child chains into multi-character edges
+
+### When to Use
+- Real-time search autocomplete systems (Google/Amazon search boxes)
+- IP routing lookup tables (Longest Prefix Match in network routers)
+- Spell checkers, dictionary lookup, and predictive text input
+
+### When NOT to Use
+- Pure exact-match key-value lookups where standard Hash Tables provide $O(1)$ lookup with simpler memory layouts
+- Datasets with very long keys and few shared prefixes where pointer overhead consumes excessive memory
+
+### Also see
+- [Trie Cache](caching.md#trie-cache) · [Geocoding](geospatial.md#geocoding) · [B-Tree](#b-tree)
+
+---
+
+## SimHash
+
+A **locality-sensitive hashing (LSH) algorithm** developed by Moses Charikar that maps large text documents into compact 64-bit or 128-bit integer fingerprints, such that the Hamming distance (number of differing bits) between two fingerprints is directly proportional to the semantic similarity of the original documents.
+
+### Key Characteristics
+- **Locality-sensitive**: Unlike cryptographic hash functions (MD5, SHA-256) where a single byte change scrambles the entire hash, SimHash produces similar hashes for similar documents
+- **Hamming distance threshold**: Documents with a Hamming distance $\le 3$ bits (out of 64 bits) are typically considered near-duplicates
+- **Vector weighting**: Tokenizes document words, computes hash vectors weighted by term frequency (TF-IDF), and sums bit vectors to generate the final binary fingerprint
+- **Table Partitioning**: Uses pigeonhole principle (splitting 64-bit keys into 4 tables of 16 bits) to execute sub-millisecond near-duplicate searches across billions of indexed web pages
+
+### When to Use
+- Web search crawlers (Google, Bing) detecting duplicate and mirrored web pages at web scale
+- Plagiarism detection systems and copyright infringement scanning
+- News aggregators clustering duplicate press releases across different media outlets
+
+### When NOT to Use
+- Cryptographic security, password hashing, or digital signatures where collision resistance is required
+- Short strings (under 50 words) where token frequency vectorization lacks statistical significance
+
+### Also see
+- [Inverted Index](#inverted-index) · [Bloom Filter](#bloom-filter) · [HyperLogLog](#hyperloglog)
+
 
 

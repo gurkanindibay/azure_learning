@@ -43,6 +43,13 @@ timestamp: 2026-06-14T00:00:00Z
 | Risk Parity | [`#risk-parity`](#risk-parity) |
 | Factor Decomposition | [`#factor-decomposition`](#factor-decomposition) |
 | Hidden Markov Model (Regime Detection) | [`#hidden-markov-model-regime`](#hidden-markov-model-regime) |
+| LMAX Disruptor | [`#lmax-disruptor`](#lmax-disruptor) |
+| Order Book | [`#order-book`](#order-book) |
+| Matching Engine | [`#matching-engine`](#matching-engine) |
+| Price-Time Priority (FIFO Matching) | [`#price-time-priority-fifo-matching`](#price-time-priority-fifo-matching) |
+| SWIFT Network | [`#swift-network`](#swift-network) |
+| ISO 20022 | [`#iso-20022`](#iso-20022) |
+| Kernel Bypass (DPDK/Solarflare) | [`#kernel-bypass-dpdksolarflare`](#kernel-bypass-dpdksolarflare) |
 
 ---
 
@@ -735,3 +742,169 @@ A **statistical model that segments time series into discrete hidden states (reg
 ### Also see
 - [Multi-Factor Model](#multi-factor-model)
 - [Factor Decomposition](#factor-decomposition)
+
+---
+
+## LMAX Disruptor
+
+A **high-performance inter-thread messaging framework** designed for low-latency financial trading platforms. It replaces traditional concurrent queues (which suffer from lock contention and cache-line bouncing) with a lock-free, pre-allocated circular ring buffer that uses memory barriers and cache-line padding to achieve millions of operations per second with deterministic sub-microsecond latency.
+
+### Key Characteristics
+- **Pre-allocated ring buffer**: Power-of-two array eliminating garbage collection pauses and dynamic allocation overhead
+- **Lock-free sequence numbers**: Producers and consumers claim slots using atomic CAS/memory barriers without OS mutex locks
+- **Cache-line padding**: Eliminates false sharing by ensuring independent sequence variables sit on distinct CPU L1/L2/L3 cache lines (typically 64 bytes)
+- **Batching effect**: Consumers naturally batch-read all available sequence slots when running behind, creating an adaptive backpressure valve
+
+### When to Use
+- Ultra-low-latency financial matching engines, crypto exchanges, and digital wallets
+- High-throughput event processing pipelines requiring in-memory deterministic sequencing
+- Core processing loops where GC pauses or kernel lock context switches cause unacceptable tail latencies
+
+### When NOT to Use
+- Standard web request handling where network I/O dominates processing time (>10 ms)
+- Multi-node distributed messaging where Kafka, RabbitMQ, or network queues are required
+- Low-throughput applications where standard language concurrency primitives (`BlockingQueue`, `Channel`) are much simpler
+
+### Also see
+- [Matching Engine](#matching-engine) · [Order Book](#order-book) · [Deterministic Processing](cqrs-event-driven.md#deterministic-processing)
+
+---
+
+## Order Book
+
+A **real-time electronic data structure** that organizes and records all outstanding limit buy orders (bids) and sell orders (asks) for a specific financial asset, sorted by price level and arrival timestamp.
+
+### Key Characteristics
+- **Bids and Asks separation**: Bids (highest buy price first, descending) and Asks (lowest sell price first, ascending)
+- **Price Levels**: Aggregates total volume available at discrete price points
+- **Level 2 / Level 3 Market Data**: Level 2 displays aggregate depth per price level; Level 3 exposes individual orders with unique order IDs
+- **In-memory data structures**: Typically implemented with doubly-linked lists bucketed in a B-Tree or radix tree for $O(1)$ order cancellation and $O(1)$ head execution
+
+### When to Use
+- Stock, foreign exchange, commodity, and cryptocurrency exchange architectures
+- Internal matching and crossing networks in high-frequency trading market makers
+- Limit order simulation in quantitative backtesting engines
+
+### When NOT to Use
+- Simple inventory reservation systems (e-commerce, hotel booking) where items do not have continuous bid/ask pricing
+- Systems where trades execute purely against an automated market maker (AMM) bonding curve without an order book
+
+### Also see
+- [Matching Engine](#matching-engine) · [Price-Time Priority (FIFO Matching)](#price-time-priority-fifo-matching) · [LMAX Disruptor](#lmax-disruptor)
+
+---
+
+## Matching Engine
+
+The **core deterministic algorithmic engine of an electronic exchange** that continuously evaluates incoming market and limit orders against the existing Order Book to execute trades and generate fill reports.
+
+### Key Characteristics
+- **Deterministic state machine**: Processing the identical stream of order events from a journal produces the exact same execution sequence and account balances
+- **Single-threaded core loop**: Avoids concurrency locking overhead by running order matching on a dedicated CPU core pinned to a single thread
+- **Execution algorithms**: Supports Price-Time Priority (FIFO), Pro-Rata, and Pegged matching rules
+- **Zero dynamic memory allocation**: Pre-allocates order structs at startup to eliminate latency spikes
+
+### When to Use
+- Financial exchanges, broker internalizers, and dark pools
+- Digital wallet internal ledger balance matching
+- High-frequency matching systems requiring predictable p99.99 latency < 10 microseconds
+
+### When NOT to Use
+- Distributed, loosely-coupled microservices where network round-trips make microsecond determinism irrelevant
+- Asynchronous batch clearing systems where orders are collected and cleared periodically (call auctions)
+
+### Also see
+- [Order Book](#order-book) · [Price-Time Priority (FIFO Matching)](#price-time-priority-fifo-matching) · [LMAX Disruptor](#lmax-disruptor) · [Kernel Bypass (DPDK/Solarflare)](#kernel-bypass-dpdksolarflare)
+
+---
+
+## Price-Time Priority (FIFO Matching)
+
+The **standard matching engine execution rule** where orders are prioritized first by the most competitive price, and among orders at identical prices, by the earliest arrival timestamp.
+
+### Key Characteristics
+- **Price priority first**: The highest bid (buy) and lowest ask (sell) always trade before less aggressive prices
+- **Time priority second**: At a given price level, orders are filled strictly First-In, First-Out (FIFO)
+- **Queue position retention**: Modifying an order's size downward preserves queue priority; increasing size or changing price moves the order to the back of the queue
+- **Incentivizes liquidity**: Rewards market participants who supply early liquidity and narrow the bid-ask spread
+
+### When to Use
+- Equity, equity options, and cryptocurrency limit order books
+- Any exchange system balancing fairness, transparency, and liquidity provisioning
+
+### When NOT to Use
+- Treasury and short-term interest rate futures markets that use **Pro-Rata** allocation (where fills are distributed proportionally to order size)
+- Flash sales or ticket reservations where lottery or randomized queuing is preferred to avoid bot speed advantages
+
+### Also see
+- [Order Book](#order-book) · [Matching Engine](#matching-engine)
+
+---
+
+## SWIFT Network
+
+The **Society for Worldwide Interbank Financial Telecommunication** messaging network: a secure, standardized global financial messaging infrastructure connecting over 11,000 financial institutions across 200+ countries. SWIFT does not hold funds or manage bank accounts; it securely transmits financial payment instructions between correspondent banks.
+
+### Key Characteristics
+- **Financial messaging, not settlement**: Transmits encrypted instructions; actual monetary settlement occurs across Nostro/Vostro bank accounts or central bank real-time gross settlement (RTGS) rails
+- **BIC / SWIFT Code**: 8 or 11-character standardized Business Identifier Code identifying institutions globally
+- **Legacy MT messages**: Fixed-format text messages (e.g., MT103 for customer transfers, MT202 for interbank transfers)
+- **Migration to MX (ISO 20022)**: Modernizing toward rich XML-based financial information
+
+### When to Use
+- Cross-border interbank wire transfers and international remittances
+- Trade finance, securities settlement notifications, and corporate treasury treasury reporting
+
+### When NOT to Use
+- Domestic retail real-time payment rails (e.g., FedNow, Pix, UPI, SEPA Instant) where domestic clearing houses are faster and cheaper
+- Real-time peer-to-peer micropayments
+
+### Also see
+- [ISO 20022](#iso-20022) · [ISO 8583](#iso-8583) · [Clearing Account](#clearing-account) · [Settlement](#settlement)
+
+---
+
+## ISO 20022
+
+An **international standard for electronic data interchange between financial institutions** that replaces fragmented, fixed-length legacy message formats (like SWIFT MT) with a unified, XML/JSON structured data dictionary across all financial business domains (payments, securities, cards, trade).
+
+### Key Characteristics
+- **Rich structured metadata**: Supports up to 9,000 characters per message with granular remittance details, ultimate debtor/creditor identities, and structured addresses
+- **Standardized business areas**: `pacs` (Payment Clearing and Settlement, e.g., `pacs.008`), `pain` (Payment Initiation, e.g., `pain.001`), `camt` (Cash Management, e.g., `camt.053` bank statement)
+- **Enhanced compliance & AML**: Unambiguous data fields reduce false positives in sanction screening and anti-money laundering filters
+- **Global adoption mandate**: Adopted by SWIFT, FedNow, Target2, and international RTGS systems
+
+### When to Use
+- Next-generation payment gateways, real-time gross settlement engines, and banking APIs
+- Corporate treasury integration requiring automated end-to-end invoice and remittance reconciliation
+
+### When NOT to Use
+- POS terminal transactions where bandwidth constraints favor ISO 8583 bitmap compactness
+- Ultra-low latency internal microservice communication where Protobuf/FlatBuffers are orders of magnitude faster
+
+### Also see
+- [SWIFT Network](#swift-network) · [ISO 8583](#iso-8583) · [Reconciliation](#reconciliation)
+
+---
+
+## Kernel Bypass (DPDK/Solarflare)
+
+A **networking architecture technique** that allows user-space applications to read and write network packets directly to and from the Network Interface Card (NIC) hardware buffers, completely bypassing the Linux kernel network stack (`sk_buff`, socket layer, and interrupt handlers).
+
+### Key Characteristics
+- **Zero OS context switches**: Eliminates syscall overhead and CPU interrupt handling through poll-mode drivers (PMD)
+- **Zero-copy memory access**: Directly transfers network packets between NIC hardware and user-space ring buffers (DMA)
+- **Hardware technologies**: Data Plane Development Kit (DPDK), Solarflare OpenOnload / EF_VI, RDMA (RoCE)
+- **Deterministic microsecond latency**: Drops networking transit latency from ~10–50 microseconds (kernel socket) to sub-microsecond levels (~500–800 nanoseconds)
+
+### When to Use
+- High-frequency trading (HFT) matching engines and market data ticker plants
+- Telco 5G user-plane network functions (UPF) and high-throughput software packet routers
+- Ultra-high performance distributed storage engines (NVMe-over-Fabrics)
+
+### When NOT to Use
+- Standard web and enterprise applications where conventional kernel TCP/IP stacks and non-blocking epoll runtimes provide ample performance with full security isolation
+- Virtualized multi-tenant environments where the kernel firewall (iptables/nftables) and OS network virtualization are strictly required
+
+### Also see
+- [Matching Engine](#matching-engine) · [LMAX Disruptor](#lmax-disruptor)
