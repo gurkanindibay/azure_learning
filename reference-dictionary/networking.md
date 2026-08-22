@@ -29,6 +29,22 @@ timestamp: 2026-07-04T00:00:00Z
 | Nagle's Algorithm / TCP_NODELAY | [`#nagles-algorithm-tcpnodelay`](#nagles-algorithm-tcpnodelay) |
 | Zero-Copy Transfer | [`#zero-copy-transfer`](#zero-copy-transfer) |
 | Network Partition | [`#network-partition`](#network-partition) |
+| QUIC | [`#quic`](#quic) |
+| HTTP/3 | [`#http3`](#http3) |
+| Head-of-Line (HoL) Blocking | [`#head-of-line-hol-blocking`](#head-of-line-hol-blocking) |
+| 0-RTT Connection Establishment | [`#0-rtt-connection-establishment`](#0-rtt-connection-establishment) |
+| DNS Hierarchical Resolution | [`#dns-hierarchical-resolution`](#dns-hierarchical-resolution) |
+| SMTP (Simple Mail Transfer Protocol) | [`#smtp-simple-mail-transfer-protocol`](#smtp-simple-mail-transfer-protocol) |
+| IMAP (Internet Message Access Protocol) | [`#imap-internet-message-access-protocol`](#imap-internet-message-access-protocol) |
+| POP3 (Post Office Protocol 3) | [`#pop3-post-office-protocol-3`](#pop3-post-office-protocol-3) |
+| SPF (Sender Policy Framework) | [`#spf-sender-policy-framework`](#spf-sender-policy-framework) |
+| DKIM (DomainKeys Identified Mail) | [`#dkim-domainkeys-identified-mail`](#dkim-domainkeys-identified-mail) |
+| DMARC | [`#dmarc`](#dmarc) |
+| Robots Exclusion Protocol | [`#robots-exclusion-protocol`](#robots-exclusion-protocol) |
+| Politeness Policy | [`#politeness-policy`](#politeness-policy) |
+
+---
+
 ## Anycast
 
 A **network routing technique** where the same IP address is announced from multiple physical locations (edge points of presence, or PoPs). [Border Gateway Protocol (BGP)](#bgp) directs each user's traffic to the nearest/topologically closest announcement point, typically measured by AS-hop count or latency.
@@ -489,7 +505,7 @@ A **request routing strategy** that directs traffic to the nearest healthy backe
 - When uneven load distribution causes hotspots — locality can concentrate traffic on a few local instances
 
 ### Also see
-- [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Smart Client](#smart-client) · [Pod Affinity](architecture-patterns.md#pod-affinity) · [Graceful Degradation](resilience.md#graceful-degradation)
+- [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Smart Client](#smart-client) · [Pod Affinity](deployment-patterns.md#pod-affinity) · [Graceful Degradation](resilience.md#graceful-degradation)
 
 ---
 
@@ -514,5 +530,301 @@ A **client-side service discovery and load balancing pattern** where the client 
 - When centralized traffic management (TLS termination, rate limiting, auth) is needed at the edge
 
 ### Also see
-- [Locality-Aware Routing](#locality-aware-routing) · [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Pod Affinity](architecture-patterns.md#pod-affinity)
+- [Locality-Aware Routing](#locality-aware-routing) · [Service Mesh](#service-mesh) · [Load Balancer](#load-balancer) · [Pod Affinity](deployment-patterns.md#pod-affinity)
+
+---
+
+## QUIC
+
+A **multiplexed, secure transport layer network protocol** developed by Google and standardized by the IETF (RFC 9000). QUIC runs over UDP rather than TCP, integrating TLS 1.3 encryption directly into the transport handshake to achieve reduced connection latency, seamless connection migration across network handoffs, and true independent stream multiplexing without TCP Head-of-Line blocking.
+
+### Key Characteristics
+- **UDP-based transport**: Operates in user-space over UDP port 443, enabling rapid protocol evolution without OS kernel upgrades
+- **Encrypted by default**: Embeds TLS 1.3 cryptographic handshake directly into transport setup (1-RTT or 0-RTT initial connection)
+- **Elimination of transport Head-of-Line blocking**: Independent byte streams; lost packets on Stream A stall only Stream A, while Streams B and C continue delivery unimpeded
+- **Connection Migration**: Uses 64-bit Connection IDs (CIDs) rather than the 4-tuple (IP:Port), allowing seamless uninterrupted connections when a mobile device switches from Wi-Fi to cellular LTE/5G
+
+### When to Use
+- Modern web and mobile applications operating over lossy, high-latency, or mobile cellular networks
+- Media streaming, video conferencing, and live cloud gaming
+- Primary transport substrate for HTTP/3
+
+### When NOT to Use
+- Internal data center networks where ultra-stable fiber connections render UDP multiplexing gains negligible compared to hardware-offloaded TCP NIC acceleration
+- Corporate firewalls or enterprise perimeter environments that aggressively drop or throttle non-DNS UDP traffic
+
+### Also see
+- [HTTP/3](#http3) · [Head-of-Line (HoL) Blocking](#head-of-line-hol-blocking) · [0-RTT Connection Establishment](#0-rtt-connection-establishment)
+
+---
+
+## HTTP/3
+
+The **third major version of the Hypertext Transfer Protocol**, officially standardized in RFC 9114. Unlike HTTP/1.1 and HTTP/2 which run over TCP and TLS, HTTP/3 maps HTTP semantics directly onto the **QUIC** transport layer protocol.
+
+### Key Characteristics
+- **Native QUIC integration**: Replaces TCP + TLS with QUIC, inheriting 0-RTT handshakes and native UDP framing
+- **QPACK Header Compression**: Upgraded from HTTP/2's HPACK to handle out-of-order header delivery without creating stream-level deadlocks
+- **Unified connection establishment**: Combines transport and security handshakes into a single round-trip
+- **Seamless network transitions**: Mobile clients do not disconnect or re-authenticate when changing IP addresses
+
+### When to Use
+- High-traffic public websites, APIs, and mobile backends aiming to minimize mobile user load times
+- Global e-commerce and media streaming services with high proportions of mobile and roaming users
+- Edge CDNs delivering static assets and dynamic API routes
+
+### When NOT to Use
+- Internal service-to-service microservice backbones where gRPC over HTTP/2 or plain TCP delivers lower CPU overhead
+- Legacy server environments lacking UDP load-balancing infrastructure
+
+### Also see
+- [QUIC](#quic) · [Head-of-Line (HoL) Blocking](#head-of-line-hol-blocking) · [CDN](#cdn)
+
+---
+
+## Head-of-Line (HoL) Blocking
+
+A **performance phenomenon and architectural bottleneck** where a single blocked, delayed, or lost packet or request at the front of a First-In, First-Out (FIFO) queue halts the transmission and processing of all subsequent independent items waiting behind it.
+
+### Key Characteristics
+- **HTTP/1.1 level**: Browsers could only issue one request per TCP connection at a time; slow responses blocked subsequent requests on that socket
+- **HTTP/2 level**: Solved application-level blocking via multiplexed streams, but introduced **TCP-level HoL blocking** (a single lost TCP packet halts all multiplexed streams in the TCP receive buffer)
+- **HTTP/3 / QUIC resolution**: Treats every stream as an independent transport sequence; dropped packets stall only the affected stream
+- **Message queue analogy**: A poisonous or slow message at the head of a single partition consumer queue stalling all subsequent unrelated messages
+
+### When to Use
+- Diagnosing latency spikes and throughput plateaus in HTTP/2 streams over unstable mobile connections
+- Designing message queues, streaming workers, and pipeline architectures with partitioned parallel processing
+
+### When NOT to Use
+- When strict, total sequential ordering across all entities is an absolute business requirement (e.g., single-account ledger transactions)
+
+### Also see
+- [QUIC](#quic) · [HTTP/3](#http3) · [Nagle's Algorithm / TCP_NODELAY](#nagles-algorithm-tcpnodelay)
+
+---
+
+## 0-RTT Connection Establishment
+
+A **cryptographic protocol feature** (present in TLS 1.3 and QUIC) that allows a client reconnecting to a previously visited server to transmit encrypted application payload data (such as an HTTP GET request) on the very first packet of the handshake, achieving zero round-trip latency before application data transfer.
+
+### Key Characteristics
+- **Resumed session keys**: Leverages pre-shared keys (PSK) or session tickets negotiated during a previous TLS 1.3/QUIC handshake
+- **Latency elimination**: Drops handshake delay from 2–3 RTTs (TLS 1.2 / TCP) and 1 RTT (TLS 1.3) down to 0 RTT for repeat visitors
+- **Replay attack vulnerability**: Because the initial 0-RTT data packet cannot incorporate server-generated nonces, an attacker can intercept and replay 0-RTT packets across the network
+- **Idempotency requirement**: Only strictly idempotent requests (like HTTP GET or safe queries) should ever be transmitted via 0-RTT data
+
+### When to Use
+- High-performance mobile applications and web APIs where repeat users demand instantaneous page loads
+- Global edge networks connecting clients to geographically distant origin servers
+
+### When NOT to Use
+- Non-idempotent mutations (e.g., `POST /api/v1/payments`, order checkout, account withdrawals) without anti-replay protection tokens
+- Unauthenticated or first-time client connections where 1-RTT is unavoidable
+
+### Also see
+- [QUIC](#quic) · [HTTP/3](#http3) · [Replay Attack](security-iam.md#replay-attack) · [Idempotency-Key](api-design.md#idempotency-key)
+
+---
+
+## DNS Hierarchical Resolution
+
+The **globally distributed, tiered lookup mechanism** that translates human-readable domain names (e.g., `api.example.com`) into routable IP addresses (IPv4 `A` records, IPv6 `AAAA` records) through a multi-stage tree resolution hierarchy.
+
+### Key Characteristics
+- **Recursive Resolver**: The ISP or public resolver (e.g., 8.8.8.8, 1.1.1.1) that traverses the DNS hierarchy on behalf of the client
+- **Root Nameservers**: 13 logical authoritative root server clusters (labeled A through M, deployed globally via Anycast) that direct queries to TLD servers
+- **Top-Level Domain (TLD) Nameservers**: Servers managing specific domain extensions (`.com`, `.net`, `.io`) that delegate to Authoritative Nameservers
+- **Authoritative Nameservers**: The final authority hosting the actual DNS record configurations for the specific registered domain
+- **Hierarchical Caching & TTL**: Every response carries a Time-To-Live (TTL) integer determining how long intermediate resolvers can serve cached answers
+
+### When to Use
+- Designing global traffic routing, geo-DNS load balancing, and failover architectures
+- Configuring record types: `A`/`AAAA` (host IPs), `CNAME` (canonical aliases), `MX` (mail routing), `NS` (name servers), `TXT` (domain verification, SPF/DKIM)
+
+### When NOT to Use
+- High-frequency dynamic load balancing (<5 seconds) where aggressive client/ISP DNS caching ignores low TTL values (use Anycast or L4/L7 Load Balancers instead)
+
+### Also see
+- [Anycast](#anycast) · [BGP](#bgp) · [CDN](#cdn)
+
+---
+
+## SMTP (Simple Mail Transfer Protocol)
+
+The **de facto standard internet protocol** (RFC 5321) for transmitting electronic mail across IP networks. SMTP is a push-based protocol used by clients (MUAs) to submit outbound messages to Mail Submission Agents (MSAs) and by Mail Transfer Agents (MTAs) to relay messages between domains over TCP port 25 or 587.
+
+### Key Characteristics
+- **Push-only model**: Pushes messages from sender to destination; does not support pulling or mailbox synchronization
+- **Text-based command protocol**: Communicates via ASCII commands (`HELO`/`EHLO`, `MAIL FROM`, `RCPT TO`, `DATA`, `QUIT`) with 3-digit numeric response codes
+- **Relaying**: MTAs query destination DNS `MX` records to locate receiving mail servers and route messages across intermediary hops
+- **Security extensions**: Upgraded with STARTTLS for opportunistic TLS encryption and SASL for authenticated submission
+
+### When to Use
+- Outbound transactional and marketing email delivery services (SendGrid, Mailgun, Amazon SES)
+- Inter-server mail routing between public email domains (e.g., Gmail to Outlook)
+
+### When NOT to Use
+- Client mailbox reading, folder navigation, or message deletion (use IMAP or modern REST APIs like Microsoft Graph / Gmail API)
+- Synchronous, high-throughput microservice event streaming
+
+### Also see
+- [IMAP (Internet Message Access Protocol)](#imap-internet-message-access-protocol) · [POP3 (Post Office Protocol 3)](#pop3-post-office-protocol-3) · [SPF (Sender Policy Framework)](#spf-sender-policy-framework)
+
+---
+
+## IMAP (Internet Message Access Protocol)
+
+A **standard client-server email protocol** (RFC 9051 / RFC 3501) that allows email clients to access, organize, and manipulate messages stored remotely on a mail server while maintaining continuous state synchronization across multiple devices.
+
+### Key Characteristics
+- **Two-way server-side state**: Folders, read/unread flags, stars, and draft states are stored on the server; changes on one client synchronize to all other devices
+- **On-demand header fetching**: Clients download only message headers and folder structures first, streaming heavy MIME body attachments only when explicitly opened
+- **Offline caching**: Clients cache messages locally for offline viewing and sync pending changes upon reconnection
+- **Port conventions**: TCP port 143 (plain/STARTTLS) and TCP port 993 (IMAPS over implicit TLS)
+
+### When to Use
+- Native desktop and mobile mail applications connecting to corporate or personal email servers
+- Multi-device email access requiring synchronized inbox state and unified folders
+
+### When NOT to Use
+- Scenarios where storage is severely constrained on the mail server (POP3 or local archiving may be preferred)
+- Sending outbound email (SMTP is required for delivery)
+
+### Also see
+- [SMTP (Simple Mail Transfer Protocol)](#smtp-simple-mail-transfer-protocol) · [POP3 (Post Office Protocol 3)](#pop3-post-office-protocol-3)
+
+---
+
+## POP3 (Post Office Protocol 3)
+
+A **simple, legacy client-server email retrieval protocol** (RFC 1939) designed to download emails from a remote server to a single local client and delete them from the server once retrieved.
+
+### Key Characteristics
+- **Download-and-delete model**: By default, downloads new messages to local disk storage and purges server copies
+- **One-way synchronization**: Folders created on the client do not exist on the server; read status does not replicate to other devices
+- **Minimal server resource usage**: Reduces mail server storage footprint since messages reside locally on the user's computer
+- **Port conventions**: TCP port 110 (plain/STARTTLS) and TCP port 995 (POP3S over implicit TLS)
+
+### When to Use
+- Low-bandwidth or resource-constrained environments where mail servers have minimal disk quotas
+- Single-device legacy clients with dedicated local archiving requirements
+
+### When NOT to Use
+- Modern multi-device setups (smartphone, laptop, web browser) where synchronized read/sent status across devices is mandatory
+- Shared mailbox or collaborative team workflows
+
+### Also see
+- [IMAP (Internet Message Access Protocol)](#imap-internet-message-access-protocol) · [SMTP (Simple Mail Transfer Protocol)](#smtp-simple-mail-transfer-protocol)
+
+---
+
+## SPF (Sender Policy Framework)
+
+An **email authentication standard** (RFC 7208) that enables domain owners to publish a list of authorized IP addresses and mail servers permitted to send email on behalf of their domain using a special DNS `TXT` record.
+
+### Key Characteristics
+- **DNS TXT record structure**: e.g., `v=spf1 ip4:198.51.100.0/24 include:_spf.google.com ~all`
+- **Envelope sender validation**: Receiving MTAs check the IP address of the connecting mail server against the domain found in the `Return-Path` (envelope `MAIL FROM`), not the visible header `From:`
+- **Mechanisms and Qualifiers**: `+` (Pass), `-` (Fail / HardFail), `~` (SoftFail), `?` (Neutral)
+- **10-lookup limit**: SPF checks must not exceed 10 recursive DNS lookups to protect resolvers from denial-of-service loops
+
+### When to Use
+- Mandatory configuration for all outgoing email domains to prevent domain spoofing and preserve inbox deliverability
+- Defending against phishing and forged email headers claiming to originate from your organization
+
+### When NOT to Use
+- As a standalone defense: SPF breaks when emails are forwarded by third-party intermediaries (e.g., mailing lists); must be paired with DKIM and DMARC
+
+### Also see
+- [DKIM (DomainKeys Identified Mail)](#dkim-domainkeys-identified-mail) · [DMARC](#dmarc) · [SMTP (Simple Mail Transfer Protocol)](#smtp-simple-mail-transfer-protocol)
+
+---
+
+## DKIM (DomainKeys Identified Mail)
+
+An **email authentication method** (RFC 6376) that uses public key cryptography to attach a digital signature to email messages, allowing the receiving mail server to verify that the email was sent by the domain owner and was not altered in transit.
+
+### Key Characteristics
+- **Cryptographic signature in headers**: Emits a `DKIM-Signature` header containing hashes of selected headers and message body
+- **DNS public key publication**: Domain owners publish their public key in DNS under a selector subdomain (e.g., `selector1._domainkey.example.com`)
+- **Forwarding resilient**: Unlike SPF, DKIM signatures survive email forwarding as long as the message body and signed headers are not modified
+- **Tamper evidence**: Any modification to signed subject lines, recipient fields, or message contents invalidates the cryptographic signature
+
+### When to Use
+- All outbound transactional, marketing, and corporate email systems
+- Ensuring message integrity and authenticating the sender domain cryptographically
+
+### When NOT to Use
+- Without SPF and DMARC: DKIM signs the domain in the signature header, but does not strictly enforce that the signature domain matches the user-visible `From:` address without DMARC Alignment
+
+### Also see
+- [SPF (Sender Policy Framework)](#spf-sender-policy-framework) · [DMARC](#dmarc) · [SMTP (Simple Mail Transfer Protocol)](#smtp-simple-mail-transfer-protocol)
+
+---
+
+## DMARC
+
+**Domain-based Message Authentication, Reporting, and Conformance** (RFC 7489): an email security protocol that builds upon SPF and DKIM to provide domain owners with policy control and visibility over how unauthorized emails using their domain are handled by receiving mail providers.
+
+### Key Characteristics
+- **Identifier Alignment**: Requires that the domain in the visible `From:` header matches the authenticated SPF domain or the DKIM signing domain
+- **Enforcement Policies (`p=`)**:
+  - `p=none`: Monitor mode; generate failure reports without impacting delivery
+  - `p=quarantine`: Direct failing messages to the recipient's spam/junk folder
+  - `p=reject`: Block failing messages outright at the receiving MTA
+- **Feedback & Reporting**: Receiving servers send aggregated XML reports (`rua`) and forensic failure alerts (`ruf`) to the domain owner detailing authentication passes and fails
+
+### When to Use
+- Complete enterprise protection against domain impersonation, CEO fraud, and phishing
+- Meeting modern sender deliverability requirements enforced by major providers (Google, Yahoo, Microsoft)
+
+### When NOT to Use
+- Jumping directly to `p=reject` on day one without first monitoring via `p=none` to discover legitimate third-party senders (SaaS apps, CRM, ticketing tools)
+
+### Also see
+- [SPF (Sender Policy Framework)](#spf-sender-policy-framework) · [DKIM (DomainKeys Identified Mail)](#dkim-domainkeys-identified-mail) · [SMTP (Simple Mail Transfer Protocol)](#smtp-simple-mail-transfer-protocol)
+
+---
+
+## Robots Exclusion Protocol
+
+A standard (formalized in RFC 9309) used by websites to instruct web crawlers and automated bots which URLs or path directories they are permitted or forbidden to access via a plaintext file hosted at `/robots.txt`.
+
+### Key Characteristics
+- **Standardized Directives**: Includes `User-agent` (target crawler identifier), `Disallow` (blocked URI prefixes), `Allow` (explicitly allowed subpaths), and `Sitemap` (location of XML sitemaps)
+- **Voluntary Compliance**: Client-side enforcement mechanism; ethical crawlers (Googlebot, Bingbot) strictly parse and obey rules, but malicious scrapers can ignore them
+- **Caching & Freshness**: Crawlers cache `robots.txt` files (typically for 24 hours) to avoid hammering the host server on every single page fetch
+
+### When to Use
+- Managing search engine indexing to prevent crawling of private admin consoles, internal APIs, or staging environments
+- Reducing crawler server load by excluding high-volume faceted search combinations or duplicate content URLs
+
+### When NOT to Use
+- Enforcing confidential access security or authorization (sensitive endpoints require real authentication, IAM, and firewalls — `robots.txt` is publicly visible)
+
+### Also see
+- [Politeness Policy](#politeness-policy) · [API Gateway](#api-gateway)
+
+---
+
+## Politeness Policy
+
+A **rate-limiting and scheduling architecture pattern implemented by web crawlers** to avoid overwhelming target web servers with excessive concurrent HTTP requests, preventing accidental Denial of Service (DoS) conditions during indexing.
+
+### Key Characteristics
+- **Per-Host Concurrency Limits**: Restricts the crawler to executing at most $N$ concurrent connections (often 1 or 2) against the same fully qualified domain name (FQDN)
+- **Inter-Request Delay**: Enforces a minimum delay interval (e.g., 500ms–2000ms, or respecting `Crawl-delay` directives) between consecutive requests to the same origin server
+- **Queue Partitioning**: Implements crawler URL Frontier architecture with separate FIFO queues per target host, managed by a Politeness Delay scheduler
+
+### When to Use
+- Distributed web scraping and search indexing pipelines (Apache Nutch, Scrapy)
+- Data ingestion pipelines fetching external APIs or third-party RSS feeds without explicit rate-limit headers
+
+### When NOT to Use
+- Internal microservice-to-microservice RPC calls within high-bandwidth private VPC networks (use Service Meshes, Bulkheads, and Load Balancers)
+
+### Also see
+- [Robots Exclusion Protocol](#robots-exclusion-protocol) · [Backpressure](resilience.md#backpressure) · [Rate Limiting](api-design.md#rate-limiting)
+
 
