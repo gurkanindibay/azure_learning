@@ -72,6 +72,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Dual-Write Migration | [`#dual-write-migration`](#dual-write-migration) |
 | Global Secondary Index | [`#global-secondary-index`](#global-secondary-index) |
 | Kafka Streams | [`#kafka-streams`](#kafka-streams) |
+| Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
 
 ## Client-Side Deduplication
 
@@ -1221,7 +1222,7 @@ An index in a distributed database that spans all shards and enables efficient q
 - When cross-shard queries are rare and scatter-gather is acceptable
 
 ### Also see
-- [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Cross-Shard Query](../reference-dictionary/cqrs-event-driven.md#cross-shard-query)
+- [Sharding](data-architecture.md#sharding) · [Shard Key](data-concurrency.md#shard-key) · [Cross-Shard Query](cqrs-event-driven.md#cross-shard-query)
 
 ---
 
@@ -1257,3 +1258,29 @@ A Java library (part of Apache Kafka) for building real-time stream processing a
 ### Also see
 
 - [Partition](#partition) · [Consumer Group](#consumer-group) · [KTable](#ktable) · [Exactly-Once Semantics](#exactly-once-semantics) · [Apache Flink](#apache-flink)
+
+---
+
+## Three-Layer Deduplication
+
+A defense-in-depth pattern for distributed messaging systems that applies deduplication at three independent layers: **client-side** (idempotency key on send), **server-side** (unique constraint on message ID), and **receiver-side** (seen-ID cache). Each layer protects against a different failure mode — no single layer can catch all duplicates.
+
+### Key Characteristics
+- **Client layer**: Generates a unique message ID and reuses it on retry. Prevents the sender from creating duplicate payloads during timeout-based retries.
+- **Server layer**: Uses the message ID as a primary key or unique index. Duplicate INSERT attempts fail deterministically at the database level.
+- **Receiver layer**: Maintains a short-lived LRU cache (with TTL) of recently processed message IDs. Discards incoming messages whose ID is already present.
+- **Defense in depth**: If layer 1 misses (e.g., client crash and reinstall), layer 2 catches it. If layer 2 misses (e.g., server replication lag), layer 3 catches it.
+
+### When to Use
+- Real-time messaging platforms with at-least-once delivery guarantees (WhatsApp, Telegram, Signal)
+- Payment processing and financial systems where duplicate transactions are unacceptable
+- Any system where network retries can produce semantically identical requests that must not be processed twice
+
+### When NOT to Use
+- Append-only telemetry or logging where occasional duplicates are harmless
+- Systems with strict low-latency requirements where the storage/check overhead of all three layers is prohibitive — use two layers instead
+- Stateless request-response APIs where idempotency keys alone at the server layer suffice
+
+### Also see
+- [Client-Side Deduplication](#client-side-deduplication) · [Delivery Cursor](#delivery-cursor) · [Atomic Deduplication](#atomic-deduplication) · [Deduplication Store](#deduplication-store) · [Idempotent Consumer](#idempotent-consumer) · [Idempotency](cqrs-event-driven.md#idempotency)
+
