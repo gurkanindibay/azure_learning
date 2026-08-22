@@ -735,3 +735,31 @@ dictionary_domains:
       - preemption
       - fair sharing
       - tenant hierarchy
+
+  geospatial.md:
+    title: "Geospatial & Spatial Indexing"
+    keywords:
+      - spatial
+      - geospatial
+      - geohash
+      - geohashing
+      - quadtree
+      - r-tree
+      - k-d tree
+      - kd-tree
+      - google s2
+      - s2
+      - uber h3
+      - h3
+      - hilbert curve
+      - map tile
+      - vector tile
+      - geocoding
+      - reverse geocoding
+      - haversine
+      - redis geospatial
+      - proximity
+      - geofence
+      - geofencing
+      - gis
+
