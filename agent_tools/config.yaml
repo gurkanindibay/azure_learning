@@ -109,6 +109,16 @@ takeaway_domains:
   resilience:
     file: "resilience/resilience-patterns.md"
     desc: "Resilience Patterns"
+    related_files:
+      - "system-design-architecture/resilience/resilience-patterns.md"
+      - "system-design-architecture/resilience/circuit-breaker-honesty.md"
+      - "system-design-architecture/resilience/famous-outages.md"
+      - "system-design-architecture/resilience/distributed-resilience-patterns.md"
+      - "system-design-architecture/resilience/uber-load-shedding.md"
+      - "system-design-architecture/resilience/cascading-failure-prevention.md"
+      - "system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md"
+      - "articles/resilience/one-microservice-failure-takes-down-entire-platform.md"
+      - "articles/resilience/otp-service-fails-during-peak-traffic.md"
   ai:
     file: "ai-ml-infrastructure/ai-ml-infrastructure.md"
     desc: "AI/ML Infrastructure"
@@ -308,6 +318,9 @@ takeaway_keywords:
   real user monitoring: resilience
   rum: resilience
   configuration propagation: resilience
+  otp: resilience
+  provider failover: resilience
+  totp: auth
   cap theorem: mesh
   vertical scaling: mesh
   horizontal scaling: mesh

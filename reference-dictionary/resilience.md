@@ -49,6 +49,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Retry Storm | [`#retry-storm`](#retry-storm) |
 | Virtual Waiting Room | [`#virtual-waiting-room`](#virtual-waiting-room) |
 | Retry Budget | [`#retry-budget`](#retry-budget) |
+| Provider Failover | [`#provider-failover`](#provider-failover) |
+| Client-Side Resend Backoff | [`#client-side-resend-backoff`](#client-side-resend-backoff) |
+| Queue with TTL | [`#queue-with-ttl`](#queue-with-ttl) |
 
 ---
 
@@ -728,5 +731,82 @@ A resilience mechanism that **caps the total volume or proportion of retries** p
 
 ### Also see
 - [Retry Storm](#retry-storm) · [Circuit Breaker](#circuit-breaker) · [Retry Amplification](#retry-amplification) · [Exponential Backoff](#exponential-backoff) · [Jitter](#jitter)
+
+---
+
+## Provider Failover
+
+An architectural fault tolerance pattern where requests to external third-party service providers (e.g., SMS gateways, payment processors, email delivery vendors) are dynamically routed across an **ordered multi-vendor hierarchy** (Primary $\rightarrow$ Secondary $\rightarrow$ Tertiary) based on local rate-limit token bucket tracking, circuit breaker trips, or synthetic health checks.
+
+### Key Characteristics
+- **Token bucket per vendor**: Each external provider's contract throughput quota is enforced via an independent token bucket in the routing layer
+- **Automatic spillover**: When the primary provider's bucket is exhausted or returns HTTP 429, traffic immediately fails over to the next tier without dropping user requests
+- **Active synthetic health probing**: Periodically dispatches synthetic test requests to detect carrier latency spikes or silent failures before live user traffic is impacted
+- **Dual sending for critical paths**: Concurrently dispatches through two distinct vendors for high-value transactions (e.g., password reset, payment verification), accepting whichever delivers first
+
+### When to Use
+- Mission-critical notification and OTP delivery systems dependent on external telecom aggregators
+- Payment gateway integrations where merchant downtime directly impacts business revenue
+- Any third-party SaaS dependency subject to unpredictable rate limits or regional outages
+
+### When NOT to Use
+- Internal microservice calls within the same trust and network domain (use standard load balancing and circuit breakers instead)
+- Low-volume non-critical background alerts where delayed delivery or retry is acceptable
+
+### Also see
+- [Circuit Breaker](#circuit-breaker) · [Fallback](#fallback) · [Resilience Stack](#resilience-stack) · [OTP Resilience Takeaways](../system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md#resilience-30-third-party-provider-bottlenecks--ordered-failover)
+
+---
+
+## Client-Side Resend Backoff
+
+A client-tier resilience and rate-limiting pattern that **temporarily disables repeat action triggers** (e.g., "Resend OTP", "Submit Order", "Refresh Feed") and renders a mandatory countdown timer cooldown in the user interface to prevent user-driven retry storm amplification.
+
+### Key Characteristics
+- **UI debouncing & lock**: The action button is disabled immediately upon click, preventing rapid multi-tapping
+- **Visual feedback countdown**: A dynamic timer (`Resend available in 30s...`) informs the user of expected wait time, reducing anxiety and frustration
+- **Token reuse invariant**: Re-clicking after cooldown re-sends the existing valid token instead of generating a new cryptographic secret or database record
+- **Server-side validation**: Paired with server-side rate limits and `Retry-After` HTTP headers to prevent malicious or bypassed mobile clients from flooding APIs
+
+### When to Use
+- OTP SMS/Email authentication screens and 2FA verification workflows
+- Checkout, payment submission, and order placement forms
+- Refresh and polling buttons in mobile applications
+
+### When NOT to Use
+- Read-only navigation flows where rapid interaction is normal (e.g., search autocomplete, pagination)
+- As the sole security mechanism without server-side rate limiting
+
+### Also see
+- [Retry Storm](#retry-storm) · [Rate Limiting](api-design.md#rate-limiting) · [Idempotency](cqrs-event-driven.md#idempotency) · [OTP Resilience Takeaways](../system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md#resilience-29-user-induced-retry-storms--resend-amplification)
+
+---
+
+## Queue with TTL
+
+A message queue buffering and load-leveling pattern that **attaches an explicit Time-To-Live (TTL) expiration window** to queued tasks, automatically discarding or routing stale messages to a Dead Letter Queue (DLQ) before workers waste processing capacity or external vendor API fees on expired payloads.
+
+### Key Characteristics
+- **Load leveling**: Absorbs instantaneous traffic bursts by enqueuing requests and dispatching them at a steady rate matched to downstream provider quotas
+- **Timestamp verification**: Workers compare $(T_{\text{now}} - T_{\text{enqueued}})$ against the payload validity window (e.g., discard if queued $> 4\text{ min}$ for a 5-minute OTP)
+- **Cost optimization**: Prevents spending carrier or cloud API fees to deliver tokens or notifications that the client has already abandoned or timed out on
+- **Dead letter redirection**: Expired messages route to a DLQ for monitoring, SLA tracking, and capacity planning
+
+### When to Use
+- OTP and notification delivery queues where security tokens have strict expiration windows
+- Flash sale and ephemeral reservation queues where delayed processing is invalid
+- Time-sensitive IoT telemetry and real-time command dispatching
+
+### When NOT to Use
+- Financial ledger transactions and audit event queues where every event must eventually be processed regardless of delay
+- Indefinite background batch processing jobs
+
+### Also see
+- [Dead Letter Queue](messaging.md#dead-letter-queue-dlq) · [Backpressure](#backpressure) · [Load Shedding](#load-shedding) · [CoDel](#codel-controlled-delay) · [OTP Resilience Takeaways](../system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md#resilience-31-burst-traffic-saturation--queue-buffering-with-ttl-discard)
+
+---
+
+> **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.
+
 
 

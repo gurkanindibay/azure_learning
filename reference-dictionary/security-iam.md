@@ -27,6 +27,7 @@ timestamp: 2026-06-28T00:00:00Z
 | Argon2 | [`#argon2`](#argon2) |
 | Salt and Pepper | [`#salt-and-pepper`](#salt-and-pepper) |
 | Replay Attack | [`#replay-attack`](#replay-attack) |
+| TOTP (Time-based One-Time Password) | [`#totp-time-based-one-time-password`](#totp-time-based-one-time-password) |
 
 ---
 
@@ -321,5 +322,32 @@ A **network security attack** where an attacker intercepts a valid data transmis
 
 ---
 
+## TOTP (Time-based One-Time Password)
+
+An open-standard algorithm (**RFC 6238**) that computes a dynamic, short-lived (typically 30–60s) one-time passcode from a shared cryptographic secret key and the current Unix epoch time counter. It is the core protocol powering software authenticator apps (Google Authenticator, Microsoft Authenticator, 1Password, Bitwarden) for multi-factor authentication (MFA).
+
+### Key Characteristics
+- **Mathematical time hashing**: Computes $TOTP = \text{HOTP}(K, T)$ where $T = \lfloor (\text{CurrentTime} - T0) / X \rfloor$, using HMAC-SHA1, HMAC-SHA256, or HMAC-SHA512
+- **Zero telecom dependency**: Generation occurs locally on user hardware and verification occurs on origin authentication servers — completely immune to SMS gateway rate limits, cellular carrier downtime, and SS7 routing delays
+- **Zero per-authentication cost**: Eliminates per-SMS telecommunication carrier fees ($0.05–$0.10+ per login)
+- **High security posture**: Resistant to SIM-swapping, SMS interception, and carrier routing exploits
+- **Time drift tolerance**: Verifiers typically evaluate $T \pm 1$ time step windows (30s drift window) to accommodate minor client clock skew
+
+### When to Use
+- Multi-factor authentication (MFA) and 2FA second-factor step-up verification for web and mobile applications
+- Primary fallback or replacement for SMS-based verification during peak traffic events
+- Offline or low-connectivity environments where users cannot receive SMS or phone calls
+
+### When NOT to Use
+- As the sole authentication factor without a primary password, passkey, or device biometric
+- Phone-number-first anonymous login flows where user onboarding occurs before authenticator enrollment
+- When users cannot easily install or manage authenticator applications (consider WebAuthn/Passkeys or email OTP instead)
+
+### Also see
+- [Authentication](#authentication) · [Zero Trust](#zero-trust) · [Least Privilege](#least-privilege) · [OTP Resilience Takeaways](../system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md#resilience-32-telecom-dependency-vulnerability--totp-alternative)
+
+---
+
 > **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.
+
 
