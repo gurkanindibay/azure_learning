@@ -48,8 +48,14 @@ timestamp: 2026-06-14T00:00:00Z
 | API Composition | [`#api-composition`](#api-composition) |
 | Fixed Window | [`#fixed-window`](#fixed-window) |
 | Sliding Window Log | [`#sliding-window-log`](#sliding-window-log) |
+| Sliding Window Counter | [`#sliding-window-counter`](#sliding-window-counter) |
+| Token Bucket | [`#token-bucket`](#token-bucket) |
 | Leaky Bucket | [`#leaky-bucket`](#leaky-bucket) |
 | Server-Sent Events | [`#server-sent-events`](#server-sent-events) |
+| Long Polling | [`#long-polling`](#long-polling) |
+
+---
+
 ## API Versioning
 
 The mechanism for evolving an API without breaking existing clients.
@@ -880,3 +886,75 @@ A unidirectional HTTP-based streaming protocol where the server pushes a continu
 
 ### Also see
 - [WebSocket](#websocket) · [Long-Running Operations](#long-running-operations) · [Streaming](../ai-ml-llm.md#streaming) · [gRPC Server Streaming](../concurrency-runtimes.md)
+
+---
+
+## Long Polling
+
+A **real-time HTTP communication pattern** where the client sends a request to the server, and rather than responding immediately with empty data, the server holds the HTTP connection open (suspended) until new events occur or a timeout is reached. As soon as the client receives data or times out, it immediately re-initiates another long-poll request.
+
+### Key Characteristics
+- **Simulates Server Push**: Provides near-instantaneous notification over standard HTTP/1.1 request-response cycles
+- **Firewall & Proxy Friendly**: Operates over standard HTTP/HTTPS ports without requiring specialized protocols (WebSocket) or proxy upgrades
+- **Connection Overhead**: Each event delivery terminates the TCP connection and requires re-establishing an HTTP request, creating noticeable network overhead under high update frequencies
+- **Server Threading Cost**: In thread-per-connection architectures, thousands of holding clients consume significant server memory; mitigated by non-blocking asynchronous event loops (Node.js, Netty, async/await)
+
+### When to Use
+- Environments where WebSockets are blocked by restrictive corporate proxies or firewalls
+- Systems with infrequent, sporadic updates (e.g., occasional chat messages, document status changes, ticket queues)
+- Fallback transport mechanism when WebSocket or SSE negotiation fails
+
+### When NOT to Use
+- High-frequency bidirectional streaming (e.g., multiplayer gaming, live financial tickers) where WebSocket framing overhead is 100x lower
+- Browser-only one-way feeds where native Server-Sent Events (SSE) provide built-in automatic reconnects and simpler code
+
+### Also see
+- [WebSocket](#websocket) · [Server-Sent Events](#server-sent-events) · [Rate Limiting](#rate-limiting)
+
+---
+
+## Token Bucket
+
+A **widely adopted, burst-tolerant rate-limiting algorithm** that models capacity as a bucket holding a maximum of $B$ tokens. Tokens are replenished into the bucket at a constant refill rate of $R$ tokens per second. Each incoming request attempts to consume one (or more) tokens; if sufficient tokens are present, the request is allowed; otherwise, it is dropped or delayed.
+
+### Key Characteristics
+- **Burst Tolerance**: Allows bursts of up to $B$ requests instantaneously as long as the bucket is full, while bounding sustained throughput to $R$ req/sec
+- **Memory Efficient**: Requires storing only two numbers per user/key in memory: current token count and the timestamp of the last refill calculation ($O(1)$ space)
+- **Lazy Evaluation**: Token refills are calculated dynamically on-demand during request arrival ($tokens = \min(B, tokens + elapsed \times R)$) without running background timer threads
+- **Industry Standard**: Algorithm used by Amazon AWS API Gateway, Stripe API, Envoy proxy, and Google Cloud Rate Limiting
+
+### When to Use
+- General-purpose public API rate limiting where users legitimately execute occasional quick bursts
+- Traffic shaping and packet scheduling in network routers and API gateways
+- Distributed rate limiters backed by Redis Lua scripts (e.g., Redis `HMSET` / `EVAL`)
+
+### When NOT to Use
+- Systems where strict uniform inter-arrival spacing between requests is required (use Leaky Bucket instead)
+- Multi-tier sliding analytics where exact sliding log queries are legally mandated
+
+### Also see
+- [Leaky Bucket](#leaky-bucket) · [Sliding Window Counter](#sliding-window-counter) · [Fixed Window](#fixed-window) · [Hierarchical Rate Limiting](#hierarchical-rate-limiting)
+
+---
+
+## Sliding Window Counter
+
+A **hybrid rate-limiting algorithm** that combines the low memory footprint of the Fixed Window algorithm with the smooth boundary transition protection of the Sliding Window Log algorithm. It estimates current window traffic by taking a weighted sum of request counts from the previous fixed window and the current fixed window.
+
+### Key Characteristics
+- **Smooth Boundary Enforcement**: Eliminates the 2x burst vulnerability at window edges inherent in Fixed Window counters
+- **Formula**: $Requests = CurrentWindowCount + PreviousWindowCount \times (1 - CurrentWindowProgress\%)$
+- **Extremely Low Memory**: Requires storing only two integers (previous counter and current counter) per key, compared to the potentially unbounded memory of timestamp logs in Sliding Window Log
+- **Approximation Accuracy**: Achieves ~99.9% rate-limiting accuracy under uniformly distributed traffic with $O(1)$ compute and memory
+
+### When to Use
+- High-scale distributed rate limiters protecting against traffic spikes at window boundaries (e.g., minute boundaries)
+- Memory-constrained Redis caching tiers serving hundreds of millions of distinct client IP keys
+- Cloud gateways balancing mathematical accuracy against storage cost
+
+### When NOT to Use
+- Systems with zero-tolerance for minor mathematical approximations (extreme edge bursts in non-uniform sub-windows)
+- Low-traffic services where exact Sliding Window Logs with Redis Sorted Sets (`ZREMRANGEBYSCORE`) easily fit in memory
+
+### Also see
+- [Token Bucket](#token-bucket) · [Sliding Window Log](#sliding-window-log) · [Fixed Window](#fixed-window) · [Rate Limiting](#rate-limiting)

@@ -42,6 +42,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Eventual Consistency | [`#eventual-consistency`](#eventual-consistency) |
 | Event Backbone | [`#event-backbone`](#event-backbone) |
 | Async Workflow | [`#async-workflow`](#async-workflow) |
+| Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
+| Orchestrator-based Saga | [`#orchestrator-based-saga`](#orchestrator-based-saga) |
 
 ---
 
@@ -597,4 +599,57 @@ A database query that must read data from multiple shards to produce a complete 
 - When a query can be restructured to include the shard key
 
 ### Also see
-- [Global Secondary Index](../reference-dictionary/messaging.md#global-secondary-index) · [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+- [Global Secondary Index](../reference-dictionary/messaging.md#global-secondary-index) · [Shard Key](../reference-dictionary/data-concurrency.md#shard-key) · [Sharding](../reference-dictionary/data-architecture.md#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+
+---
+
+## Deterministic Processing
+
+A design constraint on event-processing logic requiring that **the same input always produces the same output**, regardless of when or how many times processing occurs. Non-deterministic functions (`NOW()`, `UUID()`, external API calls) are replaced with values carried in the event payload or derived deterministically from it.
+
+### Key Characteristics
+- **Event-derived values only**: All processing inputs come from the event payload — no ambient state (clock, random, network)
+- **Replay-safe**: The same event stream replayed N times produces identical final state
+- **Enables event sourcing**: Deterministic processing is a prerequisite for event replay as a recovery and auditing mechanism
+- **Event-carried state transfer**: Events must carry sufficient data for consumers to process without external calls
+
+### When to Use
+- Event-sourced systems where replay is used for recovery, migration, or auditing
+- Idempotent consumers where non-determinism would break the idempotency guarantee
+- Systems requiring provable correctness through replay verification
+
+### When NOT to Use
+- When external API enrichment is essential and caching is not feasible (accept that replay may produce slightly different results)
+- Simple CRUD consumers where replay is never needed
+- When event size constraints prevent carrying all required data in the payload
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Event Replay](#event-replay) · [Idempotency](#idempotency)
+
+---
+
+## Orchestrator-based Saga
+
+A **Saga implementation pattern** where a central orchestrator service maintains the workflow state machine, issuing commands to participant services and handling failures through compensating transactions. Unlike choreography-based sagas where each service listens for events and decides its next action, the orchestrator explicitly knows which step is active, which steps completed, and which compensations to execute on failure.
+
+### Key Characteristics
+- **Centralized workflow logic**: The orchestrator owns the sequence, retry policies, timeout handling, and compensation triggers
+- **Durable state machine**: Saga state is persisted in a database — the orchestrator can crash and recover by scanning for incomplete sagas
+- **Explicit audit trail**: Every step, command, and compensation is recorded centrally, critical for payment and financial workflows
+- **Idempotency-gated commands**: Every command carries an idempotency key so retries never produce duplicate side effects
+- **Outbox pattern**: State updates and outgoing events are written in the same database transaction for atomic publication
+
+### When to Use
+- Payment workflows and financial systems where audit trails and explicit state tracking are mandatory
+- Sagas with complex branching, conditional steps, or partial-failure handling
+- When you need to pause, resume, retry, or manually intervene in an in-flight workflow
+- When the workflow logic changes frequently — centralized orchestration is easier to version and test
+
+### When NOT to Use
+- Simple, linear event chains where choreography's lower operational overhead is sufficient
+- When the orchestrator would become a scalability bottleneck (mitigate with partitioning by saga ID)
+- When the team lacks the operational maturity to manage an additional stateful service
+
+### Also see
+- [Saga Pattern](data-concurrency.md#saga-pattern) · [Compensating Transaction](data-concurrency.md#compensating-transaction) · [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Choreography-based Saga](messaging.md#choreography-based-saga)
+

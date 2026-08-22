@@ -32,6 +32,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Cross-Region Invalidation | [`#cross-region-invalidation`](#cross-region-invalidation) |
 | **Cache Failures & Resiliency** | |
 | Cache Stampede | [`#cache-stampede`](#cache-stampede) |
+| Cache Penetration | [`#cache-penetration`](#cache-penetration) |
+| Cache Breakdown | [`#cache-breakdown`](#cache-breakdown) |
+| Cache Avalanche | [`#cache-avalanche`](#cache-avalanche) |
 | PER Algorithm | [`#per-algorithm`](#per-algorithm) |
 | Request Coalescing | [`#request-coalescing`](#request-coalescing) |
 | Stale Read Rate | [`#stale-read-rate`](#stale-read-rate) |
@@ -75,6 +78,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Single-Flight Execution | [`#single-flight-execution`](#single-flight-execution) |
 | Soft TTL | [`#soft-ttl`](#soft-ttl) |
 | Probabilistic Early Invalidation | [`#probabilistic-early-invalidation`](#probabilistic-early-invalidation) |
+| Trie Cache | [`#trie-cache`](#trie-cache) |
 
 ---
 
@@ -1239,7 +1243,7 @@ Redis's built-in support for storing and querying geographic coordinates (longit
 - **Uber Eats restaurant search**: Stores restaurant locations in a GEO key — `GEORADIUS` finds all restaurants within 3 km of a user in milliseconds. Driver locations stored in a separate GEO key for nearest-driver matching.
 - **Tinder proximity matching**: Stores user locations as GEO members — `GEORADIUSBYMEMBER` discovers potential matches within a configurable radius. All ZSET-compatible, so ZREM instantly removes users who log out.
 
-**Also see**: [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes)
+**Also see**: [Geospatial & Spatial Indexing](geospatial.md) · [Geohashing](geospatial.md#geohashing) · [Redis Sorted Sets](#redis-sorted-sets) · [Redis Hashes](#redis-hashes)
 
 ---
 
@@ -1432,3 +1436,100 @@ A **Redis configuration directive** that sets the threshold at which a Hash key 
 
 ### Also see
 - [ziplist](#ziplist) · [listpack](#listpack) · [Lua Scripting (Redis)](#lua-scripting-redis)
+
+---
+
+## Cache Penetration
+
+A **cache failure mode** where incoming queries request keys that **do not exist in either the cache or the underlying database**. Because the data is absent from the database, the cache is never populated with a value, causing every repeated query for that non-existent key to completely bypass ("penetrate") the cache and hit the database directly.
+
+### Key Characteristics
+- **Bypasses cache layer completely**: Results in 0% cache hit ratio for non-existent keys
+- **Malicious or organic attack vector**: Often exploited by attackers scanning random or invalid IDs (e.g., `GET /user/-1`, `GET /item/nonexistent_uuid`) to overwhelm database connection pools
+- **Primary Mitigations**:
+  - **Bloom Filters**: Intercept incoming queries at the cache layer; if the Bloom filter indicates the key definitely does not exist in the database, return immediately without querying DB
+  - **Cache Null Objects**: Store a placeholder `null` value with a short TTL (e.g., 30–60 seconds) in the cache on DB miss
+
+### When to Use
+- Hardening public API endpoints and e-commerce product catalogs against high-volume scraping and denial-of-service scans
+- High-traffic lookup services receiving unpredictable or invalid query IDs
+
+### When NOT to Use
+- Internal trusted microservice calls with strictly validated foreign keys where non-existent queries are rare
+
+### Also see
+- [Cache Breakdown](#cache-breakdown) · [Cache Avalanche](#cache-avalanche) · [Bloom Filter](databases.md#bloom-filter)
+
+---
+
+## Cache Breakdown
+
+A **cache failure mode** (also known as a Hotspot Invalidated Stampede) where an **extremely popular hot key** that receives thousands of concurrent requests per second reaches its expiration TTL and is purged from the cache. The instantaneous burst of concurrent cache misses all hit the underlying database simultaneously to recompute the same value, causing database connection exhaustion and latency spikes.
+
+### Key Characteristics
+- **Single hot key focus**: Differs from Cache Avalanche because it involves only one or a few exceptionally high-traffic keys (e.g., breaking news story, celebrity profile, flash sale product)
+- **High concurrent miss volume**: Thousands of concurrent threads all find `cache.get(key) == null` within the same 50 millisecond window
+- **Primary Mitigations**:
+  - **Mutex Lock (Single-Flight)**: The first thread that misses acquires a distributed lock (e.g., Redis `SET key value NX EX 5`) to query the database and populate the cache, while other concurrent threads wait or sleep briefly
+  - **Logical Expiration**: Never set a physical Redis TTL; store an internal `expire_at` timestamp inside the cached value. When a worker reads a logically expired value, it returns the stale value immediately while triggering an asynchronous background job to refresh the cache
+
+### When to Use
+- Read-heavy systems with prominent hot keys (Twitter viral tweets, e-commerce home page banners)
+- Expensive computation or aggregation queries that take >100 ms to execute against the primary database
+
+### When NOT to Use
+- Low-traffic keys where occasional concurrent cache misses cause negligible database load
+
+### Also see
+- [Cache Stampede](#cache-stampede) · [Cache Penetration](#cache-penetration) · [Cache Avalanche](#cache-avalanche) · [Hot Key](#hot-key)
+
+---
+
+## Cache Avalanche
+
+A **system-wide catastrophic failure mode** where a massive volume of cached keys **expire simultaneously at the exact same point in time**, or the entire caching cluster crashes/reboots, causing a tidal wave of queries to cascade directly onto backend databases and take down the entire system.
+
+### Key Characteristics
+- **System-wide blast radius**: Affects large fractions of the dataset simultaneously rather than individual hot keys
+- **Common trigger**: Batch loading data with identical fixed TTLs (e.g., setting `TTL = 3600s` for 100,000 products loaded at midnight)
+- **Cascading failure**: High database CPU $\rightarrow$ connection pool exhaustion $\rightarrow$ service timeouts $\rightarrow$ retry storms $\rightarrow$ total outage
+- **Primary Mitigations**:
+  - **TTL Jitter**: Add a random jitter offset to expiration times (e.g., `TTL = 3600 + random(0, 600)` seconds) so keys expire smoothly over a time window
+  - **Multi-replica Cache Architecture**: Deploy high-availability Redis Cluster with sentinel failover across availability zones
+  - **Rate Limiting & Circuit Breakers**: Protect the database with circuit breakers and load shedding when cache cluster degradation occurs
+
+### When to Use
+- Designing cache population and warm-up batch scripts
+- Setting TTL policies across microservices sharing a common database tier
+- Production reliability audits for large-scale caching layers
+
+### When NOT to Use
+- Ephemeral caches where key creation is already naturally uniformly distributed throughout the day
+
+### Also see
+- [Cache Breakdown](#cache-breakdown) · [Cache Penetration](#cache-penetration) · [Cache Stampede](#cache-stampede) · [TTL (Time-To-Live)](#ttl-time-to-live)
+
+---
+
+## Trie Cache
+
+An **in-memory caching optimization for Trie data structures** that pre-computes and stores the Top-K most frequent search queries directly on each Trie node, eliminating the need to perform expensive recursive sub-tree traversals during real-time autocomplete requests.
+
+### Key Characteristics
+- **Instantaneous Top-K retrieval**: Drops search autocomplete response latency from $O(L + \text{subtree traversal})$ to $O(L)$ instant array access at the prefix node
+- **Offline frequency aggregation**: Node cached suggestions are updated asynchronously in batch (e.g., MapReduce / Spark job computing 5-minute historical frequency tables) rather than during live user keystrokes
+- **Memory vs. Latency tradeoff**: Increases Trie memory footprint significantly by duplicating string suggestion pointers across parent nodes in exchange for microsecond query latency
+- **Filtering & Moderation**: Inappropriate, banned, or low-quality suggestions are filtered during the offline cache population phase
+
+### When to Use
+- High-throughput search autocomplete engines handling tens of thousands of keystrokes per second
+- E-commerce search boxes recommending top products per prefix
+- Mobile search input suggestions where keystroke response times must remain under 50 milliseconds
+
+### When NOT to Use
+- Dynamic, personalized autocomplete where suggestions vary per individual user and cannot be shared across global prefix nodes
+- Memory-starved environments where bare Trie structures already exhaust RAM
+
+### Also see
+- [Trie (Prefix Tree)](databases.md#trie-prefix-tree) · [Cache-Aside Pattern](#cache-aside-pattern) · [Top-K](#top-k)
+

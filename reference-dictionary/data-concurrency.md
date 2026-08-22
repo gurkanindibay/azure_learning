@@ -53,6 +53,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Task Claiming | [`#task-claiming`](#task-claiming) |
 | PACELC Theorem | [`#pacelc-theorem`](#pacelc-theorem) |
 | Quorum | [`#quorum`](#quorum) |
+| Shard Key | [`#shard-key`](#shard-key) |
+| Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
+| Operational Transformation (OT) | [`#operational-transformation-ot`](#operational-transformation-ot) |
 
 ---
 
@@ -444,7 +447,7 @@ A sharding strategy where a routing "gene" — typically the low-order bits of a
 - When multiple co-location dimensions are equally important — gene-based sharding optimizes for one dimension
 
 ### Also see
-- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Composite Shard Key](../reference-dictionary/architecture-patterns.md#composite-shard-key) · [Snowflake ID](../reference-dictionary/architecture-patterns.md#snowflake-id) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+- [Shard Key](#shard-key) · [Composite Shard Key](databases.md#composite-shard-key) · [Snowflake ID](databases.md#snowflake-id) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
 
 ---
 
@@ -959,5 +962,75 @@ A directed dependency graph maintained internally by database transaction manage
 - Diagnosing database locks, latency spikes, and aborted transactions under high load
 
 **Also see**: [Lock Ordering](#lock-ordering), [Lock Contention](#lock-contention), [Pessimistic Locking](#pessimistic-locking)
+
+---
+
+## Shard Key
+
+The column or combination of columns used to determine which shard a row belongs to in a horizontally partitioned database. The shard key is the single most important design decision in sharding — a poor choice creates hotspots, cross-shard queries, and migration pain.
+
+### Key Characteristics
+- **Routing function**: The shard key is fed into a hash or range function to produce the shard identifier
+- **Immutable**: Once chosen, changing the shard key requires a full data migration
+- **Query locality**: Queries that include the shard key target a single shard; queries without it must scatter-gather across all shards
+
+### When to Use
+- Selecting a shard key during database horizontal scaling design
+- Evaluating whether an existing key satisfies dispersion, business relevance, and stability requirements
+
+### When NOT to Use
+- When a single-column key cannot satisfy all access patterns — consider a composite shard key or gene-based sharding
+- Before understanding the full query workload (at least 80% of queries should include the key)
+
+### Also see
+- [Gene-Based Sharding](#gene-based-sharding) · [Sharding](#sharding) · [Composite Shard Key](databases.md#composite-shard-key)
+
+---
+
+## Two Generals Problem
+
+A **fundamental thought experiment in distributed systems** that proves it is impossible for two parties to reach consensus over an unreliable communication channel with absolute certainty. Two generals must coordinate an attack via messengers who may be captured; no finite exchange of messages can guarantee both generals know the other received the plan — there is always a last message whose acknowledgment cannot be confirmed.
+
+### Key Characteristics
+- **Unsolvable in the general case**: No protocol can guarantee both parties agree with 100% certainty over an unreliable channel
+- **Maps to distributed systems**: Producer-consumer acknowledgment, two-phase commit, and TCP handshakes all face the same fundamental limitation — you can never be certain the last acknowledgment was received
+- **Practical mitigation**: Systems accept probabilistic guarantees (timeouts, retries, idempotency) rather than absolute certainty
+- **Originally formulated by Akkoyunlu et al. (1975) and named by Jim Gray (1978)**
+
+### When to Use
+- Understanding why exactly-once delivery is theoretically impossible in the general case
+- Explaining why at-least-once with idempotency is the pragmatic choice over exactly-once
+- Designing systems where the uncertainty of acknowledgment is explicitly accounted for
+
+### When NOT to Use
+- As an excuse to avoid building idempotency — the theoretical impossibility of perfect coordination is precisely why idempotency is mandatory
+- To argue that distributed systems are inherently unreliable and therefore not worth engineering rigorously
+
+### Also see
+- [Two-Phase Commit (2PC)](#two-phase-commit-2pc) · [Quorum](#quorum) · [At-Least-Once Semantics](messaging.md#at-least-once-semantics) · [Idempotency](cqrs-event-driven.md#idempotency)
+
+---
+
+## Operational Transformation (OT)
+
+An **optimistic concurrency control and conflict resolution algorithm** designed for real-time collaborative editing (such as Google Docs) where multiple users edit the same text document concurrently over a network without locking.
+
+### Key Characteristics
+- **Operation-based representation**: Changes are expressed as atomic operations (e.g., `Insert(pos, char)`, `Delete(pos)`) rather than entire document snapshots
+- **Transformation function**: When client operations arrive out of order, the server transforms the incoming operation's index based on previously applied operations ($T(Op_A, Op_B) \rightarrow (Op_A', Op_B')$) to ensure intention preservation
+- **Central coordination server**: Requires a single authoritative server to sequence revision numbers and broadcast transformed operations to all connected clients
+- **Convergence**: Guarantees that all client documents converge to the identical character string once all operations are received and transformed
+
+### When to Use
+- Collaborative rich-text and code editors requiring fine-grained character insertion/deletion synchronization (Google Docs, Etherpad)
+- Centralized collaborative environments where client-server latency is low and an authoritative sequencing server exists
+
+### When NOT to Use
+- Decentralized, peer-to-peer (P2P) distributed systems without a central server (use Conflict-free Replicated Data Types / CRDTs instead)
+- Complex nested non-text data structures where defining mathematical transformation matrix pairs becomes prohibitively complex
+
+### Also see
+- [CRDT (Conflict-free Replicated Data Type)](#crdt-conflict-free-replicated-data-type) · [WebSocket](api-design.md#websocket)
+
 
 

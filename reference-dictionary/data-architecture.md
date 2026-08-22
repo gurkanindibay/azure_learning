@@ -37,6 +37,16 @@ timestamp: 2026-06-28T00:00:00Z
 | Small File Problem | [`#small-file-problem`](#small-file-problem) |
 | Denormalization | [`#denormalization`](#denormalization) |
 | Data Skew | [`#data-skew`](#data-skew) |
+| Block Storage | [`#block-storage`](#block-storage) |
+| File Storage | [`#file-storage`](#file-storage) |
+| Object Storage | [`#object-storage`](#object-storage) |
+| Erasure Coding | [`#erasure-coding`](#erasure-coding) |
+| Reed-Solomon Coding | [`#reed-solomon-coding`](#reed-solomon-coding) |
+| Delta Sync | [`#delta-sync`](#delta-sync) |
+| Content-Defined Chunking (CDC) | [`#content-defined-chunking-cdc`](#content-defined-chunking-cdc) |
+| Rolling Hash | [`#rolling-hash`](#rolling-hash) |
+| Write Amplification | [`#write-amplification`](#write-amplification) |
+| Flash Translation Layer (FTL) | [`#flash-translation-layer-ftl`](#flash-translation-layer-ftl) |
 
 ---
 
@@ -553,5 +563,238 @@ An uneven distribution of data or traffic across shards in a horizontally partit
 - Before understanding the actual access patterns (measure, don't assume)
 
 ### Also see
-- [Shard Key](../reference-dictionary/architecture-patterns.md#shard-key) · [Composite Shard Key](../reference-dictionary/architecture-patterns.md#composite-shard-key) · [Sharding](#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+- [Shard Key](data-concurrency.md#shard-key) · [Composite Shard Key](databases.md#composite-shard-key) · [Sharding](#sharding) · [Sharding & Partitioning Strategies](../system-design-architecture/databases/sharding-partitioning-strategies.md)
+
+---
+
+## Block Storage
+
+A **low-level raw storage architecture** that exposes raw, unformatted data volumes partitioned into fixed-sized blocks (e.g., 512 bytes or 4 KB) addressed by Logical Block Addresses (LBA) across Storage Area Network (SAN) protocols (iSCSI, Fibre Channel, NVMe-oF) or cloud virtual disks (AWS EBS, Azure Managed Disks).
+
+### Key Characteristics
+- **No filesystem abstraction**: The storage system has no concept of files, directories, or application metadata; the operating system kernel formats blocks with a filesystem (ext4, XFS, NTFS)
+- **High IOPS & Sub-millisecond latency**: Direct block-level I/O ideal for performance-critical random read/write workloads
+- **Single-host attachment**: Typically attached exclusively to a single compute instance at a time (block locking)
+- **Granular mutability**: Allows in-place overwriting of individual 4 KB sectors without re-writing entire files
+
+### When to Use
+- Transactional database storage engines (PostgreSQL, MySQL, Oracle data files and WAL)
+- Virtual Machine (VM) boot and root operating system disks
+- High-performance random I/O transactional workloads
+
+### When NOT to Use
+- Storing unstructured media files (images, videos, PDF documents) shared across multiple web servers (use Object Storage or File Storage)
+- Highly scalable global web asset distribution over HTTP
+
+### Also see
+- [File Storage](#file-storage) · [Object Storage](#object-storage) · [Write Amplification](#write-amplification)
+
+---
+
+## File Storage
+
+A **hierarchical storage architecture** that organizes data into files and nested directories, exposing standard POSIX filesystem operations (`open`, `read`, `write`, `seek`, `rename`, `lock`) over Network Attached Storage (NAS) protocols (NFS, SMB/CIFS) or cloud managed filesystems (AWS EFS, Azure Files).
+
+### Key Characteristics
+- **Shared multi-host access**: Thousands of compute instances can mount the same file share simultaneously with concurrent read/write support
+- **POSIX compliant**: Supports directory trees, file locking, permissions (chmod/chown), and byte-range locks
+- **Hierarchical metadata overhead**: Traversing deep directory trees and updating shared file metadata (mtime, size) introduces latency overhead at extreme scale
+- **Moderate performance**: Higher latency than local Block Storage, but significantly more structured than flat Object Storage
+
+### When to Use
+- Shared application content directories, content management systems (WordPress), and user home directories
+- Legacy enterprise applications requiring standard filesystem semantics without code changes
+- High-Performance Computing (HPC) shared scratch spaces and machine learning training datasets
+
+### When NOT to Use
+- Primary storage for high-throughput relational database data files (NFS locking and network latency introduce stability risks)
+- Multi-petabyte internet-scale public asset hosting (cost per GB is much higher than Object Storage)
+
+### Also see
+- [Block Storage](#block-storage) · [Object Storage](#object-storage)
+
+---
+
+## Object Storage
+
+A **flat-namespace, highly scalable storage architecture** that manages data as discrete, immutable objects containing the raw binary payload, customizable extensible metadata, and a globally unique identifier (URI/key), accessed over HTTP REST APIs (AWS S3, Google Cloud Storage, Azure Blob Storage).
+
+### Key Characteristics
+- **Flat namespace**: No physical folder hierarchies; keys with slashes (e.g., `photos/2026/08/cat.jpg`) are simulated via prefix indexing
+- **HTTP REST API**: Manipulated via standard HTTP verbs: `GET`, `PUT`, `DELETE`, `HEAD`
+- **Immutability & Whole-object replacement**: Updating an object requires overwriting the entire object; does not support in-place byte editing/seeking
+- **Massive durability & elasticity**: Designed for 99.999999999% (11 9's) durability via multi-zone erasure coding and infinite elastic scalability
+
+### When to Use
+- Storing unstructured data at petabyte scale (videos, images, backups, log archives, data lake raw zones)
+- Static website hosting and direct-to-browser presigned uploads/downloads
+- AI/ML training datasets and Big Data analytics (Parquet/Iceberg tables)
+
+### When NOT to Use
+- Transactional database files requiring frequent small random in-place updates (use Block Storage)
+- Workloads requiring POSIX filesystem semantics (atomic directory renames, byte-range locks)
+
+### Also see
+- [Block Storage](#block-storage) · [File Storage](#file-storage) · [Erasure Coding](#erasure-coding)
+
+---
+
+## Erasure Coding
+
+A **mathematical data protection and redundancy method** that breaks a data object into $K$ data chunks and computes $M$ parity chunks (total $N = K + M$). The original data can be completely reconstructed from **any $K$ chunks** out of the $N$ total chunks, tolerating the simultaneous loss of any $M$ storage nodes.
+
+### Key Characteristics
+- **High storage efficiency**: An $8+4$ erasure coding scheme tolerates 4 node failures with only 50% storage overhead ($1.5\times$), compared to $3\times$ replication (200% overhead) for 2 node failures
+- **Reconstruction compute cost**: Reconstructing data from missing chunks requires algebraic matrix multiplication, increasing CPU utilization during drive rebuilds
+- **Network fan-out**: Reads and writes must coordinate across $N$ distinct storage nodes and failure domains (racks/zones)
+- **Substrate of modern cloud object stores**: Powers AWS S3, Google Cloud Storage, and Ceph
+
+### When to Use
+- Petabyte and exabyte-scale Object Storage systems (S3-like architectures)
+- Cold archive and backup tiers where storage hardware cost dominates compute cost
+- Distributed storage clusters requiring high fault tolerance without paying $3\times$ replication penalties
+
+### When NOT to Use
+- Low-latency transactional workloads with small write payloads (<1 MB) where chunking and parity computation overhead degrades IOPS
+- Small clusters with fewer than $K+M$ distinct physical failure domains
+
+### Also see
+- [Reed-Solomon Coding](#reed-solomon-coding) · [Object Storage](#object-storage) · [Replication](#replication)
+
+---
+
+## Reed-Solomon Coding
+
+A **linear error-correcting algebraic code** (developed by Irving Reed and Gustave Solomon) widely utilized in distributed storage systems and telecommunications to generate erasure-coded parity blocks using Galois Field ($\text{GF}(2^w)$) matrix arithmetic.
+
+### Key Characteristics
+- **Vandermonde & Cauchy Generator Matrices**: Encodes $K$ data words into $K+M$ total codewords via matrix multiplication ($G \times D = C$)
+- **Maximum Distance Separable (MDS)**: Optimal theoretical redundancy — any $K$ out of $N$ codewords can reconstruct the original $K$ data blocks by inverting a $K \times K$ submatrix
+- **SIMD/AVX Hardware Acceleration**: Modern storage libraries (Intel ISA-L) leverage CPU vector instructions to compute Galois field arithmetic at multi-gigabyte/sec throughput per core
+- **Parameter tuning**: Common profiles include $RS(8, 4)$ (1.5x overhead, 4 failures) and $RS(12, 4)$ (1.33x overhead, 4 failures)
+
+### When to Use
+- Implementing storage node failure redundancy in distributed file and object systems (HDFS 3.x, Ceph, MinIO)
+- QR codes, CD/DVD optical storage, and satellite communication error correction
+
+### When NOT to Use
+- Real-time in-memory caching tiers where raw replication is faster and CPU overhead is undesirable
+
+### Also see
+- [Erasure Coding](#erasure-coding) · [Object Storage](#object-storage)
+
+---
+
+## Delta Sync
+
+A **client-server synchronization optimization** where only the specific modified byte chunks of a modified file are transmitted across the network, rather than re-uploading the entire file.
+
+### Key Characteristics
+- **Chunk-level diffing**: Breaks files into chunks and compares cryptographic chunk hashes against the server's remote manifest
+- **Bandwidth reduction**: Editing a single paragraph in a 500 MB document transmits only the ~4 KB modified chunk rather than 500 MB
+- **State reconciliation**: Merges modified chunks into the remote file version while generating a new immutable version ID
+- **Foundation of cloud drives**: Core synchronization engine powering Google Drive, Dropbox, and Box desktop clients
+
+### When to Use
+- Cloud storage desktop and mobile synchronization clients syncing large binary or document files
+- Incremental backup systems and continuous file replication engines
+- Collaborative file syncing over bandwidth-constrained mobile networks
+
+### When NOT to Use
+- Small text files (<50 KB) where the metadata hash exchange overhead exceeds the file transfer savings
+- Append-only immutable log streams
+
+### Also see
+- [Content-Defined Chunking (CDC)](#content-defined-chunking-cdc) · [Rolling Hash](#rolling-hash) · [Object Storage](#object-storage)
+
+---
+
+## Content-Defined Chunking (CDC)
+
+A **variable-size data chunking technique** that determines chunk boundary cut-points based on the actual byte content of a file using a sliding window rolling hash (e.g., Rabin Fingerprint), rather than cutting at fixed byte offsets.
+
+### Key Characteristics
+- **Resilience to boundary shift**: In fixed-size chunking (e.g., 4 KB blocks), inserting a single byte at the beginning of a file shifts all subsequent chunk boundaries, invalidating deduplication for 100% of the file. CDC preserves all subsequent chunk boundaries
+- **Target average chunk size**: A chunk boundary is declared whenever the lowest $n$ bits of the rolling hash match a specific bitmask pattern (yielding an expected average chunk size of $2^n$ bytes)
+- **Minimum and maximum bounds**: Enforces min/max chunk size limits (e.g., min 2 KB, max 64 KB, avg 8 KB) to prevent pathological tiny or massive chunks
+- **High deduplication efficiency**: Achieves 80–95% deduplication ratios across successive versions of modified software builds, VM disk images, and user documents
+
+### When to Use
+- Enterprise backup and deduplication appliances (EMC Data Domain, BorgBackup, Restic)
+- Cloud file storage synchronization clients (Dropbox, Google Drive)
+- Container layer deduplication and VM snapshot archiving
+
+### When NOT to Use
+- Streaming media video formats (HLS/DASH) where chunking must strictly align with video keyframes (GOP boundaries)
+- Uniform, fixed-record binary databases
+
+### Also see
+- [Rolling Hash](#rolling-hash) · [Delta Sync](#delta-sync) · [GOP-Aligned Chunking](media-processing.md#gop-aligned-chunking)
+
+---
+
+## Rolling Hash
+
+A **hash function whose value can be computed in $O(1)$ constant time** for a sliding window of bytes by mathematically removing the byte exiting the window and incorporating the new byte entering the window, without re-hashing the entire window.
+
+### Key Characteristics
+- **Sliding window efficiency**: Sliding a window of size $W$ across a file of length $N$ takes $O(N)$ total time, compared to $O(N \times W)$ with non-rolling hashes (like SHA-256)
+- **Algorithms**: Rabin Fingerprint (polynomial division over Galois fields), Buzhash (cyclic bit shifting), Gear hash, and Adler-32 (used in `rsync`)
+- **Boundary triggering**: Evaluates the rolling hash value at every byte offset to detect predefined bit patterns that mark Content-Defined Chunking (CDC) cut boundaries
+- **Weak collision resistance**: Optimized for speed and distribution, not cryptographic security; once boundaries are cut, chunks are verified using cryptographic hashes (SHA-256)
+
+### When to Use
+- Content-Defined Chunking (CDC) and data deduplication engines
+- String pattern matching (Rabin-Karp search algorithm)
+- Rsync network delta compression algorithms
+
+### When NOT to Use
+- Cryptographic verification, HMAC signatures, or password storage (rolling hashes are trivial to forge)
+
+### Also see
+- [Content-Defined Chunking (CDC)](#content-defined-chunking-cdc) · [Delta Sync](#delta-sync)
+
+---
+
+## Write Amplification
+
+The **ratio of the total physical volume of data written to underlying storage media to the logical data written by the host application** ($\text{WAF} = \frac{\text{Physical Data Written}}{\text{Logical Data Written}}$). A high WAF degrades write throughput and accelerates hardware wear.
+
+### Key Characteristics
+- **SSD Flash memory cause**: NAND flash memory can be read and programmed in **pages** (e.g., 4 KB to 16 KB), but can only be erased in large **blocks** (e.g., 4 MB to 8 MB). Updating a 4 KB page requires copying the remaining valid pages in the block, erasing the block, and writing back the data, causing physical writes to exceed logical writes
+- **LSM-Tree database cause**: Periodic compaction merges and re-writes SSTables across multiple levels, rewriting existing keys repeatedly to maintain query performance
+- **Performance & endurance impact**: A WAF of 5x means writing 100 GB of application data causes 500 GB of physical NAND flash wear and bus saturation
+
+### When to Use
+- Sizing and selecting SSD drives for write-heavy database clusters (enterprise drives vs. consumer QLC drives)
+- Tuning LSM-tree database compaction strategies (Size-Tiered vs. Leveled compaction in Cassandra/RocksDB)
+- Calculating SSD longevity and Mean Time Between Failures (MTBF)
+
+### When NOT to Use
+- Pure read-heavy workloads where writes are negligible
+
+### Also see
+- [Flash Translation Layer (FTL)](#flash-translation-layer-ftl) · [LSM-Tree](databases.md#lsm-tree) · [Block Storage](#block-storage)
+
+---
+
+## Flash Translation Layer (FTL)
+
+The **embedded microcontroller firmware subsystem inside a Solid-State Drive (SSD)** that translates standard host filesystem Logical Block Addresses (LBA) into physical NAND flash memory page locations, abstracting the idiosyncrasies and physics of NAND flash from the operating system.
+
+### Key Characteristics
+- **Out-of-place writes**: Because flash pages cannot be overwritten in-place without erasing an entire block, the FTL remaps modified LBAs to fresh, pre-erased physical pages and marks the old page invalid
+- **Wear Leveling**: Dynamically distributes erase and write cycles evenly across all physical flash blocks to prevent premature burnout of localized cells
+- **Garbage Collection (GC)**: Continuously scans blocks with high invalid page ratios, relocates valid pages to a new block, and issues electrical erase commands to reclaim free blocks
+- **TRIM command support**: Receives OS notifications about deleted filesystem blocks so the FTL can skip copying dead pages during garbage collection
+
+### When to Use
+- Diagnosing SSD tail latency spikes caused by background garbage collection pauses under heavy sustained write load
+- Tuning operating system I/O schedulers and filesystem mount parameters (`noatime`, `discard`/TRIM) for enterprise storage
+
+### When NOT to Use
+- Mechanical Hard Disk Drives (HDDs) which support true in-place magnetic overwrites without erase blocks
+
+### Also see
+- [Write Amplification](#write-amplification) · [Block Storage](#block-storage)
 

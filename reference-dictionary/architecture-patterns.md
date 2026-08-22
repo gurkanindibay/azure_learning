@@ -16,6 +16,10 @@ timestamp: 2026-07-04T00:00:00Z
 
 | Term | Anchor |
 |:---|:---|
+| Business Capability | [`#business-capability`](#business-capability) |
+| Business Boundary | [`#business-boundary`](#business-boundary) |
+| Service Decomposition | [`#service-decomposition`](#service-decomposition) |
+| Service Discovery | [`#service-discovery`](#service-discovery) |
 | DDD | [`#ddd`](#ddd) |
 | Bounded Context | [`#bounded-context`](#bounded-context) |
 | Ubiquitous Language | [`#ubiquitous-language`](#ubiquitous-language) |
@@ -33,7 +37,6 @@ timestamp: 2026-07-04T00:00:00Z
 | Microservices | [`#microservices`](#microservices) |
 | Monolith | [`#monolith`](#monolith) |
 | Distributed Monolith | [`#distributed-monolith`](#distributed-monolith) |
-| Deployment Coupling | [`#deployment-coupling`](#deployment-coupling) |
 | Native Extension | [`#native-extension`](#native-extension) |
 | Technical Debt | [`#technical-debt`](#technical-debt) |
 | Upstream System | [`#upstream-system`](#upstream-system) |
@@ -46,25 +49,16 @@ timestamp: 2026-07-04T00:00:00Z
 | Presence Service | [`#presence-service`](#presence-service) |
 | Read/Write Path Separation | [`#readwrite-path-separation`](#readwrite-path-separation) |
 | Back-of-the-Envelope Estimation | [`#back-of-the-envelope-estimation`](#back-of-the-envelope-estimation) |
-| Business Boundary | [`#business-boundary`](#business-boundary) |
 | Coordination Cost | [`#coordination-cost`](#coordination-cost) |
-| Business Capability | [`#business-capability`](#business-capability) |
-| Service Decomposition | [`#service-decomposition`](#service-decomposition) |
-| Service Discovery | [`#service-discovery`](#service-discovery) |
-| Pod Affinity | [`#pod-affinity`](#pod-affinity) |
-| Node Affinity | [`#node-affinity`](#node-affinity) |
-| Orchestrator-based Saga | [`#orchestrator-based-saga`](#orchestrator-based-saga) |
-| Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
-| Replay Attack | [`#replay-attack`](#replay-attack) |
+| Forward Deployed Engineer (FDE) | [`#forward-deployed-engineer-fde`](#forward-deployed-engineer-fde) |
+| InnerSource | [`#innersource`](#innersource) |
+| MoSCoW Method | [`#moscow-method`](#moscow-method) |
 | Flash Sale | [`#flash-sale`](#flash-sale) |
-| Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
-| Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
-| Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
-| Shard Key | [`#shard-key`](#shard-key) |
-| Snowflake ID | [`#snowflake-id`](#snowflake-id) |
-| Composite Shard Key | [`#composite-shard-key`](#composite-shard-key) |
-| Cooldown | [`#cooldown`](#cooldown) |
 | Surge Pricing | [`#surge-pricing`](#surge-pricing) |
+| Cooldown | [`#cooldown`](#cooldown) |
+| URL Frontier | [`#url-frontier`](#url-frontier) |
+
+---
 
 ## Business Capability
 
@@ -410,30 +404,8 @@ Not applicable — this is an anti-pattern to detect and remediate.
 Always avoid. Prefer bounded contexts with database-per-service and async event integration.
 
 ### Also see
-- [Microservices](#microservices) · [Monolith](#monolith) · [Deployment Coupling](#deployment-coupling) · [Database Per Service](#database-per-service) · [Bounded Context](#bounded-context) · [Strangler Fig](#strangler-fig)
+- [Microservices](#microservices) · [Monolith](#monolith) · [Deployment Coupling](deployment-patterns.md#deployment-coupling) · [Database Per Service](#database-per-service) · [Bounded Context](#bounded-context) · [Strangler Fig](#strangler-fig)
 - [Microservices & Service Design — Key Takeaways](../system-design-architecture/48-svc-distributed-monolith-key-takeaways.md#svc-01-distributed-monolith-anti-pattern)
-
----
-
-## Deployment Coupling
-
-A condition in which deploying one service requires **coordinating the deployment of one or more other services**, eliminating independent deployability — a core benefit of microservices.
-
-### Key Characteristics
-- **Deployment order dependencies**: Service B must be deployed before Service A can start
-- **Shared schema migrations**: database schema changes must be applied across service boundaries simultaneously
-- **Synchronized release trains**: teams are forced to align release schedules rather than deploying on their own cadence
-- **Rollback propagation**: rolling back one service breaks others that depend on the new API or schema
-
-### When to Use
-Not applicable — this is an anti-pattern.
-
-### When NOT to Use
-Always avoid in microservices architectures. Use async events, versioned API contracts, and database-per-service to eliminate deployment dependencies.
-
-### Also see
-- [Distributed Monolith](#distributed-monolith) · [Microservices](#microservices) · [Database Per Service](#database-per-service)
-- [Microservices & Service Design — Key Takeaways](../system-design-architecture/48-svc-distributed-monolith-key-takeaways.md#svc-02-deployment-coupling-via-synchronous-call-chains)
 
 ---
 
@@ -582,103 +554,6 @@ A situation where two or more components **mutually depend on each other**, dire
 
 ---
 
-## Geohashing
-
-A **geospatial indexing technique** that encodes a latitude/longitude coordinate pair into a short alphanumeric string (geohash). Nearby locations share a common geohash prefix — the longer the shared prefix, the closer the points. Used for proximity searches, ride-matching, and location-based sharding.
-
-### Key Characteristics
-- **Hierarchical**: truncating a geohash gives a larger bounding box (less precision, wider area)
-- **Prefix-based proximity**: points with the same prefix are spatially close (with edge-case exceptions at cell boundaries)
-- **1D index for 2D space**: enables standard database indexes (B-tree) for spatial queries
-
-### When to Use
-- Proximity queries: "find all drivers within 2 km of this rider" (Uber)
-- Location-based sharding: partition data by geohash prefix so nearby entities land on the same shard
-- When a full spatial database (PostGIS) is overkill and approximate proximity is acceptable
-
-### When NOT to Use
-- When exact distance calculations are required — geohash is an approximation; use Haversine or PostGIS
-- For point-in-polygon queries (geofencing) — use a spatial library with proper polygon support
-
-### Also see
-- [Quadtree](#quadtree) · [Sharding Key Selection](../system-design-architecture/15-interview-roadmap.md#sdi-11-sharding-key-selection)
-
----
-
-## Quadtree
-
-A **tree data structure** where each internal node has exactly four children, recursively subdividing a 2D space into quadrants. Used for spatial indexing, collision detection, and image compression. In system design, quadtrees enable efficient "find all points within a radius" queries without scanning the entire dataset.
-
-### Key Characteristics
-- **Recursive subdivision**: each node represents a rectangular region; split into 4 quadrants when capacity is exceeded
-- **Sparse storage**: dense areas get deeper trees; empty areas stay shallow
-- **O(log N) spatial queries**: prunes irrelevant branches early
-
-### When to Use
-- Ride-matching: find nearby drivers (Uber)
-- Map rendering: determine which map tiles to load at a given zoom level (Google Maps)
-- Collision detection in games and simulations
-
-### When NOT to Use
-- When the dataset is small enough for brute-force distance calculations
-- When the data is uniformly distributed — a grid-based spatial index may be simpler
-- When updates are frequent and the tree must be rebalanced — consider geohashing instead
-
-### Also see
-- [Geohashing](#geohashing) · [Sharding Key Selection](../system-design-architecture/15-interview-roadmap.md#sdi-11-sharding-key-selection)
-
----
-
-## Selective Forwarding Unit (SFU)
-
-A **WebRTC media server architecture** where each participant sends their media stream to a central server, which selectively forwards it to other participants — without decoding or mixing. Unlike MCU (Multipoint Control Unit), the SFU does not transcode; it routes packets. This is the architecture behind Discord (2.5M+ concurrent voice users) and many modern video conferencing systems.
-
-### Key Characteristics
-- **Packet routing, not mixing**: the SFU forwards encoded packets; it does not decode or re-encode media
-- **Per-receiver bitrate adaptation**: sends different quality levels (simulcast) to participants based on their available bandwidth
-- **Lower CPU cost than MCU**: no transcoding means the server can handle many more concurrent streams
-- **End-to-end encryption compatible**: the SFU can forward encrypted packets it cannot read (E2EE with insertable streams)
-
-### When to Use
-- Group video/voice calls with >3 participants where peer-to-peer mesh would overwhelm each client's uplink
-- When different participants have heterogeneous bandwidth (mobile vs. desktop)
-- When end-to-end encryption is required and the server should not access raw media
-
-### When NOT to Use
-- For 1:1 calls — peer-to-peer WebRTC is simpler and avoids server cost
-- When all participants must receive identical media (e.g., live streaming to viewers) — use CDN/HLS instead
-- When legacy interop (PSTN/SIP) is required — MCU may be needed for transcoding
-
-### Also see
-- [Adaptive Bitrate Streaming](media-processing.md#adaptive-bitrate-streaming-abr) · [DASH / HLS](media-processing.md#dash-hls)
-
----
-
-## Inverted Index
-
-A **search data structure** that maps each term (word, token) to the list of documents containing it. This is the foundational data structure behind full-text search engines (Google Search, Elasticsearch, Lucene). Instead of scanning every document for a query term, the inverted index provides O(1) lookup of the term followed by intersection/union of result lists.
-
-### Key Characteristics
-- **Term → Document mapping**: the inverse of a forward index (document → terms)
-- **Postings list**: each term maps to a sorted list of document IDs (and optionally positions, term frequency)
-- **Boolean query support**: AND/OR/NOT queries are implemented as set operations on postings lists
-- **Skip lists**: accelerate intersection by skipping over non-matching document IDs
-
-### When to Use
-- Full-text search over large document collections
-- Log search and observability (Elasticsearch, Splunk)
-- Any system where users need keyword-based retrieval from unstructured text
-
-### When NOT to Use
-- For exact-match lookups — a hash index or B-tree is simpler and faster
-- For relational queries with joins and aggregations — use a SQL database
-- When the corpus is small enough for brute-force scan
-
-### Also see
-- [MapReduce](data-architecture.md#mapreduce) · [Database Index Types](databases.md)
-
----
-
 ## Base62 Encoding
 
 A binary-to-text encoding scheme that uses 62 characters: `0-9`, `a-z`, and `A-Z`. It produces shorter strings than Base64 (which uses 64 characters including `+` and `/`) while remaining URL-safe and human-readable. Commonly used to compress large numeric IDs into short tokens.
@@ -719,28 +594,6 @@ A system that maps long URLs to short, unique aliases and redirects users from t
 - When deterministic, collision-free generation is impossible to guarantee
 
 **Also see**: [Base62 Encoding](#base62-encoding) · [Key Generation Service](#key-generation-service) · [Cache-Aside Pattern](../reference-dictionary/caching.md#cache-aside-pattern) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
-
----
-
-## KSUID
-
-A K-Sortable Unique Identifier. A 20-byte identifier composed of a 4-byte timestamp (seconds since the KSUID epoch) and a 16-byte random payload. KSUIDs are time-sortable, require no worker coordination, and offer higher entropy than ULID.
-
-### Key Characteristics
-- **20 bytes**: Larger than UUIDs and Snowflake IDs
-- **Time-ordered**: First 4 bytes encode seconds since 2014-05-13
-- **No coordination**: Any node can generate KSUIDs independently
-- **High entropy**: 128 random bits per ID
-
-### When to Use
-- Distributed systems needing sortable IDs without worker ID assignment
-- Event streams and distributed logs where higher entropy reduces guessability
-
-### When NOT to Use
-- When storage size is constrained (20 bytes per key)
-- When millisecond-level ordering is required
-
-**Also see**: [Base62 Encoding](#base62-encoding) · [URL Shortener](#url-shortener) · [Database ID Generation Strategies](../system-design-architecture/databases/database-id-strategy.md)
 
 ---
 
@@ -898,130 +751,6 @@ The **organizational and runtime overhead required to keep multiple components, 
 
 ---
 
-## Pod Affinity
-
-A **Kubernetes scheduling rule** that attracts pods to nodes where other specified pods are already running, based on label selectors. Used to colocate frequently communicating workloads on the same node to minimize network latency.
-
-### Key Characteristics
-- **Preferred vs Required**: Preferred affinity is a soft constraint (scheduler tries but falls back); Required affinity is a hard constraint (pod won't schedule if unmet)
-- **Label-selector based**: Uses `matchLabels` or `matchExpressions` to identify target pods
-- **Topology key**: Defines the scope of colocation — `kubernetes.io/hostname` (same node), `topology.kubernetes.io/zone` (same AZ)
-- **Namespaces**: Can match pods across namespaces via `namespaceSelector`
-
-### When to Use
-- Services that communicate with high frequency (gRPC, REST, caching, database proxies)
-- Latency-sensitive workloads where same-node communication (~tens of microseconds) is critical
-- Shared cache or sidecar patterns where data locality improves hit rates
-
-### When NOT to Use
-- When node failure would take down all colocated replicas of a critical service — prefer spreading across nodes
-- CPU or memory-intensive colocated services that would contend for the same node resources
-- When the scheduler cannot place pods due to overly restrictive affinity rules (pod starvation)
-
-### Also see
-- [Node Affinity](#node-affinity) · [Topology Spread Constraints](#topology-spread-constraints) · [Blast Radius](resilience.md#blast-radius)
-
----
-
-## Node Affinity
-
-A **Kubernetes scheduling rule** that constrains which nodes a pod can be placed on, based on node labels. Used to target workloads to specific hardware (GPU, SSD, high-memory) or node pools.
-
-### Key Characteristics
-- **Preferred vs Required**: Same soft/hard semantics as Pod Affinity — `preferredDuringSchedulingIgnoredDuringExecution` vs `requiredDuringSchedulingIgnoredDuringExecution`
-- **Node-selector evolution**: More expressive than the older `nodeSelector` field; supports `In`, `NotIn`, `Exists`, `DoesNotExist`, `Gt`, `Lt` operators
-- **Static at schedule time**: Affinity is evaluated at scheduling time only; `IgnoredDuringExecution` means running pods are not evicted if node labels change
-
-### When to Use
-- GPU-accelerated inference or training workloads that require specific hardware
-- SSD-backed persistent storage nodes for database or stateful workloads
-- Dedicated node pools for compliance isolation (PCI-DSS, HIPAA)
-
-### When NOT to Use
-- When the required hardware type is available on all nodes — adds unnecessary scheduling constraints
-- For simple CPU/memory requirements — use resource `requests` and `limits` instead
-- When it limits the scheduler's ability to pack workloads efficiently across the cluster
-
-### Also see
-- [Pod Affinity](#pod-affinity) · [Topology Spread Constraints](#topology-spread-constraints)
-
----
-
-## Orchestrator-based Saga
-
-A **Saga implementation pattern** where a central orchestrator service maintains the workflow state machine, issuing commands to participant services and handling failures through compensating transactions. Unlike choreography-based sagas where each service listens for events and decides its next action, the orchestrator explicitly knows which step is active, which steps completed, and which compensations to execute on failure.
-
-### Key Characteristics
-- **Centralized workflow logic**: The orchestrator owns the sequence, retry policies, timeout handling, and compensation triggers
-- **Durable state machine**: Saga state is persisted in a database — the orchestrator can crash and recover by scanning for incomplete sagas
-- **Explicit audit trail**: Every step, command, and compensation is recorded centrally, critical for payment and financial workflows
-- **Idempotency-gated commands**: Every command carries an idempotency key so retries never produce duplicate side effects
-- **Outbox pattern**: State updates and outgoing events are written in the same database transaction for atomic publication
-
-### When to Use
-- Payment workflows and financial systems where audit trails and explicit state tracking are mandatory
-- Sagas with complex branching, conditional steps, or partial-failure handling
-- When you need to pause, resume, retry, or manually intervene in an in-flight workflow
-- When the workflow logic changes frequently — centralized orchestration is easier to version and test
-
-### When NOT to Use
-- Simple, linear event chains where choreography's lower operational overhead is sufficient
-- When the orchestrator would become a scalability bottleneck (mitigate with partitioning by saga ID)
-- When the team lacks the operational maturity to manage an additional stateful service
-
-### Also see
-- [Saga Pattern](data-concurrency.md#saga-pattern) · [Compensating Transaction](data-concurrency.md#compensating-transaction) · [Idempotency Key](cqrs-event-driven.md#idempotency-key) · [Outbox Pattern](cqrs-event-driven.md#outbox-pattern) · [Choreography-based Saga](messaging.md#choreography-based-saga)
-
----
-
-## Topology Spread Constraints
-
-A **Kubernetes scheduling mechanism** that controls how pods are distributed across failure domains (nodes, zones, regions). Balances availability (spreading to survive domain failures) against latency (colocating to minimize network cost).
-
-### Key Characteristics
-- **maxSkew**: The maximum allowed imbalance — e.g., `maxSkew: 1` means no domain can have more than 1 extra pod vs the least-populated domain
-- **Topology key**: Defines the domain boundary — `topology.kubernetes.io/zone` (AZ-level), `kubernetes.io/hostname` (node-level)
-- **WhenUnsatisfiable**: `DoNotSchedule` (hard) or `ScheduleAnyway` (soft — schedules but skew may exceed maxSkew)
-- **Counterbalance to affinity**: Where Pod Affinity pulls pods together, Topology Spread pushes them apart
-
-### When to Use
-- Ensuring high availability by distributing replicas across availability zones
-- Preventing correlated failures where all replicas land on a single node
-- Multi-zone deployments where zone-level redundancy is required
-
-### When NOT to Use
-- When colocation is more important than spread (use Pod Affinity instead)
-- Small clusters where the number of domains exceeds the number of replicas
-- When `maxSkew: 1` is too strict for the workload and causes scheduling failures
-
-### Also see
-- [Pod Affinity](#pod-affinity) · [Node Affinity](#node-affinity) · [Correlated Failure Domain](resilience.md#correlated-failure-domain)
-
----
-
-## Replay Attack
-
-An attack in which an adversary captures a valid request or message and sends it again to repeat an operation or gain an unintended effect. Idempotency keys reduce accidental retries but do not replace authentication, authorization, expiry, or ownership checks.
-
-### Key Characteristics
-- Reuses a previously valid request rather than forging a new one
-- Can repeat a payment, state change, or privileged command if freshness is not verified
-- Requires a freshness or uniqueness control such as a nonce, timestamp window, sequence number, or operation key
-
-### When to Use
-- Reviewing authenticated APIs and event consumers that accept retried or delayed messages
-- Protecting financial operations and other non-idempotent commands from captured requests
-
-### When NOT to Use
-- As a substitute for authentication or authorization
-- As the sole protection when a client-generated key can be observed and reused by another principal
-
-### Also see
-- [Idempotency-Key](api-design.md#idempotency-key)
-- [Authentication and Authorization](security-iam.md)
-
----
-
 ## Forward Deployed Engineer (FDE)
 
 An engineering role where the engineer **embeds directly within customer ecosystems**, writing production code alongside the customer's own engineering teams to customize solutions, perform intense troubleshooting, and accelerate product adoption in high-stakes environments — as opposed to providing professional services on an on-demand basis.
@@ -1136,148 +865,7 @@ A time-limited, high-traffic sales event where a limited quantity of inventory i
 
 ---
 
-## Three-Layer Deduplication
-
-A defense-in-depth pattern for distributed messaging systems that applies deduplication at three independent layers: **client-side** (idempotency key on send), **server-side** (unique constraint on message ID), and **receiver-side** (seen-ID cache). Each layer protects against a different failure mode — no single layer can catch all duplicates.
-
-### Key Characteristics
-- **Client layer**: Generates a unique message ID and reuses it on retry. Prevents the sender from creating duplicate payloads during timeout-based retries.
-- **Server layer**: Uses the message ID as a primary key or unique index. Duplicate INSERT attempts fail deterministically at the database level.
-- **Receiver layer**: Maintains a short-lived LRU cache (with TTL) of recently processed message IDs. Discards incoming messages whose ID is already present.
-- **Defense in depth**: If layer 1 misses (e.g., client crash and reinstall), layer 2 catches it. If layer 2 misses (e.g., server replication lag), layer 3 catches it.
-
-### When to Use
-- Real-time messaging platforms with at-least-once delivery guarantees (WhatsApp, Telegram, Signal)
-- Payment processing and financial systems where duplicate transactions are unacceptable
-- Any system where network retries can produce semantically identical requests that must not be processed twice
-
-### When NOT to Use
-- Append-only telemetry or logging where occasional duplicates are harmless
-- Systems with strict low-latency requirements where the storage/check overhead of all three layers is prohibitive — use two layers instead
-- Stateless request-response APIs where idempotency keys alone at the server layer suffice
-
-### Also see
-- [Client-Side Deduplication](../reference-dictionary/messaging.md#client-side-deduplication) · [Delivery Cursor](../reference-dictionary/messaging.md#delivery-cursor) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
-
----
-
-## Two Generals Problem
-
-A **fundamental thought experiment in distributed systems** that proves it is impossible for two parties to reach consensus over an unreliable communication channel with absolute certainty. Two generals must coordinate an attack via messengers who may be captured; no finite exchange of messages can guarantee both generals know the other received the plan — there is always a last message whose acknowledgment cannot be confirmed.
-
-### Key Characteristics
-- **Unsolvable in the general case**: No protocol can guarantee both parties agree with 100% certainty over an unreliable channel
-- **Maps to distributed systems**: Producer-consumer acknowledgment, two-phase commit, and TCP handshakes all face the same fundamental limitation — you can never be certain the last acknowledgment was received
-- **Practical mitigation**: Systems accept probabilistic guarantees (timeouts, retries, idempotency) rather than absolute certainty
-- **Originally formulated by Akkoyunlu et al. (1975) and named by Jim Gray (1978)**
-
-### When to Use
-- Understanding why exactly-once delivery is theoretically impossible in the general case
-- Explaining why at-least-once with idempotency is the pragmatic choice over exactly-once
-- Designing systems where the uncertainty of acknowledgment is explicitly accounted for
-
-### When NOT to Use
-- As an excuse to avoid building idempotency — the theoretical impossibility of perfect coordination is precisely why idempotency is mandatory
-- To argue that distributed systems are inherently unreliable and therefore not worth engineering rigorously
-
-### Also see
-- [At-Least-Once Semantics](../reference-dictionary/messaging.md#at-least-once-semantics) · [Exactly-Once Semantics](../reference-dictionary/messaging.md#exactly-once-semantics) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
-
----
-
-## Deterministic Processing
-
-A design constraint on event-processing logic requiring that **the same input always produces the same output**, regardless of when or how many times processing occurs. Non-deterministic functions (`NOW()`, `UUID()`, external API calls) are replaced with values carried in the event payload or derived deterministically from it.
-
-### Key Characteristics
-- **Event-derived values only**: All processing inputs come from the event payload — no ambient state (clock, random, network)
-- **Replay-safe**: The same event stream replayed N times produces identical final state
-- **Enables event sourcing**: Deterministic processing is a prerequisite for event replay as a recovery and auditing mechanism
-- **Event-carried state transfer**: Events must carry sufficient data for consumers to process without external calls
-
-### When to Use
-- Event-sourced systems where replay is used for recovery, migration, or auditing
-- Idempotent consumers where non-determinism would break the idempotency guarantee
-- Systems requiring provable correctness through replay verification
-
-### When NOT to Use
-- When external API enrichment is essential and caching is not feasible (accept that replay may produce slightly different results)
-- Simple CRUD consumers where replay is never needed
-- When event size constraints prevent carrying all required data in the payload
-
-### Also see
-- [Event Sourcing](../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Event Replay](../reference-dictionary/cqrs-event-driven.md#event-replay) · [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency)
-
----
-
-## Shard Key
-
-The column or combination of columns used to determine which shard a row belongs to in a horizontally partitioned database. The shard key is the single most important design decision in sharding — a poor choice creates hotspots, cross-shard queries, and migration pain.
-
-### Key Characteristics
-- **Routing function**: The shard key is fed into a hash or range function to produce the shard identifier
-- **Immutable**: Once chosen, changing the shard key requires a full data migration
-- **Query locality**: Queries that include the shard key target a single shard; queries without it must scatter-gather across all shards
-
-### When to Use
-- Selecting a shard key during database horizontal scaling design
-- Evaluating whether an existing key satisfies dispersion, business relevance, and stability requirements
-
-### When NOT to Use
-- When a single-column key cannot satisfy all access patterns — consider a composite shard key or gene-based sharding
-- Before understanding the full query workload (at least 80% of queries should include the key)
-
-### Also see
-- [Composite Shard Key](#composite-shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Sharding](../reference-dictionary/data-architecture.md#sharding)
-
----
-
-## Snowflake ID
-
-A 64-bit globally unique identifier format, originally developed by Twitter, that embeds a timestamp, machine ID, and sequence number into a single integer. Unlike UUIDs, Snowflake IDs are roughly time-sortable and only 8 bytes — making them B-tree-friendly for database primary keys.
-
-### Key Characteristics
-- **64-bit structure**: `[sign:1][timestamp:41][machine:10][sequence:12]` in the classic layout
-- **Time-sortable**: The timestamp in the high bits means IDs generated later are numerically larger — sequential inserts to B-tree indexes
-- **Decentralized generation**: No coordination needed between ID generators; each machine gets a unique machine ID
-- **Customizable layout**: Bits can be repurposed — e.g., gene-based sharding replaces machine bits with a shard-routing gene extracted from `user_id`
-
-### When to Use
-- Distributed systems that need unique, sortable IDs without a central coordinator
-- Database primary keys where B-tree locality matters and UUIDs would cause page splits
-- Order systems where the ID itself should encode routing information (gene-based sharding)
-
-### When NOT to Use
-- When IDs must be fully opaque (Snowflake IDs leak timestamp and machine origin)
-- When the 69-year timestamp range (from custom epoch) is insufficient
-- When coordination-free generation is not needed — auto-increment is simpler for single-instance databases
-
-### Also see
-- [Shard Key](#shard-key) · [Composite Shard Key](#composite-shard-key) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding) · [Database ID Strategies](../system-design-architecture/databases/database-id-strategy.md)
-
----
-
-## Composite Shard Key
-
-A shard key composed of two or more columns combined via hashing or concatenation to distribute data more evenly than any single column can. Composite keys address hotspots by mixing a high-traffic dimension (e.g., `merchant_id`) with a high-cardinality dimension (e.g., `user_id`).
-
-### Key Characteristics
-- **Multi-column routing**: `hash(merchant_id + user_id) % N` or `(merchant_id + "_" + user_id) % N`
-- **Hotspot mitigation**: Spreads a popular merchant's traffic across shards by including the user dimension
-- **Tradeoff with query locality**: Merchant-level queries become cross-shard since the merchant's data is no longer co-located
-- **Alternative to gene-based sharding**: Composite keys work at the application-routing layer; gene-based sharding embeds routing in the ID itself
-
-### When to Use
-- Flash-sale or peak-traffic scenarios where a single entity (merchant, event, campaign) would saturate one shard
-- When no single column satisfies all three shard-key principles (dispersion, business relevance, stability)
-
-### When NOT to Use
-- When the secondary dimension has low cardinality — a two-column key with `(merchant_id, status)` still concentrates traffic
-- When all query patterns require co-location by the primary dimension — accept some hotspot risk
-- When gene-based sharding (embedding the routing gene in the ID) is feasible and preferred for zero-lookup routing
-
-### Also see
-- [Shard Key](#shard-key) · [Snowflake ID](#snowflake-id) · [Data Skew](../reference-dictionary/data-architecture.md#data-skew) · [Gene-Based Sharding](../reference-dictionary/data-concurrency.md#gene-based-sharding)
+## Surge Pricing
 
 
 
@@ -1308,7 +896,7 @@ A dynamic pricing strategy that adjusts prices in real time based on the ratio o
 
 ### Also see
 
-- [Geohash](#geohash) · [Exponential Moving Average](../reference-dictionary/ai-ml-llm.md#exponential-moving-average) · [Cooldown](#cooldown) · [Sliding Window](../reference-dictionary/api-design.md#sliding-window)
+- [Geohash](geospatial.md#geohash) · [Exponential Moving Average](../reference-dictionary/ai-ml-llm.md#exponential-moving-average) · [Cooldown](#cooldown) · [Sliding Window](../reference-dictionary/api-design.md#sliding-window)
 
 ---
 
@@ -1338,3 +926,29 @@ A minimum interval between successive state changes in a control system. In dyna
 ### Also see
 
 - [Exponential Moving Average](../reference-dictionary/ai-ml-llm.md#exponential-moving-average) · [Surge Pricing](#surge-pricing) · [Circuit Breaker](../reference-dictionary/resilience.md#circuit-breaker)
+
+---
+
+## URL Frontier
+
+The **central URL queue and scheduling subsystem of a distributed web crawler** that manages the collection of URLs to be crawled, ensuring both crawl **politeness** (never overloading any single web server) and **prioritization** (crawling the most relevant, high-quality, or frequently updated pages first).
+
+### Key Characteristics
+- **Dual-Queue Architecture (Mercator pattern)**:
+  - **Priority Queues (Front Queues)**: Assigns URLs to priority levels based on PageRank, freshness, domain authority, or update frequency
+  - **Politeness Queues (Back Queues)**: Organizes URLs by target domain/host name, ensuring that each host queue is drained by at most one worker with a mandatory polite inter-request delay
+- **Deduplication Filter**: Integrated Bloom filters and fingerprint stores prevent re-enqueueing previously crawled or queued URLs
+- **Queue Router & Selector**: Continuously maps prioritized URLs from front queues into host-specific back queues
+
+### When to Use
+- Large-scale distributed web search crawlers (Google, Bing, Common Crawl)
+- E-commerce price intelligence spiders and enterprise knowledge discovery engines
+- Security vulnerability scanners and web archive indexing
+
+### When NOT to Use
+- Simple single-site scrapers crawling a handful of static pages
+- Direct API ingestion pipelines with structured feeds (RSS, Kafka)
+
+### Also see
+- [Politeness Policy](networking.md#politeness-policy) · [Robots Exclusion Protocol](networking.md#robots-exclusion-protocol) · [SimHash](databases.md#simhash)
+
