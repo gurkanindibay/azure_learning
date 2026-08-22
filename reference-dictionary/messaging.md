@@ -73,6 +73,8 @@ timestamp: 2026-06-14T00:00:00Z
 | Global Secondary Index | [`#global-secondary-index`](#global-secondary-index) |
 | Kafka Streams | [`#kafka-streams`](#kafka-streams) |
 | Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
+| Worker Self-Throttling | [`#worker-self-throttling`](#worker-self-throttling) |
+| Progressive Enqueuing | [`#progressive-enqueuing`](#progressive-enqueuing) |
 
 ## Client-Side Deduplication
 
@@ -1283,4 +1285,49 @@ A defense-in-depth pattern for distributed messaging systems that applies dedupl
 
 ### Also see
 - [Client-Side Deduplication](#client-side-deduplication) · [Delivery Cursor](#delivery-cursor) · [Atomic Deduplication](#atomic-deduplication) · [Deduplication Store](#deduplication-store) · [Idempotent Consumer](#idempotent-consumer) · [Idempotency](cqrs-event-driven.md#idempotency)
+
+---
+
+## Worker Self-Throttling
+
+A client-side rate-limiting and traffic-shaping pattern where asynchronous consumer workers actively pace their outbound execution rates to remain strictly within downstream provider limits (such as third-party push notification, SMS, or payment gateways), rather than consuming from the queue at maximum compute speed.
+
+### Key Characteristics
+- **Client-side rate limiting**: Workers embed token bucket or leaky bucket limiters to throttle outbound HTTP/RPC dispatch.
+- **Queue as healthy buffer**: A growing queue depth is treated as safe, expected backpressure rather than a trigger to blindly spin up more compute.
+- **Provider account protection**: Prevents HTTP 429 (Too Many Requests), connection bans, or gateway account suspensions caused by over-aggressive concurrent egress.
+
+### When to Use
+- Asynchronous worker fleets making outbound calls to rate-limited third-party APIs (APNs, FCM, Twilio, SendGrid).
+- High-fanout background workloads where upstream queue volume exceeds downstream recipient acceptance limits.
+
+### When NOT to Use
+- Internal services that support elastic autoscaling and explicit HTTP backpressure headers.
+- Workloads where the bottleneck is internal compute rather than external egress quotas.
+
+### Also see
+- [Backpressure](resilience.md#backpressure) · [Message Batching](#message-batching) · [Dead Letter Queue (DLQ)](#dead-letter-queue-dlq) · [Rate Limiting](api-design.md#rate-limiting)
+
+---
+
+## Progressive Enqueuing
+
+An architectural pattern for massive fanout or batch operations (e.g. 100M+ user campaigns) where individual jobs are not materialized and dumped into the message queue all at once; instead, the workload is stored as a high-level definition and a background generator service progressively materializes and enqueues small batches over time.
+
+### Key Characteristics
+- **Campaign definition decoupling**: The trigger persists metadata and segmentation queries rather than hundreds of millions of individual task records.
+- **Smoothed broker ingestion**: Prevents extreme spikes in message broker disk utilization, partition queue memory, and replication overhead.
+- **Steady-state processing**: Converts an unmanageable instant burst into a continuous, controllable flow of work.
+
+### When to Use
+- Mega-scale push notification campaigns, marketing email blasts, or batch statement generation targeting tens to hundreds of millions of users.
+- Large-scale media transcoding or bulk ETL migrations where upfront job creation would overwhelm message brokers.
+
+### When NOT to Use
+- Real-time emergency broadcast systems where every recipient must be targeted simultaneously with minimum latency.
+- Small-to-medium fanout operations (<1M items) where standard queue durability and partitioning handle the burst without issue.
+
+### Also see
+- [Message Batching](#message-batching) · [Partition](#partition) · [Consumer Lag](#consumer-lag) · [Backpressure](resilience.md#backpressure)
+
 

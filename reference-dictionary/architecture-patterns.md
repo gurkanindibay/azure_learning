@@ -57,6 +57,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Surge Pricing | [`#surge-pricing`](#surge-pricing) |
 | Cooldown | [`#cooldown`](#cooldown) |
 | URL Frontier | [`#url-frontier`](#url-frontier) |
+| Acceptance-Delivery Separation | [`#acceptance-delivery-separation`](#acceptance-delivery-separation) |
 
 ---
 
@@ -951,4 +952,27 @@ The **central URL queue and scheduling subsystem of a distributed web crawler** 
 
 ### Also see
 - [Politeness Policy](networking.md#politeness-policy) · [Robots Exclusion Protocol](networking.md#robots-exclusion-protocol) · [SimHash](databases.md#simhash)
+
+---
+
+## Acceptance-Delivery Separation
+
+An architectural design principle that decouples the fast, synchronous request-acceptance boundary from the slow, high-latency execution and delivery boundary in fanout and bulk operation systems.
+
+### Key Characteristics
+- **Bounded API latency**: The API validates the request, records the intent into a durable store/queue, and returns immediately (e.g., HTTP 202 Accepted) in milliseconds.
+- **Independent tier scaling**: The API tier scales based on request volume, while the worker delivery tier scales independently based on downstream throughput and queue depth.
+- **Failure boundary isolation**: Slowdowns, retries, or rate limiting in downstream third-party delivery do not block client request threads or degrade API availability.
+
+### When to Use
+- Workloads where a single client action triggers massive follow-up work (bulk notifications, marketing campaigns, report generation, video transcoding).
+- Any API endpoint where downstream dependencies have variable or high network latency.
+
+### When NOT to Use
+- Synchronous transactional operations (e.g. ATM cash withdrawal) where the client requires immediate, strict confirmation of completion.
+- Trivial, sub-millisecond computations where introducing asynchronous queuing adds unnecessary infrastructure complexity.
+
+### Also see
+- [Worker Self-Throttling](messaging.md#worker-self-throttling) · [Progressive Enqueuing](messaging.md#progressive-enqueuing) · [Dead Letter Queue (DLQ)](messaging.md#dead-letter-queue-dlq) · [Microservices](#microservices)
+
 
