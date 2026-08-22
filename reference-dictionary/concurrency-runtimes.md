@@ -30,6 +30,12 @@ timestamp: 2026-07-04T00:00:00Z
 | Thread Pool Sizing Formula | [`#thread-pool-sizing-formula`](#thread-pool-sizing-formula) |
 | Race Condition | [`#race-condition`](#race-condition) |
 | Wildcard Match Arm | [`#wildcard-match-arm`](#wildcard-match-arm) |
+| CPU Cache Hierarchy | [`#cpu-cache-hierarchy`](#cpu-cache-hierarchy) |
+| Cache Line | [`#cache-line`](#cache-line) |
+| Hardware Prefetching | [`#hardware-prefetching`](#hardware-prefetching) |
+| Pointer Chasing | [`#pointer-chasing`](#pointer-chasing) |
+| False Sharing | [`#false-sharing`](#false-sharing) |
+| Memory Stall | [`#memory-stall`](#memory-stall) |
 
 ---
 
@@ -401,3 +407,161 @@ Threads = CPU Cores × Target CPU Utilization × (1 + Wait Time / Compute Time)
 
 ### Also see
 - [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound) · [Amdahl's Law](#amdahls-law) · [Virtual Threads](java-jvm.md#virtual-threads) · [Backpressure](resilience.md#backpressure)
+
+---
+
+## CPU Cache Hierarchy
+
+A multi-tiered memory architecture implemented directly on the CPU silicon die and package that bridges the performance gap between ultra-fast processor execution units and high-capacity, high-latency main memory (DRAM).
+
+```text
+Registers (< 1 cycle)
+       │
+   L1 Cache (~3-4 cycles, tens of KB)
+       │
+   L2 Cache (~14 cycles, hundreds of KB to MBs)
+       │
+   L3 Cache (~40-60 cycles, tens of MBs, shared across cores)
+       │
+   Main Memory (DRAM) (~200+ cycles, GBs/TBs)
+```
+
+### Key Characteristics
+- **Speed vs Capacity Tradeoff**: Latency increases by orders of magnitude as capacity grows from L1 (fastest/smallest) to main memory (slowest/largest).
+- **Core Isolation & Sharing**: L1/L2 caches are typically dedicated per CPU core; L3 cache is typically shared across all cores on a socket or CCD.
+- **Cache Coherence**: Hardware protocols (e.g., MESI, MOESI) ensure cores maintain a consistent view of shared memory lines across private L1/L2 caches.
+- **Spatial and Temporal Locality**: Caches exploit programs' tendency to reuse recently accessed data (temporal) and nearby memory addresses (spatial).
+
+### When to Use
+- Designing low-latency data structures and high-throughput systems where working sets should fit into CPU cache tiers.
+- Diagnosing throughput plateaus where profiling shows high latency but low CPU core saturation (memory wall stalls).
+
+### When NOT to Use
+- Prematurely restructuring application code for cache alignment when the bottleneck is I/O-bound (network, disk, database).
+
+### Also see
+- [Cache Line](#cache-line) · [Memory Stall](#memory-stall) · [Hardware Prefetching](#hardware-prefetching)
+
+---
+
+## Cache Line
+
+The fundamental, fixed-size unit of data transfer between main memory (DRAM) and the CPU cache hierarchy (typically **64 bytes** on modern x86 and ARM64 architectures).
+
+### Key Characteristics
+- **Coarse-Grained Transfer**: When a core reads or writes even a single byte, the CPU fetches or stores the entire 64-byte block enclosing that address.
+- **Cache Line Alignment**: Memory buffers aligned to 64-byte boundaries avoid splitting reads across multiple cache line transactions.
+- **Underlying Mechanism for Locality**: Enables adjacent struct fields or contiguous array elements to be loaded in a single memory transaction.
+- **Vulnerability to Invalidation**: Multiple independent variables sharing the same cache line can cause cross-core invalidation contention ([False Sharing](#false-sharing)).
+
+### When to Use
+- Packing frequently co-accessed fields contiguously to maximize spatial locality per cache line load.
+- Adding cache line padding (64 or 128 bytes) between per-thread variables in concurrent programming.
+
+### When NOT to Use
+- General business applications without profiling evidence of cache misses or memory contention.
+
+### Also see
+- [CPU Cache Hierarchy](#cpu-cache-hierarchy) · [False Sharing](#false-sharing) · [Hardware Prefetching](#hardware-prefetching)
+
+---
+
+## Hardware Prefetching
+
+A CPU hardware feature that automatically detects predictable, sequential or strided memory access patterns and speculatively loads future cache lines from RAM into L1/L2/L3 caches before the CPU instructions explicitly request them.
+
+### Key Characteristics
+- **Latency Masking**: Hides the ~200+ cycle DRAM latency behind ongoing compute work when access patterns are sequential.
+- **Stream and Stride Detectors**: Modern CPUs detect linear strides (e.g., iterating through an array by constant step sizes).
+- **Defeated by Non-Linear Access**: Cannot predict arbitrary pointer dereferences or scattered hash lookups.
+- **Zero Software Overhead**: Operates autonomously in hardware without requiring manual software prefetch instructions for linear scans.
+
+### When to Use
+- Laying out performance-critical data in contiguous memory (flat arrays, vectors, column-oriented buffers) to maximize prefetch efficiency.
+- Struct-of-Arrays (SoA) and Data-Oriented Design (DOD) transformations for batch processing engines.
+
+### When NOT to Use
+- Complex linked graphs or dynamic pointer structures where memory layout is inherently fragmented.
+
+### Also see
+- [Cache Line](#cache-line) · [Pointer Chasing](#pointer-chasing) · [CPU Cache Hierarchy](#cpu-cache-hierarchy)
+
+---
+
+## Pointer Chasing
+
+An anti-pattern in high-performance computing where code traverses non-contiguous memory by following chained memory addresses (pointers or references), such as iterating through linked lists, node trees, or deeply nested object references.
+
+```python
+# Pointer chasing: each node hop requires an unpredictable DRAM fetch
+while node:
+    total += node.value
+    node = node.next  # Address is unknown to prefetcher; CPU stalls
+```
+
+### Key Characteristics
+- **Defeats Hardware Prefetching**: Each memory address depends on the value of the previous pointer, preventing the CPU from predicting and preloading future data.
+- **Compounding Memory Stalls**: Incurs repeated ~200+ cycle main memory stalls and Translation Lookaside Buffer (TLB) misses on every traversal hop.
+- **Cache Pollution**: Loading small node objects pulls 64-byte cache lines that contain only a fraction of useful data, evicting other hot cache entries.
+
+### When to Use
+- The concept is diagnostic: identify pointer chasing as the root cause when node-based data structures perform poorly despite low theoretical algorithmic complexity.
+
+### When NOT to Use
+- Do not use linked structures on performance-critical hot paths when contiguous arrays or arena allocators can be used instead.
+
+### Also see
+- [Memory Stall](#memory-stall) · [Hardware Prefetching](#hardware-prefetching) · [Cache Line](#cache-line)
+
+---
+
+## False Sharing
+
+A concurrency performance degradation that occurs when independent threads running on different CPU cores modify distinct variables that reside within the **same 64-byte cache line**.
+
+```text
+          Cache Line (64 bytes)
+┌────────────────────────┬────────────────────────┐
+│  Thread A's Variable   │  Thread B's Variable   │
+└────────────────────────┴────────────────────────┘
+          ▲                        ▲
+          │                        │
+       Core 1                   Core 2
+ (Writes invalidate L1/L2) (Writes invalidate L1/L2)
+          └── Cache Coherence Storm (MESI) ──┘
+```
+
+### Key Characteristics
+- **No Logical Contention**: Threads do not share data or hold mutual exclusion locks, making the bottleneck invisible to standard application lock profilers.
+- **Cache Coherence Thrashing**: Every write by Core 1 forces the cache coherence protocol (e.g. MESI) to invalidate the entire 64-byte line in Core 2's cache, forcing Core 2 to reload it from L3 or DRAM.
+- **Negative Scaling**: Adding CPU cores causes throughput to drop as cores spend more cycles waiting on inter-core bus invalidation than executing application instructions.
+
+### When to Use
+- Diagnosing multi-threaded bottlenecks where concurrent counters, ring buffer indices, or thread-local accumulators fail to scale linearly.
+- Mitigate by applying cache-line padding (e.g., Java `@Contended`, C++ `alignas(64)` / `alignas(128)`, or explicit padding bytes) or using thread-local storage.
+
+### When NOT to Use
+- Single-threaded workloads or cold code paths where structures are not concurrently written across multiple CPU cores.
+
+### Also see
+- [Cache Line](#cache-line) · [Race Condition](#race-condition) · [CPU Cache Hierarchy](#cpu-cache-hierarchy) · [LMAX Disruptor (Cache-line padding)](fintech.md#lmax-disruptor)
+
+---
+
+## Memory Stall
+
+A state where a CPU core pauses instruction pipeline execution and sits idle for hundreds of clock cycles because an instruction requires data that is not currently present in L1/L2/L3 caches and must be retrieved from main memory (DRAM).
+
+### Key Characteristics
+- **The "Memory Wall"**: Arithmetic logic units (ALUs) execute instructions in fractions of a nanosecond (< 1 cycle), while DRAM access requires 50–100 nanoseconds (~200+ cycles).
+- **Low Instructions Per Cycle (IPC)**: CPU utilization graphs may show low activity or 100% busy time that is actually spent stalling on memory loads rather than computing instructions.
+- **Pipeline Bubbles**: Out-of-order execution engines attempt to execute independent instructions while stalling, but eventually stall completely when reorder buffers fill.
+
+### When to Use
+- Diagnostic metric: use hardware performance profiling (`perf`, Linux `perf stat`, VTune) to identify memory stalls as the dominant bottleneck before refactoring.
+
+### When NOT to Use
+- When profiling proves execution is blocked on disk I/O, network latency, database queries, or lock acquisition.
+
+### Also see
+- [CPU Cache Hierarchy](#cpu-cache-hierarchy) · [Pointer Chasing](#pointer-chasing) · [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound)

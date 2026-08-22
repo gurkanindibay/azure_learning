@@ -163,6 +163,12 @@ takeaway_domains:
   perf:
     file: "performance/microservices-runtime-performance.md"
     desc: "Microservices Runtime Performance"
+    related_files:
+      - "system-design-architecture/performance/microservices-runtime-performance.md"
+      - "system-design-architecture/performance/python-to-rust-rewrite.md"
+      - "system-design-architecture/performance/rust-logic-errors-takeaways.md"
+      - "system-design-architecture/performance/cpu-memory-latency-takeaways.md"
+      - "articles/performance/your-cpu-isnt-slow-your-memory-is.md"
   broker:
     file: "messaging/kafka-consumer-mistakes.md"
     desc: "Message Brokers & Kafka"
@@ -323,6 +329,12 @@ takeaway_keywords:
   gomaxprocs: perf
   tokio: perf
   event loop: perf
+  cpu cache: perf
+  cache line: perf
+  prefetching: perf
+  pointer chasing: perf
+  false sharing: perf
+  memory stall: perf
   api gateway: gw
   hotlinking: api
   faceted search: api
@@ -568,6 +580,12 @@ dictionary_domains:
       - concurrency model
       - async runtime
       - rust async
+      - cpu cache
+      - cache line
+      - prefetching
+      - pointer chasing
+      - false sharing
+      - memory stall
   messaging.md:
     title: "Messaging"
     keywords:
