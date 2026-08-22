@@ -254,7 +254,7 @@ flowchart TD
         Ag2["Host Agent (Server 2)"]
         LB["Load Balancer"]
         CollPush["Collector Cluster"]
-        
+   
         Ag1 -->|Push metrics| LB
         Ag2 -->|Push metrics| LB
         LB --> CollPush

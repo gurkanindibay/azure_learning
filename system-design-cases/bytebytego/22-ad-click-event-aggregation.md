@@ -1,357 +1,713 @@
 ---
 type: System Design Case
 title: "Ad Click Event Aggregation"
-description: "The following set of questions helps to clarify requirements and narrow down the scope."
-tags: [system-design]
+description: "Design a distributed, real-time ad click event aggregation system at Google/Meta scale supporting exactly-once processing, windowed rollups, star schema filtering, and fault-tolerant stream analytics."
+tags: [system-design, distributed-systems, stream-processing, kafka, flink, time-series]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Ad Click Event Aggregation
 
-> **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam
-> **ByteByteGo Chapter**: 22
+> **Source**: *System Design Interview – An Insider's Guide: Volume 2* by Alex Xu & Sahn Lam  
+> **ByteByteGo Chapter**: 22  
+> **Topic**: Real-Time Stream Processing, Distributed Event Aggregation, Exactly-Once Semantics, Star Schema, Hotspot Mitigation
 
-## Step 1 - Understand the Problem and Establish Design Scope
+---
 
-The following set of questions helps to clarify requirements and narrow down the scope.
+## 1. Understand the Problem and Establish Design Scope
 
-> **Candidate:** What is the format of the input data?
+Ad click event aggregation is a foundational subsystem of digital advertising platforms (such as Google Ads, Meta Ads, and Amazon Advertising). It aggregates raw ad click streams into actionable real-time metrics used for **advertiser billing**, **budget pacing**, **real-time bidding (RTB) feedback**, and **analytics dashboards**.
 
-> **Interviewer:** It’s a log file located in different servers and the latest click events are appended to the end of the log file. The event has the following attributes: ad_id, click_timestamp, user_id, ip, and country.
+```mermaid
+flowchart LR
+    subgraph Sources["Ad Click Sources"]
+        S1["Web Browsers"]
+        S2["Mobile Apps"]
+        S3["App Servers"]
+    end
 
-> **Candidate:** What’s the data volume?
+    subgraph Ingestion["Ingestion & Streaming"]
+        L["Log Collector"] --> K1["Raw Event Stream<br/>(Kafka Topic)"]
+        K1 --> AGG["Stream Aggregator<br/>(MapReduce / Flink DAG)"]
+        AGG --> K2["Aggregated Stream<br/>(Kafka Topic)"]
+    end
 
-> **Interviewer:** 1 billion ad clicks per day and 2 million ads in total. The number of ad click events grows 30% year-over-year.
+    subgraph Storage["Storage Layer"]
+        K2 --> W["DB Writer"]
+        W --> DB[("Aggregated DB<br/>(Cassandra / ClickHouse)")]
+        K1 --> RAW[("Raw Log Store<br/>(S3 / Parquet)")]
+    end
 
-> **Candidate:** What are some of the most important queries to support?
+    subgraph Consumers["Downstream Consumers"]
+        DB --> Q["Query Service"]
+        Q --> DASH["Real-Time Dashboards"]
+        Q --> BILL["Ads Billing Engine"]
+        Q --> RTB["Real-Time Bidding (RTB)"]
+    end
 
-> **Interviewer:** The system needs to support the following 3 queries: Return the number of click events for a particular ad in the last M minutes.
-
-Return the top 100 most clicked ads in the past 1 minute. Both parameters should be configurable. Aggregation occurs every minute. Support data filtering by ip, user_id, or country for the above two queries.
-
-> **Candidate:** Do we need to worry about edge cases? I can think of the following: There might be events that arrive later than expected. There might be duplicated events. Different parts of the system might be down at any time, so we need to consider system recovery.
-
-> **Interviewer:** That’s a good list. Yes, take these into consideration.
-
-> **Candidate:** What is the latency requirement?
-
-> **Interviewer:** A few minutes of end-to-end latency. Note that latency requirements for RTB and ad click aggregation are very different. While latency for RTB is usually less than one second due to the responsiveness requirement, a few minutes of latency is acceptable for ad click event aggregation because it is primarily used for ad billing and reporting. With the information gathered above, we have both functional and non-functional requirements.
-
-### Functional requirements
-
-Aggregate the number of clicks of ad_id in the last M minutes. Return the top 100 most clicked ad_id every minute. Support aggregation filtering by different attributes. Dataset volume is at Facebook or Google scale (see the back-of-envelope estimation section below for detailed system scale requirements).
-
-### Non-functional requirements
-
-Correctness of the aggregation result is important as the data is used for RTB and ads billing. Properly handle delayed or duplicate events. Robustness. The system should be resilient to partial failures. Latency requirement. End-to-end latency should be a few minutes, at most.
-
-## Back-of-the-envelope estimation
-
-Let’s do an estimation to understand the scale of the system and the potential challenges we will need to address. 1 billion DAU. Assume on average each user clicks 1 ad per day. That’s 1 billion ad click events per day. Ad click QPS = 109 events / 105 seconds in a day = 10,000 Assume peak ad click QPS is 5 times the average number. Peak QPS = 50,000 QPS.
-
-Assume a single ad click event occupies 0.1 KB storage. Daily storage requirement is: 0.1 KB x 1 billion = 100 GB. The monthly storage requirement is about 3 TB.
-
-## Step 2 - Propose High-Level Design and Get Buy-In
-
-```sql
-
-In this section, we discuss query API design, data model, and high-level design. Query API design The purpose of the API design is to have an agreement between the client and the server. In a consumer app, a client is usually the end-user who uses the product.
-
-In our case, however, a client is the dashboard user (data scientist, product manager, advertiser, etc.) who runs queries against the aggregation service. Let’s review the functional requirements so we can better design the APIs: Aggregate the number of clicks of ad_id in the last M minutes. Return the top N most clicked ad_ids in the last M minute.
-
-Support aggregation filtering by different attributes. We only need two APIs to support those three use cases because filtering (the last requirement) can be supported by adding query parameters to the requests. API 1: Aggregate the number of clicks of ad_id in the last M minutes.
-
-API Detail GET/ads/{:ad_id}/aggregated_count Return aggregated event count for a given ad_id Table 1 API for aggregating the number of clicks Request parameters are: Field Description Type from Start minute (default is to move 1 long minute backward to End minute (default is now) long filter An identifier for different filtering long strategies. For example, filter = 001 filters out non-US clicks Table 2 Request parameters for /v1/ads/{:ad_id}/aggregated_count Response: Field Description Type
-
+    Sources --> L
 ```
 
-ad_id The identifier of the ad string count The aggregated count long between the start and end minutes Table 3 Response for /v1/ads/{:ad_id}/aggregated_count API 2: Return top N most clicked ad_ids in the last \(M\) minutes API Detail GET /ads/popular_ads Return top N most clicked ads in the last M minutes Table 4 API for /v1/ads/popular_ads Request parameters are: Field Description Type count Top N most clicked ads integer window The aggregation window size (M) integer in minutes filter An identifier for different filtering long strategies Table 5 Request parameters for /v1/ads/popular_ads Response: Field Description Type ad_ids A list of the most clicked array ads Table 6 Response for /v1/ads/popular_ads
-
-### Data model
-
-There are two types of data in the system: raw data and aggregated data. Raw data Below shows what the raw data looks like in log files: [AdClickEvent] ad001, 2021-01-01 00:00:01, user 1, 207.148.22.22, USA Table 7 lists what the data fields look like in a structured way. Data is scattered on different application servers.
-
-ad_id click_timestamp user_id ip country ad001 2021-01-01 00:00:01 user1 207.148.22.22 USA ad001 2021-01-01 00:00:02 user1 207.148.22.22 USA ad002 2021-01-01 00:00:02 user2 209.153.56.11 USA Table 7 Raw data Aggregated data Assume that ad click events are aggregated every minute. Table 8 shows the aggregated result. ad_id click_minute count ad001 202101010000 5 ad001 202101010001 7 Table 8 Aggregated data To support ad filtering, we add an additional field called filter_id to the table. Records with the same ad_id and click_minute are grouped by filter_id as shown in Table 9, and filters are defined in Table 10. ad_id click_minute filter_id count ad001 202101010000 0012 2 ad001 202101010000 0023 3 ad001 202101010001 0012 1 ad001 202101010001 0023 6 Table 9 Aggregated data with filters filter_id region IP user_id 0012 US 0012 * 0013 * 0023 123.1.2.3 Table 10 Filter table To support the query to return the top N most clicked ads in the last M minutes, the following structure is used.
-most_clicked_ads window_size integer The aggregation window size (M) in minutes update_time_minute timestamp Last updated timestamp (granularity is minute) most_clicked_ads array List of ad IDs in JSON format. Table 11 Support top N most clicked ads in the last M minutes Comparison The comparison between storing raw data and aggregated data is shown below: Raw data only Aggregated data only Pros Full data set Smaller data set Support data filter Fast query and recalculation Cons Huge data storage Data loss. This is derived Slow query data.
-
-For example, 10 entries might be aggregated to 1 entry Table 12 Raw data vs aggregated data Should we store raw data or aggregated data? Our recommendation is to store both. Let’s take a look at why.
-
-It’s a good idea to keep the raw data. If something goes wrong, we could use the raw data for debugging. If the aggregated data is corrupted due to a bad bug, we can recalculate the aggregated data from the raw data, after the bug is fixed.
-
-Aggregated data should be stored as well. The data size of the raw data is huge. The large size makes querying raw data directly very inefficient.
-
-To mitigate this problem, we run read queries on aggregated data. Raw data serves as backup data. We usually don’t need to query raw data unless recalculation is needed.
-
-Old raw data could be moved to cold storage to reduce costs. Aggregated data serves as active data. It is tuned for query performance.
-
-Choose the right database When it comes to choosing the right database, we need to evaluate the following:
-What does the data look like? Is the data relational? Is it a document or a blob?
-
-Is the workflow read-heavy, write-heavy, or both? Is transaction support needed? Do the queries rely on many online analytical processing (OLAP) functions [3] like SUM, COUNT?
-
-Let’s examine the raw data first. Even though we don’t need to query the raw data during normal operations, it is useful for data scientists or machine learning engineers to study user response prediction, behavioral targeting, relevance feedback, etc. [4]. As shown in the back of the envelope estimation, the average write QPS is 10,000, and the peak QPS can be 50,000, so the system is write-heavy.
-
-On the read side, raw data is used as backup and a source for recalculation, so in theory, the read volume is low. Relational databases can do the job, but scaling the write can be challenging. NoSQL databases like Cassandra and InfluxDB are more suitable because they are optimized for write and time-range queries.
-
-Another option is to store the data in Amazon S3 using one of the columnar data formats like ORC [5], Parquet [6], or AVRO [7]. We could put a cap on the size of each file (say, 10GB) and the stream processor responsible for writing the raw data could handle the file rotation when the size cap is reached. Since this setup may be unfamiliar for many, in this design we use Cassandra as an example.
-
-For aggregated data, it is time-series in nature and the workflow is both read and write heavy. This is because, for each ad, we need to query the database every minute to display the latest aggregation count for customers. This feature is useful for auto- refreshing the dashboard or triggering alerts in a timely manner.
-
-Since there are two million ads in total, the workflow is read-heavy. Data is aggregated and written every minute by the aggregation service, so it’s write-heavy as well. We could use the same type of database to store both raw data and aggregated data.
-
-Now we have discussed query API design and data model, let’s put together the high- level design. High-level design In real-time big data [8] processing, data usually flows into and out of the processing system as unbounded data streams. The aggregation service works in the same way; the input is the raw data (unbounded data streams), and the output is the aggregated results (see Figure 2).
-
-![Figure](images/img-160-125.jpg)
-
-*Figure 2 Aggregation workflow*
-Asynchronous processing The design we currently have is synchronous. This is not good because the capacity of producers and consumers is not always equal. Consider the following case; if there is a sudden increase in traffic and the number of events produced is far beyond what consumers can handle, consumers might get out-of-memory errors or experience an unexpected shutdown.
-
-If one component in the synchronous link is down, the whole system stops working. A common solution is to adopt a message queue (Kafka) to decouple producers and consumers. This makes the whole process asynchronous and producers/consumers can be scaled independently.
-
-Putting everything we have discussed together, we come up with the high-level design as shown in Figure 3. Log watcher, aggregation service, and database are decoupled by two message queues. The database writer polls data from the message queue, transforms the data into the database format, and writes it to the database.
-*Figure 3 High-level design What is stored in the first message queue? It contains ad click event data as shown in Table 13. ad_id click_timestamp user_id ip country Table 13 Data in the first message queue What is stored in the second message queue? The second message queue contains two types of data: 1. Ad click counts aggregated at per-minute granularity. ad_id click_minute count*
-
-Table 14 Data in the second message queue 2. Top N most clicked ads aggregated at per-minute granularity. update_time_minute most_clicked_ads Table 15 Data in the second message queue You might be wondering why we don’t write the aggregated results to the database directly. The short answer is that we need the second message queue like Kafka to achieve end-to-end exactly-once semantics (atomic commit) [9].
-
-*Figure 4: End-to-end exactly once Next, let’s dig into the details of the aggregation service. Aggregation service The MapReduce framework is a good option to aggregate ad click events. The directed acyclic graph (DAG) is a good model for it [10].*
-
-The key to the DAG model is to break down the system into small computing units, like the Map/Aggregate/Reduce nodes, as shown in Figure 5.
-*Figure 5 Aggregation service Each node is responsible for one single task and it sends the processing result to its downstream nodes. Map node A Map node reads data from a data source, and then filters and transforms the data. For example, a Map node sends ads with ad_id % 2 = 0 to node 1, and the other ads go to node 2, as shown in Figure 6.*
-
-sql
-
-*Figure 6 Map operation You might be wondering why we need the Map node. An alternative option is to set up Kafka partitions or tags and let the aggregate nodes subscribe to Kafka directly. This works, but the input data may need to be cleaned or normalized, and these operations can be done by the Map node. Another reason is that we may not have control over how data is produced and therefore events with the same ad_id might land in different Kafka partitions. Aggregate node An Aggregate node counts ad click events by ad_id in memory every minute. In the MapReduce paradigm, the Aggregate node is part of the Reduce. So the map- aggregate-reduce process really means map-reduce-reduce. Reduce node A Reduce node reduces aggregated results from all “Aggregate” nodes to the final result. For example, as shown in Figure 7, there are three aggregation nodes and each contains the top 3 most clicked ads within the node. The Reduce node reduces the total number of most clicked ads to 3.*
-*Figure 7 Reduce node The DAG model represents the well-known MapReduce paradigm. It is designed to take big data and use parallel distributed computing to turn big data into little- or regular-sized data. In the DAG model, intermediate data can be stored in memory and different nodes communicate with each other through either TCP (nodes running in different processes) or shared memory (nodes running in different threads).
-
-Main use cases Now that we understand how MapReduce works at the high level, let’s take a look at how it can be utilized to support the main use cases: Aggregate the number of clicks of ad_id in the last M mins. Return top N most clicked ad_ids in the last M minutes. Data filtering.
-
-Use case 1: aggregate the number of clicks As shown in Figure 8, input events are partitioned by ad_id (ad_id % 3) in Map nodes and are then aggregated by Aggregation nodes. Figure 8 Aggregate the number of clicks*
-
-![Figure](images/img-166-126.jpg)
-Use case 2: return top N most clicked ads Figure 9 shows a simplified design of getting the top 3 most clicked ads, which can be extended to top N. Input events are mapped using ad_id and each Aggregate node maintains a heap data structure to get the top 3 ads within the node efficiently. In the last step, the Reduce node reduces 9 ads (top 3 from each aggregate node) to the top 3 most clicked ads every minute.
-
-Figure 9 Return top N most clicked ads Use case 3: data filtering To support data filtering like “show me the aggregated click count for ad001 within the USA only”, we can pre-define filtering criteria and aggregate based on them. For example, the aggregation results look like this for ad001 and ad002: ad_id click_minute country count ad001 202101010001 USA 100 ad001 202101010001 GPB 200 ad001 202101010001 others 3000 ad002 202101010001 USA 10 ad002 202101010001 GPB 25 ad002 202101010001 others 12 Table 16 Aggregation results (filter by country)
-![Figure](images/img-167-127.jpg)
-
-This technique is called the star schema [11], which is widely used in data warehouses. The filtering fields are called dimensions. This approach has the following benefits: It is simple to understand and build.
-
-The current aggregation service can be reused to create more dimensions in the star schema. No additional component is needed. Accessing data based on filtering criteria is fast because the result is pre- calculated.
-
-A limitation with this approach is that it creates many more buckets and records, especially when we have a lot of filtering criteria.
-
-## Step 3 - Design Deep Dive
-
-In this section, we will dive deep into the following: Streaming vs batching Time and aggregation window Delivery guarantees Scale the system Data monitoring and correctness Final design diagram Fault tolerance Streaming vs batching The high-level architecture we proposed in Figure 3 is a type of stream processing system. Table 17 shows the comparison of three types of systems [12]: Services Batch system Streaming system (Online (offline system) (near real-time system) system) Responsiveness Respond to the No response to the No response to the client quickly client needed client needed Input User requests Bounded input with Input has no finite size. A large boundary (infinite amount of data streams) Output Responses to Materialized views, Materialized views, clients aggregated metrics, aggregated metrics, etc. etc.
-
-Performance Availability, Throughput Throughput, latency measurement latency Example Online MapReduce Flink [13] shopping
-Table 17 Comparison of three types of systems In our design, both stream processing and batch processing are used. We utilized stream processing to process data as it arrives and generates aggregated results in a near real-time fashion. We utilized batch processing for historical data backup.
-
-For a system that contains two processing paths (batch and streaming) simultaneously, this architecture is called lambda [14]. A disadvantage of lambda architecture is that you have two processing paths, meaning there are two codebases to maintain. Kappa architecture [15], which combines the batch and streaming in one processing path, solves the problem.
-
-The key idea is to handle both real-time data processing and continuous data reprocessing using a single stream processing engine. Figure 10 shows a comparison of lambda and kappa architecture. Figure 10 Lambda and Kappa architectures Our high-level design uses Kappa architecture, where the reprocessing of historical data also goes through the real-time aggregation service.
-
-See the “Data recalculation” section below for details. Data recalculation Sometimes we have to recalculate the aggregated data, also called historical data replay. For example, if we discover a major bug in the aggregation service, we would need to recalculate the aggregated data from raw data starting at the point where the bug was introduced.
-
-Figure 11 shows the data recalculation flow: 1. The recalculation service retrieves data from raw data storage. This is a batched job.
-2. Retrieved data is sent to a dedicated aggregation service so that the real-time processing is not impacted by historical data replay.
-
-3. Aggregated results are sent to the second message queue, then updated in the aggregation database. Figure 11 Recalculation service The recalculation process reuses the data aggregation service but uses a different data source (the raw data).
-
-Time We need a timestamp to perform aggregation. The timestamp can be generated in two different places: Event time: when an ad click happens. Processing time: refers to the system time of the aggregation machine that processes the click event.
-
-Due to network delays and asynchronous environments (data go through a message queue), the gap between event time and processing time can be large. As shown in Figure 12, event 1 arrives at the aggregation service very late (5 hours later). Figure 12 Late events If event time is used for aggregation, we have to deal with delayed events.
-
-If processing time is used for aggregation, the aggregation result may not be accurate. There is no perfect solution, so we need to consider the trade-offs. Pros Cons Event time Aggregation results are more It depends on the timestamp
-
-![Figure](images/img-168-128.jpg)
-
-accurate because the client generated on the client-side. knows exactly when an ad is Clients might have the wrong time, clicked or the timestamp might be generated by malicious users Processing time Server timestamp is more The timestamp is not accurate if reliable an event reaches the system at a much later time Table 18: Event time vs processing time Since data accuracy is very important, we recommend using event time for aggregation. How do we properly process delayed events in this case? A technique called “watermark” is commonly utilized to handle slightly delayed events.
-
-In Figure 13, ad click events are aggregated in the one-minute tumbling window (see the “Aggregation window” section for more details). If event time is used to decide whether the event is in the window, window 1 misses event 2, and window 3 misses event 5 because they arrive slightly later than the end of their aggregation windows. Figure 13 Miss events in an aggregation window One way to mitigate this problem is to use “watermark” (the extended rectangles in Figure 14), which is regarded as an extension of an aggregation window.
-
-This improves the accuracy of the aggregation result. By extending an extra 15-second (adjustable) aggregation window, window 1 is able to include event 2, and window 3 is able to include event 5. The value set for the watermark depends on the business requirement.
-
-A long watermark could catch events that arrive very late, but it adds more latency to the system. A short watermark means data is less accurate, but it adds less latency to the system.
-
-![Figure](images/img-169-129.jpg)
-
-*Figure 14 Watermark Notice that the watermark technique does not handle events that have long delays. We can argue that it is not worth the return on investment (ROI) to have a complicated design for low probability events. We can always correct the tiny bit of inaccuracy with end-of-day reconciliation (see Reconciliation section).
-
-One trade-off to consider is that using watermark improves data accuracy but increases overall latency, due to extended wait time. Aggregation window According to the “Designing data-intensive applications” book by Martin Kleppmann [16], there are four types of window functions: tumbling (also called fixed) window, hopping window, sliding window, and session window. We will discuss the tumbling window and sliding window as they are most relevant to our system.
-
-In the tumbling window (highlighted in Figure 15), time is partitioned into same-length, non-overlapping chunks. The tumbling window is a good fit for aggregating ad click events every minute (use case 1). Figure 15 Tumbling window In the sliding window (highlighted in Figure 16), events are grouped within a window that slides across the data stream, according to a specified interval.
-
-A sliding window can be an overlapping one. This is a good strategy to satisfy our second use case; to get the top N most clicked ads during the last M minutes.*
-*Figure 16 Sliding window Delivery guarantees Since the aggregation result is utilized for billing, data accuracy and completeness are very important. The system needs to be able to answer questions such as: How to avoid processing duplicate events? How to ensure all events are processed? Message queues such as Kafka usually provide three delivery semantics: at-most once, at-least once, and exactly once. Which delivery method shall we choose? In most circumstances, at-least once processing is good enough if a small percentage of duplicates are acceptable. However, this is not the case for our system. Differences of a few percent in data points could result in discrepancies of millions of dollars. Therefore, we recommend exactly- once delivery for the system. If you are interested in learning more about a real-life ad aggregation system, take a look at how Yelp implements it [17]. Data deduplication One of the most common data quality issues is duplicated data. Duplicated data can come from a wide range of sources and in this section, we discuss two common sources. Client-side: For example, a client might resend the same event multiple times. Duplicated events sent with malicious intent are best handled by ad fraud/risk control components. If this is of interest, please refer to the reference material [18]. Server outage: If an aggregation service node goes down in the middle of aggregation and the upstream service hasn’t yet received an acknowledgment, the same events might be sent and aggregated again. Let’s take a closer look. Figure 17 shows how the aggregation service node (Aggregator) outage introduces duplicate data. The Aggregator manages the status of data consumption by storing the offset in upstream Kafka.*
-![Figure](images/img-170-130.jpg)
-*Figure 17 Duplicate data If step 6 fails, perhaps due to Aggregator outage, events from 100 to 110 are already sent to the downstream, but the new offset 110 is not persisted in upstream Kafka. In this case, a new Aggregator would consume again from offset 100, even if those events are already processed, causing duplicate data. The most straightforward solution (Figure 18) is to use external file storage, such as HDFS or S3, to record the offset. However, this solution has issues as well.*
-![Figure](images/img-171-131.jpg)
-
-
-Figure 18 Record the offset In step 3, the aggregator will process events from offset 100 to 110, only if the last offset stored in external storage is
-
-100. If the offset stored in the storage is 110, the aggregator ignores events before offset
-
-110. But this design has a major problem: the offset is saved to HDFS / S3 (step 3.2) before the aggregation result is sent downstream. If step 4 fails due to Aggregator outage, events from 100 to 110 will never be processed by a newly brought up aggregator node, since the offset stored in external storage is
-
-110. To avoid data loss, we need to save the offset once we get an acknowledgment back from downstream. The updated design is shown in Figure 19.
-
-
-
-![Figure](images/img-171-132.jpg)
-*Figure 19 Save offset after receiving ack In this design, if the Aggregator is down before step 5.1 is executed, events from 100 to 110 will be sent downstream again. To achieve “exactly-once” processing, we need to put operations between step 4 to step 6 in one distributed transaction. A distributed transaction is a transaction that works across several nodes. If any of the operations fails, the whole transaction is rolled back. Figure 20 Distributed transaction*
-![Figure](images/img-172-133.jpg)
-
-As you can see, it’s not easy to dedupe data in large-scale systems. How to achieve exactly-once processing is an advanced topic. If you are interested in the details, please refer to reference material [9].
-
-### Scale the system
-From the back-of-the-envelope estimation, we know the business grows 30% per year, which leads to a doubling of capacity every 3 years. How do we handle this growth? Let’s take a look. Our system consists of three independent components: message queue, aggregation service, and database. Since these components are decoupled, we can scale each one independently.
-### Scale the message queue
-
-
-We have already discussed how to scale the message queue extensively in the “Distributed Message Queue” chapter, so we’ll only briefly touch on a few points. Producers. We don’t limit the number of producer instances, so the scalability of producers can be easily achieved.
-
-Consumers. Inside a consumer group, the rebalancing mechanism helps to scale the consumers by adding or removing nodes. As shown in Figure 21, by adding two more consumers, each consumer only processes events from one partition.
-
-Figure 21 Add consumers When there are hundreds of Kafka consumers in the system, consumer rebalance can be quite slow and could take a few minutes or even more. Therefore, if more consumers need to be added, try to do it during off-peak hours to minimize the impact. Brokers Hashing key Using ad_id as hashing key for Kafka partition to store events from the same ad_id in the same Kafka partition.
-
-In this case, an aggregation service can subscribe to all events of the same ad_id from one single partition. The number of partitions If the number of partitions changes, events of the same ad_id might be mapped to a different partition. Therefore, it’s recommended to pre-allocate enough partitions in
-advance, to avoid dynamically increasing the number of partitions in production. Topic physical sharding One single topic is usually not enough. We can split the data by geography (topic_north_america, topic_europe, topic_asia, etc.,) or by business type (topic_web_ads, topic_mobile_ads , etc).
-
-Pros: Slicing data to different topics can help increase the system throughput. With fewer consumers for a single topic, the time to rebalance consumer groups is reduced. Cons: It introduces extra complexity and increases maintenance costs.
-
-### Scale the aggregation service
-
-In the high-level design, we talked about the aggregation service being a map/reduce operation. Figure 22 shows how things are wired together. Figure 22 Aggregation service If you are interested in the details, please refer to reference material [19].
-
-Aggregation service is horizontally scalable by adding or removing nodes. Here is an interesting question; how do we increase the throughput of the aggregation service? There are two options.
-
-**Option 1: Allocate events with different ad_ids to different threads, as shown in Figure 23.**
-
-*Figure 23 Multi-threading Option 2: Deploy aggregation service nodes on resource providers like Apache Hadoop YARN [20]. You can think of this approach as utilizing multi-processing. Option 1 is easier to implement and doesn’t depend on resource providers. In reality, however, option 2 is more widely used because we can scale the system by adding more computing resources.*
-
-![Figure](images/img-174-134.jpg)
-
-### Scale the database
-
-Cassandra natively supports horizontal scaling, in a way similar to consistent hashing.
-*Figure 24 Virtual nodes [21] Data is evenly distributed to every node with a proper replication factor. Each node saves its own part of the ring based on hashed value and also saves copies from other virtual nodes. If we add a new node to the cluster, it automatically rebalances the virtual nodes among all nodes. No manual resharding is required. See Cassandra’s official documentation for more details [21]. Hotspot issue A shard or service that receives much more data than the others is called a hotspot. This occurs because major companies have advertising budgets in the millions of dollars and their ads are clicked more often. Since events are partitioned by ad_id, some aggregation service nodes might receive many more ad click events than others, potentially causing server overload. This problem can be mitigated by allocating more aggregation nodes to process popular ads. Let’s take a look at an example as shown in Figure 25. Assume each aggregation node can handle only 100 events.*
-1. Since there are 300 events in the aggregation node (beyond the capacity of a node can handle), it applies for extra resources through the resource manager.
-
-2. The resource manager allocates more resources (for example, add two more aggregation nodes) so the original aggregation node isn’t overloaded.
-
-3. The original aggregation node split events into 3 groups and each aggregation node handles 100 events.
-
-* 4. The result is written back to the original aggregate node. Figure 25 Allocate more aggregation nodes There are more sophisticated ways to handle this problem, such as Global-Local Aggregation or Split Distinct Aggregation. For more information, please refer to [22].
-
-* Fault tolerance Let’s discuss the fault tolerance of the aggregation service. Since aggregation happens in memory, when an aggregation node goes down, the aggregated result is lost as well. We can rebuild the count by replaying events from upstream Kafka brokers. Replaying data from the beginning of Kafka is slow. A good practice is to save the “system status” like upstream offset to a snapshot and recover from the last saved status. In our design, the “system status” is more than just the upstream offset because we need to store data like top N most clicked ads in the past M minutes. Figure 26 shows a simple example of what the data looks like in a snapshot.
-
-![Figure](images/img-175-135.jpg)
-*Figure 26 Data in a snapshot With a snapshot, the failover process of the aggregation service is quite simple. If one aggregation service node fails, we bring up a new node and recover data from the latest snapshot (Figure 27). If there are new events that arrive after the last snapshot was taken, the new aggregation node will pull those data from the Kafka broker for replay. Figure 27 Aggregation node failover Data monitoring and correctness As mentioned earlier, aggregation results can be used for RTB and billing purposes. It’s critical to monitor the system’s health and to ensure correctness. Continuous monitoring Here are some metrics we might want to monitor: Latency: Since latency can be introduced at each stage, it’s invaluable to track timestamps as events flow through different parts of the system. The differences between those timestamps can be exposed as latency metrics. Message queue size: If there is a sudden increase in queue size, we may need to add more aggregation nodes. Notice that Kafka is a message queue*
-![Figure](images/img-175-136.jpg)
-implemented as a distributed commit log, so we need to monitor the records- lag metrics instead. System resources on aggregation nodes: CPU, disk, JVM, etc. Reconciliation Reconciliation means comparing different sets of data in order to ensure data integrity.
-
-Unlike reconciliation in the banking industry, where you can compare your records with the bank’s records, the result of ad click aggregation has no third-party result to reconcile with. What we can do is to sort the ad click events by event time in every partition at the end of the day, by using a batch job and reconciling with the real-time aggregation result. If we have higher accuracy requirements, we can use a smaller aggregation window; for example, one hour.
-
-Please note, no matter which aggregation window is used, the result from the batch job might not match exactly with the real-time aggregation result, since some events might arrive late (see Time section). Figure 28 shows the final design diagram with reconciliation support. Figure 28 Final design Alternative design In a generalist system design interview, you are not expected to know the internals of different pieces of specialized software used in a big data pipeline.
-
-Explaining your thought process and discussing trade-offs is very important, which is why we propose a generic solution. Another option is to store ad click data in Hive, with an ElasticSearch layer built for faster queries. Aggregation is usually done in OLAP databases such as ClickHouse [23] or Druid [24].
-
-Figure 29 shows the architecture.
-![Figure](images/img-176-137.jpg)
-
-*Figure 29 Alternative design For more detail on this, please refer to reference material [25].*
-
-![Figure](images/img-177-138.jpg)
-
-## Step 4 - Wrap Up
-
-* In this chapter, we went through the process of designing an ad click event aggregation system at the scale of Facebook or Google. We covered: Data model and API design. Use MapReduce paradigm to aggregate ad click events. Scale the message queue, aggregation service, and database. Mitigate hotspot issue. Monitor the system continuously. Use reconciliation to ensure correctness.
-
-* Fault tolerance. The ad click event aggregation system is a typical big data processing system. It will be easier to understand and design if you have prior knowledge or experience with industry-standard solutions such as Apache Kafka, Apache Flink, or Apache Spark. Congratulations on getting this far! Now give yourself a pat on the back. Good job!
-
-In this chapter, we went through the process of designing an ad click event aggregation system at the scale of Facebook or Google. We covered: Data model and API design. Use MapReduce paradigm to aggregate ad click events.
-
-Scale the message queue, aggregation service, and database. Mitigate hotspot issue. Monitor the system continuously.
-
-* Use reconciliation to ensure correctness.
-
-* Fault tolerance. The ad click event aggregation system is a typical big data processing system.
-
-It will be easier to understand and design if you have prior knowledge or experience with industry-standard solutions such as Apache Kafka, Apache Flink, or Apache Spark. Congratulations on getting this far! Now give yourself a pat on the back.
-
-Good job!
+---
+
+### Interview Clarification & Scope
+
+> **Candidate:** What is the format of the input data?  
+> **Interviewer:** Input data consists of log files appended across multiple application servers. Each event contains: `ad_id`, `click_timestamp`, `user_id`, `ip`, and `country`.
+>
+> **Candidate:** What is the expected data volume?  
+> **Interviewer:** 1 billion ad clicks per day across 2 million unique active ads. The event volume grows roughly 30% year-over-year.
+>
+> **Candidate:** What are the most important queries the system must support?  
+> **Interviewer:** Three primary queries:
+> 1. **Ad Click Count**: Return the aggregated click count for a specific `ad_id` over the last $M$ minutes.
+> 2. **Top $N$ Popular Ads**: Return the top 100 most-clicked ads in the past 1 minute (both $N$ and time window configurable).
+> 3. **Attribute Filtering**: Support dynamic filtering by `ip`, `user_id`, or `country` for the above queries.
+>
+> **Candidate:** What edge cases should we prepare for?  
+> **Interviewer:** 
+> - Events arriving late (out-of-order data).
+> - Duplicate event deliveries (from client retries or network drops).
+> - System component outages and state recovery.
+>
+> **Candidate:** What are the latency requirements?  
+> **Interviewer:** End-to-end latency of a few minutes is acceptable for reporting and billing. (Note: RTB auctions require sub-second latency, but downstream billing and aggregation tolerate 1–3 minutes).
+
+---
+
+### Requirements Summary
+
+#### Functional Requirements
+1. **Per-Ad Click Aggregation**: Aggregate click counts for any `ad_id` across sliding/tumbling windows of $M$ minutes.
+2. **Top $N$ Query**: Return the top $N$ most-clicked ads over the past $M$ minutes updated every minute.
+3. **Multi-Dimensional Filtering**: Support filtering queries by dimensions such as `country`, `ip`, and `user_id`.
+4. **Data Recalculation**: Support historical data replay and backfilling if a bug or corruption occurs.
+
+#### Non-Functional Requirements
+- **High Correctness & Accuracy**: Financial impact is significant; data directly affects billing and advertiser trust. Requires **exactly-once** processing semantics.
+- **Low Latency**: End-to-end processing latency must stay under a few minutes.
+- **Robust Fault Tolerance**: Node failures must not cause data loss, double-counting, or silent drops.
+- **Scalability**: Must scale gracefully to peak loads ($50{,}000\text{ QPS}$) and 30% annual traffic growth.
+
+---
+
+### Back-of-the-Envelope Estimation
+
+| Dimension / Metric | Calculation & Value |
+|:---|:---|
+| **Daily Active Users (DAU)** | $1\text{ Billion DAU}$ |
+| **Daily Ad Clicks** | $1\text{ Billion clicks/day}$ (assuming 1 ad click per user per day on average) |
+| **Average Write QPS** | $\frac{10^9\text{ clicks}}{86{,}400\text{ seconds}} \approx 10{,}000\text{ QPS}$ |
+| **Peak Write QPS** | $5 \times \text{Average QPS} = 50{,}000\text{ QPS}$ |
+| **Total Active Ads** | $2\text{ Million ads}$ |
+| **Raw Event Size** | $\approx 100\text{ Bytes (0.1 KB)}$ per event |
+| **Daily Raw Storage** | $10^9 \times 0.1\text{ KB} = 100\text{ GB/day}$ |
+| **Monthly Raw Storage** | $100\text{ GB/day} \times 30\text{ days} = 3\text{ TB/month}$ |
+| **Annual Raw Storage** | $3\text{ TB/month} \times 12\text{ months} = 36\text{ TB/year}$ |
+
+---
+
+## 2. High-Level Design & Core Data Models
+
+### Query API Design
+
+The API serves internal dashboards, advertiser portals, and billing systems.
+
+#### 1. Aggregate Click Count for a Specific Ad
+`GET /v1/ads/{ad_id}/aggregated_count`
+
+##### Request Parameters
+| Parameter | Type | Required | Description |
+|:---|:---|:---|:---|
+| `ad_id` | `String` (path) | Yes | Unique identifier of the target ad |
+| `from` | `Int64` (epoch sec) | No | Start timestamp of range (defaults to 1 minute ago) |
+| `to` | `Int64` (epoch sec) | No | End timestamp of range (defaults to current time) |
+| `filter_id` | `String` (query) | No | Pre-computed filter dimension identifier (e.g., US-only) |
+
+##### Response Payload
+```json
+{
+  "ad_id": "ad001",
+  "count": 1420,
+  "from": 1609459200,
+  "to": 1609459260,
+  "filter_id": "0012"
+}
+```
+
+---
+
+#### 2. Get Top $N$ Most-Clicked Ads
+`GET /v1/ads/popular_ads`
+
+##### Request Parameters
+| Parameter | Type | Required | Description |
+|:---|:---|:---|:---|
+| `count` | `Integer` | No | Number of top ads to return ($N$, default: 100) |
+| `window` | `Integer` | No | Aggregation window size ($M$) in minutes (default: 1) |
+| `filter_id` | `String` | No | Dimension filter strategy identifier |
+
+##### Response Payload
+```json
+{
+  "window_size_min": 1,
+  "update_time": 1609459260,
+  "ads": [
+    { "ad_id": "ad099", "clicks": 28450 },
+    { "ad_id": "ad001", "clicks": 19320 },
+    { "ad_id": "ad312", "clicks": 14200 }
+  ]
+}
+```
+
+---
+
+### Data Models & Schema Design
+
+The system maintains two distinct categories of data: **Raw Event Data** and **Aggregated Data**.
+
+```mermaid
+classDiagram
+    class RawClickEvent {
+        +String ad_id
+        +Timestamp click_timestamp
+        +String user_id
+        +String ip
+        +String country
+    }
+
+    class AggregatedAdCount {
+        +String ad_id
+        +Timestamp click_minute
+        +String filter_id
+        +Long count
+    }
+
+    class TopNPopularAds {
+        +Integer window_size
+        +Timestamp update_time_minute
+        +JSON most_clicked_ads
+    }
+
+    class FilterDimension {
+        +String filter_id
+        +String region
+        +String ip_range
+        +String user_segment
+    }
+
+    RawClickEvent ..> AggregatedAdCount : Stream Processed into
+    AggregatedAdCount ..> TopNPopularAds : Reduced into
+    FilterDimension --> AggregatedAdCount : Dimension Tag
+```
+
+#### Raw vs. Aggregated Data Trade-Off
+
+| Storage Strategy | Pros | Cons | Recommendation |
+|:---|:---|:---|:---|
+| **Raw Data Only** | • Complete fidelity<br>• Full debugging & audit trail<br>• Supports ad-hoc ML model training | • Massive storage growth<br>• Range queries and analytical rollups are unacceptably slow | Use as immutable backup and source for replay |
+| **Aggregated Data Only** | • Ultra-fast query response<br>• Compact storage footprint<br>• Optimized for dashboard refresh | • Irreversible loss of raw details<br>• Impossible to backfill new metrics or fix bugs | Use for active queries and dashboards |
+| **Hybrid (Store Both)** | • Best of both worlds: fast active queries + full recovery capability | • Additional storage & dual pipeline maintenance overhead | **✅ Recommended Choice** |
+
+---
+
+### Database Selection
+
+```mermaid
+flowchart TD
+    DataFlow{"Data Nature"}
+    
+    DataFlow -->|Raw Event Stream| RAW_TIER["Raw Storage Tier"]
+    RAW_TIER --> CASS_RAW["Cassandra / HBase\n(High write throughput)"]
+    RAW_TIER --> S3_PARQUET["Cloud Object Storage (S3/GCS)\n+ Columnar Parquet/ORC\n(Cost-effective cold storage)"]
+    
+    DataFlow -->|Aggregated Time-Series| AGG_TIER["Aggregated Storage Tier"]
+    AGG_TIER --> CASS_AGG["Cassandra / ScyllaDB\n(Fast row lookups & TTLs)"]
+    AGG_TIER --> OLAP["ClickHouse / Apache Pinot\n(Ultra-fast OLAP & vector filters)"]
+```
+
+1. **Raw Data Storage**:
+   - **Characteristics**: Extremely write-heavy ($10\text{K} - 50\text{K}\text{ QPS}$), append-only, low read frequency (only triggered for batch retraining or disaster recalculations).
+   - **Engine Options**: 
+     - **NoSQL Key-Value / Wide-Column** (Apache Cassandra / HBase) partitioned by `(date, ad_id)`.
+     - **Cloud Object Storage + Parquet** (Amazon S3 / GCS): Stream processors flush batch Parquet files rotated every $10\text{ GB}$ or 15 minutes. Very cost-effective.
+2. **Aggregated Data Storage**:
+   - **Characteristics**: Both read-heavy (dashboards auto-refreshing for 2M ads) and write-heavy (bulk window updates every minute).
+   - **Engine Options**:
+     - **Apache Cassandra**: Efficient for time-series range queries with compound primary keys `((ad_id, filter_id), click_minute)`.
+     - **ClickHouse / Apache Pinot**: Purpose-built column stores with native streaming ingestion from Kafka and sub-second OLAP rollups.
+
+---
+
+### End-to-End System Architecture
+
+To handle unpredictable traffic spikes without overwhelming downstream consumers, we decouple producers, processors, and storage engines using distributed message queues (**Apache Kafka**).
+
+```
++----------------------------------------------------------------------------------------------------+
+|                                    END-TO-END DATA PIPELINE                                        |
++----------------------------------------------------------------------------------------------------+
+
+ [ App Server 1 ] \
+ [ App Server 2 ] ---> [ Log Collector ] ---> [ Kafka Topic 1: Raw Events ]
+ [ App Server 3 ] /                                    |
+                                                       v
+                                            [ Stream Aggregator (Flink) ]
+                                            +---------------------------+
+                                            | • Map / Cleanse           |
+                                            | • Tumbling Windows (1 min)|
+                                            | • Sliding Windows (M min) |
+                                            | • Local Min-Heap (Top N)  |
+                                            +---------------------------+
+                                                       |
+                                                       v
+                                            [ Kafka Topic 2: Aggregated ]
+                                                       |
+                                                       v
+                                            [ Database Sink Consumer ]
+                                                       |
+                                                       v
+                                          [ Aggregated DB (Cassandra) ]
+                                                       |
+                                                       v
+                                         [ Query Service & Dashboards ]
+```
+
+```mermaid
+flowchart TD
+    subgraph Ingestion_Stage["1. Event Ingestion"]
+        A1["App Server 1"] & A2["App Server 2"] & A3["App Server N"] --> LC["Log Collector / Agent"]
+        LC --> K1["Kafka Topic 1<br/>(raw_ad_clicks)"]
+    end
+
+    subgraph Stream_Stage["2. Stream Processing (Flink DAG)"]
+        K1 --> MAP["Map / Filter Nodes<br/>(Normalize & Key by ad_id)"]
+        MAP --> AGG["Aggregate Nodes<br/>(1-min Window Count & Local Heap)"]
+        AGG --> RED["Reduce Nodes<br/>(Global Top N Merge)"]
+    end
+
+    subgraph Sink_Stage["3. Aggregated Storage & Serving"]
+        RED --> K2["Kafka Topic 2<br/>(aggregated_ad_clicks)"]
+        K2 --> SINK["DB Writer / Sink Service"]
+        SINK --> TSDB[("Aggregated DB<br/>(Cassandra / ClickHouse)")]
+        TSDB --> QS["Query Service"]
+        QS --> DASH["Real-time Dashboard / Billing API"]
+    end
+
+    subgraph Cold_Stage["4. Cold Archival"]
+        K1 -.-> S3_WRITER["Archival Consumer"]
+        S3_WRITER -.-> S3[("Object Store<br/>(S3 Parquet Archive)")]
+    end
+```
+
+---
+
+### Stream Processing: The MapReduce DAG Model
+
+The aggregation engine decomposes stream computation into a Directed Acyclic Graph (DAG) of specialized computing nodes:
+
+```mermaid
+flowchart LR
+    subgraph MapStage["Map Phase"]
+        SRC["Kafka Consumer"] --> M1["Map Node 1<br/>(Cleanse & Hash)"]
+        SRC --> M2["Map Node 2<br/>(Cleanse & Hash)"]
+    end
+
+    subgraph AggStage["Aggregate Phase (In-Memory)"]
+        M1 -->|ad_id % 3 == 0| AG1["Aggregate Node 0<br/>(Tumbling Window + MinHeap)"]
+        M1 -->|ad_id % 3 == 1| AG2["Aggregate Node 1<br/>(Tumbling Window + MinHeap)"]
+        M2 -->|ad_id % 3 == 2| AG3["Aggregate Node 2<br/>(Tumbling Window + MinHeap)"]
+        M2 -->|ad_id % 3 == 0| AG1
+    end
+
+    subgraph ReduceStage["Reduce Phase"]
+        AG1 -->|Local Top 100| R["Reduce Node<br/>(Global Top 100 Merge)"]
+        AG2 -->|Local Top 100| R
+        AG3 -->|Local Top 100| R
+        R --> OUT["Emit to Kafka Topic 2"]
+    end
+```
+
+#### Core Roles in the DAG
+1. **Map Node**:
+   - Reads raw events from Kafka partitions.
+   - Cleanses, filters, and normalizes unstructured fields.
+   - Shards and routes records downstream based on `hash(ad_id) % num_aggregate_nodes`.
+2. **Aggregate Node**:
+   - Maintains in-memory count state for each `ad_id` during the current active time window.
+   - Computes local Top $N$ rankings using a local **bounded min-heap** ($O(K \log N)$ space/time).
+3. **Reduce Node**:
+   - Gathers local Top $N$ candidates from all upstream aggregate nodes.
+   - Merges the streams into a definitive **global Top $N$ list** for the time window and emits the result.
+
+---
+
+### Multi-Dimensional Data Filtering (Star Schema)
+
+To support queries like *"Number of clicks for `ad001` in the US on mobile"*, we use a **Star Schema** dimensional modeling approach pre-aggregated directly in the stream:
+
+```mermaid
+erDiagram
+    FACT_AD_AGGREGATIONS {
+        string ad_id PK
+        timestamp click_minute PK
+        string filter_id FK
+        bigint click_count
+    }
+
+    DIM_FILTER {
+        string filter_id PK
+        string country
+        string ip_subnet
+        string device_type
+    }
+
+    DIM_FILTER ||--o{ FACT_AD_AGGREGATIONS : "defines dimension"
+```
+
+#### Aggregated Data with Star Schema Dimension
+| `ad_id` | `click_minute` | `filter_id` | `count` | Description |
+|:---|:---|:---|:---|:---|
+| `ad001` | `2021-01-01 00:00:00` | `0012` | 240 | US Traffic Only |
+| `ad001` | `2021-01-01 00:00:00` | `0013` | 510 | EU Traffic Only |
+| `ad001` | `2021-01-01 00:00:00` | `0000` | 1200 | Global / All Dimensions (`*`) |
+| `ad002` | `2021-01-01 00:00:00` | `0012` | 45 | US Traffic Only |
+
+> [!TIP]
+> **Star Schema Trade-Off**: Pre-computing dimension combinations guarantees $O(1)$ query lookup speed at runtime. However, having too many dimensions causes combinatorial explosion (*curse of dimensionality*). For dynamic ad-hoc slicing across dozens of dimensions, modern OLAP engines (ClickHouse / Pinot) are preferred over static pre-materialization.
+
+---
+
+## 3. Design Deep Dive
+
+---
+
+### 1. Streaming vs. Batch Processing & Kappa Architecture
+
+| Dimension | Online Services | Batch Systems (Offline) | Streaming Systems (Near Real-Time) |
+|:---|:---|:---|:---|
+| **Responsiveness** | Milliseconds ($< 100\text{ ms}$) | Hours / Days | Sub-second to minutes |
+| **Input Data** | Discrete user requests | Bounded historical datasets | **Unbounded continuous streams** |
+| **Output** | Response to end user | Materialized tables, reports | **Continuous metric streams, live views** |
+| **Tooling** | Web servers, microservices | MapReduce, Spark, Hive | **Apache Flink, Spark Streaming, Kafka Streams** |
+
+```mermaid
+flowchart TD
+    subgraph LambdaArch["Lambda Architecture (Dual Pipeline)"]
+        SRC_L["Raw Events"] --> BATCH_L["Batch Layer (Hadoop/Spark)"]
+        SRC_L --> SPEED_L["Speed Layer (Storm/Flink)"]
+        BATCH_L --> B_VIEW["Batch Views"]
+        SPEED_L --> S_VIEW["Real-Time Views"]
+        B_VIEW & S_VIEW --> QUERY_L["Hybrid Query Engine"]
+    end
+
+    subgraph KappaArch["Kappa Architecture (Unified Stream Pipeline)"]
+        SRC_K["Raw / Historical Log (Kafka/S3)"] --> STREAM_K["Single Stream Processing Engine (Flink)"]
+        STREAM_K --> VIEW_K["Real-Time Views (Cassandra / ClickHouse)"]
+        VIEW_K --> QUERY_K["Unified Query Engine"]
+    end
+```
+
+#### Why Kappa Architecture is Selected
+- **Lambda Architecture** forces the maintenance of **two separate codebases** (e.g., Spark SQL for batch and Flink for streaming) to compute identical business logic, inevitably leading to code drift and reconciliation discrepancies.
+- **Kappa Architecture** uses **one unified stream processing engine** for both live incoming events and historical reprocessing.
+
+---
+
+### 2. Historical Data Recalculation (Replay Flow)
+
+When an aggregation bug is patched or an advertiser requests a historical audit, the system replays historical raw logs without interrupting real-time live ingestion:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant S3 as Cold Storage (S3 Raw Logs)
+    participant Recalc as Recalculation Service
+    participant Stream as Dedicated Flink Sub-Cluster
+    participant K2 as Kafka Topic 2 (Aggregated)
+    participant DB as Aggregated Database
+
+    Note over Recalc,Stream: Isolated from production stream
+    Recalc->>S3: Read historical raw data for time range [T_start, T_end]
+    Recalc->>Stream: Stream historical chunks into aggregator
+    Stream->>Stream: Apply patched aggregation logic
+    Stream->>K2: Output corrected aggregated counts
+    K2->>DB: Upsert / Overwrite corrupted time windows
+    Note over DB: Corrected state available to dashboards
+```
+
+---
+
+### 3. Time Semantics & Watermarking for Late Events
+
+#### Event Time vs. Processing Time
+
+```mermaid
+flowchart LR
+    E["Event Occurs on Client<br/>(Event Time: 12:00:00)"] -->|Network Lag / Queue Delay| S["Server Processes Event<br/>(Processing Time: 12:04:30)"]
+```
+
+| Criteria | Event Time | Processing Time |
+|:---|:---|:---|
+| **Definition** | Timestamp when the ad click occurred on the client device | System clock timestamp of the stream processing node |
+| **Accuracy** | **High**; reflects actual user behavior | **Low**; distorted by network jitter and queue backpressure |
+| **Handling Late Data** | Requires watermarking and window buffering | Trivial; no late events by definition |
+| **Reliability Risk** | Client clocks may drift or be spoofed | Server NTP clocks are trusted |
+| **Decision** | **✅ Recommended for ad billing** | ❌ Not acceptable for billing |
+
+---
+
+#### Handling Late Data with Watermarks
+
+A **Watermark** is a progress metric in event-time processing that informs the system: *"We assume no more events with timestamp $\le t$ will arrive."*
+
+```mermaid
+flowchart TD
+    subgraph W1["1-Minute Tumbling Window (12:00:00 - 12:01:00)"]
+        E1["Event 1 (12:00:15)<br/>Arrives at 12:00:16<br/>[Included on time]"]
+        E2["Event 2 (12:00:55)<br/>Arrives at 12:01:08 (Late)<br/>[Captured by Watermark Extension]"]
+    end
+    
+    WM["Watermark Buffer Closes at 12:01:15 (+15s)"]
+    
+    subgraph W1_LATE["Out-of-Bounds Straggler Events"]
+        E3["Event 3 (12:00:58)<br/>Arrives at 12:01:25 (Too Late)<br/>[Sent to DLQ / Batch Reconciliation]"]
+    end
+
+    W1 --> WM
+    WM -->|Closes Window & Emits Aggregation| OUT["Emit Window Aggregate Count"]
+    W1_LATE -.->|Dropped from Real-Time Stream| RECON["Batch Reconciliation Pipeline"]
+```
+
+```
+Window [12:00 - 12:01] 
+|-----------------------|===============> Watermark closes at 12:01:15
+   Click at 12:00:50           ^
+   Arrives at 12:01:05 --------+ (Accepted & Included in 12:00 window)
+
+   Click at 12:00:55
+   Arrives at 12:01:25 --------> (Rejected: Beyond Watermark -> Sent to Dead Letter Queue / Reconciliation)
+```
+
+> [!NOTE]
+> **Watermark Trade-Off**: 
+> - **Longer watermark buffer** (e.g., 60 seconds): Captures more straggler events $\rightarrow$ higher data accuracy, but increases end-to-end dashboard latency.
+> - **Shorter watermark buffer** (e.g., 10 seconds): Lower latency, but misses late events. Missed events are caught by **daily batch reconciliation**.
+
+---
+
+### 4. Windowing Strategies
+
+```mermaid
+flowchart TD
+    subgraph Tumbling["1. Tumbling (Fixed) Window — 1 Minute"]
+        T1["[00:00 - 01:00] (Count: 120)"]
+        T2["[01:00 - 02:00] (Count: 155)"]
+        T3["[02:00 - 03:00] (Count: 90)"]
+    end
+
+    subgraph Sliding["2. Sliding Window — 5-Min Window, 1-Min Slide"]
+        S1["[00:00 - 05:00] (Top N)"]
+        S2["[00:01 - 05:01] (Top N)"]
+        S3["[00:02 - 05:02] (Top N)"]
+    end
+```
+
+1. **Tumbling (Fixed) Window**:
+   - Non-overlapping, fixed-length intervals.
+   - **Use Case**: Aggregating per-minute ad click counts.
+2. **Sliding Window**:
+   - Overlapping intervals that advance by a configurable slide step.
+   - **Use Case**: Tracking *"Top 100 ads in the last 5 minutes, updated every 1 minute"*.
+
+---
+
+### 5. Delivery Guarantees & Exactly-Once Semantics
+
+In advertising systems, duplicate processing directly causes **over-billing**, while dropped events cause **under-billing**. Exactly-once processing is mandatory.
+
+```mermaid
+flowchart TD
+    subgraph ExactlyOncePipeline["End-to-End Exactly-Once Pipeline"]
+        K1["Upstream Kafka<br/>(Transactional Producer)"] -->|"1. Idempotent Read with Offsets"| FLINK["Flink Stream Aggregator<br/>(Stateful Checkpointing)"]
+        FLINK -->|"2. Two-Phase Commit (2PC)"| K2["Downstream Kafka<br/>(Aggregated Results)"]
+        K2 -->|"3. Idempotent Upsert"| DB[("Cassandra / OLAP DB<br/>(Primary Key Deduplication)")]
+    end
+```
+
+#### Why Standard Offset Commits Cause Duplicates or Data Loss
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant K1 as Upstream Kafka
+    participant Agg as Stream Aggregator
+    participant Ext as External Offset Store (S3)
+    participant K2 as Downstream Kafka
+
+    Note over Agg: Scenario A: Early Offset Commit (Data Loss)
+    Agg->>K1: Read Offsets 100-110
+    Agg->>Ext: Commit Offset 110 (BEFORE emitting results)
+    Note over Agg: 💥 AGGREGATOR CRASHES!
+    Note over Agg: New worker reads offset 110 -> Events 100-110 LOST!
+
+    Note over Agg: Scenario B: Late Offset Commit (Duplicates)
+    Agg->>K1: Read Offsets 100-110
+    Agg->>K2: Emit Aggregated Result
+    Note over Agg: 💥 AGGREGATOR CRASHES before offset 110 committed!
+    Note over Agg: New worker re-reads from offset 100 -> Emits DUPLICATE results!
+```
+
+#### The Solution: Two-Phase Commit (2PC) & Idempotency
+To achieve true end-to-end exactly-once:
+1. **Source to Processing Engine**: Distributed snapshots using the **Chandy-Lamport algorithm** (Flink Checkpoints).
+2. **Processing Engine to Downstream Queue**: Flink uses Kafka's **Transactional Producer API** with Two-Phase Commit (`2PC`):
+   - *Pre-commit*: Write aggregated data into Kafka transaction during snapshot.
+   - *Commit*: Mark Kafka transaction as committed only after checkpoint succeeds.
+3. **Downstream Queue to DB Sink**: Idempotent upsert operations in the storage engine using deterministic natural primary keys (`ad_id + click_minute + filter_id`).
+
+---
+
+### 6. Scalability & Hotspot Mitigation
+
+#### Scaling the Message Queue (Kafka)
+- **Partition Key**: Partition by `hash(ad_id)`. All events for a specific ad land in the same partition, enabling clean in-memory accumulation.
+- **Physical Topic Sharding**: Split large traffic streams across regional topics (e.g., `ad_clicks_us`, `ad_clicks_eu`) to limit the impact of partition rebalances.
+
+```mermaid
+flowchart TD
+    subgraph HotspotProblem["Hotspot Scenario (Popular Ad)"]
+        A_HOT["Ad #999 (Superbowl Ad)<br/>30,000 Clicks/sec"] --> P0["Partition 0<br/>(Overloaded Node!)"]
+        A_NORM["Ad #001 (Regular Ad)<br/>5 Clicks/sec"] --> P1["Partition 1<br/>(Idle Node)"]
+    end
+```
+
+#### Mitigating Hotspots: Two-Stage (Global-Local) Aggregation
+
+When a viral ad generates thousands of clicks per second, a single partition node will bottleneck. We solve this using **Two-Stage Aggregation**:
+
+```mermaid
+flowchart TD
+    subgraph Stage1["Stage 1: Local Pre-Aggregation (Salted Keys)"]
+        E["Raw Click for Ad #999"] --> SALT["Add Salt: hash(ad_id) % 3<br/>Keys: ad999_0, ad999_1, ad999_2"]
+        SALT --> L1["Local Aggregator 0<br/>(ad999_0 -> Count: 10,000)"]
+        SALT --> L2["Local Aggregator 1<br/>(ad999_1 -> Count: 10,000)"]
+        SALT --> L3["Local Aggregator 2<br/>(ad999_2 -> Count: 10,000)"]
+    end
+
+    subgraph Stage2["Stage 2: Global Merge"]
+        L1 & L2 & L3 --> G["Global Aggregator Node<br/>(Sum: 10k + 10k + 10k = 30,000)"]
+        G --> OUT["Write final ad999 Count to Sink"]
+    end
+```
+
+---
+
+### 7. Fault Tolerance & State Recovery
+
+Stream aggregators maintain stateful windows in memory. If a worker node crashes:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant K as Kafka Broker
+    participant Snap as Distributed Snapshot (HDFS/S3)
+    participant NodeNew as New Aggregator Worker
+
+    Note over Snap: Flink periodically saves checkpoints<br/>(Kafka Offset + Window State + Heap)
+    Note over NodeNew: Worker crashes -> Cluster brings up new container
+    NodeNew->>Snap: 1. Load state from last verified checkpoint (e.g., Offset: 500,000)
+    NodeNew->>K: 2. Request replay from Offset 500,001
+    K-->>NodeNew: 3. Stream catch-up delta events
+    NodeNew->>NodeNew: 4. Reconstruct in-memory window state
+    Note over NodeNew: Ready & processing live stream in sync
+```
+
+---
+
+### 8. System Monitoring & Daily Batch Reconciliation
+
+```mermaid
+flowchart TD
+    subgraph RealTime["Real-Time Streaming Path"]
+        LIVE["Kafka Ingestion"] --> FLINK["Flink Stream Aggregator"]
+        FLINK --> STREAM_DB[("Real-Time Aggregations")]
+    end
+
+    subgraph BatchReconcile["Daily Offline Batch Reconciliation"]
+        S3_RAW[("S3 Raw Parquet Logs")] --> SPARK["Spark Batch Job<br/>(Sort by Event Time & Compute Daily Rollup)"]
+        SPARK --> BATCH_DB[("Reconciled Batch View")]
+    end
+
+    STREAM_DB & BATCH_DB --> RECON["Reconciliation Comparator"]
+    RECON -->|"Diff > Threshold"| ALERT["🚨 Discrepancy Alert & Financial Audit"]
+    RECON -->|"Diff == 0 or within noise"| OK["✅ Daily Billing Ledger Certified"]
+```
+
+#### Critical Operational Metrics
+1. **Event Latency Lag**: Difference between `processing_time` and `event_time`. Spikes indicate upstream network lag or queue build-up.
+2. **Kafka Consumer Lag (`records-lag-max`)**: Measures backlog growth. Triggers auto-scaling of Flink task slots.
+3. **JVM Memory & Garbage Collection**: High memory pressure inside stream operators indicates excessive window sizes or watermark delays.
+
+---
+
+### 9. Alternative Architecture: Real-Time OLAP Engine
+
+An alternative industry-standard pattern avoids custom aggregation code by streaming raw events directly into a distributed real-time OLAP database:
+
+```mermaid
+flowchart LR
+    APP["App Servers"] --> K["Kafka Topic"]
+    K --> OLAP[("Real-Time OLAP Engine<br/>(ClickHouse / Apache Pinot)")]
+    K -.-> ARCHIVE[("S3 Deep Archive")]
+    OLAP --> API["Query Service / SQL Dashboards"]
+```
+
+#### Trade-Off Comparison
+| Feature | Custom Stream DAG (Flink + Cassandra) | Real-Time OLAP (Kafka + ClickHouse / Pinot) |
+|:---|:---|:---|
+| **Architecture Complexity** | Higher (requires custom DAG operators and 2PC sinks) | **Lower** (Kafka connects directly to ClickHouse tables) |
+| **Ad-Hoc Query Flexibility** | Low (only pre-defined dimensions in Star Schema) | **Extremely High** (full SQL slicing across any dimension) |
+| **Write Throughput** | Highest (pre-aggregated before DB write) | Very high (vectorized column inserts) |
+| **Resource Cost** | Low storage footprint | Higher memory and CPU for indexing |
+
+---
+
+## 4. Summary & Architecture Wrap-Up
+
+```mermaid
+flowchart TD
+    subgraph SummaryGrid["Ad Click Event Aggregation Summary"]
+        direction TB
+
+        C1["Scalability: Partition by hash(ad_id) + Two-stage salting for hotspots"]
+        C2["Correctness: Event-time windowing + 15s Watermark + End-to-end 2PC exactly-once"]
+        C3["Fault Tolerance: Chandy-Lamport state checkpointing + Deterministic Kafka replay"]
+        C4["Storage: S3 Parquet for raw backup + Cassandra/ClickHouse for aggregated rollups"]
+        C5["Integrity: End-of-day Spark batch reconciliation against raw event logs"]
+    end
+```
+
+### Architectural Decisions Matrix
+
+| Challenge | Chosen Solution | Rationale & Trade-Off |
+|:---|:---|:---|
+| **High Write Scale ($50\text{K}\text{ QPS}$)** | Asynchronous Kafka decoupling + Flink stream aggregation | Prevents backpressure crashes and scales consumers independently |
+| **Data Correctness for Billing** | Event-time processing with watermark extensions | Mitigates client clock skew and out-of-order deliveries |
+| **Duplicate Prevention** | Two-Phase Commit (2PC) + Idempotent DB upserts | Ensures exact financial figures without double charging |
+| **Celebrity Ad Hotspots** | Two-stage (Global-Local) salted pre-aggregation | Distributes write spikes across multiple workers |
+| **Data Recalculation** | Kappa Architecture with dedicated historical replay worker | Enables instant bug fixes and auditing using the same codebase |
+| **Data Audit & Integrity** | End-of-day offline Spark batch reconciliation | Reconciles edge-case late events and verifies ledger accuracy |
+
+---
 
 ## Reference Materials
 
-[1] Clickthrough rate (CTR): Definition: https://support.google.com/google-ads/answer/2615875?hl=en [2] Conversion rate: Definition: https://support.google.com/google- ads/answer/2684489?hl=en [3] OLAP functions: https://docs.oracle.com/database/121/OLAXS/olap_functions.htm#O LAXS169 [4] Display Advertising with Real-Time Bidding (RTB) and Behavioural Targeting: https://arxiv.org/pdf/1610.03013.pdf [5] LanguageManual ORC: https://cwiki.apache.org/confluence/display/hive/languagemanual+orc [6] Parquet: https://databricks.com/glossary/what-is-parquet [7] What is avro: https://www.ibm.com/topics/avro [8] Big Data: https://www.datakwery.com/techniques/big-data/ [9] An Overview of End-to-End Exactly-Once Processing in Apache Flink: https://flink.apache.org/features/2018/03/01/end-to-end- exactly-once-apache-flink.html [10] DAG model: https://en.wikipedia.org/wiki/Directed_acyclic_graph [11] Understand star schema and the importance for Power BI: https://docs.microsoft.com/en-us/power-bi/guidance/star-schema [12] Martin Kleppmann. Designing Data-Intensive Applications. O’Reilly Media, 2017. [13] Apache Flink: https://flink.apache.org/ [14] Lambda architecture: https://databricks.com/glossary/lambda- architecture [15] Kappa architecture: https://hazelcast.com/glossary/kappa- architecture [16] Martin Kleppmann.
-
-Stream Processing. In Designing Data- Intensive Applications. O’Reilly Media, 2017. [17] End-to-end Exactly-once Aggregation Over Ad Streams: https://www.youtube.com/watch?v=hzxytnPcAUM [18] Ad traffic quality: https://www.google.com/ads/adtrafficquality/
-
-[19] Understanding MapReduce in Hadoop: https://www.section.io/engineering-education/understanding-map- reduce-in-hadoop/ [20] Flink on Apache Yarn: https://ci.apache.org/projects/flink/flink- docs-release-1.13/docs/deployment/resource-providers/yarn/ [21] How data is distributed across a cluster (using virtual nodes): https://docs.datastax.com/en/cassandra- oss/3.0/cassandra/architecture/archDataDistributeDistribute.html [22] Flink performance tuning: https://nightlies.apache.org/flink/flink- docs-master/docs/dev/table/tuning/ [23] ClickHouse: https://clickhouse.com/ [24] Druid: https://druid.apache.org/ [25] Real-Time Exactly-Once Ad Event Processing with Apache Flink, Kafka, and Pinot: https://eng.uber.com/real-time-exactly-once-ad- event-processing/
-
-Document Outline
-
-FOREWORD
-
-ACKNOWLEDGMENTS
-
-Chapter 1. Proximity Service
-
-Chapter 2. Nearby Friends
-
-Chapter 3. Google Maps
-
-Chapter 4. Distributed Message Queue
-
-Chapter 5. Metrics Monitoring and Alerting System
-
-Chapter 6. Aggregate Ad Click Events
-
-Chapter 7. Hotel Reservation System
-
-Chapter 8. Distributed Email Service
-
-Chapter 9. S3-like Object Storage
-
-Chapter 10. Real-time Gaming Leaderboard
-
-Chapter 11. Payment System
-
-Chapter 12. Digital Wallet
-
-Chapter 13. Stock Exchange
-
-AFTERWORD
-
-## Additional Figures
-
-![Figure](images/img-177-139.jpg)
-
-![Figure](images/img-178-140.jpg)
-
-![Figure](images/img-179-141.jpg)
-
-![Figure](images/img-180-142.jpg)
-
-![Figure](images/img-181-143.jpg)
-
-![Figure](images/img-181-144.jpg)
-
-![Figure](images/img-182-145.jpg)
-
-![Figure](images/img-183-146.jpg)
-
-![Figure](images/img-184-147.jpg)
-
-![Figure](images/img-185-148.jpg)
-
-![Figure](images/img-186-149.jpg)
-
-![Figure](images/img-187-150.jpg)
-
-![Figure](images/img-187-151.jpg)
-
-![Figure](images/img-188-152.jpg)
-
-![Figure](images/img-189-153.jpg)
+1. **Clickthrough Rate (CTR)**: [Google Ads Help](https://support.google.com/google-ads/answer/2615875?hl=en)
+2. **Display Advertising with RTB and Behavioral Targeting**: [ArXiv Research](https://arxiv.org/pdf/1610.03013.pdf)
+3. **Apache Flink End-to-End Exactly-Once Processing**: [Apache Flink Documentation](https://flink.apache.org/features/2018/03/01/end-to-end-exactly-once-apache-flink.html)
+4. **Star Schema in Dimensional Modeling**: [Microsoft Architecture Guide](https://docs.microsoft.com/en-us/power-bi/guidance/star-schema)
+5. **Martin Kleppmann**: *Designing Data-Intensive Applications*. O'Reilly Media, 2017.
+6. **Yelp Ad Stream Aggregation Architecture**: [Yelp Engineering](https://www.youtube.com/watch?v=hzxytnPcAUM)
+7. **Uber Real-Time Exactly-Once Ad Processing with Flink & Pinot**: [Uber Engineering](https://eng.uber.com/real-time-exactly-once-ad-event-processing/)
+8. **ClickHouse Architecture Overview**: [ClickHouse Docs](https://clickhouse.com/docs)
