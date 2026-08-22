@@ -25,6 +25,13 @@ timestamp: 2026-07-04T00:00:00Z
 | Centralized Logging | [`#centralized-logging`](#centralized-logging) |
 | Distributed Tracing | [`#distributed-tracing`](#distributed-tracing) |
 | Abuse-Block Counts | [`#abuse-block-counts`](#abuse-block-counts) |
+| Time-Series Database (TSDB) | [`#time-series-database-tsdb`](#time-series-database-tsdb) |
+| Push vs Pull Metrics Collection | [`#push-vs-pull-metrics-collection`](#push-vs-pull-metrics-collection) |
+| Gorilla Compression | [`#gorilla-compression`](#gorilla-compression) |
+| Downsampling and Rollup | [`#downsampling-and-rollup`](#downsampling-and-rollup) |
+| FlameGraph | [`#flamegraph`](#flamegraph) |
+
+---
 
 ## Observability
 
@@ -269,4 +276,127 @@ A metric that tracks how many requests were rejected because they were classifie
 
 ### Also see
 - [Rate Limiting](api-design.md#rate-limiting) · [Golden Signals](#golden-signals) · [Load Shedding](resilience.md#load-shedding)
+
+---
+
+## Time-Series Database (TSDB)
+
+A **database engine purpose-built to store, index, and query timestamped telemetry, metrics, and event series** (e.g., InfluxDB, Prometheus, TimescaleDB, Amazon Timestream). TSDBs are optimized for append-only sequential writes ordered by time, time-range scanning, and aggressive compression.
+
+### Key Characteristics
+- **Append-only ingest model**: Writes are heavily biased toward appending the latest timestamped samples; historical overwrites/updates are rare
+- **Specialized columnar time compression**: Employs delta-of-deltas and Gorilla XOR encoding to compress 64-bit timestamps and float values down to 1–2 bytes per sample
+- **Automated data lifecycle**: Native retention policies automatically age out raw high-frequency data into downsampled rollup tiers and drop expired partitions
+- **Time-bucket aggregation primitives**: Optimized query engines supporting windowed aggregations (`SUM`, `AVG`, `PERCENTILE`, `RATE`) grouped by time buckets
+
+### When to Use
+- Infrastructure and application metrics monitoring (CPU, memory, QPS, latency histograms)
+- IoT sensor telemetry and industrial SCADA logging
+- Real-time algorithmic trading tick data and price charting
+
+### When NOT to Use
+- Complex relational business entities requiring ACID transactions and foreign key joins across normalized tables
+- Point-in-time document storage with frequent random updates to nested attributes
+
+### Also see
+- [Push vs Pull Metrics Collection](#push-vs-pull-metrics-collection) · [Gorilla Compression](#gorilla-compression) · [Downsampling and Rollup](#downsampling-and-rollup)
+
+---
+
+## Push vs Pull Metrics Collection
+
+The **fundamental architectural dichotomy in telemetry collection systems** deciding whether target applications actively send metrics to a collector (Push model) or a centralized collector periodically polls endpoints on target applications (Pull model).
+
+### Key Characteristics
+- **Pull Model (e.g., Prometheus, Datadog Agent)**:
+  - Collector periodically scrapes HTTP `/metrics` endpoints
+  - Built-in liveness detection (if scrape fails, service is down)
+  - Prevents monitoring systems from being overwhelmed by flood storms (collector dictates polling frequency)
+  - Requires service discovery (Consul, Kubernetes API) to locate ephemeral instances
+- **Push Model (e.g., StatsD, AWS CloudWatch, OpenTelemetry Collector push)**:
+  - Applications emit metrics over UDP/HTTP directly to ingestion gateways
+  - Ideal for ephemeral short-lived serverless functions (AWS Lambda) and batch jobs that terminate before a scraper can poll
+  - Requires load balancers and queue buffers in front of the ingestion pipeline to handle traffic spikes
+
+### When to Use
+- **Pull**: Long-running microservices, Kubernetes clusters, and infrastructure nodes with stable endpoints
+- **Push**: Serverless workloads (Lambda), edge/mobile clients, and short batch jobs
+
+### When NOT to Use
+- Pulling from client mobile apps behind NAT/firewalls (impossible without outbound push)
+- Pushing unbuffered telemetry from millions of nodes directly to backend databases without an ingestion broker
+
+### Also see
+- [Time-Series Database (TSDB)](#time-series-database-tsdb) · [OpenTelemetry](#opentelemetry) · [Golden Signals](#golden-signals)
+
+---
+
+## Gorilla Compression
+
+A **lossless time-series compression algorithm** developed by Facebook (SIGMOD 2015) that compresses regular 64-bit timestamps and 64-bit floating-point metric values in memory down to an average of ~1.37 bytes per sample (over 10x compression ratio).
+
+### Key Characteristics
+- **Timestamp Delta-of-Deltas**: Telemetry timestamps are usually sampled at fixed intervals (e.g., every 10 seconds). Computing the difference between successive deltas ($\Delta = (t_i - t_{i-1}) - (t_{i-1} - t_{i-2})$) yields 0 in most cases, encoded in a single bit `0`
+- **Floating-Point XOR Compression**: Metric values change slowly between successive measurements. XORing the current float with the previous float ($v_i \oplus v_{i-1}$) yields many leading and trailing zeros, which are bit-packed efficiently
+- **Streaming compression**: Compresses streaming telemetry on the fly with minimal CPU overhead, enabling hours of recent metric data to reside entirely in high-speed RAM
+
+### When to Use
+- In-memory time-series storage engines (Prometheus TSDB, M3DB, InfluxDB)
+- High-frequency IoT telemetry and financial market data recording
+- Reducing RAM footprint in real-time metrics monitoring clusters
+
+### When NOT to Use
+- Highly chaotic, completely random data where floating-point bits do not repeat
+- Unstructured text strings or binary blob payloads
+
+### Also see
+- [Time-Series Database (TSDB)](#time-series-database-tsdb) · [Downsampling and Rollup](#downsampling-and-rollup)
+
+---
+
+## Downsampling and Rollup
+
+The **lifecycle data management process in time-series systems** that compacts high-resolution raw metric points (e.g., 10-second intervals) into lower-resolution statistical summaries (e.g., 1-minute, 1-hour, or 1-day intervals) as data ages.
+
+### Key Characteristics
+- **Multi-tiered retention**: Raw 10s data kept for 7 days $\rightarrow$ 1m rollups kept for 30 days $\rightarrow$ 1hr rollups kept for 1 year
+- **Statistical preservation**: Rollup computation must preserve multiple statistical aggregates (`min`, `max`, `sum`, `count`, `p50`, `p99`); averaging averages distorts extreme spikes
+- **Storage cost reduction**: Reduces historical time-series storage footprint by 90–99% while preserving long-term trend analysis capability
+- **Fast long-range dashboard queries**: 1-year trend graphs query ~8,760 hourly points rather than 3.1 million raw samples
+
+### When to Use
+- Production observability backends managing millions of time series over multi-year retention horizons
+- Capacity planning dashboards and seasonal anomaly detection
+- Cost optimization in cloud metrics monitoring infrastructure
+
+### When NOT to Use
+- High-precision forensic debugging immediately after an active incident (where exact millisecond sample resolution is critical)
+- Non-aggregatable categorical logs
+
+### Also see
+- [Time-Series Database (TSDB)](#time-series-database-tsdb) · [Gorilla Compression](#gorilla-compression)
+
+---
+
+## FlameGraph
+
+A **hierarchical, interactive visualization of profiled execution software stacks** (created by Brendan Gregg) that plots function call trees along the vertical Y-axis and resource consumption (CPU on-CPU time, off-CPU lock wait time, or memory allocation) along the horizontal X-axis.
+
+### Key Characteristics
+- **X-axis represents volume**: The horizontal width of each box represents the percentage of total CPU time or memory consumed by that function and its descendants (alphabetically ordered, not chronological)
+- **Y-axis represents stack depth**: The vertical height shows the call stack hierarchy, with parent callers on the bottom and child callees stacked on top
+- **"Plates" indicate hotspots**: Wide flat tops ("plateaus") immediately reveal CPU bottlenecks and performance regressions without reading raw text profile logs
+- **Interactive zooming**: Allows developers to click and zoom into specific sub-stacks for fine-grained performance diagnosis
+
+### When to Use
+- Diagnosing CPU saturation, GC pause overhead, and hot loops in high-throughput backend services
+- Analyzing memory allocation churn and lock contention bottlenecks
+- Continuous production profiling (e.g., Pyroscope, Parca, Google Cloud Profiler)
+
+### When NOT to Use
+- Pure network I/O latency investigations where CPU utilization is near zero (use Distributed Tracing instead)
+- Macro-level uptime and error monitoring (use Golden Signals dashboards)
+
+### Also see
+- [Observability](#observability) · [Distributed Tracing](#distributed-tracing) · [Latency](#latency)
 
