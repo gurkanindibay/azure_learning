@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Cache miss attack"
+description: "Caching is awesome but it doesn’t come without a cost, just like many things in life. One of the issues is"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Cache miss attack

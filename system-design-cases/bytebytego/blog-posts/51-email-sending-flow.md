@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Email sending flow"
+description: "In this post, we will take a closer look at the email sending flow. 1. A user writes an email on webmail and presses the “send” button. The request is sent to the load balancer. 2. The load balance..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Email sending flow

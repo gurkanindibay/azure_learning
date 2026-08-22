@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Do you know how to generate globally unique IDs?"
+description: "In this post, we will explore common requirements for IDs that are used in social media such as Facebook, Twitter, and LinkedIn. Requirements: - Globally unique - Roughly sorted by time - Numerical..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Do you know how to generate globally unique IDs?

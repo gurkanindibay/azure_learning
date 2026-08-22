@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Design a payment system"
+description: "Today is Cyber Monday. Here is how money moves when you click the Buy button on Amazon or any of your favorite shopping websites. I posted the same diagram last week for an overview and a few peopl..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Design a payment system

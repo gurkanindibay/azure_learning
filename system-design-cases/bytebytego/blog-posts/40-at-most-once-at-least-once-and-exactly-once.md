@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "At-most once, at-least once, and exactly once"
+description: "In modern architecture, systems are broken up into small and independent building blocks with well-defined interfaces between them. Message queues provide communication and coordination for those b..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # At-most once, at-least once, and exactly once

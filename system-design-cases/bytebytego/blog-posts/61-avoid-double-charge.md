@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Avoid double charge"
+description: "One of the most serious problems a payment system can have is to **double charge a customer**. When we design the payment system, it is important to guarantee that the payment system executes a pay..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Avoid double charge

@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Interview Question: design Google Docs"
+description: "1️⃣ Clients send document editing operations to the WebSocket Server. 2️⃣ The real-time communication is handled by the WebSocket Server. 3️⃣ Documents operations are persisted in the Message Queue."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Interview Question: design Google Docs

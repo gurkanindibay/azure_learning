@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How do modern browsers work?"
+description: "Google published a series of articles about \"Inside look at modern web browser\". It's a great read. Links: https://developer.chrome.com/blog/inside-browser-part1/ https://developer.chrome.com/blog/..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How do modern browsers work?

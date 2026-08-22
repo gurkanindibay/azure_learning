@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Why is Redis so Fast?"
+description: "There are 3 main reasons as shown in the diagram below. 1. Redis is a RAM-based database. RAM access is at least 1000 times faster than random disk access. 2. Redis leverages IO multiplexing and si..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Why is Redis so Fast?

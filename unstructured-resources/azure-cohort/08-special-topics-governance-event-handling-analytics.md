@@ -1,3 +1,11 @@
+---
+type: Unstructured Note
+title: "Special Topics Governance Event Handling Analytics"
+description: "Summary"
+tags: [notes, azure]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 Summary
 
 

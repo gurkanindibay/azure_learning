@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Big data evolvement"
+description: "I hope everyone has a great time with friends and family during the holidays. If you are looking for some readings, classic engineering papers are a good start. A lot of times when we are busy with..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Big data evolvement

@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Interview Question: Design Google Maps"
+description: "Google started project G**oogle** M**aps** in 2005. As of March 2021, Google Maps had one billion daily active users, 99% coverage of the world in 200 countries. Although Google Maps is a very comp..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Interview Question: Design Google Maps

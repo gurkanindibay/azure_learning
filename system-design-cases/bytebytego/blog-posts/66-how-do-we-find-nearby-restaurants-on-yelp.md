@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How do we find nearby restaurants on Yelp?"
+description: "Here are some design details behind the scenes. There are two key services (see the diagram below): -"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How do we find nearby restaurants on Yelp?

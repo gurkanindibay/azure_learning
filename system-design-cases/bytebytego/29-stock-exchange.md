@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Stock Exchange"
+description: "*Figure 1 Largest stock exchanges (Source: [5])*"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Stock Exchange
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

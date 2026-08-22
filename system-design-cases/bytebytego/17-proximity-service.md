@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Proximity Service"
+description: "Yelp supports many features and it is not feasible to design all of them in an interview session, so it’s important to narrow down the scope by asking questions. The interactions between the interv..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Proximity Service
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

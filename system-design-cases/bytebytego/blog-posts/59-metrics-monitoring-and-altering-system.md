@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Metrics monitoring and altering system"
+description: "A well-designed **metrics monitoring**and alerting system plays a key role in providing clear visibility into the health of the infrastructure to ensure high availability and reliability. The diagr..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Metrics monitoring and altering system

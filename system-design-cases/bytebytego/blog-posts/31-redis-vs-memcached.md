@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Redis vs Memcached"
+description: "The diagram below illustrates the key differences. The advantages on data structures make Redis a good choice for: - Recording the number of clicks and comments for each post (hash) - Sorting the c..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Redis vs Memcached

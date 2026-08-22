@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design A Chat System"
+description: "In this chapter we explore the design of a chat system. Almost everyone uses a chat app. Figure 1 shows some of the most popular apps in the marketplace."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "The Learning Continues"
+description: "Designing good systems requires years of accumulation of knowledge. One shortcut is to dive into real-world system architectures. Below is a collection of helpful reading materials. We highly recom..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

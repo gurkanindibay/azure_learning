@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Big data papers"
+description: "Below is a timeline of important big data papers and how the techniques evolved over time. The green highlighted boxes are the famous 3 Google papers, which established the foundation of the big da..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Big data papers

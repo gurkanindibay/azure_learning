@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Design a flash sale system"
+description: "Black Friday is coming. Designing a system with extremely high concurrency, high availability and quick responsiveness needs to consider many aspects **all the way fromfrontend to backend**. See th..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Design a flash sale system

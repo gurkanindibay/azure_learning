@@ -30,8 +30,8 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-EXCLUDE_DIRS = {'.git', '.github', 'scripts', '__pycache__', '.venv', 'agents'}
-EXCLUDE_FILES = {'AGENTS.md', 'log.md', 'accessibility-guidelines.md'}
+EXCLUDE_DIRS = {'.git', '.github', 'scripts', 'agent_tools', '.agents', '__pycache__', '.venv', 'agents'}
+EXCLUDE_FILES = {'AGENTS.md', 'log.md', 'accessibility-guidelines.md', '.copilot-instructions.md', 'architecture_taxonomy_reference.md'}
 RESERVED = {'index.md', 'log.md'}
 
 # Files that serve as directory indices
@@ -201,17 +201,31 @@ def iter_indexes(root: Path | None = None) -> list[Path]:
 
 def cmd_validate() -> int:
     """Validate OKF conformance of the entire bundle."""
-    concepts = iter_concepts()
     passed = 0
     failed = 0
 
-    for doc in concepts:
-        issues = doc.validate()
-        if issues:
-            failed += 1
-            print(f"FAIL [{doc.rel_path}]: {', '.join(issues)}")
-        else:
-            passed += 1
+    for dirpath, dirnames, filenames in os.walk(REPO_ROOT):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS]
+        for fname in filenames:
+            if not fname.endswith(".md"):
+                continue
+            if fname in RESERVED or fname in EXCLUDE_FILES:
+                continue
+
+            filepath = Path(dirpath) / fname
+            rel_path = str(filepath.relative_to(REPO_ROOT))
+            doc = OKFDocument.parse(filepath)
+            if not doc:
+                failed += 1
+                print(f"FAIL [{rel_path}]: Missing or unparseable YAML frontmatter")
+                continue
+
+            issues = doc.validate()
+            if issues:
+                failed += 1
+                print(f"FAIL [{rel_path}]: {', '.join(issues)}")
+            else:
+                passed += 1
 
     print(f"\nResults: {passed} passed, {failed} failed")
     if failed > 0:

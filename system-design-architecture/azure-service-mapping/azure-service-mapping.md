@@ -1,7 +1,7 @@
 ---
 type: System Design
 title: "Azure Service Mapping"
-timestamp: 2026-06-14T00:00:00Z
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # 7. Azure Service Mapping

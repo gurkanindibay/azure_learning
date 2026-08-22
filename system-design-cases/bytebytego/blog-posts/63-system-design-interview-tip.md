@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "System Design Interview Tip"
+description: "One pro tip for acing a system design interview is to read the engineering blog of the company you are interviewing with. You can get a good sense of what technology they use, why the technology wa..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # System Design Interview Tip

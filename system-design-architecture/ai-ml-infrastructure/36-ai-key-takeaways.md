@@ -1,7 +1,8 @@
 ---
 type: System Design
 title: "Why AI Demos Fail in Production — Key Takeaways"
-timestamp: 2026-08-01T00:00:00Z
+description: "1. **Start with observability (ai-20) and data quality (ai-17)**: You can't fix what you can't see. Instrument AI-native metrics and data quality gates before attempting deeper pipeline changes."
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # 36. Why AI Demos Fail in Production — Key Takeaways

@@ -1,3 +1,11 @@
+---
+type: Unstructured Note
+title: "Relational Operators"
+description: "- **B-Tree Indexes:**"
+tags: [notes, azure]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 **Summary of Topics Covered in the Session:**
 
 - **B-Tree Indexes:**

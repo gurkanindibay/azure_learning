@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design A Notification System"
+description: "A notiﬁcation system has already become a very popular feature for many applications in recent years. A notiﬁcation alerts a user with important information like breaking news, product updates, eve..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Design A Notification System
 
 > **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam

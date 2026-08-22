@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Map rendering"
+description: "Google Maps Continued. Let’s take a look at"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Map rendering

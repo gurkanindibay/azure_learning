@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What is the difference between Process and Thread?"
+description: "To better understand this question, let’s first take a look at what is a Program. A **Program** is an executable file containing a set of instructions and passively stored on disk. One program can ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What is the difference between Process and Thread?

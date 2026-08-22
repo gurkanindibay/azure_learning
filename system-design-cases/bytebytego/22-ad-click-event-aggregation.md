@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Ad Click Event Aggregation"
+description: "The following set of questions helps to clarify requirements and narrow down the scope."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Ad Click Event Aggregation
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

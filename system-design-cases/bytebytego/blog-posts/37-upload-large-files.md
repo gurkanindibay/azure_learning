@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Upload large files"
+description: "How can we optimize performance when we **upload large files** to object storage service such as S3? Before we answer this question, let's take a look at why we need to optimize this process. Some ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Upload large files

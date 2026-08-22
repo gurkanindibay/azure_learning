@@ -30,6 +30,8 @@ EXCLUDE_PATTERNS = [
     '.git/',
     '.github/',
     'scripts/',
+    'agent_tools/',
+    '.agents/',
     'AGENTS.md',
     '.copilot-instructions.md',
     'accessibility-guidelines.md',
@@ -44,6 +46,7 @@ TYPE_MAPPING = [
     ('architecture-general/', 'Architecture Pattern'),
     ('architecture-azure/', 'Azure Service'),
     ('system-design-architecture/', 'System Design'),
+    ('system-design-cases/', 'System Design Case'),
     ('reference-dictionary/', 'Reference'),
     ('programming-languages/', 'Programming Guide'),
     ('articles/', 'Article'),
@@ -73,7 +76,7 @@ def resolve_type(rel_path: str) -> str:
     return 'Reference'
 
 
-def extract_title(lines: list[str]) -> str:
+def extract_title(lines: list[str], rel_path: str = '') -> str:
     """Extract title from first H1 heading, or derive from filename."""
     for line in lines:
         stripped = line.strip()
@@ -82,6 +85,10 @@ def extract_title(lines: list[str]) -> str:
             # Remove leading number prefix like "1. " or "01-"
             title = re.sub(r'^\d+[\.\-]\s*', '', title)
             return title
+    if rel_path:
+        stem = Path(rel_path).stem
+        clean_stem = re.sub(r'^\d+[\.\-]\s*', '', stem)
+        return clean_stem.replace('-', ' ').title()
     return ''
 
 
@@ -105,12 +112,13 @@ def extract_description(lines: list[str]) -> str:
         # Skip table rows and horizontal rules
         if stripped.startswith('|') or stripped.startswith('---'):
             continue
-        # Skip TOC entries: lines that are just a markdown link with optional
-        # bullet/number prefix: "- [text](#anchor)", "1. [text](#anchor)"
-        if re.match(r'^[-*\d]', stripped) and '](#' in stripped:
+        # Skip TOC entries and course navigation bullets
+        if re.match(r'^[-*\d]', stripped) and ('](#' in stripped or '](images/' in stripped or '![](images/' in stripped or stripped.startswith('* *') or stripped.startswith('* **')):
             continue
-        # Skip short bold labels (sub-headers like "**Strategy**:" or "**Problem**:")
-        if stripped.startswith('**') and len(stripped) < 80:
+        if re.search(r'^\d+/\d+\s+completed', stripped, re.IGNORECASE):
+            continue
+        # Skip short bold labels / chapter numbers like "**02**"
+        if stripped.startswith('**') and (len(stripped) < 80 or re.match(r'^\*\*\d+\*\*$', stripped)):
             continue
         # Skip code fences
         if stripped.startswith('```'):
@@ -121,8 +129,8 @@ def extract_description(lines: list[str]) -> str:
                             'end', 'style ', 'classDef ', 'click ', 'linkStyle ')
         if any(stripped.startswith(kw) for kw in _mermaid_keywords) and len(stripped) < 120:
             continue
-        # Skip image lines
-        if stripped.startswith('!['):
+        # Skip image lines and linked images
+        if stripped.startswith('![') or stripped.startswith('[!['):
             continue
         # Found first real paragraph
         desc = stripped
@@ -168,6 +176,11 @@ def extract_tags(rel_path: str) -> list[str]:
         'architecture-patterns': 'architecture',
         'azure-services': 'azure',
         'api-design': 'api',
+        'system-design-cases': 'system-design',
+        'bytebytego': 'system-design',
+        'cases': 'system-design',
+        'azure-cohort': 'azure',
+        'unstructured-resources': 'notes',
     }
     
     for part in parts[:-1]:  # Exclude filename
@@ -228,7 +241,7 @@ def add_frontmatter(content: str, rel_path: str, force: bool = False) -> str:
     
     # Extract metadata from body only (not from old frontmatter)
     body_lines = body.split('\n')
-    title = extract_title(body_lines)
+    title = extract_title(body_lines, rel_path=str(rel_path))
     description = extract_description(body_lines)
     tags = extract_tags(str(rel_path))
     
@@ -267,12 +280,15 @@ def is_poor_description(desc: str) -> bool:
     """Check if a description looks like an accidentally extracted TOC item, table label, etc."""
     if not desc:
         return False
-    # TOC entries: lines that are just a link with optional bullet/number prefix
-    # Pattern: "- [text](#anchor)", "* [text](#anchor)", "1. [text](#anchor)"
-    if re.match(r'^[-*\d]', desc) and '](#' in desc:
+    # TOC entries and navigation links
+    if re.match(r'^[-*\d]', desc) and ('](#' in desc or '](images/' in desc or '![](images/' in desc or desc.startswith('* *') or desc.startswith('* **')):
+        return True
+    if re.search(r'^\d+/\d+\s+completed', desc, re.IGNORECASE):
+        return True
+    if desc.startswith('[![') or desc.startswith('!['):
         return True
     # Bold labels
-    if desc.startswith('**') and len(desc) < 80:
+    if desc.startswith('**') and (len(desc) < 80 or re.match(r'^\*\*\d+\*\*$', desc)):
         return True
     # Table header-lines or separator-only
     if desc.startswith('|') or desc.startswith('---'):
@@ -327,7 +343,7 @@ def migrate_file(filepath: Path, dry_run: bool = False) -> dict:
             'status': 'would_migrate',
             'file': str(rel_path),
             'type': resolve_type(str(rel_path)),
-            'title': extract_title(content.split('\n')),
+            'title': extract_title(content.split('\n'), rel_path=str(rel_path)),
             'preview': preview
         }
     
@@ -445,6 +461,7 @@ A technical knowledge base covering Microsoft Azure services, cloud-agnostic arc
 ## System Design
 
 * [System Design Architecture](/system-design-architecture/) — Problem → strategy reference with domain-prefixed IDs and Azure mappings
+* [System Design Cases](/system-design-cases/) — Original interview case write-ups in the style of the Medium source articles
 
 ## Reference
 

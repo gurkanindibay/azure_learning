@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Erasure coding"
+description: "A really cool technique that’s commonly used in object storage such as S3 to improve durability is called"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Erasure coding

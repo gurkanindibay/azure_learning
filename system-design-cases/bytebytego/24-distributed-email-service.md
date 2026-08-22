@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Distributed Email Service"
+description: "Over the years, email services have changed significantly in complexity and scale. A modern email service is a complex system with many functions. There is no way we can design a real-world system ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Distributed Email Service
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

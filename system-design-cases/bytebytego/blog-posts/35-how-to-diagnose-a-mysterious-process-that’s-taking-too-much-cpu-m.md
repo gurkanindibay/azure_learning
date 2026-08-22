@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How to diagnose a mysterious process that’s taking too much CPU, memory, IO, etc?"
+description: "much CPU, memory, IO, etc? The diagram below illustrates helpful tools in a Linux system. - ‘vmstat’ - reports information about processes, memory, paging, block IO, traps, and CPU activity. - ‘ios..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How to diagnose a mysterious process that’s taking too much CPU, memory, IO, etc?

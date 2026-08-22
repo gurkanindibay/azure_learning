@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Money movement"
+description: "One picture is worth more than a thousand words. This is what happens when you buy a product using Paypal/bank card under the hood. To understand this, we need to digest two concepts: **clearing** ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Money movement

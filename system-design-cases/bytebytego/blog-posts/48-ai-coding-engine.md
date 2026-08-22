@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "AI Coding engine"
+description: "DeepMind says its new AI coding engine (AlphaCode) is as good as an average programmer. The AI bot participated in the 10 Codeforces coding competitions and was ranked 54.3%. It means its score exc..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # AI Coding engine

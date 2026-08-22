@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design A News Feed System"
+description: "In this chapter, you are asked to design a news feed system. What is news feed? According to the Facebook help page, “News feed is the constantly updating list of stories in the middle of your home..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

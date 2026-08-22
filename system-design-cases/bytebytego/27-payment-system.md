@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Payment System"
+description: "A payment system can mean very different things to different people. Some may think it’s a digital wallet like Apple Pay or Google Pay. Others may think it’s a backend system that handles payments ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Payment System
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

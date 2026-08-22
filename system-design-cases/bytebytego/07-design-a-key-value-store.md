@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design A Key-value Store"
+description: "A key-value store, also referred to as a key-value database, is a non-relational database. Each unique identifier is stored as a key with its associated value. This data pairing is known as a “key-..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

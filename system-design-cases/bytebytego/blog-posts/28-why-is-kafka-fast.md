@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Why is Kafka fast?"
+description: "Kafka achieves low latency message delivery through Sequential I/O and Zero Copy Principle. The same techniques are commonly used in many other messaging/streaming platforms. The diagram below illu..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Why is Kafka fast?

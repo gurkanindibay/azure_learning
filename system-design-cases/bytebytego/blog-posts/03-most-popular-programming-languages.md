@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Most popular programming languages"
+description: "Programming languages come and go. Some stand the test of time. Some already are shooting stars and some are rising rapidly on the horizon. I draw a diagram by putting the top 38 most commonly used..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Most popular programming languages

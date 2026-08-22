@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Reconciliation"
+description: "**Reconciliation** might be the most painful process in a payment system. It is the process of comparing records in different systems to make sure the amounts match each other. For example, if you ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Reconciliation

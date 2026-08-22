@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Read replica pattern"
+description: "In this post, we talk about a simple yet commonly used database design pattern (setup):"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Read replica pattern

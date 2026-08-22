@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Match buy and sell orders"
+description: "Match buy and sell orders Stocks go up and down. Do you know what data structure is used to efficiently match buy and sell orders? Stock exchanges use the data structure called **order books**. An ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Match buy and sell orders

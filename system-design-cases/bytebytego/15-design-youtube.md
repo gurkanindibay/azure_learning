@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design YouTube"
+description: "In this chapter, you are asked to design YouTube. The solution to this question can be applied to other interview questions like designing a video sharing platform such as Netflix and Hulu. Figure ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

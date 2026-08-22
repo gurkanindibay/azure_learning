@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Google Maps"
+description: "The interaction between the interviewer and the candidate could look like this:"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Google Maps
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam  

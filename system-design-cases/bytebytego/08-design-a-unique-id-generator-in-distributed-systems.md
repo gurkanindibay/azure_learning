@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design A Unique ID Generator In Distributed Systems"
+description: "* [Table of Contents](/study-notes/notes/)"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Design A Unique ID Generator In Distributed Systems
 
 > **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam (Study Notes)

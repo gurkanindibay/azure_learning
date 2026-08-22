@@ -1,5 +1,9 @@
 ---
 type: System Design Case
+title: "Distributed Message Queue"
+description: "Design a distributed message queue that lets producers publish messages and consumers process them reliably at scale."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Distributed Message Queue

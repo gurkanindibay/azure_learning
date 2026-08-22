@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Foreign exchange in payment"
+description: "Have you wondered what happens under the hood when you pay with USD online and the seller from Europe receives EUR (euro)? This process is called foreign exchange. Suppose Bob (the buyer) needs to ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Foreign exchange in payment

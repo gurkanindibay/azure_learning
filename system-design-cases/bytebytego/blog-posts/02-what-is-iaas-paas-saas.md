@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What is IaaS/PaaS/SaaS?"
+description: "The diagram below illustrates the differences between IaaS (Infrastructure-as-a-Service), PaaS (Platform-as-a-Service), and SaaS (Software-as-a-Service). For a non-cloud application, we own and man..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What is IaaS/PaaS/SaaS?

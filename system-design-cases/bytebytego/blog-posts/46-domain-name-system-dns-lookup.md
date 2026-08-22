@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Domain Name System (DNS) lookup"
+description: "DNS acts as an address book. It translates human-readable domain names (google.com) to machine-readable IP addresses (142.251.46.238). To achieve better scalability, the DNS servers are organized i..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Domain Name System (DNS) lookup

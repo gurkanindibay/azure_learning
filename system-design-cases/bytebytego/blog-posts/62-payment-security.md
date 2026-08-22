@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Payment security"
+description: "A few weeks ago, I posted the high-level design for the payment system. Today, I’ll continue the discussion and focus on payment security. The table below summarizes techniques that are commonly us..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Payment security

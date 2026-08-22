@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "DevOps Books"
+description: "Some **DevOps** books I find enlightening: - Accelerate - presents both the findings and the science behind measuring software delivery performance. - Continuous Delivery - introduces automated arc..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # DevOps Books

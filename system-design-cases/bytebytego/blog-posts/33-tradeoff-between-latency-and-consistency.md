@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Tradeoff between latency and consistency"
+description: "Understanding the **tradeoffs** is very important not only in system design interviews but also designing real-world systems. When we talk about data replication, there is a fundamental tradeoff be..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Tradeoff between latency and consistency

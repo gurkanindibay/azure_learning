@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Flowchart of how slack decides to send a notification"
+description: "It is a great example of why a simple feature may take much longer to develop than many people think. When we have a great design, users may not notice the complexity because it feels like the feat..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Flowchart of how slack decides to send a notification

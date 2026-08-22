@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What are database isolation levels? What are they used for?"
+description: "Database isolation allows a transaction to execute as if there are no other concurrently running transactions. The diagram below illustrates four isolation levels. - Serializalble: This is the high..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What are database isolation levels? What are they used for?

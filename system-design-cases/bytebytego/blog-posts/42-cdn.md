@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "CDN"
+description: "A content delivery network (CDN) refers to a geographically distributed servers (also called edge servers) which provide fast delivery of static and dynamic content. Let’s take a look at how it wor..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # CDN

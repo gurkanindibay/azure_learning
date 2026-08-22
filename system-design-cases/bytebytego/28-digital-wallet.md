@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Digital Wallet"
+description: "When we talk about TPS, we imply a transactional database will be used. Today, a relational database running on a typical data center node can support a few thousand transactions per second. For ex..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Digital Wallet
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

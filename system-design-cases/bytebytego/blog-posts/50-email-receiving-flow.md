@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Email receiving flow"
+description: "The following diagram demonstrates the email receiving flow. 1. Incoming emails arrive at the SMTP load balancer. 2. The load balancer distributes traffic among SMTP servers. Email acceptance polic..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Email receiving flow

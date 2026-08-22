@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What are the differences between Virtualization (VMware) and Containerization (Docker)?"
+description: "What are the differences between Virtualization (VMware) and Containerization (Docker)? The diagram below illustrates the layered architecture of virtualization and containerization. “Virtualizatio..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What are the differences between Virtualization (VMware) and Containerization (Docker)?

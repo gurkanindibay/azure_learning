@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Vertical partitioning and Horizontal partitioning"
+description: "In many large-scale applications, data is divided into partitions that can be accessed separately. There are two typical strategies for partitioning data. - Vertical partitioning: it means some col..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Vertical partitioning and Horizontal partitioning

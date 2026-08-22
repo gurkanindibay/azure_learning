@@ -1,3 +1,11 @@
+---
+type: Unstructured Note
+title: "Recovery In Sql Azure"
+description: "Summary"
+tags: [notes, azure]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 Summary
 
 **Key Topics:**

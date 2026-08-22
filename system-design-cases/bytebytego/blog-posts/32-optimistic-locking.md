@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Optimistic locking"
+description: "Optimistic locking, also referred to as optimistic concurrency control, allows multiple concurrent users to attempt to update the same resource. There are two common ways to implement optimistic lo..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Optimistic locking

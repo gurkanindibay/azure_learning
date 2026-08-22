@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What are the top cache strategies?"
+description: "Read data from the system: - Cache aside - Read through Write data to the system: - Write around - Write back - Write through The diagram below illustrates how those 5 strategies work. Some of the ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What are the top cache strategies?

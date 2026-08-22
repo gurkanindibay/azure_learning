@@ -1,7 +1,7 @@
 ---
 type: System Design
 title: "FDE Agent-Augmented Patterns — Key Takeaways"
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # 29. FDE Agent-Augmented Patterns — Key Takeaways

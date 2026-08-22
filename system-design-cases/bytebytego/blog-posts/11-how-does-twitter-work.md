@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How does Twitter work?"
+description: "This post is a summary of a tech talk given by Twitter in 2013. Let’s take a look."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How does Twitter work?

@@ -2,7 +2,7 @@
 type: Azure Service
 title: "Azure Networking Fundamentals - Summary Table"
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Azure Networking Fundamentals - Summary Table

@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "HTTP 1.0 -> HTTP 1.1 -> HTTP 2.0 -> HTTP 3.0 (QUIC)."
+description: "What problem does each generation of HTTP solve? The diagram below illustrates the key features. - HTTP 1.0 was finalized and fully documented in 1996. Every request to the same server requires a s..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # HTTP 1.0 -> HTTP 1.1 -> HTTP 2.0 -> HTTP 3.0 (QUIC).

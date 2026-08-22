@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Nearby Friends"
+description: "*Figure 1 Facebook’s nearby friends If you read Chapter 1 Proximity Service, you may wonder why we need a separate chapter for designing “nearby friends” since it looks similar to proximity service..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Nearby Friends
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "AWS Lambda behind the scenes"
+description: "Serverless is one of the hottest topics in cloud services. How does AWS Lambda work behind the scenes? Lambda is a **serverless** computing service provided by Amazon Web Services (AWS), which runs..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # AWS Lambda behind the scenes

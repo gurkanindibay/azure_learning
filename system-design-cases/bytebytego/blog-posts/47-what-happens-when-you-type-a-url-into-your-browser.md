@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "What happens when you type a URL into your browser?"
+description: "The diagram below illustrates the steps. 1. Bob enters a URL into the browser and hits Enter. In this example, the URL is composed of 4 parts: - scheme - **https**://. This tells the browser to sen..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # What happens when you type a URL into your browser?

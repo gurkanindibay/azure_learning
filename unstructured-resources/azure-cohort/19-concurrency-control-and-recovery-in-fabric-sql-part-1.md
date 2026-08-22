@@ -1,3 +1,11 @@
+---
+type: Unstructured Note
+title: "Concurrency Control And Recovery In Fabric Sql Part 1"
+description: "Summary"
+tags: [notes, azure]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 Summary
 
 **Key Topics:**

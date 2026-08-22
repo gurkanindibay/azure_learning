@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Real-time Gaming Leaderboard"
+description: "In this chapter, we are going to walk through the challenge of designing a leaderboard for an online mobile game."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 [![ByteByteGo logo](images/logo.svg)](/)
 
 ## System Design Interview

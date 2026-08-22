@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Block storage, file storage and object storage"
+description: "In this post, let’s review the storage systems in general. Storage systems fall into three broad categories: - Block storage - File storage - Object storage The diagram below illustrates the compar..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Block storage, file storage and object storage

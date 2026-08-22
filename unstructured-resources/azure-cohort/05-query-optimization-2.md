@@ -1,3 +1,11 @@
+---
+type: Unstructured Note
+title: "Query Optimization 2"
+description: "- **Introduction to Query Optimization:** Nico introduced the concept of query optimization, explaining its role in SQL language and the importance of defining the search space, enumerating it, and..."
+tags: [notes, azure]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 
 ## Summary
 

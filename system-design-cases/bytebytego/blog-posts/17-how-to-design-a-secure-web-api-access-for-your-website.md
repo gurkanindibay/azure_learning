@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How to design a secure web API access for your website?"
+description: "website? When we open web API access to users, we need to make sure each API call is authenticated. This means the user must be who they claim to be. In this post, we explore two common ways: 1. To..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How to design a secure web API access for your website?

@@ -1,7 +1,7 @@
 ---
 type: System Design
-title: "Agentic AI — Key Takeaways (FDE AI-Augmented Engineering)"
-timestamp: 2026-07-29T00:00:00Z
+title: "Agentic AI — Key Takeaways"
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # 32. Agentic AI — Key Takeaways

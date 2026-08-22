@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Stock exchange design"
+description: "The stock market has been volatile recently. Coincidentally, we just finished a new chapter “Design a stock exchange”. I’ll use plain English to explain what happens when you place a stock buying o..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Stock exchange design

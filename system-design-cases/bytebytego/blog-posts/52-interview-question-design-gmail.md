@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Interview Question: Design Gmail"
+description: "One picture is worth more than a thousand words. In this post, we will take a look at what happens when Alice sends an email to Bob. 1. Alice logs in to her Outlook client, composes an email, and p..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Interview Question: Design Gmail

@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "SWIFT payment network"
+description: "You probably heard about **SWIFT**. What is SWIFT? What role does it play in cross-border payments? You can find answers to those questions in this post. The Society for Worldwide Interbank Financi..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # SWIFT payment network

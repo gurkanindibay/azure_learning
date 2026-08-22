@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How to scale a website to support millions of users?"
+description: "We will explain this step-by-step. The diagram below illustrates the evolution of a simplified eCommerce website. It goes from a monolithic design on one single server, to a service-oriented/micros..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How to scale a website to support millions of users?

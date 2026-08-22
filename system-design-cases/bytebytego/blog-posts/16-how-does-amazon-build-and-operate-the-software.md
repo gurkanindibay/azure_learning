@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "How does Amazon build and operate the software?"
+description: "In 2019, Amazon released The Amazon Builders' Library. It contains architecture-based articles that describe how Amazon architects, releases, and operates technology. As of today, it published 26 a..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # How does Amazon build and operate the software?

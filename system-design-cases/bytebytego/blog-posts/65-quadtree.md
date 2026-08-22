@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Quadtree"
+description: "In this post, let’s explore another data structure to find nearby restaurants on Yelp or Google Maps. A quadtree is a data structure that is commonly used to partition a two-dimensional space by re..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Quadtree

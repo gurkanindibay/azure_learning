@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Which database shall I use for the metrics collecting system?"
+description: "system? This is one of the most important questions we need to address in an interview."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Which database shall I use for the metrics collecting system?

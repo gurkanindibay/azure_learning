@@ -1,6 +1,9 @@
 ---
-okf_version: "0.1"
-type: concept
+type: System Design Case
+title: "Pull vs push models"
+description: "There are two ways metrics data can be collected, pull or push. It is a routine debate as to which one is better and there is no clear answer. In this post, we will take a look at the pull model."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Pull vs push models

@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "S3-like Object Storage"
+description: "directory structure. File storage is the most common general-purpose storage solution. File storage could be made accessible by a large number of servers using common file- level network protocols ..."
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # S3-like Object Storage
 
 > **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam

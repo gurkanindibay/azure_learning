@@ -1,3 +1,11 @@
+---
+type: System Design Case
+title: "Design Google Drive"
+description: "* [Table of Contents](/study-notes/notes/)"
+tags: [system-design]
+timestamp: 2026-08-22T00:00:00Z
+---
+
 # Design Google Drive
 
 > **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam (Study Notes)
