@@ -135,7 +135,7 @@ sequenceDiagram
     App->>Sem: acquire() (Permit check)
     App->>Pool: getConnection() (Fast Lease)
     Pool-->>App: Active Connection
-    App->>DB: BEGIN; UPDATE inventory; INSERT order; COMMIT;
+    App->>DB: BEGIN, UPDATE inventory, INSERT order, COMMIT
     DB-->>App: Success
     App->>Pool: close() (Return Connection)
     App->>Sem: release()

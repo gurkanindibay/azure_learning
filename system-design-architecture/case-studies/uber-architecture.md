@@ -750,7 +750,7 @@ surge_multiplier = f(demand_count / supply_count)
 
 **Tradeoff**: Window-based counting loses exact moment-by-moment precision but gains stability. The alternative — instantaneous counting — would produce wildly oscillating prices from single-second spikes.
 
-> **Dictionary**: [Geohash](../../../reference-dictionary/architecture-patterns.md#geohash), [Sliding Window](../../../reference-dictionary/api-design.md#sliding-window) | **Azure**: [Azure Cache for Redis](../../../architecture-azure/data/redis/) + [Event Hubs](../../../architecture-azure/integration/event-hubs/) | **Taxonomy**: §3.3 Event-Driven & Messaging, §7.3 Caching Strategies
+> **Dictionary**: [Geohash](../../../reference-dictionary/geospatial.md#geohash), [Sliding Window](../../../reference-dictionary/api-design.md#sliding-window) | **Azure**: [Azure Cache for Redis](../../../architecture-azure/data/redis/) + [Event Hubs](../../../architecture-azure/integration/event-hubs/) | **Taxonomy**: §3.3 Event-Driven & Messaging, §7.3 Caching Strategies
 
 ---
 
@@ -836,7 +836,7 @@ This is analogous to **spatial anti-aliasing** in computer graphics — smoothin
 
 **Tradeoff**: Adjacency adjustment blurs the spatial precision of demand signals. A genuinely isolated demand spike (e.g., a single concert venue in one cell) will be partially dampened by its lower-demand neighbors. The β parameter controls this tradeoff.
 
-> **Dictionary**: [Geohash](../../../reference-dictionary/architecture-patterns.md#geohash) | **Taxonomy**: §3.3 Event-Driven & Messaging
+> **Dictionary**: [Geohash](../../../reference-dictionary/geospatial.md#geohash) | **Taxonomy**: §3.3 Event-Driven & Messaging
 
 ---
 
@@ -903,4 +903,4 @@ graph TD
 | Surge Pricing Article | [`articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md`](../../../articles/case-studies/uber-architecture/06-surge-pricing-during-rain.md) |
 | Uber Architecture — Full Series | [`articles/case-studies/uber-architecture/`](../../../articles/case-studies/uber-architecture/) |
 | Dictionary: Surge Pricing | [`reference-dictionary/architecture-patterns.md`](../../../reference-dictionary/architecture-patterns.md#surge-pricing) |
-| Dictionary: Geohash | [`reference-dictionary/architecture-patterns.md`](../../../reference-dictionary/architecture-patterns.md#geohash) |
+| Dictionary: Geohash | [`reference-dictionary/geospatial.md`](../../../reference-dictionary/geospatial.md#geohash) |

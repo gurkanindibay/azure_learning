@@ -12,7 +12,7 @@ timestamp: 2026-07-17T00:00:00Z
 > **Purpose**: Extract the universal layered architecture and fan-out tradeoff that recur across all 16 at-scale products.
 
 > **Also see**: [Interview Roadmap](interview-roadmap.md), [Pragmatic Takeaways](pragmatic-takeaways.md)
-> **Dictionary**: [Fan-out on Write / Fan-out on Read](../../reference-dictionary/design-patterns.md#fan-out-on-write), [Geohashing / Quadtree](../../reference-dictionary/architecture-patterns.md#geohashing), [SFU Architecture](../../reference-dictionary/architecture-patterns.md#selective-forwarding-unit-sfu)
+> **Dictionary**: [Fan-out on Write / Fan-out on Read](../../reference-dictionary/design-patterns.md#fan-out-on-write), [Geohashing / Quadtree](../../reference-dictionary/geospatial.md#geohashing), [SFU Architecture](../../reference-dictionary/architecture-patterns.md#selective-forwarding-unit-sfu)
 > **Taxonomy Reference**: §2.1 Application Architecture Styles (Layered Architecture), §3.3 Event-Driven & Messaging
 
 ---
