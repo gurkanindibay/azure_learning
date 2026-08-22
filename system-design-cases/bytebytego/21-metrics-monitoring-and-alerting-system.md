@@ -212,13 +212,13 @@ cpu.load,host=webserver02,region=us-west,env=prod value=43 1613707265000000000
 flowchart TD
     DB{"Database\nCategory"}
     
-    DB -->|RDBMS (MySQL/Postgres)| R["Relational DB"]
+    DB -->|RDBMS - MySQL or Postgres| R["Relational DB"]
     R --> R_FAIL["❌ High write lock contention\n❌ Heavy index overhead per tag\n❌ Complex moving average queries"]
     
-    DB -->|General NoSQL (Cassandra/HBase)| N["NoSQL Column Store"]
+    DB -->|General NoSQL - Cassandra or HBase| N["NoSQL Column Store"]
     N --> N_OK["⚠️ Capable of high writes\n❌ Requires manual schema tuning, compaction & rollup logic"]
     
-    DB -->|Specialized TSDB (InfluxDB/Prometheus/Gorilla)| T["Time-Series DB (TSDB)"]
+    DB -->|Specialized TSDB - InfluxDB or Prometheus| T["Time-Series DB (TSDB)"]
     T --> T_WIN["✅ Optimized LSM/WAL engine\n✅ Built-in delta-of-delta compression\n✅ Native rollup & TTL downsampling\n✅ Inverted index for label lookups"]
 ```
 
@@ -245,8 +245,8 @@ flowchart TD
         W2["Target: DB /metrics"]
         
         CollP -.->|1. Fetch Endpoints| SD
-        CollP -->|2. HTTP GET /metrics| W1
-        CollP -->|2. HTTP GET /metrics| W2
+        CollP -->|2. Scrape metrics endpoint| W1
+        CollP -->|2. Scrape metrics endpoint| W2
     end
 
     subgraph PushModel["PUSH MODEL (e.g., CloudWatch, StatsD)"]
@@ -459,8 +459,8 @@ flowchart TD
     Roll1["1-Minute Resolution Rollup\nRetention: 30 Days\nStorage: Standard SSD"]
     Roll2["1-Hour Resolution Rollup\nRetention: 1 Year\nStorage: Object Storage / Cold Tier"]
 
-    Raw -->|After 7 Days (Aggregate Avg/Min/Max)| Roll1
-    Roll1 -->|After 30 Days (Aggregate Avg/Min/Max)| Roll2
+    Raw -->|After 7 Days - Aggregate Avg Min Max| Roll1
+    Roll1 -->|After 30 Days - Aggregate Avg Min Max| Roll2
 ```
 
 **10-Second Raw Data:**
@@ -496,7 +496,7 @@ flowchart TD
     end
 
     subgraph Dispatch["4. Deduplication & Dispatch"]
-        AM -->|Dedup & Group| AK["Kafka Alert Topic"]
+        AM -->|Dedup and Group| AK["Kafka Alert Topic"]
         AK --> AC["Alert Consumers"]
         AC --> PD["PagerDuty"]
         AC --> SMS["SMS / Voice"]
@@ -512,9 +512,9 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> Inactive : Value below threshold
-    Inactive --> Pending : Threshold breached (T < duration)
+    Inactive --> Pending : Threshold breached (grace period active)
     Pending --> Inactive : Value recovers within grace period
-    Pending --> Firing : Threshold breached for duration (e.g. for: 5m)
+    Pending --> Firing : Threshold breached for sustained duration (e.g. 5m)
     Firing --> Resolved : Metric returns to healthy range
     Resolved --> Inactive
 ```
@@ -610,11 +610,11 @@ flowchart TD
 
     Sources -.->|Register| SD
     Col -.->|Read endpoints| SD
-    Sources -->|Pull/Push| Col
+    Sources -->|Pull or Push| Col
     Col --> K
     K --> Flink
     Flink --> TSDB
-    TSDB -->|TTL Expiry & Archive| Cold
+    TSDB -->|TTL Expiry and Archive| Cold
     
     TSDB <--> QS
     QS <--> QC
