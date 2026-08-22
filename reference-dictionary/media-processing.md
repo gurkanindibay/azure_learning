@@ -27,6 +27,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Buffer-based Bitrate Adaptation | [`#buffer-based-bitrate-adaptation`](#buffer-based-bitrate-adaptation) |
 | Quality Ladder | [`#quality-ladder`](#quality-ladder) |
 | Adaptive Bitrate Streaming (ABR) | [`#adaptive-bitrate-streaming-abr`](#adaptive-bitrate-streaming-abr) |
+| HLS (HTTP Live Streaming) | [`#hls-http-live-streaming`](#hls-http-live-streaming) |
+| MPEG-DASH | [`#mpeg-dash`](#mpeg-dash) |
+| Transcoding DAG Model | [`#transcoding-dag-model`](#transcoding-dag-model) |
+| Selective Forwarding Unit (SFU) | [`#selective-forwarding-unit-sfu`](#selective-forwarding-unit-sfu) |
 
 ---
 
@@ -189,3 +193,101 @@ A **pre-encoded set of bitrate/resolution pairs** for a single piece of content,
 
 ### Also see
 - [DASH/HLS](#dash-hls) · [Buffer-based Bitrate Adaptation](#buffer-based-bitrate-adaptation) · [Transcoding](#transcoding) · [GOP-Aligned Chunking](#gop-aligned-chunking)
+
+---
+
+## HLS (HTTP Live Streaming)
+
+An **HTTP-based adaptive bitrate streaming communications protocol** developed by Apple. It breaks overall video streams into a sequence of small HTTP-based file downloads (historically MPEG-2 Transport Streams `.ts`, now also fragmented MP4 `.m4s`), each download loading one short chunk of an overall potentially unbounded transport stream. A master `.m3u8` playlist coordinates available bitrate streams and chunk locations.
+
+### Key Characteristics
+- **Manifest format**: Extended M3U playlist (`.m3u8`) with hierarchical master/variant structure
+- **Chunk format**: MPEG-2 TS or Fragmented MP4 (fMP4) chunks, typically 2–6 seconds in length
+- **Universal Apple support**: Required by iOS App Store guidelines for video exceeding 3 minutes or 5 MB
+- **Standard HTTP transport**: Traversable across firewalls and cacheable on existing standard CDN edge servers
+
+### When to Use
+- Video on Demand (VOD) and Live streaming targeting iOS, macOS, Safari, and cross-platform web players (via hls.js)
+- Edge-cached video distribution leveraging commoditized CDN web infrastructure
+- Secure streaming requiring AES-128 chunk encryption or FairPlay DRM
+
+### When NOT to Use
+- Ultra-low latency requirements under 1 second (such as live bidirectional interaction; prefer WebRTC) without Low-Latency HLS (LL-HLS) tuning
+- Environments strictly requiring non-segmented, continuous socket streams
+
+### Also see
+- [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr) · [MPEG-DASH](#mpeg-dash) · [Quality Ladder](#quality-ladder) · [GOP-Aligned Chunking](#gop-aligned-chunking)
+
+---
+
+## MPEG-DASH
+
+An **international standard adaptive bitrate streaming protocol** (ISO/IEC 23009-1) that enables high-quality streaming of media content over the Internet delivered from conventional HTTP web servers. Unlike proprietary protocols, DASH is codec-agnostic and uses an XML-formatted Media Presentation Description (`.mpd`) manifest.
+
+### Key Characteristics
+- **Codec agnostic**: Works seamlessly with H.264, H.265 (HEVC), VP9, AV1, and AAC/Opus audio
+- **Manifest format**: XML-based Media Presentation Description (`.mpd`) containing Period, AdaptationSet, and Representation elements
+- **Container format**: Segmented ISO Base Media File Format (fragmented MP4) and WebM
+- **DRM interoperability**: Supports Common Encryption (CENC) allowing a single set of media files to decrypt under Widevine, PlayReady, or FairPlay
+
+### When to Use
+- Standardized cross-platform video delivery on Android, Smart TVs, game consoles, and modern desktop browsers (via dash.js)
+- Multi-DRM production environments where storing separate encrypted asset copies per platform is cost-prohibitive
+- Advanced subtitle, multi-language audio, and dynamic ad-insertion (DAI) workflows
+
+### When NOT to Use
+- Pure native iOS/Safari environments where native Safari lacks DASH playback without JavaScript MSE polyfills
+- Low-complexity architectures where a single HLS pipeline satisfies all client requirements
+
+### Also see
+- [HLS (HTTP Live Streaming)](#hls-http-live-streaming) · [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr) · [Transcoding](#transcoding)
+
+---
+
+## Transcoding DAG Model
+
+A **modular pipeline execution architecture** that structures video ingestion and processing as a Directed Acyclic Graph (DAG). Rather than treating video processing as a monolithic linear task, the DAG splits source video at GOP keyframe boundaries into independent chunks and parallelizes sequential transformations across distributed workers.
+
+### Key Characteristics
+- **Graph-based task decomposition**: Stages include demuxing, video splitting, parallel multi-resolution encoding, audio extraction, watermarking, thumbnail generation, and manifest merging
+- **Fine-grained parallelism**: Unblocks horizontal scaling across spot/preemptible worker clusters
+- **Fault containment**: Failure in encoding a single 6-second segment at 1080p triggers a retry of only that graph node rather than restarting the entire hour-long video
+- **Resource specialization**: CPU-intensive audio filtering and GPU-accelerated video rendering execute on dedicated, right-sized compute nodes
+
+### When to Use
+- Large-scale video platforms (YouTube, TikTok, Netflix) processing millions of user uploads daily
+- Complex post-processing pipelines requiring conditional execution (e.g., AI moderation, automated captions, multi-codec rendering)
+- Cloud cost optimization allowing aggressive use of ephemeral GPU instances
+
+### When NOT to Use
+- Simple, low-volume video hosting where a single FFmpeg command suffices
+- Real-time video conferencing where frame-by-frame latency budgets rule out batch chunking
+
+### Also see
+- [Transcoding](#transcoding) · [GOP-Aligned Chunking](#gop-aligned-chunking) · [Fan-Out / Fan-In](#fan-out-fan-in) · [Embarrassingly Parallel](#embarrassingly-parallel)
+
+---
+
+## Selective Forwarding Unit (SFU)
+
+A **WebRTC media server architecture** where each participant sends their media stream to a central server, which selectively forwards it to other participants — without decoding or mixing. Unlike MCU (Multipoint Control Unit), the SFU does not transcode; it routes packets. This is the architecture behind Discord (2.5M+ concurrent voice users) and many modern video conferencing systems.
+
+### Key Characteristics
+- **Packet routing, not mixing**: the SFU forwards encoded packets; it does not decode or re-encode media
+- **Per-receiver bitrate adaptation**: sends different quality levels (simulcast) to participants based on their available bandwidth
+- **Lower CPU cost than MCU**: no transcoding means the server can handle many more concurrent streams
+- **End-to-end encryption compatible**: the SFU can forward encrypted packets it cannot read (E2EE with insertable streams)
+
+### When to Use
+- Group video/voice calls with >3 participants where peer-to-peer mesh would overwhelm each client's uplink
+- Large-scale real-time audio rooms (Discord stages, Twitter Spaces, Clubhouse)
+- Systems where server CPU cost must scale sub-linearly with participant count
+
+### When NOT to Use
+- 1:1 calls where direct P2P mesh has lower latency and zero server cost
+- Legacy endpoints (PSTN, SIP) that cannot decode multiple incoming streams — requires an MCU to mix into a single stream
+- Ultra-low-bandwidth clients that cannot receive multiple incoming streams
+
+### Also see
+- [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr) · [HLS (HTTP Live Streaming)](#hls-http-live-streaming)
+
