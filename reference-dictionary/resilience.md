@@ -48,6 +48,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Scorecard Engine | [`#scorecard-engine`](#scorecard-engine) |
 | Retry Storm | [`#retry-storm`](#retry-storm) |
 | Virtual Waiting Room | [`#virtual-waiting-room`](#virtual-waiting-room) |
+| Retry Budget | [`#retry-budget`](#retry-budget) |
 
 ---
 
@@ -703,5 +704,29 @@ A **traffic shaping and admission control architecture pattern** that intercepts
 
 ### Also see
 - [Load Shedding](#load-shedding) · [Rate Limiting](api-design.md#rate-limiting) · [Cascading Failure](#cascading-failure) · [Flash Sale](architecture-patterns.md#flash-sale)
+
+---
+
+## Retry Budget
+
+A resilience mechanism that **caps the total volume or proportion of retries** permitted across a service instance or time window, preventing retries from overwhelming degraded dependencies during partial outages.
+
+### Key Characteristics
+- **Percentage or token-bucket quota**: Limits retries to a fixed fraction of regular request volume (typically $\le 10\%$) or a sliding window token bucket
+- **Stops load amplification**: When a dependency fails or slows down, the budget is rapidly consumed, preventing a self-inflicted $3\times\text{--}5\times$ retry storm
+- **Client-side enforcement**: Enforced by HTTP/RPC client middleware (e.g., Envoy, Finagle, Resilience4j, Polly) before initiating subsequent attempts
+- **Complements circuit breakers**: Serves as a rate limiter for retries while the circuit breaker evaluates broad failure rate thresholds
+
+### When to Use
+- High-throughput distributed microservice architectures where unconstrained client retries risk cascading failure
+- Outbound API clients calling third-party or multi-tenant services with strict rate limits
+- Alongside exponential backoff and jitter to guarantee bounded retry traffic
+
+### When NOT to Use
+- Low-volume background batch jobs where eventual completion outweighs downstream traffic spikes
+- Single-instance monolithic applications with dedicated in-memory queues and no network retry amplification risk
+
+### Also see
+- [Retry Storm](#retry-storm) · [Circuit Breaker](#circuit-breaker) · [Retry Amplification](#retry-amplification) · [Exponential Backoff](#exponential-backoff) · [Jitter](#jitter)
 
 
