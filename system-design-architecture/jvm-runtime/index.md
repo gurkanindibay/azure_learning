@@ -17,6 +17,7 @@ Problems and strategies for JVM-based systems: memory management, garbage collec
 |:---|:---|:---|
 | [jvm-memory-gc.md](jvm-memory-gc.md) | `jvm-01` – `jvm-09` | Heap allocation rate, Stack overflow, Metaspace leaks, Full GC storms, Memory leaks, Thread explosion, HashMap collisions |
 | [jvm-thread-model-vs-go.md](jvm-thread-model-vs-go.md) | `jvm-10` – `jvm-13` | Java 1:1 thread model ceiling, Go M:N goroutine scheduler, Virtual Thread pinning trap, Spring Boot 3.2 migration path |
+| [modern-java-evolution-takeaways.md](modern-java-evolution-takeaways.md) | `jvm-14` – `jvm-19` | Stream Gatherers, Scoped Values, Structured Concurrency, FFM API, Generational ZGC, Compact Headers, HTTP/3 |
 
 ## Cross-References
 

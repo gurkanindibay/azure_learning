@@ -188,6 +188,12 @@ takeaway_domains:
   jvm:
     file: "jvm-runtime/jvm-memory-gc.md"
     desc: "JVM Memory & GC"
+    related_files:
+      - "system-design-architecture/jvm-runtime/jvm-memory-gc.md"
+      - "system-design-architecture/jvm-runtime/jvm-thread-model-vs-go.md"
+      - "system-design-architecture/jvm-runtime/modern-java-evolution-takeaways.md"
+      - "articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md"
+      - "articles/jvm-runtime/modern-java-has-changed-more-than-you-think.md"
   sdi:
     file: "system-design-interview/interview-roadmap.md"
     desc: "System Design Interview"
@@ -351,6 +357,14 @@ takeaway_keywords:
   api gateway: gw
   hotlinking: api
   faceted search: api
+  stream gatherers: jvm
+  scoped values: jvm
+  structured concurrency: jvm
+  ffm: jvm
+  foreign function: jvm
+  compact object headers: jvm
+  generational zgc: jvm
+  lazy constants: jvm
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
 
@@ -693,6 +707,15 @@ dictionary_domains:
       - carrier thread
       - hashmap
       - treeification
+      - stream gatherers
+      - scoped values
+      - structured concurrency
+      - ffm
+      - foreign function
+      - panama
+      - compact object headers
+      - generational zgc
+      - lazy constants
 
   databases.md:
     title: "Databases & Database Engines"

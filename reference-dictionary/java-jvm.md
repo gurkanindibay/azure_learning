@@ -42,6 +42,13 @@ timestamp: 2026-06-15T00:00:00Z
 | Thread Pinning | [`#thread-pinning`](#thread-pinning) |
 | Carrier Thread | [`#carrier-thread`](#carrier-thread) |
 | CallerRunsPolicy | [`#callerrunspolicy`](#callerrunspolicy) |
+| Stream Gatherers | [`#stream-gatherers`](#stream-gatherers) |
+| Scoped Values | [`#scoped-values`](#scoped-values) |
+| Structured Concurrency | [`#structured-concurrency`](#structured-concurrency) |
+| Foreign Function & Memory API | [`#foreign-function-and-memory-api`](#foreign-function-and-memory-api) |
+| Compact Object Headers | [`#compact-object-headers`](#compact-object-headers) |
+| Generational ZGC | [`#generational-zgc`](#generational-zgc) |
+| Lazy Constants | [`#lazy-constants`](#lazy-constants) |
 
 ---
 
@@ -525,4 +532,188 @@ new ThreadPoolExecutor(
 - [Backpressure](resilience.md#backpressure) — the general pattern that CallerRunsPolicy implements locally
 - [Bounded Queue](resilience.md#backpressure) — the queue strategy that pairs with this policy
 - [Virtual Threads](#virtual-threads) — an alternative concurrency model that avoids thread-pool sizing entirely
+
+---
+
+## Stream Gatherers
+
+### stream-gatherers
+
+An extension point for the Java Stream API (JEP 461/473/485) that enables developers to define **custom intermediate stream operations** with managed state, short-circuiting, and transformation capabilities (one-to-one, one-to-many, many-to-one, and many-to-many).
+
+### Key Characteristics
+- Extends intermediate pipeline capabilities beyond built-in operators (`map`, `filter`, `flatMap`)
+- Invoked via `stream.gather(Gatherer)`
+- Built-in gatherers in `java.util.stream.Gatherers` include `windowFixed(n)`, `windowSliding(n)`, `fold()`, `scan()`, and `mapConcurrent()`
+- Supports parallel execution and stateful, ordered streaming without breaking stream laziness
+
+### When to Use
+- Implementing custom chunking, sliding windows, deduplication, or running totals directly in stream pipelines
+- When avoiding premature collection into intermediate in-memory lists (e.g. `Collectors.groupingBy()`)
+
+### When NOT to Use
+- For simple mapping or filtering operations where standard `map()` and `filter()` suffice
+- When terminal aggregation into collections is all that is required (use `Collector`)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — concurrency model for streaming pipelines
+
+---
+
+## Scoped Values
+
+### scoped-values
+
+A lightweight, immutable mechanism (JEP 429/446/481/487) for **sharing contextual data safely and efficiently within and across threads** without the memory and safety drawbacks of `ThreadLocal`.
+
+### Key Characteristics
+- Immutable: bound values cannot be modified during the scope execution
+- Automatically bounded lifetime: values are popped when the `run()` or `call()` scope ends
+- Replaces `ThreadLocal` with negligible memory overhead, making it safe for millions of Virtual Threads
+- Supports rebinding in child scopes without mutating the parent binding
+
+### When to Use
+- Propagating request metadata, tenant identifiers, security principals, and distributed tracing spans across method calls and subtasks
+- Virtual-thread-heavy applications where `ThreadLocal` causes unbounded memory growth
+
+### When NOT to Use
+- When mutable state must be updated during execution (use dedicated mutable request context objects instead)
+- On legacy JDK versions (< Java 21)
+
+### Also see
+- [ThreadLocal](#threadlocal) — legacy alternative with mutability and leak risks
+- [Virtual Threads](#virtual-threads) — primary concurrency use case for Scoped Values
+- [Structured Concurrency](#structured-concurrency) — propagates scoped values to child tasks
+
+---
+
+## Structured Concurrency
+
+### structured-concurrency
+
+A concurrency paradigm (JEP 428/453/480/499) that treats **groups of concurrent subtasks executing in separate threads as a single unit of work**, ensuring that subtasks are created, joined, and cancelled within a deterministic syntactic scope.
+
+### Key Characteristics
+- Implemented via `StructuredTaskScope` in `java.util.concurrent`
+- Core policies include `ShutdownOnFailure` (fail-fast: cancel siblings on first error) and `ShutdownOnSuccess` (race: return first successful result)
+- Guaranteed cleanup: try-with-resources blocks ensure all child virtual threads are terminated before exiting
+- Preserves call hierarchy and relationship in thread dumps and diagnostic tooling
+
+### When to Use
+- Fan-out/fan-in aggregation requests (e.g., API gateway calling multiple microservices concurrently)
+- Ensuring sibling tasks are short-circuited and cancelled immediately if any critical task fails
+
+### When NOT to Use
+- Fire-and-forget background worker threads that must outlive the HTTP request lifecycle
+- Asynchronous event-driven messaging queues where tasks are decoupled across time
+
+### Also see
+- [Virtual Threads](#virtual-threads) — underlying lightweight execution threads
+- [Scoped Values](#scoped-values) — inherited across structured scopes
+
+---
+
+## Foreign Function & Memory API
+
+### foreign-function-and-memory-api
+
+A modern Java API (JEP 454, Project Panama) that enables Java programs to **interoperate with native code and off-heap memory safely, efficiently, and without the risks of JNI**.
+
+### Key Characteristics
+- Pure Java interface for allocating off-heap memory (`Arena`, `MemorySegment`, `MemoryLayout`)
+- Binds and executes C/native functions via `Linker` and `SymbolLookup` without writing C JNI wrappers
+- Explicit memory lifetime governance through confined, shared, or automatic arenas
+- Prevents use-after-free and dangling pointer bugs common in unmanaged C integration
+
+### When to Use
+- Interfacing with native C/C++ libraries: machine learning frameworks (ONNX, LibTorch), high-performance databases (RocksDB), graphics engines, or hardware drivers
+- Managing large off-heap memory caches to avoid JVM GC overhead
+
+### When NOT to Use
+- Standard enterprise CRUD applications where native performance is unnecessary
+- Cross-platform codebases where native dependencies complicate portability
+
+### Also see
+- [Metaspace](#metaspace) — off-heap class metadata region
+- [JVM Heap Memory](#jvm-heap-memory) — managed memory counterpart
+
+---
+
+## Compact Object Headers
+
+### compact-object-headers
+
+An optimization in the HotSpot JVM (JEP 450/490, Project Lilliput) that **compresses the 64-bit object header from 128 bits (16 bytes) down to 64 bits (8 bytes)**.
+
+### Key Characteristics
+- Encodes the Mark Word and Class Pointer (Klass Word) into a single 64-bit header
+- Reduces memory consumption by 10% to 20% across large-heap and object-intensive workloads
+- Improves CPU L1/L2 cache density by fitting more live object references per cache line
+- Enabled via `-XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders`
+
+### When to Use
+- Memory-constrained cloud containers (e.g. Kubernetes pods with strict RAM limits)
+- High-throughput services allocating millions of small, short-lived domain and DTO objects
+
+### When NOT to Use
+- 32-bit JVM architectures (already use small headers)
+- Systems requiring unsupported legacy JVMTI agents incompatible with compressed headers
+
+### Also see
+- [JVM Heap Memory](#jvm-heap-memory) — primary beneficiary of reduced header size
+- [Generational ZGC](#generational-zgc) — complementary garbage collection optimization
+
+---
+
+## Generational ZGC
+
+### generational-zgc
+
+An enhancement to the Z Garbage Collector (JEP 439) that **separates the heap into young and old generations**, retaining sub-millisecond pause times while significantly reducing CPU overhead and improving allocation throughput.
+
+### Key Characteristics
+- Preserves ZGC's core guarantee of sub-1ms stop-the-world pauses
+- Exploits the weak generational hypothesis (most objects die young), collecting young generations frequently with low CPU overhead
+- Enabled via `-XX:+UseZGC -XX:+ZGenerational`
+- Eliminates "allocation stall" spikes that affected single-generation ZGC under rapid allocation bursts
+
+### When to Use
+- Latency-critical microservices requiring strict p99/p99.9 SLAs (<10ms) under heavy traffic
+- Large heaps (e.g. 16 GB to terabytes) where G1GC pause times exceed tolerance
+
+### When NOT to Use
+- Ultra-small heaps (<512 MB) where Serial GC or G1GC has lower baseline memory footprint
+- Batch processing jobs where raw batch throughput is prioritized over latency pauses
+
+### Also see
+- [ZGC](#zgc) — single-generation predecessor
+- [G1GC](#g1gc) — default throughput-balanced collector
+- [GC Pause](#gc-pause) — the metric minimized by Generational ZGC
+
+---
+
+## Lazy Constants
+
+### lazy-constants
+
+A Java language and runtime preview feature that provides a **thread-safe, high-performance abstraction for lazy initialization of constants and singleton resources** without manual synchronization or double-checked locking boilerplate.
+
+### Key Characteristics
+- Provided via `java.lang.Lazy` (or computed constants abstraction)
+- Guarantees exactly-once evaluation of the supplier in multi-threaded environments
+- Replaces error-prone double-checked locking and `volatile` synchronization patterns
+- Enables the HotSpot JIT compiler to fold constant references once initialized
+
+### When to Use
+- Heavy resource initialization (e.g., database connection factories, cryptographic engines, large configuration maps) that should only run when first accessed
+- Thread-safe singleton patterns without synchronization overhead on subsequent reads
+
+### When NOT to Use
+- Simple, cheap values that can be safely initialized statically at class-load time
+- Values that change dynamically over the application lifecycle (use caching abstractions instead)
+
+### Also see
+- [CallerRunsPolicy](#callerrunspolicy) — concurrency policy
+- [HashMap](#hashmap) — common data structure initialized lazily
+
 
