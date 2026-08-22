@@ -27,14 +27,14 @@ flowchart LR
     end
 
     subgraph Pipeline["Monitoring Pipeline"]
-        C["Collection\n(Pull / Push)"] --> T["Transmission\n(Kafka / Stream)"]
-        T --> DB[("Time-Series DB\n(InfluxDB / Prometheus)")]
-        DB --> Q["Query Service\n& Cache"]
+        C["Collection<br/>(Pull / Push)"] --> T["Transmission<br/>(Kafka / Stream)"]
+        T --> DB[("Time-Series DB<br/>(InfluxDB / Prometheus)")]
+        DB --> Q["Query Service<br/>& Cache"]
     end
 
     subgraph Consumers["Downstream"]
-        Q --> V["Visualization\n(Grafana)"]
-        Q --> A["Alert Manager\n(PagerDuty / Webhook)"]
+        Q --> V["Visualization<br/>(Grafana)"]
+        Q --> A["Alert Manager<br/>(PagerDuty / Webhook)"]
     end
 
     Sources --> Pipeline
@@ -210,16 +210,16 @@ cpu.load,host=webserver02,region=us-west,env=prod value=43 1613707265000000000
 
 ```mermaid
 flowchart TD
-    DB{"Database\nCategory"}
+    DB{"Database<br/>Category"}
     
     DB -->|RDBMS - MySQL or Postgres| R["Relational DB"]
-    R --> R_FAIL["❌ High write lock contention\n❌ Heavy index overhead per tag\n❌ Complex moving average queries"]
+    R --> R_FAIL["❌ High write lock contention<br/>❌ Heavy index overhead per tag<br/>❌ Complex moving average queries"]
     
     DB -->|General NoSQL - Cassandra or HBase| N["NoSQL Column Store"]
-    N --> N_OK["⚠️ Capable of high writes\n❌ Requires manual schema tuning, compaction & rollup logic"]
+    N --> N_OK["⚠️ Capable of high writes<br/>❌ Requires manual schema tuning, compaction & rollup logic"]
     
     DB -->|Specialized TSDB - InfluxDB or Prometheus| T["Time-Series DB (TSDB)"]
-    T --> T_WIN["✅ Optimized LSM/WAL engine\n✅ Built-in delta-of-delta compression\n✅ Native rollup & TTL downsampling\n✅ Inverted index for label lookups"]
+    T --> T_WIN["✅ Optimized LSM/WAL engine<br/>✅ Built-in delta-of-delta compression<br/>✅ Native rollup & TTL downsampling<br/>✅ Inverted index for label lookups"]
 ```
 
 | Criteria | Relational (MySQL / PostgreSQL) | General NoSQL (Cassandra / Bigtable) | Specialized TSDB (InfluxDB / Prometheus) |
@@ -239,7 +239,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph PullModel["PULL MODEL (e.g., Prometheus)"]
-        SD["Service Discovery\n(etcd / Consul)"]
+        SD["Service Discovery<br/>(etcd / Consul)"]
         CollP["Collector Pool"]
         W1["Target: Web App /metrics"]
         W2["Target: DB /metrics"]
@@ -269,10 +269,10 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph HashRing["Consistent Hash Ring for Pull Collectors"]
-        C1["Collector 1\n(Servers 1 & 5)"]
-        C2["Collector 2\n(Servers 2 & 6)"]
-        C3["Collector 3\n(Servers 3 & 7)"]
-        C4["Collector 4\n(Servers 4 & 8)"]
+        C1["Collector 1<br/>(Servers 1 & 5)"]
+        C2["Collector 2<br/>(Servers 2 & 6)"]
+        C3["Collector 3<br/>(Servers 3 & 7)"]
+        C4["Collector 4<br/>(Servers 4 & 8)"]
     end
 ```
 
@@ -306,9 +306,9 @@ flowchart LR
     end
 
     subgraph Messaging["Kafka Buffer"]
-        KP1["Topic: Metrics\nPartition 0 (CPU)"]
-        KP2["Topic: Metrics\nPartition 1 (Memory)"]
-        KP3["Topic: Metrics\nPartition 2 (Network)"]
+        KP1["Topic: Metrics<br/>Partition 0 (CPU)"]
+        KP2["Topic: Metrics<br/>Partition 1 (Memory)"]
+        KP3["Topic: Metrics<br/>Partition 2 (Network)"]
     end
 
     subgraph Processing["Stream Workers"]
@@ -344,15 +344,15 @@ If managing a massive Kafka cluster is deemed too operationally heavy, systems l
 ```mermaid
 flowchart TD
     subgraph Tier1["1. Collection Agent (Client-Side)"]
-        T1["Local In-Memory Counter Aggregation\n(1-minute window rollup before network push)"]
+        T1["Local In-Memory Counter Aggregation<br/>(1-minute window rollup before network push)"]
     end
 
     subgraph Tier2["2. Ingestion Pipeline (Stream Processing)"]
-        T2["Apache Flink / Spark Streaming\n(Sliding / Tumbling window rollups, anomaly detection)"]
+        T2["Apache Flink / Spark Streaming<br/>(Sliding / Tumbling window rollups, anomaly detection)"]
     end
 
     subgraph Tier3["3. Query Side (Read-Time)"]
-        T3["TSDB Query Engine\n(Ad-hoc group by, dynamic math functions)"]
+        T3["TSDB Query Engine<br/>(Ad-hoc group by, dynamic math functions)"]
     end
 
     Tier1 --> Tier2 --> Tier3
@@ -370,8 +370,8 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    C["Clients\n(Grafana / Alert Engine)"] --> QS["Query Service Cluster"]
-    QS <--> QC[("Cache Layer\n(Redis / Memcached)")]
+    C["Clients<br/>(Grafana / Alert Engine)"] --> QS["Query Service Cluster"]
+    QS <--> QC[("Cache Layer<br/>(Redis / Memcached)")]
     QS --> TSDB[("Time-Series DB")]
 ```
 
@@ -445,8 +445,8 @@ Metric values (e.g., CPU percentage `0.291`) are stored as IEEE 754 floating-poi
 
 ```mermaid
 flowchart LR
-    V1["Value 1\n(0.2900)"] --> XOR["XOR Operation\n(V1 ⊕ V2)"]
-    V2["Value 2\n(0.2910)"] --> XOR
+    V1["Value 1<br/>(0.2900)"] --> XOR["XOR Operation<br/>(V1 ⊕ V2)"]
+    V2["Value 2<br/>(0.2910)"] --> XOR
     XOR --> Z["Bit Stream with leading/trailing zeros"]
     Z --> Comp["Packed into 1-4 bits instead of 64 bits"]
 ```
@@ -455,9 +455,9 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Raw["Raw Data (10s resolution)\nRetention: 7 Days\nStorage: Fast NVMe SSD"]
-    Roll1["1-Minute Resolution Rollup\nRetention: 30 Days\nStorage: Standard SSD"]
-    Roll2["1-Hour Resolution Rollup\nRetention: 1 Year\nStorage: Object Storage / Cold Tier"]
+    Raw["Raw Data (10s resolution)<br/>Retention: 7 Days<br/>Storage: Fast NVMe SSD"]
+    Roll1["1-Minute Resolution Rollup<br/>Retention: 30 Days<br/>Storage: Standard SSD"]
+    Roll2["1-Hour Resolution Rollup<br/>Retention: 1 Year<br/>Storage: Object Storage / Cold Tier"]
 
     Raw -->|After 7 Days - Aggregate Avg Min Max| Roll1
     Roll1 -->|After 30 Days - Aggregate Avg Min Max| Roll2
@@ -492,7 +492,7 @@ flowchart TD
     end
 
     subgraph State["3. State Management"]
-        AS[("Alert State Store\n(Cassandra / Redis)\n[Inactive, Pending, Firing, Resolved]")]
+        AS[("Alert State Store<br/>(Cassandra / Redis)<br/>[Inactive, Pending, Firing, Resolved]")]
     end
 
     subgraph Dispatch["4. Deduplication & Dispatch"]
@@ -569,29 +569,29 @@ flowchart TD
     end
 
     subgraph Discovery["Discovery Tier"]
-        SD["Service Discovery\n(etcd / Consul)"]
+        SD["Service Discovery<br/>(etcd / Consul)"]
     end
 
     subgraph Ingestion["Metrics Collection Tier"]
-        Col["Collector Cluster\n(Consistent Hash Ring / Auto-scaling)"]
+        Col["Collector Cluster<br/>(Consistent Hash Ring / Auto-scaling)"]
     end
 
     subgraph MessageQueue["Message Streaming Tier"]
-        K["Apache Kafka Cluster\n(Partitioned by Metric Name)"]
+        K["Apache Kafka Cluster<br/>(Partitioned by Metric Name)"]
     end
 
     subgraph StreamingEngine["Stream Processing Tier"]
-        Flink["Apache Flink / Spark Streaming\n(Downsampling & Anomaly Aggregation)"]
+        Flink["Apache Flink / Spark Streaming<br/>(Downsampling & Anomaly Aggregation)"]
     end
 
     subgraph StorageTier["Time-Series Storage Tier"]
-        TSDB[("TSDB Cluster\n(InfluxDB / Prometheus / Gorilla)")]
-        Cold[("Cold Storage S3 / Object Store\n(1-Hour Rollups, 1-Year Retention)")]
+        TSDB[("TSDB Cluster<br/>(InfluxDB / Prometheus / Gorilla)")]
+        Cold[("Cold Storage S3 / Object Store<br/>(1-Hour Rollups, 1-Year Retention)")]
     end
 
     subgraph QueryLayer["Query & Caching Tier"]
         QS["Query Service"]
-        QC[("Query Cache\n(Redis)")]
+        QC[("Query Cache<br/>(Redis)")]
     end
 
     subgraph AlertPipeline["Alert Processing Tier"]
