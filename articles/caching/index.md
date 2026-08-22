@@ -23,3 +23,4 @@ Source articles covering caching patterns, strategies, and case studies.
 - [URL Shortener Suddenly Crashes During IPL Finals: How Will You Fix?](url-shortener-viral-hotkey-cdn-caching.md)
 - [Amazon Cart Shows Old Data — Cache Invalidation and Distributed Session Consistency](amazon-cart-cache-invalidation-deep-dive.md)
 - [A 90% Redis Cost Reduction Sounds Impossible Until You Look Under the Hood](meesho-redis-90-percent-cost-reduction.md)
+- [Redis Distributed Locking — Commands, Patterns, and Production Pitfalls](redis-distributed-locking-commands-patterns-pitfalls.md)

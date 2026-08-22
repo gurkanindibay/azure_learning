@@ -37,6 +37,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Lease-Based Lock | [`#lease-based-lock`](#lease-based-lock) |
 | Lock Contention | [`#lock-contention`](#lock-contention) |
 | Lock Ordering | [`#lock-ordering`](#lock-ordering) |
+| Lock-Transaction Inversion | [`#lock-transaction-inversion`](#lock-transaction-inversion) |
 | Lost Update | [`#lost-update`](#lost-update) |
 | Optimistic Locking | [`#optimistic-locking`](#optimistic-locking) |
 | Overselling | [`#overselling`](#overselling) |
@@ -273,7 +274,38 @@ A lock that is valid only for a bounded time window (lease/TTL). The holder must
 - When the protected operation's duration is unpredictable or can exceed the lease
 - As the only guard for correctness-critical invariants
 
-**Also see**: [Distributed Lock](#distributed-lock), [Fencing Token](#fencing-token)
+**Also see**: [Distributed Lock](#distributed-lock), [Fencing Token](#fencing-token), [Lock-Transaction Inversion](#lock-transaction-inversion)
+
+---
+
+## Lock-Transaction Inversion
+
+A distributed concurrency anti-pattern where a distributed lock is released before the underlying database transaction commits. This occurs frequently when mixing distributed locks with declarative transaction management (such as Spring `@Transactional`), creating an unshielded race window where concurrent workers acquire the newly released lock and observe uncommitted or stale database state.
+
+```
+❌ Inverted Order:
+Acquire Lock → Begin DB Tx → Execute Operations → Release Lock ❌ → DB Commit (Too Late!)
+                                                 ▲
+                                     [Race Window for Contenders]
+
+✅ Aligned Order:
+Acquire Lock → Begin DB Tx → Execute Operations → DB Commit → Release Lock ✅
+```
+
+### Key Characteristics
+- **Boundary mismatch**: The outer synchronization scope (distributed lock) closes before the inner persistence scope (DB transaction) finishes
+- **Invisible in single-threaded tests**: Only manifests under high-concurrency multi-instance load when contested resources are updated
+- **Fixed via programmatic transaction wrappers**: Solved by using `TransactionTemplate` or explicit commit callbacks to release the lock in a `finally` block strictly after transaction commit
+
+### When to Use (Awareness / Prevention)
+- Designing transactional endpoints that synchronize on distributed locks (coupons, inventory, seat reservation, wallet balances)
+- Code reviews for frameworks utilizing proxy-based declarative transactions (`@Transactional`, Python context managers)
+
+### When NOT to Use
+- Pure read-only queries with no transactional mutations
+- Systems relying solely on database-level row locks (`SELECT ... FOR UPDATE`) where transaction commit automatically releases locks
+
+**Also see**: [Distributed Lock](#distributed-lock), [Double-Booking Problem](#double-booking-problem), [Atomic Conditional Update](#atomic-conditional-update), [Safe Lock Release (Lua Script)](caching.md#safe-lock-release-lua-script)
 
 ---
 

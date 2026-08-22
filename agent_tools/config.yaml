@@ -185,6 +185,13 @@ takeaway_domains:
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"
+    related_files:
+      - "system-design-architecture/caching/redis-internals.md"
+      - "system-design-architecture/caching/redis-rate-limiting-patterns.md"
+      - "system-design-architecture/caching/redis-data-structures-takeaways.md"
+      - "system-design-architecture/caching/redis-distributed-locking-takeaways.md"
+      - "articles/caching/redis-distributed-locking-commands-patterns-pitfalls.md"
+      - "articles/caching/redis-rate-limiting-distributed-race-conditions.md"
   jvm:
     file: "jvm-runtime/jvm-memory-gc.md"
     desc: "JVM Memory & GC"
@@ -235,6 +242,8 @@ takeaway_keywords:
   message broker: broker
   cache: cache
   redis: cache
+  redlock: cache
+  set nx: cache
   sql: sql
   database: db
   index: db

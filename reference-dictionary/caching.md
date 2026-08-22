@@ -60,6 +60,8 @@ timestamp: 2026-06-14T00:00:00Z
 | UNLINK (Async Deletion) | [`#unlink-async-deletion`](#unlink-async-deletion) |
 | Redis Sorted Sets | [`#redis-sorted-sets`](#redis-sorted-sets) |
 | SET NX (Redis) | [`#set-nx-redis`](#set-nx-redis) |
+| Safe Lock Release (Lua Script) | [`#safe-lock-release-lua-script`](#safe-lock-release-lua-script) |
+| Redlock Algorithm | [`#redlock-algorithm`](#redlock-algorithm) |
 | ziplist | [`#ziplist`](#ziplist) |
 | listpack | [`#listpack`](#listpack) |
 | hash-max-ziplist-entries | [`#hash-max-ziplist-entries`](#hash-max-ziplist-entries) |
@@ -959,7 +961,59 @@ Consumer receives event with eventId = "abc-123"
 - As the sole deduplication mechanism — Redis can lose keys on eviction or restart; always pair with DB constraints
 - For correctness-critical locking (use Redlock or ZooKeeper with fencing tokens instead)
 
-**Also see**: [Deduplication Store](../messaging.md#deduplication-store), [Atomic Deduplication](../messaging.md#atomic-deduplication), [Idempotency](../cqrs-event-driven.md#idempotency), [TTL](#ttl-time-to-live)
+**Also see**: [Deduplication Store](../messaging.md#deduplication-store), [Atomic Deduplication](../messaging.md#atomic-deduplication), [Idempotency](../cqrs-event-driven.md#idempotency), [TTL](#ttl-time-to-live), [Safe Lock Release (Lua Script)](#safe-lock-release-lua-script), [Redlock Algorithm](#redlock-algorithm)
+
+---
+
+## Safe Lock Release (Lua Script)
+
+A distributed lock release pattern that executes an atomic Lua script on the Redis server to compare the lock's current value against the caller's unique ownership token (UUID) before deleting the key. This ensures a client never inadvertently releases a lock acquired by another client after its own lease expires.
+
+```lua
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+else
+    return 0
+end
+```
+
+### Key Characteristics
+- **Owner verification**: Guarantees that only the worker holding the matching UUID token can delete the lock
+- **Server-side atomicity**: `GET` and `DEL` execute inside a single Redis transaction script with zero network round-trip delay between read and delete
+- **Eliminates cross-client deletion**: Prevents cascading lock corruption when GC pauses, DB latency, or network partitions exceed the lock's TTL
+
+### When to Use
+- Any production distributed lock built on top of Redis `SET key value NX PX <ttl>`
+- Multi-instance background workers competing for unique task execution
+- High-concurrency transaction gates where task duration has high variance
+
+### When NOT to Use
+- When lock ownership is managed by strong consensus systems with built-in leases and fencing (e.g., etcd, ZooKeeper)
+- Uncontended single-thread in-memory locks (use standard language mutexes instead)
+
+**Also see**: [SET NX (Redis)](#set-nx-redis), [Redlock Algorithm](#redlock-algorithm), [Distributed Lock](data-concurrency.md#distributed-lock), [Fencing Token](data-concurrency.md#fencing-token)
+
+---
+
+## Redlock Algorithm
+
+A distributed lock consensus algorithm designed for Redis clusters consisting of $N$ (typically 5) independent master nodes. To acquire a lock, a client requests the lock across all nodes sequentially; the lock is successfully granted only if the client acquires it from a strict majority ($\lfloor N/2 \rfloor + 1$) within a time window significantly shorter than the lock validity TTL, accounting for clock drift.
+
+### Key Characteristics
+- **Multi-master quorum**: Operates across independent Redis instances without master-replica failover vulnerabilities
+- **Clock drift bounded**: Validates total acquisition time and subtracts clock drift margin from the effective lock lease
+- **Safe release across all nodes**: In the event of failure to obtain quorum, the client releases the lock across all $N$ instances (including timed-out nodes)
+- **Probabilistic vs absolute consensus**: Provides higher fault tolerance than a single Redis instance, though Martin Kleppmann's critique notes it can still be vulnerable to unbounded process pauses without downstream fencing tokens
+
+### When to Use
+- Multi-node Redis deployments requiring fault tolerance against single-instance failure or asynchronous failover split-brain
+- Scenarios where mutual exclusion across independent nodes is desired without maintaining a separate ZooKeeper/etcd cluster
+
+### When NOT to Use
+- Correctness-critical banking or financial ledger operations without downstream database fencing tokens
+- Simple single-instance Redis cache setups where occasional lock loss during master reboot is acceptable
+
+**Also see**: [SET NX (Redis)](#set-nx-redis), [Safe Lock Release (Lua Script)](#safe-lock-release-lua-script), [Distributed Lock](data-concurrency.md#distributed-lock), [Fencing Token](data-concurrency.md#fencing-token)
 
 ---
 

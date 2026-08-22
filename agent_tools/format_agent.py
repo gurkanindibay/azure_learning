@@ -249,16 +249,26 @@ def validate_document(filepath: Path) -> list[str]:
     if not re.search(r'^type:\s*\S', fm_text, re.MULTILINE):
         issues.append("Missing required 'type' field in frontmatter")
 
-    # 2. Title (H1) should be present
+    # 2. Title (H1) should be present (outside code blocks)
     body_start = fm_match.end()
     body_lines = content[body_start:].split("\n")
-    has_h1 = any(l.strip().startswith("# ") for l in body_lines)
+    in_code_block = False
+    clean_body_lines = []
+    for line in body_lines:
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if not in_code_block:
+            clean_body_lines.append(line)
+
+    has_h1 = any(l.strip().startswith("# ") for l in clean_body_lines)
     if not has_h1:
         issues.append("Missing H1 heading")
 
     # 3. Heading hierarchy check
     heading_levels = []
-    for line in body_lines:
+    for line in clean_body_lines:
         m = re.match(r'^(#{1,6})\s', line.strip())
         if m:
             level = len(m.group(1))
