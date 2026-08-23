@@ -954,6 +954,20 @@ A **threshold mechanism in stream processing** that defines how long to wait for
 - **Trade-off**: Longer watermark = more complete results but higher latency; shorter watermark = faster results but more missed late events
 - **Heuristic by nature**: Watermarks are a best-effort mechanism — some events may still arrive after the watermark
 
+### Example: Tumbling Window with 15s Watermark Buffer
+
+```
+Scenario: 1-minute window [12:00:00 - 12:01:00] with 15s allowed lateness.
+
+Timeline:
+├─ 12:00:20  Event E1 (Event-Time: 12:00:15) arrives ──► Placed in window [12:00 - 12:01]
+├─ 12:01:05  Event E2 (Event-Time: 12:00:50) arrives ──► Placed in window [12:00 - 12:01] (Late, but within buffer)
+├─ 12:01:15  System clock reaches 12:01:15            ──► Watermark reaches 12:01:00 (12:01:15 - 15s)
+│                                                         WINDOW CLOSES & Emits Result: count = 2
+└─ 12:01:25  Event E3 (Event-Time: 12:00:45) arrives ──► Event-Time (12:00:45) < Watermark (12:01:00)
+                                                          DROPPED or routed to Dead Letter Queue (DLQ)
+```
+
 ### When to Use
 - Windowed aggregations where completeness matters (hourly/daily rollups, billing)
 - IoT pipelines where device data can be delayed by hours due to connectivity gaps
@@ -965,7 +979,7 @@ A **threshold mechanism in stream processing** that defines how long to wait for
 - When incomplete windows are acceptable and freshness is the priority
 
 ### Also see
-- [Event-Time](#event-time) · [Processing-Time](#processing-time) · [Consumer Lag](#consumer-lag)
+- [Event-Time](#event-time) · [Processing-Time](#processing-time) · [Consumer Lag](#consumer-lag) · [Low-Watermark / High-Watermark](databases.md#low-watermark-high-watermark)
 
 ---
 

@@ -25,6 +25,8 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [35-db-key-takeaways.md](35-db-key-takeaways.md) | `db-28` – `db-30` | WAL-based CDC state machine, Replication slot lifecycle, Publication/subscription model for selective CDC |
 | [36-db-key-takeaways.md](36-db-key-takeaways.md) | `db-31` – `db-33` | Random UUIDv4 B-tree fragmentation, Time-ordered keys (UUIDv7/ULID), 64-bit TSID/Snowflake vs 128-bit UUID trade-offs |
 | [37-db-key-takeaways.md](37-db-key-takeaways.md) | `db-34` – `db-36` | Virtual thread connection storm, Multi-region pool sizing formula, Database backpressure & acquisition latency monitoring |
+| [38-db-key-takeaways.md](38-db-key-takeaways.md) | `db-37` – `db-40` | State polling vs mutation streaming failure modes, Netflix DBLog non-blocking snapshots, Stream partition ordering, Warehouse idempotent MERGE |
+
 
 
 ## Cross-References

@@ -62,6 +62,11 @@ timestamp: 2026-06-18T00:00:00Z
 | KSUID | [`#ksuid`](#ksuid) |
 | Trie (Prefix Tree) | [`#trie-prefix-tree`](#trie-prefix-tree) |
 | SimHash | [`#simhash`](#simhash) |
+| Non-Blocking Incremental Snapshot | [`#non-blocking-incremental-snapshot`](#non-blocking-incremental-snapshot) |
+| CDC Tombstone | [`#cdc-tombstone`](#cdc-tombstone) |
+| LSN Lag | [`#lsn-lag`](#lsn-lag) |
+| Monotonic Timestamp Guard | [`#monotonic-timestamp-guard`](#monotonic-timestamp-guard) |
+| Low-Watermark / High-Watermark | [`#low-watermark-high-watermark`](#low-watermark-high-watermark) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1147,5 +1152,144 @@ A **locality-sensitive hashing (LSH) algorithm** developed by Moses Charikar tha
 ### Also see
 - [Inverted Index](#inverted-index) · [Bloom Filter](#bloom-filter) · [HyperLogLog](#hyperloglog)
 
+---
 
+## Non-Blocking Incremental Snapshot
 
+A **database bootstrapping technique** (pioneered by Netflix's DBLog framework) that captures a full baseline snapshot of an active, multi-million-row database table without acquiring table-level read locks (`LOCK TABLE ... IN SHARE MODE`) or blocking application write traffic. It works by interleaving primary key range chunks with the live transaction log (WAL/Binlog) using low-watermark and high-watermark signals written to a dedicated control table.
+
+### Key Characteristics
+- **Zero lock contention**: Reads primary key intervals via standard `SELECT ... WHERE pk >= chunk_start AND pk < chunk_end` queries without blocking concurrent transactional updates.
+- **Windowed log deduplication**: For any mutations occurring in the transaction log between the chunk's low-watermark and high-watermark signals, the connector reconciles in-memory state so WAL events supersede snapshot data.
+- **Dynamic pause and resume**: Snapshot progress is tracked per chunk in metadata tables, allowing bootstrapping to be paused, throttled during peak OLTP hours, or resumed after node failures.
+- **Uniform resource footprint**: Bounds memory and buffer pool usage by scanning small, discrete primary key intervals rather than unbounded table scans.
+
+### When to Use
+- Initializing Change Data Capture (CDC) pipelines on large, production-critical tables with strict 24/7 uptime SLAs.
+- Adding newly created tables or backfilling missing historical tables into an existing live streaming pipeline.
+- Disaster recovery re-syncing where an analytical warehouse must be repopulated without degrading primary database throughput.
+
+### When NOT to Use
+- Small, static reference tables where a simple table export or off-peak copy causes negligible lock impact.
+- Tables lacking a primary key or unique, monotonically sortable integer index needed for deterministic range chunking.
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [LSN Lag](#lsn-lag) · [CDC Tombstone](#cdc-tombstone) · [Low-Watermark / High-Watermark](#low-watermark-high-watermark) · [38. CDC Pipeline Scale Failures](../../system-design-architecture/databases/38-db-key-takeaways.md)
+
+---
+
+## CDC Tombstone
+
+An **explicit deletion event marker** emitted by Change Data Capture (CDC) engines (such as Debezium) when a row is physically deleted from the source database (`DELETE FROM table`). It typically contains a deletion operation indicator (e.g., `_cdc_op = 'D'` or a null payload with entity ID key) to signal downstream consumers, stream processors, and cloud data warehouses to remove or soft-delete the corresponding target entity.
+
+### Key Characteristics
+- **Prevents zombie records**: Physical database deletes leave no updated timestamp; without tombstones, deleted rows linger permanently as active records in downstream data lakes and warehouses.
+- **Preserves partition key**: Carries the source primary key as the broker message key so the deletion event lands on the exact same Kafka partition as preceding inserts and updates.
+- **Compact topic support**: Compatible with Kafka log compaction, where a null-payload tombstone instructs broker log cleaners to evict all older record versions with that key.
+
+### When to Use
+- Synchronizing relational databases to analytical data warehouses (Snowflake, BigQuery, Databricks Delta Lake) where physical deletes must propagate deterministically.
+- Invalidating distributed cache entries (Redis/Memcached) or search indices (Elasticsearch) in real time upon database row deletion.
+
+### When NOT to Use
+- Append-only immutable event logs or financial ledgers where physical deletions are prohibited by compliance (use compensatory reversal events instead).
+- Systems using application-level soft deletes (`is_deleted = true`), where standard `UPDATE` CDC events convey state change.
+
+### Also see
+- [Non-Blocking Incremental Snapshot](#non-blocking-incremental-snapshot) · [Monotonic Timestamp Guard](#monotonic-timestamp-guard) · [Change Data Capture](../data-concurrency.md#change-data-capture)
+
+---
+
+## LSN Lag
+
+The **replication backlog gap** measured as the difference in bytes between the primary database's current Write-Ahead Log Log Sequence Number (`pg_current_wal_lsn()`) and a replication slot's latest confirmed flush position (`confirmed_flush_lsn`). Unlike Kafka consumer lag which only consumes broker memory/disk, unconsumed database LSN lag forces the database engine to retain all WAL segments on disk, risking primary node disk exhaustion.
+
+### Key Characteristics
+- **Storage pressure on primary**: The primary database checkpointer cannot recycle or delete WAL files that are newer than the oldest active replication slot's `restart_lsn`.
+- **Disk exhaustion vulnerability**: If a CDC consumer or subscriber halts without dropping its slot, WAL files accumulate until database disk space hits 100%, causing a hard database outage.
+- **Independent of broker lag**: Consumer lag inside Kafka measures delivery latency to analytical sinks; LSN lag measures extraction latency from the database storage engine itself.
+
+### When to Use
+- Primary database health monitoring and alerting (triggering high-priority alerts when replication slot lag exceeds disk safety thresholds).
+- Capacity planning for CDC pipelines and Postgres logical replication infrastructure.
+
+### When NOT to Use
+- Measuring end-to-end event delivery latency to final consumers (use Kafka consumer group offset lag for downstream queue monitoring).
+
+### Also see
+- [LSN (Log Sequence Number)](#lsn) · [WALSender](#walsender) · [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [35. PostgreSQL Logical Replication Takeaways](../../system-design-architecture/databases/35-db-key-takeaways.md)
+
+---
+
+## Monotonic Timestamp Guard
+
+A **conditional update guard clause** used in data warehouse reconciliation queries (e.g., `WHEN MATCHED AND source._cdc_ts > target._cdc_last_updated THEN UPDATE`) that prevents out-of-order, delayed, or retried CDC events from overwriting fresher state in target analytical tables.
+
+### Key Characteristics
+- **Idempotent upsert safety**: Guarantees deterministic state reconciliation even when network retransmissions or batch replays deliver historical events after newer updates.
+- **Epoch/Timestamp validation**: Compares the transaction commit timestamp (`_cdc_ts`) or database LSN attached to the change event against the target row's recorded watermark.
+- **Complement to micro-batch deduplication**: Works in tandem with windowed deduplication (`ROW_NUMBER() OVER (PARTITION BY pk ORDER BY _cdc_ts DESC)`) to ensure correctness across batch boundaries.
+
+### When to Use
+- Streaming ingestion pipelines targeting cloud data warehouses (Snowflake, BigQuery, Databricks Delta Lake, Azure Synapse).
+- Multi-master or active-active replication systems reconciling concurrent event streams using Last-Write-Wins (LWW) semantics.
+
+### When NOT to Use
+- Pure append-only event stores where every mutation is written as a new immutable historical row rather than updating an in-place dimension table.
+
+### Also see
+- [CDC Tombstone](#cdc-tombstone) · [Upsert](#upsert) · [Change Data Capture](../data-concurrency.md#change-data-capture)
+
+---
+
+## Low-Watermark / High-Watermark {#low-watermark-high-watermark}
+
+A **synthetic log demarcation protocol** (central to Netflix's DBLog algorithm and modern lock-free CDC engines like Debezium) used to coordinate parallel chunk-based table reads with an active transaction log. A low-watermark ($LW$) signal record is written to a dedicated database table before reading a primary key chunk, and a high-watermark ($HW$) signal is written immediately after the chunk read completes. Changes appearing in the transaction log between $LW$ and $HW$ are reconciled in memory to guarantee snapshot consistency without blocking concurrent database transactions.
+
+### Key Characteristics
+- **Transactional signaling**: Generates synthetic WAL/Binlog events by inserting lightweight marker rows into a dedicated signaling table within the source database.
+- **Windowed reconciliation**: Captures the exact window of concurrent mutations during a `SELECT` query on a primary key range chunk ($pk \in [start, end)$); any WAL changes between $LW$ and $HW$ overwrite stale chunk values.
+- **Non-blocking linearizability**: Achieves serializable snapshot consistency for historical data backfills without acquiring table-level shared locks (`LOCK TABLE`).
+- **Generalized boundary concept**: Outside of CDC signaling, high/low watermarks define commit boundaries in distributed logs (e.g., Kafka ISR commit offsets) and hysteresis thresholds for buffer flow control/backpressure.
+
+### Example: Lock-Free Chunk Snapshot with LW/HW Signaling (DBLog Protocol)
+
+```sql
+-- Step 1: CDC engine writes Low-Watermark signal to database
+INSERT INTO cdc_signal_table (id, type) VALUES ('chunk_101_LW', 'LOG_MARKER');
+
+-- Step 2: Read snapshot chunk in application memory
+SELECT id, name, email FROM accounts WHERE id >= 1000 AND id < 2000;
+-- (Suppose Row 1042 has email = 'old@example.com' at this moment)
+
+-- Step 3: CDC engine writes High-Watermark signal to database
+INSERT INTO cdc_signal_table (id, type) VALUES ('chunk_101_HW', 'LOG_MARKER');
+```
+
+```
+WAL / Binlog Stream Processing:
+[... Normal Live Events ...]
+  │
+  ├─ 1. Encounter signal 'chunk_101_LW' in WAL  ──► Begin chunk window tracking
+  │
+  ├─ 2. Encounter live WAL event:               ──► In-memory reconciliation:
+  │     UPDATE accounts SET email='new@x.com'       Overwrites Row 1042 with 'new@x.com'
+  │     WHERE id = 1042;
+  │
+  ├─ 3. Encounter signal 'chunk_101_HW' in WAL  ──► Window closes; emit finalized,
+  │                                                 consistent chunk 101 to Kafka
+  ▼
+[... Resume Standard Real-Time Streaming ...]
+```
+
+### When to Use
+- Implementing or configuring lock-free incremental snapshots on active OLTP database tables.
+- Reconciling concurrent application writes with historical data backfills in Change Data Capture (CDC) streaming pipelines.
+- Distributed log partition replication where consumers only read up to the replicated High-Watermark.
+
+### When NOT to Use
+- Small or static reference tables where a simple table export or off-peak copy causes negligible lock impact.
+- Standard streaming event-time windowing where heuristic watermarks (delay thresholds) rather than transactional signal markers are required (see [Watermarking](messaging.md#watermarking)).
+
+### Also see
+- [Non-Blocking Incremental Snapshot](#non-blocking-incremental-snapshot) · [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Watermarking](messaging.md#watermarking) · [38. CDC Pipeline Scale Failures](../../system-design-architecture/databases/38-db-key-takeaways.md#db-38-log-based-cdc-bootstrapping--non-blocking-incremental-snapshots)

@@ -29,4 +29,6 @@ Source articles covering databases patterns, strategies, and case studies.
 - [postgresql-logical-replication-end-to-end-flow](postgresql-logical-replication-end-to-end-flow.md)
 - [the-database-architecture-trap-almost-everyone-falls-for](the-database-architecture-trap-almost-everyone-falls-for.md)
 - [why-did-our-database-collapse-after-we-migrated-to-virtual-threads](why-did-our-database-collapse-after-we-migrated-to-virtual-threads.md)
+- [why-most-cdc-pipelines-break-at-scale](why-most-cdc-pipelines-break-at-scale.md)
+
 
