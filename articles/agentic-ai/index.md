@@ -26,3 +26,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [Graph Engineering — Multi-Factor Alpha Model](graph-engineering-multi-factor-alpha-model.md)
 - [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](harness-loop-graph-engineering.md)
 - [Our RAG Got Better When We Fixed Chunking, Not Embeddings](our-rag-got-better-when-we-fixed-chunking-not-embeddings.md)
+- [Context Rot: The Silent Failure Mode of Long-Running AI Agents](context-rot-the-silent-failure-mode-of-long-running-ai-agents.md)

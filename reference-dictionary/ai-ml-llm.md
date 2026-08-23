@@ -80,6 +80,11 @@ timestamp: 2026-06-14T00:00:00Z
 | Structure-Aware Chunking | [`#structure-aware-chunking`](#structure-aware-chunking) |
 | Semantic Chunking | [`#semantic-chunking`](#semantic-chunking) |
 | Chunk Inspection Audit | [`#chunk-inspection-audit`](#chunk-inspection-audit) |
+| Context Governor | [`#context-governor`](#context-governor) |
+| Cognitive Debris | [`#cognitive-debris`](#cognitive-debris) |
+| Context Working Set | [`#context-working-set`](#context-working-set) |
+| Context Pruning | [`#context-pruning`](#context-pruning) |
+| Semantic Contamination | [`#semantic-contamination`](#semantic-contamination) |
 
 ---
 
@@ -249,18 +254,35 @@ The **complete software infrastructure wrapping an LLM** — orchestration loop,
 
 ## Context Rot
 
-**Performance degradation when key content falls in mid-window positions** of an LLM's context. Also known as the **"Lost in the Middle"** phenomenon (Stanford research): models attend strongly to beginning and end of context, but mid-window content is effectively invisible. Even million-token windows suffer instruction-following degradation as context grows — 30%+ performance drops are documented.
+The **silent, progressive performance degradation of an AI agent or LLM as context accumulates over time**, caused by a combination of attention displacement (**"Lost in the Middle"** phenomenon) and the accumulation of **cognitive debris** (stale assumptions, obsolete tool outputs, superseded hypotheses, and semantic contamination). Rather than failing loudly with a crash, the agent degrades quietly: it hallucinating from badly managed context, violates earlier constraints, cites outdated evidence, and makes confident errors over an unpruned working set.
 
-| Mitigation | Mechanism |
-|:---|:---|
-| Compaction | Summarize history; preserve architectural decisions, discard redundant outputs |
-| Observation Masking | Hide old tool outputs while keeping tool calls visible |
-| JIT Retrieval | Load data dynamically via search rather than full-file reads |
-| Sub-Agent Delegation | Subagents return 1,000–2,000 token condensed summaries |
+| Failure Mechanism | Manifestation | Mitigation |
+|:---|:---|:---|
+| **Attention Displacement** | Mid-window tokens receive diminished attention weights | Compaction, observation masking, JIT retrieval |
+| **Cognitive Debris Accumulation** | Stale tool traces and expired hypotheses crowd out decisive evidence | Context governor, dynamic pruning, stale-memory decay |
+| **Semantic Contamination** | Plausible, semantically similar but incorrect chunks pollute prompt distribution | Relevance routing, domain classifier gating, hard negative filtering |
+| **Context Landfill** | Prompt treated as passive append-only log rather than governed working set | Explicit context lifecycle, evidence state tables, working-set isolation |
 
-**When to use**: Multi-turn agents, long-running tasks, context-heavy workflows.  
-**When NOT to use**: Single-call LLM usage, short conversations.  
-**Also see**: [Agent Harness](#agent-harness), [LLM](#llm), [Token](#token)
+### Key Characteristics
+- **Deceptive stability**: The agent produces superficially coherent, confident responses while operating over contaminated working memory.
+- **Quantity paradox**: Larger context windows reduce curation pressure, often accelerating degradation rather than fixing it.
+- **Systems-level defect**: Caused by the absence of context lifecycle management (admit, retain, prune, evict, audit) rather than poor model weights.
+
+### When to Use
+- Multi-turn agents, long-horizon workflows, production RAG, coding assistants, and operational troubleshooting agents.
+
+### When NOT to Use
+- Single-turn queries or stateless completions where no historical context or tool traces accumulate.
+
+### Also see
+- [Context Engineering](#context-engineering)
+- [Context Governor](#context-governor)
+- [Cognitive Debris](#cognitive-debris)
+- [Context Working Set](#context-working-set)
+- [Context Pruning](#context-pruning)
+- [Semantic Contamination](#semantic-contamination)
+- [Agent Harness](#agent-harness)
+- [Token](#token)
 
 ---
 
@@ -607,7 +629,7 @@ Parallel execution:
 - [Five Levels of AI-Assisted Dev](#five-levels)
 - [Verification Loop (AI)](#verification-loop-ai)
 - [Attention-Weighted Parallelism](#attention-weighted-parallelism)
-- [agentic-11 in system-design-architecture](../system-design-architecture/50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
+- [agentic-11 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-two-track-workflow.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
 
 ---
 
@@ -632,7 +654,7 @@ The principle that **tasks should be parallelised by matching their cognitive-at
 
 ### Also see
 - [Two-Track Agentic Workflow](#two-track-agentic-workflow)
-- [agentic-11 in system-design-architecture](../system-design-architecture/50-agentic-two-track-workflow-key-takeaways.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
+- [agentic-11 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-two-track-workflow.md#agentic-11-two-track-workflow--attention-weighted-parallelism)
 
 ---
 
@@ -663,7 +685,7 @@ A **four-condition checklist that determines whether a task warrants an agentic 
 ### Also see
 - [Agent Loop](#agent-loop)
 - [Loop Build Order](#loop-build-order)
-- [agentic-19 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-19-loop-viability-test--four-conditions)
+- [agentic-19 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-loop-engineering.md#agentic-19-loop-viability-test--four-conditions)
 
 ---
 
@@ -695,7 +717,7 @@ The **four-step sequence for building a reliable agentic loop**: prove manual re
 - [Agent Loop](#agent-loop)
 - [Loop Viability Test](#loop-viability-test)
 - [Premature Loop Exit](#premature-loop-exit)
-- [agentic-20 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-20-loop-build-order--prove-before-scheduling)
+- [agentic-20 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-loop-engineering.md#agentic-20-loop-build-order--prove-before-scheduling)
 
 ---
 
@@ -726,7 +748,7 @@ cost per accepted change = total_tokens_spent / accepted_results_count
 - [Token](#token)
 - [Verification Loop (AI)](#verification-loop-ai)
 - [LLM-as-Judge](#llm-as-judge)
-- [agentic-21 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-21-cost-per-accepted-change--the-loop-efficiency-metric)
+- [agentic-21 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-loop-engineering.md#agentic-21-cost-per-accepted-change--the-loop-efficiency-metric)
 
 ---
 
@@ -751,7 +773,7 @@ A **silent failure mode** in agentic loops where the agent declares the task com
 - [Verification Loop (AI)](#verification-loop-ai)
 - [Review Gate](#review-gate)
 - [Loop Build Order](#loop-build-order)
-- [agentic-17 in system-design-architecture](../system-design-architecture/57-agentic-loop-engineering-key-takeaways.md#agentic-17-verify-gate--the-heart-of-the-loop)
+- [agentic-17 in system-design-architecture](../system-design-architecture/agentic-ai/agentic-loop-engineering.md#agentic-17-verify-gate--the-heart-of-the-loop)
 
 ---
 
@@ -1669,3 +1691,124 @@ A **systematic qualitative debugging methodology** for RAG pipelines where engin
 - [RAG](#rag)
 - [Guardrails (AI)](#guardrails-ai)
 - [Context Engineering](#context-engineering)
+
+---
+
+## Context Governor
+
+An **architectural runtime subsystem that enforces admission, retention, prioritization, and eviction policies on information entering an agent's active context window**. Rather than allowing raw tool outputs, conversational history, and retrieved documents to accumulate into an unmanaged prompt, a context governor applies explicit evaluation rules (e.g. relevance scoring, freshness decay, authority ranking, character budgets, document count limits, and contradiction detection) to construct a high-signal working context for each reasoning step.
+
+### Key Characteristics
+- **Six-policy evaluation**: Evaluates candidates against relevance, freshness, authority, specificity, traceability, and compression safety.
+- **Budget enforcement**: Caps document counts and character/token limits to prevent mid-window attention degradation.
+- **Stale-memory penalties**: Applies mathematical recency penalties to older retrieved passages or unverified previous turns.
+- **Pre-inference gatekeeping**: Sits between retrieval/tools and the LLM generation step to ensure "governed context first, LLM second."
+
+### When to Use
+- Multi-turn operational agents (troubleshooting, customer support, coding agents) where sessions span tens or hundreds of tool calls.
+- High-stakes RAG systems where contradictory or outdated documentation must not pollute reasoning.
+
+### When NOT to Use
+- Single-step stateless LLM prompts or simple conversational bots with small, clean conversation histories.
+
+### Also see
+- [Context Rot](#context-rot)
+- [Context Engineering](#context-engineering)
+- [Context Working Set](#context-working-set)
+- [Context Pruning](#context-pruning)
+- [Cognitive Debris](#cognitive-debris)
+- [Agent Harness](#agent-harness)
+
+---
+
+## Cognitive Debris
+
+The **accumulation of obsolete, partially relevant, superseded, or noisy information in an agent's working context** that degrades reasoning quality without causing explicit runtime exceptions or syntax crashes. Cognitive debris includes old tool outputs, expired environment assumptions, superseded intermediate plans, unverified hypotheses, and summaries that have dropped critical constraints or uncertainties.
+
+### Key Characteristics
+- **Silent degradation**: Does not trigger exceptions; instead, produces plausible-sounding but factually corrupted or obsolete answers.
+- **Attention competition**: Every token of debris consumes attention bandwidth, shifting the model's output probability distribution.
+- **Context landfill effect**: Arises when information enters an agent freely (via tools/retrieval) but lacks an explicit eviction or garbage-collection lifecycle.
+
+### When to Use
+- Diagnosing and mitigating drift, ungrounded confidence, or repeated obsolete actions in long-running agent workflows.
+
+### When NOT to Use
+- Stateless, single-turn prompts where context is constructed fresh on every request.
+
+### Also see
+- [Context Rot](#context-rot)
+- [Context Governor](#context-governor)
+- [Semantic Contamination](#semantic-contamination)
+- [Context Pruning](#context-pruning)
+
+---
+
+## Context Working Set
+
+The **compact, high-signal, task-aligned operational state actively maintained in an agent's prompt window at any given moment**, conceptually analogous to an operating system's virtual memory working set. The context working set contains only the current objective, confirmed facts, active constraints, validated evidence, and immediate next decisions, while offloading complete conversational transcripts, raw logs, and historical tool traces to external persistence or archive stores.
+
+### Key Characteristics
+- **Active state vs history**: Strictly separates the active operational state (what is true now) from execution history (the chronological record of past actions).
+- **Just-in-Time (JIT) retrieval**: Pulls detailed historical artifacts into the working set only when explicitly required by a specific sub-task.
+- **Bounded footprint**: Kept intentionally well below model context limits to maintain peak instruction-following fidelity.
+
+### When to Use
+- Architecture of long-horizon software engineering agents, autonomous troubleshooting systems, and multi-agent coordination pipelines.
+
+### When NOT to Use
+- Simple interactive chats where preserving the natural, literal dialogue stream is the primary user expectation.
+
+### Also see
+- [Context Governor](#context-governor)
+- [Context Rot](#context-rot)
+- [Persistent Session Memory](#persistent-session-memory)
+- [Token Compression](#token-compression)
+
+---
+
+## Context Pruning
+
+The **proactive removal, masking, or compaction of low-value, stale, or superseded context items from an agent's working memory before prompt assembly**. Context pruning algorithms score items by semantic relevance, apply decay penalties for age/staleness, enforce document count and character budgets, and evict non-decisive passages to prevent context bloat.
+
+### Key Characteristics
+- **Observation masking**: Hides bulky, intermediate tool execution outputs while retaining lightweight summaries or status codes.
+- **Score-based eviction**: Ranks candidate context items and discards items below dynamic relevance thresholds or beyond budget ceilings.
+- **Freshness discounting**: Penalizes items from earlier turns unless explicitly re-validated by recent tool confirmations.
+
+### When to Use
+- Multi-step agent loops that execute numerous shell commands, API calls, or database queries.
+- Long-horizon workflows where full transcript inclusion would cause context exhaustion or attention dilution.
+
+### When NOT to Use
+- Short prompts where all historical turns fit comfortably and remain directly relevant to the current query.
+
+### Also see
+- [Context Governor](#context-governor)
+- [Context Rot](#context-rot)
+- [Token Compression](#token-compression)
+- [Type-Specific Compression](#type-specific-compression)
+
+---
+
+## Semantic Contamination
+
+A **subtle failure mode in RAG and agent systems where retrieved passages or memory fragments are semantically similar to the topic but factually irrelevant, outdated, or contradictory**, skewing the LLM's probability distribution toward plausible hallucinations. Unlike random noise, semantic contamination is especially dangerous because the model treats high-similarity text as authoritative evidence.
+
+### Key Characteristics
+- **Hard negative vulnerability**: Occurs when similarity search surfaces documents that share domain terminology (e.g. OSPF vs BGP routing incidents) but describe different entities, versions, or contexts.
+- **Misplaced confidence**: The model generates fluent, authoritative explanations based on the contaminated context rather than detecting the mismatch.
+- **Mitigation by classifier gating**: Requires domain routing classifiers, structured entity constraints, or cross-encoder rerankers before context admission.
+
+### When to Use
+- Designing and auditing RAG retrieval pipelines, multi-domain knowledge bases, and multi-turn agent memory architectures.
+
+### When NOT to Use
+- Systems where the knowledge base is strictly homogeneous and version-locked with zero semantic overlap across disparate domains.
+
+### Also see
+- [Context Rot](#context-rot)
+- [Cognitive Debris](#cognitive-debris)
+- [Context Governor](#context-governor)
+- [Guardrails (AI)](#guardrails-ai)
+- [Structure-Aware Chunking](#structure-aware-chunking)

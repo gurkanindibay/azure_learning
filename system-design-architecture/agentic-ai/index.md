@@ -26,6 +26,7 @@ Problems and strategies for designing agentic AI systems: enterprise multi-agent
 | [32-agentic-key-takeaways.md](32-agentic-key-takeaways.md) | `agentic-34` – `agentic-41` | Multi-agent orchestration, Three-tier AI loop, Autonomous refactoring, Saga+Idempotency, FDE Allocation Matrix, Plan & Execute, Memory Fabric, Dry-Run Sandbox |
 | [36-agentarch-key-takeaways.md](36-agentarch-key-takeaways.md) | `agentarch-07` – `agentarch-12` | Graph engineering progression, Maker-checker, Parallel factor fanout, Node-scoped failure isolation, Multi-model tier, Budget transparency |
 | [37-agentic-key-takeaways.md](37-agentic-key-takeaways.md) | `agentic-42` – `agentic-45` | Harness six components, Evidence-based loop stopping, Graph control flow, Diagnostic triage |
+| [38-agentic-key-takeaways.md](38-agentic-key-takeaways.md) | `agentic-46` – `agentic-50` | Cognitive debris, Context governor six policies, Staleness decay pruning, Governed context first, Structured evidence tables |
 
 ## Cross-References
 

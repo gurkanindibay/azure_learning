@@ -155,6 +155,17 @@ takeaway_domains:
   agentic:
     file: "agentic-ai/enterprise-strategic-systems.md"
     desc: "Agentic AI"
+    related_files:
+      - "system-design-architecture/agentic-ai/enterprise-strategic-systems.md"
+      - "system-design-architecture/agentic-ai/agentic-accountability.md"
+      - "system-design-architecture/agentic-ai/agentic-two-track-workflow.md"
+      - "system-design-architecture/agentic-ai/agentic-loop-engineering.md"
+      - "system-design-architecture/agentic-ai/agentic-core-engineering.md"
+      - "system-design-architecture/agentic-ai/agent-harness.md"
+      - "system-design-architecture/agentic-ai/32-agentic-key-takeaways.md"
+      - "system-design-architecture/agentic-ai/37-agentic-key-takeaways.md"
+      - "system-design-architecture/agentic-ai/38-agentic-key-takeaways.md"
+      - "articles/agentic-ai/context-rot-the-silent-failure-mode-of-long-running-ai-agents.md"
   prag:
     file: "system-design-interview/pragmatic-takeaways.md"
     desc: "Pragmatic System Design"
@@ -415,6 +426,12 @@ takeaway_keywords:
   lsn lag: db
   warehouse reconciliation: db
   idempotent merge: db
+  context rot: agentic
+  context governor: agentic
+  cognitive debris: agentic
+  context pruning: agentic
+  semantic contamination: agentic
+  context working set: agentic
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -444,6 +461,12 @@ dictionary_domains:
       - chunking
       - chunk
       - structure-aware
+      - context rot
+      - context governor
+      - cognitive debris
+      - context pruning
+      - semantic contamination
+      - context working set
   api-design.md:
     title: "API Design"
     keywords:
