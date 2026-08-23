@@ -118,6 +118,11 @@ takeaway_domains:
   flink:
     file: "stream-processing/stream-processing-flink.md"
     desc: "Stream Processing (Flink)"
+    related_files:
+      - "system-design-architecture/stream-processing/stream-processing-flink.md"
+      - "system-design-architecture/stream-processing/netflix-ads-event-processing-takeaways.md"
+      - "articles/stream-processing/apache-flink-10000-feet/01-apache-flink-from-10000-feet.md"
+      - "articles/stream-processing/netflix-ads-event-processing-pipeline.md"
   resilience:
     file: "resilience/resilience-patterns.md"
     desc: "Resilience Patterns"
@@ -439,6 +444,14 @@ takeaway_keywords:
   demand paging: ai
   expert weights: ai
   read-compute overlap: ai
+  ad event: flink
+  ad session: flink
+  sessionizer: flink
+  frequency capping: flink
+  opaque token: flink
+  metadata registry: flink
+  vast: media
+  ssai: media
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -534,6 +547,8 @@ dictionary_domains:
       - read/write path
       - back-of-the-envelope
       - acceptance-delivery separation
+      - frequency capping
+      - transient metadata registry
   networking.md:
     title: "Networking"
     keywords:
@@ -639,6 +654,10 @@ dictionary_domains:
       - bitrate
       - hls
       - dash
+      - ssai
+      - server-side ad insertion
+      - vast
+      - video ad serving template
   deployment-patterns.md:
     title: "Deployment & Release Patterns"
     keywords:
@@ -733,6 +752,7 @@ dictionary_domains:
       - write-ahead buffer
       - worker self-throttling
       - progressive enqueuing
+      - stream sessionization
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:

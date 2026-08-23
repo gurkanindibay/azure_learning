@@ -31,6 +31,8 @@ timestamp: 2026-06-14T00:00:00Z
 | MPEG-DASH | [`#mpeg-dash`](#mpeg-dash) |
 | Transcoding DAG Model | [`#transcoding-dag-model`](#transcoding-dag-model) |
 | Selective Forwarding Unit (SFU) | [`#selective-forwarding-unit-sfu`](#selective-forwarding-unit-sfu) |
+| Server-Side Ad Insertion (SSAI) | [`#server-side-ad-insertion-ssai`](#server-side-ad-insertion-ssai) |
+| Video Ad Serving Template (VAST) | [`#video-ad-serving-template-vast`](#video-ad-serving-template-vast) |
 
 ---
 
@@ -290,4 +292,51 @@ A **WebRTC media server architecture** where each participant sends their media 
 
 ### Also see
 - [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr) · [HLS (HTTP Live Streaming)](#hls-http-live-streaming)
+
+---
+
+## Server-Side Ad Insertion (SSAI)
+
+A video streaming delivery technique (often referred to as dynamic ad insertion or "ad stitching") where advertisements are spliced directly into the content stream manifest (HLS/DASH) or video stream on the server side prior to delivery to the client. This contrasts with Client-Side Ad Insertion (CSAI) where the client device requests and renders ads separately.
+
+### Key Characteristics
+- **Unified Stream Delivery**: Content and advertisements are delivered as a seamless single stream, eliminating client player buffering, resolution jumps, and playback stalls during ad breaks
+- **Ad-Blocker Resilience**: Difficult for client-side ad blockers to detect or intercept because ad segments share the same CDN delivery domain and stream structure as primary video content
+- **Client Device Agnostic**: Compatible with resource-constrained devices (smart TVs, streaming sticks, legacy set-top boxes) without requiring complex client-side SDKs
+- **Server-Side Tracking / Telemetry**: Ad decisioning, VAST parsing, and token generation happen server-side, while playback tracking signals are proxied or emitted via lightweight telemetry callbacks
+
+### When to Use
+- Over-The-Top (OTT) video streaming platforms (e.g., Netflix, Hulu, YouTube) delivering ads across thousands of diverse consumer hardware devices
+- Live stream broadcasts where thousands of viewers hit synchronized ad breaks simultaneously
+- Premium streaming services requiring seamless TV-like ad transitions without client-side lag
+
+### When NOT to Use
+- Rich interactive or playable ad formats requiring custom on-device client rendering and DOM manipulation
+- Highly dynamic, real-time client-only personalized interactivity (where CSAI SDKs provide more rich interactive overlays)
+
+### Also see
+- [Video Ad Serving Template (VAST)](#video-ad-serving-template-vast) · [DASH / HLS](#dash-hls) · [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr)
+
+---
+
+## Video Ad Serving Template (VAST)
+
+An industry-standard XML specification developed by the Interactive Advertising Bureau (IAB) that defines a universal data structure for video ad responses between ad servers and video player/streaming platforms.
+
+### Key Characteristics
+- **Standardized Schema**: Encapsulates ad media files (creative video URLs, resolutions, codecs), impression beacons, tracking events (start, quartiles, midpoint, complete, pause, mute), and click-through URLs
+- **Vendor Agnostic**: Enables interoperability across disparate ad servers, supply-side platforms (SSPs), demand-side platforms (DSPs), and measurement vendors (e.g., IAS, DoubleVerify, Nielsen)
+- **Hierarchical Wrappers**: Supports ad redirects (VAST Wrappers) allowing multi-tier ad exchanges to pass tracking events down the chain
+
+### When to Use
+- Exchanging advertising creatives and tracking metadata between third-party ad decision engines and video delivery platforms
+- Standardizing programmatic ad buying and multi-vendor verification tracking
+
+### When NOT to Use
+- Direct binary internal microservice communication where Protocol Buffers (Protobuf) or gRPC provide superior serialization efficiency and lower latency
+- Standalone static display banner ads (where formats like VPAID/MRAID or simple JSON payloads are used)
+
+### Also see
+- [Server-Side Ad Insertion (SSAI)](#server-side-ad-insertion-ssai) · [Adaptive Bitrate Streaming (ABR)](#adaptive-bitrate-streaming-abr)
+
 

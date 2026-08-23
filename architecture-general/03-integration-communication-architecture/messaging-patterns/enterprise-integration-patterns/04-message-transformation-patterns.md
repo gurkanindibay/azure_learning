@@ -101,6 +101,8 @@ sequenceDiagram
 
 A document processing service stores 50MB PDF files in blob storage and passes only the blob reference through the message queue, avoiding broker size limits and improving throughput.
 
+> **Deep Dive**: See [Claim Check Pattern](../claim-check.md) for full architectural design, token schemas, eviction strategies, and Azure/AWS implementations.
+
 ---
 
 ## Normalizer

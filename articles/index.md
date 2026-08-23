@@ -28,7 +28,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [resilience/](resilience/) | 7 | [resilience/](../system-design-architecture/resilience/) |
 | [security/](security/) | 2 | [security/](../system-design-architecture/security/) |
 | [software-architecture/](software-architecture/) | 12 | [software-architecture/](../system-design-architecture/software-architecture/) |
-| [stream-processing/](stream-processing/) | 3 | [stream-processing/](../system-design-architecture/stream-processing/) |
+| [stream-processing/](stream-processing/) | 4 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 15 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 132 articles across 15 domains
+**Total**: 133 articles across 15 domains

@@ -58,6 +58,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Cooldown | [`#cooldown`](#cooldown) |
 | URL Frontier | [`#url-frontier`](#url-frontier) |
 | Acceptance-Delivery Separation | [`#acceptance-delivery-separation`](#acceptance-delivery-separation) |
+| Frequency Capping | [`#frequency-capping`](#frequency-capping) |
+| Transient Metadata Registry | [`#transient-metadata-registry`](#transient-metadata-registry) |
 
 ---
 
@@ -974,5 +976,53 @@ An architectural design principle that decouples the fast, synchronous request-a
 
 ### Also see
 - [Worker Self-Throttling](messaging.md#worker-self-throttling) · [Progressive Enqueuing](messaging.md#progressive-enqueuing) · [Dead Letter Queue (DLQ)](messaging.md#dead-letter-queue-dlq) · [Microservices](#microservices)
+
+---
+
+## Frequency Capping
+
+An advertising and rate-limiting policy that restricts the number of times a specific advertisement, creative, or campaign is shown to a given user, household, or profile within a defined time window (e.g., maximum 3 impressions per user per 24 hours).
+
+### Key Characteristics
+- **Real-time Stateful Counting**: Tracks impression events across user profiles and campaigns with low-latency rolling counters (typically stored in Redis, Hazelcast, or stream-state stores)
+- **Closed-Loop Feedback**: Downstream ad impression events feed near real-time state back to the ad selection/decision engine to prevent over-exposure on subsequent ad breaks
+- **Multi-Level Scoping**: Configurable across diverse hierarchy levels — per ad creative, per campaign, per advertiser, or per network category
+
+### When to Use
+- Ad-supported video streaming platforms (AVOD/SVOD), display networks, and sponsored product engines
+- Marketing automation and promotional push campaigns to prevent user notification fatigue
+- Budget pacing systems where over-delivery burns advertiser budgets prematurely
+
+### When NOT to Use
+- Mandatory service announcements or security alerts (e.g., 2FA codes, password reset confirmations) where delivery cannot be throttled
+- Simple static rate limiting on API keys where standard fixed/sliding window algorithms suffice without business hierarchy scoping
+
+### Also see
+- [Rate Limiting](api-design.md#rate-limiting) · [Stream Sessionization](messaging.md#stream-sessionization) · [Server-Side Ad Insertion (SSAI)](media-processing.md#server-side-ad-insertion-ssai)
+
+---
+
+## Transient Metadata Registry
+
+An architectural pattern (a specialized application of the Claim Check pattern) where rich, contextual metadata generated during synchronous request decisioning is persisted into a low-latency, transient Key-Value store, while client devices or message payloads receive only lightweight reference identifiers.
+
+### Key Characteristics
+- **Lightweight Reference Tokens**: Clients cache and exchange opaque tokens containing minimal identifiers (e.g., `ad_id`, `record_id`, `event_name`) instead of fat JSON/Protobuf tracking payloads
+- **Mitigates Client Memory & Bandwidth Bloat**: Prevents large tracking URL arrays and verification configurations from bloating mobile/smart TV heap memory and cellular network data
+- **Asynchronous Hydration**: Downstream telemetry handlers fetch full tracking records from the transient store on-demand when client callbacks arrive
+- **TTL-Based Storage**: Records are automatically evicted after the maximum allowable session duration (e.g., 2–6 hours), keeping infrastructure lightweight
+
+### When to Use
+- Telemetry and event tracking systems where complex verification, attribution, or third-party callback URLs must be mapped to device actions
+- Systems communicating with memory-constrained client runtimes (embedded devices, smart TVs, mobile SDKs)
+- Microservice pipelines where passing large payload blobs through intermediate message hops would degrade network and queue throughput
+
+### When NOT to Use
+- Immutable historical audit logs requiring permanent durable persistence
+- Systems where the metadata is tiny (<100 bytes) and the additional network round-trip to the KV store outweighs the serialization saving
+
+### Also see
+- [Claim Check](messaging.md#claim-check) · [Read/Write Path Separation](#readwrite-path-separation) · [Server-Side Ad Insertion (SSAI)](media-processing.md#server-side-ad-insertion-ssai)
+
 
 

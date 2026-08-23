@@ -75,6 +75,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Three-Layer Deduplication | [`#three-layer-deduplication`](#three-layer-deduplication) |
 | Worker Self-Throttling | [`#worker-self-throttling`](#worker-self-throttling) |
 | Progressive Enqueuing | [`#progressive-enqueuing`](#progressive-enqueuing) |
+| Stream Sessionization | [`#stream-sessionization`](#stream-sessionization) |
 
 ## Client-Side Deduplication
 
@@ -653,7 +654,7 @@ Store a **large payload in external storage** and pass only a reference (the "cl
 - Systems where strict exactly-once guarantees must span both the broker and the object store (two-phase coordination is complex)
 
 ### Also see
-- [Messaging](messaging.md) · [Event Carried State Transfer](cqrs-event-driven.md#event-carried-state-transfer) · [Messaging: Compacted Topic](messaging.md#compacted-topic)
+- [Claim Check Pattern](../architecture-general/03-integration-communication-architecture/messaging-patterns/claim-check.md) · [Event Carried State Transfer](cqrs-event-driven.md#event-carried-state-transfer) · [Compacted Topic](messaging.md#compacted-topic)
 
 ---
 
@@ -1343,5 +1344,29 @@ An architectural pattern for massive fanout or batch operations (e.g. 100M+ user
 
 ### Also see
 - [Message Batching](#message-batching) · [Partition](#partition) · [Consumer Lag](#consumer-lag) · [Backpressure](resilience.md#backpressure)
+
+---
+
+## Stream Sessionization
+
+A stateful stream processing pattern that aggregates discrete, out-of-order, and asynchronous events into cohesive, higher-level session records based on a common correlation key (e.g., `session_id`, `ad_id`, or `user_id`) and inactivity gap intervals.
+
+### Key Characteristics
+- **Keyed State Accumulation**: Stream processing engines (such as Apache Flink or Kafka Streams) maintain managed in-memory/RocksDB state keyed by session identifier, accumulating milestones (e.g. ad start, quartiles, pause, complete, click)
+- **Gap-Based Windowing & Watermarks**: Closes session windows dynamically when an inactivity timeout gap elapses or an explicit terminal event is received, utilizing event-time watermarking to handle late-arriving network events
+- **Analytical Simplification**: Transforms billions of fragmented telemetry events into clean, pre-aggregated analytical entities for downstream OLAP ingestion, advertiser reporting, and financial accounting
+
+### When to Use
+- Advertising platforms tracking multi-stage ad playback telemetry (impressions, quartile heartbeats, completion, user interactions)
+- User web/mobile analytics grouping clickstream events into browsing sessions
+- IoT and telemetry systems consolidating sensor bursts into distinct diagnostic sessions
+
+### When NOT to Use
+- Simple point-in-time threshold alerting where events do not require cross-event state retention
+- Purely stateless message transformations or point-to-point event routing
+
+### Also see
+- [Apache Flink](#apache-flink) · [Event-Time](#event-time) · [Watermarking](#watermarking) · [Kafka Streams](#kafka-streams)
+
 
 

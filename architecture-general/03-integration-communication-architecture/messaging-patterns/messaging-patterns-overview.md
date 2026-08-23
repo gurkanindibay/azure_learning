@@ -288,6 +288,27 @@ graph TB
     N --> CF[Canonical Format]
 ```
 
+### 6. Claim Check
+
+Store large payloads externally and transmit a lightweight reference token over the broker.
+
+```mermaid
+sequenceDiagram
+    participant P as Producer
+    participant DS as Blob / KV Store
+    participant B as Broker
+    participant C as Consumer
+
+    P->>DS: Store Large Payload
+    DS-->>P: Claim Check (Token / URI)
+    P->>B: Message with Claim Check
+    B->>C: Message with Claim Check
+    C->>DS: Fetch Payload via Claim Check
+    DS-->>C: Stream Payload
+```
+
+> **Deep Dive**: See [Claim Check Pattern](claim-check.md) for detailed architecture, token structures, eviction strategies, and Azure/AWS implementations.
+
 ## Reliability Patterns
 
 ### 1. Guaranteed Delivery

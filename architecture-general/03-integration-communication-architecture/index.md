@@ -90,6 +90,7 @@ API design styles and patterns:
 │   ├── outbox-pattern.md                    # Transactional Outbox deep-dive
 │   ├── idempotency-store-pattern.md         # Idempotency Store deep-dive
 │   ├── saga-pattern.md                      # Saga distributed transactions
+│   ├── claim-check.md                       # Claim Check large payload offloading
 │   └── enterprise-integration-patterns.md   # Classic EIP
     ├── event-driven-messaging/
     ├── 01-patterns/
