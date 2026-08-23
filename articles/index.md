@@ -15,7 +15,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 
 | Domain | Articles | Related SDA |
 |:---|:--|:---|
-| [agentic-ai/](agentic-ai/) | 12 | [agentic-ai/](../system-design-architecture/agentic-ai/) |
+| [agentic-ai/](agentic-ai/) | 14 | [agentic-ai/](../system-design-architecture/agentic-ai/) |
 | [api-network/](api-network/) | 5 | [api-network/](../system-design-architecture/api-network/) |
 | [caching/](caching/) | 10 | [caching/](../system-design-architecture/caching/) |
 | [case-studies/](case-studies/) | 4 | [case-studies/](../system-design-architecture/case-studies/) |
@@ -31,4 +31,4 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [stream-processing/](stream-processing/) | 3 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 15 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 131 articles across 15 domains
+**Total**: 132 articles across 15 domains

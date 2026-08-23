@@ -139,7 +139,9 @@ takeaway_domains:
       - "system-design-architecture/ai-ml-infrastructure/35-ai-key-takeaways.md"
       - "system-design-architecture/ai-ml-infrastructure/36-ai-key-takeaways.md"
       - "system-design-architecture/ai-ml-infrastructure/37-ai-key-takeaways.md"
+      - "system-design-architecture/ai-ml-infrastructure/38-ai-key-takeaways.md"
       - "articles/agentic-ai/our-rag-got-better-when-we-fixed-chunking-not-embeddings.md"
+      - "articles/agentic-ai/a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone.md"
   media:
     file: "media-processing/media-processing-pipelines.md"
     desc: "Media Processing"
@@ -432,6 +434,11 @@ takeaway_keywords:
   context pruning: agentic
   semantic contamination: agentic
   context working set: agentic
+  moe: ai
+  mixture of experts: ai
+  demand paging: ai
+  expert weights: ai
+  read-compute overlap: ai
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -467,6 +474,11 @@ dictionary_domains:
       - context pruning
       - semantic contamination
       - context working set
+      - moe
+      - mixture of experts
+      - demand paging
+      - expert weights
+      - read-compute overlapping
   api-design.md:
     title: "API Design"
     keywords:

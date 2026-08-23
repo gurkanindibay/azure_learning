@@ -85,6 +85,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Context Working Set | [`#context-working-set`](#context-working-set) |
 | Context Pruning | [`#context-pruning`](#context-pruning) |
 | Semantic Contamination | [`#semantic-contamination`](#semantic-contamination) |
+| MoE (Mixture of Experts) | [`#moe`](#moe) |
+| Demand Paging for MoE Weights | [`#demand-paging-moe-weights`](#demand-paging-moe-weights) |
+| Read-Compute Overlapping (Inference) | [`#read-compute-overlapping-inference`](#read-compute-overlapping-inference) |
 
 ---
 
@@ -1812,3 +1815,92 @@ A **subtle failure mode in RAG and agent systems where retrieved passages or mem
 - [Context Governor](#context-governor)
 - [Guardrails (AI)](#guardrails-ai)
 - [Structure-Aware Chunking](#structure-aware-chunking)
+
+---
+
+## MoE
+
+**Mixture of Experts** — a neural network architecture that replaces dense feed-forward network (FFN) layers with multiple parallel sub-networks called **experts**, coordinated by a parameterized gating **router**. For each incoming token, the router dynamically selects a sparse subset (e.g., top-2 or top-8 of 64+ experts) to execute, enabling models to scale total parameter count into hundreds of billions while keeping active compute per token equivalent to a much smaller dense model.
+
+| Property | Dense Architecture | MoE Architecture |
+|:---|:---|:---|
+| **Parameter Usage** | 100% of parameters active per token | Sparse subset (~5–15%) active per token |
+| **Compute Cost** | Scales directly with total parameter size | Scales with active parameter subset |
+| **Memory Footprint** | RAM must hold active parameters (all weights) | RAM holds all weights by default, or resident core under demand paging |
+| **Routing Mechanism** | Fixed static layer execution | Dynamic softmax gating / top-K routing per layer |
+
+### Key Characteristics
+- **Total vs. Active parameters**: Total parameters (e.g. 284B) provide immense model capacity and zero-shot reasoning, while active parameters (e.g. ~10B) keep token generation FLOPS low.
+- **Sparse activation**: Compute is localized to selected expert sub-networks at each layer step.
+- **Routing divergence**: Different tokens follow different expert execution paths dynamically.
+
+### When to Use
+- Scaling LLM capacity and knowledge density while maintaining low per-token inference latency.
+- Multi-domain foundation models requiring specialized sub-network knowledge without exploding training/inference compute.
+
+### When NOT to Use
+- Ultra-small models where dense layer execution is already fast and routing overhead adds latency.
+- Scenarios where fine-tuning frameworks lack multi-expert parallelization support.
+
+### Also see
+- [LLM](#llm)
+- [Demand Paging for MoE Weights](#demand-paging-moe-weights)
+- [Read-Compute Overlapping (Inference)](#read-compute-overlapping-inference)
+
+---
+
+## Demand Paging for MoE Weights
+
+An **inference optimization technique that keeps only the core model architecture (attention, layer norms, router) resident in RAM while streaming sparse expert weight slices on demand from flash storage (SSD/NVMe/UFS)** just-in-time when selected by the router. This decouples memory capacity constraints from total model parameter count, allowing 280B+ parameter MoE models to run on 12GB RAM edge devices without compression, quantization loss, or parameter pruning.
+
+```
+Token State → In-RAM Router → Top-K Expert IDs → Stream Weight Slices from Flash Storage → Compute Layer Activations → Evict Ephemeral Buffer
+```
+
+### Key Characteristics
+- **Byte-identical fidelity**: Produces exact, uncompromised mathematical results identical to running the full model resident in memory.
+- **Strictly bounded RAM**: Memory usage depends only on the resident core plus the working buffer for active experts.
+- **Bandwidth-bound execution**: Shifts the hardware bottleneck from RAM capacity to sequential flash storage throughput.
+
+### When to Use
+- Deploying large sparse MoE models to memory-constrained hardware (smartphones, edge appliances, developer laptops).
+- Running zero-shot or complex reasoning frontier models where model accuracy cannot be sacrificed to aggressive quantization.
+
+### When NOT to Use
+- Dense architectures where all parameters are active on every token (no sparsity to exploit).
+- High-throughput multi-tenant server inference where all model weights can fit into high-bandwidth GPU VRAM.
+
+### Also see
+- [MoE (Mixture of Experts)](#moe)
+- [Read-Compute Overlapping (Inference)](#read-compute-overlapping-inference)
+- [Token Compression](#token-compression)
+
+---
+
+## Read-Compute Overlapping (Inference)
+
+An **asynchronous I/O pipelining pattern for storage-bound inference where flash storage reads for subsequent expert weights occur concurrently in the background while the CPU/GPU executes matrix computations for the current layer**. By overlapping storage transfer with compute, idle execution stalls are minimized and generation latency is improved.
+
+| Aspect | Synchronous Weight Loading | Read-Compute Overlapping |
+|:---|:---|:---|
+| **I/O Handling** | Blocking reads on critical path | Background non-blocking DMA / asynchronous I/O |
+| **Compute Utilization** | Compute sits idle during storage reads | Compute active while next layer's weights transfer |
+| **Throughput** | Depressed (<1 tok/s on slow flash) | Higher throughput bounded only by max storage throughput |
+
+### Key Characteristics
+- **Asynchronous pipeline**: Decouples I/O prefetching threads from execution kernels.
+- **Speculative prefetching**: Can speculatively fetch candidate experts based on early token state or layer lookahead.
+- **Hot-expert caching**: Complemented by an LRU memory cache for frequently invoked expert weights.
+
+### When to Use
+- Storage-streamed inference architectures (e.g. BigMoeOnEdge, FlashLLM) where flash read latency dominates token time.
+- Edge runtimes with multi-core CPUs where background I/O threads can run without stealing compute cycles.
+
+### When NOT to Use
+- In-memory GPU inference where all weights already reside in ultra-fast VRAM (HBM/GDDR).
+- Hardware environments with single-threaded blocking storage controllers.
+
+### Also see
+- [MoE (Mixture of Experts)](#moe)
+- [Demand Paging for MoE Weights](#demand-paging-moe-weights)
+

@@ -27,3 +27,4 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+](harness-loop-graph-engineering.md)
 - [Our RAG Got Better When We Fixed Chunking, Not Embeddings](our-rag-got-better-when-we-fixed-chunking-not-embeddings.md)
 - [Context Rot: The Silent Failure Mode of Long-Running AI Agents](context-rot-the-silent-failure-mode-of-long-running-ai-agents.md)
+- [A 284 Billion Parameter AI Model Just Ran on a 12GB Phone](a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone.md)
