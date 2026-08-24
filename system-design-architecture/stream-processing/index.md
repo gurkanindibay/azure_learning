@@ -16,7 +16,7 @@ Patterns and strategies for stream processing architectures: Apache Flink fundam
 | File | ID Range | Topics |
 |:---|:---|:---|
 | [stream-processing-flink.md](stream-processing-flink.md) | `flink-01` – `flink-05` | Lambda vs Kappa, Batch as special case of streaming, Stateful exactly-once, Windowing, Barrier snapshots |
-| [netflix-ads-event-processing-takeaways.md](netflix-ads-event-processing-takeaways.md) | `flink-06` – `flink-10` | Transient KV metadata registry, Canonical event publisher, Flink sessionization, Real-time frequency capping, Hybrid OLAP/offline billing |
+| [netflix-ads-event-processing-takeaways.md](netflix-ads-event-processing-takeaways.md) | `flink-06` – `flink-15` | Transient KV metadata registry, Canonical event publisher, Flink sessionization, Stream-stream joins, Route-to-data, In-stream dedup, Shadow canary cutovers |
 | [async-concurrency-patterns.md](async-concurrency-patterns.md) | `async-01` – `async-04` | Thread pool exhaustion, Parallel I/O, Post-commit dispatch, Silent failures |
 
 ## Cross-References

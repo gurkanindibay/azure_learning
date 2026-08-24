@@ -11,7 +11,7 @@ timestamp: 2026-08-23T00:00:00Z
 # Behind the Scenes: Building a Robust Ads Event Processing Pipeline
 
 > **Source**: [Netflix Technology Blog](https://netflixtechblog.com/behind-the-scenes-building-a-robust-ads-event-processing-pipeline-e4e86caf9249) by [Kinesh Satiya](https://www.linkedin.com/in/kineshsatiya/)  
-> **Related**: [Stream Processing Takeaways](../../system-design-architecture/stream-processing/netflix-ads-event-processing-takeaways.md), [Stream Processing (Flink)](../../system-design-architecture/stream-processing/stream-processing-flink.md)
+> **Related**: [Part II: Evolving Netflix's Ads Event Pipeline for Live](netflix-ads-event-pipeline-live.md), [Stream Processing Takeaways](../../system-design-architecture/stream-processing/netflix-ads-event-processing-takeaways.md), [Stream Processing (Flink)](../../system-design-architecture/stream-processing/stream-processing-flink.md)
 
 ## Introduction
 

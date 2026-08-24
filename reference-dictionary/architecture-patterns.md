@@ -60,6 +60,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Acceptance-Delivery Separation | [`#acceptance-delivery-separation`](#acceptance-delivery-separation) |
 | Frequency Capping | [`#frequency-capping`](#frequency-capping) |
 | Transient Metadata Registry | [`#transient-metadata-registry`](#transient-metadata-registry) |
+| Route-to-Data Pattern | [`#route-to-data-pattern`](#route-to-data-pattern) |
 
 ---
 
@@ -1023,6 +1024,31 @@ An architectural pattern (a specialized application of the Claim Check pattern) 
 
 ### Also see
 - [Claim Check](messaging.md#claim-check) · [Read/Write Path Separation](#readwrite-path-separation) · [Server-Side Ad Insertion (SSAI)](media-processing.md#server-side-ad-insertion-ssai)
+
+---
+
+## Route-to-Data Pattern
+
+A distributed systems architecture pattern where requests or telemetry events are routed to the specific region, cluster, or node that holds the authoritative state, rather than replicating the entire state globally across all regions.
+
+### Key Characteristics
+- **Origin-Tagged Tokens / Metadata**: Requests or opaque client tokens are embedded with an immutable origin tag (e.g., `serving_region: "us-east-1"`) during initial interaction.
+- **Edge Region Inspection & Forwarding**: When a roaming client lands in a different region (e.g., cellular handover), regional ingress gateways inspect the origin tag and forward the request across the cloud backbone to the state-holding region.
+- **Eliminates Global State Replication Overhead**: Avoids broadcasting ephemeral data across multi-region databases or Kafka clusters, eliminating >99% of cross-region storage, synchronization, and compute costs.
+- **Localised In-Memory Joins**: Keeps stateful processing engines (such as Flink stream joins or cache lookups) strictly local to each region while still supporting globally mobile clients.
+
+### When to Use
+- Multi-region event streaming architectures where client devices frequently roam across geographical boundaries during an active session (streaming video, live gaming, IoT fleet tracking).
+- Stateful stream joins where decision logs or transient state reside locally in the original serving region.
+- Workloads where the volume of local interactions drastically exceeds the volume of cross-region roamers (>99% vs <1%).
+
+### When NOT to Use
+- Highly read-heavy global static content where edge CDN caching or multi-region read replicas provide superior latency for all users.
+- Mission-critical disaster recovery where state must be continuously active in multiple standby regions simultaneously.
+
+### Also see
+- [Transient Metadata Registry](#transient-metadata-registry) · [Stream-Stream Join](messaging.md#stream-stream-join) · [Message Routing](messaging.md#message-ordering) · [Sidecar Pattern](#sidecar-pattern)
+
 
 
 

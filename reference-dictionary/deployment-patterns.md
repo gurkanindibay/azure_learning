@@ -28,6 +28,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Pod Affinity | [`#pod-affinity`](#pod-affinity) |
 | Node Affinity | [`#node-affinity`](#node-affinity) |
 | Topology Spread Constraints | [`#topology-spread-constraints`](#topology-spread-constraints) |
+| Deterministic Traffic Dialing | [`#deterministic-traffic-dialing`](#deterministic-traffic-dialing) |
+| Canary Deployment vs Deterministic Traffic Dialing | [`#canary-deployment-vs-deterministic-traffic-dialing`](#canary-deployment-vs-deterministic-traffic-dialing) |
 
 ---
 
@@ -282,4 +284,78 @@ A **Kubernetes scheduling mechanism** that controls how pods are distributed acr
 
 ### Also see
 - [Pod Affinity](#pod-affinity) · [Node Affinity](#node-affinity) · [Correlated Failure Domain](resilience.md#correlated-failure-domain)
+
+---
+
+## Deterministic Traffic Dialing
+
+A zero-downtime progressive migration and canary release pattern where live traffic is partitioned between legacy and next-generation processing engines based on a deterministic hash of an immutable transaction key (e.g., `Hash(event_id) % 100 < Threshold`), ensuring exactly-once execution per entity while allowing fine-grained dial-up and instant rollback.
+
+### Key Characteristics
+- **Deterministic Key Hashing**: Rather than random coin-flip routing, an immutable entity identifier (e.g., `user_id`, `ad_id`, `order_id`) is hashed into a bucket `[0..99]`.
+- **Single Authoritative Publisher**: In dual-running shadow architectures, both systems may process the stream in parallel for automated diff auditing, but only the system designated by the deterministic threshold publishes the authoritative output downstream.
+- **Granular Dial-Up**: Traffic volume shifted to the new pipeline increases incrementally (0% → 1% → 10% → 50% → 100%) by simply turning up the threshold.
+- **Instant Rollback**: If anomalies or data drift are detected, lowering the threshold instantly reverts traffic to the legacy system without state corruption.
+
+### When to Use
+- Migrating high-throughput, revenue-critical pipelines (billing, payment processing, ad event tracking) where downtime or duplicate message publishing is intolerable.
+- State-sensitive migrations where the same business entity must consistently be processed by the same system version throughout its lifecycle.
+- Zero-downtime cutover between distinct storage or streaming processing architectures (e.g., KV datastore lookup to Apache Flink streaming join).
+
+### When NOT to Use
+- Stateless web endpoints where simple weighted load balancer routing (round-robin canary) is sufficient.
+- Minor internal service deployments where brief maintenance windows or standard Blue-Green cutovers are acceptable.
+
+### Also see
+- [Canary Deployment](#canary-deployment) · [Shadow Testing](#shadow-testing) · [Progressive Delivery](#progressive-delivery) · [Feature Flag](#feature-flag)
+
+---
+
+## Canary Deployment vs Deterministic Traffic Dialing
+
+While both strategies are progressive delivery patterns designed to minimize blast radius and validate new software versions against live traffic, they differ fundamentally in **routing mechanisms**, **entity/state affinity**, and **how they handle asynchronous dual-running pipelines**:
+
+| Dimension | Standard Canary Deployment | Deterministic Traffic Dialing |
+|:---|:---|:---|
+| **Routing Mechanism** | **Probabilistic / Weighted**: Ingress load balancer routes e.g. 5% of incoming HTTP connections at random or round-robin to canary pods. | **Deterministic Hash Partitioning**: `Hash(entity_id) % 100 < Threshold` routes by immutable transaction key. |
+| **Entity & Session Affinity** | **None (or IP/Cookie Sticky)**: Two separate events belonging to the same business entity or ad break may hit different versions. | **Strict & Repeatable**: The same entity (`ad_id`, `order_id`, `user_id`) *always* resolves to the same pipeline version across time, retries, and sessions. |
+| **Shadow / Dual-Run Support** | Usually standalone: canary instances process traffic independently and emit responses directly. | Designed for **shadow pipelines**: both legacy and next-gen engines process 100% of live traffic for real-time diff auditing, but **only one authoritatively publishes** downstream. |
+| **Duplicate Prevention** | Not designed for stream publisher deduplication; random splits on event streams risk double-publishing. | **Guarantees single-publisher semantics**: an event is never published by both old and new engines downstream. |
+| **Primary Domain** | Stateless web APIs, microservices, frontends, and REST endpoints. | Stateful stream processing (Apache Flink, Kafka), financial billing, ad event tracking, payment pipelines. |
+
+```
+[Standard Canary: Probabilistic Request Routing]
+
+Incoming Traffic ──► [ Load Balancer (95% / 5% Weight) ]
+                            │
+                            ├──── (95%) ──► [ Service v1 (Stable) ]
+                            └──── ( 5%) ──► [ Service v2 (Canary) ]
+
+[Deterministic Traffic Dialing: Shadow Audit & Hash-Partitioned Publishing]
+
+                             Live Event Stream (100%)
+                                        │
+                    ┌───────────────────┴───────────────────┐
+                    ▼                                       ▼
+        +───────────────────────+               +───────────────────────+
+        │ Legacy Pipeline (v1)  │               │ Modern Pipeline (v2)  │
+        +───────────────────────+               +───────────────────────+
+                    │                                       │
+                    ├──────────► [ Automated Audit ] ◄──────┤ (Diff Comparison)
+                    │            (Compares outputs)         │
+                    │                                       │
+        +───────────────────────────────────────────────────────────────+
+        │ Deterministic Hash Dial: Bucket = Hash(entity_id) % 100       │
+        │ - If Bucket < Dial_Threshold: Modern (v2) publishes           │
+        │ - If Bucket >= Dial_Threshold: Legacy (v1) publishes          │
+        +───────────────────────────────────────────────────────────────+
+                                        │
+                                        ▼ Exactly-Once Authoritative Output
+                             Downstream Sinks / Billing
+```
+
+### Also see
+- [Canary Deployment](#canary-deployment) · [Deterministic Traffic Dialing](#deterministic-traffic-dialing) · [Shadow Testing](#shadow-testing) · [Blue-Green vs Canary Deployment](#blue-green-vs-canary-deployment)
+
+
 
