@@ -81,6 +81,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Soft TTL | [`#soft-ttl`](#soft-ttl) |
 | Probabilistic Early Invalidation | [`#probabilistic-early-invalidation`](#probabilistic-early-invalidation) |
 | Trie Cache | [`#trie-cache`](#trie-cache) |
+| **AI & LLM Caching** | |
+| Semantic Cache | [`#semantic-cache`](#semantic-cache) |
+| Semantic Similarity Threshold | [`#semantic-similarity-threshold`](#semantic-similarity-threshold) |
+| KV Cache | [`#kv-cache`](#kv-cache) |
 
 ---
 
@@ -1586,4 +1590,107 @@ An **in-memory caching optimization for Trie data structures** that pre-computes
 
 ### Also see
 - [Trie (Prefix Tree)](databases.md#trie-prefix-tree) · [Cache-Aside Pattern](#cache-aside-pattern) · [Top-K](#top-k)
+
+---
+
+### AI & LLM Caching
+
+## Semantic Cache
+
+A **caching layer for Large Language Model (LLM) queries that stores and retrieves responses based on semantic similarity** in high-dimensional vector embedding space, rather than relying on exact cryptographic hash matches (e.g., SHA-256). When an incoming prompt's embedding vector has a cosine similarity exceeding a configured threshold ($\tau$) relative to a cached query, the cached response is served immediately without invoking the LLM inference engine.
+
+```
+User Query ──▶ Embedding Model ──▶ Vector Lookup (ANN / Cosine)
+                                        │
+                         ┌──────────────┴──────────────┐
+                         ▼                             ▼
+                 Similarity >= τ               Similarity < τ
+                   [CACHE HIT]                   [CACHE MISS]
+             Return Cached Answer (0 ms)      Forward to LLM Engine
+                                                       │
+                                              Store (Vector, Answer)
+```
+
+### Key Characteristics
+- **Bypasses LLM inference completely**: Unlike KV caching or prompt caching which accelerate generation, semantic caching eliminates the model execution entirely, delivering ~400× latency reduction (e.g., 10ms vs 4000ms) and 100% token cost savings on cache hits.
+- **Normalized dot-product vector search**: Embeddings are $L_2$-normalized so cosine similarity reduces to a fast matrix dot-product ($V \cdot v_q$), scalable via Approximate Nearest Neighbor (ANN / HNSW) indices in FAISS, Redis, or vector databases.
+- **Probabilistic tradeoff**: Introduces a non-zero risk of false hits due to semantic overlap, requiring strict threshold calibration ($\tau \approx 0.85 - 0.92$), entity matching filters, and shadow testing.
+- **Economic breakeven**: Profitable whenever hit rate $h > \frac{c_{\text{embed}}}{c_{\text{LLM}}}$. With local CPU embedding models ($c_{\text{embed}} \approx 0.001 \cdot c_{\text{LLM}}$), breakeven occurs at hit rates as low as 0.1%.
+
+### When to Use
+- High-volume customer support chatbots, FAQ assistants, and documentation QA systems where users ask the same underlying questions with different phrasing.
+- Applications where exact-match cache hit rates are negligible (<5%) due to morphological or linguistic variations (especially in agglutinative languages).
+- Cost-sensitive generative AI systems requiring 25–50%+ token budget reductions.
+
+### When NOT to Use
+- Real-time time-dependent questions ("What is today's stock price?", "Is there a sale right now?").
+- Highly personalized or sensitive queries where caching risks cross-user PII leakage (unless partitioned by strict per-user/tenant namespaces).
+- Mission-critical financial, medical, or legal systems where zero tolerance exists for false positive paraphrase hits (unless protected by downstream deterministic verification).
+
+### Also see
+- [Semantic Similarity Threshold](#semantic-similarity-threshold) · [KV Cache](#kv-cache) · [Prompt Caching](ai-ml-llm.md#prompt-caching) · [Embedding](ai-ml-llm.md#embedding) · [Vector Search (ANN)](ai-ml-llm.md#vector-search-ann)
+
+---
+
+## Semantic Similarity Threshold
+
+The **numerical boundary ($\tau$) in semantic caching that determines whether a candidate query's vector embedding is sufficiently close to a cached query to trigger a cache hit**. Typically evaluated using cosine similarity ($\cos \theta \in [0, 1]$ on normalized vectors), balancing the fundamental trade-off between precision (correctness) and recall (cache hit rate).
+
+```
+τ = 0.75 (Aggressive) ─────────────── τ = 0.86 (Balanced) ─────────────── τ = 0.95 (Conservative)
+  • High hit rate (50-70%)              • Moderate hit rate (30-45%)        • Low hit rate (5-15%)
+  • High cost savings                   • Optimal economic ROI              • Minimal cost savings
+  • High false hit rate (risky)         • Low false hit rate (<0.5%)        • Near-zero false hit rate
+```
+
+### Key Characteristics
+- **Single control parameter**: Controls the entire precision/recall curve of the semantic cache.
+- **Non-separable overlap zone**: In the 0.80–0.96 similarity band, legitimate paraphrases ("where is my package" vs "track my shipment") often overlap with dangerous traps like **negations** ("Is return 14 days?" vs "Is return NOT 14 days?", $\text{sim} \approx 0.96$) and **numeric entity variations** ("500 TL" vs "5000 TL", $\text{sim} \approx 0.97$).
+- **Complementary deterministic filters**: Overcomes embedding numeric blindness by coupling the threshold with regex entity extractors and requiring complete-sentence cached answers.
+- **Empirical tuning**: Calibrated by plotting similarity score histograms over labeled historic query pairs and conducting continuous shadow testing (comparing 1–5% of cache hits against live LLM outputs).
+
+### When to Use
+- Sizing and tuning semantic cache pipelines for enterprise chatbots and search engines.
+- Defining SLA/SLO boundaries for generative AI cost reduction vs answer quality.
+
+### When NOT to Use
+- As a standalone protection against entity or negation mistakes without secondary entity-matching guardrails.
+
+### Also see
+- [Semantic Cache](#semantic-cache) · [Stale Read Rate](#stale-read-rate) · [Guardrails (AI)](ai-ml-llm.md#guardrails-ai)
+
+---
+
+## KV Cache
+
+The **GPU memory cache that stores the intermediate Key and Value attention tensor representations** for previously generated tokens in autoregressive Transformer models. By reusing past key/value states from GPU High Bandwidth Memory (HBM/VRAM), the model avoids recomputing self-attention matrices for all preceding tokens during subsequent token generation steps.
+
+```
+Without KV Cache (O(N^2) compute per token):
+Token 1 ──▶ Compute Attention(1)
+Token 2 ──▶ Compute Attention(1, 2)
+Token 3 ──▶ Compute Attention(1, 2, 3)
+
+With KV Cache (O(N) compute per token):
+Token 1 ──▶ Compute(1) ──▶ Store KV_1 in VRAM
+Token 2 ──▶ Load KV_1 ──▶ Compute(2) ──▶ Store KV_2 in VRAM
+Token 3 ──▶ Load KV_1, KV_2 ──▶ Compute(3) ──▶ Store KV_3 in VRAM
+```
+
+### Key Characteristics
+- **Hardware-level acceleration**: Resides directly inside GPU VRAM / HBM and is managed by the inference runtime (e.g., vLLM, TensorRT-LLM, HuggingFace TGI).
+- **Reduces computational complexity**: Decreases decoding time from $O(N^2)$ to $O(N)$ arithmetic operations per output token.
+- **Memory footprint bottleneck**: Memory consumption scales linearly with batch size, sequence length, number of attention layers, and hidden dimensions ($\text{Size} = 2 \times 2 \times n_{\text{layers}} \times d_{\text{head}} \times n_{\text{heads}} \times \text{seq\_len} \times \text{batch\_size}$ bytes). PagedAttention (vLLM) manages this memory non-contiguously like virtual memory pages.
+- **Zero deviation risk**: Produces exact, mathematically identical outputs to non-cached decoding.
+
+### When to Use
+- Standard in all production LLM serving frameworks (vLLM, Ollama, OpenAI Triton) for autoregressive text generation.
+- Long-context multi-turn conversations and streaming LLM responses.
+
+### When NOT to Use
+- Non-autoregressive models (e.g., BERT encoders, embedding models) where all tokens are processed in a single forward pass.
+- When GPU VRAM is severely constrained and context fits within short prompt windows without batching.
+
+### Also see
+- [Semantic Cache](#semantic-cache) · [Prompt Caching](ai-ml-llm.md#prompt-caching) · [Token](ai-ml-llm.md#token)
 

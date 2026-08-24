@@ -26,6 +26,7 @@ Problems and strategies for designing and operating caching layers, from cache s
 | [redis-hash-encoding-optimization-takeaways.md](redis-hash-encoding-optimization-takeaways.md) | `cache-39` – `cache-42` | Hash grouping vs per-field keys, Encoding threshold tuning (ziplist/listpack), Lua batching, Protobuf compression + TTL |
 | [redis-data-structures-takeaways.md](redis-data-structures-takeaways.md) | `cache-43` – `cache-48` | Data structure selection guide, Sorted Sets for leaderboards, HyperLogLog for unique counting, Streams for reliable messaging, Bloom Filters for membership, Hashes vs Strings for objects |
 | [redis-distributed-locking-takeaways.md](redis-distributed-locking-takeaways.md) | `cache-49` – `cache-53` | Atomic SET NX PX, Safe Lua release scripts, Exponential backoff retry, Transaction boundary alignment, Redlock quorum |
+| [semantic-cache-llm-takeaways.md](semantic-cache-llm-takeaways.md) | `cache-54` – `cache-59` | Semantic caching pipeline, Cosine similarity decision rules, ANN / HNSW vector indexing, Threshold precision/recall dilemma, User isolation, Multi-tier GenAI cache hierarchy |
 
 ## Cross-References
 

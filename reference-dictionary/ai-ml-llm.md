@@ -88,6 +88,7 @@ timestamp: 2026-06-14T00:00:00Z
 | MoE (Mixture of Experts) | [`#moe`](#moe) |
 | Demand Paging for MoE Weights | [`#demand-paging-moe-weights`](#demand-paging-moe-weights) |
 | Read-Compute Overlapping (Inference) | [`#read-compute-overlapping-inference`](#read-compute-overlapping-inference) |
+| Vector Search (ANN) | [`#vector-search-ann`](#vector-search-ann) |
 
 ---
 
@@ -1903,4 +1904,38 @@ An **asynchronous I/O pipelining pattern for storage-bound inference where flash
 ### Also see
 - [MoE (Mixture of Experts)](#moe)
 - [Demand Paging for MoE Weights](#demand-paging-moe-weights)
+
+---
+
+## Vector Search (ANN)
+
+**Approximate Nearest Neighbor (ANN) vector search** is an algorithmic indexing and retrieval approach that finds the $k$ closest high-dimensional embedding vectors to a given query vector in sub-linear time ($O(\log N)$ or $O(\sqrt{N})$), sacrificing a tiny fraction of accuracy (recall) in exchange for orders-of-magnitude faster query speeds compared to brute-force exact linear scans ($O(N \cdot d)$).
+
+```
+Brute-force (Flat Exact): Check all N points ──▶ O(N * d) operations (Slow for large N)
+
+HNSW Graph (ANN):
+Layer 2: Fast highway jumps between sparse cluster centroids
+Layer 1: Medium granularity navigation
+Layer 0: Local dense graph traversal to nearest neighbor
+──▶ O(log N) search complexity
+```
+
+### Key Characteristics
+- **Graph-based and quantization algorithms**: Dominant indexing methods include **HNSW** (Hierarchical Navigable Small World graphs for high recall and microsecond latency), **IVF** (Inverted File indexing with Voronoi cells), and **PQ** (Product Quantization for extreme vector memory compression).
+- **Tunable recall/latency parameter**: Retrieval accuracy (recall@k) is tuned via search parameters (e.g., `efSearch` in HNSW or `nprobe` in IVF) to trade off milliseconds for precision.
+- **Normalization optimization**: When vectors are $L_2$-normalized to unit length, cosine similarity computation simplifies directly to inner product (dot product), avoiding expensive per-vector square root calculations.
+- **Scalability**: Enables searching across millions to billions of vectors across vector databases (e.g., Qdrant, Milvus, Pinecone, FAISS, Azure AI Search).
+
+### When to Use
+- Semantic caching pipelines containing $>20{,}000$ cached query embeddings where linear scanning exceeds the 10–20ms latency threshold.
+- RAG (Retrieval-Augmented Generation) document search over large corpus collections.
+- Real-time recommendation systems, multimodal image/text retrieval, and duplicate content detection.
+
+### When NOT to Use
+- Small collections ($<10{,}000$ vectors) where exact brute-force matrix multiplication (e.g., `np.dot` / `faiss.IndexFlatIP`) is simpler, requires zero index build time, and guarantees 100% recall.
+- Exact constraint matching (e.g., searching for exact IDs or strict boolean filtering without semantic ambiguity).
+
+### Also see
+- [Vector Database](#vector-database) · [Embedding](#embedding) · [RAG (Retrieval-Augmented Generation)](#rag) · [Semantic Cache](caching.md#semantic-cache)
 

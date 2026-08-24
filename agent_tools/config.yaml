@@ -233,8 +233,10 @@ takeaway_domains:
       - "system-design-architecture/caching/redis-rate-limiting-patterns.md"
       - "system-design-architecture/caching/redis-data-structures-takeaways.md"
       - "system-design-architecture/caching/redis-distributed-locking-takeaways.md"
+      - "system-design-architecture/caching/semantic-cache-llm-takeaways.md"
       - "articles/caching/redis-distributed-locking-commands-patterns-pitfalls.md"
       - "articles/caching/redis-rate-limiting-distributed-race-conditions.md"
+      - "articles/caching/semantic-cache-ayni-soruyu-ikinci-kez-sormanin-bedeli.md"
   jvm:
     file: "jvm-runtime/jvm-memory-gc.md"
     desc: "JVM Memory & GC"
@@ -492,6 +494,9 @@ dictionary_domains:
       - demand paging
       - expert weights
       - read-compute overlapping
+      - vector search
+      - ann
+      - hnsw
   api-design.md:
     title: "API Design"
     keywords:
@@ -582,6 +587,9 @@ dictionary_domains:
       - cache-aside
       - write-through
       - read-through
+      - semantic cache
+      - kv cache
+      - faiss
   cqrs-event-driven.md:
     title: "CQRS & Event-Driven"
     keywords:
