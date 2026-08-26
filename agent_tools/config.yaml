@@ -554,6 +554,8 @@ dictionary_domains:
       - acceptance-delivery separation
       - frequency capping
       - transient metadata registry
+      - dag
+      - directed acyclic graph
   networking.md:
     title: "Networking"
     keywords:
@@ -614,6 +616,8 @@ dictionary_domains:
       - deadlock
       - mvcc
       - serializ
+      - chandy-lamport
+      - distributed snapshot
   dotnet-multithreading.md:
     title: ".NET Multithreading"
     keywords:

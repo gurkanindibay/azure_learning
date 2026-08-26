@@ -646,7 +646,7 @@ flowchart TB
 | **Deployment** | `java -jar myapp.jar` | Submit JAR to cluster; manage via CLI/REST/Dashboard |
 | **State storage** | RocksDB local + Kafka changelog | RocksDB/HDFS/S3 + distributed checkpointing |
 | **Scaling model** | Add app instances; bounded by partition count | Add TaskManagers; rescale jobs with savepoints |
-| **Delivery guarantee** | Exactly-once (via Kafka transactions) | Exactly-once (via distributed snapshots / Chandy-Lamport) |
+| **Delivery guarantee** | Exactly-once (via Kafka transactions) | Exactly-once (via distributed snapshots / [Chandy-Lamport](../../reference-dictionary/data-concurrency.md#chandy-lamport-algorithm)) |
 | **Event time** | Basic watermark support | Sophisticated watermarking, allowed lateness, side outputs |
 | **Fault tolerance** | State rebuilt from changelog on rebalance | Asynchronous barrier snapshotting; incremental checkpointing |
 | **SQL** | KSQL / ksqlDB (separate service) | Built-in SQL API (batch + streaming unified) |

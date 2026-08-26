@@ -57,6 +57,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Shard Key | [`#shard-key`](#shard-key) |
 | Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
 | Operational Transformation (OT) | [`#operational-transformation-ot`](#operational-transformation-ot) |
+| Chandy-Lamport Algorithm | [`#chandy-lamport-algorithm`](#chandy-lamport-algorithm) |
 
 ---
 
@@ -1064,5 +1065,28 @@ An **optimistic concurrency control and conflict resolution algorithm** designed
 ### Also see
 - [CRDT (Conflict-free Replicated Data Type)](#crdt-conflict-free-replicated-data-type) · [WebSocket](api-design.md#websocket)
 
+---
 
+## Chandy-Lamport Algorithm
 
+A foundational distributed systems algorithm designed by Leslie Lamport and K. Mani Chandy (1985) to capture a **consistent global snapshot** of a running distributed system (both node states and in-flight communication channel states) **without freezing or pausing execution**. It is the theoretical backbone behind distributed checkpointing in modern stream processing engines (such as Apache Flink's Asynchronous Barrier Snapshotting / ABS), distributed debugging, and state recovery.
+
+### Key Characteristics
+- **Non-blocking Execution**: The distributed system continues processing live incoming requests and mutating state while the global snapshot is captured asynchronously in the background.
+- **Marker-Based Recording**: An initiator node records its local state and sends a special control message (**marker**) along all its outgoing channels. When any process receives a marker for the first time on an incoming channel, it immediately snapshots its own local state and forwards the marker along all outgoing channels.
+- **In-Flight Channel State Capture**: To capture in-flight messages without a global clock, a process logs incoming messages received on a channel between the moment it saved its own state and the moment it receives the marker on that specific channel (requires FIFO channel ordering).
+- **Causal Consistency**: Guarantees that the captured global snapshot represents a valid, causally consistent system state that satisfies the "happened-before" relation (no effect is recorded without its causal cause).
+- **Foundation for Exactly-Once Stream Processing**: Modern stream processors (like Apache Flink) adapt Chandy-Lamport into lightweight barrier alignment algorithms, checkpointing state across operators to provide deterministic exactly-once fault recovery.
+
+### When to Use
+- **Distributed State Checkpointing & Savepoints**: Stateful stream processing engines (Apache Flink, Kafka Streams state backends) capturing consistent operator state for recovery.
+- **Consistent Global Backups & Recovery**: Distributed databases and storage clusters requiring point-in-time state recovery without taking system downtime.
+- **Distributed Deadlock & Termination Detection**: Inspecting stable global properties (e.g., deadlock, token loss, termination) across a distributed network of communicating processes.
+
+### When NOT to Use
+- Single-node database engines where local Write-Ahead Logging (WAL) or snapshot isolation (MVCC) provides simpler point-in-time recovery.
+- Systems with non-FIFO, unsequenced, or lossy communication channels where marker boundaries cannot be preserved without additional protocol layers.
+- Purely stateless distributed services where state is delegated entirely to an external datastore.
+
+### Also see
+- [Lamport Clocks](#lamport-clocks) · [Vector Clocks](#vector-clocks) · [Two-Phase Commit (2PC)](#two-phase-commit-2pc) · [Apache Flink](messaging.md#apache-flink) · [Watermarking](messaging.md#watermarking) · [Exactly-Once Semantics](messaging.md#exactly-once-semantics)

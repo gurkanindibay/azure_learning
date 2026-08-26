@@ -61,6 +61,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Frequency Capping | [`#frequency-capping`](#frequency-capping) |
 | Transient Metadata Registry | [`#transient-metadata-registry`](#transient-metadata-registry) |
 | Route-to-Data Pattern | [`#route-to-data-pattern`](#route-to-data-pattern) |
+| Directed Acyclic Graph (DAG) | [`#directed-acyclic-graph-dag`](#directed-acyclic-graph-dag) |
 
 ---
 
@@ -1049,6 +1050,29 @@ A distributed systems architecture pattern where requests or telemetry events ar
 ### Also see
 - [Transient Metadata Registry](#transient-metadata-registry) · [Stream-Stream Join](messaging.md#stream-stream-join) · [Message Routing](messaging.md#message-ordering) · [Sidecar Pattern](#sidecar-pattern)
 
+---
 
+## Directed Acyclic Graph (DAG)
 
+A mathematical graph structure composed of directed edges (arrows) connecting vertices (nodes) with **no closed loops or cycles** ($v_1 \to v_2 \to \dots \to v_1$ is impossible). In software architecture and distributed systems, DAGs represent task dependency graphs, workflow orchestration pipelines, distributed computation topologies (Flink/Spark/Dryad), database physical query execution plans (Polaris/Fabric UQO), build systems, and agentic AI planning graphs (Plan-and-Execute).
 
+### Key Characteristics
+- **Topological Sorting**: Vertices can always be linearly ordered such that every directed edge $(u, v)$ has $u$ appearing before $v$. This guarantees a deterministic, valid execution sequence.
+- **Parallelism via Branching & Concurrency**: Unblocked nodes (nodes whose upstream prerequisites are complete) can execute concurrently across distributed worker pools without synchronization barriers.
+- **Deadlock and Cycle Immunity**: Because cycles are structurally forbidden, execution pipelines cannot enter infinite circular wait states or deadlocks due to circular dependency.
+- **Granular Fault Isolation & Resumability**: If an individual node fails, execution can resume or retry from the failed node without restarting successfully completed upstream nodes.
+- **Dynamic vs Static DAGs**: Static DAGs are pre-compiled before execution (e.g., dbt models, Airflow workflows, query plans); dynamic DAGs construct or expand nodes at runtime based on intermediate results (e.g., recursive AI agent task breakdown, adaptive query optimization).
+
+### When to Use
+- **Task Orchestration**: Workflow engines (Apache Airflow, Prefect, Dagster, Temporal, AWS Step Functions) where tasks have explicit prerequisite dependencies.
+- **Distributed Data Processing**: Stream and batch computation engines (Apache Flink, Apache Spark, Dryad) modeling transformation pipelines (map, filter, join, aggregate).
+- **Media & Transcoding Pipelines**: Large-scale video platforms splitting video at GOP boundaries and processing parallel encoding/audio/thumbnail stages across heterogeneous nodes.
+- **Query Optimization & Execution**: Database engines (Polaris, Fabric UQO, Presto/Trino) replacing flat serial operations with dependency-driven parallel stages.
+- **Agentic AI Execution**: Agent planning architectures (Plan-and-Execute pattern, LangGraph) where a Planner model outputs a structured multi-step execution graph with dependency constraints.
+
+### When NOT to Use
+- Workloads requiring continuous bidirectional feedback loops, iterative state convergence, or cyclic state machines (e.g., real-time control loops, cyclic graph traversal algorithms) unless managed as separate iterative epochs or loop unrolling.
+- Trivial linear pipelines where sequential execution has no branches or dependencies (adds unnecessary orchestration and scheduler overhead).
+
+### Also see
+- [Transcoding DAG Model](media-processing.md#transcoding-dag-model) · [Apache Flink](messaging.md#apache-flink) · [Upstream/Downstream Relationship](#upstreamdownstream-relationship) · [Circular Dependency](#circular-dependency) · [Plan & Execute](ai-ml-llm.md#plan--execute)

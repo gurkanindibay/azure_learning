@@ -304,7 +304,7 @@ flowchart TD
 
 ### Stream Processing: The MapReduce DAG Model
 
-The aggregation engine decomposes stream computation into a Directed Acyclic Graph (DAG) of specialized computing nodes:
+The aggregation engine decomposes stream computation into a [Directed Acyclic Graph (DAG)](../../reference-dictionary/architecture-patterns.md#directed-acyclic-graph-dag) of specialized computing nodes:
 
 ```mermaid
 flowchart LR
@@ -560,7 +560,7 @@ sequenceDiagram
 
 #### The Solution: Two-Phase Commit (2PC) & Idempotency
 To achieve true end-to-end exactly-once:
-1. **Source to Processing Engine**: Distributed snapshots using the **Chandy-Lamport algorithm** (Flink Checkpoints).
+1. **Source to Processing Engine**: Distributed snapshots using the [**Chandy-Lamport algorithm**](../../reference-dictionary/data-concurrency.md#chandy-lamport-algorithm) (Flink Checkpoints).
 2. **Processing Engine to Downstream Queue**: Flink uses Kafka's **Transactional Producer API** with Two-Phase Commit (`2PC`):
    - *Pre-commit*: Write aggregated data into Kafka transaction during snapshot.
    - *Commit*: Mark Kafka transaction as committed only after checkpoint succeeds.

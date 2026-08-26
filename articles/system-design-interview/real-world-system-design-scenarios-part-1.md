@@ -3526,7 +3526,7 @@ The orchestration layer needs to be redesigned.
 
 **B. Choreography through an event bus:** Agents publish and subscribe to events. There is no central controller, and each agent independently triggers the next one.
 
-**C. DAG-based execution:** Represent the workflow as a directed acyclic graph, run independent steps in parallel, and wait only for real dependencies.
+**C. DAG-based execution:** Represent the workflow as a [directed acyclic graph](../../reference-dictionary/architecture-patterns.md#directed-acyclic-graph-dag), run independent steps in parallel, and wait only for real dependencies.
 
 **D. Supervisor pattern:** Add a meta-agent that watches the other agents, detects failures, and decides whether to retry, reroute, or involve a human.
 

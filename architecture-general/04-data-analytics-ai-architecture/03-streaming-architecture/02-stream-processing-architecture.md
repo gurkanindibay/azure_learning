@@ -292,7 +292,7 @@ sequenceDiagram
 
 | Mechanism | Description | Framework |
 |-----------|-------------|-----------|
-| **Chandy-Lamport Algorithm** | Distributed snapshot via barriers | Flink |
+| [**Chandy-Lamport Algorithm**](../../../../reference-dictionary/data-concurrency.md#chandy-lamport-algorithm) | Distributed snapshot via barriers | Flink |
 | **Write-Ahead Log (WAL)** | Log every state change before processing | Spark |
 | **Kafka Transactions** | Atomic write + offset commit | Kafka Streams |
 | **Savepoints** | User-triggered snapshot (for upgrades) | Flink |
