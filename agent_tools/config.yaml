@@ -145,8 +145,11 @@ takeaway_domains:
       - "system-design-architecture/ai-ml-infrastructure/36-ai-key-takeaways.md"
       - "system-design-architecture/ai-ml-infrastructure/37-ai-key-takeaways.md"
       - "system-design-architecture/ai-ml-infrastructure/38-ai-key-takeaways.md"
+      - "system-design-architecture/ai-ml-infrastructure/39-ai-key-takeaways.md"
       - "articles/agentic-ai/our-rag-got-better-when-we-fixed-chunking-not-embeddings.md"
       - "articles/agentic-ai/a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone.md"
+      - "articles/agentic-ai/how-does-anthropic-watermark-ai-generated-content.md"
+
   media:
     file: "media-processing/media-processing-pipelines.md"
     desc: "Media Processing"
@@ -457,6 +460,12 @@ takeaway_keywords:
   delayed job scheduler: sdi
   job scheduler: sdi
   delayed job: sdi
+  synthid: ai
+  watermark: ai
+  c2pa: ai
+  content credentials: ai
+  g-value: ai
+  provenance manifest: ai
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -500,6 +509,13 @@ dictionary_domains:
       - vector search
       - ann
       - hnsw
+      - synthid
+      - watermark
+      - c2pa
+      - content credentials
+      - g-value
+      - provenance
+
   api-design.md:
     title: "API Design"
     keywords:

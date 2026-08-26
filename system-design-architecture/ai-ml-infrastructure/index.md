@@ -22,6 +22,8 @@ Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Gen
 | [36-ai-key-takeaways.md](36-ai-key-takeaways.md) | `ai-17` – `ai-24` | Demo-to-production gaps: data quality, retrieval validation, eval drift, AI observability, token cost governance, data drift, prompt decoupling, pipeline validation |
 | [37-ai-key-takeaways.md](37-ai-key-takeaways.md) | `ai-25` – `ai-27` | RAG chunking vs embeddings: structure-aware chunking, noise-resilient semantic chunking, qualitative chunk inspection audit |
 | [38-ai-key-takeaways.md](38-ai-key-takeaways.md) | `ai-28` – `ai-30` | On-device MoE inference: selective demand-paged expert loading, asynchronous read-compute overlapping, flash throughput-centric edge AI |
+| [39-ai-key-takeaways.md](39-ai-key-takeaways.md) | `ai-31` – `ai-33` | AI content watermarking & provenance: imperceptible statistical token watermarking, cryptographic C2PA content credentials, dual-layer governance |
+
 
 ## Cross-References
 

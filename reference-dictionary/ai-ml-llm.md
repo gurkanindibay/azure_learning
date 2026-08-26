@@ -95,6 +95,10 @@ timestamp: 2026-06-14T00:00:00Z
 | Model Routing by Complexity | [`#model-routing-by-complexity`](#model-routing-by-complexity) |
 | Graceful Spend Degradation (LLM) | [`#graceful-spend-degradation-llm`](#graceful-spend-degradation-llm) |
 | Copilot Acceptance Rate | [`#copilot-acceptance-rate`](#copilot-acceptance-rate) |
+| Generative Watermarking | [`#generative-watermarking`](#generative-watermarking) |
+| Content Credentials (C2PA) | [`#content-credentials-c2pa`](#content-credentials-c2pa) |
+| G-Value (Watermark Scoring) | [`#g-value-watermark-scoring`](#g-value-watermark-scoring) |
+
 
 ---
 
@@ -2118,5 +2122,85 @@ $$\text{Acceptance Rate} = \frac{\text{Accepted (As-Is)} + (\alpha \times \text{
 
 ### Also see
 - [Human Ownership](#human-ownership) · [Review Gate](#review-gate) · [Reopen-Gated Auto-Resolution Rate](#reopen-gated-auto-resolution-rate)
+
+---
+
+## Generative Watermarking
+
+An **inference-time model alignment and attribution technique** (pioneered by Google DeepMind's SynthID-Text) that embeds an imperceptible, machine-detectable statistical signature into AI-generated text or media during autoregressive token/pixel generation without degrading output quality or changing semantic meaning.
+
+```
+Context Window Tokens + Secret Key → Pseudorandom Seed → Calculate G-Values for Vocabulary → Bias Sampling Logits → Watermarked Output
+```
+
+### Key Characteristics
+- **Statistical embedding**: Subtle positive bias applied to pseudo-randomly scored candidate tokens ($g$-values) across sequence steps.
+- **Model-free verification**: Detectors require only the secret watermarking key $K$ and text tokenization to calculate statistical confidence ($\bar{g} > 0.5$), eliminating the need to load large model weights during verification.
+- **Human-imperceptible**: Preserves natural language fluency and probabilistic diversity without injecting visible markers or fixed boilerplate tokens.
+- **Statistical decay**: Detection confidence is proportional to sequence length (strongest on >100 tokens) and degrades under heavy token-level rewriting or back-translation.
+
+### When to Use
+- Complying with synthetic media transparency regulations (e.g., EU AI Act Article 50).
+- Establishing provenance and attribution for enterprise generative AI outputs and customer-facing chatbots.
+
+### When NOT to Use
+- Extremely short completions (single-word, code syntax keywords) where statistical variation obscures watermark signals.
+- Security boundary enforcement where adversaries control the entire transformation pipeline and can execute full structural paraphrasing.
+
+### Also see
+- [G-Value (Watermark Scoring)](#g-value-watermark-scoring) · [Content Credentials (C2PA)](#content-credentials-c2pa) · [Token](#token)
+
+---
+
+## Content Credentials (C2PA)
+
+An **open industry standard (Coalition for Content Provenance and Authenticity)** for attaching cryptographically signed, tamper-evident provenance metadata manifests to digital media assets (images, audio, video, documents) detailing generation models, timestamps, editing history, and organizational attribution.
+
+| Component | Role | Mechanism |
+|:---|:---|:---|
+| **C2PA Manifest** | Provenance Record | JSON-LD assertions describing asset lineage, ingredients, and tool actions |
+| **Trust Anchor / Certificate** | Authenticity & Non-Repudiation | X.509 cryptographic digital signatures validating publishing entity |
+| **Container Segment** | Storage & Portability | Standardized binary segments (e.g., JPEG APP11 / JUMBF boxes, MP4 moov atoms) |
+| **Client Verifier** | Decentralized Audit | Client-side viewer verifying cryptographic hashes without central server dependencies |
+
+### Key Characteristics
+- **Cryptographic non-repudiation**: Verifies whether an asset was produced by an authenticated system (e.g., Google Generative AI, Anthropic Claude) and detects post-generation payload modifications.
+- **Interoperable chain of custody**: Records chained edits across cooperating tools (e.g., generated in Midjourney/Gemini → retouched in Adobe Photoshop).
+- **Format-dependent retention**: Stored in standard metadata segments that can be stripped or dropped by non-compliant re-encoders or image sanitization scripts.
+
+### When to Use
+- Multimodal asset provenance tracking, publisher attribution, and deepfake verification.
+- Enterprise audit compliance, intellectual property protection, and copyright provenance pipelines.
+
+### When NOT to Use
+- Raw unformatted text files (JSON, plain text) that lack containerized binary metadata segments.
+- Systems requiring watermark survival after aggressive metadata stripping or format conversions.
+
+### Also see
+- [Generative Watermarking](#generative-watermarking) · [Zero Trust](security-iam.md#zero-trust) · [HSM & Cryptography](hsm-cryptography.md)
+
+---
+
+## G-Value (Watermark Scoring)
+
+A **pseudo-random watermark score $\in [0, 1)$ assigned to vocabulary tokens** during generative text watermarking (such as SynthID-Text), derived deterministically from a secret key and a sliding window of preceding context tokens to bias sampling selection.
+
+$$\bar{g} = \frac{1}{N} \sum_{i=1}^{N} g(w_i) \quad \begin{cases} \bar{g} \approx 0.50 & \text{Unwatermarked Text (Uniform Distribution)} \\ \bar{g} > 0.50 & \text{Watermarked Text (Biased Sampling)} \end{cases}$$
+
+### Key Characteristics
+- **Deterministic reproducibility**: Anyone with the secret watermarking key can reconstruct the exact $g$-values for a given token sequence.
+- **Hypothesis testing metric**: The sample mean $\bar{g}$ over $N$ tokens serves as a test statistic to accept or reject the null hypothesis of unwatermarked text.
+- **Logit modulation**: Used during inference to tilt token probabilities toward higher-scoring tokens without truncating valid vocabulary options.
+
+### When to Use
+- Implementing and evaluating statistical watermark detectors for generative language models.
+- Auditing watermarking false-positive rates and detector sensitivity across varying prompt domains.
+
+### When NOT to Use
+- Deterministic token generation modes (greedy search / temperature = 0) where sampling probability biasing is inactive.
+
+### Also see
+- [Generative Watermarking](#generative-watermarking) · [Token](#token) · [LLM](#llm)
+
 
 
