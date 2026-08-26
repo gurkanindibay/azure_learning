@@ -29,6 +29,6 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [security/](security/) | 2 | [security/](../system-design-architecture/security/) |
 | [software-architecture/](software-architecture/) | 12 | [software-architecture/](../system-design-architecture/software-architecture/) |
 | [stream-processing/](stream-processing/) | 5 | [stream-processing/](../system-design-architecture/stream-processing/) |
-| [system-design-interview/](system-design-interview/) | 15 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
+| [system-design-interview/](system-design-interview/) | 16 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 134 articles across 15 domains
+**Total**: 135 articles across 15 domains

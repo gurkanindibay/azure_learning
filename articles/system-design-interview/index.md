@@ -30,4 +30,5 @@ Source articles covering system design interview patterns, strategies, and case 
 - [million-notifications-system-design](million-notifications-system-design.md)
 - [every-system-design-interview-is-secretly-about-these-16-companies](every-system-design-interview-is-secretly-about-these-16-companies.md)
 - [Amazon Interview Question: Design a Delayed Job Scheduler](amazon-interview-question-design-a-delayed-job-scheduler.md)
+- [Customer Support System Design Interview: Building an AI-Powered Support Platform (From MVP to GenAI)](customer-support-ai-platform-system-design-interview.md)
 - [why-standard-template-fails-system-design-interviews](why-standard-template-fails-system-design-interviews.md)

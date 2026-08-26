@@ -89,6 +89,12 @@ timestamp: 2026-06-14T00:00:00Z
 | Demand Paging for MoE Weights | [`#demand-paging-moe-weights`](#demand-paging-moe-weights) |
 | Read-Compute Overlapping (Inference) | [`#read-compute-overlapping-inference`](#read-compute-overlapping-inference) |
 | Vector Search (ANN) | [`#vector-search-ann`](#vector-search-ann) |
+| KB-Gap Detector | [`#kb-gap-detector`](#kb-gap-detector) |
+| Grounding Rate | [`#grounding-rate`](#grounding-rate) |
+| Reopen-Gated Auto-Resolution Rate | [`#reopen-gated-auto-resolution-rate`](#reopen-gated-auto-resolution-rate) |
+| Model Routing by Complexity | [`#model-routing-by-complexity`](#model-routing-by-complexity) |
+| Graceful Spend Degradation (LLM) | [`#graceful-spend-degradation-llm`](#graceful-spend-degradation-llm) |
+| Copilot Acceptance Rate | [`#copilot-acceptance-rate`](#copilot-acceptance-rate) |
 
 ---
 
@@ -1938,4 +1944,179 @@ Layer 0: Local dense graph traversal to nearest neighbor
 
 ### Also see
 - [Vector Database](#vector-database) · [Embedding](#embedding) · [RAG (Retrieval-Augmented Generation)](#rag) · [Semantic Cache](caching.md#semantic-cache)
+
+---
+
+## KB-Gap Detector
+
+A **batch telemetry and data-mining system that analyzes customer support ticket resolutions to detect missing, outdated, or contradicted knowledge base (KB) documentation**. By identifying queries resolved purely via agent tribal knowledge (no KB article cited) or queries where customers escalated, the detector clusters unaddressed topics, drafts new documentation using an LLM, and surfaces them to human knowledge managers for validation and publication.
+
+```
+Resolved Tickets ──▶ Log Resolution Source (KB Article vs Agent Tribal vs Escalated)
+                          │
+                          ▼
+Batch Clustering ──▶ Identify Frequent Clusters with Missing/Contradicted KB Articles
+                          │
+                          ▼
+LLM Proposal     ──▶ Auto-Draft Proposed KB Article
+                          │
+                          ▼
+Human Review     ──▶ Knowledge Manager Approves / Edits ──▶ Published to Live KB
+```
+
+### Key Characteristics
+- **Feedback loop closure**: Turns daily customer support operations into an automated documentation improvement engine.
+- **Asynchronous batch execution**: Runs on scheduled off-peak batches (e.g., daily or weekly) rather than blocking real-time customer request paths.
+- **Human-in-the-loop publishing**: LLM generates candidate article drafts and identifies conflicting legacy documents, but human knowledge managers retain publishing authority.
+
+### When to Use
+- Customer support and service desk platforms where knowledge base decay leads to falling first-contact resolution rates.
+- Enterprise RAG systems where domain knowledge rapidly evolves and manual documentation cannot keep pace with new product features or error modes.
+
+### When NOT to Use
+- Purely static, unchanging documentation corpora where all topics are already exhaustively documented.
+- Real-time synchronous query routing paths (gap analysis is inherently a batch aggregate workload).
+
+### Also see
+- [RAG (Retrieval-Augmented Generation)](#rag) · [Grounding](#grounding) · [Grounding Rate](#grounding-rate)
+
+---
+
+## Grounding Rate
+
+An **AI observability metric measuring the percentage of generative model outputs that are strictly grounded in verified retrieval context (citations) versus ungrounded free-form generation**. A declining grounding rate serves as an early warning signal of retrieval failures, knowledge base staleness, or prompt drift.
+
+$$\text{Grounding Rate} = \frac{\text{Responses with Validated Context Citations}}{\text{Total Generative Responses}} \times 100\%$$
+
+| Metric Level | Interpretation | Action Required |
+|:---|:---|:---|
+| **High (>95%)** | Safe; model answers strictly from verified knowledge sources | Normal operation |
+| **Moderate (80–95%)** | Increased reliance on general model training data | Inspect retrieval queries and top-k thresholds |
+| **Low (<80%)** | Critical trust risk; high hallucination probability | Enable strict fallback/escalation gate |
+
+### Key Characteristics
+- **Hallucination canary**: Directly correlates with factual accuracy and contractual compliance in enterprise support systems.
+- **Citation validation**: Verifies that generated assertions map to specific retrieved text spans rather than generic plausibility.
+
+### When to Use
+- Continuous monitoring of enterprise RAG systems, customer support bots, and compliance-sensitive conversational agents.
+- Automated evaluation pipelines (e.g., LLM-as-Judge, Ragas) during CI/CD prompt deployments.
+
+### When NOT to Use
+- Creative writing, brainstorming, or open-ended code generation tasks where external document retrieval is not expected.
+
+### Also see
+- [Grounding](#grounding) · [Hallucination](#hallucination) · [LLM-as-Judge](#llm-as-judge) · [RAG (Retrieval-Augmented Generation)](#rag)
+
+---
+
+## Reopen-Gated Auto-Resolution Rate
+
+An **outcome-based customer support metric that measures the percentage of customer tickets resolved by an automated AI system without requiring human escalation or customer reopening within a defined time window (e.g., 7 days)**. Unlike naive resolution rates (which count any closed bot session), reopen-gated resolution exposes "silent failures" where customers were deflected or frustrated rather than helped.
+
+$$\text{Reopen-Gated Auto-Resolution Rate} = \frac{\text{Tickets Resolved by Bot with No Reopen in } N \text{ Days}}{\text{Total Ingested Inquiries}} \times 100\%$$
+
+### Key Characteristics
+- **Lagged metric**: Requires an evaluation delay equal to the observation window (typically 7 to 14 days) to achieve finalized accuracy.
+- **Anti-gaming defense**: Prevents support teams from artificially inflating deflection rates by prematurely closing unresolved tickets.
+- **Customer satisfaction correlation**: Strongly aligns with true Net Promoter Score (NPS) and Customer Effort Score (CES).
+
+### When to Use
+- Measuring ROI and operational impact of customer-facing AI resolvers and chatbots.
+- Tuning confidence escalation thresholds — balancing raw deflection against repeat contact rates.
+
+### When NOT to Use
+- Immediate, real-time alerting dashboards (use leading indicators like escalation rate and CSAT thumbs-down instead).
+
+### Also see
+- [Copilot Acceptance Rate](#copilot-acceptance-rate) · [Grounding Rate](#grounding-rate)
+
+---
+
+## Model Routing by Complexity
+
+An **architectural pattern that dynamically routes incoming inference requests to different model tiers (small/fast SLMs vs large frontier reasoning models) or cache layers based on semantic query complexity, task type, and cost constraints**.
+
+```
+User Request ──▶ Complexity Classifier / Semantic Router
+                      │
+        ┌─────────────┼─────────────┐
+        ▼             ▼             ▼
+  [Exact/Semantic   [Small SLM /    [Frontier LLM /
+     Cache]           Fast Tier]      Reasoning Tier]
+ (Cost: $0.00)     (Cost: $0.001)    (Cost: $0.030)
+ (Latency: 5ms)    (Latency: 200ms)  (Latency: 2.5s)
+```
+
+### Key Characteristics
+- **Cost optimization**: Drastically reduces blended token cost (e.g., 60–80% savings) by avoiding expensive frontier models for routine FAQ queries.
+- **Latency tiering**: Delivers sub-second response times for common questions while allocating latency budgets only to complex multi-step reasoning.
+- **Fallback cascading**: If a smaller model outputs low confidence or fails guardrail checks, the request cascades up to the next tier.
+
+### When to Use
+- High-throughput production AI applications with bimodal query distributions (many simple queries + occasional complex investigations).
+- Multi-tenant enterprise platforms where service-level tiers determine model allocation.
+
+### When NOT to Use
+- Single-purpose tasks where all queries have uniform complexity.
+- Scenarios where classifier overhead exceeds the execution time/cost savings of smaller models.
+
+### Also see
+- [Multi-Model Tier Architecture](#multi-model-tier-architecture) · [Semantic Cache](caching.md#semantic-cache) · [Graceful Spend Degradation (LLM)](#graceful-spend-degradation-llm)
+
+---
+
+## Graceful Spend Degradation (LLM)
+
+A **cost-governance and resilience pattern where an AI platform dynamically degrades generative features to lower-cost or zero-token fallback modes when pre-allocated monthly or hourly spending budgets approach hard limits**.
+
+| Spend Status | Operational Mode | System Behavior | Token Cost |
+|:---|:---|:---|:---|
+| **Normal (<80% Budget)** | Full Generative AI | Interactive RAG generation with personalized synthesis | Standard |
+| **Warning (80–95% Budget)** | Throttled / Tiered | Strict semantic caching + smaller SLM model routing | -60% |
+| **Critical (>95% Budget)** | Link-Only Fallback | Returns top-3 direct KB search links (no LLM generation) | Zero ($0) |
+
+### Key Characteristics
+- **Zero-downtime cost ceiling**: Enforces strict financial boundaries without taking the underlying platform offline.
+- **MVP survivability**: Leverages non-AI baseline architecture (search engines, deterministic routing) as the durable fallback tier.
+- **Per-feature isolation**: Allows non-critical background features (e.g., batch article generation) to pause while preserving interactive customer-facing paths.
+
+### When to Use
+- SaaS applications offering AI capabilities with fixed subscription pricing or tight margin requirements.
+- Mitigating financial denial-of-wallet (DoW) attacks or viral traffic spikes.
+
+### When NOT to Use
+- Mission-critical systems where continuous high-accuracy generative reasoning is legally or contractually mandatory regardless of cost.
+
+### Also see
+- [Model Routing by Complexity](#model-routing-by-complexity) · [Cost Per Accepted Change](#cost-per-accepted-change) · [Circuit Breaker](resilience.md#circuit-breaker)
+
+---
+
+## Copilot Acceptance Rate
+
+A **productivity and telemetry metric measuring the proportion of AI-generated suggestions (code completions, support reply drafts, summaries) that human operators accept as-is, edit before sending, or discard entirely**.
+
+$$\text{Acceptance Rate} = \frac{\text{Accepted (As-Is)} + (\alpha \times \text{Edited})}{\text{Total Generated Suggestions}} \times 100\%$$
+
+| Category | Definition | Implication |
+|:---|:---|:---|
+| **Accepted As-Is** | Used without any manual modification | High relevance and tone alignment |
+| **Accepted with Edits** | Modified by human before submission | Useful foundation; slight style/detail drift |
+| **Discarded** | Completely rejected or overwritten | Irrelevant, incorrect, or hallucinated suggestion |
+
+### Key Characteristics
+- **Human-in-the-loop efficiency signal**: Indicates whether an AI copilot is saving operator time or creating cognitive review overhead.
+- **Prompt fine-tuning feedback**: Discarded and heavily edited suggestions highlight specific categories where context retrieval or system prompts require refinement.
+
+### When to Use
+- Evaluating developer AI coding tools (Copilot, Cursor) and customer support agent assistance workbenches.
+- A/B testing prompt modifications, grounding context strategies, and new foundation models.
+
+### When NOT to Use
+- Autonomous agent loops operating without direct human interaction.
+
+### Also see
+- [Human Ownership](#human-ownership) · [Review Gate](#review-gate) · [Reopen-Gated Auto-Resolution Rate](#reopen-gated-auto-resolution-rate)
+
 
