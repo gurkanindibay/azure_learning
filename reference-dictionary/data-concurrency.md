@@ -58,6 +58,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Two Generals Problem | [`#two-generals-problem`](#two-generals-problem) |
 | Operational Transformation (OT) | [`#operational-transformation-ot`](#operational-transformation-ot) |
 | Chandy-Lamport Algorithm | [`#chandy-lamport-algorithm`](#chandy-lamport-algorithm) |
+| FOR UPDATE SKIP LOCKED | [`#for-update-skip-locked`](#for-update-skip-locked) |
 
 ---
 
@@ -1090,3 +1091,42 @@ A foundational distributed systems algorithm designed by Leslie Lamport and K. M
 
 ### Also see
 - [Lamport Clocks](#lamport-clocks) · [Vector Clocks](#vector-clocks) · [Two-Phase Commit (2PC)](#two-phase-commit-2pc) · [Apache Flink](messaging.md#apache-flink) · [Watermarking](messaging.md#watermarking) · [Exactly-Once Semantics](messaging.md#exactly-once-semantics)
+
+---
+
+## FOR UPDATE SKIP LOCKED
+
+A SQL row-level locking extension (supported in PostgreSQL 9.5+, MySQL 8.0+, Oracle, and MS SQL Server via `WITH (READPAST, UPDLOCK)`) that instructs the database engine to acquire exclusive locks only on matching unlocked rows while **silently skipping** any rows currently locked by other concurrent transactions. It transforms a relational database table into a high-throughput, distributed, concurrency-safe work queue without lock contention or serialization bottlenecks.
+
+```sql
+UPDATE jobs
+   SET state = 'CLAIMED', lease_owner = :worker_id, lease_expires_at = now() + interval '60 seconds'
+ WHERE job_id IN (
+     SELECT job_id
+       FROM jobs
+      WHERE state = 'PENDING' AND run_at <= now()
+      ORDER BY run_at
+      LIMIT 50
+      FOR UPDATE SKIP LOCKED
+ )
+RETURNING *;
+```
+
+### Key Characteristics
+- **Non-Blocking Contention Resolution**: Unlike standard `FOR UPDATE` (which forces competing transactions to wait and serialize) or `NOWAIT` (which throws serialization errors on lock conflict), `SKIP LOCKED` skips locked rows seamlessly, returning immediately with available rows.
+- **Disjoint Batch Allocation**: Multiple competing worker processes can execute the exact same query concurrently and receive mutually exclusive, non-overlapping subsets of pending tasks.
+- **Zero External Coordination**: Eliminates the need for dedicated distributed lock managers (e.g., Redis Redlock, ZooKeeper) or separate message brokers when managing persistent work queues in relational databases.
+- **Index Dependency**: Must be backed by a selective index (e.g., a partial index `WHERE state = 'PENDING'`); full table scans with `SKIP LOCKED` can lock large index ranges and degrade performance.
+
+### When to Use
+- **Distributed Job & Task Queues**: Multiple worker processes polling a relational table for pending tasks (e.g., delayed job schedulers, email dispatchers, payment settlement batches).
+- **Work Stealing & Sharded Workers**: Sweeping expired leases or abandoned tasks concurrently without worker collision.
+- **Relational Work Queues under Moderate Throughput**: Systems handling thousands of tasks per second directly within PostgreSQL, MySQL, or SQL Server before reaching the scale threshold that justifies dedicated brokers (Kafka/RabbitMQ).
+
+### When NOT to Use
+- **High-Throughput Event Streaming**: Workloads requiring tens of thousands to millions of events per second (use Kafka, Event Hubs, or Pulsar).
+- **Strict FIFO Processing across Workers**: When strict global chronological ordering must be maintained and skipping a locked row would violate domain invariants (use single-partition queues or keyed partition brokers).
+- **Data Warehousing & OLAP**: Analytical batch queries where reading a complete, consistent snapshot of all matching data is required.
+
+### Also see
+- [Task Claiming](#task-claiming) · [Pessimistic Locking](#pessimistic-locking) · [Lease-Based Lock](#lease-based-lock) · [Delayed Job Scheduler](architecture-patterns.md#delayed-job-scheduler)

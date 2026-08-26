@@ -454,6 +454,9 @@ takeaway_keywords:
   metadata registry: flink
   vast: media
   ssai: media
+  delayed job scheduler: sdi
+  job scheduler: sdi
+  delayed job: sdi
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -556,6 +559,8 @@ dictionary_domains:
       - transient metadata registry
       - dag
       - directed acyclic graph
+      - delayed job scheduler
+      - time bucketing
   networking.md:
     title: "Networking"
     keywords:
@@ -618,6 +623,8 @@ dictionary_domains:
       - serializ
       - chandy-lamport
       - distributed snapshot
+      - skip locked
+      - for update skip locked
   dotnet-multithreading.md:
     title: ".NET Multithreading"
     keywords:
@@ -734,6 +741,7 @@ dictionary_domains:
       - pointer chasing
       - false sharing
       - memory stall
+      - cooperative cancellation
   messaging.md:
     title: "Messaging"
     keywords:

@@ -36,6 +36,7 @@ timestamp: 2026-07-04T00:00:00Z
 | Pointer Chasing | [`#pointer-chasing`](#pointer-chasing) |
 | False Sharing | [`#false-sharing`](#false-sharing) |
 | Memory Stall | [`#memory-stall`](#memory-stall) |
+| Cooperative Cancellation | [`#cooperative-cancellation`](#cooperative-cancellation) |
 
 ---
 
@@ -565,3 +566,40 @@ A state where a CPU core pauses instruction pipeline execution and sits idle for
 
 ### Also see
 - [CPU Cache Hierarchy](#cpu-cache-hierarchy) · [Pointer Chasing](#pointer-chasing) · [I/O-bound vs CPU-bound](#io-bound-vs-cpu-bound)
+
+---
+
+## Cooperative Cancellation
+
+A concurrency and distributed execution pattern where long-running asynchronous tasks, worker threads, or distributed jobs periodically inspect a shared cancellation signal (such as a `CancellationToken`, boolean flag, atomic variable, or database record) and **voluntarily terminate** their own execution in a safe, clean manner. It stands in contrast to preemptive or forceful thread/process termination (`Thread.stop()`, `SIGKILL`), which risks resource leaks, corrupted memory, and partial distributed side-effects.
+
+```java
+// Worker loop checking cooperative cancellation token
+while (hasMoreBatches() && !cancellationToken.isCancellationRequested()) {
+    processBatch();
+    saveCheckpoint();
+}
+if (cancellationToken.isCancellationRequested()) {
+    rollbackUncommittedWork();
+    updateStatus(Status.CANCELLED);
+}
+```
+
+### Key Characteristics
+- **Voluntary & Safe Termination**: The executing worker controls when and where execution stops, ensuring database connections are returned to pools, file handles are closed, and uncommitted transactions are rolled back.
+- **Checkpoint-Based Polling**: Workers poll the cancellation token at safe execution boundaries (between batch items, before external HTTP calls, or after checkpoint commits).
+- **Graceful State Cleanup**: Enables handlers to record explicit `CANCELLED` statuses in audit logs or emit compensatory events in Saga architectures.
+- **Language & Runtime Support**: Standardized across ecosystems (e.g., .NET `CancellationToken`, Go `context.Context` (`<-ctx.Done()`), Java `Thread.currentThread().isInterrupted()`).
+- **Distributed Heartbeat Integration**: In distributed schedulers, if a worker loses its lease ownership (e.g., heartbeat update affects 0 rows), it triggers its own internal cooperative cancellation token to stop processing immediately.
+
+### When to Use
+- **Long-Running Background Jobs**: Batch processing, video transcoding, report generation, or multi-step ETL pipelines that users may need to abort.
+- **Distributed Work Queues & Delayed Schedulers**: Aborting in-flight tasks when a user requests cancellation or when lease ownership expires.
+- **HTTP Request Pipelines**: Aborting downstream database queries or microservice calls when a client disconnects.
+
+### When NOT to Use
+- **Synchronous Non-Interruptible Native Calls**: External C/C++ libraries or synchronous I/O system calls that block indefinitely without exposing interruption hooks.
+- **Sub-Millisecond Micro-Tasks**: Trivial operations where the overhead of checking tokens exceeds the runtime of the task itself.
+
+### Also see
+- [CancellationToken](dotnet-multithreading.md#cancellationtoken) · [Delayed Job Scheduler](architecture-patterns.md#delayed-job-scheduler) · [Lease-Based Lock](data-concurrency.md#lease-based-lock) · [Thread Pool Sizing Formula](#thread-pool-sizing-formula)

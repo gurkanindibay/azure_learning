@@ -62,6 +62,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Transient Metadata Registry | [`#transient-metadata-registry`](#transient-metadata-registry) |
 | Route-to-Data Pattern | [`#route-to-data-pattern`](#route-to-data-pattern) |
 | Directed Acyclic Graph (DAG) | [`#directed-acyclic-graph-dag`](#directed-acyclic-graph-dag) |
+| Delayed Job Scheduler | [`#delayed-job-scheduler`](#delayed-job-scheduler) |
+| Time Bucketing | [`#time-bucketing`](#time-bucketing) |
 
 ---
 
@@ -1076,3 +1078,73 @@ A mathematical graph structure composed of directed edges (arrows) connecting ve
 
 ### Also see
 - [Transcoding DAG Model](media-processing.md#transcoding-dag-model) · [Apache Flink](messaging.md#apache-flink) · [Upstream/Downstream Relationship](#upstreamdownstream-relationship) · [Circular Dependency](#circular-dependency) · [Plan & Execute](ai-ml-llm.md#plan--execute)
+
+---
+
+## Delayed Job Scheduler
+
+A distributed system architecture designed to schedule, store, and execute asynchronous tasks at a specific future timestamp (`run_at`). Unlike real-time message brokers or periodic cron runners, a delayed job scheduler supports arbitrary execution offsets, high-precision timing, dynamic cancellation, durable persistence across process crashes, and concurrent worker claiming without duplicate executions.
+
+```mermaid
+flowchart LR
+    Producer[API / Producer] -->|Insert with run_at| DB[(Durable Database)]
+    DB -.->|Indexed by run_at| Index[Partial Index state='PENDING']
+    subgraph Scheduler Worker
+        Lookahead[Lookahead Scanner] -->|SKIP LOCKED Batch Poll| DB
+        Lookahead -->|Insert due jobs| MinHeap[In-Memory Min-Heap]
+        Timer[Timer Thread wait/notify] -->|Pop Due Job| MinHeap
+        Timer -->|Dispatch Task| WorkerPool[Execution Worker Pool]
+    end
+```
+
+### Key Characteristics
+- **Two-Tier Timing Architecture**: Separates durability from precision. A durable store (relational DB or partitioned log) acts as the source of truth, while an in-memory priority queue (Min-Heap / `PriorityQueue`) micro-schedules upcoming jobs with millisecond precision inside a lookahead window.
+- **Interruptible Timer Loop**: Employs condition waiting (`lock.wait(delay)` / `lock.notify()`) rather than static sleeps, allowing the timer to dynamically adjust whenever a sooner-expiring task is inserted.
+- **Distributed Concurrency Primitives**: Uses database-level row locking with `FOR UPDATE SKIP LOCKED` or lease-based heartbeats to allow competing workers to claim disjoint batches of tasks without serializing behind locks.
+- **At-Least-Once Delivery Contract**: Employs idempotent handlers and stable job IDs to handle edge-case worker crashes between task completion and database status updates.
+- **Cooperative Cancellation**: Unclaimed tasks are cancelled atomically in the database; running tasks are cancelled cooperatively via polled checkpoint flags.
+
+### When to Use
+- **Time-Delayed Business Logic**: Order cancellation timeouts (e.g., auto-cancel unpaid orders after 15 minutes), trial expiration notifications, multi-step marketing drip campaigns, scheduled publish dates.
+- **Adaptive Retry & Backoff**: Rescheduling failed jobs with exponential backoff and jitter without maintaining dedicated retry queues.
+- **Rate-Limited Dispatch**: Spreading bursty batched operations across a wide execution window.
+
+### When NOT to Use
+- **Immediate Real-Time Event Streaming**: Low-latency event processing where delays are unintended (use Kafka, RabbitMQ, or Event Hubs).
+- **Static Coarse Cron Jobs**: Fixed periodic schedules (e.g., nightly backups) where Kubernetes CronJobs or Azure Functions Timer Triggers are sufficient.
+
+### Also see
+- [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Task Claiming](data-concurrency.md#task-claiming) · [Time Bucketing](#time-bucketing) · [Cooperative Cancellation](concurrency-runtimes.md#cooperative-cancellation) · [Idempotency](resilience.md#idempotency)
+
+---
+
+## Time Bucketing
+
+A data partitioning and query optimization pattern that groups continuous temporal records (such as job execution timestamps or log entries) into discrete, fixed-duration temporal buckets (e.g., 1-minute, 5-minute, or 1-hour intervals). By assigning records a derived `bucket` identifier (e.g., `date_trunc('minute', run_at)`), queries restrict table scans and lock contention to specific active time slices.
+
+```sql
+-- Query only the active minute bucket rather than the entire table
+SELECT job_id, run_at 
+  FROM jobs 
+ WHERE bucket = date_trunc('minute', now()) 
+   AND state = 'PENDING'
+   FOR UPDATE SKIP LOCKED;
+```
+
+### Key Characteristics
+- **Working Set Bounding**: Reduces query execution scope from tens of millions of historical rows to a localized active time bucket, keeping indexes compact and resident in memory.
+- **Bulk Lifecycle Management**: Entire expired time buckets (partitions) can be dropped (`DROP TABLE` / truncate) in constant time rather than performing expensive row-by-row `DELETE` operations.
+- **Stampede & Contention Mitigation**: Prevents full-table lock contention when thousands of tasks cluster on round time boundaries (e.g., midnight cron stamps) by enabling bucket-sharded worker polling.
+- **Temporal Alignment with Sharding**: Enables natural horizontal sharding keys where data is co-located by tenant and time bucket.
+
+### When to Use
+- **High-Scale Job Schedulers**: Partitioning pending task queues to prevent full-table index scans under high worker concurrency.
+- **Time-Series Data & Metric Storage**: Organizing observability logs, IoT telemetry, and financial market ticks into rolling time partitions.
+- **Rate-Limiting & Window Aggregations**: Implementing fixed or sliding window counters across distributed nodes.
+
+### When NOT to Use
+- **Random Non-Temporal Lookups**: Workloads where queries access records by arbitrary non-time keys (e.g., user profile lookups by UUID).
+- **Low-Volume Data**: Systems where total row counts are small enough that a standard B-tree index provides sub-millisecond lookups without partition overhead.
+
+### Also see
+- [Delayed Job Scheduler](#delayed-job-scheduler) · [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Sharding](data-concurrency.md#sharding)
