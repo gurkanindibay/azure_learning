@@ -1,287 +1,256 @@
 ---
 type: System Design Case
 title: "Design Google Drive"
-description: "* [Table of Contents](/study-notes/notes/)"
-tags: [system-design]
+description: "Design a cloud file storage and synchronization platform (like Google Drive or Dropbox) featuring block-level chunking, delta sync, content-addressable deduplication, conflict resolution, and WebSocket notification sync."
+tags: [system-design, distributed-systems, google-drive, dropbox, delta-sync, block-storage, deduplication, s3]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Design Google Drive
 
-> **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam (Study Notes)
-> **ByteByteGo Chapter**: 16
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 16  
+> **Topic**: Cloud Storage, Block-Level Delta Synchronization, Content-Addressable Deduplication, File Revision Trees
 
+---
 
-[![My Site Logo](images/tsg-16-a716f384.svg)![My Site Logo](images/tsg-16-a716f384.svg)
+## 1. Understand the Problem and Establish Design Scope
 
-**Toronto Study Group Notes**](/study-notes/)[Notes](/study-notes/notes/)
+Google Drive and Dropbox allow users to store files securely in the cloud, synchronize modifications across multiple devices (desktop, mobile, web), track version history, and collaborate via shared folders.
 
-* [Table of Contents](/study-notes/notes/)
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
+```mermaid
+flowchart LR
+    subgraph ClientDevices["User Devices"]
+        D1["Desktop Client (Mac/PC)"]
+        D2["Mobile Phone (iOS/Android)"]
+    end
 
-  + [Chapter 1: Scale From Zero to Millions of Users](/study-notes/notes/system-design-interview/ch1)
-  + [Chapter 2: BACK-OF-THE-ENVELOPE ESTIMATION](/study-notes/notes/system-design-interview/ch2)
-  + [Chapter 3: A FRAMEWORK FOR SYSTEM DESIGN INTERVIEWS](/study-notes/notes/system-design-interview/ch3)
-  + [Chapter 4: Design a Rate Limiter](/study-notes/notes/system-design-interview/ch4)
-  + [Chapter 5: Design Consistent Hashing](/study-notes/notes/system-design-interview/ch5)
-  + [Chapter 6: Design a Key-Value Store](/study-notes/notes/system-design-interview/ch6)
-  + [Chapter 7: Design a Unique ID Generator in Distributed Systems](/study-notes/notes/system-design-interview/ch7)
-  + [Chapter 8: Design A URL Shortener](/study-notes/notes/system-design-interview/ch8)
-  + [Chapter 9: Design a Web Crawler](/study-notes/notes/system-design-interview/ch9)
-  + [Chapter 10: Design a Notification System](/study-notes/notes/system-design-interview/ch10)
-  + [Chapter 11: Design a News Feed System](/study-notes/notes/system-design-interview/ch11)
-  + [Chapter 12: Design a Chat System](/study-notes/notes/system-design-interview/ch12)
-  + [Chapter 13: Designing a Search Autocomplete System](/study-notes/notes/system-design-interview/ch13)
-  + [Chapter 14: Design YouTube](/study-notes/notes/system-design-interview/ch14)
-  + [Chapter 15: DESIGN GOOGLE DRIVE](/study-notes/notes/system-design-interview/ch15)
-* [Kubernetes - Up and Running](/study-notes/notes/kubernetes-up-and-running)
+    subgraph DrivePlatform["Cloud Synchronization Engine"]
+        BLOCK_SVC["Block Server<br/>(Delta Chunking & Compression)"]
+        META_SVC["Metadata Server<br/>(File Tree & Versions)"]
+        S3_STORAGE[("Cloud Object Storage (S3)<br/>(Encrypted 4MB Chunks)")]
+    end
 
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
-* Chapter 15: DESIGN GOOGLE DRIVE
+    D1 -->|1. Edit File & Upload Modified Chunks| BLOCK_SVC
+    BLOCK_SVC --> S3_STORAGE
+    BLOCK_SVC --> META_SVC
+    META_SVC -.->|2. Push Change Notification| D2
+    D2 -->|3. Download Only Delta Chunks| S3_STORAGE
+```
 
+---
 
-# Chapter 15: DESIGN GOOGLE DRIVE
+### Interview Clarification & Scope
 
-## Understand Google Drive[​](#understand-google-drive "Direct link to Understand Google Drive")
+> **Candidate:** What are the primary user features?  
+> **Interviewer:** **File upload/download**, **cross-device synchronization**, **revision history**, and **change notifications**. Real-time collaborative doc editing (like Google Docs) is out of scope.
+>
+> **Candidate:** What is the scale and file size limit?  
+> **Interviewer:** **10 Million Daily Active Users (DAU)**. Files up to **10 GB** are supported.
+>
+> **Candidate:** What are the security and bandwidth requirements?  
+> **Interviewer:** Files must be encrypted at rest and in transit. Minimize bandwidth consumption using **delta sync and data compression**.
 
-* Google Drive is a file storage and synchronization service that helps you store documents, photos, videos, and other files in the cloud.
-  ![Google drive](images/tsg-16-f0aace39.png)
-  ![Google drive mobile](images/tsg-16-0ea3ca01.png)
+---
 
-## Step 1 - Understand the problem and establish design scope[​](#step-1---understand-the-problem-and-establish-design-scope "Direct link to Step 1 - Understand the problem and establish design scope")
+### Back-of-the-Envelope Estimation
 
-* requirements
-  + features: Upload and download files, file sync, and notifications
-  + mobile and web app
-  + supported file formats: any file type
-  + files are encrypted
-  + size limit: `10 GB` or smaller
-  + 10M DAU (Daily Active Users)
-* Focused features:
-  + Add files -> drag and drop
-  + Download files
-  + Sync files across multiple devices
-  + See file revisions
-  + Share files
-  + Send a notification(edited, deleted, or shared)
-* Not included
-  + Google doc editing and collaboration
+| Metric / Dimension | Calculation | Estimated Value |
+|:---|:---|:---|
+| **Registered Users / DAU** | $50\text{M registered} / 10\text{M active}$ | $10{,}000{,}000\text{ DAU}$ |
+| **Free Storage Allocation** | $50\text{M users} \times 10\text{ GB free}$ | $\mathbf{500\text{ PB total allocated}}$ |
+| **Daily File Uploads** | $10\text{M users} \times 2\text{ uploads/day}$ | $20{,}000{,}000\text{ uploads/day}$ |
+| **Average Upload QPS** | $\frac{20{,}000{,}000}{86{,}400\text{ sec}}$ | $\approx \mathbf{240\text{ QPS}}$ |
+| **Peak Upload QPS** | $2 \times \text{Average QPS}$ | $\approx \mathbf{480\text{ QPS}}$ |
 
-## Back of the envelope estimation[​](#back-of-the-envelope-estimation "Direct link to Back of the envelope estimation")
+---
 
-* assume -> `50` million signed up users and `10` million DA
-* Users get `10` GB free space
-* Assume users upload `2` files per day. The average file size is `500 KB`
-* `1:1` read to write ratio
-* Total space allocated: `50 million * 10 GB = 500 Petabyte`
-* QPS (Queries Per Second) for upload API: `10 million * 2 uploads / 24 hours / 3600 seconds = ~ 240`
-* Peak QPS = QPS \* 2 = `480`
+## 2. Core Storage Architecture: Block-Level Delta Synchronization
 
-## Step 2 - Propose high-level design and get buy-in[​](#step-2---propose-high-level-design-and-get-buy-in "Direct link to Step 2 - Propose high-level design and get buy-in")
+Uploading entire $10\text{ GB}$ files upon minor text edits wastes massive client bandwidth and saturates network pipes. The system uses **Block-Level Chunking & Delta Sync**:
 
-* a single server -> scale it up to support millions of users
-* a single server setup
-  + web server (Apache web server) -> upload and download files
-  + A database (MySql database) -> metadata (user data, login info, files info)
-  + A storage system to store files -> 1TB
-    ![directory](images/tsg-16-a7669a14.png)
+```mermaid
+flowchart TD
+    FILE["Original File: Document.pdf (12 MB)"] --> CHUNK["Chunker (Split into 4 MB Blocks)"]
+    
+    subgraph Blocks["4 MB Content-Addressable Blocks"]
+        B1["Block 1 (Hash: 0x8a3f...)"]
+        B2["Block 2 (Hash: 0x9b1c...)"]
+        B3["Block 3 (Hash: 0x4f2a...)"]
+    end
+    
+    CHUNK --> B1 & B2 & B3
 
-## APIs[​](#apis "Direct link to APIs")
+    subgraph EditScenario["User Modifies Only Page 2"]
+        EDIT_FILE["Modified File: Document.pdf"] --> EDIT_CHUNK["Re-Chunk"]
+        EDIT_CHUNK --> EB1["Block 1 (Hash: 0x8a3f -> Unchanged)"]
+        EDIT_CHUNK --> EB2["Block 2 (Hash: 0x7c8e -> <b>MODIFIED!</b>)"]
+        EDIT_CHUNK --> EB3["Block 3 (Hash: 0x4f2a -> Unchanged)"]
+    end
 
-* 3 APis: upload a file, download a file, and get
-  file revisions
-* user authentication and use HTTPS
-* **1. Upload a file to Google Drive**
-  + Two types of uploads are supported:
-    - Simple upload -> file size is small
-    - Resumable upload -> file size is large and there is high chance of network interruption
-  + example: `https://api.example.com/files/upload?uploadType=resumable`
-  + params:
-    - uploadType=resumable
-    - data: Local file to be uploaded
-  + 3 steps of resumable uploading
-    - Send the initial request to retrieve the resumable URL.
-    - Upload the data and monitor upload state.
-    - If upload is disturbed, resume the upload.
-* **2. Download a file from Google Drive**
-  + example: `https://api.example.com/files/download`
-  + params:
-    - path: download file path.
-    - example:
+    EB2 -->|Upload ONLY Modified Block 2 (4 MB)| S3[("Object Storage")]
+```
 
-      ```
-      ```
-      {
-        "path": "/recipes/soup/best_soup.txt"
-      }
-      ```
-      ```
-* **3. Get file revisions**
-  + example:  `https://api.example.com/files/list_revisions`
-  + params:
-    - path: The path to the file you want to get the revision history.
-    - limit: The maximum number of revisions to return.
-    - example:
+### Key Technical Optimizations
+1. **Delta Sync**: Only modified blocks are uploaded and synced across devices, reducing network transfer by $>90\%$.
+2. **Deduplication**: Chunks are content-addressed by SHA-256 hash. If another user uploaded the same block, storage is de-duplicated instantly.
+3. **Compression & Encryption**: Blocks are compressed using GZIP/Snappy and encrypted with AES-256 before leaving the client.
 
-      ```
-      ```
-      {
-        "path": "/recipes/soup/best_soup.txt",
-        "limit": 20
-      }
-      ```
-      ```
+---
 
-## Move away from single server[​](#move-away-from-single-server "Direct link to Move away from single server")
+## 3. High-Level Architecture
 
-* Not enough space
-  ![limited space](images/tsg-16-9959e719.png)
-* sharding based on user\_id -> potential data losses in case of storage server outage
-  ![sharding](images/tsg-16-8d093587.png)
-* Amazon S3 supports same-region and cross-region replication
-  ![S3](images/tsg-16-bbe99994.png)
-* decoupled web servers, metadata database, and file storage from a single server
-  ![improvement](images/tsg-16-4a27edab.png)
+```mermaid
+flowchart TD
+    subgraph ClientApp["Desktop / Mobile Client Engine"]
+        CHUNKER["Chunker & Hasher"]
+        LOCAL_DB[("Local SQLite DB<br/>(Local File States)")]
+    end
 
-## Sync conflicts[​](#sync-conflicts "Direct link to Sync conflicts")
+    subgraph EdgeGateways["API & Notification Gateways"]
+        LB["Load Balancer"]
+        API["Metadata API Servers<br/>(File Tree, Shares, Versions)"]
+        NOTIF["Notification Gateway<br/>(WebSockets / Long Polling)"]
+    end
 
-* **our strategy: the first version that gets processed wins, and the version that gets processed later receives a conflict**
-  ![improvement](images/tsg-16-1ef8e54d.png)
-* User 2 has the option to merge both files or override one version with the other.
-  ![improvement](images/tsg-16-9462b443.png)
+    subgraph BackendTier["Compute & Processing Fleet"]
+        BLOCK_SVC["Block Server Fleet"]
+        S3_STORAGE[("Cloud Object Storage (S3)<br/>(Raw Encrypted Blocks)")]
+        META_DB[("Metadata DB<br/>(PostgreSQL / MySQL)")]
+        REDIS[("Metadata Cache (Redis)")]
+    end
 
-## High-level design[​](#high-level-design "Direct link to High-level design")
+    ClientApp -->|1. Upload Modified Blocks| BLOCK_SVC --> S3_STORAGE
+    ClientApp -->|2. Commit File Version| API
+    API <--> META_DB & REDIS
+    API -->|3. Publish File Updated Event| NOTIF
+    NOTIF -.->|4. Push Sync Event to other Devices| ClientApp
+```
 
-![improvement](images/tsg-16-86b051fb.png)
+---
 
-* **Block servers**
-  + upload blocks to cloud storage
-  + block-level storage
-  + A file can be split into several blocks -> each with a unique hash value -> stored in our metadata database
-  + independent object -> stored in S3
-  + reconstruct a file -> are joined in a particular order
-  + the block size (e.g. Dropbox): maximal size of a block to `4MB`
-* **Cloud storage**
-  + A file is split into smaller blocks and stored in cloud storage.
-* **Cold storage**
-  + storing inactive data (files are not accessed for a long time)
-* **Load balancer**
-  + evenly distributes requests
-* **API servers**
-  + other than the uploading flow
-  + user authentication, managing user profile, updating file metadata, etc.
-* **Metadata database**
-  + metadata of users, files, blocks, versions, etc
-* **Metadata cache**
-  + Some of the metadata are cached for fast retrieval.
-* **Notification service**
-  + publisher/subscriber system
-  + notifies relevant clients when a file is added/edited/removed elsewhere so they can pull the latest changes
-* **Offline backup queue**
-  + a client is offline -> the offline backup queue stores the info -> changes will be synced when the client is online
+## 4. Metadata Schema & Conflict Resolution
 
-## Step 3 - Design deep dive[​](#step-3---design-deep-dive "Direct link to Step 3 - Design deep dive")
+### Relational Storage Schema (MySQL / Spanner)
 
-* **Block servers**
-  + large files -> minimize the amount of network traffic being transmitted
-    - **Delta sync**. When a file is modified, only modified blocks are synced instead of the whole file using a sync algorithm
-    - **Compression** -> using compression algorithms depending on file types
-      * e.g. gzip and bzip2 are used to compress text files
-  + block server
-    ![block server](images/tsg-16-dbdc65dd.png)
-  + Instead of uploading the whole file to the storage system, only modified blocks are transferred -> save network traffic by providing delta sync and compression
-    ![block server](images/tsg-16-45f338b0.png)
-* **High consistency requirement**
-  + Memory caches adopt an eventual consistency model by default -> different replicas might have different data.
-  + To achieve strong consistency, ensure:
-    - Data in cache replicas and the master is consistent
-    - Invalidate caches on database write to ensure cache and database hold the same value.
-  + a relational database -> strong consistency -> because ACID (Atomicity, Consistency, Isolation, Durability) => we choose it in our design
-  + NoSQL databases -> not support ACID -> must be programmatically incorporated in synchronization logic
-* **Metadata database**
-  ![metadata database](images/tsg-16-d232c217.png)
-* **Upload flow**
-  ![upload flow](images/tsg-16-e1293b00.png)
-* **Download flow**
-  + Download flow is triggered when a file is added or edited elsewhere.
-    ![download flow](images/tsg-16-2695b9dc.png)
-* **Notification service**
-  + notification service allows data to be transferred to clients as events happen.
-    - **Long polling**. Dropbox uses long polling
-    - **WebSocket** -> a persistent connection between the client and the server -> bi-directional
-  + we opt for long polling for the following two reasons:
-    - Communication for notification service is not bi-directional
-    - WebSocket is suited for real-time bi-directional communication such as a chat app
-  + **long polling**
-    - each client establishes a long poll connection to the notification service
-    - If changes to a file are detected -> he client will close the long poll connection
-    - a client must connect to the metadata server to download the latest changes
-    - a response is received or connection timeout is reached -> a new request to keep the connection open
-* **Save storage space**
-  + De-duplicate data blocks
-    - Eliminating redundant blocks at the account level
-    - Two blocks are identical if they have the same hash value
-  + Adopt an intelligent data backup strategy
-    - Set a limit: a limit for the number of versions to store
-    - Keep valuable versions only:
-      * limit the number of saved versions
-      * give more weight to recent versions
-      * Moving infrequently used data to cold storage -> Amazon S3 glacier -> cheaper
-* **Failure Handling**
-  + Load balancer failure
-    - If a load balancer fails, the secondary would become active and pick up the traffic
-    - monitor each other using a heartbeat
-    - if it has not sent a heartbeat for some time -> failed
-  + Block server failure
-    - If a block server fails, other servers pick up unfinished or pending jobs
-  + Cloud storage failure
-    - S3 buckets are replicated multiple times in different regions
-    - not available in one region -> can be fetched from different regions
-  + API server failure
-    - a stateless service
-    - if fails -> the traffic is redirected to other API servers by a load balancer
-  + Metadata cache failure
-    - are replicated multiple times
-    - if fails -> access other nodes to fetch data
-    - bring up a new cache server to replace the failed one
-  + Metadata DB failure
-    - Master down
-      * promote one of the slaves to act as a new master and bring up a new slave node
-    - Slave down
-      * use another slave for read operations
-      * bring another database server to replace the failed one
-  + Notification service failure
-    - Even though one server can keep many open connections, it cannot reconnect all the lost connections at once.
-    - Reconnecting with all the lost clients is a relatively slow process
-  + Offline backup queue failure
-    - Queues are replicated multiple times.
-    - If one queue fails, consumers of the queue may need to re-subscribe to the backup queue.
+```mermaid
+erDiagram
+    USER ||--o{ FILE_METADATA : owns
+    FILE_METADATA ||--o{ FILE_VERSION : tracks
+    FILE_VERSION ||--o{ FILE_BLOCK : consists_of
 
-## Wrap up[​](#wrap-up "Direct link to Wrap up")
+    USER {
+        bigint user_id PK
+        varchar username
+        varchar email
+    }
 
-* In our design, a file is
-  transferred to block servers first, and then to the cloud storage
-  + drawbacks
-    - the same chunking, compression, and encryption logic must be implemented on different platforms (iOS, Android, Web)-> It is error-prone and requires a lot of engineering effort
-    - as a client can easily be hacked or manipulated, implementing encrypting logic on the client side is not ideal
-* presence service (online/offline)
-  + by moving presence service out of notification servers -> online/offline functionality can easily be integrated by other services
+    FILE_METADATA {
+        bigint file_id PK
+        bigint owner_id FK
+        varchar file_name
+        varchar file_path
+        boolean is_directory
+    }
 
+    FILE_VERSION {
+        bigint version_id PK
+        bigint file_id FK
+        int version_number
+        bigint total_size
+        timestamp created_at
+    }
 
-[Previous
+    FILE_BLOCK {
+        bigint block_id PK
+        bigint version_id FK
+        int block_order
+        varchar block_hash
+        varchar s3_object_key
+    }
+```
 
-Chapter 14: Design YouTube](/study-notes/notes/system-design-interview/ch14)[Next
+---
 
-Kubernetes - Up and Running](/study-notes/notes/kubernetes-up-and-running)
+### Conflict Resolution Strategy (First-Write-Wins + Branching)
 
-* [Understand Google Drive](#understand-google-drive)
-* [Step 1 - Understand the problem and establish design scope](#step-1---understand-the-problem-and-establish-design-scope)
-* [Back of the envelope estimation](#back-of-the-envelope-estimation)
-* [Step 2 - Propose high-level design and get buy-in](#step-2---propose-high-level-design-and-get-buy-in)
-* [APIs](#apis)
-* [Move away from single server](#move-away-from-single-server)
-* [Sync conflicts](#sync-conflicts)
-* [High-level design](#high-level-design)
-* [Step 3 - Design deep dive](#step-3---design-deep-dive)
-* [Wrap up](#wrap-up)
+When two devices edit the same file offline and sync simultaneously:
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor D1 as Device 1 (Alice)
+    participant Server as Metadata Server
+    actor D2 as Device 2 (Bob)
+
+    Note over D1,D2: Both have local copy: Document.txt (v1)
+    D1->>Server: 1. Uploads edit -> Commits Document.txt (v2)
+    Server-->>D1: Success (Version 2 Created)
+    
+    D2->>Server: 2. Attempts upload edit based on stale v1
+    Server-->>D2: ❌ Conflict Detected! (Server is already on v2)
+    
+    D2->>D2: 3. Branching: Renames local file to "Document (Bob's Conflicted Copy).txt"
+    D2->>Server: 4. Uploads conflicted copy as new separate file
+```
+
+---
+
+## 5. End-to-End File Upload Sequence Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Drive Client App
+    participant BlockSvc as Block Server
+    participant S3 as S3 Object Storage
+    participant MetaSvc as Metadata Server
+    participant Notif as Notification Server
+    actor Device2 as Synced Device 2
+
+    Client->>Client: 1. Split modified file into 4MB chunks & compute SHA-256
+    Client->>BlockSvc: 2. Check block existence (deduplication check)
+    BlockSvc-->>Client: Returns list of missing blocks to upload
+    Client->>S3: 3. Upload missing encrypted blocks
+    Client->>MetaSvc: 4. Commit metadata (file_id, new version_id, block list)
+    MetaSvc->>MetaSvc: 5. Save to Metadata DB & update Redis
+    MetaSvc->>Notif: 6. Trigger "FileChangedEvent (file_id)"
+    Notif->>Device2: 7. Push change notification via WebSocket
+    Device2->>MetaSvc: 8. Get latest block list
+    Device2->>S3: 9. Download ONLY missing 4MB blocks
+```
+
+---
+
+## 6. Architectural Summary
+
+```mermaid
+mindmap
+  root((Google Drive))
+    Core Architecture
+      Block-Level Delta Synchronization (4MB)
+      Content-Addressable Deduplication (SHA-256)
+      Cold Storage on S3 / Hot Metadata in DB
+    Sync Engine
+      Local SQLite DB on client devices
+      WebSocket Notification Server for change broadcasts
+      First-Write-Wins + Conflicted Copy Branching
+    Security & Scale
+      Client-side AES-256 block encryption
+      Multi-AZ S3 durability
+```
+
+| Component | Design Decision | System Benefit |
+|:---|:---|:---|
+| **Chunking** | 4 MB Fixed Block Chunks | Optimizes network throughput, delta retransmissions, and compression efficiency. |
+| **Deduplication** | Content-Addressable SHA-256 Hashing | Eliminates redundant storage of identical files across users. |
+| **Synchronization**| WebSocket Notification Engine | Instantly notifies other logged-in devices to pull delta blocks. |
+| **Conflict Strategy**| First-Write-Wins with Branching | Prevents silent data overwrites by automatically generating conflicted file copies. |
+
+---
+
+## References
+
+1. How We Scaled Dropbox: https://dropbox.tech/infrastructure/how-we-scaled-dropbox
+2. Content-Addressable Storage (CAS): https://en.wikipedia.org/wiki/Content-addressable_storage
+3. Rsync Algorithm for Remote Delta Synchronization: https://rsync.samba.org/tech_report/

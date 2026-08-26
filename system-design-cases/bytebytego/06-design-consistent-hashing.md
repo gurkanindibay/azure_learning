@@ -1,295 +1,174 @@
 ---
 type: System Design Case
 title: "Design Consistent Hashing"
-description: "To achieve horizontal scaling, it is important to distribute requests/data efficiently and evenly across servers. Consistent hashing is a commonly used technique to achieve this goal. But first, le..."
-tags: [system-design]
+description: "A comprehensive deep dive into consistent hashing: solving the modulo-N rehashing stampede, virtual nodes (V-nodes) for balanced distribution, mathematical data movement guarantees, and real-world implementations in DynamoDB and Cassandra."
+tags: [system-design, distributed-systems, consistent-hashing, hash-ring, virtual-nodes, dynamodb, cassandra, partitioning]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
-[![ByteByteGo logo](images/logo.svg)](/)
-
-## System Design Interview
-
-0/31 completed
-
-* **Foreword**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *01***Join the Community**
-* *02***Scale From Zero To Millions Of Users**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *03***Back-of-the-envelope Estimation**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *04***A Framework For System Design Interviews**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *05***Design A Rate Limiter**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *06***Design Consistent Hashing**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *07***Design A Key-value Store**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *08***Design A Unique ID Generator In Distributed Systems**
-* *09***Design A URL Shortener**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *10***Design A Web Crawler**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *11***Design A Notification System**
-* *12***Design A News Feed System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *13***Design A Chat System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *14***Design A Search Autocomplete System**
-* *15***Design YouTube**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *16***Design Google Drive**
-* *17***Proximity Service**
-* *18***Nearby Friends**
-* *19***Google Maps**
-* *20***Distributed Message Queue**
-* *21***Metrics Monitoring and Alerting System**
-* *22***Ad Click Event Aggregation**
-* *23***Hotel Reservation System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *24***Distributed Email Service**
-* *25***S3-like Object Storage**
-* *26***Real-time Gaming Leaderboard**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *27***Payment System**
-* *28***Digital Wallet**
-* *29***Stock Exchange**
-* *30***The Learning Continues**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-
-[![ByteByteGo logo](images/logo.svg)](/)
-
-**06**
-
 # Design Consistent Hashing
 
-To achieve horizontal scaling, it is important to distribute requests/data efficiently and evenly across servers. Consistent hashing is a commonly used technique to achieve this goal. But first, let us take an in-depth look at the problem.
-
-## The rehashing problem
-
-If you have *n* cache servers, a common way to balance the load is to use the following hash method:
-
-*serverIndex = hash(key) % N*, where *N* is the size of the server pool.
-
-Let us use an example to illustrate how it works. As shown in Table 1, we have 4 servers and 8 string keys with their hashes.
-
-| **key** | **hash** | **hash % 4** |
-| --- | --- | --- |
-| key0 | 18358617 | 1 |
-| key1 | 26143584 | 0 |
-| key2 | 18131146 | 2 |
-| key3 | 35863496 | 0 |
-| key4 | 34085809 | 1 |
-| key5 | 27581703 | 3 |
-| key6 | 38164978 | 2 |
-| key7 | 22530351 | 3 |
-
-Table 1
-
-To fetch the server where a key is stored, we perform the modular operation *f(key) % 4*. For instance, *hash(key0) % 4 = 1* means a client must contact server 1 to fetch the cached data. Figure 1 shows the distribution of keys based on Table 1.
-
-![Image represents a simple consistent hashing scheme for distributing keys across four servers.  The top line shows the formula `serverIndex = hash % 4`, indicating that a key's hash value (presumably a numerical representation generated from the key itself) is modulo-4'd to determine which server (indexed 0-3) it's assigned to. Below, four servers (`server 0`, `server 1`, `server 2`, `server 3`) are depicted as colored boxes, each associated with a server index (0, 1, 2, 3 respectively).  Underneath the servers, a list of keys (`key1`, `key0`, `key2`, `key5`, `key6`, `key7`) is shown, with some keys (e.g., `key1`, `key0`) visually associated with specific servers based on their implied hash value and the modulo operation.  The text 'keover does not luppo full SVG ikey6' appears to be a corrupted or incomplete label associated with `key6`, suggesting a potential issue with the image's OCR.  The overall diagram illustrates a basic load balancing strategy where keys are distributed across servers using a consistent hashing algorithm to ensure even distribution and minimize data movement during rebalancing.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-1-JYB5LSFH.svg)
-
-Figure 1
-
-This approach works well when the size of the server pool is fixed, and the data distribution is even. However, problems arise when new servers are added, or existing servers are removed. For example, if server 1 goes offline, the size of the server pool becomes 3. Using the same hash function, we get the same hash value for a key. But applying modular operation gives us different server indexes because the number of servers is reduced by 1. We get the results as shown in Table 2 by applying *hash % 3*:
-
-| **key** | **hash** | **hash % 3** |
-| --- | --- | --- |
-| key0 | 18358617 | 0 |
-| key1 | 26143584 | 0 |
-| key2 | 18131146 | 1 |
-| key3 | 35863496 | 2 |
-| key4 | 34085809 | 1 |
-| key5 | 27581703 | 0 |
-| key6 | 38164978 | 1 |
-| key7 | 22530351 | 0 |
-
-Table 2
-
-Figure 2 shows the new distribution of keys based on Table 2.
-
-![Image represents a simple consistent hashing scheme for distributing keys across three servers.  The top line shows the formula `serverIndex = hash % 3`, indicating that a key's hash value (modulo 3) determines its assigned server.  Below, 'Server Index' labels columns representing server indices 0, 1, and 2.  Corresponding to each index is a labeled server box ('server 0', 'server 1', 'server 2', and 'server 3' although only three are used in the hashing scheme).  The 'Keys' section lists example keys ('key0', 'key1', 'key2', 'key3', 'key4', 'key5', 'key6') which would be distributed across the servers based on their hash values.  For instance, `hash('key0') % 3` would likely result in 0, assigning `key0` to `server 0`, and similarly for other keys.  The visual arrangement shows a conceptual mapping of keys to servers using the modulo operation.  The presence of 'server 3' suggests potential future expansion beyond the current three-server setup.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-2-25DSOGUM.svg)
-
-Figure 2
-
-As shown in Figure 2, most keys are redistributed, not just the ones originally stored in the offline server (server 1). This means that when server 1 goes offline, most cache clients will connect to the wrong servers to fetch data. This causes a storm of cache misses. Consistent hashing is an effective technique to mitigate this problem.
-
-## Consistent hashing
-
-Quoted from Wikipedia: "Consistent hashing is a special kind of hashing such that when a hash table is re-sized and consistent hashing is used, only k/n keys need to be remapped on average, where k is the number of keys, and n is the number of slots. In contrast, in most traditional hash tables, a change in the number of array slots causes nearly all keys to be remapped [1]”.
-
-### Hash space and hash ring
-
-Now we understand the definition of consistent hashing, let us find out how it works. Assume SHA-1 is used as the hash function f, and the output range of the hash function is: *x0, x1, x2, x3, …, xn*. In cryptography, SHA-1’s hash space goes from 0 to 2^160 - 1. That means *x0* corresponds to 0, *xn* corresponds to 2^160 – 1, and all the other hash values in the middle fall between 0 and 2^160 - 1. Figure 3 shows the hash space.
-
-![Image represents a simplified diagram illustrating data processing or transformation.  A long, rectangular box, representing a system or process, is shown horizontally.  On the left, an arrow labeled 'x0' points downwards into the top of the box, indicating input data labeled 'x0' entering the system. On the right, an arrow labeled 'xn' points downwards into the top of the box from above, indicating output data labeled 'xn' exiting the system. The box itself contains the text 'Viewer does not support full SVG 1.1,' indicating that the original diagram was likely an SVG image that cannot be fully rendered by the current viewer.  The overall structure suggests a linear transformation where input 'x0' is processed within the system to produce output 'xn.'  No internal details of the processing within the box are visible.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-3-REYWWCBF.svg)
-
-Figure 3
-
-By collecting both ends, we get a hash ring as shown in Figure 4:
-
-![Image represents a simplified diagram illustrating a circular buffer or ring buffer data structure.  The circle depicts the buffer itself, a fixed-size memory region used for storing data.  A short vertical line segment inside the circle represents the current write pointer, indicating the location where the next data element will be written.  Two arrows point to the top of this vertical line, labeled 'x0' and 'xn'.  'x0' likely indicates the starting address or index of the buffer, while 'xn' represents the current write index, showing the location where the next data element will be written.  The data flows into the buffer at 'xn', and as the buffer fills, 'xn' moves around the circle.  Once 'xn' reaches the end, it wraps around to the beginning, overwriting older data if the buffer is full.  The absence of a read pointer suggests a simplified representation focusing solely on the write operation. The text 'Viewer does not support full SVG 1.1' at the bottom is a browser-related message indicating the image rendering limitations and is not part of the data structure itself.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-4-IYSYQWO7.svg)
-
-Figure 4
-
-### Hash servers
-
-Using the same hash function f, we map servers based on server IP or name onto the ring. Figure 5 shows that 4 servers are mapped on the hash ring.
-
-![Image represents a conceptual diagram illustrating a system of four servers (server 0, server 1, server 2, and server 3), each represented by a colored square on the left, and their arrangement in a ring topology.  The servers are also represented as nodes (s0, s1, s2, s3) in a circular gray line forming the ring.  Each node is color-coded to match its corresponding server label on the left.  A dark gray arrow points from the top to node s0, labeled 'f (server 0),' indicating a function or operation 'f' is performed on server 0.  The text 's0 = server 0...' to the right of the ring suggests that node s0 represents server 0 and potentially additional information associated with it.  The nodes are connected by the circular line, implying communication or data flow between them within the ring structure.  The bottom of the image contains a message indicating that the viewer does not support full SVG 1.1, which is likely a rendering issue unrelated to the core system representation.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-5-4LOAYCHE.svg)
-
-Figure 5
-
-### Hash keys
-
-One thing worth mentioning is that hash function used here is different from the one in “the rehashing problem,” and there is no modular operation. As shown in Figure 6, 4 cache keys (key0, key1, key2, and key3) are hashed onto the hash ring
-
-![Image represents a circular arrangement of components depicting a system architecture.  A gray circle forms the backbone, upon which four colored nodes (s0, s1, s2, s3) are placed equidistantly. These nodes, labeled s0, s1, s2, and s3, represent servers, with their corresponding server numbers (server 0, server 1, server 2, server 3) listed in colored boxes to the left.  The colors of the server boxes match the colors of the corresponding nodes on the circle. Four black nodes (k0, k1, k2, k3) are also placed on the circle, interspersed between the colored server nodes.  These black nodes likely represent keys or other control points within the system.  A text annotation 's0 = server 0s1...' to the right indicates that the s0 node's label is shorthand for a more complex identifier potentially including other server instances.  The gray circle connecting all nodes suggests a ring topology or a cyclical dependency between the components. No explicit information flow is shown, but the arrangement implies interaction or communication between adjacent nodes along the circle.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-6-SDSBYUI6.svg)
-
-Figure 6
-
-### Server lookup
-
-To determine which server a key is stored on, we go clockwise from the key position on the ring until a server is found. Figure 7 explains this process. Going clockwise, *key0* is stored on *server 0*; *key1* is stored on *server 1*; *key2* is stored on *server 2* and *key3* is stored on *server 3*.
-
-![Image represents a circular arrangement of nodes representing servers and keys, connected by a gray circular path.  Four colored nodes labeled `s0`, `s1`, `s2`, and `s3` represent servers, with `s0` (light purple) being explicitly identified as 'server 0s1...' suggesting it represents a composite of servers.  These server nodes are positioned along the outer edge of the circle. Four black nodes labeled `k0`, `k1`, `k2`, and `k3` represent keys and are located on the same circular path, but slightly inward from the server nodes.  Black arrows indicate the direction of information flow or connections.  `k0` connects to `s0`, `k3` connects to `s3`, `k2` connects to `s2`, and `k1` connects to `s1`.  A separate box on the left lists 'Servers' and shows four colored rectangles labeled 'server 0,' 'server 1,' 'server 2,' and 'server 3,' mirroring the colors of the corresponding server nodes in the circular diagram.  The overall structure suggests a ring topology with keys associated with each server, implying a system where keys control access to or interaction with the servers.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-7-OIUSEHJP.svg)
-
-Figure 7
-
-### Add a server
-
-Using the logic described above, adding a new server will only require redistribution of a fraction of keys.
-
-In Figure 8, after a new *server 4* is added, only *key0* needs to be redistributed. *k1, k2,* and *k3* remain on the same servers. Let us take a close look at the logic. Before *server 4* is added, *key0* is stored on *server 0*. Now, *key0* will be stored on *server 4* because *server 4* is the first server it encounters by going clockwise from *key0*’s position on the ring. The other keys are not redistributed based on consistent hashing algorithm.
-
-![Image represents a circular arrangement of nodes representing servers and keys.  Five colored nodes labeled `s0`, `s1`, `s2`, `s3`, and `s4` represent servers 0 through 4 respectively, with their corresponding colors matching a legend on the left showing server labels and colors (purple, light blue, pink, orange, and green).  Five black nodes labeled `k0`, `k1`, `k2`, `k3`, and implicitly `k4` (though not explicitly labeled) represent keys.  A thick gray arc connects the server nodes in a circular fashion.  Solid arrows indicate a directed connection from `k0` to `s4` labeled 'keyo' and a dashed arrow shows a connection from `k0` to `s0`.  A text annotation states that `s0` represents server 0, server 1, and so on.  The keys are positioned between the servers, and the image suggests a relationship between keys and servers, possibly indicating ownership or access control.  The bottom of the image shows 'key2' indicating the label for key `k2`.  The text 'Viewer does not support full SVG 1.1' indicates a rendering issue.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-8-OBPLVFJF.svg)
-
-Figure 8
-
-### Remove a server
-
-When a server is removed, only a small fraction of keys require redistribution with consistent hashing. In Figure 9, when *server 1* is removed, only *key1* must be remapped to *server 2*. The rest of the keys are unaffected.
-
-![Image represents a circular arrangement of nodes connected by a gray arc, representing a ring topology.  Four colored nodes labeled `s0`, `s1`, `s2`, and `s3` are positioned along the outer arc, representing servers.  These server nodes are color-coded and correspond to a list of servers on the left: `s0` (light purple) corresponds to `server 0` (light purple box), `s1` (light blue) to `server 1` (light blue box), `s2` (pink) to `server 2` (pink box), and `s3` (light orange) to `server 3` (light orange box). Four black nodes labeled `k0`, `k1`, `k2`, and `k3` are interspersed between the server nodes along the same arc, likely representing keys or control points. A thick black curved arrow points from `k2` to `s2`, suggesting a unidirectional data flow or control mechanism.  The text 's0 = server 0s1...' indicates that the `s0` node's label is an abbreviation representing a sequence of servers. The bottom of the image contains a message indicating that the viewer does not fully support the SVG format used to create the diagram.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-9-NK63F2OI.svg)
-
-Figure 9
-
-### Two issues in the basic approach
-
-The consistent hashing algorithm was introduced by Karger et al. at MIT [1]. The basic steps are:
-
-* Map servers and keys on to the ring using a uniformly distributed hash function.
-* To find out which server a key is mapped to, go clockwise from the key position until the first server on the ring is found.
-
-Two problems are identified with this approach. First, it is impossible to keep the same size of partitions on the ring for all servers considering a server can be added or removed. A partition is the hash space between adjacent servers. It is possible that the size of the partitions on the ring assigned to each server is very small or fairly large. In Figure 10, if *s1* is removed, *s2’s* partition (highlighted with the bidirectional arrows) is twice as large as *s0* and *s3’s* partition.
-
-![Image represents a circular arrangement of four servers (s0, s1, s2, s3) depicted as colored circles, labeled with 's' followed by a number.  These servers are positioned along a grey circular path.  To the left, a vertical stack of colored rectangular boxes labeled 'Servers' lists 'server 0,' 'server 1,' 'server 2,' and 'server 3,' seemingly corresponding to the colored circles on the ring.  A bright pink curved arrow indicates data flow, starting from server s1, proceeding to server s2, and then continuing to server s0.  The text 's0 = server 0s1...' suggests that server s0's identity incorporates information from servers 0 and 1.  At the bottom, a message 'Viewer does not support full SVG 1.1' indicates a limitation in rendering the diagram's full visual detail.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-10-FCDAIIM2.svg)
-
-Figure 10
-
-Second, it is possible to have a non-uniform key distribution on the ring. For instance, if servers are mapped to positions listed in Figure 11, most of the keys are stored on *server 2*. However, *server 1* and *server 3* have no data.
-
-![Image represents a circular arrangement of servers, depicted as a gray ring with colored nodes representing individual servers.  Four colored nodes, labeled `s0`, `s1`, `s2`, and `s3`, are positioned along the ring's circumference, each representing a specific server.  `s0` is light purple, `s1` is light blue, `s2` is pink, and `s3` is light orange.  A text annotation next to `s0` clarifies that `s0` corresponds to `server 0s1...`, suggesting a naming convention.  Between the colored nodes are four uncolored, white circles along the ring, indicating potential additional server locations or connection points.  To the left of the circular arrangement, a vertical list displays four rectangular boxes, each labeled `server 0`, `server 1`, `server 2`, and `server 3`, respectively, mirroring the color scheme of the nodes on the ring and providing a key to their identification.  The bottom of the image contains a message indicating that the viewer does not support full SVG 1.1.  The overall diagram suggests a ring topology or a distributed system where servers are interconnected in a circular fashion.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-11-BZXRZPW7.svg)
-
-Figure 11
-
-A technique called virtual nodes or replicas is used to solve these problems.
-
-### Virtual nodes
-
-A virtual node refers to the real node, and each server is represented by multiple virtual nodes on the ring. In Figure 12, both *server 0* and *server 1* have 3 virtual nodes. The 3 is arbitrarily chosen; and in real-world systems, the number of virtual nodes is much larger. Instead of using *s0*, we have *s0\_0, s0\_1*, and *s0\_2* to represent *server 0* on the ring. Similarly, *s1\_0, s1\_1*, and *s1\_2* represent server 1 on the ring. With virtual nodes, each server is responsible for multiple partitions. Partitions (edges) with label *s0* are managed by server 0. On the other hand, partitions with label *s1* are managed by *server 1*.
-
-![Image represents a system architecture diagram illustrating data flow between two servers (labeled 'server 0' and 'server 1') using a ring topology.  The diagram shows a circular arrangement of nodes, with four nodes colored purple (labeled `s0_0`, `s0_1`, `s0_2`, representing server 0's data) and four nodes colored light blue (`s1_0`, `s1_1`, `s1_2`, representing server 1's data).  A thick dark gray line connects these nodes in a circular fashion, representing the main data pathway.  Thinner lines, colored light purple and light blue, depict data transfer between specific nodes.  Light purple lines (labeled `s0`) represent data flow originating from server 0, while light blue lines (labeled `s1`) represent data flow from server 1.  For example, a light purple line connects `s0_2` to `s1_2`, indicating data transfer from server 0's second data point to server 1's second data point.  Similarly, a light blue line connects `s1_0` to `s0_0`, showing data transfer in the opposite direction.  The text 's0 = server 0s1...' suggests that the `s0` labels represent a composite data identifier combining data from both servers.  A note at the bottom indicates that the viewer does not fully support the SVG format used in the diagram.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-12-JS3PL6KQ.svg)
-
-Figure 12
-
-To find which server a key is stored on, we go clockwise from the key’s location and find the first virtual node encountered on the ring. In Figure 13, to find out which server *k0* is stored on, we go clockwise from *k0*’s location and find virtual node *s1\_1*, which refers to *server 1*.
-
-![Image represents a system architecture diagram showing two servers, labeled 'server 0' (purple) and 'server 1' (cyan), and their interaction with a ring-shaped network.  The ring consists of six nodes:  three labeled `s0_0`, `s0_1`, `s0_2` (purple) representing instances on server 0, and three labeled `s1_0`, `s1_1`, `s1_2` (cyan) representing instances on server 1.  These nodes are arranged around a grey circular line, indicating a ring topology.  A separate black node, labeled `k0`, is connected to the ring and has a self-looping arrow pointing back to itself, suggesting a control or coordination function.  A text annotation near the top right clarifies that `s0` represents server 0 instances (`0s1...`), implying a naming convention.  The bottom of the diagram displays a message indicating that the viewer does not fully support the SVG format used to create the image.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-13-EH76K4PV.svg)
-
-Figure 13
-
-As the number of virtual nodes increases, the distribution of keys becomes more balanced. This is because the standard deviation gets smaller with more virtual nodes, leading to balanced data distribution. Standard deviation measures how data are spread out. The outcome of an experiment carried out by online research [2] shows that with one or two hundred virtual nodes, the standard deviation is between 5% (200 virtual nodes) and 10% (100 virtual nodes) of the mean. The standard deviation will be smaller when we increase the number of virtual nodes. However, more spaces are needed to store data about virtual nodes. This is a tradeoff, and we can tune the number of virtual nodes to fit our system requirements.
-
-### Find affected keys
-
-When a server is added or removed, a fraction of data needs to be redistributed. How can we find the affected range to redistribute the keys?
-
-In Figure 14, *server 4* is added onto the ring. The affected range starts from *s4* (newly added node) and moves anticlockwise around the ring until a server is found (*s3*). Thus, keys located between *s3* and *s4* need to be redistributed to *s4*.
-
-![Image represents a circular arrangement of nodes representing servers and keys.  Five colored nodes labeled `s0`, `s1`, `s2`, `s3`, and `s4` represent servers 0 through 4 respectively, with their corresponding colors matching a legend of rectangular server boxes on the left.  Five black nodes labeled `k0`, `k1`, `k2`, `k3`, and implicitly `k4` (though not explicitly labeled) represent keys.  A thick gray arc connects the server nodes in a circular fashion.  Solid arrows indicate a directed connection from `k0` to `s4` labeled 'keyo' and a dashed arrow shows a connection from `k0` to `s0`.  Another dashed arrow shows a connection from `s4` to `s0`. The text 's0 = server 0s1...' indicates that `s0` represents a composite or aggregated server.  The keys are positioned between the servers along the gray arc.  The overall structure suggests a ring topology with keys potentially acting as routing or access points between servers.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-14-HZNKA3J3.svg)
-
-Figure 14
-
-When a server (*s1*) is removed as shown in Figure 15, the affected range starts from *s1* (removed node) and moves anticlockwise around the ring until a server is found (*s0*). Thus, keys located between *s0* and *s1* must be redistributed to *s2*.
-
-![Image represents a circular arrangement of nodes connected by a gray arc, representing a ring topology.  Four colored nodes labeled `s0`, `s1`, `s2`, and `s3` are positioned along the outer arc, representing servers.  `s0` is light purple, `s1` is light blue, `s2` is pink, and `s3` is light orange.  These server nodes are further identified by a text annotation stating `s0 = server 0s1...`, implying a naming convention. Four black-filled nodes labeled `k0`, `k1`, `k2`, and `k3` are placed at the intersections of the gray arc and the imaginary radii connecting the colored server nodes to the center. These `k` nodes likely represent key components or points within the system. A thick black curved arrow points from `k2` to `s2`, suggesting a unidirectional flow or dependency.  To the left, a rectangular box labeled 'Servers' lists four colored rectangles representing servers 0, 1, 2, and 3, mirroring the colors of the `s` nodes in the ring.  The bottom of the image contains a message indicating that the viewer does not fully support the SVG format used to create the diagram.](images/images-courses-system-design-interview-design-consistent-hashing-figure-5-15-PNWYOYZO.svg)
-
-Figure 15
-
-## Wrap up
-
-In this chapter, we had an in-depth discussion about consistent hashing, including why it is needed and how it works. The benefits of consistent hashing include:
-
-* Minimized keys are redistributed when servers are added or removed.
-* It is easy to scale horizontally because data are more evenly distributed.
-* Mitigate hotspot key problem. Excessive access to a specific shard could cause server overload. Imagine data for Katy Perry, Justin Bieber, and Lady Gaga all end up on the same shard. Consistent hashing helps to mitigate the problem by distributing the data more evenly.
-
-Consistent hashing is widely used in real-world systems, including some notable ones:
-
-* Partitioning component of Amazon’s Dynamo database [3]
-* Data partitioning across the cluster in Apache Cassandra [4]
-* Discord chat application [5]
-* Akamai content delivery network [6]
-* Maglev network load balancer [7]
-
-Congratulations on getting this far! Now give yourself a pat on the back. Good job!
-
-## Reference materials
-
-[1] Consistent hashing:
-<https://en.wikipedia.org/wiki/Consistent_hashing>
-
-[2] Consistent Hashing:
-<https://tom-e-white.com/2007/11/consistent-hashing.html>
-
-[3] Dynamo: Amazon’s Highly Available Key-value Store:
-<https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf>
-
-[4] Cassandra - A Decentralized Structured Storage System:
-<http://www.cs.cornell.edu/Projects/ladis2009/papers/Lakshman-ladis2009.PDF>
-
-[5] How Discord Scaled Elixir to 5,000,000 Concurrent Users:
-<https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users>
-
-[6] CS168: The Modern Algorithmic Toolbox Lecture #1: Introduction and Consistent Hashing:
-<http://theory.stanford.edu/~tim/s16/l/l1.pdf>
-
-[7] Maglev: A Fast and Reliable Software Network Load Balancer:
-<https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/44824.pdf>
-
-Loading...
-
-### Partner With Us
-
-[Teach on ByteByteGo](/jobs)
-
-[Be an Affiliate](/be-an-affiliate)
-
-[Become a Contributor](/become-a-contributor)
-
-### Support
-
-hi@bytebytego.com
-
-Report a Bug
-
-### Company & Legal
-
-[Our Team](/our-team)
-
-Newsletter
-
-[Privacy Policy](/privacy-policy)
-
-[Terms of Service](/terms-of-service)
-
-### Resources
-
-YouTube
-
-[Visual Dev Guides](/guides)
-
-[Find Jobs](https://jobright.ai)
-
-[Prepare for Coding Interviews](https://neetcode.io)
-
-Copyright ©2022-2026 ByteByteGo Inc. All rights reserved.
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 06  
+> **Topic**: Distributed Data Partitioning, Hash Ring Topologies, Virtual Nodes (V-Nodes), Rebalancing Minimization
+
+---
+
+## 1. The Rehashing Problem (Why Modulo-N Fails)
+
+In distributed caching and database systems, keys are partitioned across $N$ servers. The traditional approach uses the modulo hash function:
+
+$$\text{serverIndex} = \text{hash}(\text{key}) \pmod N$$
+
+```mermaid
+flowchart TD
+    subgraph Modulo4["Initial State: N = 4 Servers"]
+        K1["key0 (hash: 18M) -> 18M % 4 = <b>Server 1</b>"]
+        K2["key1 (hash: 26M) -> 26M % 4 = <b>Server 0</b>"]
+        K3["key2 (hash: 18M) -> 18M % 4 = <b>Server 2</b>"]
+        K4["key3 (hash: 35M) -> 35M % 4 = <b>Server 0</b>"]
+    end
+
+    subgraph Modulo3["After Server 1 Fails: N = 3 Servers"]
+        K1_NEW["key0 -> 18M % 3 = <b>Server 0 (Moved!)</b>"]
+        K2_NEW["key1 -> 26M % 3 = <b>Server 2 (Moved!)</b>"]
+        K3_NEW["key2 -> 18M % 3 = <b>Server 1 (Moved!)</b>"]
+        K4_NEW["key3 -> 35M % 3 = <b>Server 2 (Moved!)</b>"]
+    end
+
+    Modulo4 -->|Server 1 Goes Offline| Modulo3
+```
+
+> [!CAUTION]
+> When $N$ changes (e.g., node addition or crash), **almost $100\%$ of keys are remapped to new servers**. In a caching tier, this causes a catastrophic **cache stampede** as millions of concurrent requests miss the cache and overwhelm origin databases simultaneously.
+
+---
+
+## 2. Consistent Hashing Mechanics
+
+Consistent hashing maps both servers and data keys onto a **circular hash ring**, ensuring that adding or removing a node only requires remapping $k/N$ keys on average ($k = \text{total keys}, N = \text{total server slots}$).
+
+```mermaid
+flowchart TD
+    subgraph HashRing["360° Circular Hash Ring [0 to 2^160 - 1]"]
+        S0["Server 0 (hash: 10)"]
+        S1["Server 1 (hash: 90)"]
+        S2["Server 2 (hash: 180)"]
+        S3["Server 3 (hash: 270)"]
+        
+        K0["Key 0 (hash: 30) ──Clockwise──> Stored in Server 1"]
+        K1["Key 1 (hash: 120) ──Clockwise──> Stored in Server 2"]
+        K2["Key 2 (hash: 200) ──Clockwise──> Stored in Server 3"]
+        K3["Key 3 (hash: 300) ──Clockwise──> Stored in Server 0"]
+    end
+```
+
+### Core Operations
+
+#### 1. Server Lookup (Clockwise Traversal)
+- To find where `keyX` is stored, calculate $\text{hash}(\text{keyX})$ and move **clockwise** along the ring until encountering the first server node.
+
+#### 2. Adding a Server Node (Minimal Data Movement)
+- When `Server 4` is inserted between `Server 0` and `Server 1`, **only the keys between `Server 0` and `Server 4` are moved** to `Server 4`. All other server partitions remain completely undisturbed.
+
+```mermaid
+flowchart LR
+    subgraph AddNode["Adding Server 4"]
+        S0["Server 0"] --> K_NEW["Keys in arc (S0, S4] ──> Remapped to Server 4"]
+        K_NEW --> S4["Server 4 (New)"]
+        S4 --> S1["Server 1 (Retains keys in arc (S4, S1])"]
+        S1 --> S2["Server 2 (Unchanged)"]
+        S2 --> S3["Server 3 (Unchanged)"]
+    end
+```
+
+#### 3. Removing a Server Node
+- When `Server 1` is removed, only the keys previously stored on `Server 1` are remapped clockwise to `Server 2`. Zero unaffected keys move.
+
+---
+
+## 3. Two Inherent Flaws & The Virtual Nodes Solution
+
+### The Two Problems with Basic Consistent Hashing
+1. **Non-Uniform Partition Sizes**: Because hash functions place physical server nodes randomly on the ring, arc distances between servers vary wildly. One server might own $60\%$ of the ring while another owns $5\%$.
+2. **Non-Uniform Key Distribution (Hotspots)**: A server with a large incoming arc receives disproportionately heavy traffic.
+
+```mermaid
+flowchart LR
+    subgraph UnevenRing["Flaw: Highly Skewed Ring"]
+        S0["Server 0"] ---|5% of Ring| S1["Server 1"]
+        S1 ---|75% of Ring (Overloaded Hotspot!)| S2["Server 2"]
+        S2 ---|20% of Ring| S0
+    end
+```
+
+---
+
+### The Solution: Virtual Nodes (V-Nodes)
+
+Instead of placing 1 physical node on the ring, each physical server is assigned **$V$ virtual nodes** (e.g., $V = 100\text{–}200$ replicas) distributed evenly across the ring using multiple hash labels: `Server0_0`, `Server0_1`, `Server0_2` ... `Server0_V-1`.
+
+```mermaid
+flowchart TD
+    subgraph VNodeRing["Virtual Nodes Distributed Uniformly on Ring"]
+        S0_1["Server 0 (VNode 1)"] --> S1_1["Server 1 (VNode 1)"]
+        S1_1 --> S0_2["Server 0 (VNode 2)"]
+        S0_2 --> S1_2["Server 1 (VNode 2)"]
+        S1_2 --> S0_3["Server 0 (VNode 3)"]
+        S0_3 --> S1_3["Server 1 (VNode 3)"]
+    end
+```
+
+#### Standard Deviation of Key Distribution vs. Number of Virtual Nodes
+
+| Number of Virtual Nodes ($V$) | Standard Deviation ($\sigma$) of Load | Memory Overhead per Node |
+|:---|:---|:---|
+| **$V = 1$** (No V-Nodes) | $\approx \mathbf{100\%}$ (Extremely uneven) | Minimal ($O(1)$) |
+| **$V = 50$** | $\approx \mathbf{15\%}$ | Low |
+| **$V = 100$** | $\approx \mathbf{10\%}$ | Moderate |
+| **$V = 200$** | $\approx \mathbf{5\%}$ (Highly balanced) | Well within modern RAM limits |
+
+> [!TIP]
+> Increasing $V$ to $100\text{–}200$ achieves near-perfect load balancing across physical hardware. In practice, $V$ can be tuned proportionally to a physical server's CPU/RAM capacity (heterogeneous cluster weighting).
+
+---
+
+## 4. Real-World Implementations
+
+```mermaid
+mindmap
+  root((Consistent Hashing in Production))
+    Amazon DynamoDB
+      Partition key hash ring
+      Data replication to next N physical nodes
+      Sloppy Quorum & Hinted Handoff
+    Apache Cassandra
+      Murmur3Partitioner token range
+      V-nodes per cluster node
+      Virtual node range repair
+    Discord Gateway Routing
+      Consistent hashing across ring of gateway workers
+      Sticky WebSocket routing
+    Akamai / Cloudflare CDN
+      Consistent hashing for cache web proxies
+      Eliminates origin cache misses
+```
+
+---
+
+## 5. Architectural Summary
+
+| Dimension | Modulo Hashing ($\text{key} \pmod N$) | Consistent Hashing with V-Nodes |
+|:---|:---|:---|
+| **Keys Remapped on Scaling** | $\approx 100\%$ (Catastrophic cache wipe) | Only $k/N$ keys on average ($\text{Minimal}$) |
+| **Load Uniformity** | Poor when $N$ changes | Uniform ($<5\%$ variance with $200$ V-Nodes) |
+| **Hotspot Defense** | Ineffective | Excellent (Heterogeneous server capacity weighting) |
+| **Lookup Complexity** | $O(1)$ | $O(\log(\text{Total V-Nodes}))$ via Binary Search / Red-Black Tree |
+
+---
+
+## References
+
+1. Consistent Hashing and Random Trees (Karger et al. MIT Paper): https://www.cs.princeton.edu/courses/archive/fall09/cos518/papers/karger.pdf
+2. Dynamo: Amazon's Highly Available Key-value Store: https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+3. Apache Cassandra Architecture (Virtual Nodes): https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html

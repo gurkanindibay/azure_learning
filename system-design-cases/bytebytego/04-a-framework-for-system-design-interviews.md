@@ -1,273 +1,173 @@
 ---
 type: System Design Case
 title: "A Framework For System Design Interviews"
-description: "You have just landed a coveted on-site interview at your dream company. The hiring coordinator sends you a schedule for that day. Scanning down the list, you feel pretty good about it until your ey..."
-tags: [system-design]
+description: "The definitive 4-step framework for navigating open-ended system design interviews: establishing scope, high-level blueprinting, deep-dive bottleneck resolution, operational wrap-up, and interview time management."
+tags: [system-design, interview-framework, engineering-methodology, distributed-systems, communication, best-practices]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
-[![ByteByteGo logo](images/logo.svg)](/)
-
-## System Design Interview
-
-0/31 completed
-
-* **Foreword**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *01***Join the Community**
-* *02***Scale From Zero To Millions Of Users**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *03***Back-of-the-envelope Estimation**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *04***A Framework For System Design Interviews**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *05***Design A Rate Limiter**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *06***Design Consistent Hashing**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *07***Design A Key-value Store**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *08***Design A Unique ID Generator In Distributed Systems**
-* *09***Design A URL Shortener**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *10***Design A Web Crawler**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *11***Design A Notification System**
-* *12***Design A News Feed System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *13***Design A Chat System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *14***Design A Search Autocomplete System**
-* *15***Design YouTube**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *16***Design Google Drive**
-* *17***Proximity Service**
-* *18***Nearby Friends**
-* *19***Google Maps**
-* *20***Distributed Message Queue**
-* *21***Metrics Monitoring and Alerting System**
-* *22***Ad Click Event Aggregation**
-* *23***Hotel Reservation System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *24***Distributed Email Service**
-* *25***S3-like Object Storage**
-* *26***Real-time Gaming Leaderboard**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *27***Payment System**
-* *28***Digital Wallet**
-* *29***Stock Exchange**
-* *30***The Learning Continues**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-
-[![ByteByteGo logo](images/logo.svg)](/)
-
-**04**
-
 # A Framework For System Design Interviews
 
-You have just landed a coveted on-site interview at your dream company. The hiring coordinator sends you a schedule for that day. Scanning down the list, you feel pretty good about it until your eyes land on this interview session - System Design Interview.
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 04  
+> **Topic**: The 4-Step Problem-Solving Framework, Interview Time Allocation, Collaboration & Signal Gathering
+
+---
+
+## 1. The Interviewer's Mindset & Core Evaluation Signals
+
+A system design interview is not a trivia contest or a test of design purity. It simulates a **collaborative design session between two senior engineers** tackling an ambiguous, open-ended problem.
+
+```mermaid
+flowchart TD
+    subgraph Signals["Key Evaluation Signals"]
+        S1["<b>1. Communication & Collaboration</b><br/>Asking clarifying questions, taking feedback, driving consensus."]
+        S2["<b>2. Ambiguity Resolution</b><br/>Breaking vague prompts into concrete functional/non-functional requirements."]
+        S3["<b>3. Trade-Off Analysis</b><br/>Defending technology choices (e.g., SQL vs. NoSQL, Sync vs. Async)."]
+        S4["<b>4. Handling Scale & Bottlenecks</b><br/>Identifying SPOFs, race conditions, and partitioning limits."]
+    end
+
+    subgraph RedFlags["Major Red Flags"]
+        R1["❌ Jumping immediately to code or box diagrams without clarifying scope."]
+        R2["❌ Over-engineering complex microservices for simple low-throughput tasks."]
+        R3["❌ Stubbornness or ignoring interviewer hints and boundary constraints."]
+        R4["❌ Working in complete silence without verbalizing thought processes."]
+    end
+```
+
+---
 
-System design interviews are often intimidating. It could be as vague as “designing a well-known product X?”. The questions are ambiguous and seem unreasonably broad. Your weariness is understandable. After all, how could anyone design a popular product in an hour that has taken hundreds if not thousands of engineers to build?
-
-The good news is that no one expects you to. Real-world system design is extremely complicated. For example, Google search is deceptively simple; however, the amount of technology that underpins that simplicity is truly astonishing. If no one expects you to design a real-world system in an hour, what is the benefit of a system design interview?
-
-The system design interview simulates real-life problem solving where two co-workers collaborate on an ambiguous problem and come up with a solution that meets their goals. The problem is open-ended, and there is no perfect answer. The final design is less important compared to the work you put in the design process. This allows you to demonstrate your design skill, defend your design choices, and respond to feedback in a constructive manner.
-
-Let us flip the table and consider what goes through the interviewer’s head as she walks into the conference room to meet you. The primary goal of the interviewer is to accurately assess your abilities. The last thing she wants is to give an inconclusive evaluation because the session has gone poorly and there are not enough signals. What is an interviewer looking for in a system design interview?
-
-Many think that system design interview is all about a person's technical design skills. It is much more than that. An effective system design interview gives strong signals about a person's ability to collaborate, to work under pressure, and to resolve ambiguity constructively. The ability to ask good questions is also an essential skill, and many interviewers specifically look for this skill.
-
-A good interviewer also looks for red flags. Over-engineering is a real disease of many engineers as they delight in design purity and ignore tradeoffs. They are often unaware of the compounding costs of over-engineered systems, and many companies pay a high price for that ignorance. You certainly do not want to demonstrate this tendency in a system design interview. Other red flags include narrow mindedness, stubbornness, etc.
-
-In this chapter, we will go over some useful tips and introduce a simple and effective framework to solve system design interview problems.
-
-## A 4-step process for effective system design interview
-
-Every system design interview is different. A great system design interview is open-ended and there is no one-size-fits-all solution. However, there are steps and common ground to cover in every system design interview.
-
-### Step 1 - Understand the problem and establish design scope
-
-"Why did the tiger roar?"
-
-A hand shot up in the back of the class.
-
-"Yes, Jimmy?", the teacher responded.
-
-"Because he was HUNGRY".
-
-"Very good Jimmy."
-
-Throughout his childhood, Jimmy has always been the first to answer questions in the class. Whenever the teacher asks a question, there is always a kid in the classroom who loves to take a crack at the question, no matter if he knows the answer or not. That is Jimmy.
-
-Jimmy is an ace student. He takes pride in knowing all the answers fast. In exams, he is usually the first person to finish the questions. He is a teacher's top choice for any academic competition.
-
-DON'T be like Jimmy.
-
-In a system design interview, giving out an answer quickly without thinking gives you no bonus points. Answering without a thorough understanding of the requirements is a huge red flag as the interview is not a trivia contest. There is no right answer.
-
-So, do not jump right in to give a solution. Slow down. Think deeply and ask questions to clarify requirements and assumptions. This is extremely important.
-
-As an engineer, we like to solve hard problems and jump into the final design; however, this approach is likely to lead you to design the wrong system. One of the most important skills as an engineer is to ask the right questions, make the proper assumptions, and gather all the information needed to build a system. So, do not be afraid to ask questions.
-
-When you ask a question, the interviewer either answers your question directly or asks you to make your assumptions. If the latter happens, write down your assumptions on the whiteboard or paper. You might need them later.
-
-What kind of questions to ask? Ask questions to understand the exact requirements. Here is a list of questions to help you get started:
-
-* What specific features are we going to build?
-* How many users does the product have?
-* How fast does the company anticipate to scale up? What are the anticipated scales in 3 months, 6 months, and a year?
-* What is the company’s technology stack? What existing services you might leverage to simplify the design?
-
-#### Example
-
-If you are asked to design a news feed system, you want to ask questions that help you clarify the requirements. The conversation between you and the interviewer might look like this:
-
-**Candidate**: Is this a mobile app? Or a web app? Or both?
-**Interviewer**: Both.
-
-**Candidate**: What are the most important features for the product?
-**Interviewer**: Ability to make a post and see friends’ news feed.
-
-**Candidate**: Is the news feed sorted in reverse chronological order or a particular order? The particular order means each post is given a different weight. For instance, posts from your close friends are more important than posts from a group.
-**Interviewer**: To keep things simple, let us assume the feed is sorted by reverse chronological order.
-
-**Candidate**: How many friends can a user have?
-**Interviewer**: 5000
-
-**Candidate**: What is the traffic volume?
-**Interviewer**: 10 million daily active users (DAU)
-
-**Candidate**: Can feed contain images, videos, or just text?
-**Interviewer**: It can contain media files, including both images and videos.
-
-Above are some sample questions that you can ask your interviewer. It is important to understand the requirements and clarify ambiguities
-
-### Step 2 - Propose high-level design and get buy-in
-
-In this step, we aim to develop a high-level design and reach an agreement with the interviewer on the design. It is a great idea to collaborate with the interviewer during the process.
-
-* Come up with an initial blueprint for the design. Ask for feedback. Treat your interviewer as a teammate and work together. Many good interviewers love to talk and get involved.
-* Draw box diagrams with key components on the whiteboard or paper. This might include clients (mobile/web), APIs, web servers, data stores, cache, CDN, message queue, etc.
-* Do back-of-the-envelope calculations to evaluate if your blueprint fits the scale constraints. Think out loud. Communicate with your interviewer if back-of-the-envelope is necessary before diving into it.
-
-If possible, go through a few concrete use cases. This will help you frame the high-level design. It is also likely that the use cases would help you discover edge cases you have not yet considered.
-
-Should we include API endpoints and database schema here? This depends on the problem. For large design problems like “Design Google search engine”, this is a bit of too low level. For a problem like designing the backend for a multi-player poker game, this is a fair game. Communicate with your interviewer.
-
-#### Example
-
-Let us use “Design a news feed system” to demonstrate how to approach the high-level design. Here you are not required to understand how the system actually works. All the details will be explained in the "Design A News Feed System" chapter.
-
-At the high level, the design is divided into two flows: feed publishing and news feed building.
-
-* Feed publishing: when a user publishes a post, corresponding data is written into cache/database, and the post will be populated into friends’ news feed.
-* Newsfeed building: the news feed is built by aggregating friends’ posts in a reverse chronological order.
-
-Figure 1 and Figure 2 present high-level designs for feed publishing and news feed building flows, respectively.
-
-![Image represents a system architecture diagram showing the flow of a user request for a news feed.  A user, accessing via either a web browser or mobile app, initiates a request that first resolves through a DNS server. This request, containing parameters like `v1/me/feed?content=Hello&auth_token={auth_token}`, is then directed to a load balancer which distributes the traffic across multiple web servers.  These web servers communicate with three distinct services: a Post Service, a Fanout Service, and a Notification Service. The Post Service retrieves data from a Post Cache, which in turn accesses a Post DB if necessary.  The Fanout Service interacts with a News Feed Cache to provide the news feed content.  The Notification Service is shown but its interaction details are not depicted.  The diagram illustrates a client-server architecture with load balancing and caching mechanisms to improve performance and scalability.  The dashed lines around the web servers and caches suggest these components may be clustered or replicated.](images/images-courses-system-design-interview-a-framework-for-system-design-interviews-figure-3-1-ZIAGKIG7.png)
-
-Figure 1
-
-![Image represents a system architecture diagram for a news feed service.  A user, accessing via a web browser or mobile app, initiates a request (labeled 'v1/me/feed') which first resolves through a DNS server.  The request then reaches a load balancer, distributing the traffic across multiple web servers. These web servers communicate with a 'News Feed Service,' which in turn retrieves data from a 'News Feed Cache' (represented as three stacked cache units).  The entire flow is unidirectional, starting from the user and ending at the cache, implying a read-only operation to fetch the news feed.  The dashed lines around the web servers suggest a cluster or pool of servers, while the solid lines indicate the data flow direction.](images/images-courses-system-design-interview-a-framework-for-system-design-interviews-figure-3-2-4TY6XZV7.png)
-
-Figure 2
-
-### Step 3 - Design deep dive
-
-At this step, you and your interviewer should have already achieved the following objectives:
-
-* Agreed on the overall goals and feature scope
-* Sketched out a high-level blueprint for the overall design
-* Obtained feedback from your interviewer on the high-level design
-* Had some initial ideas about areas to focus on in deep dive based on her feedback
-
-You shall work with the interviewer to identify and prioritize components in the architecture. It is worth stressing that every interview is different. Sometimes, the interviewer may give off hints that she likes focusing on high-level design. Sometimes, for a senior candidate interview, the discussion could be on the system performance characteristics, likely focusing on the bottlenecks and resource estimations. In most cases, the interviewer may want you to dig into details of some system components. For URL shortener, it is interesting to dive into the hash function design that converts a long URL to a short one. For a chat system, how to reduce latency and how to support online/offline status are two interesting topics.
-
-Time management is essential as it is easy to get carried away with minute details that do not demonstrate your abilities. You must be armed with signals to show your interviewer. Try not to get into unnecessary details. For example, talking about the EdgeRank algorithm of Facebook feed ranking in detail is not ideal during a system design interview as this takes much precious time and does not prove your ability in designing a scalable system.
-
-#### Example
-
-At this point, we have discussed the high-level design for a news feed system, and the interviewer is happy with your proposal. Next, we will investigate two of the most important use cases:
-
-1. Feed publishing
-
-2. News feed retrieval
-
-Figure 3 and Figure 4 show the detailed design for the two use cases, which will be explained in detail in the "Design A News Feed System" chapter.
-
-![Image represents a system architecture diagram for a news feed application.  A user, accessing via web browser or mobile app, initiates a request (v1/me/feed?content=Hello&auth_token={auth_token}) that first resolves through a DNS server. The request then hits a load balancer, distributing traffic to multiple web servers.  These servers handle authentication and rate limiting before interacting with a Post Service, which retrieves data from a Post Cache or Post DB.  The web servers also communicate with a Fanout Service, which, labeled with (1), requests friend IDs from a Graph DB.  The Fanout Service then, labeled with (2), retrieves friends' data from the User Cache or User DB. This data is then placed into a Message Queue (3).  Fanout Workers (4) process the messages from the queue, updating the News Feed Cache (5) before the updated feed is sent back to the user.  A Notification Service is also triggered by the web servers.  The entire system utilizes caching mechanisms (Post Cache, User Cache, News Feed Cache) to improve performance.  Numbered labels (1-5) indicate the flow of data and processing steps within the system.](images/images-courses-system-design-interview-a-framework-for-system-design-interviews-figure-3-3-OEFRG37K.png)
-
-Figure 3
-
-![Image represents a system architecture diagram for a news feed service.  A user, accessing via web browser or mobile app, initiates a request (labeled '/v1/me/feed') which first resolves through a DNS server. This request then hits a load balancer (1), distributing the traffic across multiple web servers (2).  The web servers handle authentication and rate limiting before forwarding the request to the News Feed Service (3). The News Feed Service accesses data from a News Feed Cache (4), which in turn may access a database if the data is not cached.  The News Feed Service also sends data to a User Cache (5) and a Post Cache (5), which store user-specific and post-specific information respectively. These caches can access their corresponding User DB and Post DB if necessary.  The entire system is fronted by a CDN (6), improving performance and scalability by caching content closer to the users.  Numbers in parentheses indicate the flow of requests.](images/images-courses-system-design-interview-a-framework-for-system-design-interviews-figure-3-4-4ZXFIXDU.png)
-
-Figure 4
-
-### Step 4 - Wrap up
-
-In this final step, the interviewer might ask you a few follow-up questions or give you the freedom to discuss other additional points. Here are a few directions to follow:
-
-* The interviewer might want you to identify the system bottlenecks and discuss potential improvements. Never say your design is perfect and nothing can be improved. There is always something to improve upon. This is a great opportunity to show your critical thinking and leave a good final impression.
-* It could be useful to give the interviewer a recap of your design. This is particularly important if you suggested a few solutions. Refreshing your interviewer’s memory can be helpful after a long session.
-* Error cases (server failure, network loss, etc.) are interesting to talk about.
-* Operation issues are worth mentioning. How do you monitor metrics and error logs? How to roll out the system?
-* How to handle the next scale curve is also an interesting topic. For example, if your current design supports 1 million users, what changes do you need to make to support 10 million users?
-* Propose other refinements you need if you had more time.
-
-To wrap up, we summarize a list of the Dos and Don’ts.
-
-Dos
-
-* Always ask for clarification. Do not assume your assumption is correct.
-* Understand the requirements of the problem.
-* There is neither the right answer nor the best answer. A solution designed to solve the problems of a young startup is different from that of an established company with millions of users. Make sure you understand the requirements.
-* Let the interviewer know what you are thinking. Communicate with your interview.
-* Suggest multiple approaches if possible.
-* Once you agree with your interviewer on the blueprint, go into details on each component. Design the most critical components first.
-* Bounce ideas off the interviewer. A good interviewer works with you as a teammate.
-* Never give up.
-
-Don’ts
-
-* Don't be unprepared for typical interview questions.
-* Don’t jump into a solution without clarifying the requirements and assumptions.
-* Don’t go into too much detail on a single component in the beginning. Give the high-level design first then drills down.
-* If you get stuck, don't hesitate to ask for hints.
-* Again, communicate. Don't think in silence.
-* Don’t think your interview is done once you give the design. You are not done until your interviewer says you are done. Ask for feedback early and often.
-
-### Time allocation on each step
-
-System design interview questions are usually very broad, and 45 minutes or an hour is not enough to cover the entire design. Time management is essential. How much time should you spend on each step? The following is a very rough guide on distributing your time in a 45-minute interview session. Please remember this is a rough estimate, and the actual time distribution depends on the scope of the problem and the requirements from the interviewer.
-
-Step 1 Understand the problem and establish design scope: 3 - 10 minutes
-
-Step 2 Propose high-level design and get buy-in: 10 - 15 minutes
-
-Step 3 Design deep dive: 10 - 25 minutes
-
-Step 4 Wrap: 3 - 5 minutes
-
-Loading...
-
-### Partner With Us
-
-[Teach on ByteByteGo](/jobs)
-
-[Be an Affiliate](/be-an-affiliate)
-
-[Become a Contributor](/become-a-contributor)
-
-### Support
-
-hi@bytebytego.com
-
-Report a Bug
-
-### Company & Legal
-
-[Our Team](/our-team)
-
-Newsletter
-
-[Privacy Policy](/privacy-policy)
-
-[Terms of Service](/terms-of-service)
-
-### Resources
-
-YouTube
-
-[Visual Dev Guides](/guides)
-
-[Find Jobs](https://jobright.ai)
-
-[Prepare for Coding Interviews](https://neetcode.io)
-
-Copyright ©2022-2026 ByteByteGo Inc. All rights reserved.
+## 2. The 4-Step System Design Framework
+
+```mermaid
+flowchart TD
+    S1["<b>Step 1: Understand Problem & Establish Scope</b><br/>(3–8 mins) • Clarify Features, Non-Functionals, QPS & Storage"]
+    S2["<b>Step 2: Propose High-Level Design & Get Buy-In</b><br/>(10–15 mins) • Core APIs, Architecture Box Diagram, Data Models"]
+    S3["<b>Step 3: Design Deep Dive</b><br/>(15–25 mins) • Bottlenecks, Sharding, Concurrency, Caching & Failover"]
+    S4["<b>Step 4: Wrap Up & Operational Hardening</b><br/>(3–5 mins) • Metrics, Alerting, Edge Cases, Post-Mortem Reflection"]
+
+    S1 --> S2 --> S3 --> S4
+```
+
+---
+
+### Step 1: Understand the Problem & Establish Design Scope ($3\text{–}8\text{ mins}$)
+
+> [!IMPORTANT]
+> **Never start drawing boxes immediately.** Slow down, ask clarifying questions, and write down assumptions explicitly on the whiteboard.
+
+#### Recommended Clarification Checklist
+1. **Target Platforms**: Mobile only? Web only? Both?
+2. **Core Feature Scope**: What are the top 2–3 must-have features vs. out-of-scope features?
+3. **Scale & Traffic**: Daily Active Users (DAU), read-to-write ratio, peak QPS multipliers.
+4. **Latency & SLA**: Strict real-time ($< 50\text{ ms}$) vs. eventual consistency batch processing?
+5. **Data Longevity & Sizing**: How long is data retained ($1\text{ year vs. } 5\text{ years}$)?
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Candidate
+    actor Interviewer
+
+    Candidate->>Interviewer: "Is this news feed sorted chronologically or via ML candidate ranking?"
+    Interviewer-->>Candidate: "Reverse chronological order for simplicity."
+    Candidate->>Interviewer: "What is the expected DAU and media content breakdown?"
+    Interviewer-->>Candidate: "10M DAU; posts contain text and images (up to 5 MB)."
+    Candidate->>Candidate: Calculates QPS (~120 write, ~1,200 read) and confirms scope.
+```
+
+---
+
+### Step 2: Propose High-Level Design & Get Buy-In ($10\text{–}15\text{ mins}$)
+
+Develop a clean end-to-end blueprint and validate it with the interviewer before diving into low-level mechanics.
+
+```mermaid
+flowchart LR
+    CLIENT["Client Tier<br/>(Mobile / Web)"] --> LB["Load Balancer"]
+    LB --> API["API Gateway / Web Tier"]
+    API --> SVC1["Service A (Core Logic)"]
+    API --> SVC2["Service B (Feed Builder)"]
+    SVC1 & SVC2 --> CACHE[("Cache Layer (Redis)")]
+    SVC1 & SVC2 --> DB[("Database Tier")]
+```
+
+#### Key Deliverables in Step 2
+1. **API Contracts**: Define clean RESTful / gRPC request & response signatures for primary endpoints.
+2. **Data Schemas**: Outline relational tables or NoSQL document models with partition keys.
+3. **Component Flowchart**: Draw boxes connecting Clients, Load Balancers, Web Tier, Cache, and Data Tier.
+4. **Validation Check**: Ask the interviewer: *"Does this high-level topology align with your expectations, or should we adjust any component before deep-diving?"*
+
+---
+
+### Step 3: Design Deep Dive ($15\text{–}25\text{ mins}$)
+
+Work with the interviewer to prioritize and unpack the $1\text{–}2$ most critical bottlenecks in the architecture.
+
+```mermaid
+flowchart TD
+    subgraph DeepDiveAreas["Core Deep-Dive Focus Areas"]
+        direction TB
+        A["<b>1. Concurrency & Contention</b><br/>Pessimistic vs. Optimistic Locking, Distributed Mutexes, Double-click Idempotency."]
+        B["<b>2. Partitioning & Data Scaling</b><br/>Sharding keys, Consistent Hashing rings, Hotkey/Celebrity mitigation."]
+        C["<b>3. Performance Optimization</b><br/>Cache-Aside, Write-Through, CDN Edge caching, DB Indexing."]
+        D["<b>4. High Availability & Failover</b><br/>Active-Passive / Active-Active DB replication, Consensus (Raft), Circuit Breakers."]
+    end
+```
+
+---
+
+### Step 4: Wrap Up ($3\text{–}5\text{ mins}$)
+
+Summarize the design, evaluate operational readiness, and critique potential failure modes.
+
+```mermaid
+flowchart LR
+    SUM["1. Summarize Final Architecture"] --> METRICS["2. Monitoring & Golden Signals (Latency, Error Rate)"]
+    METRICS --> SCALE["3. Future Scalability Bottlenecks (10x Growth Plan)"]
+```
+
+#### Wrap-Up Checklist
+- Revisit non-functional requirements: Did we meet the target QPS and latency budget?
+- Discuss telemetry: Metrics (Prometheus), Distributed Tracing (Jaeger), Centralized Logs (ELK).
+- Acknowledge trade-offs honestly: Where would the system buckle under $10\times$ load?
+
+---
+
+## 3. 45-Minute Interview Time Allocation
+
+```mermaid
+gantt
+    title 45-Minute System Design Interview Timeline
+    dateFormat mm
+    axisFormat %M min
+
+    section Step 1
+    Scope & Clarification      :done, 00, 05m
+    section Step 2
+    High-Level Architecture    :active, 05, 15m
+    section Step 3
+    Deep Dive Bottlenecks      :20, 20m
+    section Step 4
+    Wrap-Up & Monitoring       :40, 05m
+```
+
+---
+
+## 4. Dos and Don'ts Matrix
+
+| Phase | DO (Best Practices) | DON'T (Common Pitfalls) |
+|:---|:---|:---|
+| **Step 1** | Ask clarifying questions; state assumptions out loud; establish scale numbers. | Jump into drawing architecture without clarifying requirements. |
+| **Step 2** | Draw clean end-to-end box diagrams; get interviewer buy-in before proceeding. | Dive into minute details (e.g., database indexes) before agreeing on high-level design. |
+| **Step 3** | Focus on performance bottlenecks, race conditions, and single points of failure. | Get bogged down in generic CRUD logic without addressing scale bottlenecks. |
+| **Step 4** | Proactively discuss metrics, alerting, and failure recovery scenarios. | Claim the design is "flawless" or forget to summarize key components. |
+| **General** | Treat the interviewer as a collaborative teammate; think out loud continuously. | Work in complete silence or stubbornly defend a flawed technical choice. |
+
+---
+
+## References
+
+1. System Design Interview An Insider's Guide by Alex Xu: https://bytebytego.com
+2. System Design Primer by Donne Martin: https://github.com/donnemartin/system-design-primer
+3. Designing Data-Intensive Applications by Martin Kleppmann

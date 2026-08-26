@@ -1,345 +1,248 @@
 ---
 type: System Design Case
 title: "Design A URL Shortener"
-description: "In this chapter, we will tackle an interesting and classic system design interview question: designing a URL shortening service like tinyurl."
-tags: [system-design]
+description: "Design a high-throughput, globally available URL shortening service (like TinyURL or Bitly) featuring Base62 encoding, 301 vs. 302 redirection trade-offs, Bloom filter existence checks, distributed caching, and database sharding."
+tags: [system-design, distributed-systems, url-shortener, base62, redirection, caching, bloom-filter, tinyurl]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
-[![ByteByteGo logo](images/logo.svg)](/)
-
-## System Design Interview
-
-0/31 completed
-
-* **Foreword**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *01***Join the Community**
-* *02***Scale From Zero To Millions Of Users**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *03***Back-of-the-envelope Estimation**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *04***A Framework For System Design Interviews**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *05***Design A Rate Limiter**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *06***Design Consistent Hashing**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *07***Design A Key-value Store**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *08***Design A Unique ID Generator In Distributed Systems**
-* *09***Design A URL Shortener**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *10***Design A Web Crawler**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *11***Design A Notification System**
-* *12***Design A News Feed System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *13***Design A Chat System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *14***Design A Search Autocomplete System**
-* *15***Design YouTube**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *16***Design Google Drive**
-* *17***Proximity Service**
-* *18***Nearby Friends**
-* *19***Google Maps**
-* *20***Distributed Message Queue**
-* *21***Metrics Monitoring and Alerting System**
-* *22***Ad Click Event Aggregation**
-* *23***Hotel Reservation System**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *24***Distributed Email Service**
-* *25***S3-like Object Storage**
-* *26***Real-time Gaming Leaderboard**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-* *27***Payment System**
-* *28***Digital Wallet**
-* *29***Stock Exchange**
-* *30***The Learning Continues**![](images/_next-static-media-arrow-right.0lh31wn6gtett.png)
-
-[![ByteByteGo logo](images/logo.svg)](/)
-
-**09**
-
 # Design A URL Shortener
 
-In this chapter, we will tackle an interesting and classic system design interview question: designing a URL shortening service like tinyurl.
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 09  
+> **Topic**: URL Shortening, Base62 Encoding vs. Hash Collision Resolution, HTTP 301/302 Redirection, Distributed Caching
 
-## Step 1 - Understand the problem and establish design scope
+---
 
-System design interview questions are intentionally left open-ended. To design a well-crafted system, it is critical to ask clarification questions.
+## 1. Understand the Problem and Establish Design Scope
 
-**Candidate**: Can you give an example of how a URL shortener work?
-**Interviewer**: Assume URL `https://www.systeminterview.com/q=chatsystem&c=loggedin&v=v3&l=long` is the original URL. Your service creates an alias with shorter length: `https://tinyurl.com/y7keocwj`. If you click the alias, it redirects you to the original URL.
+A URL shortener (e.g., TinyURL, Bitly) creates an alias character string for long URLs, saving character space in SMS/social media feeds and providing click tracking.
 
-**Candidate**: What is the traffic volume?
-**Interviewer**: 100 million URLs are generated per day.
+```mermaid
+flowchart LR
+    subgraph ShortenFlow["1. URL Shortening"]
+        CLIENT1["Client"] -->|POST /api/v1/data/shorten (longUrl)| GW["URL Shortener Service"]
+        GW -->|Returns: https://tinyurl.com/y7keocwj| CLIENT1
+    end
 
-**Candidate**: How long is the shortened URL?
-**Interviewer**: As short as possible.
-
-**Candidate**: What characters are allowed in the shortened URL?
-**Interviewer**: Shortened URL can be a combination of numbers (0-9) and characters (a-z, A-Z).
-
-**Candidate**: Can shortened URLs be deleted or updated?
-**Interviewer**: For simplicity, let us assume shortened URLs cannot be deleted or updated.
-
-Here are the basic use cases:
-
-1. URL shortening: given a long URL => return a much shorter URL
-2. URL redirecting: given a shorter URL => redirect to the original URL
-3. High availability, scalability, and fault tolerance considerations
-
-### Back of the envelope estimation
-
-* Write operation: 100 million URLs are generated per day.
-* Write operation per second: 100 million / 24 /3600 = 1160
-* Read operation: Assuming ratio of read operation to write operation is 10:1, read operation per second: 1160 \* 10 = 11,600
-* Assuming the URL shortener service will run for 10 years, this means we must support 100 million \* 365 \* 10 = 365 billion records.
-* Assume average URL length is 100.
-* Storage requirement over 10 years: 365 billion \* 100 bytes = 36.5 TB
-
-It is important for you to walk through the assumptions and calculations with your interviewer so that both of you are on the same page.
-
-## Step 2 - Propose high-level design and get buy-in
-
-In this section, we discuss the API endpoints, URL redirecting, and URL shortening flows.
-
-### API Endpoints
-
-API endpoints facilitate the communication between clients and servers. We will design the APIs REST-style. If you are unfamiliar with restful API, you can consult external materials, such as the one in the reference material [1]. A URL shortener primary needs two API endpoints.
-
-1. **URL shortening.** To create a new short URL, a client sends a POST request, which contains one parameter: the original long URL. The API looks like this:
-
-   ```
-   POST api/v1/data/shorten
-
-   - request parameter: {longUrl: longURLString}
-   - return: shortURL
-   ```
-2. **URL redirecting.** To redirect a short URL to the corresponding long URL, a client sends a GET request. The API looks like this:
-
-   ```
-   GET api/v1/shortUrl
-
-   - return: longURL for HTTP redirection
-   ```
-
-### URL redirecting
-
-Figure 1 shows what happens when you enter a tinyurl onto the browser. Once the server receives a tinyurl request, it changes the short URL to the long URL with 301 redirect.
-
-![Image represents a network request response, specifically showing details of an HTTP GET request and its corresponding response headers.  The top section displays the request details: the URL (`https://tinyurl.com/qtj5opu`), the method (GET), a 301 status code (indicating a redirect), the remote server address (`[2606:4700:10::6814:391e]:443`), and the referrer policy ('no-referrer-when-downgrade'). Below, the 'Response Headers' section lists various headers sent by the server, including `alt-svc` (specifying alternative service protocols), `cache-control` (setting caching directives), `cf-cache-status` (indicating a dynamic response from Cloudflare), `cf-ray` (a Cloudflare request identifier), `content-type` (specifying HTML content with UTF-8 encoding), `date` (timestamp of the response), `expect-ct` (related to certificate transparency), and crucially, `location` (containing the redirect URL: `https://www.amazon.com/dp/B017V4NTFA?pLink=63eaef76-979c-4d&ref=adblp13nvvxx_0_2_im`).  The arrangement is linear, with request details above the response headers, and each header is presented as a key-value pair.  The information flow is unidirectional, from the client making the request to the server providing the response, including the redirect location.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-1-GSSWK66W.svg)
-
-Figure 1
-
-The detailed communication between clients and servers is shown in Figure 2.
-
-![Image represents a simplified URL redirection system.  A 'Client' (represented by a smartphone icon) initiates the process by visiting a short URL: `https://tinyurl.com/qtj5opu`. This request is sent to a 'tinyurl server,' which then responds with a 301 status code (indicating a permanent redirect) and the 'location' of the long URL: `https://www.amazon.com/dp/B017V4NTFA?pLink=63eaef76-979c-4d&ref=adblp13nvvxx_0_2_im`.  The client then automatically follows this redirect, sending a new request to the 'Amazon server' to visit the long URL.  The diagram uses arrows to show the flow of requests and responses between the client, the tinyurl server, and the Amazon server.  The text labels clearly indicate the URLs involved and the HTTP status code of the redirect.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-2-KMMJ65HT.png)
-
-Figure 2
-
-One thing worth discussing here is 301 redirect vs 302 redirect.
-
-**301 redirect**. A 301 redirect shows that the requested URL is “permanently” moved to the long URL. Since it is permanently redirected, the browser caches the response, and subsequent requests for the same URL will not be sent to the URL shortening service. Instead, requests are redirected to the long URL server directly.
-
-**302 redirect**. A 302 redirect means that the URL is “temporarily” moved to the long URL, meaning that subsequent requests for the same URL will be sent to the URL shortening service first. Then, they are redirected to the long URL server.
-
-Each redirection method has its pros and cons. If the priority is to reduce the server load, using 301 redirect makes sense as only the first request of the same URL is sent to URL shortening servers. However, if analytics is important, 302 redirect is a better choice as it can track click rate and source of the click more easily.
-
-The most intuitive way to implement URL redirecting is to use hash tables. Assuming the hash table stores *<shortURL, longURL>* pairs, URL redirecting can be implemented by the following:
-
-* Get longURL: longURL = hashTable.get(shortURL)
-* Once you get the longURL, perform the URL redirect.
-
-### URL shortening
-
-Let us assume the short URL looks like this: `www.tinyurl.com/{hashValue}`. To support the URL shortening use case, we must find a hash function *fx* that maps a long URL to the \*hashValue\*, as shown in Figure 3.
-
-![Image represents a simplified URL shortening system.  A rectangular box labeled 'longURL' containing the text 'longURL' represents the original, lengthy URL.  An arrow points from this box to a second rectangular box containing the mathematical function symbol 'ƒ(x)', representing a hashing function. This function takes the 'longURL' as input.  Below the 'ƒ(x)' box, a downward-pointing arrow labeled 'hash' connects it to a third rectangular box, which displays a shortened URL: 'https://tinyurl.com/qtj5opu'.  The text 'Viewer does not support full SVG' is present below the shortened URL box, indicating a limitation of the image display, not the system itself.  The overall diagram illustrates the process of inputting a long URL, applying a hashing function (ƒ(x)) to generate a short hash, and then using that hash to create a shortened, accessible URL.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-3-YHOCRGSP.svg)
-
-Figure 3
-
-The hash function must satisfy the following requirements:
-
-* Each *longURL* must be hashed to one *hashValue*.
-* Each *hashValue* can be mapped back to the *longURL*.
-
-Detailed design for the hash function is discussed in deep dive.
-
-## Step 3 - Design deep dive
-
-Up until now, we have discussed the high-level design of URL shortening and URL redirecting. In this section, we dive deep into the following: data model, hash function, URL shortening and URL redirecting.
-
-### Data model
-
-In the high-level design, everything is stored in a hash table. This is a good starting point; however, this approach is not feasible for real-world systems as memory resources are limited and expensive. A better option is to store *<shortURL, longURL>* mapping in a relational database. Figure 4 shows a simple database table design. The simplified version of the table contains 3 columns: *id*, *shortURL, longURL*.
-
-![Image represents a simplified relational database table schema, likely for a URL shortening service.  The table is named 'url' and contains three columns. The first column, labeled 'PK' (Primary Key), indicates that the 'id' column serves as the unique identifier for each row.  The 'id' column itself presumably holds a unique integer representing each shortened URL entry. The second column, 'shortURL', stores the shortened URL string, and the third column, 'longURL', stores the corresponding original, longer URL string.  No information flows between the columns; rather, each row represents a single mapping between a short URL and its long URL counterpart. The table structure suggests that given a shortURL, one can retrieve the corresponding longURL, and vice-versa, using the 'id' as the primary key for efficient lookups.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-4-3R6D55TD.svg)
-
-Figure 4
-
-### Hash function
-
-Hash function is used to hash a long URL to a short URL, also known as *hashValue*.
-
-#### Hash value length
-
-The *hashValue* consists of characters from [0-9, a-z, A-Z], containing 10 + 26 + 26 = 62 possible characters. To figure out the length of *hashValue*, find the smallest *n* such that *62^n ≥ 365 billion*. The system must support up to 365 billion URLs based on the back of the envelope estimation. Table 1 shows the length of *hashValue* and the corresponding maximal number of URLs it can support.
-
-| **n** | **Maximal number of URLs** |
-| --- | --- |
-| 1 | 62^1 = 62 |
-| 2 | 62^2 = 3,844 |
-| 3 | 62^3 = 238,328 |
-| 4 | 62^ 4 = 14,776,336 |
-| 5 | 62^5 = 916,132,832 |
-| 6 | 62^6 = 56,800,235,584 |
-| **7** | **62^7 = 3,521,614,606,208 = ~3.5 trillion** |
-| 8 | 62^8 = 218,340,105,584,896 |
-
-Table 1
-
-When *n = 7, 62 ^ n = ~3.5 trillion*, 3.5 trillion is more than enough to hold 365 billion URLs, so the length of *hashValue* is 7.
-
-We will explore two types of hash functions for a URL shortener. The first one is “hash + collision resolution”, and the second one is “base 62 conversion.” Let us look at them one by one.
-
-#### Hash + collision resolution
-
-To shorten a long URL, we should implement a hash function that hashes a long URL to a 7-character string. A straightforward solution is to use well-known hash functions like CRC32, MD5, or SHA-1. The following table compares the hash results after applying different hash functions on this URL:
-`https://en.wikipedia.org/wiki/Systems_design`
-
-| **Hash function** | **Hash value (Hexadecimal)** |
-| --- | --- |
-| CRC32 | 5cb54054 |
-| MD5 | 5a62509a84df9ee03fe1230b9df8b84e |
-| SHA-1 | 0eeae7916c06853901d9ccbefbfcaf4de57ed85b |
-
-Table 2
-
-As shown in Table 2, even the shortest hash value (from CRC32) is too long (more than 7 characters). How can we make it shorter?
-
-The first approach is to collect the first 7 characters of a hash value; however, this method can lead to hash collisions. To resolve hash collisions, we can recursively append a new predefined string until no more collision is discovered. This process is explained in Figure 5.
-
-![Image represents a flowchart depicting the process of URL shortening.  It begins with a green circle labeled 'start,' which initiates the process.  An arrow leads to a light-blue rectangle labeled 'input: longURL,' representing the input of a long URL. This long URL then flows to a light-blue rectangle labeled 'hash function,' where a hashing algorithm is applied to generate a shortened URL. The output, 'shortURL,' is shown in another light-blue rectangle.  This short URL then enters a diamond-shaped decision node labeled 'exist in DB?', checking if the short URL already exists in a database (DB). If 'yes' (a collision), an arrow points to a light-blue rectangle labeled 'longURL + predefi..,' indicating that the process might involve appending a predefined string to the long URL and repeating the hashing process. If 'no,' an arrow leads to a light-blue rectangle labeled 'save to DB,' where the short URL and its corresponding long URL are stored in the database. Finally, an arrow leads from 'save to DB' to a green circle labeled 'end,' signifying the completion of the process.  The arrows indicate the flow of data and control throughout the system.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-5-KWG6EFZC.svg)
-
-Figure 5
-
-This method can eliminate collision; however, it is expensive to query the database to check if a shortURL exists for every request. A technique called bloom filters [2] can improve performance. A bloom filter is a space-efficient probabilistic technique to test if an element is a member of a set. Refer to the reference material [2] for more details.
-
-#### Base 62 conversion
-
-Base conversion is another approach commonly used for URL shorteners. Base conversion helps to convert the same number between its different number representation systems. Base 62 conversion is used as there are 62 possible characters for *hashValue*. Let us use an example to explain how the conversion works: convert 1115710 to base 62 representation (1115710 represents 11157 in a base 10 system).
-
-* From its name, base 62 is a way of using 62 characters for encoding. The mappings are: *0-0, ..., 9-9, 10-a, 11-b, ..., 35-z, 36-A, ..., 61-Z, where* ‘a’ stands for 10, ‘Z’ stands for 61, etc.
-* 1115710 = 2 x 622 + 55 x 621 + 59 x 620 = [2, 55, 59] -> [2, T, X] in base 62 representation. Figure 6 shows the conversation process.
-
-![Image represents a diagram illustrating the conversion of a decimal number (11157) into its base-62 representation.  The left side shows a repeated division process.  The number 11157 is repeatedly divided by 62, with the remainders shown on the right (59, 55, and 2).  Each division's quotient becomes the dividend in the next step (11157/62 = 179 remainder 59; 179/62 = 2 remainder 55; 2/62 = 0 remainder 2). The remainders are listed in reverse order to form the base-62 representation ('X T 2'), where 'X' represents 59 and 'T' represents 55. The final remainder is 0, indicating the end of the conversion.  The diagram visually connects each division step with a line, showing the flow of the calculation from the initial decimal number to its base-62 equivalent.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-6-OHTOBFS7.svg)
-
-Figure 6
-
-* Thus, the short URL is `https://tinyurl.com/`**2TX**
-
-#### Comparison of the two approaches
-
-Table 3 shows the differences of the two approaches.
-
-| **Hash + collision resolution** | **Base 62 conversion** |
-| --- | --- |
-| Fixed short URL length. | Short URL length is not fixed. It goes up with the ID. |
-| Does not need a unique ID generator. | This option depends on a unique ID generator. |
-| Collision is possible and needs to be resolved. | Collision is not possible because ID is unique. |
-| It’s not possible to figure out the next available short URL because it doesn’t depend on ID. | It is easy to figure out what is the next available short URL if ID increments by 1 for a new entry. This can be a security concern. |
-
-Table 3
-
-### URL shortening deep dive
-
-As one of the core pieces of the system, we want the URL shortening flow to be logically simple and functional. Base 62 conversion is used in our design. We build the following diagram (Figure 7) to demonstrate the flow.
-
-![Image represents a flowchart depicting the process of URL shortening.  It begins with a rectangular box labeled '1. input: longURL,' representing the input of a long URL. An arrow connects this to a diamond-shaped decision box, '2. longURL in DB?', which checks if the long URL already exists in the database (DB).  If 'yes,' an arrow points to a rectangular box, '3. return shortURL,' indicating that the corresponding short URL is returned. If 'no,' an arrow leads to a rectangular box, '4. Generate a ne...', suggesting the generation of a new unique ID. This is followed by a box, '5. Convert ID to...', implying the conversion of this ID into a short URL. Finally, an arrow connects to '6. Save ID, shor...', indicating the saving of both the ID and the short URL into the database.  The entire flow is sequential, with each step dependent on the previous one, culminating in either returning an existing short URL or generating and saving a new one.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-7-A3ZKM2XP.svg)
-
-Figure 7
-
-1. longURL is the input.
-2. The system checks if the longURL is in the database.
-3. If it is, it means the longURL was converted to shortURL before. In this case, fetch the shortURL from the database and return it to the client.
-4. If not, the longURL is new. A new unique ID (primary key) Is generated by the unique ID generator.
-5. Convert the ID to shortURL with base 62 conversion.
-6. Create a new database row with the ID, shortURL, and longURL.
-
-To make the flow easier to understand, let us look at a concrete example.
-
-* Assuming the input longURL is: `https://en.wikipedia.org/wiki/Systems_design`
-* Unique ID generator returns ID: 2009215674938.
-* Convert the ID to shortURL using the base 62 conversion. ID (2009215674938) is converted to “zn9edcu”.
-* Save ID, shortURL, and longURL to the database as shown in Table 4.
-
-| id | shortURL | longURL |
-| --- | --- | --- |
-| 2009215674938 | zn9edcu | `https://en.wikipedia.org/wiki/Systems_design` |
-
-Table 4
-
-The distributed unique ID generator is worth mentioning. Its primary function is to generate globally unique IDs, which are used for creating shortURLs. In a highly distributed environment, implementing a unique ID generator is challenging. Luckily, we have already discussed a few solutions in the “Design A Unique ID Generator in Distributed Systems” chapter. You can refer back to it to refresh your memory.
-
-### URL redirecting deep dive
-
-Figure 8 shows the detailed design of the URL redirecting. As there are more reads than writes, *<shortURL, longURL>* mapping is stored in a cache to improve performance.
-
-![Image represents a simplified system architecture diagram illustrating a user's request for a shortened URL and its resolution.  A user (represented by icons of a laptop and a mobile phone) initiates a GET request (1) to the shortened URL 'https://tinyurl.com/zn9edcu'. This request is directed to a load balancer (2), which distributes the traffic across multiple web servers. The web servers then return the long URL 'https://en.wikipedia.org/wiki/Systems_design' (5) to the user.  The web servers are connected to a cache (3) for faster access to frequently requested data and a database (4) for persistent storage of information.  The numbered arrows (1-5) indicate the flow of the request and response, showing the interaction between the user, load balancer, web servers, cache, and database.](images/images-courses-system-design-interview-design-a-url-shortener-figure-8-8-VBPJ6PXY.png)
-
-Figure 8
-
-The flow of URL redirecting is summarized as follows:
-
-1. A user clicks a short URL link: `https://tinyurl.com/zn9edcu`
-2. The load balancer forwards the request to web servers.
-3. If a shortURL is already in the cache, return the longURL directly.
-4. If a shortURL is not in the cache, fetch the longURL from the database. If it is not in the database, it is likely a user entered an invalid shortURL.
-5. The longURL is returned to the user.
-
-## Step 4 - Wrap up
-
-In this chapter, we talked about the API design, data model, hash function, URL shortening, and URL redirecting.
-
-If there is extra time at the end of the interview, here are a few additional talking points.
-
-* Rate limiter: A potential security problem we could face is that malicious users send an overwhelmingly large number of URL shortening requests. Rate limiter helps to filter out requests based on IP address or other filtering rules. If you want to refresh your memory about rate limiting, refer to the “Design a rate limiter” chapter.
-* Web server scaling: Since the web tier is stateless, it is easy to scale the web tier by adding or removing web servers.
-* Database scaling: Database replication and sharding are common techniques.
-* Analytics: Data is increasingly important for business success. Integrating an analytics solution to the URL shortener could help to answer important questions like how many people click on a link? When do they click the link? etc.
-* Availability, consistency, and reliability. These concepts are at the core of any large system’s success. We discussed them in detail in the "Scale From Zero To Millions Of Users" chapter, please refresh your memory on these topics.
-
-Congratulations on getting this far! Now give yourself a pat on the back. Good job!
-
-## Reference materials
-
-[1] A RESTful Tutorial: <https://www.restapitutorial.com/index.html>
-
-[2] Bloom filter: <https://en.wikipedia.org/wiki/Bloom_filter>
-
-Loading...
-
-### Partner With Us
-
-[Teach on ByteByteGo](/jobs)
-
-[Be an Affiliate](/be-an-affiliate)
-
-[Become a Contributor](/become-a-contributor)
-
-### Support
-
-hi@bytebytego.com
-
-Report a Bug
-
-### Company & Legal
-
-[Our Team](/our-team)
-
-Newsletter
-
-[Privacy Policy](/privacy-policy)
-
-[Terms of Service](/terms-of-service)
-
-### Resources
-
-YouTube
-
-[Visual Dev Guides](/guides)
-
-[Find Jobs](https://jobright.ai)
-
-[Prepare for Coding Interviews](https://neetcode.io)
-
-Copyright ©2022-2026 ByteByteGo Inc. All rights reserved.
+    subgraph RedirectFlow["2. URL Redirection"]
+        CLIENT2["Client Browser"] -->|GET /y7keocwj| GW
+        GW -->|HTTP 301/302 Location: https://amazon.com/...| CLIENT2
+        CLIENT2 -->|Direct Fetch| ORIGIN["Target Web Server"]
+    end
+```
+
+---
+
+### Interview Clarification & Scope
+
+> **Candidate:** What is the daily write traffic volume?  
+> **Interviewer:** **100 million URLs generated per day**.
+>
+> **Candidate:** What is the read-to-write ratio?  
+> **Interviewer:** **10:1** ($10\times$ more redirects than shorten requests).
+>
+> **Candidate:** What characters are allowed in the shortened URL?  
+> **Interviewer:** Alphanumeric characters `[0-9, a-z, A-Z]` ($62\text{ distinct characters}$).
+>
+> **Candidate:** How long should shortened URLs be retained?  
+> **Interviewer:** Retain records for **10 years**. URLs cannot be updated or deleted.
+
+---
+
+### Back-of-the-Envelope Estimation
+
+| Metric / Dimension | Calculation | Estimated Value |
+|:---|:---|:---|
+| **Write QPS** | $\frac{100{,}000{,}000}{86{,}400\text{ sec}}$ | $\approx \mathbf{1{,}160\text{ Write QPS}}$ |
+| **Peak Write QPS** | $2 \times \text{Write QPS}$ | $\approx \mathbf{2{,}320\text{ QPS}}$ |
+| **Read QPS (10:1 Ratio)** | $1{,}160 \times 10$ | $\approx \mathbf{11{,}600\text{ Read QPS}}$ |
+| **10-Year Total URL Count** | $100\text{M/day} \times 365 \times 10$ | $\approx \mathbf{365\text{ Billion records}}$ |
+| **Average URL Length** | Text + Metadata | $\approx 100\text{ bytes/record}$ |
+| **10-Year Storage Capacity** | $365\text{B} \times 100\text{ bytes}$ | $\approx \mathbf{36.5\text{ TB}}$ |
+| **Memory Cache Size (20% Pareto)** | $100\text{M} \times 10 \times 100\text{B} \times 0.20$ | $\approx \mathbf{20\text{ GB RAM}}$ |
+
+---
+
+## 2. API Design & HTTP Redirection Semantics
+
+### REST Endpoints
+1. `POST /api/v1/data/shorten`
+   - **Request**: `{ "longUrl": "https://www.example.com/very/long/path" }`
+   - **Response**: `{ "shortUrl": "https://tinyurl.com/y7keocwj" }`
+2. `GET /{shortUrl}`
+   - **Response**: HTTP Redirection (`Location: https://www.example.com/very/long/path`)
+
+---
+
+### HTTP 301 vs. HTTP 302 Redirection
+
+```mermaid
+flowchart TD
+    subgraph PermanentRedirect["HTTP 301 (Moved Permanently)"]
+        C1["Client"] -->|1. First GET /y7k| S1["Shortener Service"]
+        S1 -->>|2. 301 + Location| C1
+        C1 -->|3. Browser Caches Mapping| C1
+        C1 -->|4. Future Requests: Direct to Origin (Bypasses Shortener)| O1["Target Origin Server"]
+    end
+
+    subgraph TemporaryRedirect["HTTP 302 (Found / Temporary)"]
+        C2["Client"] -->|1. GET /y7k| S2["Shortener Service"]
+        S2 -->>|2. 302 + Location| C2
+        C2 -->|3. Always hits Shortener first (Enables Analytics & Click Tracking)| S2
+    end
+```
+
+| Redirect Code | Browser Caching | Server Load | Click Analytics Tracking |
+|:---|:---|:---|:---|
+| **HTTP 301 (Permanent)** | Cached in browser memory | **Lowest** (subsequent clicks bypass shortener) | Poor (only first click is tracked) |
+| **HTTP 302 (Temporary)** | **Not cached** by browser | Higher | **Accurate (100% clicks recorded)** |
+
+---
+
+## 3. Short URL Encoding & Length Mathematics
+
+We use Base62 characters: `0-9` (10), `a-z` (26), `A-Z` (26) $\implies \mathbf{62\text{ characters}}$.
+
+To store $365\text{ Billion URLs}$, determine the minimum short URL length $n$:
+
+$$62^n \ge 365\text{ Billion}$$
+
+- For $n = 6$: $62^6 \approx 56.8\text{ Billion}$ (Insufficient).
+- For $n = 7$: $62^7 \approx \mathbf{3.5\text{ Trillion}}$ ($\approx 10\times$ our 10-year requirement).
+
+$$\mathbf{\text{Short URL Path Length} = 7\text{ characters (e.g., https://tinyurl.com/aBc123D)}}$$
+
+---
+
+### Hashing + Collision vs. Distributed ID + Base62
+
+```mermaid
+flowchart TD
+    subgraph HashCollision["Approach A: Hash Truncation (MD5 / SHA-256)"]
+        H1["Long URL"] --> H2["MD5 Hash (128-bit)"]
+        H2 --> H3["Take First 7 Characters"]
+        H3 --> H4{"Collision in DB?"}
+        H4 -->|Yes| H5["Append Salt & Rehash (Slow Recursive Loop)"]
+        H4 -->|No| H6["Save to DB"]
+    end
+
+    subgraph Base62Conversion["Approach B: Distributed ID + Base62 (Recommended)"]
+        B1["Long URL"] --> B2["Unique 64-bit ID Generator (Snowflake)"]
+        B2 --> B3["Unique ID: 20,092,156,749"]
+        B3 --> B4["Base62 Conversion: 'zn9ed4'"]
+        B4 --> B5["Deterministic, Zero Collisions ($O(1)$)"]
+    end
+```
+
+#### Base62 Conversion Algorithm
+Convert integer ID $20092156749$ to Base62 string by repeatedly dividing by $62$:
+$$20092156749 \pmod{62} \dots \implies \text{"zn9ed4"}$$
+
+---
+
+## 4. High-Level Architecture & End-to-End Data Flows
+
+```mermaid
+flowchart TD
+    subgraph IngressTier["Edge Tier"]
+        CLIENT["Clients (Web / Mobile)"] --> LB["Load Balancer"]
+        LB --> WEB["Stateless Web Servers"]
+    end
+
+    subgraph CoreEngine["Core Compute & Cache"]
+        WEB <--> BLOOM["Bloom Filter (Quick Non-Existence Check)"]
+        WEB <--> REDIS[("Redis Cache Cluster<br/>(ShortURL -> LongURL)")]
+        WEB --> SNOWFLAKE["Snowflake Unique ID Generator"]
+    end
+
+    subgraph StorageTier["Data Tier"]
+        WEB --> SHARD_ROUTER["DB Sharding Proxy"]
+        SHARD_ROUTER --> S1[("MySQL / Cassandra Shard 1")]
+        SHARD_ROUTER --> S2[("MySQL / Cassandra Shard 2")]
+        SHARD_ROUTER --> SN[("MySQL / Cassandra Shard N")]
+    end
+```
+
+---
+
+### End-to-End Sequence Flows
+
+#### 1. URL Shortening Flow (Write Path)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Web as Web Server
+    participant Bloom as Bloom Filter
+    participant ID as Snowflake ID Gen
+    participant Cache as Redis Cache
+    participant DB as Sharded DB
+
+    User->>Web: POST /api/v1/data/shorten (longUrl: "https://amazon.com/...")
+    Web->>Bloom: Check if longUrl already exists
+    Web->>ID: Generate unique 64-bit ID (e.g., 20092156749)
+    Web->>Web: Convert ID to Base62 ("zn9ed4")
+    Web->>DB: INSERT INTO url_mapping (id, short_url, long_url)
+    Web->>Cache: SET short:zn9ed4 = "https://amazon.com/..." (TTL: 7 days)
+    Web-->>User: 200 OK (https://tinyurl.com/zn9ed4)
+```
+
+#### 2. URL Redirection Flow (Read Path)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Web as Web Server
+    participant Cache as Redis Cache
+    participant DB as Sharded DB
+
+    User->>Web: GET /zn9ed4
+    Web->>Cache: GET short:zn9ed4
+    alt Cache Hit (90% of traffic)
+        Cache-->>Web: Return longUrl
+    else Cache Miss
+        Cache-->>Web: Nil
+        Web->>DB: SELECT long_url FROM url_mapping WHERE short_url = "zn9ed4"
+        DB-->>Web: Return longUrl
+        Web->>Cache: SET short:zn9ed4 = longUrl
+    end
+    Web-->>User: HTTP 302 Found (Location: "https://amazon.com/...")
+```
+
+---
+
+## 5. Wrap Up & Summary
+
+### Architectural Summary Mindmap
+
+```mermaid
+mindmap
+  root((URL Shortener))
+    Encoding Strategy
+      Base62 Alphabet (0-9, a-z, A-Z)
+      7-Character Hash = 3.5 Trillion URLs
+      Snowflake ID -> Base62 (Zero Collisions)
+    Redirection Strategy
+      HTTP 301 for Low Server Load
+      HTTP 302 for Click Analytics & Tracking
+    Performance & Scale
+      Redis Cache-Aside for Hot 20% URLs
+      Bloom Filters to Prevent DB Misses
+      Database Sharding by hash(short_url)
+```
+
+| Subsystem | Architectural Decision | Core Rationale |
+|:---|:---|:---|
+| **ID Generation** | Distributed Snowflake + Base62 | Eliminates MD5 hash collision loops; guarantees $O(1)$ unique short URL creation. |
+| **Caching** | Redis Cache-Aside | Absorbs $>90\%$ of read QPS ($11{,}600\text{ QPS}$), providing sub-5ms redirection. |
+| **Existence Check** | Bloom Filter | Prevents expensive disk database lookups for non-existent short URLs. |
+| **Data Partitioning** | Sharding by `hash(short_url)` | Distributes $36.5\text{ TB}$ storage and write load evenly across DB shards. |
+
+---
+
+## References
+
+1. Base62 Encoding: https://en.wikipedia.org/wiki/Base62
+2. Bloom Filters: A Probabilistic Data Structure: https://en.wikipedia.org/wiki/Bloom_filter
+3. High Scalability: How TinyURL and Bitly scale: http://highscalability.com/blog/2014/7/21/bitly-architecture.html

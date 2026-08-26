@@ -1,232 +1,219 @@
 ---
 type: System Design Case
 title: "Design A Search Autocomplete System"
-description: "* [Table of Contents](/study-notes/notes/)"
-tags: [system-design]
+description: "Design a sub-millisecond search autocomplete (typeahead) engine (like Google Search) using optimized Trie prefix trees with node-level top-K caching, asynchronous MapReduce aggregation pipelines, and distributed Trie sharding."
+tags: [system-design, distributed-systems, search-autocomplete, trie, prefix-tree, mapreduce, caching, typeahead]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Design A Search Autocomplete System
 
-> **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam (Study Notes)
-> **ByteByteGo Chapter**: 14
-
-
-[![My Site Logo](images/tsg-14-a716f384.svg)![My Site Logo](images/tsg-14-a716f384.svg)
-
-**Toronto Study Group Notes**](/study-notes/)[Notes](/study-notes/notes/)
-
-* [Table of Contents](/study-notes/notes/)
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
-
-  + [Chapter 1: Scale From Zero to Millions of Users](/study-notes/notes/system-design-interview/ch1)
-  + [Chapter 2: BACK-OF-THE-ENVELOPE ESTIMATION](/study-notes/notes/system-design-interview/ch2)
-  + [Chapter 3: A FRAMEWORK FOR SYSTEM DESIGN INTERVIEWS](/study-notes/notes/system-design-interview/ch3)
-  + [Chapter 4: Design a Rate Limiter](/study-notes/notes/system-design-interview/ch4)
-  + [Chapter 5: Design Consistent Hashing](/study-notes/notes/system-design-interview/ch5)
-  + [Chapter 6: Design a Key-Value Store](/study-notes/notes/system-design-interview/ch6)
-  + [Chapter 7: Design a Unique ID Generator in Distributed Systems](/study-notes/notes/system-design-interview/ch7)
-  + [Chapter 8: Design A URL Shortener](/study-notes/notes/system-design-interview/ch8)
-  + [Chapter 9: Design a Web Crawler](/study-notes/notes/system-design-interview/ch9)
-  + [Chapter 10: Design a Notification System](/study-notes/notes/system-design-interview/ch10)
-  + [Chapter 11: Design a News Feed System](/study-notes/notes/system-design-interview/ch11)
-  + [Chapter 12: Design a Chat System](/study-notes/notes/system-design-interview/ch12)
-  + [Chapter 13: Designing a Search Autocomplete System](/study-notes/notes/system-design-interview/ch13)
-  + [Chapter 14: Design YouTube](/study-notes/notes/system-design-interview/ch14)
-  + [Chapter 15: DESIGN GOOGLE DRIVE](/study-notes/notes/system-design-interview/ch15)
-* [Kubernetes - Up and Running](/study-notes/notes/kubernetes-up-and-running)
-
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
-* Chapter 13: Designing a Search Autocomplete System
-
-
-# Chapter 13: Designing a Search Autocomplete System
-
-note
-
-Autocomplete (also called typeahead or search-as-you-type) shows suggested queries while users type. It is widely used in systems like Google Search or Amazon. The interview question is: design a system that returns the top-k most popular search queries given a prefix.
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 14  
+> **Topic**: Typeahead Search, Prefix Tree (Trie) Optimizations, Node-Level Top-K Caching, Offline MapReduce Pipelines
 
 ---
 
-## Step 1 - Understand the problem and establish design scope[​](#step-1---understand-the-problem-and-establish-design-scope "Direct link to Step 1 - Understand the problem and establish design scope")
+## 1. Understand the Problem and Establish Design Scope
 
-Candidate: Is the matching only supported at the beginning of a search query or in the middle as well?
-Interviewer: Only at the beginning of a search query.
-Candidate: How many autocomplete suggestions should the system return?
-Interviewer: 5
-Candidate: How does the system know which 5 suggestions to return?
-Interviewer: This is determined by popularity, decided by the historical query frequency.
-Candidate: Does the system support spell check?
-Interviewer: No, spell check or autocorrect is not supported.
-Candidate: Are search queries in English?
-Interviewer: Yes. If time allows at the end, we can discuss multi-language support.
-Candidate: Do we allow capitalization and special characters?
-Interviewer: No, we assume all search queries have lowercase alphabetic characters.
-Candidate: How many users use the product?
-Interviewer: 10 million DAU.
+A search autocomplete (typeahead) system suggests the top $K$ most relevant and popular completed queries in real time as the user types each character into a search box.
 
-**Requirement**
-
-1. **Speed**: Results must appear within ~100 ms.
-2. **Relevance**: Suggestions must match the prefix.
-3. **Ranking**: Sorted by popularity (query frequency).
-4. **Scalability**: Handle millions of users and high query per second (QPS).
-5. **Availability**: Must stay online despite failures.
-
-**Estimation:**
-
-* Assume 10 million daily active users (DAU).
-* An average person performs 10 searches per day.
-* 20 bytes of data per query string:
-  + Assume we use ASCII character encoding. 1 character = 1 byte
-  + Assume a query contains 4 words, and each word contains 5 characters on average.
-  + That is 4 x 5 = 20 bytes per query.
-* On average, 20 requests are sent for each search query. For example, the following 6 requests are sent to the backend by the time you finish typing “dinner”.
-  + `search?q=d`
-  + `search?q=di`
-  + `search?q=din`
-  + `search?q=dinn`
-  + `search?q=dinne`
-  + `search?q=dinner`
-* ~24,000 query per second (QPS) = 10,000,000 users \* 10 queries / day \* 20 characters / 24 hours / 3600 seconds.
-* Peak QPS = QPS \* 2 = ~48,000
-* Assume 20% of the daily queries are new. 10 million \* 10 queries / day \* 20 byte per query \* 20% = 0.4 GB.
-* => This means 0.4GB of new data is added to storage daily.
+```mermaid
+flowchart LR
+    USER["User types: 'be'"] --> API["Typeahead Query Service"]
+    API --> TRIE["In-Memory Optimized Trie"]
+    TRIE -->|Top 5 Suggestions| USER
+    
+    subgraph Suggestions["Returned Suggestions (Top 5)"]
+        S1["1. best buy (freq: 35M)"]
+        S2["2. betty white (freq: 28M)"]
+        S3["3. beyonce (freq: 24M)"]
+        S4["4. bed bath and beyond (freq: 19M)"]
+        S5["5. beef stew recipes (freq: 15M)"]
+    end
+```
 
 ---
 
-## Step 2 – High-Level Design[​](#step-2--high-level-design "Direct link to Step 2 – High-Level Design")
+### Interview Clarification & Scope
 
-Two main services:
-
-1. Data Gathering Service – collects queries, aggregates them, and stores frequency data.
-   ![Frequency Table](images/tsg-14-764771bc.avif)
-2. Query Service – given a prefix, returns the top-5 most searched queries.
-   ![Query and Frequency](images/tsg-14-efb94cf9.avif)
-   ![When you search](images/tsg-14-51f6227d.avif)
-   ![Query SQL](images/tsg-14-147fdb86.avif)
-
----
-
-## Step 3 – Deep Dive Design[​](#step-3--deep-dive-design "Direct link to Step 3 – Deep Dive Design")
-
-### Core Data Structure: Trie[​](#core-data-structure-trie "Direct link to Core Data Structure: Trie")
-
-* Trie (pronounced “try”) is a tree-like data structure that can compactly store strings.
-* The main idea of trie consists of the following:
-
-  + A trie is a tree-like data structure.
-  + The root represents an empty string.
-  + Each node stores a character and has 26 children, one for each possible character. To save space, we do not draw empty links.
-  + Each tree node represents a single word or a prefix string.
-    ![Trie](images/tsg-14-25eca215.avif)
-    ![Frequent Table](images/tsg-14-49264128.avif)
-    ![Trie and Frequency](images/tsg-14-525a2be3.avif)
-* How does autocomplete work with trie? Before diving into the algorithm, let us define some terms.
-
-  + p: length of a prefix
-  + n: total number of nodes in a trie
-  + c: number of children of a given node
-* Steps to get top k most searched queries are listed below:
-
-  1. Find the prefix. Time complexity: O(p).
-  2. Traverse the subtree from the prefix node to get all valid children. A child is valid if it
-     can form a valid query string. Time complexity: O(c)
-  3. Sort the children and get top k. Time complexity: O(clogc)
-* Example in Figure 13-7: a user types “tr” in the search box. The algorithm works as follows:
-
-  + Step 1: Find the prefix node “tr”.
-  + Step 2: Traverse the subtree to get all valid children. In this case, nodes [tree: 10], [true: 35], [try: 29] are valid.
-  + Step 3: Sort the children and get top 2. [true: 35] and [try: 29] are the top 2 queries with prefix “tr”.
-    ![algorithm of tr](images/tsg-14-65fb7936.avif)
-  + The time complexity of this algorithm is the sum of time spent on each step mentioned above: `O(p) + O(c) + O(clogc)`
-* **Optimizations:**
-
-  + Limit prefix length (constant-time lookup): Users rarely type a long search query into the search box. Thus, it is safe to say p is a small integer number, say 50. If we limit the length of a prefix, the time complexity for “Find the prefix” can be reduced from `O(p)` to O(small constant), aka `O(1)`.
-  + Cache top queries at each node (trade space for time).
-    ![Catch top queries](images/tsg-14-a5d1b2b4.avif)
-  + After applying those two optimizations:
-    1. Find the prefix node. Time complexity: `O(1)`
-    2. Return top k. Since top k queries are cached, the time complexity for this step is `O(1)`
-  + As the time complexity for each of the steps is reduced to `O(1)`, our algorithm takes only `O(1)` to fetch top k queries.
-
-### Data Gathering Service[​](#data-gathering-service "Direct link to Data Gathering Service")
-
-* Before, data is updated in real-time. This approach is not practical for the following two reasons:
-  1. Users may enter billions of queries per day. Updating the trie on every query significantly slows down the query service.
-  2. Top suggestions may not change much once the trie is built. Thus, it is unnecessary to update the trie frequently.
-* Redesigned data gathering service:
-  ![Redesigned data gathering service](images/tsg-14-365a90c9.avif)
-  + Analytics Logs: Store raw data of search queries. Logs are append-only and not indexed.
-    ![Analytics Logs](images/tsg-14-e49639f0.avif)
-  + Aggregators: Logs are very large and not in the right format, so we aggregate them.
-  + Aggregated Data:
-    ![Aggregated Data](images/tsg-14-fa227b21.avif)
-  + Workers: Workers are a set of servers that perform asynchronous jobs at regular intervals. They build the trie data structure and store it in Trie DB.
-  + Trie Cache: Trie Cache is a distributed cache system that keeps trie in memory for fast read. It takes a weekly snapshot of the DB.
-  + Trie DB: Trie DB is the persistent storage. Two options are available to store the data:
-    1. Document store: Like MongoDB
-    2. Key-value store: A trie can be represented in a hash table form by applying the following logic:
-    - Every prefix in the trie is mapped to a key in a hash table.
-    - Data on each trie node is mapped to a value in a hash table.
-      ![Key-value store](images/tsg-14-da7934d2.avif)
-    - PS. If you are unclear how key-value stores work, refer to Chapter 6: Design a key-value store.
-
-### Query Service[​](#query-service "Direct link to Query Service")
-
-* Query Service Design:
-  ![Query Service Design](images/tsg-14-52adf1c0.avif)
-  1. A search query is sent to the load balancer.
-  2. The load balancer routes the request to API servers.
-  3. API servers get trie data from Trie Cache and construct autocomplete suggestions for the client.
-  4. In case the data is not in Trie Cache, we replenish data back to the cache. This way, all subsequent requests for the same prefix are returned from the cache. A cache miss can happen when a cache server is out of memory or offline.
-* lightning-fast speed optimizations:
-  1. AJAX request: Sending/receiving a request/response does not refresh the whole web page.
-  2. Browser caching
-  3. Data sampling: For instance, only 1 out of every N requests is logged by the system.
-
-### Trie Operations[​](#trie-operations "Direct link to Trie Operations")
-
-* Create: workers build trie from aggregated logs.
-* Update: replace weekly, or update nodes (slower).
-  + Option 1: Update the trie weekly. Once a new trie is created, the new trie replaces the old one.
-  + Option 2: Update individual trie node directly.
-    ![Update Trie](images/tsg-14-e134b23d.avif)
-* Delete: use filter layer to remove offensive/unsafe suggestions.
-  ![Delete Trie](images/tsg-14-77e015f3.avif)
-
-### Scaling[​](#scaling "Direct link to Scaling")
-
-* Shard data across servers (e.g., by first character).
-* Adjust shard ranges dynamically to avoid uneven distribution. For example, if there are a similar number of historical queries for ‘s’ and for ‘u’, ‘v’, ‘w’, ‘x’, ‘y’ and ‘z’ combined, we can maintain two shards: one for ‘s’ and one for ‘u’ to ‘z’.
-  ![Scaling](images/tsg-14-97ddf780.avif)
+> **Candidate:** Does the prefix matching apply to anywhere in the query or only the beginning?  
+> **Interviewer:** Only matching at the **beginning of the query string**.
+>
+> **Candidate:** How many autocomplete suggestions should be returned?  
+> **Interviewer:** Top **$5$ suggestions**, ranked by historical search frequency/popularity.
+>
+> **Candidate:** What is the daily scale and latency SLA?  
+> **Interviewer:** **10 Million Daily Active Users (DAU)**. Autocomplete results must appear in **$< 100\text{ ms}$**.
+>
+> **Candidate:** Can we assume queries are normalized to English lowercase letters?  
+> **Interviewer:** Yes, lowercase alphabetic characters `[a-z]` for simplicity.
 
 ---
 
-## Step 4 – Extensions[​](#step-4--extensions "Direct link to Step 4 – Extensions")
+### Back-of-the-Envelope Estimation
 
-* Multi-language support: use Unicode in trie.
-* Country-specific trends: build separate tries per region; distribute with CDNs.
-* Real-time trending queries...some tips:
-  + Autocomplete requires fast response and efficient data structures.
-  + Trie + caching makes O(1) query response possible.
-  + Batch aggregation balances performance and freshness.
-  + Scalability and filtering are critical for production readiness.
+- **Daily Active Users (DAU)**: $10\text{ Million}$
+- **Queries per User per Day**: $10\text{ searches}$
+- **Keystrokes per Query**: On average, a user sends an autocomplete request per keystroke ($\approx 20\text{ requests per full query}$).
 
+$$\text{Total Daily Autocomplete Requests} = 10\text{M users} \times 10\text{ queries} \times 20\text{ keystrokes} = \mathbf{2{,}000{,}000{,}000\text{ requests/day}}$$
 
-[Previous
+$$\text{Average Query QPS} = \frac{2\times 10^9}{86{,}400\text{ sec}} \approx \mathbf{24{,}000\text{ QPS}}$$
 
-Chapter 12: Design a Chat System](/study-notes/notes/system-design-interview/ch12)[Next
+$$\text{Peak Query QPS} = 2 \times \text{Average QPS} \approx \mathbf{48{,}000\text{ QPS}}$$
 
-Chapter 14: Design YouTube](/study-notes/notes/system-design-interview/ch14)
+---
 
-* [Step 1 - Understand the problem and establish design scope](#step-1---understand-the-problem-and-establish-design-scope)
-* [Step 2 – High-Level Design](#step-2--high-level-design)
-* [Step 3 – Deep Dive Design](#step-3--deep-dive-design)
-  + [Core Data Structure: Trie](#core-data-structure-trie)
-  + [Data Gathering Service](#data-gathering-service)
-  + [Query Service](#query-service)
-  + [Trie Operations](#trie-operations)
-  + [Scaling](#scaling)
-* [Step 4 – Extensions](#step-4--extensions)
+## 2. Core Data Structure: Optimized Prefix Tree (Trie)
 
+A **Trie (Prefix Tree)** organizes string characters hierarchically where each node represents a character, and paths from the root form words.
+
+```mermaid
+flowchart TD
+    ROOT["Root ('')"]
+    ROOT --> B["b"]
+    ROOT --> T["t"]
+    
+    B --> BE["e (be)"]
+    BE --> BEST["st (best)"]
+    BE --> BEEF["ef (beef)"]
+    
+    T --> TR["r (tr)"]
+    TR --> TREE["ee (tree)"]
+    TR --> TRUE["ue (true)"]
+```
+
+---
+
+### 1. Unoptimized vs. Optimized Trie Lookup
+
+#### Naive Trie Traversal ($O(p + c + c \log c)$)
+1. Find prefix node of length $p \implies O(p)$.
+2. Traverse entire child subtree with $c$ nodes $\implies O(c)$.
+3. Sort all child queries to extract top $K \implies O(c \log c)$.
+- **Problem**: When a prefix has millions of children (e.g., prefix `"a"`), traversing and sorting the subtree in real time violates the $100\text{ ms}$ latency budget.
+
+---
+
+#### Optimization 1: Max Prefix Length Constraint ($p \le 50$)
+- Real-world users rarely type more than $50$ characters. Limiting prefix search depth caps the initial search at $O(1)$.
+
+#### Optimization 2: Pre-Computed Top-$K$ Caching at Every Node ($O(1)$)
+- Store a pre-sorted list of the **Top 5 search queries directly inside each Trie node**.
+
+```mermaid
+classDiagram
+    class TrieNode {
+        +char character
+        +Map~char, TrieNode~ children
+        +boolean isEndOfWord
+        +long frequency
+        +List~TopQuery~ top5Cache
+    }
+
+    class TopQuery {
+        +String query
+        +long frequency
+    }
+
+    TrieNode *-- TopQuery
+```
+
+```mermaid
+flowchart TD
+    NODE_TR["Node: 'tr'<br/><b>Cached Top 2: [('true', 35), ('try', 29)]</b>"]
+    NODE_TR --> NODE_TREE["Node: 'tree' (freq: 10)"]
+    NODE_TR --> NODE_TRUE["Node: 'true' (freq: 35)"]
+    NODE_TR --> NODE_TRY["Node: 'try' (freq: 29)"]
+```
+
+$$\mathbf{\text{Optimized Retrieval Complexity}} = O(\text{prefix length}) + O(1\text{ Cache Read}) \approx \mathbf{O(1)\text{ Instant Time!}}$$
+
+---
+
+## 3. High-Level Architecture & Two Core Pipelines
+
+The system separates into a **Real-Time Query Service** and an **Offline Data Gathering & Trie Aggregation Pipeline**:
+
+```mermaid
+flowchart TD
+    subgraph QueryPath["1. Real-Time Query Path (< 10 ms)"]
+        CLIENT["Client Browser / Mobile"] -->|1. GET /v1/search/suggest?q=be| LB["Load Balancer"]
+        LB --> GW["Typeahead API Servers"]
+        GW <--> CACHE[("Distributed Trie Cache<br/>(Redis / In-Memory Shards)")]
+    end
+
+    subgraph DataPipeline["2. Offline Aggregation & Ingestion Pipeline"]
+        LOGS["Search Query Log Stream (Kafka)"] --> AGG["Log Aggregator (Flink / Spark)"]
+        AGG --> DB_FREQ[("Weekly Query Frequency DB<br/>(Cassandra / ClickHouse)")]
+        DB_FREQ --> MAPREDUCE["MapReduce / Spark Trie Builder"]
+        MAPREDUCE --> SNAPSHOT[("Trie Snapshots (S3 / HDFS)")]
+        SNAPSHOT -->|Periodic Reload (Weekly)| CACHE
+    end
+```
+
+---
+
+## 4. Design Deep Dive
+
+### 1. Scaling the Trie (Horizontal Sharding)
+
+When the entire global search vocabulary cannot fit on a single server, the Trie is sharded across multiple machines:
+
+```mermaid
+flowchart TD
+    ROUTER["Trie Shard Router"]
+    
+    ROUTER -->|Prefix 'a' - 'm'| S1["Trie Server 1 ('a' - 'm')"]
+    ROUTER -->|Prefix 'n' - 'z'| S2["Trie Server 2 ('n' - 'z')"]
+    
+    subgraph MultiLevel["2-Level Sharding for Hot Prefixes"]
+        S1 --> S1_A["Server 1A ('aa' - 'ag')"]
+        S1 --> S1_B["Server 1B ('ah' - 'az')"]
+    end
+```
+
+- **Consistent Hashing**: Route queries by `hash(prefix)` to ensure balanced distribution across Trie cache servers.
+
+---
+
+### 2. Fast Client-Side Optimizations
+
+1. **AJAX Debouncing**: Delay sending search API calls until the user stops typing for $50\text{–}100\text{ ms}$ (eliminates up to $70\%$ of intermediate network requests).
+2. **Browser Cache (`Cache-Control`)**: Cache autocomplete responses in the browser for $1\text{ hour}$ (e.g., subsequent typing of `"goog"` instantly resolves locally).
+
+---
+
+## 5. Architectural Summary
+
+```mermaid
+mindmap
+  root((Search Autocomplete))
+    Data Structure
+      Trie with max depth = 50
+      Pre-computed Top-5 queries cached per node
+      O(1) instant lookup time
+    Architecture
+      Stateless Query API + In-Memory Trie Cache
+      Offline Batch Ingestion (Kafka + Spark)
+      Consistent Hashing Shard Router
+    Client Optimization
+      Client-side Debouncing (100ms)
+      Browser HTTP Caching
+```
+
+| Subsystem | Architectural Decision | Core Benefit |
+|:---|:---|:---|
+| **Data Structure** | Trie with Node-Level Top 5 Cache | Reduces suggestion retrieval from $O(c \log c)$ to instant $O(1)$. |
+| **Data Ingestion** | Offline Weekly MapReduce Aggregation | Isolates analytical log processing from real-time search queries. |
+| **Scalability** | Sharded In-Memory Trie Cluster | Distributes memory footprint and query load linearly across servers. |
+| **Client Efficiency**| Client-Side Debouncing | Prevents millions of redundant intermediate keystroke requests from hitting backend servers. |
+
+---
+
+## References
+
+1. Trie Prefix Tree Data Structure: https://en.wikipedia.org/wiki/Trie
+2. Google Search Autocomplete Architecture: https://blog.google/products/search/how-google-autocomplete-works-search/
+3. Building a Real-Time Autocomplete System: https://medium.com/@prefixyteam/how-we-built-prefixy-a-scalable-prefix-search-service-for-autocomplete-d34e62a03cf6

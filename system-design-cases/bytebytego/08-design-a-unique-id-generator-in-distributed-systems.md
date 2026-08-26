@@ -1,190 +1,216 @@
 ---
 type: System Design Case
 title: "Design A Unique ID Generator In Distributed Systems"
-description: "* [Table of Contents](/study-notes/notes/)"
-tags: [system-design]
+description: "Design a distributed, highly available, 64-bit unique ID generator (like Twitter Snowflake) supporting time-sortable numeric IDs, multi-datacenter deployment, high throughput (>10,000 IDs/sec), and clock synchronization resilience."
+tags: [system-design, distributed-systems, unique-id, snowflake, twitter, clock-synchronization, high-throughput]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Design A Unique ID Generator In Distributed Systems
 
-> **Source**: System Design Interview – An Insider's Guide by Alex Xu & Sahn Lam (Study Notes)
-> **ByteByteGo Chapter**: 08
+> **Source**: *System Design Interview – An Insider's Guide: Volume 1* by Alex Xu  
+> **ByteByteGo Chapter**: 08  
+> **Topic**: Distributed ID Generation, Bit-Level Layouts, Twitter Snowflake, NTP Clock Drift Resilience
 
+---
 
-[![My Site Logo](images/tsg-08-a716f384.svg)![My Site Logo](images/tsg-08-a716f384.svg)
+## 1. Understand the Problem and Establish Design Scope
 
-**Toronto Study Group Notes**](/study-notes/)[Notes](/study-notes/notes/)
+In distributed architectures, relational database `AUTO_INCREMENT` primary keys become single points of failure and cannot scale horizontally across multi-master or sharded databases. We need a decentralized service capable of generating unique, globally sorted 64-bit numerical IDs at high velocity.
 
-* [Table of Contents](/study-notes/notes/)
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
+```mermaid
+flowchart LR
+    APP1["Application Server 1"] -->|getId()| IDGEN1["Snowflake ID Generator<br/>(DC 1, Node 1)"]
+    APP2["Application Server 2"] -->|getId()| IDGEN2["Snowflake ID Generator<br/>(DC 1, Node 2)"]
+    APP3["Application Server 3"] -->|getId()| IDGEN3["Snowflake ID Generator<br/>(DC 2, Node 1)"]
 
-  + [Chapter 1: Scale From Zero to Millions of Users](/study-notes/notes/system-design-interview/ch1)
-  + [Chapter 2: BACK-OF-THE-ENVELOPE ESTIMATION](/study-notes/notes/system-design-interview/ch2)
-  + [Chapter 3: A FRAMEWORK FOR SYSTEM DESIGN INTERVIEWS](/study-notes/notes/system-design-interview/ch3)
-  + [Chapter 4: Design a Rate Limiter](/study-notes/notes/system-design-interview/ch4)
-  + [Chapter 5: Design Consistent Hashing](/study-notes/notes/system-design-interview/ch5)
-  + [Chapter 6: Design a Key-Value Store](/study-notes/notes/system-design-interview/ch6)
-  + [Chapter 7: Design a Unique ID Generator in Distributed Systems](/study-notes/notes/system-design-interview/ch7)
-  + [Chapter 8: Design A URL Shortener](/study-notes/notes/system-design-interview/ch8)
-  + [Chapter 9: Design a Web Crawler](/study-notes/notes/system-design-interview/ch9)
-  + [Chapter 10: Design a Notification System](/study-notes/notes/system-design-interview/ch10)
-  + [Chapter 11: Design a News Feed System](/study-notes/notes/system-design-interview/ch11)
-  + [Chapter 12: Design a Chat System](/study-notes/notes/system-design-interview/ch12)
-  + [Chapter 13: Designing a Search Autocomplete System](/study-notes/notes/system-design-interview/ch13)
-  + [Chapter 14: Design YouTube](/study-notes/notes/system-design-interview/ch14)
-  + [Chapter 15: DESIGN GOOGLE DRIVE](/study-notes/notes/system-design-interview/ch15)
-* [Kubernetes - Up and Running](/study-notes/notes/kubernetes-up-and-running)
+    IDGEN1 & IDGEN2 & IDGEN3 -.->|64-bit Time-Sortable Integer| DB[("Distributed Sharded DB")]
+```
 
-* [System Design Interview: An Insider’s Guide](/study-notes/notes/system-design-interview)
-* Chapter 7: Design a Unique ID Generator in Distributed Systems
+---
 
+### Interview Clarification & Scope
 
-# Chapter 7: Design a Unique ID Generator in Distributed Systems
+> **Candidate:** What are the format and size constraints for the generated IDs?  
+> **Interviewer:** Must be **64-bit numeric integers** that are roughly **time-sortable** (IDs created later are larger than IDs created earlier).
+>
+> **Candidate:** What is the throughput requirement?  
+> **Interviewer:** Must generate over **$10{,}000\text{ IDs per second}$** with zero collisions.
+>
+> **Candidate:** Does the system span multiple data centers?  
+> **Interviewer:** Yes, multi-datacenter deployment with zero central coordination.
 
-note
+---
 
-You are asked to design a unique ID generator in distributed systems.
+### Requirements Summary
 
-## First thought[​](#first-thought "Direct link to First thought")
+#### Functional Requirements
+1. **Global Uniqueness**: No two generated IDs can ever be identical.
+2. **64-Bit Numerical Values**: Fit directly into standard 64-bit integer types (`BIGINT` / `int64`).
+3. **Time-Sortable ($k$-ordered)**: IDs roughly increment with time.
 
-> Using a primary key with the `auto_increment` attribute in a traditional
-> database
+#### Non-Functional Requirements
+- **High Throughput**: Capable of generating $> 10{,}000\text{ IDs/sec}$ per node.
+- **High Availability & Low Latency**: Generation must be local and sub-microsecond without distributed network locking.
 
-* Does not work in a distributed environment because
-  1. a single database server is not large enough
-  2. generating unique IDs across multiple databases with minimal delay is challenging
-     ![examples of unique IDs](images/tsg-08-08296859.png)
+---
 
-## Step 1 - Understand the problem and establish design scope[​](#step-1---understand-the-problem-and-establish-design-scope "Direct link to Step 1 - Understand the problem and establish design scope")
+## 2. High-Level Alternatives Evaluation
 
-* **Clarification questions**
-  + **Candidate**: What are the characteristics of unique IDs?
-  + **Interviewer**: IDs must be unique and sortable.
-  + **Candidate**: For each new record, does ID increment by 1?
-  + **Interviewer**: The ID increments by time but not necessarily only increments by 1. IDs
-    created in the evening are larger than those created in the morning on the same day.
-  + **Candidate**: Do IDs only contain numerical values?
-  + **Interviewer**: Yes, that is correct.
-  + **Candidate**: What is the ID length requirement?
-  + **Interviewer**: IDs should fit into 64-bit.
-  + **Candidate**: What is the scale of the system?
-  + **Interviewer**: The system should be able to generate 10,000 IDs per second.
-* **the requirements are listed as follows**
-  + IDs must be unique.
-  + IDs are numerical values only.
-  + IDs fit into 64-bit.
-  + IDs are ordered by date.
-  + Ability to generate over 10,000 unique IDs per second.
+```mermaid
+flowchart TD
+    subgraph Approaches["ID Generation Strategies"]
+        direction TB
+        A["<b>1. Multi-Master MySQL (Auto-Increment Step K)</b><br/>Server 1 generates 1, 3, 5; Server 2 generates 2, 4, 6.<br/>❌ Hard to scale dynamically; fails across multiple data centers."]
+        B["<b>2. UUID (128-Bit String)</b><br/>Universally unique without central coordination.<br/>❌ 128 bits (too long); non-numeric; random order degrades B-tree index performance."]
+        C["<b>3. Centralized Ticket Server (Flickr Pattern)</b><br/>Dedicated MySQL with auto-increment.<br/>❌ Single Point of Failure (SPOF); network latency bottleneck."]
+        D["<b>4. Twitter Snowflake (64-Bit Bitmask)</b><br/>Decentralized bit partitioning (Timestamp + Node + Sequence).<br/>✅ 64-bit, time-sorted, ultra-fast, highly scalable."]
+    end
+```
 
-## Step 2 - Propose high-level design and get buy-in[​](#step-2---propose-high-level-design-and-get-buy-in "Direct link to Step 2 - Propose high-level design and get buy-in")
+### Strategy Comparison Matrix
 
-* **Multi-master replication**
-  ![Multi-master replication](images/tsg-08-8e8bb6ab.png)
+| Approach | Bit Length | Sortable by Time | Scale & Coordination | SPOF Risk |
+|:---|:---|:---|:---|:---|
+| **Multi-Master MySQL** | 64 bits | No (across servers) | Poor when servers are added/removed | Low |
+| **UUID (v4)** | 128 bits | No (Random) | **Excellent (Zero coordination)** | **None** |
+| **Ticket Server (Flickr)** | 64 bits | Yes | Poor (Single central bottleneck) | **High (Single POF)** |
+| **Twitter Snowflake** | **64 bits** | **Yes (Locally & Globally)** | **Excellent (Independent nodes)** | **None** |
 
-  + uses the databases’ `auto_increment` feature
-  + increasing the next ID by `1`, we increase it by `k`
-  + where k is the number of database servers in use
-  + ✅ Pros:
-    - solves some scalability issues because IDs can scale with the number of database servers.
-  + ❌ Cons:
-    - Hard to scale with multiple data centers
-    - IDs do not go up with time across multiple servers.
-    - It does not scale well when a server is added or removed
-* **UUID**
+---
 
-  + UUID is a `128-bit` number used to identify information in computer systems. e.g. `09c93e62-50b4-468d-bf8a-c07e1040bfb2`
-    ![UUIDs design](images/tsg-08-2bccdef9.png)
-  + ✅ Pros:
-    - low probability of getting collusion
-    - UUIDs can be
-      generated independently without coordination between servers
-    > after generating 1 billion UUIDs every second for approximately
-    > 100 years would the probability of creating a single duplicate reach 50%”
+## 3. Design Deep Dive: The Twitter Snowflake 64-Bit Layout
 
-    - The system is easy to scale
-      * because each web server is responsible for generating IDs they consume.
-      * ID generator can easily scale with web servers.
-  + ❌ Cons:
-    - IDs are 128 bits long, but our requirement is 64 bits.
-    - IDs do not go up with time.
-    - IDs could be non-numeric.
-* **Ticket Server**
+Instead of relying on central storage, Snowflake divides a 64-bit integer into distinct semantic bit fields:
 
-  + The idea is to use a centralized auto\_increment feature in a single database server
-    ![Ticket Server](images/tsg-08-3dc9b6c0.png)
-    - ✅ Pros:
-      * Numeric IDs.
-      * It is easy to implement, and it works for small to medium-scale applications.
-    - ❌ Cons:
-      * Single point of failure
-      * To avoid a single point of failure → we can set up
-        multiple ticket servers → will introduce new challenges such as data
-        synchronization.
-* **Twitter snowflake approach**
+```mermaid
+flowchart LR
+    S["1 Bit<br/><b>Sign (0)</b>"] --- TS["41 Bits<br/><b>Timestamp (ms since epoch)</b>"]
+    TS --- DC["5 Bits<br/><b>Datacenter ID (0-31)</b>"]
+    DC --- MACH["5 Bits<br/><b>Worker ID (0-31)</b>"]
+    MACH --- SEQ["12 Bits<br/><b>Sequence Number (0-4095)</b>"]
+```
 
-  + Twitter’s unique ID generation system called “snowflake” is inspiring and can satisfy our requirements.
-  + Divide and conquer → Instead of generating an ID directly → we divide an ID into different sections
-  + the layout of a `64-bit` ID
-    ![layout](images/tsg-08-e29fef2d.png)
-  + Sign bit: `1 bit`. It will always be `0`. This is reserved for future uses. It can potentially be used to distinguish between signed and unsigned numbers.
-  + Timestamp: `41 bits`. Milliseconds since the epoch or custom epoch. We use Twitter snowflake default epoch `1288834974657`, equivalent to `Nov 04, 2010, 01:42:54 UTC`.
-  + Datacenter ID: `5 bits`, which gives us `2 ^ 5 = 32` datacenters.
-  + Machine ID: `5 bits`, which gives us `2 ^ 5 = 32` machines per datacenter.
-  + Sequence number: `12 bits`. For every ID generated on that machine/process, the sequence number is incremented by `1`. The number is reset to `0` every millisecond.
+### Bit Allocation Breakdown
 
-## Step 3 - Design deep dive[​](#step-3---design-deep-dive "Direct link to Step 3 - Design deep dive")
+| Bit Field | Width | Range / Capacity | Purpose / Rationale |
+|:---|:---|:---|:---|
+| **Sign Bit** | `1 bit` | Always `0` | Reserved to ensure the 64-bit integer remains positive in signed languages (Java/C#). |
+| **Timestamp** | `41 bits` | $2^{41} - 1 \approx 2.199 \times 10^{12}\text{ ms} \approx \mathbf{69.7\text{ years}}$ | Milliseconds elapsed since a custom epoch (e.g., Nov 04, 2010). |
+| **Datacenter ID** | `5 bits` | $2^5 = \mathbf{32\text{ Datacenters}}$ | Uniquely identifies the physical datacenter hosting the generator. |
+| **Worker / Machine ID** | `5 bits` | $2^5 = \mathbf{32\text{ Worker Nodes / DC}}$ | Total of $32 \times 32 = \mathbf{1{,}024\text{ unique generator nodes}}$. |
+| **Sequence Number** | `12 bits` | $2^{12} = \mathbf{4{,}096\text{ IDs / ms / node}}$ | Increments per ID within the same millisecond; resets to `0` each new millisecond. |
 
-* Fixed: Datacenter IDs and machine ID
+$$\text{Theoretical Peak Throughput} = 1{,}024\text{ nodes} \times 4{,}096\text{ IDs/ms} \times 1{,}000\text{ ms/s} \approx \mathbf{4.19\text{ Billion IDs/sec}}$$
 
-  + Any changes in datacenter IDs and machine IDs require careful review
-    since an accidental change in those values can lead to ID conflicts.
-* **Timestamp**
+---
 
-  + `41 bits`
-  + are sortable by time
-  + binary representation is converted to UTC
-    ![binary to UTC](images/tsg-08-fd8c6523.png)
-  + The maximum timestamp that can be represented in `41 bits` is
-    `2 ^ 41 - 1 = 2199023255551 milliseconds (ms)`, which gives us: `~ 69 years = 2199023255551 ms / 1000 seconds / 365 days / 24 hours/ 3600 seconds`
-  + This means the ID generator will work for 69 years
-  + and having a custom epoch time close to today’s date delays the overflow time
-  + After 69 years, we will need a new epoch time or adopt other techniques
-    to migrate IDs.
-* **Sequence number**
+### Snowflake ID Generation Algorithm (Java / Pseudocode)
 
-  + `12 bits`
-  + 2 ^ 12 = 4096 combinations.
-  + This field is `0` unless more than one ID is generated in a millisecond on the same server
+```java
+public class SnowflakeIdGenerator {
+    private final long customEpoch = 1609459200000L; // 2021-01-01 00:00:00 UTC
+    private final long datacenterIdBits = 5L;
+    private final long workerIdBits = 5L;
+    private final long sequenceBits = 12L;
 
-## Step 4 - Wrap up[​](#step-4---wrap-up "Direct link to Step 4 - Wrap up")
+    private final long maxWorkerId = -1L ^ (-1L << workerIdBits); // 31
+    private final long maxSequence = -1L ^ (-1L << sequenceBits); // 4095
 
-* **unique ID generator**
-* multimaster replication
-* UUID
-* ticket server
-* Twitter snowflake-like unique ID generator
-* **a few additional talking points:**
-  + **Clock synchronization**
-  + we assume ID generation servers have the same clock
-  + might not be true when a server is running on multiple cores and multi-machine scenarios
-  + ✅ popular solution: Network Time Protocol
-  + **Section length tuning**
-    - e.g. fewer sequence numbers but more timestamp bits are effective for low concurrency and long-term applications
-  + **High availability**
-    - Since an ID generator is a mission-critical system, it must be highly
-      available
+    private final long workerIdShift = sequenceBits; // 12
+    private final long datacenterIdShift = sequenceBits + workerIdBits; // 17
+    private final long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits; // 22
 
+    private long datacenterId;
+    private long workerId;
+    private long sequence = 0L;
+    private long lastTimestamp = -1L;
 
-[Previous
+    public synchronized long nextId() {
+        long currentTimestamp = System.currentTimeMillis();
 
-Chapter 6: Design a Key-Value Store](/study-notes/notes/system-design-interview/ch6)[Next
+        // 1. Clock drift defense
+        if (currentTimestamp < lastTimestamp) {
+            throw new IllegalStateException("Clock moved backwards! Refusing to generate ID for " 
+                + (lastTimestamp - currentTimestamp) + "ms");
+        }
 
-Chapter 8: Design A URL Shortener](/study-notes/notes/system-design-interview/ch8)
+        // 2. Same millisecond: increment sequence
+        if (currentTimestamp == lastTimestamp) {
+            sequence = (sequence + 1) & maxSequence;
+            if (sequence == 0) {
+                // Sequence exhausted (4096 IDs in 1 ms): wait until next millisecond
+                currentTimestamp = waitNextMillis(currentTimestamp);
+            }
+        } else {
+            // New millisecond: reset sequence
+            sequence = 0L;
+        }
 
-* [First thought](#first-thought)
-* [Step 1 - Understand the problem and establish design scope](#step-1---understand-the-problem-and-establish-design-scope)
-* [Step 2 - Propose high-level design and get buy-in](#step-2---propose-high-level-design-and-get-buy-in)
-* [Step 3 - Design deep dive](#step-3---design-deep-dive)
-* [Step 4 - Wrap up](#step-4---wrap-up)
+        lastTimestamp = currentTimestamp;
 
+        // 3. Bitwise OR composition
+        return ((currentTimestamp - customEpoch) << timestampLeftShift)
+                | (datacenterId << datacenterIdShift)
+                | (workerId << workerIdShift)
+                | sequence;
+    }
+
+    private long waitNextMillis(long currentTimestamp) {
+        while (currentTimestamp <= lastTimestamp) {
+            currentTimestamp = System.currentTimeMillis();
+        }
+        return currentTimestamp;
+    }
+}
+```
+
+---
+
+## 4. Key Distributed System Challenges
+
+### 1. Clock Synchronization & Drift (NTP Anomaly)
+- **Problem**: In distributed systems, Network Time Protocol (NTP) adjustments can cause system clocks to drift backwards by milliseconds, potentially generating duplicate timestamps.
+- **Mitigation Strategies**:
+  - **Wait / Sleep**: If clock skew is minor ($< 5\text{ ms}$), pause the generator thread until the real clock catches up to `lastTimestamp`.
+  - **Refuse Requests**: If clock skew is substantial, reject ID generation requests and trigger high-priority alerts to on-call engineers.
+  - **Hardware Clocks**: Use cloud instances equipped with atomic clocks (e.g., AWS Time Sync Service, Google TrueTime).
+
+### 2. Worker ID Provisioning & Management
+- Worker IDs ($0\text{–}31$) and Datacenter IDs ($0\text{–}31$) should be dynamically assigned on node startup via consensus registries like **Apache ZooKeeper** or **etcd** to avoid human misconfiguration.
+
+---
+
+## 5. Architectural Summary
+
+```mermaid
+mindmap
+  root((Snowflake ID Generator))
+    Layout
+      1-bit Sign Bit (0)
+      41-bit Timestamp (~69 years)
+      10-bit DC & Worker ID (1024 nodes)
+      12-bit Sequence (4096 IDs/ms)
+    Key Advantages
+      64-bit compact BIGINT
+      Locally generated in memory (no network locks)
+      B-tree index friendly (monotonic insertion)
+    Failure Protections
+      Clock drift check
+      Dynamic worker allocation via ZooKeeper
+```
+
+| Dimension | Architectural Choice | Benefit |
+|:---|:---|:---|
+| **Structure** | 64-bit bitmask partitioning | Fits directly into database `BIGINT` indices without string serialization overhead. |
+| **Performance** | Local in-memory bit-shifting | Sub-microsecond latency ($> 4\text{M IDs/sec}$ per node). |
+| **Ordering** | 41-bit timestamp prefix | Monotonically increasing layout minimizes B-Tree index page splits. |
+| **Fault Isolation** | Decentralized independent workers | Zero cross-server network dependencies during runtime. |
+
+---
+
+## References
+
+1. Twitter Snowflake Announcement: https://blog.twitter.com/engineering/en_us/a/2010/announcing-snowflake
+2. Network Time Protocol (NTP) Best Practices: https://en.wikipedia.org/wiki/Network_Time_Protocol
+3. Sonyflake (Go Implementation of Snowflake): https://github.com/sony/sonyflake

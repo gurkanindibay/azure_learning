@@ -1,317 +1,256 @@
 ---
 type: System Design Case
 title: "Distributed Message Queue"
-description: "Design a distributed message queue that lets producers publish messages and consumers process them reliably at scale."
-tags: [system-design]
+description: "Design a high-throughput, horizontally scalable distributed message queue (like Apache Kafka or Pulsar) featuring append-only commit logs, zero-copy data transfer, partition replication (ISR), and transactional exactly-once delivery."
+tags: [system-design, distributed-systems, message-queue, kafka, pulsar, commit-log, zero-copy, isr, exactly-once]
 timestamp: 2026-08-22T00:00:00Z
 ---
 
 # Distributed Message Queue
 
-> **Source**: System Design Interview – An Insider's Guide: Volume 2 by Alex Xu & Sahn Lam
-> **ByteByteGo Chapter**: 20
+> **Source**: *System Design Interview – An Insider's Guide: Volume 2* by Alex Xu & Sahn Lam  
+> **ByteByteGo Chapter**: 20  
+> **Topic**: Append-Only Commit Logs, Zero-Copy I/O, Partitioning & ISR Replication, Consumer Group Rebalancing, Exactly-Once Semantics
 
-## 1. Problem statement
+---
 
-Design a distributed message queue that lets producers publish messages and consumers process them reliably at scale.
+## 1. Understand the Problem and Establish Design Scope
 
-The system should support both:
-
-- **Point-to-point delivery**: one consumer in a group processes each message.
-- **Publish-subscribe delivery**: multiple consumer groups process the same message independently.
-
-The design also needs configurable retention, ordering, throughput, latency, and delivery guarantees.
-
-## 2. Clarify the requirements
-
-| Question | Assumption |
-| --- | --- |
-| Message format and size | Text or small binary payloads, usually a few KB. |
-| Retention | Messages are retained for two weeks. |
-| Replay | Consumers can replay retained messages. |
-| Ordering | Messages are ordered within a partition. Global ordering is not required. |
-| Scale | Support many producers and consumers, with high throughput. |
-| Delivery semantics | At-most-once, at-least-once, and exactly-once are configurable. |
-| Workload | Support both high-throughput streams and low-latency queues. |
-
-### Functional requirements
-
-- Producers publish messages to topics.
-- Consumers read messages from topics.
-- Consumer groups maintain independent positions and can replay messages.
-- Historical messages expire according to a retention policy.
-- A message key can keep related messages in the same partition.
-- Ordering is guaranteed within each partition.
-- Producers can choose a delivery acknowledgment level.
-
-### Non-functional requirements
-
-- Horizontally scalable and distributed.
-- Durable: messages are written to disk and replicated.
-- Fault tolerant: broker failures should not lose committed messages.
-- Tunable for either throughput or latency.
-- Able to absorb traffic spikes.
-
-### Traditional queue versus retained log
-
-Traditional queues such as RabbitMQ usually remove a message after successful delivery. This design behaves more like a durable event log: messages remain available during the retention period, so several consumer groups can read them independently.
-
-## 3. Core model
-
-### Topics, partitions, and brokers
-
-- A **topic** groups related messages.
-- A topic is split into **partitions** for scale.
-- Each partition is an append-only FIFO log.
-- A message's position in a partition is its **offset**.
-- A **broker** stores partitions and serves reads and writes.
-- Replicas of a partition are placed on different brokers.
-
-Messages with the same key are routed to the same partition, commonly with:
-
-```text
-partition = hash(messageKey) % partitionCount
-```
-
-Messages without a key can be distributed across partitions. Ordering is therefore guaranteed only for messages that share a partition.
-
-### Consumer groups
-
-A consumer group is a set of consumers that share work:
-
-- Each partition is assigned to at most one consumer in a group.
-- Different groups keep separate offsets and can read the same messages.
-- A single group can simulate point-to-point delivery.
-- Adding consumers increases parallelism until there are more consumers than partitions.
-
-## 4. High-level architecture
+A distributed message queue provides high-throughput, low-latency, and durable publish-subscribe messaging between decoupled distributed microservices.
 
 ```mermaid
 flowchart LR
-    P[Producers] -->|publish| B[Broker cluster]
-    B --> S[(Append-only storage)]
-    B --> C1[Consumer group A]
-    B --> C2[Consumer group B]
-    B <--> M[(Metadata and offset store)]
-    Z[Controller and coordination] <--> B
+    subgraph Producers["Message Producers"]
+        P1["Order Service"]
+        P2["Payment Service"]
+    end
+
+    subgraph BrokerCluster["Distributed Broker Cluster (Kafka)"]
+        TOPIC["Topic: orders (3 Partitions)"]
+        P_0["Partition 0 (Leader: B1)"]
+        P_1["Partition 1 (Leader: B2)"]
+        P_2["Partition 2 (Leader: B3)"]
+        TOPIC --> P_0 & P_1 & P_2
+    end
+
+    subgraph ConsumerGroups["Consumer Groups"]
+        subgraph GroupA["Group A (Shipping)"]
+            C1["Consumer A1"]
+            C2["Consumer A2"]
+        end
+        subgraph GroupB["Group B (Analytics)"]
+            C3["Consumer B1"]
+        end
+    end
+
+    Producers -->|Batch Publish| TOPIC
+    P_0 --> C1
+    P_1 --> C2
+    P_2 --> C2
+    P_0 & P_1 & P_2 --> C3
 ```
 
-### Components
-
-| Component | Responsibility |
-| --- | --- |
-| Producer client | Selects a partition, buffers messages, and sends batches. |
-| Broker | Accepts writes, serves reads, and owns partition replicas. |
-| Partition | Stores an ordered subset of a topic. |
-| Consumer group coordinator | Tracks membership, heartbeats, partition assignments, and offsets. |
-| Data storage | Persists message logs. |
-| State storage | Persists consumer-group offsets and assignments. |
-| Metadata storage | Stores topics, partitions, retention, and replica placement. |
-| Coordination service | Detects brokers, elects a controller, and coordinates cluster metadata. |
-
-The controller creates the replica distribution plan and assigns partition leaders. ZooKeeper or etcd are common coordination choices. Modern Kafka deployments can also store this metadata within the Kafka cluster itself.
-
-## 5. Storage design
-
-### Why not a database?
-
-The workload is primarily append, sequential read, and retention-based deletion. A general-purpose database can store the data, but random-access indexes, update semantics, and coordination overhead make it a poor fit at high volume.
-
-### Append-only log segments
-
-Store each partition as a sequence of log segments:
-
-1. Append new messages to the active segment.
-2. When it reaches a size limit, close it and create a new active segment.
-3. Read older segments sequentially.
-4. Delete expired segments when the retention period or capacity limit is reached.
-
-This layout provides efficient sequential disk access and works well with the operating system's page cache. It also avoids rewriting existing messages.
-
-### Message format
-
-| Field | Purpose |
-| --- | --- |
-| `key` | Optional business key used for partition routing. |
-| `value` | Message payload. |
-| `topic` | Owning topic. |
-| `partition` | Partition identifier. |
-| `offset` | Position within the partition. |
-| `timestamp` | Storage time. |
-| `size` | Payload size. |
-| `crc` | Detects corrupted data. |
-
-The same message representation should pass from producer to broker to consumer without unnecessary mutation or copying.
-
-### Batching
-
-Batch at every layer:
-
-- Producers collect messages before sending.
-- Brokers append batches to the log.
-- Consumers fetch batches.
-
-Larger batches improve network and disk throughput, but increase latency while the system waits to fill a batch. Use smaller batches for latency-sensitive queues and larger batches for log aggregation.
-
-## 6. Producer flow
-
-1. The producer fetches or caches topic metadata.
-2. It chooses a partition using the message key or a custom partitioner.
-3. The producer buffers messages and sends a batch directly to the partition leader.
-4. Followers copy the batch from the leader.
-5. The leader acknowledges the write according to the configured acknowledgment level.
-
-Embedding routing and buffering in the producer client avoids a separate routing hop and makes batching easier.
-
-## 7. Consumer flow
-
-Consumers normally use a pull model:
-
-1. A consumer joins a group and sends heartbeats to its coordinator.
-2. The coordinator assigns partitions to group members.
-3. The consumer fetches a batch starting at its committed offset.
-4. It processes the batch.
-5. It commits the offset according to the chosen delivery semantic.
-
-Pulling lets consumers control their own rate. Long polling prevents consumers from repeatedly sending empty requests when no messages are available.
-
-### Rebalancing
-
-The coordinator reassigns partitions when a consumer joins, leaves, crashes, or when the topic changes.
-
-Typical sequence:
-
-1. The coordinator detects a membership change through a join or missed heartbeat.
-2. Existing consumers rejoin the group.
-3. A group leader creates a new partition assignment.
-4. The coordinator distributes the assignment.
-5. Consumers resume from their committed offsets.
-
-Rebalancing improves fault tolerance, but it temporarily pauses consumption. Assignment strategies include round-robin and range-based assignment.
-
-## 8. Replication and durability
-
-Each partition has one leader and one or more followers:
-
-- Producers write to the leader.
-- Followers copy data from the leader.
-- Consumers normally read from the leader.
-- The controller can promote a follower if the leader fails.
-
-Replicas should be placed on different broker nodes, and preferably across availability zones when the durability requirement justifies the added cost and latency.
-
-### In-sync replicas
-
-An **in-sync replica (ISR)** is a replica that is sufficiently caught up with the leader. The exact lag threshold is configurable.
-
-ISR membership balances durability and availability:
-
-- Waiting for every replica gives stronger durability but lets a slow replica delay writes.
-- Accepting fewer replicas improves latency but increases the risk of data loss during failures.
-
-### Acknowledgment levels
-
-| Setting | Producer receives an acknowledgment when | Trade-off |
-| --- | --- | --- |
-| `ack=0` | The request is sent; no response is required. | Lowest latency, highest loss risk. |
-| `ack=1` | The leader persists the message. | Good latency, but a leader failure before replication can lose data. |
-| `ack=all` | The required ISR set persists the message. | Strongest durability, highest latency. |
-
-`ack=all` should be combined with a minimum ISR setting. Otherwise, a partition with too few healthy replicas could still accept writes with weaker durability than intended.
-
-## 9. Delivery semantics
-
-The processing order and offset-commit order determine what happens when a consumer fails.
-
-| Semantic | Producer behavior | Consumer behavior | Result |
-| --- | --- | --- | --- |
-| At-most-once | Do not retry after a failed send. | Commit the offset before processing. | No duplicates, but messages can be lost. |
-| At-least-once | Retry until the broker confirms the write. | Commit after successful processing. | No intentional loss, but duplicates are possible. |
-| Exactly-once | Requires coordinated writes and retries. | Processing and offset update must be atomic or idempotent. | Avoids duplicates, but adds complexity and reduces performance. |
-
-At-least-once is the usual default. Consumers should be idempotent or deduplicate with a unique message ID. Exactly-once is most valuable when duplicates are unacceptable, such as some payment or accounting workflows.
-
-## 10. Scaling and failure recovery
-
-### Producers and consumers
-
-- Add producer instances to increase publishing capacity.
-- Add consumer groups without affecting other groups.
-- Add consumers within a group up to the number of partitions.
-- Pre-create enough partitions because increasing partitions can change key-to-partition mapping and requires rebalancing.
-
-### Broker failure
-
-When a broker fails:
-
-1. The controller detects the failure.
-2. A healthy ISR is promoted to leader.
-3. Partition assignments are updated.
-4. New replicas are created on healthy brokers.
-5. The new replicas catch up before being considered fully healthy.
-
-Replica placement, minimum ISR, and cross-zone replication determine how much failure the system can tolerate.
-
-### Adding a broker
-
-To avoid data loss, add a new replica first, let it catch up, and remove the old replica afterward. This temporarily creates extra replicas but allows a graceful migration.
-
-### Changing partition count
-
-- **Increase**: new messages can use the new partitions; old messages remain where they were.
-- **Decrease**: stop writing to the removed partition, but keep it readable until its retained data expires. Decreasing partitions is not an immediate storage cleanup operation.
-
-## 11. Optional features
-
-### Message filtering
-
-Put filterable metadata, such as tags or event type, alongside the message. Brokers can filter using metadata without decrypting or deserializing the payload. Complex script-based filtering is more flexible but adds broker cost and security risk.
-
-### Delayed and scheduled messages
-
-Store delayed messages temporarily and publish them to the target topic when their delivery time arrives. Common timing approaches are:
-
-- Predefined delay queues.
-- A hierarchical time wheel for many scheduled delivery times.
-
-### Retry topics and archival
-
-- Send failed messages to a retry topic so they do not block new traffic.
-- Archive expired messages to object storage or another large-capacity store when consumers need long-term replay.
-
-## 12. Key trade-offs
-
-| Decision | Favors | Costs |
-| --- | --- | --- |
-| More partitions | Throughput and consumer parallelism | More metadata and coordination. |
-| Larger batches | Throughput and disk efficiency | Higher latency. |
-| Pull consumers | Back-pressure and flexible processing rates | Empty polls without long polling. |
-| More replicas | Durability and availability | Storage, network, and replication cost. |
-| Stronger acknowledgments | Lower data-loss risk | Higher write latency. |
-| Longer retention | Replay and recovery | More storage cost. |
-
-## 13. Interview wrap-up
-
-The core design is an append-only, partitioned log replicated across brokers:
-
-1. Producers route keyed messages to partitions and send batches.
-2. Brokers append messages to durable log segments.
-3. Followers replicate partition data.
-4. Consumer groups pull batches and track independent offsets.
-5. A controller handles leader election, partition placement, and recovery.
-6. Acknowledgment and offset-commit policies provide configurable delivery semantics.
-
-The most important limitation to state explicitly is ordering: the system guarantees order within a partition, not across all partitions.
+---
+
+### Interview Clarification & Scope
+
+> **Candidate:** What delivery models should be supported?  
+> **Interviewer:** Both **point-to-point** (competing workers within a consumer group) and **publish-subscribe** (independent consumer groups).
+>
+> **Candidate:** What are the message retention and ordering requirements?  
+> **Interviewer:** Configurable retention (e.g., $14\text{ days}$). Messages must be strictly ordered **within each partition**.
+>
+> **Candidate:** What delivery semantics are required?  
+> **Interviewer:** Support configurable semantics: **At-most-once**, **At-least-once**, and **Exactly-once**.
+>
+> **Candidate:** What are the performance and scale targets?  
+> **Interviewer:** High throughput (millions of messages per second), sub-10ms delivery latency, and petabyte-scale durable log storage.
+
+---
+
+## 2. Core Architecture: Topics, Partitions, and Consumer Groups
+
+```mermaid
+classDiagram
+    class Topic {
+        +String name
+        +int partitionCount
+        +int replicationFactor
+    }
+
+    class Partition {
+        +int partitionId
+        +Broker leader
+        +List~Broker~ inSyncReplicas
+        +long logEndOffset
+        +long highWatermark
+    }
+
+    class ConsumerGroup {
+        +String groupId
+        +List~Consumer~ members
+        +Map~Partition, Long~ committedOffsets
+    }
+
+    Topic "1" *-- "many" Partition
+    ConsumerGroup "1" --> "many" Partition : assigns
+```
+
+### Partitioning Rules
+- **Keyed Messages**: $\text{Partition} = \text{hash}(\text{message\_key}) \pmod{\text{partition\_count}}$ (Guarantees strict per-entity ordering).
+- **Keyless Messages**: Round-robin / sticky batching across partitions for uniform load distribution.
+
+---
+
+## 3. High-Throughput Storage Engine: Append-Only Segment Logs
+
+General-purpose SQL/NoSQL databases degrade under heavy random write loads. A distributed queue structures each partition as an **append-only sequence of immutable disk segment files**:
+
+```mermaid
+flowchart TD
+    PARTITION["Partition 0 Directory: /data/topic-0/"]
+    
+    subgraph Segments["Log Segments (e.g., 1 GB per segment)"]
+        S1["0000000000.log (Oldest - Closed)"]
+        S2["0000050000.log (Closed)"]
+        S3["0000100000.log (<b>Active Segment - Writing New Appends</b>)"]
+    end
+
+    subgraph IndexFiles["Memory-Mapped Sparse Index (.index)"]
+        I1["0000100000.index<br/>[Offset 100001 -> Byte Position 0]<br/>[Offset 100004 -> Byte Position 4096]"]
+    end
+
+    PARTITION --> Segments
+    S3 <--> I1
+```
+
+---
+
+### Three Pillars of Maximum I/O Performance
+
+```mermaid
+flowchart LR
+    subgraph P1["1. Sequential Disk I/O"]
+        SEQ["Sequential writes bypass disk head seek penalties, achieving 600+ MB/s on HDDs & GB/s on NVMe."]
+    end
+
+    subgraph P2["2. OS Page Cache"]
+        CACHE["Brokers rely on Linux Kernel Page Cache. Hot messages read by consumers never hit physical disk!"]
+    end
+
+    subgraph P3["3. Zero-Copy (sendfile)"]
+        ZERO["sendfile() transfers bytes directly from OS Page Cache to Network Socket without copying to User Space."]
+    end
+```
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant KernelCache as Linux Page Cache
+    participant NIC as Network Card (Socket Buffer)
+    participant Client as Consumer Client
+
+    Note over KernelCache,NIC: Zero-Copy (sendfile Syscall)
+    KernelCache->>NIC: DMA transfer directly from Page Cache to NIC Buffer (0 CPU context switches!)
+    NIC-->>Client: Stream bytes over TCP Socket
+```
+
+---
+
+## 4. Replication, High Availability & Quorum (ISR)
+
+Each partition maintains a configured number of replicas ($N=3$) distributed across independent broker nodes:
+
+```mermaid
+flowchart TD
+    PRODUCER["Producer (acks=all)"] --> LEADER["Broker 1 (Partition Leader)"]
+    
+    subgraph ISRCluster["In-Sync Replicas (ISR)"]
+        LEADER
+        F1["Broker 2 (Follower 1)"]
+        F2["Broker 3 (Follower 2)"]
+    end
+
+    LEADER -->|Replicate Log Append| F1 & F2
+    F1 & F2 -->>|ACK Replicated| LEADER
+    LEADER -->>|High Watermark Advanced -> Commit ACK| PRODUCER
+```
+
+### Producer Acknowledgment Levels (`acks`)
+
+| `acks` Level | Description | Durability | Latency |
+|:---|:---|:---|:---|
+| **`acks = 0`** | Producer sends and does not wait for broker response (Fire & Forget). | Lowest (Data loss on crash) | **Fastest ($< 1\text{ ms}$)** |
+| **`acks = 1`** | Producer waits until **Partition Leader** commits to local log. | Medium (Loss if leader dies before replication) | Fast ($2\text{–}5\text{ ms}$) |
+| **`acks = all` (`-1`)**| Producer waits until **all In-Sync Replicas (ISR)** commit to log. | **Maximum (Zero data loss)** | Medium ($5\text{–}15\text{ ms}$) |
+
+---
+
+## 5. Consumer Offset Tracking & Rebalancing
+
+```mermaid
+flowchart TD
+    CONSUMER["Consumer A1 in Group 'shipping'"] -->|1. Poll Messages| BROKER["Broker Partition Leader"]
+    BROKER -->>|2. Batch of Messages| CONSUMER
+    CONSUMER ->|3. Process Batch & Commit Offset 4500| OFFSETS_TOPIC[("__consumer_offsets Topic<br/>(Compacted Log)")]
+```
+
+### Consumer Group Rebalance Protocol
+When a consumer joins, crashes, or partitions change:
+1. **Group Coordinator** (designated broker) detects missing heartbeats ($> 10\text{s}$).
+2. Triggers **Rebalance**: Revokes existing partition assignments.
+3. Elects **Group Leader Consumer** to compute a new balanced partition assignment matrix (Range / Round-Robin / Sticky).
+4. Synchronizes new partition claims across remaining consumers.
+
+---
+
+## 6. Delivery Semantics: Exactly-Once Processing (EOS)
+
+```mermaid
+flowchart LR
+    P["Idempotent Producer<br/>(PID + Monotonic Seq#)"] -->|Deduplicated by Broker| B["Broker Log"]
+    B -->|Read-Process-Write| TXN["Transactional Coordinator<br/>(2-Phase Commit Atomic Offset + Output)"]
+    TXN --> OUT["Downstream Topic"]
+```
+
+1. **Idempotent Producer**: Prevents network retry duplicates by tagging each batch with a unique Producer ID (`PID`) and monotonically increasing Sequence Number (`Seq#`).
+2. **Transactional Coordinator**: Uses a Two-Phase Commit protocol to atomically commit consumer offsets and produced messages together.
+
+---
+
+## 7. Architectural Summary
+
+```mermaid
+mindmap
+  root((Distributed Message Queue))
+    Core Model
+      Topics & Partitions (hash routing)
+      Append-Only Segment Files (.log + .index)
+      Consumer Groups with Independent Offsets
+    Performance
+      Sequential Disk I/O
+      Linux Page Cache Acceleration
+      Zero-Copy sendfile DMA Transfer
+    High Availability
+      Leader-Follower ISR Replication
+      Configurable acks (0, 1, all)
+      Automated Group Rebalance
+    Semantics
+      At-Least-Once (Default)
+      Exactly-Once via PID + 2PC Transactions
+```
+
+| Subsystem | Architectural Decision | Core Rationale |
+|:---|:---|:---|
+| **Storage Engine** | Append-Only Disk Segments | Exploits sequential I/O to achieve hardware-limit throughput on low-cost disks. |
+| **Data Transfer** | Linux OS `sendfile` Zero-Copy | Eliminates CPU memory copy overhead between kernel page cache and network buffers. |
+| **Replication** | In-Sync Replicas (ISR) Quorum | Prevents data loss during leader broker failures while maintaining bounded replication latency. |
+| **Scalability** | Horizontal Topic Partitioning | Allows linearly scaling write throughput and consumer parallelism across broker clusters. |
+
+---
 
 ## References
 
-1. [RabbitMQ queue length limits](https://www.rabbitmq.com/maxlength.html)
-2. [Apache ZooKeeper](https://zookeeper.apache.org/)
-3. [etcd](https://etcd.io/)
-4. [Push versus pull in Kafka](https://kafka.apache.org/documentation/#design_pull)
-5. [Kafka consumer configuration](https://kafka.apache.org/20/documentation.html#consumerconfigs)
-6. Martin Kleppmann, [Designing Data-Intensive Applications](https://dataintensive.net/), chapter 5.
-7. [Kafka ISR explanation](https://www.cloudkarafka.com/blog/what-does-in-sync-in-apache-kafka-really-mean.html)
-8. [Kafka fetch from the closest replica](https://cwiki.apache.org/confluence/display/KAFKA/KIP-392%3A+Allow+consumers+to+fetch+from+closest+replica)
-9. [Kafka replication](https://www.confluent.io/blog/hands-free-kafka-replication-a-lesson-in-operational-simplicity/)
-10. [Kafka mirroring](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330)
+1. Kafka: A Distributed Messaging System for Log Processing (Kreps et al. LinkedIn): https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/Kafka.pdf
+2. Apache Kafka Documentation & Architecture: https://kafka.apache.org/documentation/
+3. It's Okay to Store Data on Disk (Sequential I/O Benchmarks): https://queue.acm.org/detail.cfm?id=1563874
