@@ -175,7 +175,9 @@ takeaway_domains:
       - "system-design-architecture/agentic-ai/32-agentic-key-takeaways.md"
       - "system-design-architecture/agentic-ai/37-agentic-key-takeaways.md"
       - "system-design-architecture/agentic-ai/38-agentic-key-takeaways.md"
+      - "system-design-architecture/agentic-ai/39-agentic-key-takeaways.md"
       - "articles/agentic-ai/context-rot-the-silent-failure-mode-of-long-running-ai-agents.md"
+      - "articles/agentic-ai/your-git-repository-wasnt-designed-for-the-ai-era.md"
   prag:
     file: "system-design-interview/pragmatic-takeaways.md"
     desc: "Pragmatic System Design"
@@ -466,6 +468,10 @@ takeaway_keywords:
   content credentials: ai
   g-value: ai
   provenance manifest: ai
+  git: agentic
+  disposable repository: agentic
+  log-first: agentic
+  application-level replication: agentic
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -515,6 +521,9 @@ dictionary_domains:
       - content credentials
       - g-value
       - provenance
+      - disposable repositories
+      - coding agents
+      - agentic sandboxing
 
   api-design.md:
     title: "API Design"
@@ -577,6 +586,8 @@ dictionary_domains:
       - directed acyclic graph
       - delayed job scheduler
       - time bucketing
+      - log-first storage
+      - application-level replication
   networking.md:
     title: "Networking"
     keywords:

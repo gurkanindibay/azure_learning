@@ -29,4 +29,5 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [Context Rot: The Silent Failure Mode of Long-Running AI Agents](context-rot-the-silent-failure-mode-of-long-running-ai-agents.md)
 - [A 284 Billion Parameter AI Model Just Ran on a 12GB Phone](a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone.md)
 - [How Does Anthropic Watermark AI-Generated Content?](how-does-anthropic-watermark-ai-generated-content.md)
+- [Your Git Repository Wasn’t Designed for the AI Era](your-git-repository-wasnt-designed-for-the-ai-era.md)
 

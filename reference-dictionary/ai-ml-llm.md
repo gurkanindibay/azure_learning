@@ -98,6 +98,7 @@ timestamp: 2026-06-14T00:00:00Z
 | Generative Watermarking | [`#generative-watermarking`](#generative-watermarking) |
 | Content Credentials (C2PA) | [`#content-credentials-c2pa`](#content-credentials-c2pa) |
 | G-Value (Watermark Scoring) | [`#g-value-watermark-scoring`](#g-value-watermark-scoring) |
+| Disposable Repositories | [`#disposable-repositories`](#disposable-repositories) |
 
 
 ---
@@ -2201,6 +2202,34 @@ $$\bar{g} = \frac{1}{N} \sum_{i=1}^{N} g(w_i) \quad \begin{cases} \bar{g} \appro
 
 ### Also see
 - [Generative Watermarking](#generative-watermarking) · [Token](#token) · [LLM](#llm)
+
+---
+
+## Disposable Repositories
+
+**Ephemeral, short-lived Git repositories** created dynamically by autonomous AI coding agents or automated CI workflows for isolated experimentation, throwaway test execution, or single-turn task iterations, which are abandoned or discarded shortly after completion.
+
+| Dimension | Persistent Enterprise Repository | Disposable Agent Repository |
+|:---|:---|:---|
+| **Lifecycle** | Months to years | Minutes to hours (5–60 min) |
+| **Mutation Rate** | Human pacing (10s of commits/day) | Rapid automated bursts (100s of commits/hour) |
+| **Storage Strategy** | Multi-node quorum replication with high-availability disks | Ephemeral local caches backed by cloud object storage WAL |
+| **Decommissioning** | Deliberate archiving & compliance audit | Automated TTL-based garbage collection |
+
+### Key Characteristics
+- **Short-Lived Ephemerality**: Created on-demand for sandboxed execution without requiring permanent cluster provisioning.
+- **Resource Inefficiency Under Quorum Replication**: In traditional Git hosting, allocating full 3-node replica sets for thousands of disposable repos creates severe resource waste (the "fixed floor" problem).
+- **Log-First Compatibility**: Thrives in log-first storage architectures where dormant or abandoned repos reside cost-effectively in cloud object storage at zero active compute cost.
+
+### When to Use
+- **AI Coding Agent Sandboxing**: Providing isolated, dependency-clean environments for agents running speculative refactorings or code generation tasks.
+- **Dynamic CI/CD Build Isolation**: Branch-per-PR ephemeral testing environments that must spin up and tear down in seconds.
+
+### When NOT to Use
+- **Monolithic Core Repositories**: Long-term enterprise codebases requiring strict compliance audit trails, permanent historical branch tracking, and multi-region read replicas.
+
+### Also see
+- [Log-First Storage Architecture](architecture-patterns.md#log-first-storage-architecture) · [Application-Level Replication](architecture-patterns.md#application-level-replication) · [Agent Harness](#agent-harness) · [Verification Loop (AI)](#verification-loop-ai)
 
 
 

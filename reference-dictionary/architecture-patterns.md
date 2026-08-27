@@ -64,6 +64,8 @@ timestamp: 2026-07-04T00:00:00Z
 | Directed Acyclic Graph (DAG) | [`#directed-acyclic-graph-dag`](#directed-acyclic-graph-dag) |
 | Delayed Job Scheduler | [`#delayed-job-scheduler`](#delayed-job-scheduler) |
 | Time Bucketing | [`#time-bucketing`](#time-bucketing) |
+| Log-First Storage Architecture | [`#log-first-storage-architecture`](#log-first-storage-architecture) |
+| Application-Level Replication | [`#application-level-replication`](#application-level-replication) |
 
 ---
 
@@ -1148,3 +1150,65 @@ SELECT job_id, run_at
 
 ### Also see
 - [Delayed Job Scheduler](#delayed-job-scheduler) · [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Sharding](data-concurrency.md#sharding)
+
+---
+
+## Log-First Storage Architecture
+
+A **storage and version-control architecture pattern** that establishes an append-only write-ahead log (WAL) hosted in durable cloud object storage (e.g., AWS S3, Azure Blob Storage) as the authoritative, singular source of truth, while local NVMe on-disk filesystems or database instances act as ephemeral, lazily-materialized read caches.
+
+```text
+git push / write
+      │
+      ▼
+┌───────────────┐        ┌──────────────────────┐
+│ Local NVMe    │──────▶│ Write-Ahead Log (WAL)│
+│ (fast reads,  │  also  │ in Object Storage    │
+│  disposable)  │  write │ (Durable source of   │
+└───────────────┘        │ truth, cheap storage)│
+      ▲                  └──────────────────────┘
+      │ rebuild / materialize on demand │
+      └─────────────────────────────────┘
+        Replicas materialize from the log,
+        not from synchronized filesystem locks
+```
+
+### Key Characteristics
+- **Durability Decoupled from Serving**: Writes succeed as soon as they are durably committed to the append-only object storage log, bypassing synchronous multi-node filesystem consensus.
+- **Zero-Cost Dormant State**: Dormant or disposable entities (e.g., throwaway agent branches, abandoned test repositories) consume zero compute/RAM and cents-per-gigabyte cold object storage, rehydrating on demand.
+- **Unbounded Horizontal Read Scaling**: Stateless read replicas hydrate independently from the log without burdening write coordinators or participating in synchronous consensus rings.
+- **Disposable Local Nodes**: Local caching nodes can crash or be reclaimed at any time without data loss because the entire state is deterministically replayable from the WAL.
+
+### When to Use
+- **Cloud-Native Version Control Systems**: High-scale Git hosting subjected to automated AI coding agent workloads (frequent pushes, thousands of disposable repositories, bursty CI reads).
+- **Cloud-Native Databases (Aurora / Neon Style)**: Database engines that offload redo logs to distributed storage fleets while compute nodes run statelessly.
+- **Multi-Tenant Serverless Workloads**: Applications managing millions of long-tail, infrequently-accessed customer tenants or sandboxes.
+
+### When NOT to Use
+- **Strict Read-Your-Writes on Stale Replicas Without Coordinator Routing**: Systems where asynchronous log replay lag cannot be tolerated by clients reading from arbitrary un-synced cache nodes.
+- **Air-Gapped / Ultra-Low-Bandwidth Edge Hardware**: Standalone on-premises servers without scalable, high-throughput cloud object storage backends.
+
+### Also see
+- [Application-Level Replication](#application-level-replication) · [Read/Write Path Separation](#readwrite-path-separation) · [CQRS](cqrs-event-driven.md#cqrs) · [Write-Ahead Log (WAL)](data-concurrency.md#write-ahead-log-wal)
+
+---
+
+## Application-Level Replication
+
+A **replication and high-availability architecture** where complete copies of application state (such as full on-disk Git repositories or database directories) are maintained across multiple physical server nodes and kept synchronized using application-tier coordination and quorum consensus protocols (e.g., Raft, Paxos).
+
+### Key Characteristics
+- **Fixed Resource Floor**: Every provisioned entity requires a dedicated multi-node replica set (typically 3 nodes) running on fast, pre-allocated storage regardless of whether the entity is active or idle.
+- **Consensus Throughput Ceiling**: Scaling replica counts to handle read surges degrades write latency because quorum writes must await synchronous acknowledgments from a majority of nodes, bottlenecked by the slowest replica (straggler effect).
+- **Coupled Compute and Storage**: Each replica combines storage durability with query-serving CPU/RAM, preventing independent scaling of storage vs. query capacity.
+
+### When to Use
+- **Low-to-Medium Multi-Tenant Scale**: Systems with a bounded, predictable count of persistently active repositories or databases managed by human developers.
+- **Self-Contained On-Premises Clusters**: Deployments that rely on local disks and direct TCP consensus without access to cloud object storage.
+
+### When NOT to Use
+- **High-Velocity AI Agent Environments**: Workloads characterized by thousands of short-lived disposable sandboxes and high-frequency push bursts.
+- **Massive Long-Tail Multi-Tenancy**: Scenarios where 95%+ of managed repositories or databases are idle at any given time.
+
+### Also see
+- [Log-First Storage Architecture](#log-first-storage-architecture) · [Consensus Protocol](data-concurrency.md#consensus-protocol) · [Raft](data-concurrency.md#raft)

@@ -27,6 +27,7 @@ Problems and strategies for designing agentic AI systems: enterprise multi-agent
 | [36-agentarch-key-takeaways.md](36-agentarch-key-takeaways.md) | `agentarch-07` – `agentarch-12` | Graph engineering progression, Maker-checker, Parallel factor fanout, Node-scoped failure isolation, Multi-model tier, Budget transparency |
 | [37-agentic-key-takeaways.md](37-agentic-key-takeaways.md) | `agentic-42` – `agentic-45` | Harness six components, Evidence-based loop stopping, Graph control flow, Diagnostic triage |
 | [38-agentic-key-takeaways.md](38-agentic-key-takeaways.md) | `agentic-46` – `agentic-50` | Cognitive debris, Context governor six policies, Staleness decay pruning, Governed context first, Structured evidence tables |
+| [39-agentic-key-takeaways.md](39-agentic-key-takeaways.md) | `agentic-51` – `agentic-54` | Git DAG pointer chasing, Agentic workload inversion, Application-level replication bottlenecks, Log-first object storage architecture |
 
 ## Cross-References
 
