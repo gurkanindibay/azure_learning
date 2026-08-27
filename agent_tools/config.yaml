@@ -112,6 +112,12 @@ takeaway_domains:
   uber:
     file: "case-studies/uber-architecture.md"
     desc: "Uber Architecture"
+  spotify:
+    file: "case-studies/spotify-discover-weekly.md"
+    desc: "Spotify Recommendation Architecture"
+    related_files:
+      - "system-design-architecture/case-studies/spotify-discover-weekly.md"
+      - "articles/case-studies/how-spotify-builds-discover-weekly.md"
   async:
     file: "stream-processing/async-concurrency-patterns.md"
     desc: "Async & Concurrency Patterns"
@@ -320,6 +326,10 @@ takeaway_keywords:
   docker: docker
   container: docker
   uber: uber
+  spotify: spotify
+  discover weekly: spotify
+  collaborative filtering: spotify
+  matrix factorization: spotify
   agent: agentic
   ai agent: agentarch
   llm: agentic

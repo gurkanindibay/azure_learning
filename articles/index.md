@@ -18,7 +18,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [agentic-ai/](agentic-ai/) | 14 | [agentic-ai/](../system-design-architecture/agentic-ai/) |
 | [api-network/](api-network/) | 5 | [api-network/](../system-design-architecture/api-network/) |
 | [caching/](caching/) | 10 | [caching/](../system-design-architecture/caching/) |
-| [case-studies/](case-studies/) | 4 | [case-studies/](../system-design-architecture/case-studies/) |
+| [case-studies/](case-studies/) | 5 | [case-studies/](../system-design-architecture/case-studies/) |
 | [concurrency-transactions/](concurrency-transactions/) | 12 | [concurrency-transactions/](../system-design-architecture/concurrency-transactions/) |
 | [cqrs-fintech/](cqrs-fintech/) | 7 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
 | [databases/](databases/) | 17 | [databases/](../system-design-architecture/databases/) |
@@ -31,4 +31,4 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [stream-processing/](stream-processing/) | 5 | [stream-processing/](../system-design-architecture/stream-processing/) |
 | [system-design-interview/](system-design-interview/) | 16 | [system-design-interview/](../system-design-architecture/system-design-interview/) |
 
-**Total**: 135 articles across 15 domains
+**Total**: 136 articles across 15 domains

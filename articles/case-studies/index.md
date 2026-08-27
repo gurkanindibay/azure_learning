@@ -24,3 +24,4 @@ Source articles covering case studies patterns, strategies, and case studies.
 - [uber-architecture/06-surge-pricing-during-rain](uber-architecture/06-surge-pricing-during-rain.md)
 - [Netflix Batch Compute with Kueue](netflix-batch-compute-kueue.md)
 - [discord-presence-200m-users](discord-presence-200m-users.md)
+- [How Spotify Builds Your Discover Weekly Before You Even Wake Up](how-spotify-builds-discover-weekly.md)
