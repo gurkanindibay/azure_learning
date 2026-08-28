@@ -283,7 +283,7 @@ sequenceDiagram
         Proc->>Push: Notify new email event
         Push->>Bob: WebSocket push (Message ID, Subject, From)
     else Bob is Offline
-        Note over Proc,Bob: Persisted in DB; fetched on next login
+        Note over Proc,Bob: Persisted in DB, fetched on next login
     end
 ```
 
