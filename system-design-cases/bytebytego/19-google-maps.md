@@ -103,10 +103,10 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    ORIGIN["Origin (Local Street)"] -->|1. Navigate Local Tile (Level 1)| ARTERIAL["Arterial Road (Level 2)"]
-    ARTERIAL -->|2. Join Interstate (Level 3)| HIGHWAY["Interstate Highway (Level 3)"]
-    HIGHWAY -->|3. Exit Highway (Level 2)| DEST_ART["Arterial Road (Level 2)"]
-    DEST_ART -->|4. Final Street Arrival (Level 1)| DEST["Destination (Local Street)"]
+    ORIGIN["Origin (Local Street)"] -->|"1. Navigate Local Tile (Level 1)"| ARTERIAL["Arterial Road (Level 2)"]
+    ARTERIAL -->|"2. Join Interstate (Level 3)"| HIGHWAY["Interstate Highway (Level 3)"]
+    HIGHWAY -->|"3. Exit Highway (Level 2)"| DEST_ART["Arterial Road (Level 2)"]
+    DEST_ART -->|"4. Final Street Arrival (Level 1)"| DEST["Destination (Local Street)"]
 ```
 
 ---

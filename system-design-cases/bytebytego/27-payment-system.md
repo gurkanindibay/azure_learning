@@ -21,11 +21,11 @@ A payment system orchestrates the movement of financial value between buyers, me
 ```mermaid
 flowchart LR
     subgraph PayIn["1. Pay-In Flow (Checkout)"]
-        BUYER["Buyer"] -->|Credit Card / Wallet| ECOMM["E-Commerce Platform (Custodian)"]
+        BUYER["Buyer"] -->|"Credit Card / Wallet"| ECOMM["E-Commerce Platform (Custodian)"]
     end
 
     subgraph PayOut["2. Pay-Out Flow (Settlement)"]
-        ECOMM -->|Merchant Payout (Minus Fee)| SELLER["Merchant Bank Account"]
+        ECOMM -->|"Merchant Payout (Minus Fee)"| SELLER["Merchant Bank Account"]
     end
 ```
 
@@ -306,7 +306,7 @@ flowchart TD
     FAIL["Payment Attempt Failed"] --> CHECK{"Retryable Error?<br/>(e.g., Network Timeout, 503)"}
     
     CHECK -->|Yes| RETRY_Q["Retry Queue<br/>(Exponential Backoff + Jitter)"]
-    CHECK -->|No: Invalid Card / Fraud| FAILED_STATE["Mark Payment FAILED"]
+    CHECK -->|"No: Invalid Card / Fraud"| FAILED_STATE["Mark Payment FAILED"]
     
     RETRY_Q --> RETRY_ATTEMPT["Retry Execution Worker"]
     RETRY_ATTEMPT -->|Success| SUCCESS_STATE["Mark Payment SUCCESS"]
@@ -339,8 +339,8 @@ flowchart TD
     end
 
     subgraph Resolution["Exception Handling"]
-        MISMATCH -->|Classifiable (e.g., Timing Drift)| AUTO_FIX["Automated Balancing Adjustment"]
-        MISMATCH -->|Unclassifiable / Amount Mismatch| MANUAL["Finance Team Review Queue"]
+        MISMATCH -->|"Classifiable (e.g., Timing Drift)"| AUTO_FIX["Automated Balancing Adjustment"]
+        MISMATCH -->|"Unclassifiable / Amount Mismatch"| MANUAL["Finance Team Review Queue"]
     end
 ```
 
@@ -361,24 +361,46 @@ flowchart TD
 
 ## 5. Wrap Up & Summary
 
-### Architectural Summary Mindmap
+### Architectural Summary
 
 ```mermaid
-mindmap
-  root((Payment System))
-    Step 1 Scope
-      1M Daily Transactions (~12 TPS)
-      Pay-In & Pay-Out Flows
-      PCI-DSS Compliance Isolation
-    Step 2 Architecture
-      Stateless Payment Service
-      Decoupled Payment Executor
-      PSP Hosted Payment Page
-    Step 3 Deep Dive
-      Double-Entry Ledger
-      Idempotency Keys & Nonce
-      Exponential Backoff & DLQ
-      Async Nightly 3-Way Reconciliation
+flowchart TD
+    ROOT["<b>Payment System Architecture</b>"]
+    
+    subgraph S1["1. Scope & Scale"]
+        S1_1["1M Daily Transactions (~12 TPS)"]
+        S1_2["Pay-In & Pay-Out Flows"]
+        S1_3["PCI-DSS Compliance Isolation"]
+    end
+    
+    subgraph S2["2. Core Components"]
+        S2_1["Stateless Payment Service"]
+        S2_2["Decoupled Payment Executor"]
+        S2_3["PSP Hosted Payment Page"]
+    end
+    
+    subgraph S3["3. Reliability & Integrity"]
+        S3_1["Double-Entry Ledger"]
+        S3_2["Idempotency Keys & Nonce"]
+        S3_3["Exponential Backoff & DLQ"]
+        S3_4["Async Nightly 3-Way Reconciliation"]
+    end
+
+    ROOT --> S1
+    ROOT --> S2
+    ROOT --> S3
+
+    style ROOT fill:#2d3436,color:#ffffff,stroke:#1e272e
+    style S1_1 fill:#2d3436,color:#ffffff,stroke:#1e272e
+    style S1_2 fill:#2d3436,color:#ffffff,stroke:#1e272e
+    style S1_3 fill:#2d3436,color:#ffffff,stroke:#1e272e
+    style S2_1 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S2_2 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S2_3 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S3_1 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S3_2 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S3_3 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S3_4 fill:#27ae60,color:#ffffff,stroke:#218c74
 ```
 
 | Subsystem | Primary Design Decision | Core Rationale |
