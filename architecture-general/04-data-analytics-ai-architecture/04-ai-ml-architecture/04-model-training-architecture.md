@@ -301,9 +301,9 @@ graph TD
     Q2 -->|Yes| HPTUNE[Single-GPU +<br/>HP Tuning]
     Q2 -->|No| SINGLE[Single-GPU<br/>Training]
 
-    Q3 -->|Yes (1B-10B)| DATAPARALLEL["Data Parallelism<br/>(PyTorch DDP)"]
-    Q3 -->|Yes (10B-100B)| PIPELINE["Pipeline + Data<br/>Parallelism"]
-    Q3 -->|Yes (100B+)| THREED["3D Parallelism<br/>(Megatron + DeepSpeed)"]
+    Q3 -->|"Yes (1B-10B)"| DATAPARALLEL["Data Parallelism<br/>(PyTorch DDP)"]
+    Q3 -->|"Yes (10B-100B)"| PIPELINE["Pipeline + Data<br/>Parallelism"]
+    Q3 -->|"Yes (100B+)"| THREED["3D Parallelism<br/>(Megatron + DeepSpeed)"]
 
     style SINGLE fill:#96ceb4,color:#fff
     style DATAPARALLEL fill:#4ecdc4,color:#fff

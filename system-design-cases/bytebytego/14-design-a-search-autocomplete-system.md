@@ -149,7 +149,7 @@ flowchart TD
         AGG --> DB_FREQ[("Weekly Query Frequency DB<br/>(Cassandra / ClickHouse)")]
         DB_FREQ --> MAPREDUCE["MapReduce / Spark Trie Builder"]
         MAPREDUCE --> SNAPSHOT[("Trie Snapshots (S3 / HDFS)")]
-        SNAPSHOT -->|Periodic Reload (Weekly)| CACHE
+        SNAPSHOT -->|"Periodic Reload (Weekly)"| CACHE
     end
 ```
 
@@ -193,7 +193,7 @@ mindmap
     Data Structure
       Trie with max depth = 50
       Pre-computed Top-5 queries cached per node
-      O(1) instant lookup time
+      Instant O(1) lookup time
     Architecture
       Stateless Query API + In-Memory Trie Cache
       Offline Batch Ingestion (Kafka + Spark)
