@@ -354,6 +354,36 @@ flowchart TD
 ### Architectural Summary Mindmap
 
 ```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#2d3436',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#1e272e',
+    'lineColor': '#576574',
+    'cScale0': '#2d3436',
+    'cScaleLabel0': '#ffffff',
+    'cScale1': '#0984e3',
+    'cScaleLabel1': '#ffffff',
+    'cScale2': '#27ae60',
+    'cScaleLabel2': '#ffffff',
+    'cScale3': '#8e44ad',
+    'cScaleLabel3': '#ffffff',
+    'cScale4': '#d35400',
+    'cScaleLabel4': '#ffffff',
+    'cScale5': '#c0392b',
+    'cScaleLabel5': '#ffffff',
+    'cScaleBorder0': '#1e272e',
+    'cScaleBorder1': '#0652dd',
+    'cScaleBorder2': '#218c74',
+    'cScaleBorder3': '#6c5ce7',
+    'mindmapRootColor': '#2d3436',
+    'mindmapMainColor': '#0984e3',
+    'mindmapSecondaryColor': '#27ae60',
+    'mindmapTextColor': '#ffffff',
+    'mindmapLineColor': '#576574'
+  }
+}}%%
 mindmap
   root((Gaming Leaderboard))
     Step 1 Scope
