@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Stock Exchange Design Scope",
+    "output": "stock-exchange-design-scope.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/gurkanindibay/azure_learning",
+      "revision": "1368a7b64c5cc89764f7156e5221e377f337645d"
+    },
+    "views": [
+      {
+        "id": "critical-path",
+        "label": "Critical trading path",
+        "focus": ["retail", "hft", "gateway", "order-manager", "sequencer", "matching-engine", "market-data"],
+        "note": "Follow an accepted limit order from participant ingress to matching and market-data publication."
+      },
+      {
+        "id": "availability",
+        "label": "Availability and recovery",
+        "focus": ["sequencer", "matching-engine", "standby", "event-log", "reporting"],
+        "note": "Trace deterministic replication, failover, and asynchronous reporting."
+      },
+      {
+        "id": "scope-and-slas",
+        "label": "Scope and SLAs",
+        "focus": ["gateway", "order-manager", "matching-engine", "event-log", "reporting"],
+        "note": "Review the supported order scope, throughput, latency, and durability constraints."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "retail",
+      "type": "external",
+      "label": "Retail broker / trader",
+      "pos": [40, 230],
+      "size": [170, 68],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 28, "label": "Participants" }]
+    },
+    {
+      "id": "hft",
+      "type": "external",
+      "label": "Institutional / HFT",
+      "pos": [40, 345],
+      "size": [170, 68],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 29, "label": "Participants" }]
+    },
+    {
+      "id": "gateway",
+      "type": "security",
+      "label": "Client Gateway",
+      "tag": "Auth + rate limits",
+      "pos": [270, 285],
+      "size": [180, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 124, "label": "Component Breakdown" }]
+    },
+    {
+      "id": "order-manager",
+      "type": "backend",
+      "label": "Order Manager",
+      "tag": "Reject before sequence",
+      "pos": [510, 285],
+      "size": [180, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 125, "label": "Component Breakdown" }]
+    },
+    {
+      "id": "sequencer",
+      "type": "messagebus",
+      "label": "Inbound Sequencer",
+      "tag": "Monotonic IDs",
+      "pos": [750, 285],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 126, "label": "Component Breakdown" }]
+    },
+    {
+      "id": "matching-engine",
+      "type": "backend",
+      "label": "Matching Engine",
+      "tag": "Price-time FIFO",
+      "pos": [1000, 285],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 127, "label": "Component Breakdown" }]
+    },
+    {
+      "id": "market-data",
+      "type": "cloud",
+      "label": "Market Data Publisher",
+      "tag": "Multicast distribution",
+      "pos": [1240, 285],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 128, "label": "Component Breakdown" }]
+    },
+    {
+      "id": "standby",
+      "type": "backend",
+      "label": "Warm Standby",
+      "tag": "Failover < 1 s",
+      "pos": [1000, 485],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 239, "label": "Hot-warm standby" }]
+    },
+    {
+      "id": "event-log",
+      "type": "database",
+      "label": "Event Log",
+      "tag": "RPO = 0",
+      "pos": [750, 485],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 226, "label": "Deterministic replay" }]
+    },
+    {
+      "id": "reporting",
+      "type": "database",
+      "label": "Reporting & Settlement",
+      "tag": "Audit + clearing",
+      "pos": [1240, 485],
+      "size": [190, 76],
+      "sources": [{ "path": "system-design-cases/bytebytego/29-stock-exchange.md", "line": 129, "label": "Component Breakdown" }]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Ultra-low latency exchange core",
+      "wraps": ["gateway", "order-manager", "sequencer", "matching-engine", "market-data", "standby", "event-log", "reporting"],
+      "pad": 34
+    }
+  ],
+  "connections": [
+    { "id": "retail-to-gateway", "from": "retail", "to": "gateway", "variant": "emphasis" },
+    { "id": "hft-to-gateway", "from": "hft", "to": "gateway", "variant": "emphasis" },
+    { "id": "gateway-to-risk", "from": "gateway", "to": "order-manager", "label": "Normalize + authenticate", "labelDy": 62 },
+    { "id": "risk-to-sequencer", "from": "order-manager", "to": "sequencer", "label": "Accepted command", "labelDy": 62 },
+    { "id": "sequencer-to-matching", "from": "sequencer", "to": "matching-engine", "label": "Sequence ID" },
+    { "id": "matching-to-market-data", "from": "matching-engine", "to": "market-data", "label": "Fills + book updates", "variant": "emphasis", "labelDy": 62 },
+    { "id": "sequencer-to-event-log", "from": "sequencer", "to": "event-log", "label": "Durable event stream", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 62 },
+    { "id": "event-log-to-standby", "from": "event-log", "to": "standby", "label": "Replay identical input", "variant": "dashed", "labelDy": 62 },
+    { "id": "sequencer-to-standby", "from": "sequencer", "to": "standby", "label": "Replicated sequence", "variant": "dashed", "fromSide": "right", "toSide": "left", "via": [[970, 323], [970, 523]], "labelAt": [955, 395] },
+    { "id": "matching-to-reporting", "from": "matching-engine", "to": "reporting", "label": "Async fills", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 62 },
+    { "id": "market-data-to-retail", "from": "market-data", "to": "retail", "label": "L1 / L2 / L3 feed", "variant": "dashed", "fromSide": "top", "toSide": "top", "via": [[1335, 180], [125, 180]] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Supported scope", "items": ["100 stock symbols", "Limit orders only", "Market and complex conditional orders out of scope"] },
+    { "dot": "amber", "title": "Performance target", "items": ["1B orders per trading day", "~215K peak QPS", "Single-digit ms end-to-end P99"] },
+    { "dot": "rose", "title": "Availability target", "items": ["99.99% availability", "RPO = 0", "RTO < seconds with warm standby"] }
+  ]
+}

@@ -41,6 +41,12 @@ flowchart LR
     MDP -->|Multicast Feeds| RETAIL & HFT
 ```
 
+### Interactive Design Scope Diagram
+
+![Stock exchange design scope diagram](resources/stock-exchange-design-scope.png)
+
+> **Interactive diagram**: [Open the Stock Exchange Design Scope diagram](./resources/stock-exchange-design-scope.html)
+
 ---
 
 ### Interview Clarification & Scope
@@ -58,6 +64,54 @@ flowchart LR
 > **Interviewer:** 
 > - **End-to-end P99 latency**: Single-digit milliseconds or lower (sub-microsecond on the critical matching path).
 > - **Availability**: At least **$99.99\%$ (4 nines)** with zero data loss ($RPO = 0$, $RTO < \text{seconds}$).
+
+### Limit Order Book Responsibility Within the Matching Engine
+
+The **Matching Engine is the authoritative owner of the Limit Order Book (LOB)**. The LOB is an in-memory representation of all currently active limit orders for a symbol. It is not a general-purpose database and is not owned by the Gateway, Order Manager, or Market Data Publisher.
+
+#### What the LOB stores
+
+For each of the 100 supported stock symbols, the Matching Engine maintains an independent book with:
+
+- **Bid side**: Buy orders grouped by price, with the highest price at the front.
+- **Ask side**: Sell orders grouped by price, with the lowest price at the front.
+- **FIFO queue per price**: Orders at the same price are ordered by their authoritative sequence or arrival time.
+- **Order index**: A direct `orderId` lookup for fast cancellation and replacement.
+- **Book state**: Best bid, best ask, spread, and remaining quantity at each active price level.
+
+The book is partitioned by symbol so activity in `ABC` does not require scanning orders for `XYZ`. Each symbol partition has a single writer, which avoids locks on the critical matching path and makes replay deterministic.
+
+#### Example: placing and matching orders
+
+Assume the `ABC` book contains these orders:
+
+```text
+Buyers                         Sellers
+$100.00: B1 for 100 shares     $100.05: S1 for 50 shares
+$99.95:  B2 for 200 shares     $100.10: S2 for 300 shares
+```
+
+1. A new buy order for 120 shares at `$100.05` arrives with sequence ID `1001`.
+2. The engine compares its price with the best ask, `$100.05`, and finds a match.
+3. It executes 50 shares against `S1`, removes `S1`, and leaves 70 shares from the incoming order.
+4. No seller remains at or below `$100.05`, so the remaining 70 shares are queued on the buy side at `$100.05`.
+5. The engine emits execution and book-update events. The resulting best bid is `$100.05` for 70 shares, and the best ask is `$100.10` for 300 shares.
+
+#### What belongs in the LOB versus elsewhere
+
+| Concern | Owner | Reason |
+|:---|:---|:---|
+| Active orders and price queues | Matching Engine LOB | Required for immediate price-time matching |
+| Authentication, buying power, and account limits | Order Manager | Rejected orders must never enter the book |
+| Sequence IDs and replay order | Inbound Sequencer | Establishes one authoritative input order |
+| L1/L2/L3 subscriber views | Market Data Publisher | Derived projections for external consumers |
+| Durable audit and settlement records | Reporting Engine | Asynchronous, replayable downstream processing |
+
+#### LOB consistency and recovery
+
+The primary Matching Engine mutates the LOB sequentially. A warm standby consumes the same sequenced input stream and builds the same book by replaying the same commands. After a failure, the standby can continue from the last confirmed sequence without reconstructing the book from slower reporting or market-data databases.
+
+The LOB is therefore optimized for **current executable state**, while the sequenced event stream is the source used to reproduce that state. Periodic snapshots can reduce recovery time, but they do not replace the authoritative event order.
 
 ---
 
@@ -118,12 +172,18 @@ flowchart TD
 ```
 
 ### Component Breakdown
-1. **Client Gateway**: Lightweight edge proxy for FIX/SBE protocol parsing, authentication, and IP rate limiting.
-2. **Order Manager**: Manages order state machine and validates pre-trade account risk limits.
-3. **Inbound Sequencer**: Stamps every incoming order with a strictly monotonically increasing sequence ID before execution.
-4. **Matching Engine**: Core in-memory order book execution engine matching orders using **Price-Time Priority (FIFO)**.
-5. **Market Data Publisher (MDP)**: Reconstructs L1/L2/L3 order books and candlestick bars ($1\text{m}, 5\text{m}, 1\text{h}$) for external subscribers.
-6. **Reporting Engine**: Consolidates orders and fills asynchronously for regulatory audit, taxes, and end-of-day clearing.
+1. **Client Gateway**: The network-facing entry point for trading participants. It terminates FIX or SBE sessions, authenticates the sender, validates message framing, applies connection and IP-level rate limits, and converts wire messages into an internal order format.
+    - **Example**: A broker sends a FIX `NewOrderSingle` for 100 shares of `ABC` at `$100.00`. The gateway verifies the session and message checksum, assigns the request to the correct symbol partition, and forwards the normalized order to the Order Manager.
+2. **Order Manager**: Owns the client-facing order state machine and performs fast pre-trade checks before an order can reach the matching engine. Typical checks include account status, maximum order size, buying power, position limits, and duplicate client order IDs.
+    - **Example**: A buy order for 100 shares is rejected immediately when the account has only `$5,000` available and the notional value is `$10,000`. The rejection does not enter the sequenced trading stream.
+3. **Inbound Sequencer**: Establishes the authoritative order of accepted commands. It assigns a strictly increasing sequence ID and publishes the command to the primary and standby engines. The sequence is also the input log used for replay and recovery.
+    - **Example**: If two valid orders arrive nearly simultaneously, the sequencer assigns IDs `1001` and `1002`. Both engines process ID `1001` first, even if the second network packet reaches one replica earlier.
+4. **Matching Engine**: The single-writer execution core. It maintains an in-memory limit order book and applies price-time priority: the best price wins, and orders at the same price execute FIFO. It emits accepted, partially filled, filled, and canceled events.
+    - **Example**: An ask for 100 shares at `$99.95` is already queued ahead of an ask at `$100.00`. A marketable buy at `$100.00` consumes the `$99.95` liquidity first and then continues to the next price level if quantity remains.
+5. **Market Data Publisher (MDP)**: Converts sequenced order and execution events into subscriber feeds. It maintains derived L1, L2, and L3 views, publishes trade and quote updates, and aggregates completed trades into candlestick bars ($1\text{m}, 5\text{m}, 1\text{h}$). It is decoupled from matching so slow subscribers cannot block execution.
+    - **Example**: When the best ask changes from `$100.00` to `$100.05`, the MDP emits a new L1 quote. It can also emit the complete queue change on the L3 feed and update the current 1-minute candle from the resulting trade.
+6. **Reporting Engine**: Consumes the durable event stream asynchronously and builds audit, compliance, tax, and settlement records. It must be replayable and idempotent because downstream databases may be unavailable without stopping the trading path.
+    - **Example**: After a fill event, the reporting engine records the buyer, seller, price, quantity, sequence ID, and execution timestamp in the trade ledger. A replay after a database outage uses the event ID to avoid creating a duplicate settlement record.
 
 ---
 
@@ -283,15 +343,15 @@ flowchart LR
 mindmap
   root((Stock Exchange System))
     Step 1 Scope
-      1B Orders / Day (~215K Peak QPS)
+        1B Orders / Day - ~215K Peak QPS
       Sub-Millisecond P99 Latency
       Price-Time Priority Matching
     Step 2 Three Data Paths
-      1. Critical Trading Path (Zero Disk/Network)
+        1. Critical Trading Path - Zero Disk/Network
       2. Market Data Feed (L1/L2/L3 Multicast)
       3. Reporting & Settlement (Async Batch)
     Step 3 Deep Dive
-      In-Memory O(1) Limit Order Book (Doubly-Linked List + Hash)
+        In-Memory Constant-Time Limit Order Book - Doubly-Linked List + Hash
       CPU Core Pinning & Lock-Free Ring Buffers
       /dev/shm mmap Shared Memory
       Deterministic Sequencer & Event Sourcing
