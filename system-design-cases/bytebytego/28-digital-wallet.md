@@ -184,36 +184,40 @@ flowchart LR
 
 ### 1. File-Based Storage with `mmap` & RocksDB
 
-To avoid remote network overhead (such as sending events to Kafka and querying remote databases), Command queues, Event stores, and States are colocated directly on local NVMe disks using **memory-mapped files (`mmap`)**.
+Each Raft node stores its own local copy of the shard's data on local NVMe. The **committed append-only event log is the source of truth**. RocksDB or SQLite is a rebuildable local projection of that log, used to answer balance queries quickly; it is not a second source of truth. `mmap` is only an efficient way to access the local log file. It does not provide replication or consistency by itself.
 
 ```mermaid
 flowchart TD
-    subgraph NodeArchitecture["Single Event Sourcing Node"]
+    subgraph NodeArchitecture["Each node in one Raft shard"]
         direction TB
         subgraph MemStore["OS Page Cache & Memory"]
             MMAP["Memory-Mapped Buffer (mmap)"]
             MEM_STATE["In-Memory State Cache"]
         end
         subgraph DiskStore["Sequential NVMe Storage"]
-            WAL["Append-Only Event Log (Sequential Write)"]
-            ROCKS[("Local RocksDB / SQLite (LSM-Tree State)")]
-            SNAP[("State Snapshots (Hourly Checkpoints)")]
+            WAL["Committed Append-Only Event Log<br/>(source of truth)"]
+            ROCKS[("Local RocksDB or SQLite<br/>(derived balance projection)")]
+            SNAP[("Derived State Snapshot")]
         end
     end
 
-    MMAP <--> WAL
-    MEM_STATE <--> ROCKS
+    MMAP --> WAL
+    WAL --> ROCKS
+    ROCKS <--> MEM_STATE
     ROCKS --> SNAP
 ```
 
-- **Sequential I/O**: Appending events to disk sequentially achieves speeds exceeding **$100{,}000\text{ writes/sec}$** per server.
-- **Snapshots**: Periodic checkpoints saved to HDFS/S3 allow the state machine to recover instantly without replaying millions of past events from day zero.
+- **Write order**: The leader appends an event, replicates it through Raft, waits for a quorum, and then marks it committed. Nodes apply committed events to their local projection.
+- **Recovery order**: If RocksDB/SQLite or the memory cache is lost, the node restores the latest snapshot and replays later committed events from the log. The log remains authoritative.
+- **Snapshots**: Periodic checkpoints saved to HDFS/S3 speed recovery, but a snapshot is a derived checkpoint and can be regenerated from the event log.
 
 ---
 
 ### 2. High Reliability via Raft Consensus
 
 To eliminate single points of failure, event sourcing nodes are grouped into **3- or 5-node Raft consensus clusters**.
+
+![Raft Consensus for One Wallet Shard](resources/28-digital-wallet/raft-consensus-shard.visual-check.1440x900.light.png)
 
 ```mermaid
 flowchart TD
@@ -222,7 +226,7 @@ flowchart TD
     LEADER -->|Raft Log Replication| F1["Follower 1 (Node 2)"]
     LEADER -->|Raft Log Replication| F2["Follower 2 (Node 3)"]
 
-    F1 & F2 -.->|Quorum Ack (Majority: 2/3)| LEADER
+    F1 & F2 -.->|"Quorum Ack (Majority: 2/3)"| LEADER
     LEADER -->|3. Commit & Apply Event to State| LEADER
     LEADER -->|4. Push Status| CLIENT
 ```
@@ -235,15 +239,35 @@ flowchart TD
 
 ### 3. Distributed Raft Sharding & CQRS Push Architecture
 
-To achieve $1{,}000{,}000\text{ TPS}$, accounts are partitioned across multiple independent Raft consensus groups. A distributed Saga coordinator executes transfers across partitions.
+To achieve $1{,}000{,}000\text{ TPS}$, accounts are partitioned across multiple independent Raft consensus groups. **Sharding chooses the owner partition; Raft replicates that partition.** Raft does not synchronize every account with every database.
+
+For example, Account A may belong to Shard 1 and Account B may belong to Shard 2:
+
+```mermaid
+flowchart LR
+    ROUTER["Account Router<br/>hash(account_id)"] --> S1L
+    ROUTER --> S2L
+
+    subgraph S1["Shard 1: accounts A, D, X"]
+        S1L["Node 1: Leader"] --> S1F1["Node 2: Follower"]
+        S1L --> S1F2["Node 3: Follower"]
+    end
+
+    subgraph S2["Shard 2: accounts B, E, Y"]
+        S2L["Node 4: Leader"] --> S2F1["Node 5: Follower"]
+        S2L --> S2F2["Node 6: Follower"]
+    end
+```
+
+All replicas in Shard 1 contain the committed event history for Account A, while replicas in Shard 2 contain the history for Account B. The Saga coordinator is needed only when one transfer touches accounts in different shards.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as User A
     participant COORD as Saga Coordinator / Reverse Proxy
-    participant P1 as Partition 1 (Raft Leader A)
-    participant P2 as Partition 2 (Raft Leader B)
+    participant P1 as Shard 1 Leader (owns A)
+    participant P2 as Shard 2 Leader (owns B)
 
     User->>COORD: POST /v1/wallet/balance_transfer (A -> B, $1)
     COORD->>COORD: 1. Record Saga in Phase Status Table (Status: STARTED)
@@ -265,7 +289,33 @@ sequenceDiagram
 
 ---
 
-## 4. Architectural Summary
+The two local Raft commits above are not one global Raft commit. Shard 1 guarantees that its replicas agree about the debit, and Shard 2 guarantees that its replicas agree about the credit. The Saga phase table tracks whether the overall transfer is `STARTED`, `DEBITED`, `COMPLETED`, or needs retry/compensation.
+
+## 4. Balance Check Read Path
+
+A balance query is routed to the shard that owns the requested account. For a financial decision, read from the current leader using a linearizable read (for example, a Raft `ReadIndex`) so the result reflects all committed events. A follower may be used for less-sensitive, eventually consistent views, but it can be stale.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant API as Wallet API / Router
+    participant S1 as Shard 1 Leader (owns Account A)
+    participant F1 as Shard 1 Followers
+
+    User->>API: GET /v1/wallets/A/balance
+    API->>API: Route by account_id A -> Shard 1
+    API->>S1: Linearizable balance read
+    S1->>F1: Confirm current Raft commit index
+    F1-->>S1: Quorum confirms committed index
+    S1->>S1: Read Account A projection at that index
+    S1-->>API: Balance = $7, version = 1842
+    API-->>User: 200 OK { balance: $7, version: 1842 }
+```
+
+The balance projection is a local read model derived from the committed event log. It is not independently reconciled with every other shard: Account A is authoritative in Shard 1, and Account B is authoritative in Shard 2.
+
+## 5. Architectural Summary
 
 ### Architectural Comparison Matrix
 

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Raft Consensus for One Wallet Shard",
+    "output": "raft-consensus-shard.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "commit-path",
+        "label": "Commit path",
+        "focus": ["wallet", "leader", "follower-a", "follower-b"],
+        "note": "A command is committed after a majority of replicas acknowledge the log entry."
+      },
+      {
+        "id": "local-state",
+        "label": "Local state",
+        "focus": ["leader", "follower-a", "follower-b", "projection"],
+        "note": "Each node applies committed events to its own rebuildable balance projection."
+      }
+    ]
+  },
+  "components": [
+    { "id": "wallet", "type": "external", "label": "Wallet Service", "sublabel": "command client", "pos": [40, 260], "size": [150, 68] },
+    { "id": "leader", "type": "backend", "label": "Raft Leader", "sublabel": "accepts and orders commands", "pos": [280, 260], "size": [170, 68], "tag": "Shard 1" },
+    { "id": "follower-a", "type": "backend", "label": "Follower A", "sublabel": "replicated event log", "pos": [530, 150], "size": [170, 68] },
+    { "id": "follower-b", "type": "backend", "label": "Follower B", "sublabel": "replicated event log", "pos": [530, 370], "size": [170, 68] },
+    { "id": "projection", "type": "database", "label": "Local Projection", "sublabel": "RocksDB or SQLite", "pos": [790, 260], "size": [180, 68], "tag": "derived state" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "One Raft group owns one account shard", "wraps": ["leader", "follower-a", "follower-b", "projection"] }
+  ],
+  "connections": [
+    { "id": "command", "from": "wallet", "to": "leader", "label": "command", "variant": "emphasis" },
+    { "id": "replicate-a", "from": "leader", "to": "follower-a", "label": "append log entry", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "replicate-b", "from": "leader", "to": "follower-b", "label": "append log entry", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "quorum", "from": "follower-a", "to": "leader", "label": "quorum ack", "variant": "emphasis", "fromSide": "left", "toSide": "top" },
+    { "id": "quorum-b", "from": "follower-b", "to": "leader", "label": "quorum ack", "variant": "emphasis", "fromSide": "left", "toSide": "bottom", "labelDy": 28 },
+    { "id": "apply-state", "from": "leader", "to": "projection", "label": "apply committed events", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "What Raft guarantees", "items": ["Replicas in this shard agree on one ordered log", "A quorum commit survives a leader failure"] },
+    { "dot": "emerald", "title": "What this shard owns", "items": ["Accounts assigned to Shard 1", "Its local balance projection and event history"] },
+    { "dot": "rose", "title": "What Raft does not do", "items": ["It does not replicate accounts from other shards", "Cross-shard transfers need a coordinator or transaction protocol"] }
+  ]
+}
