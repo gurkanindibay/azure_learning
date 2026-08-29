@@ -6,6 +6,10 @@ okf_version: "0.1"
 
 > Your own system-design interview case library.
 
+## Start Here
+
+* [System Design Case Preparation Guide](system-design-case-preparation-guide.md) — Categorized case catalog, preparation sequence, interview references, and scale-driven design heuristics.
+
 ## Cases
 
 ### Part 2
