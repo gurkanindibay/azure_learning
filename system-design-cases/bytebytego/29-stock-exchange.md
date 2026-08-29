@@ -291,7 +291,7 @@ mindmap
       2. Market Data Feed (L1/L2/L3 Multicast)
       3. Reporting & Settlement (Async Batch)
     Step 3 Deep Dive
-      O(1) Limit Order Book (Doubly-Linked List + Hash)
+      In-Memory O(1) Limit Order Book (Doubly-Linked List + Hash)
       CPU Core Pinning & Lock-Free Ring Buffers
       /dev/shm mmap Shared Memory
       Deterministic Sequencer & Event Sourcing

@@ -20,8 +20,8 @@ A distributed key-value store (e.g., Amazon DynamoDB, Apache Cassandra) partitio
 
 ```mermaid
 flowchart LR
-    CLIENT["Client"] -->|put(key, value)| COORD["Coordinator Node"]
-    CLIENT -->|get(key)| COORD
+    CLIENT["Client"] -->|"put(key, value)"| COORD["Coordinator Node"]
+    CLIENT -->|"get(key)"| COORD
     
     COORD --> N1[("Replica Node 1")]
     COORD --> N2[("Replica Node 2")]

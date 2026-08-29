@@ -28,7 +28,7 @@ flowchart LR
 
     subgraph StreamingTier["2. Edge Streaming"]
         S3_ENCODED --> CDN["Global CDN Edge Network"]
-        CDN -->|Adaptive Bitrate Stream (HLS/DASH)| VIEWER["Viewer (Mobile / Web / TV)"]
+        CDN -->|"Adaptive Bitrate Stream (HLS/DASH)"| VIEWER["Viewer (Mobile / Web / TV)"]
     end
 ```
 
@@ -91,7 +91,7 @@ flowchart TD
 
     CREATOR -->|1. Get Pre-Signed URL| LB
     LB --> API <--> META_DB
-    API -->>|2. Return S3 Upload URL| CREATOR
+    API -.->|2. Return S3 Upload URL| CREATOR
     
     CREATOR -->|3. Multipart Direct Upload| RAW_S3
     RAW_S3 -->|4. S3 Event Notification| DAG_SCHED
@@ -182,6 +182,36 @@ sequenceDiagram
 ## 6. Architectural Summary
 
 ```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#2d3436',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#1e272e',
+    'lineColor': '#576574',
+    'cScale0': '#2d3436',
+    'cScaleLabel0': '#ffffff',
+    'cScale1': '#0984e3',
+    'cScaleLabel1': '#ffffff',
+    'cScale2': '#27ae60',
+    'cScaleLabel2': '#ffffff',
+    'cScale3': '#8e44ad',
+    'cScaleLabel3': '#ffffff',
+    'cScale4': '#d35400',
+    'cScaleLabel4': '#ffffff',
+    'cScale5': '#c0392b',
+    'cScaleLabel5': '#ffffff',
+    'cScaleBorder0': '#1e272e',
+    'cScaleBorder1': '#0652dd',
+    'cScaleBorder2': '#218c74',
+    'cScaleBorder3': '#6c5ce7',
+    'mindmapRootColor': '#2d3436',
+    'mindmapMainColor': '#0984e3',
+    'mindmapSecondaryColor': '#27ae60',
+    'mindmapTextColor': '#ffffff',
+    'mindmapLineColor': '#576574'
+  }
+}}%%
 mindmap
   root((YouTube Architecture))
     Upload Path

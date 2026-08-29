@@ -242,7 +242,7 @@ graph LR
 graph TD
     DRIFT[Drift Detected] --> SEVERITY{Severity?}
 
-    SEVERITY -->|Low (< threshold)| LOG[Log & Continue<br/>Monitoring]
+    SEVERITY -->|"Low (< threshold)"| LOG[Log & Continue<br/>Monitoring]
     SEVERITY -->|Medium| INVESTIGATE[Investigate Root Cause<br/>Feature analysis]
     SEVERITY -->|High| RETRAIN[Auto-Trigger<br/>Retraining]
     SEVERITY -->|Critical| ROLLBACK[Rollback to<br/>Previous Model]
@@ -279,7 +279,7 @@ graph TD
     Q2 -->|Monthly+| CI_CD[Level 2: CI/CD pipeline]
     Q2 -->|Weekly/Daily| FULL[Level 3: Full MLOps]
 
-    Q3 -->|High (finance, healthcare)| GOVERNED[Full MLOps with<br/>governance & audit]
+    Q3 -->|"High (finance, healthcare)"| GOVERNED[Full MLOps with<br/>governance & audit]
     Q3 -->|Low| FULL2[Level 3: Auto-retrain]
 
     style FULL fill:#4ecdc4,color:#fff

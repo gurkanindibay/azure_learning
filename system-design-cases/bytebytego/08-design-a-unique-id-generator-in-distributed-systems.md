@@ -20,9 +20,9 @@ In distributed architectures, relational database `AUTO_INCREMENT` primary keys 
 
 ```mermaid
 flowchart LR
-    APP1["Application Server 1"] -->|getId()| IDGEN1["Snowflake ID Generator<br/>(DC 1, Node 1)"]
-    APP2["Application Server 2"] -->|getId()| IDGEN2["Snowflake ID Generator<br/>(DC 1, Node 2)"]
-    APP3["Application Server 3"] -->|getId()| IDGEN3["Snowflake ID Generator<br/>(DC 2, Node 1)"]
+    APP1["Application Server 1"] -->|"getId()"| IDGEN1["Snowflake ID Generator<br/>(DC 1, Node 1)"]
+    APP2["Application Server 2"] -->|"getId()"| IDGEN2["Snowflake ID Generator<br/>(DC 1, Node 2)"]
+    APP3["Application Server 3"] -->|"getId()"| IDGEN3["Snowflake ID Generator<br/>(DC 2, Node 1)"]
 
     IDGEN1 & IDGEN2 & IDGEN3 -.->|64-bit Time-Sortable Integer| DB[("Distributed Sharded DB")]
 ```
@@ -184,20 +184,41 @@ public class SnowflakeIdGenerator {
 ## 5. Architectural Summary
 
 ```mermaid
-mindmap
-  root((Snowflake ID Generator))
-    Layout
-      1-bit Sign Bit (0)
-      41-bit Timestamp (~69 years)
-      10-bit DC & Worker ID (1024 nodes)
-      12-bit Sequence (4096 IDs/ms)
-    Key Advantages
-      64-bit compact BIGINT
-      Locally generated in memory (no network locks)
-      B-tree index friendly (monotonic insertion)
-    Failure Protections
-      Clock drift check
-      Dynamic worker allocation via ZooKeeper
+flowchart TD
+    ROOT["<b>Snowflake ID Generator Architecture</b>"]
+    
+    subgraph S1["1. 64-Bit Bitmask Layout"]
+        S1_1["1-bit Sign Bit (Always 0)"]
+        S1_2["41-bit Timestamp (~69.7 Years)"]
+        S1_3["10-bit DC & Worker ID (1024 Nodes)"]
+        S1_4["12-bit Sequence (4096 IDs/ms/node)"]
+    end
+    
+    subgraph S2["2. Key Architectural Advantages"]
+        S2_1["64-bit Compact Numeric BIGINT"]
+        S2_2["Local In-Memory Generation (No Network Locks)"]
+        S2_3["B-Tree Index Friendly (Monotonic Insertion)"]
+    end
+    
+    subgraph S3["3. Distributed Protections"]
+        S3_1["Clock Drift Defense (Wait / Reject / NTP Sync)"]
+        S3_2["Dynamic Node Allocation (ZooKeeper / etcd)"]
+    end
+
+    ROOT --> S1
+    ROOT --> S2
+    ROOT --> S3
+
+    style ROOT fill:#2d3436,color:#ffffff,stroke:#1e272e
+    style S1_1 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S1_2 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S1_3 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S1_4 fill:#0984e3,color:#ffffff,stroke:#0652dd
+    style S2_1 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S2_2 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S2_3 fill:#27ae60,color:#ffffff,stroke:#218c74
+    style S3_1 fill:#8e44ad,color:#ffffff,stroke:#6c5ce7
+    style S3_2 fill:#8e44ad,color:#ffffff,stroke:#6c5ce7
 ```
 
 | Dimension | Architectural Choice | Benefit |
