@@ -32,6 +32,10 @@ The repo uses a **skills + tools + instructions** pattern. Do not duplicate guid
 
 For the full architecture of the agent tooling, see [`agent_tools/README.md`](agent_tools/README.md).
 
+### Architecture Diagram Guidance
+
+When creating a document with a substantial architecture, workflow, sequence, data-flow, or lifecycle diagram, use Archify as the primary diagram authoring tool. Store the Archify specification and delivered HTML viewer under the document's local `resources/` directory, validate with `node bin/archify.mjs validate ... --quality showcase --repo-root <repository>`, and deliver with `node bin/archify.mjs deliver ...`. Embed the generated PNG with standard Markdown for reliable rendering, and link the HTML viewer separately for interactive exploration. Use Mermaid for small inline explanatory diagrams when a standalone Archify artifact is not warranted.
+
 ---
 
 ## Base Instructions

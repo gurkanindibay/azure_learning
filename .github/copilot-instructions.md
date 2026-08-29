@@ -215,6 +215,9 @@ See [`agent_tools/README.md`](../agent_tools/README.md) for the full OKF agent g
 - Comparison tables for alternatives
 - Code blocks with language tags
 - Mermaid diagrams for architecture visualizations
+- Use Archify as the primary authoring tool for substantial architecture, workflow, sequence, data-flow, and lifecycle diagrams. Store the Archify JSON specification, HTML viewer, and Markdown-compatible PNG under the document's local `resources/` directory.
+- Validate Archify diagrams with `node bin/archify.mjs validate <type> <spec.json> --quality showcase --repo-root <repository> --json`, deliver the HTML with `node bin/archify.mjs deliver <type> <spec.json> <output.html> --quality showcase --repo-root <repository> --json`, and run `visual-check` before handoff.
+- Embed the generated PNG with standard Markdown because iframe rendering is not reliable across Markdown viewers; provide a separate relative link to the interactive HTML viewer. Use Mermaid for small inline diagrams when a standalone Archify artifact is not warranted.
 - Reference official Microsoft/vendor documentation
 - Include practical examples and case studies
 - **Accessibility**: Follow [accessibility guidelines](accessibility-guidelines.md) for diagrams (WCAG 2.1 AA contrast, approved color palette)
