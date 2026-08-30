@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Azure Cosmos DB Consistency Spectrum",
+    "quality_profile": "showcase",
+    "viewBox": [720, 466],
+    "views": [
+      {
+        "id": "spectrum",
+        "label": "Consistency spectrum",
+        "focus": ["strong", "bounded", "session", "prefix", "eventual"],
+        "note": "Move from stronger guarantees toward higher availability and throughput."
+      },
+      {
+        "id": "request-behavior",
+        "label": "Account and request behavior",
+        "focus": ["account-policy", "request-read", "strong", "session"],
+        "note": "The account policy governs writes; request overrides primarily change read behavior."
+      },
+      {
+        "id": "selection",
+        "label": "Choose by workload",
+        "focus": ["strong", "bounded", "session", "prefix", "eventual"],
+        "note": "Select the weakest guarantee that still satisfies the business contract."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "levels", "label": "Consistency levels" },
+    { "id": "guarantees", "label": "Guarantees and use cases" },
+    { "id": "controls", "label": "Configuration controls" }
+  ],
+  "phases": [
+    { "id": "stronger", "label": "Stronger guarantees", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "balanced", "label": "Balanced choices", "fromCol": 2, "toCol": 3 },
+    { "id": "faster", "label": "Higher availability and throughput", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "read-write", "label": "Account policy and request behavior", "lane": "controls", "fromCol": 0, "toCol": 3, "variant": "security" }
+  ],
+  "mainPath": ["strong", "bounded", "session", "prefix", "eventual"],
+  "nodes": [
+    { "id": "strong", "lane": "levels", "col": 0, "width": 72, "type": "security", "label": "Strong", "sublabel": "linearizable" },
+    { "id": "bounded", "lane": "levels", "col": 1, "width": 72, "type": "cloud", "label": "Bound", "sublabel": "K or T lag" },
+    { "id": "session", "lane": "levels", "col": 2, "width": 72, "type": "backend", "label": "Session", "sublabel": "own writes" },
+    { "id": "prefix", "lane": "levels", "col": 3, "width": 56, "type": "messagebus", "label": "Prefix", "sublabel": "ordered" },
+    { "id": "eventual", "lane": "levels", "col": 4, "width": 60, "type": "database", "label": "Eventual", "sublabel": "available" },
+    { "id": "account-policy", "lane": "controls", "col": 1, "type": "cloud", "label": "Account policy", "sublabel": "default + writes" },
+    { "id": "request-read", "lane": "controls", "col": 3, "type": "backend", "label": "Read override", "sublabel": "request-level read" },
+    { "id": "critical", "lane": "guarantees", "col": 0, "width": 72, "type": "external", "label": "Critical", "sublabel": "finance" },
+    { "id": "predictable", "lane": "guarantees", "col": 1, "width": 72, "type": "external", "label": "Lag bound", "sublabel": "regions" },
+    { "id": "user-session", "lane": "guarantees", "col": 2, "width": 72, "type": "external", "label": "User state", "sublabel": "carts" },
+    { "id": "ordered-feed", "lane": "guarantees", "col": 3, "width": 56, "type": "external", "label": "Ordered", "sublabel": "events" },
+    { "id": "high-throughput", "lane": "guarantees", "col": 4, "width": 56, "type": "external", "label": "Fast", "sublabel": "telemetry" }
+  ],
+  "edges": [
+    { "from": "strong", "to": "bounded", "variant": "emphasis" },
+    { "from": "bounded", "to": "session", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom" },
+    { "from": "session", "to": "prefix" },
+    { "from": "prefix", "to": "eventual", "variant": "emphasis", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom" },
+    { "from": "account-policy", "to": "request-read", "label": "default read behavior", "variant": "dashed" },
+    { "from": "strong", "to": "critical", "label": "critical", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "bounded", "to": "predictable", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "session", "to": "user-session", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "prefix", "to": "ordered-feed", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "eventual", "to": "high-throughput", "variant": "dashed", "route": "drop", "fromSide": "bottom", "toSide": "top" }
+  ]
+}

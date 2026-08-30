@@ -86,6 +86,11 @@ Each of the consistency models can be used for specific real-world scenarios. Ea
 
 ## Consistency Levels Overview
 
+Explore the interactive [Azure Cosmos DB consistency spectrum](resources/cosmos-consistency-spectrum.html), which shows the trade-off between consistency guarantees, availability, throughput, and request-level behavior.
+
+
+![Azure Cosmos DB consistency levels](resources/consistency-levels-overview.png)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │              Azure Cosmos DB Consistency Levels                     │
