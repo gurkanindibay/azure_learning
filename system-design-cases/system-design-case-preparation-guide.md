@@ -177,6 +177,8 @@ Read these to reinforce a focused concept before or after a case. They are not s
 
 These are order-of-magnitude starting points for an interview, not hardware limits or provider guarantees. Validate them against peak traffic, record size, query shape, working-set size, latency target, availability target, consistency requirement, team maturity, and cost.
 
+The useful question is not “What number forces me to use a distributed system?” It is “Which resource is constrained, and which design change relieves that constraint?” The examples below use deliberately rough numbers so that the reasoning remains visible. State the assumptions, round aggressively, and name the next bottleneck.
+
 ### Estimate before adding components
 
 | Estimate | Fast approximation | Design consequence |
@@ -188,6 +190,17 @@ These are order-of-magnitude starting points for an interview, not hardware limi
 | Cache capacity | Hot working set x replication factor | Avoids treating all historical data as cacheable |
 | Network bandwidth | Peak QPS x response size | Reveals CDN, compression, or asynchronous-delivery needs |
 
+#### Worked example: turn product requirements into pressure points
+
+Suppose a photo timeline receives 10M reads/day, 200K writes/day, and 20% of reads happen in the busiest hour. Start with the math:
+
+- Average reads: $10\text{M} / 100{,}000 \approx 100$ QPS.
+- Peak reads: $100 \times 5 \approx 500$ QPS.
+- Peak-hour check: $2\text{M} / 3{,}600 \approx 560$ QPS, which is close to the burst multiplier and is a useful cross-check.
+- If each response is 200 KB, peak egress is about $500 \times 200\text{ KB} = 100\text{ MB/s}$.
+
+The first design consequence is therefore a cache or CDN for repeated media reads, not sharding. Sharding addresses database data or write scale; it does not reduce bytes sent to users. The next check is cache hit rate and origin bandwidth. If the hit rate is poor because each request is unique, move the investigation to image resizing, compression, or asynchronous generation instead of simply adding cache nodes.
+
 ### Stateless request path
 
 | Peak workload signal | Start with | Add next when the constraint appears |
@@ -196,6 +209,10 @@ These are order-of-magnitude starting points for an interview, not hardware limi
 | 100-1,000 QPS or short spikes | Stateless service instances behind a load balancer | Rate limiting and a cache for demonstrably hot reads |
 | 1,000-10,000 QPS | Horizontally scaled stateless services, CDN for cacheable public content, targeted cache | Queue slow work; isolate expensive endpoints; control cache stampedes |
 | Above 10,000 QPS or extreme burstiness | Independently scalable request paths and asynchronous pipelines | Partition state only after indexes, caching, batching, and replicas no longer satisfy the SLO |
+
+**Why these steps change.** Below 100 QPS, a single deployable service keeps deployment, debugging, and failure recovery understandable; invest first in backups, monitoring, and restore practice. At 100-1,000 QPS, replicas behind a load balancer absorb CPU and connection spikes because any instance can serve any request. At higher load, CDN and cache remove repeat work from the origin, while queues isolate slow work from interactive requests. Above that, independent scaling domains matter because a report, upload, or search workload should not exhaust capacity for normal reads.
+
+**Example.** A 2,000-QPS API with a 300-ms report-generation endpoint should not make every web instance faster. Keep normal reads synchronous, put report generation on a queue, and return a job ID. This works because completion latency can differ from request latency. The trade-off is that clients must observe job status and workers must be idempotent. Partition state only after cache hit rate, indexes, batching, and replicas fail to meet the SLO.
 
 ### Stateful data path
 
@@ -207,6 +224,10 @@ These are order-of-magnitude starting points for an interview, not hardware limi
 | Above roughly 10,000 writes/s, data volume, or geographic write demand exceeds one primary | Shard or adopt a distributed data store using an access-aligned partition key | Cross-shard transactions and scatter-gather as the common path |
 | Partition key is skewed | Key salting, tenant isolation, adaptive splits, or a different key | Hashing blindly without a hot-key plan |
 
+**Why these steps change.** A relational primary is usually the best starting point when the write rate and dataset fit on one machine: one transaction boundary makes uniqueness, joins, and state transitions easier to guarantee. Read replicas add read capacity, but asynchronous lag makes them unsuitable for read-after-write or financial correctness reads. A hot key is a concentration problem, so batching, coalescing, or changing the access pattern attacks the cause; another replica does not. Sharding becomes justified when one primary cannot meet throughput, capacity, or geographic locality, and the partition key must keep common queries local.
+
+**Example.** An order service at 300 writes/s with joins, uniqueness checks, and payment state transitions usually benefits from one relational primary. At 8,000 writes/s, first ask whether one customer, product, or counter receives most writes. If one counter is hot, batching increments or storing per-event facts may help more than adding shards. Only when the access pattern and data volume exceed one primary should a partitioned design become the next step.
+
 ### Cache, queues, and multi-region
 
 | Condition | Use | Guardrail |
@@ -217,6 +238,21 @@ These are order-of-magnitude starting points for an interview, not hardware limi
 | Producer bursts exceed consumer capacity | Durable queue, consumer autoscaling, and admission control | Queueing moves pressure; it does not remove capacity limits |
 | Global reads with relaxed write consistency | CDN/edge cache and regional read replicas | State the staleness and invalidation behavior |
 | Global writes requiring strict ordering or correctness | Single write region or explicitly coordinated quorum/consensus scope | Do not promise low-latency global strong writes without explaining the latency and availability cost |
+
+**Why these choices differ.** A cache is appropriate when repeated reads can tolerate bounded staleness: it removes database work from the critical path in exchange for invalidation and freshness complexity. Inventory, balances, and uniqueness checks are different because the write path must serialize conflicting claims; a cache can display a value but cannot authorize it. A queue is useful when request latency and completion latency can differ, because it makes backlog visible and lets workers scale independently. For global reads, edge delivery reduces WAN latency and origin bandwidth. For globally ordered writes, a single authority or coordinated quorum makes correctness explicit, but adds latency and can reduce availability during a partition.
+
+**Example.** For product pages, a five-minute cache may be an excellent trade: a stale description is tolerable and cache hits protect the database. For inventory, the same cache can show an old quantity but cannot authorize a purchase. The write path must conditionally reserve inventory in the authoritative store, then invalidate or refresh the cached view.
+
+### How to explain a scaling decision
+
+For every component, use this short chain:
+
+1. **Signal:** name the measured or estimated pressure, such as 500 peak QPS, 200-ms P99, 80% cache misses, or a queue age above 30 seconds.
+2. **Mechanism:** explain which resource the component changes: a CDN reduces origin requests, replicas add read capacity, a queue decouples arrival from processing, and sharding distributes state ownership.
+3. **Cost:** name what becomes harder: stale data, lag, retries, ordering, cross-partition queries, operations, or money.
+4. **Trigger:** state what evidence justifies the next step and what you would change then.
+
+For example: “At 500 peak reads/s, the database is spending most of its work serving identical public objects. I would add a cache-aside layer because it removes repeated reads from the database. I accept bounded staleness and cache invalidation complexity. If hit rate stays below 70% or origin P99 remains above the target, I would inspect the key shape and consider a CDN or a read-model redesign.” This demonstrates reasoning rather than treating a threshold as a universal rule.
 
 ## Universal Design Heuristics
 
