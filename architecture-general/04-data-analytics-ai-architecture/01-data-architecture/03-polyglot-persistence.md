@@ -213,7 +213,7 @@ flowchart TD
 
 ## Relational DB versus Wide-Column Databases
 
-Choose based on the correctness and query contract, not on raw throughput alone. PostgreSQL is normally the preferred source of truth when transactions and relationships matter. Cassandra is preferred when the access pattern is known in advance and the workload needs distributed write availability and predictable scale.
+Choose based on the correctness and query contract, not on raw throughput alone. PostgreSQL is normally the preferred source of truth when transactions and relationships matter. [Apache Cassandra](../data-architecture-fundamentals/cassandra.md) is preferred when the access pattern is known in advance and the workload needs distributed write availability and predictable scale.
 
 ```mermaid
 flowchart LR

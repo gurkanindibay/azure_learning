@@ -147,6 +147,41 @@ Key modeling rules:
 | Joins | Not supported | Limited `$lookup` | Full SQL joins |
 | Scaling model | Horizontal, add nodes | Horizontal via sharding | Vertical + read replicas |
 
+## Apache Cassandra versus Azure Cosmos DB for Cassandra
+
+Azure Cosmos DB for Cassandra provides Cassandra wire-protocol compatibility as a managed Azure service, but it is not identical to operating a native Cassandra cluster. The most important difference is consistency control: native Cassandra exposes separate read and write consistency levels per request, while Cosmos DB uses an account-level consistency policy for writes and maps Cassandra driver read levels to the closest supported Cosmos DB behavior.
+
+### Consistency level mapping
+
+The following is a practical map for the common single-region-read case. These are **closest analogues**, not semantic equivalents. Native Cassandra chooses read and write levels independently for each operation; Azure Cosmos DB for Cassandra applies an account-level default to writes and dynamically maps supported Cassandra driver read levels.
+
+| Apache Cassandra level or combination | Closest Azure Cosmos DB consistency level | Practical interpretation |
+|---|---|---|
+| `ONE`, `LOCAL_ONE`, or `ANY` for reads | `Eventual` | Lowest-latency read path; a single replica may return stale data. `ANY` is write-only in native Cassandra and has no exact Cosmos equivalent. |
+| `TWO` or `THREE` for reads | `Strong` when the account policy and write path support it | Reads from multiple replicas provide a local quorum-like guarantee; Cosmos has no exact two-node write acknowledgement. |
+| `LOCAL_QUORUM` for reads | `Strong` when the account policy and write path support it | Closest to a local quorum read; Cosmos uses its own replica and region protocol rather than Cassandra's configured replication factor. |
+| `QUORUM` or `EACH_QUORUM` for reads | `Strong` for single-region writes; no exact equivalent for multi-region writes | Closest to quorum-based strong reads. Native `EACH_QUORUM` requires a quorum in every data center, while Cosmos `Strong` is a service-managed account policy. |
+| `ALL` for reads | `Strong` | Both require the strongest read condition in their respective systems, but failure behavior and replica topology differ. |
+| `ANY`, `ONE`, `TWO`, `THREE`, `LOCAL_QUORUM`, `QUORUM`, or `EACH_QUORUM` for writes | Account default: `Strong`, `Bounded staleness`, `Session`, `Consistent prefix`, or `Eventual` | Native Cassandra acknowledges according to the requested write level. Cosmos durably commits according to the account policy; the write level cannot be changed per request. |
+| `SERIAL` or `LOCAL_SERIAL` for LWT | Closest to `Strong` for the conditional operation | This is only an approximate comparison. Cassandra uses Paxos for LWT, while Cosmos uses its own durable coordination mechanism. |
+| No native Cassandra equivalent | `Bounded staleness` | Cosmos-only guarantee that limits replica lag by a configured number of versions or time interval. |
+| No native Cassandra equivalent | `Session` | Cosmos-only session-token guarantee, including read-your-writes within a client session. |
+| No native Cassandra equivalent | `Consistent prefix` | Cosmos-only ordering guarantee that prevents reads from observing writes out of order. |
+
+The levels therefore should not be translated mechanically. For example, `QUORUM` in native Cassandra means a quorum of the configured replica set, whereas `Strong` in Cosmos DB is a service-level replication guarantee. Conversely, a Cosmos account configured for `Eventual` does not become strongly consistent merely because an application issues a Cassandra `QUORUM` read; the request is constrained by the account policy, subject to supported read overrides.
+
+### Choosing between them
+
+| Requirement | Prefer Apache Cassandra | Prefer Azure Cosmos DB for Cassandra |
+|---|---|---|
+| Need exact per-operation read/write quorum control | Yes | No; use the account policy and supported read overrides |
+| Need a managed Azure service with built-in regional distribution, failover, and Azure integration | No | Yes |
+| Need to preserve an existing Cassandra deployment model and operational controls | Yes | Only after validating API and consistency compatibility |
+| Need strong consistency across multiple regions | Possible with careful `EACH_QUORUM`/replication design, with availability and latency costs | Use single-region writes with `Strong` consistency where the regional-distance and availability constraints are acceptable |
+| Need low-latency globally distributed writes | Yes, with native multi-master and eventual or tuned consistency | Yes, with multi-region writes and a weaker Cosmos consistency policy |
+
+For the detailed, version-sensitive mapping of Cassandra consistency levels to Azure Cosmos DB behavior, see Microsoft's [Apache Cassandra and Azure Cosmos DB consistency levels](https://learn.microsoft.com/en-us/azure/cosmos-db/cassandra/consistency-mapping) and the repository's [Azure Cosmos DB consistency levels](../../../architecture-azure/data/databases/azure_cosmosdb/cosmosdb_consistency_levels.md) guide.
+
 ## Related Concepts
 
 - [BASE Properties](base-properties.md) — Availability-first semantics
