@@ -168,7 +168,7 @@ flowchart TD
 
     CONFIG -->|Load Rules| GW
     GW -->|2. Check Limit via Lua Script| REDIS
-    REDIS -->>|3. Allowed (Tokens Left)| GW
+    REDIS -->|3. Allowed Tokens Left| GW
     
     GW -->|4a. Allowed -> Forward Request| API["Backend API Servers"]
     GW -->|4b. Throttled -> HTTP 429| CLIENT
