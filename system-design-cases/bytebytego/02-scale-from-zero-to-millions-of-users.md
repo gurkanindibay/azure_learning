@@ -30,6 +30,36 @@ flowchart TD
     S8 --> S9["9. Database Sharding & Microservices"]
 ```
 
+### Transaction Load Evolution
+
+The architecture changes when the current tier can no longer absorb the next order of magnitude of active users or peak transaction load. The figures below are illustrative planning estimates for a read-heavy web application; actual capacity depends on request complexity, payload size, storage latency, and availability targets.
+
+```mermaid
+flowchart LR
+    M1["Stage 1<br/>1 active user<br/>1 peak TPS<br/>Single server"] --> M2["Stage 2<br/>100 active users<br/>10 peak TPS<br/>Separate data tier"]
+    M2 --> M3["Stage 3<br/>1,000 active users<br/>100 peak TPS<br/>Load-balanced web tier"]
+    M3 --> M4["Stage 4<br/>10,000 active users<br/>1,000 peak TPS<br/>Read replicas"]
+    M4 --> M5["Stage 5<br/>100,000 active users<br/>10,000 peak TPS<br/>Cache and CDN"]
+    M5 --> M6["Stage 6<br/>500,000 active users<br/>25,000 peak TPS<br/>Stateless web tier"]
+    M6 --> M7["Stage 7<br/>1 million active users<br/>50,000 peak TPS<br/>Multi-region routing"]
+    M7 --> M8["Stage 8<br/>5 million active users<br/>250,000 peak TPS<br/>Queues and workers"]
+    M8 --> M9["Stage 9<br/>10 million plus active users<br/>500,000 plus peak TPS<br/>Sharded data tier"]
+```
+
+| Stage | Illustrative active users | Illustrative peak TPS | Architecture response |
+|:---|---:|---:|:---|
+| 1 | 1 | 1 | Run application, database, and storage on one server. |
+| 2 | 100 | 10 | Separate the web tier from the data tier. |
+| 3 | 1,000 | 100 | Add a load balancer and multiple web servers. |
+| 4 | 10,000 | 1,000 | Add read replicas and route reads separately from writes. |
+| 5 | 100,000 | 10,000 | Cache hot data and serve static assets through a CDN. |
+| 6 | 500,000 | 25,000 | Move sessions to shared storage and keep web nodes stateless. |
+| 7 | 1 million | 50,000 | Route users to nearby regions and replicate data across regions. |
+| 8 | 5 million | 250,000 | Move slow work to queues and independently scalable workers. |
+| 9 | 10 million plus | 500,000 plus | Shard durable data and split high-volume business capabilities. |
+
+> **Sizing note:** TPS means peak application transactions per second, not necessarily database writes. A single transaction may produce several cache reads, database queries, or asynchronous events.
+
 ![Scale-to-millions target architecture showing GeoDNS and CDN at the edge, a load-balanced stateless web tier, cache-aside reads, asynchronous workers, and sharded databases.](resources/scale-to-millions/scale-to-millions-architecture.png)
 
 **Diagram description:** Global users are routed through GeoDNS and a CDN to a load-balanced stateless web tier. The application serves hot reads from cache, sends slow work through a queue to independently scalable workers, and routes durable data to partitioned database shards.
