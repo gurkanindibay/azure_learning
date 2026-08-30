@@ -45,7 +45,7 @@ flowchart LR
 
 ![Stock exchange design scope diagram](resources/stock-exchange-design-scope.png)
 
-> **Interactive diagram**: [Open the Stock Exchange Design Scope diagram](./resources/stock-exchange-design-scope.html)
+**Diagram:** Accepted limit orders pass through the gateway, pre-trade risk checks, and a monotonic inbound sequencer before one matching-engine writer updates the price-time book. The same sequence supports warm-standby replay, while fills flow to market data and reporting outside the critical path. [Interactive architecture](resources/stock-exchange-design-scope.html)
 
 ---
 

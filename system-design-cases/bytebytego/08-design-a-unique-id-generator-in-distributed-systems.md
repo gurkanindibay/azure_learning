@@ -53,6 +53,10 @@ flowchart LR
 - **High Throughput**: Capable of generating $> 10{,}000\text{ IDs/sec}$ per node.
 - **High Availability & Low Latency**: Generation must be local and sub-microsecond without distributed network locking.
 
+![Snowflake ID generation across datacenters showing worker-ID provisioning, local timestamp and sequence composition, clock-drift protection, and sharded storage.](resources/unique-id-generator/unique-id-generator-architecture.png)
+
+**Diagram:** Application services request IDs from independent workers in each datacenter. A registry provisions location fields at startup, while workers compose 64-bit IDs locally and guard against backward clock movement. [Open the interactive Snowflake ID architecture diagram](resources/unique-id-generator/unique-id-generator-architecture.html).
+
 ---
 
 ## 2. High-Level Alternatives Evaluation

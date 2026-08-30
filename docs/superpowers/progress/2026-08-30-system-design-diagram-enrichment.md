@@ -23,16 +23,16 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | Chapter | Primary diagram | Status |
 |:---|:---|:---|
 | 02 Scale From Zero To Millions Of Users | Scale evolution architecture | Complete |
-| 05 Design A Rate Limiter | Distributed rate limiting workflow | Not started |
-| 06 Design Consistent Hashing | Ring membership and request routing | Not started |
-| 07 Design A Key-Value Store | Partitioned key-value architecture | Not started |
-| 08 Design A Unique ID Generator | Distributed ID generation workflow | Not started |
-| 09 Design A URL Shortener | Redirect architecture | Not started |
-| 10 Design A Web Crawler | Crawl frontier and worker pipeline | Not started |
-| 11 Design A Notification System | Notification delivery architecture | Not started |
-| 12 Design A News Feed System | Fan-out architecture | Not started |
-| 13 Design A Chat System | Real-time chat architecture | Not started |
-| 14 Design A Search Autocomplete System | Suggestion generation pipeline | Not started |
+| 05 Design A Rate Limiter | Distributed rate limiting workflow | Complete |
+| 06 Design Consistent Hashing | Ring membership and request routing | Complete |
+| 07 Design A Key-Value Store | Partitioned key-value architecture | Complete |
+| 08 Design A Unique ID Generator | Distributed ID generation workflow | Complete |
+| 09 Design A URL Shortener | Redirect architecture | Complete |
+| 10 Design A Web Crawler | Crawl frontier and worker pipeline | Complete |
+| 11 Design A Notification System | Notification delivery architecture | Complete |
+| 12 Design A News Feed System | Fan-out architecture | Complete |
+| 13 Design A Chat System | Real-time chat architecture | Complete |
+| 14 Design A Search Autocomplete System | Suggestion generation pipeline | Complete |
 | 15 Design YouTube | Upload and video delivery architecture | Not started |
 | 16 Design Google Drive | File synchronization architecture | Not started |
 | 17 Proximity Service | Geo-index query architecture | Not started |
@@ -45,9 +45,9 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | 24 Distributed Email Service | Email delivery pipeline | Not started |
 | 25 S3-like Object Storage | Object metadata and blob storage architecture | Not started |
 | 26 Real-time Gaming Leaderboard | Ranking update architecture | Not started |
-| 27 Payment System | Payment processing architecture | Not started |
-| 28 Digital Wallet | Wallet ledger and transfer workflow | Not started |
-| 29 Stock Exchange | Order matching architecture | Not started |
+| 27 Payment System | Payment processing architecture | Complete |
+| 28 Digital Wallet | Wallet ledger and transfer workflow | Complete |
+| 29 Stock Exchange | Order matching architecture | Complete |
 
 ## Source Articles
 

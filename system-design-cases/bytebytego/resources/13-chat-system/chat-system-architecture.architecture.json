@@ -104,10 +104,9 @@
     {"id": "sender-websocket", "from": "sender", "to": "chat-one", "label": "WebSocket message", "variant": "emphasis"},
     {"id": "store-message-one", "from": "chat-one", "to": "messages", "label": "append message", "fromSide": "bottom", "toSide": "left"},
     {"id": "session-lookup", "from": "chat-one", "to": "sessions", "label": "recipient server lookup", "fromSide": "top", "toSide": "left"},
-    {"id": "heartbeat", "from": "presence", "to": "sessions", "label": "heartbeat lease", "variant": "dashed", "labelDy": 29},
+    {"id": "heartbeat", "from": "presence", "to": "sessions", "label": "heartbeat lease", "variant": "dashed", "labelDy": -55},
     {"id": "internal-rpc", "from": "chat-one", "to": "chat-two", "label": "internal RPC", "variant": "emphasis"},
     {"id": "recipient-websocket", "from": "chat-two", "to": "receiver", "label": "WebSocket push", "variant": "emphasis"},
-    {"id": "store-message-two", "from": "chat-two", "to": "messages", "label": "history read/write", "fromSide": "bottom", "toSide": "right", "via": [[807, 520], [700, 520]]},
     {"id": "offline-push", "from": "chat-one", "to": "push", "label": "recipient offline", "variant": "dashed", "fromSide": "bottom", "toSide": "left"},
     {"id": "push-delivery", "from": "push", "to": "offline", "label": "push alert", "variant": "dashed"}
   ],

@@ -55,6 +55,10 @@ flowchart LR
 - **Tunable Consistency**: Support configurable Read ($R$) and Write ($W$) quorums.
 - **Zero Single Point of Failure**: Fully decentralized, leaderless master-master topology.
 
+![Leaderless key-value store quorum path showing request routing, replicated storage, tunable quorum acknowledgement, gossip membership, and Merkle-tree repair.](resources/key-value-store/key-value-store-architecture.png)
+
+**Diagram:** The request-receiving replica hashes each key and sends reads or writes to the selected replica set. Quorum responses control acknowledgement, while gossip and Merkle-tree repair handle membership and divergent ranges. [Open the interactive key-value store architecture diagram](resources/key-value-store/key-value-store-architecture.html).
+
 ---
 
 ## 2. Distributed Architecture Principles (The Dynamo Blueprint)

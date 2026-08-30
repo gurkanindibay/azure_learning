@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "News Feed Hybrid Fan-Out Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 700],
+    "views": [
+      {"id": "publish", "label": "Publish path", "focus": ["author", "post-service", "fanout-queue", "fanout-workers", "timeline-cache"], "note": "Standard authors fan out post IDs asynchronously to follower timelines."},
+      {"id": "read", "label": "Read path", "focus": ["reader", "feed-service", "timeline-cache", "celebrity-outbox", "post-store"], "note": "Feed reads merge precomputed inboxes with celebrity outbox posts."}
+    ]
+  },
+  "components": [
+    {"id": "author", "type": "external", "label": "Author", "sublabel": "publishes post", "pos": [35, 170], "size": [145, 64]},
+    {"id": "reader", "type": "external", "label": "Follower", "sublabel": "requests timeline", "pos": [35, 470], "size": [145, 64]},
+    {"id": "post-service", "type": "backend", "label": "Post Service", "sublabel": "stores content and author", "pos": [260, 170], "size": [185, 64]},
+    {"id": "feed-service", "type": "backend", "label": "Feed Service", "sublabel": "merges and ranks candidates", "pos": [260, 470], "size": [185, 64]},
+    {"id": "fanout-queue", "type": "messagebus", "label": "Fan-Out Queue", "sublabel": "durable post events", "pos": [510, 170], "size": [175, 64]},
+    {"id": "fanout-workers", "type": "backend", "label": "Fan-Out Workers", "sublabel": "standard follower push", "pos": [750, 170], "size": [190, 64]},
+    {"id": "timeline-cache", "type": "database", "label": "Follower Timeline Cache", "sublabel": "Redis inbox of post IDs", "pos": [1010, 170], "size": [210, 64]},
+    {"id": "celebrity-outbox", "type": "database", "label": "Celebrity Outboxes", "sublabel": "read-time candidate posts", "pos": [750, 470], "size": [190, 64]},
+    {"id": "post-store", "type": "database", "label": "Post Content Store", "sublabel": "hydrated post metadata", "pos": [1010, 470], "size": [210, 64]}
+  ],
+  "connections": [
+    {"id": "publish", "from": "author", "to": "post-service", "label": "create post", "variant": "emphasis"},
+    {"id": "enqueue", "from": "post-service", "to": "fanout-queue", "variant": "emphasis"},
+    {"id": "consume", "from": "fanout-queue", "to": "fanout-workers", "variant": "emphasis"},
+    {"id": "push-inboxes", "from": "fanout-workers", "to": "timeline-cache", "variant": "emphasis"},
+    {"id": "read-feed", "from": "reader", "to": "feed-service", "label": "get timeline", "variant": "emphasis"},
+    {"id": "read-inbox", "from": "feed-service", "to": "timeline-cache", "label": "read inbox", "variant": "emphasis", "via": [[445, 502], [445, 250], [1010, 250]]},
+    {"id": "read-celebrities", "from": "feed-service", "to": "celebrity-outbox", "label": "pull celebrity posts", "variant": "dashed"},
+    {"id": "hydrate", "from": "feed-service", "to": "post-store", "label": "hydrate and rank", "variant": "emphasis", "via": [[445, 600], [970, 600], [970, 502]]}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Standard Authors", "items": ["Post events are processed asynchronously", "Follower inboxes contain precomputed post IDs"]},
+    {"dot": "emerald", "title": "Celebrity Defense", "items": ["High-follower authors stay in an outbox", "Their posts are merged only for requesting readers"]},
+    {"dot": "amber", "title": "Fast Reads", "items": ["Feed service merges inbox and celebrity candidates", "Post content is hydrated in batches before ranking"]}
+  ]
+}

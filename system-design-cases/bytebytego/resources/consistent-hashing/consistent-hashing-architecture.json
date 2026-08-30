@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Consistent Hashing with Virtual Nodes",
+    "quality_profile": "showcase",
+    "viewBox": [1360, 720],
+    "views": [
+      {"id": "lookup", "label": "Clockwise lookup", "focus": ["partitioning-client", "hash-ring", "token-range-b", "storage-member-b"], "note": "A key hash advances clockwise to the first virtual-node token and its owning storage member."},
+      {"id": "balance", "label": "Virtual-node balance", "focus": ["hash-ring", "token-range-a", "token-range-b", "token-range-c", "storage-member-a", "storage-member-b", "storage-member-c"], "note": "Many tokens per physical member distribute token ranges and request load more evenly."},
+      {"id": "rebalance", "label": "Minimal remap", "focus": ["new-member", "token-range-a", "hash-ring", "storage-member-a"], "note": "Adding a member transfers only the predecessor interval, leaving other assignments unchanged."}
+    ]
+  },
+  "components": [
+    {"id": "partitioning-client", "type": "external", "label": "Partitioning Client", "sublabel": "hashes each data key", "pos": [45, 330], "size": [175, 64]},
+    {"id": "hash-ring", "type": "backend", "label": "Hash Ring Index", "sublabel": "ordered 0 to 2^160 - 1 tokens", "pos": [300, 330], "size": [205, 64]},
+    {"id": "token-range-a", "type": "backend", "label": "VNode Token Range A", "sublabel": "first clockwise match", "pos": [585, 135], "size": [190, 64]},
+    {"id": "token-range-b", "type": "backend", "label": "VNode Token Range B", "sublabel": "first clockwise match", "pos": [585, 330], "size": [190, 64]},
+    {"id": "token-range-c", "type": "backend", "label": "VNode Token Range C", "sublabel": "first clockwise match", "pos": [585, 525], "size": [190, 64]},
+    {"id": "storage-member-a", "type": "database", "label": "Storage Member A", "sublabel": "owns many virtual tokens", "pos": [870, 135], "size": [190, 64]},
+    {"id": "storage-member-b", "type": "database", "label": "Storage Member B", "sublabel": "owns many virtual tokens", "pos": [870, 330], "size": [190, 64]},
+    {"id": "storage-member-c", "type": "database", "label": "Storage Member C", "sublabel": "owns many virtual tokens", "pos": [870, 525], "size": [190, 64]},
+    {"id": "new-member", "type": "database", "label": "New Storage Member", "sublabel": "receives predecessor interval", "pos": [1135, 135], "size": [190, 64]}
+  ],
+  "connections": [
+    {"from": "partitioning-client", "to": "hash-ring", "label": "hash(key)", "variant": "emphasis", "labelDy": -28},
+    {"from": "hash-ring", "to": "token-range-a", "label": "clockwise token lookup", "fromSide": "top", "toSide": "left", "labelDy": -24},
+    {"from": "hash-ring", "to": "token-range-b", "label": "clockwise token lookup", "variant": "emphasis", "labelDy": -28},
+    {"from": "hash-ring", "to": "token-range-c", "label": "clockwise token lookup", "fromSide": "bottom", "toSide": "left", "labelDy": 24},
+    {"from": "token-range-a", "to": "storage-member-a", "label": "route key range", "labelDy": -28},
+    {"from": "token-range-b", "to": "storage-member-b", "label": "route key range", "labelDy": -28},
+    {"from": "token-range-c", "to": "storage-member-c", "label": "route key range", "labelDy": -28},
+    {"from": "storage-member-a", "to": "new-member", "label": "transfer predecessor interval", "variant": "dashed", "labelDy": -28}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Lookup", "items": ["The client hashes a key and selects the first token clockwise on the ring.", "A sorted token index supports O(log(total virtual nodes)) lookup."]},
+    {"dot": "emerald", "title": "Virtual Nodes", "items": ["Each physical member owns many dispersed tokens rather than one large arc.", "More virtual nodes reduce uneven ranges and hotspots."]},
+    {"dot": "amber", "title": "Scaling", "items": ["A joining member receives only the interval from its predecessor.", "Other token ranges retain their existing key assignments."]}
+  ]
+}

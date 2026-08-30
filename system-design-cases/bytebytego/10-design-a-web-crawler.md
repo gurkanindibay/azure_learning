@@ -83,6 +83,10 @@ flowchart TD
     SEEN_URL -->|New URL| UF
 ```
 
+![Web crawler polite discovery pipeline](resources/web-crawler/web-crawler-architecture.png)
+
+**Diagram:** The URL Frontier separates priority scheduling from host-specific politeness queues. Downloaders apply DNS and `robots.txt` checks, while parsing feeds SimHash content screening, HTML archival, and Bloom-filtered URL discovery back into the frontier. [Open the interactive architecture diagram](resources/web-crawler/web-crawler-architecture.html).
+
 ---
 
 ## 3. Design Deep Dive

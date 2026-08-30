@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": { "title": "Search Autocomplete: Prefix Reads and Offline Trie Rebuild", "quality_profile": "showcase", "viewBox": [1180, 700] },
+  "components": [
+    { "id": "user", "type": "external", "label": "Search User", "sublabel": "prefix: be", "pos": [40, 250], "size": [125, 62] },
+    { "id": "load-balancer", "type": "cloud", "label": "Load Balancer", "sublabel": "suggest request", "pos": [220, 250], "size": [135, 62] },
+    { "id": "api", "type": "backend", "label": "Typeahead API", "sublabel": "prefix lookup", "pos": [410, 250], "size": [140, 62] },
+    { "id": "trie-cache", "type": "database", "label": "Distributed Trie Cache", "sublabel": "node-level top 5", "pos": [620, 250], "size": [170, 62] },
+    { "id": "query-log", "type": "messagebus", "label": "Query Log Stream", "sublabel": "search events", "pos": [220, 490], "size": [155, 62] },
+    { "id": "aggregator", "type": "backend", "label": "Log Aggregator", "sublabel": "frequency counts", "pos": [445, 490], "size": [150, 62] },
+    { "id": "frequency-db", "type": "database", "label": "Query Frequency DB", "sublabel": "weekly aggregate", "pos": [660, 490], "size": [160, 62] },
+    { "id": "trie-builder", "type": "backend", "label": "Trie Builder", "sublabel": "MapReduce / Spark", "pos": [865, 490], "size": [150, 62] },
+    { "id": "snapshots", "type": "cloud", "label": "Trie Snapshots", "sublabel": "periodic reload", "pos": [865, 250], "size": [150, 62] }
+  ],
+  "boundaries": [{ "kind": "region", "label": "Autocomplete platform", "wraps": ["load-balancer", "api", "trie-cache", "query-log", "aggregator", "frequency-db", "trie-builder", "snapshots"], "pad": 28 }],
+  "connections": [
+    { "id": "suggest-request", "from": "user", "to": "load-balancer", "label": "GET /suggest?q=be", "variant": "emphasis", "labelAt": [192, 335] },
+    { "id": "route-suggest", "from": "load-balancer", "to": "api", "label": "route prefix", "labelAt": [382, 222] },
+    { "id": "lookup-top-k", "from": "api", "to": "trie-cache", "label": "read cached top 5 suggestions", "labelAt": [585, 335] },
+    { "id": "log-query", "from": "api", "to": "query-log", "label": "async query event", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "aggregate", "from": "query-log", "to": "aggregator", "label": "aggregate logs", "labelAt": [410, 566] },
+    { "id": "store-frequencies", "from": "aggregator", "to": "frequency-db", "label": "write counts" },
+    { "id": "build-trie", "from": "frequency-db", "to": "trie-builder", "label": "build snapshot", "labelAt": [843, 566] },
+    { "id": "publish-snapshot", "from": "trie-builder", "to": "snapshots", "label": "publish trie", "fromSide": "top", "toSide": "bottom" },
+    { "id": "reload-cache", "from": "snapshots", "to": "trie-cache", "label": "weekly reload", "variant": "dashed" }
+  ]
+}

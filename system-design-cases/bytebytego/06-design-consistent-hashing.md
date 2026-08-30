@@ -63,6 +63,12 @@ flowchart TD
     end
 ```
 
+![Consistent hashing with a partitioning client, clockwise virtual-node token lookups, physical storage members, and a joining member that receives one predecessor interval.](resources/consistent-hashing/consistent-hashing-architecture.png)
+
+**Diagram description:** A partitioning client hashes each key and looks up the first virtual-node token clockwise on the ordered ring, then routes to that token’s physical storage member. Multiple dispersed virtual nodes balance ownership; when a member joins, only its predecessor interval transfers.
+
+[Open the interactive consistent-hashing architecture diagram](resources/consistent-hashing/consistent-hashing-architecture.html)
+
 ### Core Operations
 
 #### 1. Server Lookup (Clockwise Traversal)

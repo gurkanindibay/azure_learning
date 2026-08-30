@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": { "title": "Notification System: Channel-Isolated Delivery", "quality_profile": "showcase", "viewBox": [1200, 680] },
+  "components": [
+    { "id": "billing", "type": "backend", "label": "Billing Service", "sublabel": "transaction events", "pos": [35, 150], "size": [155, 62] },
+    { "id": "orders", "type": "backend", "label": "Order Service", "sublabel": "order events", "pos": [35, 320], "size": [155, 62] },
+    { "id": "social", "type": "backend", "label": "Social Service", "sublabel": "activity events", "pos": [35, 490], "size": [155, 62] },
+    { "id": "notificationApi", "type": "backend", "label": "Notification API", "sublabel": "auth, rate limit, preferences", "pos": [285, 320], "size": [190, 62] },
+    { "id": "preferenceCache", "type": "database", "label": "Redis Preferences and Tokens", "sublabel": "opt-out and quiet-hour checks", "pos": [285, 150], "size": [190, 62] },
+    { "id": "notificationLog", "type": "database", "label": "Notification Log", "sublabel": "event and delivery metadata", "pos": [285, 490], "size": [190, 62] },
+    { "id": "channelQueues", "type": "messagebus", "label": "Dedicated Channel Queues", "sublabel": "APNs, FCM, SMS, and email", "pos": [585, 320], "size": [190, 62] },
+    { "id": "channelWorkers", "type": "backend", "label": "Channel Worker Fleets", "sublabel": "independent scaling and retries", "pos": [800, 320], "size": [190, 62] },
+    { "id": "providers", "type": "external", "label": "APNs, FCM, Twilio, SendGrid", "sublabel": "external delivery gateways", "pos": [1020, 320], "size": [180, 62] }
+  ],
+  "connections": [
+    { "id": "billing-submit", "from": "billing", "to": "notificationApi", "label": "send request", "labelDy": -30 },
+    { "id": "orders-submit", "from": "orders", "to": "notificationApi", "label": "send request", "labelDy": 52, "labelDx": -70 },
+    { "id": "social-submit", "from": "social", "to": "notificationApi", "label": "activity event", "labelDy": 133, "labelDx": 70 },
+    { "id": "load-preferences", "from": "notificationApi", "to": "preferenceCache", "label": "filter recipients", "fromSide": "top", "toSide": "bottom" },
+    { "id": "record-event", "from": "notificationApi", "to": "notificationLog", "label": "record event", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "route-channel", "from": "notificationApi", "to": "channelQueues", "label": "route by channel", "variant": "emphasis", "labelDy": -30 },
+    { "id": "consume-queue", "from": "channelQueues", "to": "channelWorkers", "label": "isolated consumption", "variant": "emphasis", "labelDy": 52 },
+    { "id": "deliver-provider", "from": "channelWorkers", "to": "providers", "label": "vendor API", "variant": "emphasis", "labelDy": -30 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Before Enqueue", "items": ["Recipient preferences and tokens are read from Redis", "Notification metadata is retained in the delivery log"] },
+    { "dot": "emerald", "title": "Channel Isolation", "items": ["Each provider channel owns an independent queue", "A slow SMS vendor does not block push or email work"] },
+    { "dot": "amber", "title": "Reliable Delivery", "items": ["Workers retry transient failures with backoff and jitter", "Exhausted deliveries enter a dead-letter queue"] }
+  ]
+}

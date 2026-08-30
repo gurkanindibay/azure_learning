@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Snowflake ID Generation Across Datacenters",
+    "quality_profile": "showcase",
+    "viewBox": [1200, 650],
+    "views": [
+      {"id": "generation", "label": "Local generation", "focus": ["applications", "worker-dc1", "worker-dc2"], "note": "Workers compose IDs locally from timestamp, location, and sequence fields."},
+      {"id": "provisioning", "label": "Worker provisioning", "focus": ["registry", "worker-dc1", "worker-dc2"], "note": "A registry assigns unique datacenter and worker identifiers at startup."}
+    ]
+  },
+  "components": [
+    {"id": "applications", "type": "external", "label": "Application Services", "sublabel": "request nextId()", "pos": [35, 290], "size": [170, 64]},
+    {"id": "registry", "type": "backend", "label": "Worker-ID Registry", "sublabel": "ZooKeeper or etcd", "pos": [285, 105], "size": [190, 64]},
+    {"id": "worker-dc1", "type": "backend", "label": "Snowflake Workers DC1", "sublabel": "timestamp + worker + sequence", "pos": [535, 180], "size": [210, 70]},
+    {"id": "worker-dc2", "type": "backend", "label": "Snowflake Workers DC2", "sublabel": "timestamp + worker + sequence", "pos": [535, 400], "size": [210, 70]},
+    {"id": "id-store", "type": "database", "label": "Sharded Data Stores", "sublabel": "64-bit time-sortable IDs", "pos": [900, 290], "size": [205, 70]},
+    {"id": "clock-guard", "type": "backend", "label": "Clock-Drift Guard", "sublabel": "wait or reject backward time", "pos": [900, 105], "size": [205, 64]}
+  ],
+  "connections": [
+    {"id": "request-dc1", "from": "applications", "to": "worker-dc1", "label": "local ID request", "variant": "emphasis", "labelDy": -28},
+    {"id": "request-dc2", "from": "applications", "to": "worker-dc2", "label": "local ID request", "variant": "emphasis", "labelDy": 28},
+    {"id": "assign-dc1", "from": "registry", "to": "worker-dc1", "label": "assign DC and worker", "variant": "dashed", "labelAt": [505, 265]},
+    {"id": "compose-dc1", "from": "worker-dc1", "to": "id-store", "label": "64-bit IDs", "variant": "emphasis", "labelDy": -28},
+    {"id": "compose-dc2", "from": "worker-dc2", "to": "id-store", "label": "64-bit IDs", "variant": "emphasis", "labelDy": 28},
+    {"id": "clock-check", "from": "worker-dc1", "to": "clock-guard", "label": "check timestamp", "variant": "dashed"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Bit Layout", "items": ["41-bit timestamp preserves approximate ordering", "Datacenter, worker, and sequence fields prevent collisions"]},
+    {"dot": "emerald", "title": "Runtime Path", "items": ["Generation stays in local memory without network locking", "Each worker can emit thousands of IDs per millisecond"]},
+    {"dot": "amber", "title": "Resilience", "items": ["Registry coordination is limited to startup provisioning", "Backward clock movement waits briefly or rejects generation"]}
+  ]
+}

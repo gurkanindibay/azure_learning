@@ -82,43 +82,9 @@ flowchart LR
 
 ### Core Components of the Pay-In Flow
 
-```mermaid
-flowchart TD
-    subgraph Ingress["Client & Edge"]
-        BUYER["Buyer Browser / App"]
-        GW["API Gateway"]
-    end
+![Payment System: durable pay-in to reconciliation](resources/payment-system/payment-system.png)
 
-    subgraph PaymentEngine["Payment Orchestration Tier"]
-        PS["Payment Service<br/>(Risk Checks & Coordinator)"]
-        PE["Payment Executor<br/>(Order Dispatcher)"]
-    end
-
-    subgraph AsyncTier["Messaging & Storage"]
-        KAFKA["Payment Event Stream<br/>(Kafka Queue)"]
-        PDB[("Payment DB<br/>(Orders & Events)")]
-        WALLET["Merchant Wallet Service"]
-        LEDGER["Double-Entry Ledger Service"]
-        RECON["Reconciliation Service"]
-    end
-
-    subgraph External["External Financial Institutions"]
-        PSP["Payment Service Provider<br/>(Stripe / Adyen)"]
-        BANK["Settlement Bank"]
-    end
-
-    BUYER -->|1. Submit Order| GW
-    GW --> PS
-    PS -->|2. Save Event| PDB
-    PS -->|3. Publish Order| KAFKA
-    KAFKA --> PE
-    PE -->|4. Execute Payment| PSP
-    PSP -.->|5. Webhook Async Status| PS
-    PS -->|6. Credit Balance| WALLET
-    PS -->|7. Post Ledger| LEDGER
-    BANK -.->|8. Nightly Settlement File| RECON
-    RECON <--> LEDGER
-```
+**Diagram:** The checkout request is persisted with its idempotency state before durable dispatch. The executor charges through the PSP, while its signed webhook authorizes wallet credit and balanced ledger entries; nightly bank files reconcile the immutable journal. [Interactive architecture](resources/payment-system/payment-system-architecture.html)
 
 #### Component Roles
 - **Payment Service**: Authenticates orders, enforces AML (Anti-Money Laundering) risk checks, orchestrates state transitions.
@@ -266,6 +232,10 @@ sequenceDiagram
 
 > [!TIP]
 > Never rely exclusively on the client browser redirect for financial confirmation. Network disconnects or browser closures can drop redirects; **the server-to-server webhook is the authoritative source of truth**.
+
+![Payment processing: hosted capture and authoritative webhook](resources/payment-system/payment-processing.png)
+
+**Diagram:** Card data remains in the PSP-hosted page. The browser redirect improves checkout feedback, but only the signed PSP webhook is verified and committed as `SUCCESS`. [Interactive payment-processing sequence](resources/payment-system/payment-processing.html)
 
 ---
 

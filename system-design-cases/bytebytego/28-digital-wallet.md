@@ -217,7 +217,9 @@ flowchart TD
 
 To eliminate single points of failure, event sourcing nodes are grouped into **3- or 5-node Raft consensus clusters**.
 
-![Raft Consensus for One Wallet Shard](resources/28-digital-wallet/raft-consensus-shard.visual-check.1440x900.light.png)
+![Raft consensus for one wallet shard](resources/28-digital-wallet/raft-consensus-shard.png)
+
+**Diagram:** A shard leader appends a transfer event and waits for a majority of its followers before committing it to the authoritative event log and local read projection. [Interactive Raft shard architecture](resources/28-digital-wallet/raft-consensus-shard.html)
 
 ```mermaid
 flowchart TD

@@ -66,6 +66,10 @@ flowchart LR
 
 To prevent an outage or rate-limiting in one external vendor (e.g., Twilio) from blocking critical push notifications, **each delivery channel is decoupled with an independent message queue**.
 
+![Notification architecture showing preference checks, delivery logging, channel-specific queues, independent workers, and external providers.](resources/notification-system/notification-system-architecture.png)
+
+**Diagram:** Triggering services pass validated notifications through preference checks and durable logging before channel-isolated queues fan out to independently retrying workers. [Open the interactive notification architecture diagram](resources/notification-system/notification-system-architecture.html).
+
 ```mermaid
 flowchart TD
     subgraph TriggerTier["Triggering Services"]

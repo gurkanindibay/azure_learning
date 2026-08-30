@@ -143,6 +143,10 @@ $$20092156749 \pmod{62} \dots \implies \text{"zn9ed4"}$$
 
 ## 4. High-Level Architecture & End-to-End Data Flows
 
+![URL-shortener architecture showing edge routing, Bloom-filter misses, Redis cache-aside reads, Base62 ID allocation, sharded mappings, and redirect analytics.](resources/url-shortener/url-shortener-architecture.png)
+
+**Diagram:** Shorten and redirect requests share stateless web servers, while Bloom filters and Redis protect sharded URL mappings; 302 redirects can emit analytics events without blocking the response. [Open the interactive URL-shortener architecture diagram](resources/url-shortener/url-shortener-architecture.html).
+
 ```mermaid
 flowchart TD
     subgraph IngressTier["Edge Tier"]

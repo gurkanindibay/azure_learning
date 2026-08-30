@@ -174,6 +174,12 @@ flowchart TD
     GW -->|4b. Throttled -> HTTP 429| CLIENT
 ```
 
+  ![Distributed API rate limiter showing gateway rule evaluation, atomic Redis counters, allowed API traffic, HTTP 429 responses, regional synchronization, and fail-open alerting.](resources/rate-limiter/rate-limiter-architecture.png)
+
+  **Diagram description:** The gateway loads a matching IP, user, API-key, or route rule and runs an atomic Lua limit check against Redis. Allowed requests reach the protected API fleet; exceeded requests receive HTTP 429 headers, while regional peers synchronize counters asynchronously and Redis timeouts fail open with an on-call alert.
+
+  [Open the interactive rate-limiter architecture diagram](resources/rate-limiter/rate-limiter-architecture.html)
+
 ### Standard Rate Limiting HTTP Headers
 
 | Header | Description | Example |

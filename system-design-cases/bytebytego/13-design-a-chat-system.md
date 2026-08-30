@@ -73,6 +73,10 @@ flowchart TD
 
 The system decouples into **stateless services** (HTTP REST for auth, profile, discovery) and **stateful services** (persistent WebSocket chat servers and presence servers).
 
+![Real-time chat architecture showing WebSocket servers, Redis session presence, Cassandra history, and offline push delivery.](resources/13-chat-system/chat-system-architecture.png)
+
+**Diagram:** Redis maps recipients to active WebSocket servers, while Cassandra provides durable message history and the push gateway handles offline recipients. [Open the interactive chat architecture diagram](resources/13-chat-system/chat-system-architecture.html).
+
 ```mermaid
 flowchart TD
     subgraph IngressTier["Clients & Edge"]

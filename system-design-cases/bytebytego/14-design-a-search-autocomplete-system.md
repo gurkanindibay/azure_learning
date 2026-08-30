@@ -136,6 +136,10 @@ $$\mathbf{\text{Optimized Retrieval Complexity}} = O(\text{prefix length}) + O(1
 
 The system separates into a **Real-Time Query Service** and an **Offline Data Gathering & Trie Aggregation Pipeline**:
 
+![Search autocomplete architecture showing cached prefix reads and offline trie rebuilds from query and catalog data.](resources/search-autocomplete/search-autocomplete.png)
+
+**Diagram:** Real-time prefix requests stay on the cache and query-service path, while offline aggregation rebuilds ranked trie snapshots for atomic publication. [Open the interactive search-autocomplete architecture diagram](resources/search-autocomplete/search-autocomplete.html).
+
 ```mermaid
 flowchart TD
     subgraph QueryPath["1. Real-Time Query Path (< 10 ms)"]

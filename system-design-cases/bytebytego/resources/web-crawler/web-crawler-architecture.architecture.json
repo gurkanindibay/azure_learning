@@ -4,7 +4,7 @@
   "meta": { "title": "Web Crawler: Polite Discovery Pipeline", "quality_profile": "showcase", "viewBox": [1320, 680] },
   "components": [
     { "id": "seedUrls", "type": "external", "label": "Seed URL Sources", "sublabel": "curated web entry points", "pos": [35, 300], "size": [150, 64] },
-    { "id": "urlFrontier", "type": "messagebus", "label": "URL Frontier", "sublabel": "priority queues and per-host back queues", "pos": [250, 300], "size": [190, 64] },
+    { "id": "urlFrontier", "type": "messagebus", "label": "URL Frontier", "sublabel": "priority and host queues", "pos": [250, 300], "size": [190, 64] },
     { "id": "downloadWorkers", "type": "backend", "label": "HTML Downloader Fleet", "sublabel": "politeness delay per host", "pos": [510, 300], "size": [180, 64] },
     { "id": "dnsCache", "type": "cloud", "label": "DNS Cache Resolver", "sublabel": "reuses host lookups", "pos": [510, 115], "size": [180, 64] },
     { "id": "robotsCache", "type": "cloud", "label": "robots.txt Cache", "sublabel": "host crawl rules", "pos": [510, 500], "size": [180, 64] },
@@ -20,12 +20,12 @@
     { "id": "seed-admission", "from": "seedUrls", "to": "urlFrontier", "label": "seed URLs", "variant": "emphasis", "labelDy": 52 },
     { "id": "dispatch-fetch", "from": "urlFrontier", "to": "downloadWorkers", "label": "next eligible URL", "variant": "emphasis", "labelDy": -30 },
     { "id": "dns-resolution", "from": "downloadWorkers", "to": "dnsCache", "label": "resolve host", "fromSide": "top", "toSide": "bottom" },
-    { "id": "robots-check", "from": "downloadWorkers", "to": "robotsCache", "label": "enforce crawl rule", "fromSide": "bottom", "toSide": "top", "labelDy": -58 },
+    { "id": "robots-check", "from": "downloadWorkers", "to": "robotsCache", "label": "enforce crawl rule", "fromSide": "bottom", "toSide": "top", "labelAt": [700, 430] },
     { "id": "parse-page", "from": "downloadWorkers", "to": "contentParser", "label": "fetched HTML", "variant": "emphasis", "labelDy": 52 },
     { "id": "fingerprint-content", "from": "contentParser", "to": "simhash", "label": "64-bit fingerprint", "fromSide": "top", "toSide": "left" },
     { "id": "archive-new-content", "from": "simhash", "to": "htmlArchive", "label": "novel HTML only", "fromSide": "bottom", "toSide": "top" },
     { "id": "extract-links", "from": "contentParser", "to": "urlFilter", "label": "discovered links", "fromSide": "bottom", "toSide": "left" },
-    { "id": "return-new-urls", "from": "urlFilter", "to": "urlFrontier", "label": "unseen safe URLs", "variant": "dashed", "fromSide": "left", "toSide": "bottom", "via": [[970, 527], [970, 620], [350, 620], [350, 364]], "labelAt": [690, 642] }
+    { "id": "return-new-urls", "from": "urlFilter", "to": "urlFrontier", "label": "unseen safe URLs", "variant": "dashed", "fromSide": "left", "toSide": "bottom", "via": [[970, 527], [970, 620], [345, 620], [345, 420]], "labelAt": [690, 642] }
   ],
   "cards": [
     { "dot": "cyan", "title": "Scheduling", "items": ["Front queues preserve quality and freshness priority", "Back queues keep concurrent requests scoped to a host"] },

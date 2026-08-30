@@ -58,6 +58,10 @@ flowchart LR
 - **High Availability**: Temporary background worker delays must not disrupt feed reading.
 - **Celebrity / Hotspot Defense**: System must handle users with millions of followers without cascading memory exhaustion.
 
+![News feed hybrid fan-out architecture showing asynchronous standard-user pushes, celebrity outboxes, follower timeline cache reads, and batched post hydration.](resources/news-feed-system/news-feed-hybrid-fanout-architecture.png)
+
+**Diagram:** Standard posts flow through a durable fan-out queue into follower inboxes, while celebrity posts stay in outboxes and are merged at read time. [Open the interactive hybrid fan-out architecture diagram](resources/news-feed-system/news-feed-hybrid-fanout-architecture.html).
+
 ---
 
 ## 2. Core Fan-Out Models Comparison
