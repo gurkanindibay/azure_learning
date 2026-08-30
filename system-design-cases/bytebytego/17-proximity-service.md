@@ -26,6 +26,10 @@ flowchart LR
     B_DB -->|List of Top Nearby Businesses| USER
 ```
 
+![Archify diagram: proximity search with geohash neighbor expansion](resources/proximity-service/proximity-geohash-search.png)
+
+[Open the interactive Archify diagram](resources/proximity-service/proximity-geohash-search.html)
+
 ---
 
 ### Interview Clarification & Scope

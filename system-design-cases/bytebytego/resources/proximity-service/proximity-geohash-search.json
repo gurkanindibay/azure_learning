@@ -1,1 +1,209 @@
-{"schema_version":1,"diagram_type":"architecture","meta":{"title":"Proximity Search with Geohash Neighbor Expansion","quality_profile":"showcase","viewBox":[1280,680],"views":[{"id":"search","label":"Nearby search","focus":["client","lbs","geo-cache","business-cache","read-replicas"],"note":"The service expands the user's cell to nine geohash cells, then filters exact distance."},{"id":"updates","label":"Business updates","focus":["business-service","primary-db","read-replicas","geo-cache"],"note":"Infrequent business edits flow to the primary database and read-side caches."}]},"components":[{"id":"client","type":"external","label":"Mobile or Web Client","sublabel":"lat, lon, radius","pos":[35,300],"size":[175,64]},{"id":"lbs","type":"backend","label":"Location Service","sublabel":"9-cell lookup and Haversine filter","pos":[275,300],"size":[205,64]},{"id":"business-service","type":"backend","label":"Business Service","sublabel":"write-light CRUD","pos":[275,120],"size":[205,64]},{"id":"geo-cache","type":"database","label":"Redis Geo Cache","sublabel":"geohash to business IDs","pos":[550,300],"size":[190,64]},{"id":"business-cache","type":"database","label":"Business Detail Cache","sublabel":"business JSON records","pos":[800,300],"size":[200,64]},{"id":"primary-db","type":"database","label":"Primary Business DB","sublabel":"authoritative metadata","pos":[550,120],"size":[190,64]},{"id":"read-replicas","type":"database","label":"Read Replica Cluster","sublabel":"candidate and detail reads","pos":[1050,300],"size":[190,64]}],"connections":[{"id":"nearby-query","from":"client","to":"lbs","label":"nearby search","variant":"emphasis"},{"id":"cell-lookup","from":"lbs","to":"geo-cache","label":"center plus 8 neighbors","variant":"emphasis"},{"id":"candidate-details","from":"lbs","to":"business-cache","label":"load candidate details","variant":"emphasis"},{"id":"cache-miss","from":"geo-cache","to":"read-replicas","label":"cache miss candidates","variant":"dashed"},{"id":"exact-filter","from":"business-cache","to":"read-replicas","label":"fallback detail read","variant":"dashed"},{"id":"business-write","from":"business-service","to":"primary-db","label":"business update","variant":"emphasis"},{"id":"replicate","from":"primary-db","to":"read-replicas","label":"replicate metadata","variant":"dashed"}],"cards":[{"dot":"cyan","title":"Spatial Lookup","items":["Geohash converts coordinates into indexable cells","Center plus eight neighbors avoids cell-boundary misses"]},{"dot":"emerald","title":"Read Path","items":["Redis caches candidate IDs and business details","Haversine distance filtering produces exact radius results"]},{"dot":"amber","title":"Scale Profile","items":["Stateless location workers absorb read traffic","Primary and read replicas isolate infrequent writes"]}]}
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Proximity Search with Geohash Neighbor Expansion",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1280,
+      680
+    ],
+    "views": [
+      {
+        "id": "search",
+        "label": "Nearby search",
+        "focus": [
+          "client",
+          "lbs",
+          "geo-cache",
+          "business-cache",
+          "read-replicas"
+        ],
+        "note": "The service expands the user's cell to nine geohash cells, then filters exact distance."
+      },
+      {
+        "id": "updates",
+        "label": "Business updates",
+        "focus": [
+          "business-service",
+          "primary-db",
+          "read-replicas",
+          "geo-cache"
+        ],
+        "note": "Infrequent business edits flow to the primary database and read-side caches."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Mobile or Web Client",
+      "sublabel": "lat, lon, radius",
+      "pos": [
+        35,
+        300
+      ],
+      "size": [
+        175,
+        64
+      ]
+    },
+    {
+      "id": "lbs",
+      "type": "backend",
+      "label": "Location Service",
+      "sublabel": "9-cell lookup and Haversine filter",
+      "pos": [
+        275,
+        300
+      ],
+      "size": [
+        205,
+        64
+      ]
+    },
+    {
+      "id": "business-service",
+      "type": "backend",
+      "label": "Business Service",
+      "sublabel": "write-light CRUD",
+      "pos": [
+        275,
+        120
+      ],
+      "size": [
+        205,
+        64
+      ]
+    },
+    {
+      "id": "geo-cache",
+      "type": "database",
+      "label": "Redis Geo Cache",
+      "sublabel": "geohash to business IDs",
+      "pos": [
+        550,
+        300
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "business-cache",
+      "type": "database",
+      "label": "Business Detail Cache",
+      "sublabel": "business JSON records",
+      "pos": [
+        800,
+        300
+      ],
+      "size": [
+        200,
+        64
+      ]
+    },
+    {
+      "id": "primary-db",
+      "type": "database",
+      "label": "Primary Business DB",
+      "sublabel": "authoritative metadata",
+      "pos": [
+        550,
+        120
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "read-replicas",
+      "type": "database",
+      "label": "Read Replica Cluster",
+      "sublabel": "candidate and detail reads",
+      "pos": [
+        1050,
+        300
+      ],
+      "size": [
+        190,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "nearby-query",
+      "from": "client",
+      "to": "lbs",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cell-lookup",
+      "from": "lbs",
+      "to": "geo-cache",
+      "variant": "emphasis"
+    },
+    {
+      "id": "candidate-details",
+      "from": "lbs",
+      "to": "business-cache",
+      "variant": "emphasis",
+      "via": [[480, 390], [800, 390]]
+    },
+    {
+      "id": "cache-miss",
+      "from": "geo-cache",
+      "to": "read-replicas",
+      "variant": "dashed",
+      "via": [[740, 250], [1050, 250]]
+    },
+    {
+      "id": "exact-filter",
+      "from": "business-cache",
+      "to": "read-replicas",
+      "variant": "dashed"
+    },
+    {
+      "id": "business-write",
+      "from": "business-service",
+      "to": "primary-db",
+      "variant": "emphasis"
+    },
+    {
+      "id": "replicate",
+      "from": "primary-db",
+      "to": "read-replicas",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Spatial Lookup",
+      "items": [
+        "Geohash converts coordinates into indexable cells",
+        "Center plus eight neighbors avoids cell-boundary misses"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Read Path",
+      "items": [
+        "Redis caches candidate IDs and business details",
+        "Haversine distance filtering produces exact radius results"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Scale Profile",
+      "items": [
+        "Stateless location workers absorb read traffic",
+        "Primary and read replicas isolate infrequent writes"
+      ]
+    }
+  ]
+}

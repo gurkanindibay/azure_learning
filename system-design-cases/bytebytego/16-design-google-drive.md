@@ -38,6 +38,10 @@ flowchart LR
     D2 -->|3. Download Only Delta Chunks| S3_STORAGE
 ```
 
+![Archify diagram: Google Drive block delta synchronization](resources/google-drive/google-drive-delta-sync.png)
+
+[Open the interactive Archify diagram](resources/google-drive/google-drive-delta-sync.html)
+
 ---
 
 ### Interview Clarification & Scope

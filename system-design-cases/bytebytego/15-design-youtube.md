@@ -32,6 +32,10 @@ flowchart LR
     end
 ```
 
+![Archify diagram: YouTube upload, transcode, and CDN delivery](resources/youtube/youtube-upload-transcode-delivery.png)
+
+[Open the interactive Archify diagram](resources/youtube/youtube-upload-transcode-delivery.html)
+
 ---
 
 ### Interview Clarification & Scope

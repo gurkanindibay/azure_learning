@@ -33,9 +33,9 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | 12 Design A News Feed System | Fan-out architecture | Complete |
 | 13 Design A Chat System | Real-time chat architecture | Complete |
 | 14 Design A Search Autocomplete System | Suggestion generation pipeline | Complete |
-| 15 Design YouTube | Upload and video delivery architecture | Not started |
-| 16 Design Google Drive | File synchronization architecture | Not started |
-| 17 Proximity Service | Geo-index query architecture | Not started |
+| 15 Design YouTube | Upload and video delivery architecture | Complete |
+| 16 Design Google Drive | File synchronization architecture | Complete |
+| 17 Proximity Service | Geo-index query architecture | Complete |
 | 18 Nearby Friends | Location-update and discovery flow | Not started |
 | 19 Google Maps | Map-tile and routing architecture | Not started |
 | 20 Distributed Message Queue | Producer, broker, and consumer architecture | Not started |
