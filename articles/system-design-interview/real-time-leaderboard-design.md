@@ -534,6 +534,12 @@ The challenge is continuously maintaining accurate rankings while hundreds of th
 
 That’s why large-scale gaming platforms separate persistence, event processing, ranking, and real-time delivery into dedicated components.
 
+## Archify diagrams
+
+![Archify diagram: real-time leaderboard architecture](resources/real-time-leaderboard-design/leaderboard-architecture.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Real-time leaderboard architecture](resources/real-time-leaderboard-design/leaderboard-architecture.html)
+
 ## Lets Conclude
 
 Most engineers think a leaderboard is just:

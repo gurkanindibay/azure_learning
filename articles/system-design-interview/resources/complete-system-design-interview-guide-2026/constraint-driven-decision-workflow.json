@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {"title": "Constraint-Driven System Design Decisions", "quality_profile": "showcase", "viewBox": [1100, 566]},
+  "lanes": [
+    {"id": "signal", "label": "Understand the system"},
+    {"id": "choose", "label": "Choose the mechanism"},
+    {"id": "prove", "label": "Prove the choice"}
+  ],
+  "phases": [
+    {"id": "scope", "label": "Scope", "fromCol": 0, "toCol": 1},
+    {"id": "select", "label": "Select", "fromCol": 2, "toCol": 3, "variant": "emphasis"},
+    {"id": "prove-phase", "label": "Prove", "fromCol": 4, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["constraints", "scale", "model", "mechanism", "failure", "tradeoff"],
+  "nodes": [
+    {"id": "constraints", "lane": "signal", "col": 0, "width": 80, "type": "external", "label": "Constraints", "sublabel": "NFRs", "tag": "ask"},
+    {"id": "scale", "lane": "choose", "col": 1, "width": 80, "type": "database", "label": "Scale", "sublabel": "QPS + storage", "tag": "quantify"},
+    {"id": "model", "lane": "signal", "col": 2, "width": 80, "type": "database", "label": "Data model", "sublabel": "access patterns", "tag": "fit"},
+    {"id": "mechanism", "lane": "choose", "col": 3, "width": 80, "type": "backend", "label": "Mechanism", "sublabel": "DB, cache, queue", "tag": "choose"},
+    {"id": "failure", "lane": "prove", "col": 4, "width": 80, "type": "security", "label": "Failure", "sublabel": "recover", "tag": "test"},
+    {"id": "tradeoff", "lane": "prove", "col": 5, "width": 80, "type": "external", "label": "Trade-off", "sublabel": "cost", "tag": "defend"}
+  ],
+  "edges": [
+    {"from": "constraints", "to": "scale", "route": "drop", "variant": "emphasis"},
+    {"from": "scale", "to": "model", "route": "drop", "variant": "emphasis"},
+    {"from": "model", "to": "mechanism", "route": "drop", "variant": "emphasis"},
+    {"from": "mechanism", "to": "failure", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "variant": "emphasis"},
+    {"from": "failure", "to": "tradeoff", "route": "straight", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Constraint first", "items": ["Choose consistency and availability behavior explicitly", "Quantify scale before selecting infrastructure"]},
+    {"dot": "amber", "title": "Mechanism follows model", "items": ["Match storage to access patterns", "Use queues, caches, and gateways only where they solve a constraint"]},
+    {"dot": "rose", "title": "Defend the design", "items": ["Walk through failure and recovery", "State cost, complexity, and the next scaling boundary"]}
+  ]
+}

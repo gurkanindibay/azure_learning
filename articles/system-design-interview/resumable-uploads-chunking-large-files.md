@@ -479,6 +479,16 @@ Every component solves a specific problem:
 - Checksums ensure integrity.
 - Assembly creates the final file.
 
+## Archify diagrams
+
+![Archify diagram: resumable upload architecture](resources/resumable-uploads-chunking-large-files/upload-architecture.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Resumable upload architecture](resources/resumable-uploads-chunking-large-files/upload-architecture.html)
+
+![Archify diagram: resumable upload session lifecycle](resources/resumable-uploads-chunking-large-files/upload-session-lifecycle.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Resumable upload session lifecycle](resources/resumable-uploads-chunking-large-files/upload-session-lifecycle.html)
+
 ## Summary
 
 1. Split large files into chunks.

@@ -539,6 +539,12 @@ A service mesh handles service-to-service communication at the infrastructure le
 
 > **Reality check:** True global scale is expensive and complex. Most systems don't need it. Start with single region, expand when data shows you need it.
 
+## Archify diagrams
+
+![Archify diagram: constraint-driven system design decision workflow](resources/complete-system-design-interview-guide-2026/constraint-driven-decision-workflow.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Constraint-driven decision workflow](resources/complete-system-design-interview-guide-2026/constraint-driven-decision-workflow.html)
+
 ## Quick Reference Cheat Sheet
 
 ### Scaling Decision Tree

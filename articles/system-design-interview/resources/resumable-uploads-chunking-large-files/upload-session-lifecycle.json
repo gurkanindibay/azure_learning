@@ -1,32 +1,26 @@
 {
   "schema_version": 1,
   "diagram_type": "lifecycle",
-  "meta": {"title": "Resumable Upload Session Lifecycle", "quality_profile": "showcase", "viewBox": [1000, 760]},
+  "meta": {"title": "Resumable Upload Session Lifecycle", "quality_profile": "showcase", "viewBox": [1100, 566]},
   "lanes": [
-    {"id": "client", "label": "Client"},
-    {"id": "server", "label": "Upload service"},
-    {"id": "storage", "label": "Storage"}
+    {"id": "main", "label": "Upload session"},
+    {"id": "recovery", "label": "Recovery path"}
   ],
   "states": [
-    {"id": "created", "type": "start", "label": "Session created", "lane": "client", "col": 0},
-    {"id": "uploading", "type": "active", "label": "Uploading chunks", "lane": "client", "col": 1},
-    {"id": "tracked", "type": "active", "label": "Chunks tracked", "lane": "server", "col": 2},
-    {"id": "interrupted", "type": "waiting", "label": "Network interrupted", "lane": "client", "col": 2},
-    {"id": "missing", "type": "decision", "label": "Find missing chunks", "lane": "server", "col": 3},
-    {"id": "retrying", "type": "active", "label": "Retry missing only", "lane": "client", "col": 3},
-    {"id": "assembled", "type": "success", "label": "Object assembled", "lane": "storage", "col": 4},
-    {"id": "corrupt", "type": "failure", "label": "Checksum rejected", "lane": "storage", "col": 4}
+    {"id": "created", "type": "start", "label": "Session created", "lane": "main", "col": 0, "step": "01"},
+    {"id": "uploading", "type": "active", "label": "Uploading chunks", "lane": "main", "col": 1, "step": "02"},
+    {"id": "tracked", "type": "active", "label": "Chunks tracked", "lane": "main", "col": 2, "step": "03"},
+    {"id": "assembled", "type": "success", "label": "Object assembled", "lane": "main", "col": 2, "yOffset": 110, "step": "04"},
+    {"id": "interrupted", "type": "waiting", "label": "Network interrupted", "lane": "recovery", "col": 0, "yOffset": 100},
+    {"id": "retrying", "type": "active", "label": "Retry missing chunks", "lane": "recovery", "col": 2}
   ],
   "transitions": [
-    {"id": "start-upload", "from": "created", "to": "uploading", "label": "split file"},
-    {"id": "send-chunk", "from": "uploading", "to": "tracked", "label": "session + chunk number"},
-    {"id": "disconnect", "from": "uploading", "to": "interrupted", "label": "connection lost", "variant": "dashed"},
-    {"id": "resume", "from": "interrupted", "to": "missing", "label": "query session state"},
-    {"id": "retry", "from": "missing", "to": "retrying", "label": "retry absent chunks"},
-    {"id": "complete", "from": "tracked", "to": "assembled", "label": "all chunks present"},
-    {"id": "verify-fail", "from": "tracked", "to": "corrupt", "label": "checksum mismatch", "variant": "dashed"},
-    {"id": "retry-after-check", "from": "corrupt", "to": "retrying", "label": "replace bad chunk", "variant": "dashed"},
-    {"id": "retry-complete", "from": "retrying", "to": "tracked", "label": "idempotent retry"}
+    {"id": "start-upload", "from": "created", "to": "uploading", "route": "straight"},
+    {"id": "send-chunk", "from": "uploading", "to": "tracked", "route": "straight"},
+    {"id": "complete", "from": "tracked", "to": "assembled", "route": "straight", "variant": "emphasis"},
+    {"id": "disconnect", "from": "uploading", "to": "interrupted", "route": "drop", "variant": "dashed"},
+    {"id": "resume", "from": "interrupted", "to": "retrying", "route": "drop"},
+    {"id": "retry-complete", "from": "retrying", "to": "tracked", "route": "drop"}
   ],
   "cards": [
     {"dot": "cyan", "title": "Resume behavior", "items": ["Persist the session ID across reconnects", "Query missing chunk numbers before retrying"]},

@@ -443,6 +443,12 @@ This is where senior candidates distinguish themselves.
 
 ---
 
+## Archify diagrams
+
+![Archify diagram: seven-phase system design interview workflow](resources/design-system-interviews/seven-phase-interview-workflow.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Seven-phase interview workflow](resources/design-system-interviews/seven-phase-interview-workflow.html)
+
 ## Quick Reference
 
 | Rule | Value |

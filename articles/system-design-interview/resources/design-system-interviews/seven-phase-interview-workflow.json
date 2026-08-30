@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {"title": "Seven-Phase System Design Interview Workflow", "quality_profile": "showcase", "viewBox": [1100, 566]},
+  "lanes": [
+    {"id": "scoping", "label": "Scope and quantify"},
+    {"id": "design", "label": "Design and explain"},
+    {"id": "decision", "label": "Decide and trade off"}
+  ],
+  "phases": [
+    {"id": "frame", "label": "Frame", "fromCol": 0, "toCol": 1},
+    {"id": "model", "label": "Model", "fromCol": 2, "toCol": 3},
+    {"id": "design-phase", "label": "Design", "fromCol": 4, "toCol": 4, "variant": "emphasis"},
+    {"id": "decide", "label": "Decide", "fromCol": 5, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["requirements", "math", "entities", "api", "high-level", "deep-dive", "tradeoffs"],
+  "nodes": [
+    {"id": "requirements", "lane": "scoping", "col": 0, "width": 80, "type": "external", "label": "Requirements", "sublabel": "actors + NFRs", "tag": "05 min"},
+    {"id": "math", "lane": "scoping", "col": 1, "width": 80, "type": "database", "label": "Estimate", "sublabel": "QPS + storage", "tag": "02 min"},
+    {"id": "entities", "lane": "design", "col": 2, "width": 80, "type": "database", "label": "Entities", "sublabel": "data model", "tag": "03 min"},
+    {"id": "api", "lane": "decision", "col": 3, "width": 80, "type": "backend", "label": "API design", "sublabel": "idempotency", "tag": "05 min"},
+    {"id": "high-level", "lane": "scoping", "col": 4, "width": 80, "type": "backend", "label": "High-level", "sublabel": "request path", "tag": "07 min"},
+    {"id": "deep-dive", "lane": "design", "col": 5, "width": 80, "type": "security", "label": "Deep dive", "sublabel": "failure", "tag": "15 min"},
+    {"id": "tradeoffs", "lane": "decision", "col": 5, "width": 80, "type": "external", "label": "Trade-offs", "sublabel": "limits", "tag": "03 min"}
+  ],
+  "edges": [
+    {"from": "requirements", "to": "math", "route": "straight", "variant": "emphasis"},
+    {"from": "math", "to": "entities", "route": "straight", "variant": "emphasis"},
+    {"from": "entities", "to": "api", "route": "drop", "variant": "emphasis"},
+    {"from": "api", "to": "high-level", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "variant": "emphasis"},
+    {"from": "high-level", "to": "deep-dive", "route": "drop", "variant": "emphasis"},
+    {"from": "deep-dive", "to": "tradeoffs", "route": "drop", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Start with evidence", "items": ["Clarify actors, P0 flows, failures, and NFRs", "Estimate scale before choosing infrastructure"]},
+    {"dot": "amber", "title": "Earn the deep dive", "items": ["Connect entities and APIs to the request path", "Spend most time on the bottleneck and its failure modes"]},
+    {"dot": "rose", "title": "Close with judgment", "items": ["State the trade-off behind each important choice", "Name what breaks at 10x or 100x scale"]}
+  ]
+}

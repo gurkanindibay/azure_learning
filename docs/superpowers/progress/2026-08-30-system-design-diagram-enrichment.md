@@ -56,9 +56,9 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | `million-notifications-system-design.md` | Notification architecture | Delivery and retry sequence | Complete |
 | `amazon-interview-question-design-a-delayed-job-scheduler.md` | Durable scheduler architecture | Job state and lease lifecycle | Complete |
 | `customer-support-ai-platform-system-design-interview.md` | Support platform architecture | Ticket to AI or human escalation | Complete |
-| `resumable-uploads-chunking-large-files.md` | Resumable-upload architecture | Upload session lifecycle | Not started |
-| `real-time-leaderboard-design.md` | Leaderboard architecture | — | Not started |
-| `design-system-interviews.md` | Seven-phase interview workflow | — | Not started |
-| `complete-system-design-interview-guide-2026.md` | Constraint-driven decision workflow | — | Not started |
+| `resumable-uploads-chunking-large-files.md` | Resumable-upload architecture | Upload session lifecycle | Complete |
+| `real-time-leaderboard-design.md` | Leaderboard architecture | — | Complete |
+| `design-system-interviews.md` | Seven-phase interview workflow | — | Complete |
+| `complete-system-design-interview-guide-2026.md` | Constraint-driven decision workflow | — | Complete |
 | `real-world-system-design-scenarios-part-1.md` | Scenario-family decision map | — | Not started |
 | `22-design-interview-questions/01-22-scenario-based-system-design-questions.md` | Scenario-family decision map | — | Not started |

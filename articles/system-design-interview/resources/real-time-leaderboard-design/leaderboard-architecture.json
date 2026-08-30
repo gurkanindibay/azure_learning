@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Real-Time Leaderboard: Durable Scores to Live Rankings", "quality_profile": "showcase", "viewBox": [1560, 820]},
+  "components": [
+    {"id": "game", "type": "external", "label": "Game service", "pos": [100, 330]},
+    {"id": "scores", "type": "database", "label": "Score database", "pos": [350, 150]},
+    {"id": "events", "type": "messagebus", "label": "Kafka score events", "pos": [350, 510]},
+    {"id": "projector", "type": "backend", "label": "Ranking projector", "pos": [700, 330]},
+    {"id": "redis", "type": "database", "label": "Redis Sorted Sets", "pos": [980, 180]},
+    {"id": "dimensions", "type": "database", "label": "Ranking dimensions", "pos": [980, 510]},
+    {"id": "gateway", "type": "backend", "label": "Realtime gateway", "pos": [1240, 330]},
+    {"id": "players", "type": "external", "label": "Players", "pos": [1400, 330]}
+  ],
+  "connections": [
+    {"id": "write-score", "from": "game", "to": "scores", "label": "persist official score", "variant": "emphasis", "labelDy": -18},
+    {"id": "publish-score", "from": "game", "to": "events", "label": "publish ordered event", "variant": "emphasis", "labelDy": 18},
+    {"id": "consume", "from": "events", "to": "projector", "label": "consume and deduplicate", "variant": "emphasis"},
+    {"id": "rebuild", "from": "scores", "to": "projector", "label": "rebuild after cache loss", "variant": "dashed"},
+    {"id": "rank", "from": "projector", "to": "redis", "label": "ZADD by latest version", "variant": "emphasis", "labelDy": -18},
+    {"id": "partition", "from": "projector", "to": "dimensions", "label": "write ranking dimensions", "variant": "emphasis", "labelDy": 18},
+    {"id": "query", "from": "redis", "to": "gateway", "label": "top 100 and player rank", "variant": "default"},
+    {"id": "push", "from": "dimensions", "to": "gateway", "label": "publish ranking delta", "variant": "dashed"},
+    {"id": "update", "from": "gateway", "to": "players", "label": "WebSocket update", "variant": "emphasis", "labelDy": -24}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Fast reads", "items": ["Sorted Sets keep rank and score queries near constant time", "WebSockets push only relevant ranking changes"]},
+    {"dot": "amber", "title": "Correctness", "items": ["The database remains the source of truth", "Versioned events prevent late updates from lowering a score"]},
+    {"dot": "rose", "title": "Scale and recovery", "items": ["Separate dimensions can be partitioned independently", "The projector rebuilds Redis after cache loss"]}
+  ]
+}
