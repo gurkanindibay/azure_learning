@@ -20,6 +20,9 @@ Polyglot Persistence is the architectural principle of using **multiple data sto
 - [Storage Paradigms](#storage-paradigms)
 - [Architecture Diagram](#architecture-diagram)
 - [Decision Matrix](#decision-matrix)
+- [Decision Flow with Measurable Choice Points](#decision-flow-with-measurable-choice-points)
+- [PostgreSQL versus Cassandra](#postgresql-versus-cassandra)
+- [PostgreSQL versus Document Databases](#postgresql-versus-document-databases)
 - [Implementation Patterns](#implementation-patterns)
 - [Challenges & Mitigations](#challenges-mitigations)
 - [Related Patterns](#related-patterns)
@@ -131,6 +134,159 @@ graph TB
 | Immutable history, audit trails, event replay | Append-Only / Event Store |
 | BI, historical reporting, and large aggregations | Analytical Warehouse |
 | Large files, backups, static assets | Blob Storage |
+
+## Decision Flow with Measurable Choice Points
+
+Use measured workload characteristics to select a primary store or a combination of stores. The thresholds are starting heuristics, not universal limits; validate them with a representative benchmark and the chosen engine's operational limits.
+
+```mermaid
+flowchart TD
+    START[Capture workload metrics<br/>QPS, p95/p99 latency, data size,<br/>read/write ratio, retention, query shape]
+    TXN{"Need atomic writes across<br/>multiple records or relationships?"}
+    TXN_SCALE{"Does the transactional system also need a<br/>predictable, high-volume partition-key path?"}
+    LOCAL{"Must operate without a network<br/>or inside one process/device?"}
+    ANALYTICS{"Are most queries historical scans,<br/>joins, or aggregations?"}
+    IMMUTABLE{"Must preserve immutable events<br/>for audit or replay?"}
+    TS{"Are more than 70% of queries<br/>time-window queries on timestamped data?"}
+    ACCESS{"Is the access pattern predictable<br/>by a partition/key and write-heavy?"}
+    DOC{"Is the primary access unit a flexible<br/>nested aggregate or JSON document?"}
+
+    REL[Relational<br/>PostgreSQL, SQL Server<br/>ACID, joins, constraints]
+    PG_CASS[Relational + Wide-Column<br/>PostgreSQL + Cassandra<br/>transactions + high-volume access path]
+    EMBED[Local / Embedded<br/>SQLite, DuckDB, RocksDB<br/>single-node or offline state]
+    WH[Analytical Warehouse<br/>Snowflake, BigQuery, Synapse<br/>large scans and BI]
+    EVENT[Append-only / Event Store<br/>EventStoreDB, Kafka, Redpanda<br/>immutable history and replay]
+    TSDB[Time-Series<br/>TimescaleDB, InfluxDB, Prometheus<br/>retention and time-window queries]
+    WIDE[Wide-Column<br/>Cassandra, ScyllaDB, HBase<br/>high write scale and known keys]
+    DOCUMENT[Document<br/>MongoDB, Couchbase, Firestore<br/>flexible aggregate reads]
+
+    START --> TXN
+    TXN -->|yes| TXN_SCALE
+    TXN_SCALE -->|yes| PG_CASS
+    TXN_SCALE -->|no| REL
+    TXN -->|no| LOCAL
+    LOCAL -->|yes| EMBED
+    LOCAL -->|no| ANALYTICS
+    ANALYTICS -->|yes| WH
+    ANALYTICS -->|no| EVENTS
+    IMMUTABLE -->|yes| EVENT
+    IMMUTABLE -->|no| TS
+    TS -->|yes| TSDB
+    TS -->|no| ACCESS
+    ACCESS -->|yes| WIDE
+    ACCESS -->|no| DOC
+    DOC -->|yes| DOCUMENT
+    DOC -->|no| REL
+
+    style START fill:#37474f,color:#fff
+    style TXN fill:#5c6bc0,color:#fff
+    style TXN_SCALE fill:#5c6bc0,color:#fff
+    style LOCAL fill:#5c6bc0,color:#fff
+    style ANALYTICS fill:#5c6bc0,color:#fff
+    style IMMUTABLE fill:#5c6bc0,color:#fff
+    style TS fill:#5c6bc0,color:#fff
+    style ACCESS fill:#5c6bc0,color:#fff
+    style DOC fill:#5c6bc0,color:#fff
+    style REL fill:#90caf9,color:#000
+    style PG_CASS fill:#f0b27a,color:#000
+    style EMBED fill:#a5d6a7,color:#000
+    style WH fill:#f48fb1,color:#000
+    style EVENT fill:#ffcc80,color:#000
+    style TSDB fill:#80cbc4,color:#000
+    style WIDE fill:#f0b27a,color:#000
+    style DOCUMENT fill:#ce93d8,color:#000
+```
+
+### Metrics to collect before choosing
+
+| Choice point | Metrics and signals | Typical direction |
+|--------------|---------------------|-------------------|
+| Transactional integrity | Multi-row transaction count, constraint violations, required isolation, join count | Relational when atomicity, referential integrity, or joins are central |
+| Local operation | Offline duration, local data size, process/device ownership, sync frequency | Embedded when state is local or rebuildable and network access is unavailable |
+| Analytical workload | Scan volume per query, historical retention, concurrent analysts, aggregation latency | Warehouse when scans and BI dominate rather than point writes |
+| Immutable history | Events per second, ordering scope, replay frequency, audit-retention period | Event store when facts must be retained and projections can be rebuilt |
+| Time-oriented access | Percentage of time-window queries, points per second, retention, downsampling rate | Time-series when timestamp is the primary access dimension |
+| Predictable high-volume access | Writes/second, partition-key cardinality, hot-partition rate, p99 latency | Wide-column when access paths are known and horizontal write scale is required |
+| Flexible aggregates | Schema-change frequency, document size, aggregate read ratio, cross-document joins | Document when nested aggregates are read and updated as units |
+
+> **Measurement rule**: record average and p95/p99 values separately. A database can meet average throughput while violating tail-latency or storage-growth requirements.
+
+## PostgreSQL versus Cassandra
+
+Choose based on the correctness and query contract, not on raw throughput alone. PostgreSQL is normally the preferred source of truth when transactions and relationships matter. Cassandra is preferred when the access pattern is known in advance and the workload needs distributed write availability and predictable scale.
+
+```mermaid
+flowchart LR
+    NEEDS[Workload and migration requirements]
+    ACID{"Need multi-row ACID,<br/>joins, constraints, or ad-hoc SQL?"}
+    SCALE{"Need multi-region write availability<br/>and predictable partition-key scale?"}
+    PG[Prefer PostgreSQL<br/>transactional source of truth]
+    CASS[Prefer Cassandra<br/>denormalized, partition-key access]
+    HYBRID[Use both<br/>PostgreSQL authority + Cassandra projection]
+
+    NEEDS --> ACID
+    ACID -->|yes| PG
+    ACID -->|no| SCALE
+    SCALE -->|yes| CASS
+    SCALE -->|no| PG
+    PG -. high-volume projection .-> HYBRID
+    CASS -. transactional system of record .-> HYBRID
+
+    style NEEDS fill:#37474f,color:#fff
+    style ACID fill:#5c6bc0,color:#fff
+    style SCALE fill:#5c6bc0,color:#fff
+    style PG fill:#90caf9,color:#000
+    style CASS fill:#f0b27a,color:#000
+    style HYBRID fill:#a5d6a7,color:#000
+```
+
+| Situation | Preferred direction | Why |
+|-----------|---------------------|-----|
+| Existing PostgreSQL system cannot serve a predictable high-volume feed, timeline, or lookup path | PostgreSQL -> Cassandra | Keep PostgreSQL as the authority and project a Cassandra model designed for the hot access pattern |
+| Existing Cassandra data now needs joins, multi-row transactions, foreign keys, or flexible ad-hoc queries | Cassandra -> PostgreSQL | Rebuild a normalized relational source of truth and move correctness rules into database transactions and constraints |
+| Both transactional correctness and very high-volume partition-key reads are required | PostgreSQL + Cassandra | Use PostgreSQL for writes and Cassandra as a purpose-built read or distribution model; synchronize with CDC or events |
+| Workload is small or its access patterns are still changing | Prefer PostgreSQL first | A single relational system avoids premature denormalization and operational duplication |
+
+For either migration direction, backfill historical data, dual-run and compare reads, monitor lag and error rates, then switch traffic only after the target model is verified. Do not copy tables mechanically: Cassandra requires query-driven partition design, while PostgreSQL requires normalized entities and explicit transaction boundaries.
+
+## PostgreSQL versus Document Databases
+
+Use a document database when the application usually reads and updates a complete aggregate as one document, the schema varies significantly between records, or document-native distribution is valuable. Keep PostgreSQL when relationships, cross-aggregate transactions, constraints, and ad-hoc relational queries are central.
+
+```mermaid
+flowchart LR
+    NEEDS[Workload and migration requirements]
+    RELATIONS{"Are cross-entity relationships,<br/>constraints, or joins central?"}
+    AGGREGATE{"Is the access unit a flexible<br/>nested aggregate read as a whole?"}
+    PG[Prefer PostgreSQL<br/>normalized transactional model]
+    DOC[Prefer Couchbase or MongoDB<br/>document-oriented model]
+    HYBRID[Use both<br/>PostgreSQL authority + document projection]
+
+    NEEDS --> RELATIONS
+    RELATIONS -->|yes| PG
+    RELATIONS -->|no| AGGREGATE
+    AGGREGATE -->|yes| DOC
+    AGGREGATE -->|no| PG
+    PG -. flexible read model .-> HYBRID
+    DOC -. relational source of truth .-> HYBRID
+
+    style NEEDS fill:#37474f,color:#fff
+    style RELATIONS fill:#5c6bc0,color:#fff
+    style AGGREGATE fill:#5c6bc0,color:#fff
+    style PG fill:#90caf9,color:#000
+    style DOC fill:#ce93d8,color:#000
+    style HYBRID fill:#a5d6a7,color:#000
+```
+
+| Situation | Preferred direction | Why |
+|-----------|---------------------|-----|
+| Existing PostgreSQL schema requires many joins to build API responses, and each response is a stable aggregate | PostgreSQL -> Couchbase or MongoDB | Project denormalized documents for simpler and faster aggregate reads |
+| Existing PostgreSQL data contains highly variable nested attributes or product-specific fields | PostgreSQL -> Couchbase or MongoDB | Store changing aggregate shape without proliferating relational tables and joins |
+| Existing document data now needs cross-aggregate transactions, foreign keys, or consistent reporting | Couchbase or MongoDB -> PostgreSQL | Normalize the data and enforce integrity in relational transactions and constraints |
+| Document reads are simple but updates frequently affect many documents or require coordinated writes | Couchbase or MongoDB -> PostgreSQL | Centralize transactional correctness instead of coordinating document updates in application code |
+| The system needs both strong transactional writes and flexible, read-optimized aggregates | PostgreSQL + Couchbase or MongoDB | Keep PostgreSQL authoritative and publish document projections through CDC or domain events |
+
+Choose between **Couchbase** and **MongoDB** only after comparing their operational model, query features, indexing, consistency requirements, managed-service availability, and team expertise. The migration direction is determined by the required data contract, not by the product name.
 
 ### Intersection cases
 
