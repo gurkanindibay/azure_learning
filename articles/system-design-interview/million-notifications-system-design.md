@@ -385,6 +385,16 @@ I’d process them asynchronously as events.
 
 This keeps analytics separate from notification delivery.
 
+## Archify diagrams
+
+![Archify diagram: notification delivery architecture](resources/million-notifications/notification-delivery-architecture.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Notification delivery architecture](resources/million-notifications/notification-delivery-architecture.html)
+
+![Archify diagram: notification delivery, retry, and idempotency sequence](resources/million-notifications/notification-delivery-sequence.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Notification delivery, retry, and idempotency sequence](resources/million-notifications/notification-delivery-sequence.html)
+
 ## Concluding the interview
 
 **Aadvik:** Summarize your design.

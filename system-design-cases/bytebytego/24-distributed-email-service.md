@@ -488,6 +488,10 @@ mindmap
       Elasticsearch vs LSM Search Engine
 ```
 
+![Archify diagram: distributed email delivery and mailbox](resources/distributed-email-service/distributed-email-delivery.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Distributed email delivery and mailbox](resources/distributed-email-service/distributed-email-delivery.html)
+
 | Area | Primary Architectural Decision | Key Benefit |
 |:---|:---|:---|
 | **Storage Separation** | Wide-column NoSQL for metadata + S3 for attachments | Prevents database bloat from large attachment files. |

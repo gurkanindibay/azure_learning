@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "System Design Case-to-Skill Map",
+    "output": "case-skill-map.html",
+    "quality_profile": "showcase",
+    "viewBox": [1078, 720],
+    "views": [
+      { "id": "workload", "label": "Workload reasoning", "focus": ["estimation", "cache", "partition", "replication"], "note": "Match a workload signal to the design mechanism it makes necessary." },
+      { "id": "correctness", "label": "Correctness pressure", "focus": ["ordering", "idempotency", "inventory"], "note": "Choose specialist cases when correctness, ordering, or auditability is the weakness." }
+    ]
+  },
+  "components": [
+    { "id": "estimation", "type": "backend", "label": "Estimation", "sublabel": "QPS + storage + bandwidth", "tag": "foundation", "pos": [40, 90], "size": [190, 72] },
+    { "id": "cache", "type": "cloud", "label": "Caching", "sublabel": "hot reads + stampedes", "tag": "core", "pos": [300, 90], "size": [190, 72] },
+    { "id": "partition", "type": "database", "label": "Partitioning", "sublabel": "keys + hot tenants", "tag": "advanced", "pos": [560, 90], "size": [190, 72] },
+    { "id": "replication", "type": "messagebus", "label": "Replication", "sublabel": "lag + recovery", "tag": "advanced", "pos": [820, 90], "size": [190, 72] },
+    { "id": "ordering", "type": "security", "label": "Ordering", "sublabel": "fairness + sequence", "tag": "specialist", "pos": [170, 300], "size": [190, 72] },
+    { "id": "idempotency", "type": "backend", "label": "Idempotency", "sublabel": "retry-safe writes", "tag": "specialist", "pos": [430, 300], "size": [190, 72] },
+    { "id": "inventory", "type": "database", "label": "Contention", "sublabel": "inventory + booking", "tag": "specialist", "pos": [690, 300], "size": [190, 72] },
+    { "id": "case-selection", "type": "external", "label": "Pick a case", "sublabel": "follow the weakest skill", "tag": "next move", "pos": [430, 500], "size": [220, 78] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Workload and scale", "wraps": ["estimation", "cache", "partition", "replication"], "pad": 28 },
+    { "kind": "security-group", "label": "Correctness and domain pressure", "wraps": ["ordering", "idempotency", "inventory"], "pad": 28 }
+  ],
+  "connections": [
+    { "from": "estimation", "to": "cache", "label": "repeated reads", "labelDy": 60 },
+    { "from": "cache", "to": "partition", "label": "cache is not source of truth", "labelDy": 60 },
+    { "from": "partition", "to": "replication", "label": "scale + recover", "labelDy": 60 },
+    { "from": "estimation", "to": "ordering", "label": "latency target", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "from": "replication", "to": "inventory", "label": "freshness boundary", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "from": "ordering", "to": "idempotency", "label": "safe retries" },
+    { "from": "idempotency", "to": "inventory", "label": "state transition", "labelDy": 60 },
+    { "from": "idempotency", "to": "case-selection", "label": "choose by gap", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "from": "inventory", "to": "case-selection", "label": "choose by gap", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" }
+  ]
+}

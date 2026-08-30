@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {"title": "Resumable Upload Session Lifecycle", "quality_profile": "showcase", "viewBox": [1000, 760]},
+  "lanes": [
+    {"id": "client", "label": "Client"},
+    {"id": "server", "label": "Upload service"},
+    {"id": "storage", "label": "Storage"}
+  ],
+  "states": [
+    {"id": "created", "type": "start", "label": "Session created", "lane": "client", "col": 0},
+    {"id": "uploading", "type": "active", "label": "Uploading chunks", "lane": "client", "col": 1},
+    {"id": "tracked", "type": "active", "label": "Chunks tracked", "lane": "server", "col": 2},
+    {"id": "interrupted", "type": "waiting", "label": "Network interrupted", "lane": "client", "col": 2},
+    {"id": "missing", "type": "decision", "label": "Find missing chunks", "lane": "server", "col": 3},
+    {"id": "retrying", "type": "active", "label": "Retry missing only", "lane": "client", "col": 3},
+    {"id": "assembled", "type": "success", "label": "Object assembled", "lane": "storage", "col": 4},
+    {"id": "corrupt", "type": "failure", "label": "Checksum rejected", "lane": "storage", "col": 4}
+  ],
+  "transitions": [
+    {"id": "start-upload", "from": "created", "to": "uploading", "label": "split file"},
+    {"id": "send-chunk", "from": "uploading", "to": "tracked", "label": "session + chunk number"},
+    {"id": "disconnect", "from": "uploading", "to": "interrupted", "label": "connection lost", "variant": "dashed"},
+    {"id": "resume", "from": "interrupted", "to": "missing", "label": "query session state"},
+    {"id": "retry", "from": "missing", "to": "retrying", "label": "retry absent chunks"},
+    {"id": "complete", "from": "tracked", "to": "assembled", "label": "all chunks present"},
+    {"id": "verify-fail", "from": "tracked", "to": "corrupt", "label": "checksum mismatch", "variant": "dashed"},
+    {"id": "retry-after-check", "from": "corrupt", "to": "retrying", "label": "replace bad chunk", "variant": "dashed"},
+    {"id": "retry-complete", "from": "retrying", "to": "tracked", "label": "idempotent retry"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Resume behavior", "items": ["Persist the session ID across reconnects", "Query missing chunk numbers before retrying"]},
+    {"dot": "amber", "title": "Duplicate behavior", "items": ["Composite session and chunk key prevents duplicate storage", "Checksum failure returns the bad chunk to retry"]}
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "System Design Preparation Path",
+    "output": "preparation-path.html",
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "viewBox": [720, 720],
+    "views": [
+      { "id": "progression", "label": "Progression", "focus": ["foundation", "core", "advanced", "specialist"], "note": "Move from vocabulary and estimates toward distributed trade-offs and domain pressure." },
+      { "id": "practice", "label": "Practice loop", "focus": ["core", "solve", "review"], "note": "Solve, review, and repeat with one changed workload constraint." }
+    ]
+  },
+  "lanes": [
+    { "id": "learning", "label": "Learning level" },
+    { "id": "practice", "label": "Practice action" },
+    { "id": "branch", "label": "Targeted branch", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "build", "label": "Build the model", "fromCol": 0, "toCol": 2, "variant": "emphasis" },
+    { "id": "stress", "label": "Stress the design", "fromCol": 3, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "foundation-group", "label": "Common building blocks", "lane": "learning", "fromCol": 0, "toCol": 1 },
+    { "id": "distributed-group", "label": "Distributed trade-offs", "lane": "learning", "fromCol": 2, "toCol": 4, "variant": "emphasis" },
+    { "id": "specialist-group", "label": "Domain pressure", "lane": "branch", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["foundation", "core", "solve", "advanced", "specialist", "review"],
+  "nodes": [
+    { "id": "foundation", "lane": "learning", "col": 0, "type": "external", "label": "Foundation", "sublabel": "vocabulary + estimates", "tag": "start" },
+    { "id": "core", "lane": "learning", "col": 1, "type": "backend", "label": "Core", "sublabel": "patterns + data choices", "tag": "choose" },
+    { "id": "solve", "lane": "practice", "col": 2, "type": "backend", "label": "Solve baseline", "sublabel": "draw before optimizing", "tag": "85 min" },
+    { "id": "advanced", "lane": "learning", "col": 3, "type": "database", "label": "Advanced", "sublabel": "partitions + failure", "tag": "stress" },
+    { "id": "specialist", "lane": "branch", "col": 4, "type": "security", "label": "Specialist", "sublabel": "correctness or domain", "tag": "target gap" },
+    { "id": "review", "lane": "practice", "col": 5, "width": 100, "type": "cloud", "label": "Repeat", "sublabel": "change one constraint", "tag": "improve" }
+  ],
+  "edges": [
+    { "from": "foundation", "to": "core", "variant": "emphasis" },
+    { "from": "core", "to": "solve", "variant": "emphasis" },
+    { "from": "solve", "to": "advanced", "variant": "emphasis" },
+    { "from": "advanced", "to": "specialist", "variant": "emphasis" },
+      { "from": "specialist", "to": "review", "label": "select weakness", "variant": "security" }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Customer Support Platform: Durable Ingestion and Guarded AI",
+    "quality_profile": "showcase",
+    "viewBox": [1400, 760]
+  },
+  "components": [
+    {"id": "customer", "type": "external", "label": "Customer", "pos": [80, 300]},
+    {"id": "ingestion", "type": "backend", "label": "Ingestion", "pos": [280, 300]},
+    {"id": "events", "type": "messagebus", "label": "Event bus", "pos": [480, 300]},
+    {"id": "ticket", "type": "backend", "label": "Ticket service", "pos": [680, 180]},
+    {"id": "sla", "type": "backend", "label": "SLA service", "pos": [680, 420]},
+    {"id": "orchestrator", "type": "security", "label": "AI orchestrator", "pos": [900, 300]},
+    {"id": "resolver", "type": "backend", "label": "AI resolver", "pos": [1100, 180]},
+    {"id": "agent", "type": "backend", "label": "Agent copilot", "pos": [1100, 420]},
+    {"id": "kb", "type": "database", "label": "Knowledge base", "pos": [900, 560]},
+    {"id": "human", "type": "external", "label": "Human queue", "pos": [1280, 300]}
+  ],
+  "connections": [
+    {"id": "submit", "from": "customer", "to": "ingestion", "label": "accept request", "variant": "emphasis"},
+    {"id": "durable", "from": "ingestion", "to": "events", "label": "persist event", "variant": "emphasis"},
+    {"id": "ticket-events", "from": "events", "to": "ticket", "label": "create or update ticket", "variant": "emphasis"},
+    {"id": "sla-events", "from": "events", "to": "sla", "label": "observe ticket events", "variant": "dashed"},
+    {"id": "ai-request", "from": "ticket", "to": "orchestrator", "label": "request grounded answer", "variant": "emphasis"},
+    {"id": "sla-breach", "from": "sla", "to": "human", "label": "SLA breach event", "variant": "dashed"},
+    {"id": "guarded", "from": "orchestrator", "to": "resolver", "label": "PII scan and policy checks", "variant": "security"},
+    {"id": "low-confidence", "from": "resolver", "to": "human", "label": "low confidence or talk to human", "variant": "dashed"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Durability boundary", "items": ["Accept and persist before downstream ticket work", "Event bus keeps ingestion available during failures"]},
+    {"dot": "amber", "title": "AI safety boundary", "items": ["Ground answers in cited knowledge-base context", "Low confidence and human requests escalate"]},
+    {"dot": "emerald", "title": "Human control", "items": ["Copilot drafts are never auto-sent", "SLA breaches remain explicit operational events"]}
+  ]
+}

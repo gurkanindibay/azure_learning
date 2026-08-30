@@ -214,3 +214,13 @@ Feature: SLA escalation
 - Split proposal from enforcement: the LLM proposes intent, priority, and queue; the deterministic SLA rule layer enforces it. The LLM can misread a ticket; the rule layer can’t miscompute a deadline.
 - The KB-gap detector turns the AI’s existence into the missing data signal — resolution events feed back into article coverage, closing the loop that makes the KB self-improving.
 - The engineering discipline transfers wholesale: TDD for time-and-money logic, BDD for customer workflows, load tests for incident spikes, chaos tests for ingestion failure, and per-feature AI cost dashboards.
+
+## Archify diagrams
+
+![Archify diagram: support platform architecture](resources/customer-support-ai-platform/support-platform-architecture.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Support platform architecture](resources/customer-support-ai-platform/support-platform-architecture.html)
+
+![Archify diagram: support AI escalation sequence](resources/customer-support-ai-platform/escalation-sequence.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Support AI escalation sequence](resources/customer-support-ai-platform/escalation-sequence.html)

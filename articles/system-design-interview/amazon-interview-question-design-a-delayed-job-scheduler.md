@@ -263,6 +263,16 @@ With that in place, the tests worth naming are the concurrent ones:
 
 ![](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*2yLUbs3KJdwzVkZWUhmumg.png)
 
+## Archify diagrams
+
+![Archify diagram: distributed job claiming workflow](resources/delayed-job-scheduler/distributed-claiming-workflow.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Distributed job claiming workflow](resources/delayed-job-scheduler/distributed-claiming-workflow.html)
+
+![Archify diagram: timer and worker dispatch sequence](resources/delayed-job-scheduler/timer-dispatch-sequence.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Timer and worker dispatch sequence](resources/delayed-job-scheduler/timer-dispatch-sequence.html)
+
 ## What Decides This Interview
 
 Six moments, and they arrive roughly in this order:

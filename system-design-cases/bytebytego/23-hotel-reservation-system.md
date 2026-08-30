@@ -526,6 +526,10 @@ mindmap
       Saga Compensating Transactions
 ```
 
+![Archify diagram: hotel reservation and inventory](resources/hotel-reservation-system/hotel-reservation-inventory.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Hotel reservation and inventory](resources/hotel-reservation-system/hotel-reservation-inventory.html)
+
 | Area | Primary Design Decision | Rationale |
 |:---|:---|:---|
 | **Data Model** | Room type-level inventory tracking (`room_type_inventory`) | Guests book room types; physical rooms assigned at check-in. |

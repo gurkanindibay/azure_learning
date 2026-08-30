@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Resumable Uploads: Direct Chunks and Durable Assembly", "quality_profile": "showcase", "viewBox": [1400, 760]},
+  "components": [
+    {"id": "client", "type": "external", "label": "Upload client", "pos": [100, 330]},
+    {"id": "api", "type": "backend", "label": "Upload API", "pos": [310, 150]},
+    {"id": "meta", "type": "database", "label": "Session metadata", "pos": [530, 180]},
+    {"id": "storage", "type": "cloud", "label": "Object storage", "pos": [760, 330]},
+    {"id": "signed", "type": "security", "label": "Signed URLs", "pos": [530, 500]},
+    {"id": "assembly", "type": "backend", "label": "Final assembly", "pos": [990, 330]},
+    {"id": "checksum", "type": "backend", "label": "Checksum validation", "pos": [990, 540]},
+    {"id": "consumer", "type": "external", "label": "File consumer", "pos": [1230, 330]}
+  ],
+  "connections": [
+    {"id": "create", "from": "client", "to": "api", "label": "create session", "variant": "emphasis", "labelDy": -18},
+    {"id": "record", "from": "api", "to": "meta", "label": "persist session ID", "variant": "emphasis"},
+    {"id": "upload", "from": "client", "to": "storage", "label": "upload chunks directly", "variant": "emphasis"},
+    {"id": "track", "from": "storage", "to": "meta", "label": "record chunk number", "variant": "dashed"},
+    {"id": "assemble", "from": "storage", "to": "assembly", "label": "merge all chunks", "variant": "emphasis"},
+    {"id": "verify", "from": "assembly", "to": "checksum", "label": "verify SHA-256", "variant": "dashed", "labelDy": 24},
+    {"id": "complete", "from": "assembly", "to": "consumer", "label": "completed object", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Resume contract", "items": ["Session metadata identifies missing chunks", "Retries send only chunks not acknowledged"]},
+    {"dot": "amber", "title": "Integrity contract", "items": ["Chunk checksum detects corruption", "Session ID plus chunk number makes retries idempotent"]}
+  ]
+}

@@ -580,6 +580,10 @@ mindmap
       Background Compaction GC
 ```
 
+![Archify diagram: S3-like object storage placement](resources/s3-like-object-storage/object-storage-placement.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [S3-like object storage placement](resources/s3-like-object-storage/object-storage-placement.html)
+
 | Subsystem | Architectural Decision | Primary Benefit |
 |:---|:---|:---|
 | **Data Layout** | Append-only container files ($2\text{–}4\text{ GB}$) | Eliminates inode exhaustion and disk block waste. |

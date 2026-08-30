@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Notification Delivery, Retry, and Idempotency",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1100,
+      700
+    ],
+    "column_fit": "spread",
+    "views": [
+      {
+        "id": "accept",
+        "label": "Accept campaign",
+        "focus": [
+          "caller",
+          "api",
+          "queue",
+          "generator"
+        ],
+        "note": "The API returns after durable campaign acceptance; generation proceeds progressively."
+      },
+      {
+        "id": "deliver",
+        "label": "Deliver safely",
+        "focus": [
+          "queue",
+          "worker",
+          "dedupe",
+          "provider",
+          "status"
+        ],
+        "note": "A unique notification ID prevents duplicate effects after acknowledgement loss."
+      },
+      {
+        "id": "recover",
+        "label": "Recover failures",
+        "focus": [
+          "worker",
+          "queue",
+          "provider",
+          "dlq",
+          "status"
+        ],
+        "note": "Transient failures retry with backoff while permanent failures move to the DLQ."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "external",
+      "label": "Caller"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Notif API"
+    },
+    {
+      "id": "generator",
+      "type": "backend",
+      "label": "Job Generator"
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "Work Queue"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker"
+    },
+    {
+      "id": "dedupe",
+      "type": "database",
+      "label": "Processed IDs"
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "Push Provider"
+    },
+    {
+      "id": "status",
+      "type": "database",
+      "label": "Status Store"
+    },
+    {
+      "id": "dlq",
+      "type": "messagebus",
+      "label": "DLQ"
+    }
+  ],
+  "segments": [
+    {
+      "from": 80,
+      "to": 215,
+      "label": "Campaign acceptance"
+    },
+    {
+      "from": 230,
+      "to": 480,
+      "label": "At-least-once delivery"
+    },
+    {
+      "from": 495,
+      "to": 650,
+      "label": "Failure handling"
+    }
+  ],
+  "messages": [
+    {
+      "id": "submit",
+      "from": "caller",
+      "to": "api",
+      "y": 160,
+      "label": "create campaign",
+      "variant": "emphasis"
+    },
+    {
+      "id": "accepted",
+      "from": "api",
+      "to": "caller",
+      "y": 190,
+      "label": "202 Accepted",
+      "variant": "return"
+    },
+    {
+      "id": "start-generation",
+      "from": "api",
+      "to": "generator",
+      "y": 170,
+      "label": "start fan-out",
+      "variant": "emphasis"
+    },
+    {
+      "id": "expand",
+      "from": "generator",
+      "to": "queue",
+      "y": 205,
+      "label": "emit notification job",
+      "variant": "emphasis"
+    },
+    {
+      "id": "consume",
+      "from": "queue",
+      "to": "worker",
+      "y": 240,
+      "label": "deliver job",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim",
+      "from": "worker",
+      "to": "dedupe",
+      "y": 285,
+      "label": "insert notification_id",
+      "variant": "emphasis"
+    },
+    {
+      "id": "send",
+      "from": "worker",
+      "to": "provider",
+      "y": 330,
+      "label": "batch send",
+      "variant": "emphasis"
+    },
+    {
+      "id": "crash",
+      "from": "provider",
+      "to": "worker",
+      "y": 375,
+      "label": "success; worker crashes before ack",
+      "variant": "return",
+      "note": "The provider accepted the notification, but the queue acknowledgement was lost."
+    },
+    {
+      "id": "redeliver",
+      "from": "queue",
+      "to": "worker",
+      "y": 420,
+      "label": "redeliver same job",
+      "variant": "dashed"
+    },
+    {
+      "id": "duplicate",
+      "from": "worker",
+      "to": "dedupe",
+      "y": 465,
+      "label": "unique constraint rejects duplicate",
+      "variant": "return"
+    },
+    {
+      "id": "skip",
+      "from": "worker",
+      "to": "status",
+      "y": 510,
+      "label": "record already processed",
+      "variant": "dashed"
+    },
+    {
+      "id": "retry",
+      "from": "provider",
+      "to": "queue",
+      "y": 550,
+      "label": "transient error; backoff retry",
+      "variant": "dashed"
+    },
+    {
+      "id": "dead",
+      "from": "worker",
+      "to": "dlq",
+      "y": 580,
+      "label": "max retries or invalid token",
+      "variant": "dashed"
+    },
+    {
+      "id": "callback",
+      "from": "provider",
+      "to": "status",
+      "y": 610,
+      "label": "delivery callback",
+      "variant": "dashed"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 94,
+      "to": 186,
+      "type": "backend"
+    },
+    {
+      "participant": "generator",
+      "from": 164,
+      "to": 220,
+      "type": "backend"
+    },
+    {
+      "participant": "queue",
+      "from": 199,
+      "to": 425,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 234,
+      "to": 530,
+      "type": "backend"
+    },
+    {
+      "participant": "dedupe",
+      "from": 279,
+      "to": 480,
+      "type": "database"
+    },
+    {
+      "participant": "provider",
+      "from": 324,
+      "to": 395,
+      "type": "cloud"
+    },
+    {
+      "participant": "status",
+      "from": 504,
+      "to": 654,
+      "type": "database"
+    },
+    {
+      "participant": "dlq",
+      "from": 584,
+      "to": 614,
+      "type": "messagebus"
+    }
+  ]
+}

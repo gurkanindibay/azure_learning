@@ -39,12 +39,12 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | 18 Nearby Friends | Location-update and discovery flow | Complete |
 | 19 Google Maps | Map-tile and routing architecture | Complete |
 | 20 Distributed Message Queue | Producer, broker, and consumer architecture | Complete |
-| 21 Metrics Monitoring and Alerting System | Metrics ingestion and alert evaluation | Not started |
-| 22 Ad Click Event Aggregation | Stream aggregation data flow | Not started |
-| 23 Hotel Reservation System | Reservation consistency workflow | Not started |
-| 24 Distributed Email Service | Email delivery pipeline | Not started |
-| 25 S3-like Object Storage | Object metadata and blob storage architecture | Not started |
-| 26 Real-time Gaming Leaderboard | Ranking update architecture | Not started |
+| 21 Metrics Monitoring and Alerting System | Metrics ingestion and alert evaluation | Complete |
+| 22 Ad Click Event Aggregation | Stream aggregation data flow | Complete |
+| 23 Hotel Reservation System | Reservation consistency workflow | Complete |
+| 24 Distributed Email Service | Email delivery pipeline | Complete |
+| 25 S3-like Object Storage | Object metadata and blob storage architecture | Complete |
+| 26 Real-time Gaming Leaderboard | Ranking update architecture | Complete |
 | 27 Payment System | Payment processing architecture | Complete |
 | 28 Digital Wallet | Wallet ledger and transfer workflow | Complete |
 | 29 Stock Exchange | Order matching architecture | Complete |
@@ -53,9 +53,9 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 
 | Document | Primary diagram | Secondary diagram | Status |
 |:---|:---|:---|:---|
-| `million-notifications-system-design.md` | Notification architecture | Delivery and retry sequence | Not started |
-| `amazon-interview-question-design-a-delayed-job-scheduler.md` | Durable scheduler architecture | Job state and lease lifecycle | Not started |
-| `customer-support-ai-platform-system-design-interview.md` | Support platform architecture | Ticket to AI or human escalation | Not started |
+| `million-notifications-system-design.md` | Notification architecture | Delivery and retry sequence | Complete |
+| `amazon-interview-question-design-a-delayed-job-scheduler.md` | Durable scheduler architecture | Job state and lease lifecycle | Complete |
+| `customer-support-ai-platform-system-design-interview.md` | Support platform architecture | Ticket to AI or human escalation | Complete |
 | `resumable-uploads-chunking-large-files.md` | Resumable-upload architecture | Upload session lifecycle | Not started |
 | `real-time-leaderboard-design.md` | Leaderboard architecture | — | Not started |
 | `design-system-interviews.md` | Seven-phase interview workflow | — | Not started |

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Support AI: Grounded Answer or Human Escalation",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1400, 760]
+  },
+  "participants": [
+    {"id": "customer", "type": "external", "label": "Customer"},
+    {"id": "ticket", "type": "backend", "label": "Ticket service"},
+    {"id": "orchestrator", "type": "security", "label": "AI orchestrator"},
+    {"id": "kb", "type": "database", "label": "Knowledge base"},
+    {"id": "resolver", "type": "backend", "label": "AI resolver"},
+    {"id": "agent", "type": "backend", "label": "Agent copilot"},
+    {"id": "human", "type": "external", "label": "Human queue"}
+  ],
+  "segments": [
+    {"from": 120, "to": 280, "label": "Ground and evaluate"},
+    {"from": 300, "to": 480, "label": "Answer or escalate"},
+    {"from": 500, "to": 700, "label": "Human-controlled response"}
+  ],
+  "messages": [
+    {"id": "question", "from": "customer", "to": "ticket", "y": 160, "label": "new question", "variant": "emphasis"},
+    {"id": "guard", "from": "ticket", "to": "orchestrator", "y": 210, "label": "PII scan and policy check", "variant": "security"},
+    {"id": "context", "from": "orchestrator", "to": "kb", "y": 265, "label": "retrieve relevant articles", "variant": "dashed"},
+    {"id": "grounded", "from": "kb", "to": "resolver", "y": 320, "label": "cited context", "variant": "return"},
+    {"id": "answer", "from": "resolver", "to": "customer", "y": 390, "label": "grounded answer", "variant": "return"},
+    {"id": "escalate", "from": "resolver", "to": "human", "y": 455, "label": "low confidence or talk to human", "variant": "dashed"},
+    {"id": "draft", "from": "orchestrator", "to": "agent", "y": 520, "label": "draft response", "variant": "dashed"},
+    {"id": "discard", "from": "agent", "to": "human", "y": 585, "label": "discard or escalate", "variant": "dashed"},
+    {"id": "reply", "from": "human", "to": "customer", "y": 650, "label": "human response", "variant": "return"}
+  ],
+  "activations": [
+    {"participant": "ticket", "from": 160, "to": 225, "type": "backend"},
+    {"participant": "orchestrator", "from": 205, "to": 545, "type": "security"},
+    {"participant": "resolver", "from": 310, "to": 470, "type": "backend"},
+    {"participant": "agent", "from": 510, "to": 605, "type": "backend"},
+    {"participant": "human", "from": 445, "to": 675, "type": "external"}
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Delayed Job Scheduler: Distributed Claiming",
+    "quality_profile": "showcase",
+    "viewBox": [1200, 720]
+  },
+  "lanes": [
+    {"id": "workers", "label": "Competing workers"},
+    {"id": "store", "label": "Durable job store"},
+    {"id": "outcome", "label": "Execution outcome"}
+  ],
+  "phases": [
+    {"id": "poll", "label": "Lookahead poll", "fromCol": 0, "toCol": 1, "variant": "default"},
+    {"id": "claim", "label": "Atomic claim", "fromCol": 2, "toCol": 3, "variant": "emphasis"},
+    {"id": "execute", "label": "Execute or recover", "fromCol": 4, "toCol": 5, "variant": "default"}
+  ],
+  "mainPath": ["poll-db", "query", "claim-a", "lock", "run-a"],
+  "nodes": [
+    {"id": "poll-db", "lane": "workers", "col": 0, "type": "backend", "label": "Worker fleet"},
+    {"id": "query", "lane": "store", "col": 1, "type": "database", "label": "Due jobs"},
+    {"id": "claim-a", "lane": "workers", "col": 2, "type": "backend", "label": "Claim batch"},
+    {"id": "lock", "lane": "store", "col": 3, "type": "database", "label": "SKIP LOCKED"},
+    {"id": "run-a", "lane": "outcome", "col": 4, "type": "backend", "label": "Execute job"},
+    {"id": "lease", "lane": "store", "col": 5, "type": "database", "label": "Lease guard"},
+    {"id": "recover", "lane": "outcome", "col": 5, "type": "backend", "label": "Reclaim jobs"}
+  ],
+  "edges": [
+    {"id": "poll-query", "from": "poll-db", "to": "query", "label": "find due or expired jobs", "role": "main", "variant": "emphasis"},
+    {"id": "query-a", "from": "query", "to": "claim-a", "label": "candidate batch", "role": "main"},
+    {"id": "a-lock", "from": "claim-a", "to": "lock", "label": "FOR UPDATE SKIP LOCKED", "role": "main", "variant": "emphasis"},
+    {"id": "lock-run", "from": "lock", "to": "run-a", "label": "state CLAIMED", "role": "main"},
+    {"id": "run-lease", "from": "run-a", "to": "lease", "label": "heartbeat guard", "role": "async", "variant": "dashed", "route": "drop"},
+    {"id": "lease-recover", "from": "lease", "to": "recover", "label": "lease expired", "role": "error", "variant": "dashed", "route": "drop", "labelDy": 24}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Coordination rule", "items": ["FOR UPDATE SKIP LOCKED grants disjoint batches", "Competing workers avoid serializing the queue"]},
+    {"dot": "amber", "title": "Failure rule", "items": ["Lease expiry makes abandoned work visible", "Owner-guarded heartbeats cannot renew stolen work"]}
+  ]
+}

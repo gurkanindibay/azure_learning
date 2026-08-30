@@ -401,6 +401,10 @@ mindmap
       Composite Score Float Tie-Breaking
 ```
 
+    ![Archify diagram: real-time gaming leaderboard ranking](resources/real-time-gaming-leaderboard/leaderboard-ranking.visual-check.1440x900.light.png)
+
+    > **Interactive Archify diagram**: [Real-time gaming leaderboard ranking](resources/real-time-gaming-leaderboard/leaderboard-ranking.html)
+
 | Area | Decision | Key Rationale |
 |:---|:---|:---|
 | **Core Storage** | Redis Sorted Set (`ZSET`) | $O(\log N)$ rank calculation and range queries via Skip List. |

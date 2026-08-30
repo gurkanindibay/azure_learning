@@ -11,6 +11,38 @@ Use this guide to choose a case, structure a timed answer, and justify each arch
 
 > **Interview References**: [Roadmap](../system-design-architecture/system-design-interview/interview-roadmap.md), [Preparation Master Sheet](../system-design-architecture/system-design-interview/system-design-preparation-master-sheet-takeaways.md), [Deep Dive Reference](../system-design-architecture/system-design-interview/interview-deep-dive.md), [Decision Frameworks](../system-design-architecture/system-design-interview/complete-system-design-interview-guide-2026-takeaways.md), and [Review Plan](../system-design-architecture/system-design-interview/system-design-review-plan.md).
 
+## Visual Dashboard
+
+Use the interactive diagrams when you want the shape of the preparation plan at a glance. The Markdown view remains the source of truth for the catalog and heuristics.
+
+| View | Best for | Interactive companion |
+|:---|:---|:---|
+| Preparation path | Choosing the next difficulty level and knowing when to branch | [Open the Archify preparation path](resources/preparation-path.html) |
+| Case-to-skill map | Picking a case that exercises a specific weakness | [Open the Archify case-to-skill map](resources/case-skill-map.html) |
+
+```mermaid
+flowchart LR
+	F[Foundation\nrequirements + estimates] --> C[Core\npatterns + data choices]
+	C --> A[Advanced\npartitions + failure modes]
+	A --> S[Specialist\ncorrectness + domain pressure]
+	S --> R[Review\nchange one constraint]
+	R --> F
+	C -. choose by weakness .-> M[Case-to-skill map]
+	M -. return to practice .-> P[85-minute loop]
+```
+
+### Track a practice pass
+
+Copy this small tracker beneath a case before starting. Check each item only after you can explain it aloud without reading the reference solution.
+
+- [ ] Requirements and non-goals are explicit
+- [ ] Average and peak load are estimated
+- [ ] Entities, ownership, keys, and APIs are named
+- [ ] Baseline read and write paths are traceable
+- [ ] Highest-risk bottleneck has a mechanism and trade-off
+- [ ] Retry, duplicate, overload, dependency, and region failures are covered
+- [ ] First scaling limit and evolution trigger are stated
+
 ## Preparation Path
 
 Work from **foundation** to **core**, then use **advanced** and **specialist** cases to test a specific weakness. Do not passively read a solution first.

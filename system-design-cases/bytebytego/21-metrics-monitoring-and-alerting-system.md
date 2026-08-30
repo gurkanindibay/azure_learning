@@ -629,6 +629,10 @@ flowchart TD
     ACons --> WH
 ```
 
+![Archify diagram: metrics monitoring ingestion and alerting](resources/metrics-monitoring/metrics-monitoring-ingestion-alerting.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Metrics monitoring ingestion and alerting](resources/metrics-monitoring/metrics-monitoring-ingestion-alerting.html)
+
 ---
 
 ## 5. Summary & Key Takeaways

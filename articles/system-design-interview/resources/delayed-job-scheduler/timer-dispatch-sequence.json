@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Delayed Job Scheduler: Timer and Dispatch",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1400, 760]
+  },
+  "participants": [
+    {"id": "caller", "type": "external", "label": "Caller"},
+    {"id": "timer", "type": "backend", "label": "Timer loop"},
+    {"id": "heap", "type": "backend", "label": "Min-heap"},
+    {"id": "pool", "type": "backend", "label": "Worker pool"},
+    {"id": "job", "type": "backend", "label": "Job handler"}
+  ],
+  "segments": [
+    {"from": 120, "to": 290, "label": "Schedule and wake"},
+    {"from": 310, "to": 500, "label": "Wait until due"},
+    {"from": 520, "to": 700, "label": "Dispatch without blocking"}
+  ],
+  "messages": [
+    {"id": "schedule", "from": "caller", "to": "heap", "y": 160, "label": "schedule(job, runAt)", "variant": "emphasis"},
+    {"id": "head", "from": "heap", "to": "timer", "y": 205, "label": "new head detected", "variant": "return"},
+    {"id": "notify", "from": "heap", "to": "timer", "y": 250, "label": "lock.notify()", "variant": "emphasis"},
+    {"id": "wait", "from": "timer", "to": "heap", "y": 330, "label": "lock.wait(delay)", "variant": "dashed"},
+    {"id": "due", "from": "heap", "to": "timer", "y": 400, "label": "job is due", "variant": "return"},
+    {"id": "poll", "from": "timer", "to": "heap", "y": 465, "label": "poll due job", "variant": "emphasis"},
+    {"id": "submit", "from": "timer", "to": "pool", "y": 530, "label": "workerPool.submit(job)", "variant": "emphasis"},
+    {"id": "execute", "from": "pool", "to": "job", "y": 595, "label": "execute independently", "variant": "emphasis"},
+    {"id": "resume", "from": "timer", "to": "heap", "y": 660, "label": "return to timer loop", "variant": "dashed"}
+  ],
+  "activations": [
+    {"participant": "timer", "from": 195, "to": 680, "type": "backend"},
+    {"participant": "heap", "from": 150, "to": 490, "type": "backend"},
+    {"participant": "pool", "from": 520, "to": 625, "type": "backend"},
+    {"participant": "job", "from": 585, "to": 635, "type": "backend"}
+  ]
+}

@@ -688,6 +688,10 @@ flowchart TD
     end
 ```
 
+![Archify diagram: ad click stream aggregation](resources/ad-click-event-aggregation/ad-click-stream-aggregation.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Ad click stream aggregation](resources/ad-click-event-aggregation/ad-click-stream-aggregation.html)
+
 ### Architectural Decisions Matrix
 
 | Challenge | Chosen Solution | Rationale & Trade-Off |
