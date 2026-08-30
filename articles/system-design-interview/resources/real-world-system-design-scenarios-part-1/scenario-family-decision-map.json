@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Real-World System Design Scenario Decision Map", "quality_profile": "showcase", "viewBox": [1500, 820]},
+  "components": [
+    {"id": "scenario", "type": "external", "label": "Scenario signal", "pos": [100, 350]},
+    {"id": "api", "type": "backend", "label": "API and edge", "pos": [350, 150]},
+    {"id": "data", "type": "database", "label": "Data and access", "pos": [350, 550]},
+    {"id": "async", "type": "messagebus", "label": "Async and events", "pos": [700, 150]},
+    {"id": "consistency", "type": "security", "label": "Consistency", "pos": [700, 550]},
+    {"id": "scale", "type": "cloud", "label": "Scale + resilience", "pos": [1050, 350]},
+    {"id": "tradeoff", "type": "external", "label": "Trade-off", "pos": [1350, 350]}
+  ],
+  "connections": [
+    {"id": "classify-api", "from": "scenario", "to": "api", "label": "routing, rate, gateway", "variant": "emphasis", "labelDy": -18},
+    {"id": "classify-data", "from": "scenario", "to": "data", "label": "query, cache, storage", "variant": "emphasis", "labelDy": 18},
+    {"id": "api-async", "from": "api", "to": "async", "label": "decouple burst work", "variant": "emphasis"},
+    {"id": "data-safety", "from": "data", "to": "consistency", "label": "protect state", "variant": "emphasis"},
+    {"id": "async-scale", "from": "async", "to": "scale", "label": "backpressure + workers", "variant": "emphasis", "labelDy": -18},
+    {"id": "safety-scale", "from": "consistency", "to": "scale", "label": "isolate failure", "variant": "emphasis", "labelDy": 18},
+    {"id": "choose", "from": "scale", "to": "tradeoff", "label": "state limits and cost", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Classify the failure", "items": ["Start with the observed bottleneck, not a favorite technology", "Separate API, data, and event-driven problems"]},
+    {"dot": "amber", "title": "Apply the mechanism", "items": ["Use caches, indexes, sharding, or queues when the workload demands them", "Make ordering, idempotency, and consistency explicit"]},
+    {"dot": "rose", "title": "Defend the trade-off", "items": ["Explain what happens during overload or partial failure", "Name the cost and the next boundary at higher scale"]}
+  ]
+}

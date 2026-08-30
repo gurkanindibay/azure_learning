@@ -39,6 +39,12 @@ Let’s get started.
 > **IMP Note** : This story is **Part 1 of a two-part system design series**. To keep the article practical and comfortable to read, I have divided the complete collection into two parts:  
 > **Part 2:** 30 more scenario-based system design questions and breakdowns (**Coming Soon)**
 
+## Archify diagrams
+
+![Archify diagram: Real-world system design scenario decision map](resources/real-world-system-design-scenarios-part-1/scenario-family-decision-map.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Real-world system design scenario decision map](resources/real-world-system-design-scenarios-part-1/scenario-family-decision-map.html)
+
 ## 1\. Decoupling a Mobile App from Backend Services
 
 ![](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*T-VQbNOjjRsfl3DxSFnyAg.png)

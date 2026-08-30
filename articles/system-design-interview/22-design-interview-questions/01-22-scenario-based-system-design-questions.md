@@ -36,6 +36,12 @@ They test whether you can **think through chaos**. Real-world chaos — the kind
 
 That single question reveals your understanding of distributed systems, reliability engineering, scalability, failure handling, architecture tradeoffs, and production maturity.
 
+## Archify diagrams
+
+![Archify diagram: Scenario failure response map](../resources/22-design-interview-questions/22-scenario-failure-response-map.visual-check.1440x900.light.png)
+
+> **Interactive Archify diagram**: [Scenario failure response map](../resources/22-design-interview-questions/22-scenario-failure-response-map.html)
+
 ---
 
 ## Table of Contents

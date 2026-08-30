@@ -60,5 +60,5 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | `real-time-leaderboard-design.md` | Leaderboard architecture | — | Complete |
 | `design-system-interviews.md` | Seven-phase interview workflow | — | Complete |
 | `complete-system-design-interview-guide-2026.md` | Constraint-driven decision workflow | — | Complete |
-| `real-world-system-design-scenarios-part-1.md` | Scenario-family decision map | — | Not started |
-| `22-design-interview-questions/01-22-scenario-based-system-design-questions.md` | Scenario-family decision map | — | Not started |
+| `real-world-system-design-scenarios-part-1.md` | Scenario-family decision map | — | Complete |
+| `22-design-interview-questions/01-22-scenario-based-system-design-questions.md` | Scenario-family decision map | — | Complete |

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {"title": "Scenario Failure Response Map", "quality_profile": "showcase", "viewBox": [1100, 566]},
+  "lanes": [
+    {"id": "detect", "label": "Detect the break"},
+    {"id": "protect", "label": "Protect correctness"},
+    {"id": "recover", "label": "Recover and scale"}
+  ],
+  "phases": [
+    {"id": "observe", "label": "Observe", "fromCol": 0, "toCol": 1},
+    {"id": "protect-phase", "label": "Protect", "fromCol": 2, "toCol": 3, "variant": "emphasis"},
+    {"id": "recover-phase", "label": "Recover", "fromCol": 4, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["signal", "classify", "guard", "decouple", "reconcile", "scale"],
+  "nodes": [
+    {"id": "signal", "lane": "detect", "col": 0, "width": 80, "type": "messagebus", "label": "Signal", "sublabel": "latency or error", "tag": "observe"},
+    {"id": "classify", "lane": "detect", "col": 1, "width": 80, "type": "backend", "label": "Classify", "sublabel": "hot key or race", "tag": "scope"},
+    {"id": "guard", "lane": "protect", "col": 2, "width": 80, "type": "security", "label": "Guard state", "sublabel": "lock + dedupe", "tag": "correct"},
+    {"id": "decouple", "lane": "protect", "col": 3, "width": 80, "type": "messagebus", "label": "Decouple", "sublabel": "queue or cache", "tag": "absorb"},
+    {"id": "reconcile", "lane": "recover", "col": 4, "width": 80, "type": "database", "label": "Reconcile", "sublabel": "retry or repair", "tag": "recover"},
+    {"id": "scale", "lane": "recover", "col": 5, "width": 80, "type": "cloud", "label": "Scale", "sublabel": "observe", "tag": "sustain"}
+  ],
+  "edges": [
+    {"from": "signal", "to": "classify", "route": "straight", "variant": "emphasis"},
+    {"from": "classify", "to": "guard", "route": "drop", "variant": "emphasis"},
+    {"from": "guard", "to": "decouple", "route": "straight", "variant": "emphasis"},
+    {"from": "decouple", "to": "reconcile", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "variant": "emphasis"},
+    {"from": "reconcile", "to": "scale", "route": "straight", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Find the failure", "items": ["Read-heavy spikes, races, stale state, and duplicate delivery need different remedies", "Name the bottleneck before naming the product"]},
+    {"dot": "amber", "title": "Protect correctness", "items": ["Use idempotency, ordering, locks, or circuit breakers where state can be corrupted", "Use queues and backpressure to contain bursts"]},
+    {"dot": "rose", "title": "Recover deliberately", "items": ["Retry, reconcile, or rebuild instead of assuming success", "Scale the hot dimension and keep the failure observable"]}
+  ]
+}
