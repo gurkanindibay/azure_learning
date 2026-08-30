@@ -21,8 +21,8 @@ Polyglot Persistence is the architectural principle of using **multiple data sto
 - [Architecture Diagram](#architecture-diagram)
 - [Decision Matrix](#decision-matrix)
 - [Decision Flow with Measurable Choice Points](#decision-flow-with-measurable-choice-points)
-- [PostgreSQL versus Cassandra](#postgresql-versus-cassandra)
-- [PostgreSQL versus Document Databases](#postgresql-versus-document-databases)
+- [Relational DB versus Wide-Column Databases](#relational-db-versus-wide-column-databases)
+- [Relational DB versus Document Databases](#relational-db-versus-document-databases)
 - [Implementation Patterns](#implementation-patterns)
 - [Challenges & Mitigations](#challenges-mitigations)
 - [Related Patterns](#related-patterns)
@@ -69,7 +69,7 @@ graph TB
         end
 
         subgraph "Storage Engines"
-            RDBMS[(Relational<br/>PostgreSQL, MySQL)]
+            RDBMS[(Relational DB)]
             DOC[(Document<br/>MongoDB, Couchbase)]
             KV[(Key-Value<br/>Redis, DynamoDB)]
             GRAPH[(Graph<br/>Neo4j, Neptune)]
@@ -151,8 +151,8 @@ flowchart TD
     ACCESS{"Is the access pattern predictable<br/>by a partition/key and write-heavy?"}
     DOC{"Is the primary access unit a flexible<br/>nested aggregate or JSON document?"}
 
-    REL[Relational<br/>PostgreSQL, SQL Server<br/>ACID, joins, constraints]
-    PG_CASS[Relational + Wide-Column<br/>PostgreSQL + Cassandra<br/>transactions + high-volume access path]
+    REL[Relational DB<br/>ACID, joins, constraints]
+    PG_CASS[Relational DB + Wide-Column<br/>Relational DB + Cassandra<br/>transactions + high-volume access path]
     EMBED[Local / Embedded<br/>SQLite, DuckDB, RocksDB<br/>single-node or offline state]
     WH[Analytical Warehouse<br/>Snowflake, BigQuery, Synapse<br/>large scans and BI]
     EVENT[Append-only / Event Store<br/>EventStoreDB, Kafka, Redpanda<br/>immutable history and replay]
@@ -211,7 +211,7 @@ flowchart TD
 
 > **Measurement rule**: record average and p95/p99 values separately. A database can meet average throughput while violating tail-latency or storage-growth requirements.
 
-## PostgreSQL versus Cassandra
+## Relational DB versus Wide-Column Databases
 
 Choose based on the correctness and query contract, not on raw throughput alone. PostgreSQL is normally the preferred source of truth when transactions and relationships matter. Cassandra is preferred when the access pattern is known in advance and the workload needs distributed write availability and predictable scale.
 
@@ -220,9 +220,9 @@ flowchart LR
     NEEDS[Workload and migration requirements]
     ACID{"Need multi-row ACID,<br/>joins, constraints, or ad-hoc SQL?"}
     SCALE{"Need multi-region write availability<br/>and predictable partition-key scale?"}
-    PG[Prefer PostgreSQL<br/>transactional source of truth]
+    PG[Prefer Relational DB<br/>transactional source of truth]
     CASS[Prefer Cassandra<br/>denormalized, partition-key access]
-    HYBRID[Use both<br/>PostgreSQL authority + Cassandra projection]
+    HYBRID[Use both<br/>Relational DB authority + Cassandra projection]
 
     NEEDS --> ACID
     ACID -->|yes| PG
@@ -249,7 +249,7 @@ flowchart LR
 
 For either migration direction, backfill historical data, dual-run and compare reads, monitor lag and error rates, then switch traffic only after the target model is verified. Do not copy tables mechanically: Cassandra requires query-driven partition design, while PostgreSQL requires normalized entities and explicit transaction boundaries.
 
-## PostgreSQL versus Document Databases
+## Relational DB versus Document Databases
 
 Use a document database when the application usually reads and updates a complete aggregate as one document, the schema varies significantly between records, or document-native distribution is valuable. Keep PostgreSQL when relationships, cross-aggregate transactions, constraints, and ad-hoc relational queries are central.
 
@@ -258,9 +258,9 @@ flowchart LR
     NEEDS[Workload and migration requirements]
     RELATIONS{"Are cross-entity relationships,<br/>constraints, or joins central?"}
     AGGREGATE{"Is the access unit a flexible<br/>nested aggregate read as a whole?"}
-    PG[Prefer PostgreSQL<br/>normalized transactional model]
+    PG[Prefer Relational DB<br/>normalized transactional model]
     DOC[Prefer Couchbase or MongoDB<br/>document-oriented model]
-    HYBRID[Use both<br/>PostgreSQL authority + document projection]
+    HYBRID[Use both<br/>Relational DB authority + document projection]
 
     NEEDS --> RELATIONS
     RELATIONS -->|yes| PG
@@ -324,7 +324,7 @@ graph TB
         end
 
         subgraph "Data Stores"
-            PG[(PostgreSQL<br/>Orders, Users)]
+            PG[(Relational DB<br/>Orders, Users)]
             MONGO[(MongoDB<br/>Product Catalog)]
             NEO4J[(Neo4j<br/>Product Graph)]
             ES[(Elasticsearch<br/>Search Index)]
@@ -374,7 +374,7 @@ Since distributed transactions (XA) are impractical across different databases, 
 ```mermaid
 sequenceDiagram
     participant Svc as Order Service
-    participant PG as PostgreSQL (Orders)
+    participant PG as Relational DB (Orders)
     participant Mongo as MongoDB (Inventory)
     participant Redis as Redis (Cache)
 
