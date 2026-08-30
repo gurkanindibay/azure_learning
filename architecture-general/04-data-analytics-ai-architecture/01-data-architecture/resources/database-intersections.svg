@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 980" role="img" aria-labelledby="title description">
+  <title id="title">Common database technology intersections</title>
+  <desc id="description">Seven pairwise set diagrams show common combinations: relational with event store, relational with document, relational with wide-column, event store with document, event store with time-series, relational with local embedded, and relational with analytical warehouse.</desc>
+  <rect width="1000" height="690" fill="#ffffff"/>
+  <text x="500" y="38" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#172033">Common database intersections</text>
+  <text x="500" y="65" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#4b5563">Each overlap represents a workload served by both technologies</text>
+
+  <g transform="translate(30 95)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#90caf9" fill-opacity="0.70" stroke="#5c6bc0" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#ffcc80" fill-opacity="0.70" stroke="#ef8c00" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Relational</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Event Store</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">Audit</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">trail</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Transactional audit trail</text>
+  </g>
+
+  <g transform="translate(352 95)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#ffcc80" fill-opacity="0.70" stroke="#ef8c00" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#b39ddb" fill-opacity="0.70" stroke="#7654b7" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Event Store</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Document</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">Replay</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">views</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Replayable read projections</text>
+  </g>
+
+  <g transform="translate(674 95)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#ffcc80" fill-opacity="0.70" stroke="#ef8c00" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#80cbc4" fill-opacity="0.70" stroke="#2d8f87" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Event Store</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Time-Series</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">Metrics</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">pipeline</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Event-driven metrics</text>
+  </g>
+
+  <g transform="translate(30 390)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#90caf9" fill-opacity="0.70" stroke="#5c6bc0" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#ce93d8" fill-opacity="0.70" stroke="#8e4aa3" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Relational</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Document</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">API</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">views</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Flexible read models</text>
+  </g>
+
+  <g transform="translate(352 390)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#90caf9" fill-opacity="0.70" stroke="#5c6bc0" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#f0b27a" fill-opacity="0.70" stroke="#c97828" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Relational</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Wide-Column</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">Scale</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">path</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">High-volume access path</text>
+  </g>
+
+  <g transform="translate(190 675)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#90caf9" fill-opacity="0.70" stroke="#5c6bc0" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#a5d6a7" fill-opacity="0.70" stroke="#388e3c" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Relational</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Embedded</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">Offline</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">replica</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Offline replica or local index</text>
+  </g>
+
+  <g transform="translate(512 675)">
+    <rect width="295" height="250" rx="8" fill="#f8fafc" stroke="#d5dbea"/>
+    <circle cx="112" cy="105" r="72" fill="#90caf9" fill-opacity="0.70" stroke="#5c6bc0" stroke-width="2"/>
+    <circle cx="183" cy="105" r="72" fill="#f48fb1" fill-opacity="0.70" stroke="#c4517a" stroke-width="2"/>
+    <text x="82" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Relational</text>
+    <text x="214" y="76" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#172033">Warehouse</text>
+    <text x="147" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#172033">OLTP</text>
+    <text x="147" y="122" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#172033">to OLAP</text>
+    <text x="147" y="211" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#172033">Operational to analytical pipeline</text>
+  </g>
+</svg>

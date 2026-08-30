@@ -142,6 +142,7 @@ Read these to reinforce a focused concept before or after a case. They are not s
 | [IaaS, PaaS, and SaaS](bytebytego/blog-posts/02-what-is-iaas-paas-saas.md) | Managed-service and operational trade-offs |
 | [Programming Languages](bytebytego/blog-posts/03-most-popular-programming-languages.md) | Runtime selection context |
 | [Choosing a Database](bytebytego/blog-posts/09-a-visual-guide-on-how-to-choose-the-right-database.md) | Data-model and workload fit |
+| [Polyglot Persistence](../architecture-general/04-data-analytics-ai-architecture/01-data-architecture/03-polyglot-persistence.md) | Database-family selection across relational, document, key-value, wide-column, time-series, graph, search, and blob workloads |
 | [Globally Unique IDs](bytebytego/blog-posts/10-do-you-know-how-to-generate-globally-unique-ids.md) | Identifier strategies |
 | [How Twitter Works](bytebytego/blog-posts/11-how-does-twitter-work.md) | Feed fan-out and social graph concepts |
 | [Processes and Threads](bytebytego/blog-posts/12-what-is-the-difference-between-process-and-thread.md) | Concurrency vocabulary |

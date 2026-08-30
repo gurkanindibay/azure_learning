@@ -73,6 +73,9 @@ graph TB
             COL[(Wide-Column<br/>Cassandra, HBase)]
             SEARCH[(Search<br/>Elasticsearch)]
             TS[(Time-Series<br/>InfluxDB, TimescaleDB)]
+            EMBED[(Local / Embedded<br/>SQLite, DuckDB)]
+            EVENT[(Append-Only / Event Store<br/>EventStoreDB, Kafka)]
+            WAREHOUSE[(Analytical Warehouse<br/>Snowflake, BigQuery)]
             BLOB[(Blob/Object<br/>S3, Azure Blob)]
         end
 
@@ -84,6 +87,9 @@ graph TB
         REPO --> COL
         REPO --> SEARCH
         REPO --> TS
+        REPO --> EMBED
+        REPO --> EVENT
+        REPO --> WAREHOUSE
         REPO --> BLOB
     end
 
@@ -105,6 +111,9 @@ graph TB
 | **Wide-Column** | High write throughput, time-series, IoT | Cassandra, ScyllaDB, HBase | Linear write scalability, tunable consistency |
 | **Search** | Full-text search, log analytics | Elasticsearch, OpenSearch, Solr | Inverted indexes, relevance scoring, aggregations |
 | **Time-Series** | Metrics, monitoring, sensor data | InfluxDB, TimescaleDB, Prometheus | Time-based partitioning, downsampling, retention |
+| **Local / Embedded** | In-process state, offline-first apps, local indexes | SQLite, DuckDB, RocksDB | No network hop, simple deployment, low operational overhead |
+| **Append-Only / Event Store** | Immutable events, audit history, replayable state | EventStoreDB, Kafka, Redpanda | Durable ordering, replay, and auditability; reads use projections |
+| **Analytical Warehouse** | Historical analytics, BI, large aggregations | Snowflake, BigQuery, Synapse, ClickHouse | Columnar scans, elastic analytical compute, separation of storage and compute |
 | **Blob Storage** | Files, images, backups | S3, Azure Blob, GCS | Infinite scale, low cost, immutability |
 
 ### Workload-to-Engine Mapping
@@ -118,7 +127,32 @@ graph TB
 | IoT, logs, high-ingest write-only | Wide-Column |
 | Text search, relevance ranking | Search |
 | Metrics, monitoring, dashboards | Time-Series |
+| In-process state, offline-first, or local analytical queries | Local / Embedded |
+| Immutable history, audit trails, event replay | Append-Only / Event Store |
+| BI, historical reporting, and large aggregations | Analytical Warehouse |
 | Large files, backups, static assets | Blob Storage |
+
+### Intersection cases
+
+The database families are sets of workload capabilities, not mutually exclusive choices. The intersections below show common combinations where one store owns the source data and another serves a specialized access pattern.
+
+![Common database technology intersections](resources/database-intersections.svg)
+
+| Intersection | Typical architecture | Example | Key reason |
+|--------------|----------------------|---------|------------|
+| Relational ∩ Append-only / Event Store | Commit business state transactionally, then publish immutable domain events | Payment order plus an audit trail | Strong write correctness plus audit and replay |
+| Relational ∩ Document | Keep normalized transactional records and project flexible aggregates for reads | Product catalog with a checkout database | ACID writes plus schema-flexible API responses |
+| Relational ∩ Wide-Column | Keep authoritative entities relationally and replicate high-volume access patterns to a denormalized store | User profiles plus a high-volume activity feed | Transactional correctness plus predictable write and read scale |
+| Append-only / Event Store ∩ Document | Replay events into denormalized document projections | Order events projected into a customer order history | Flexible, read-optimized views without losing history |
+| Append-only / Event Store ∩ Time-Series | Consume events into a metrics or telemetry store | Service events converted into latency metrics | Durable event history plus efficient time-window queries |
+| Relational ∩ Local / Embedded | Synchronize a server database with SQLite or maintain a local index | Mobile application with offline customer records | Offline operation or low-latency local reads |
+| Relational ∩ Analytical Warehouse | Load operational changes into Snowflake, BigQuery, or Synapse | E-commerce orders loaded into BI dashboards | Transactional serving isolated from large analytical scans |
+
+### Important boundaries
+
+- **Local / embedded databases** are usually owned by one process, device, or node. Use them for local state, offline capability, test fixtures, or rebuildable indexes; they are not automatically a shared distributed source of truth.
+- **Append-only / event stores** preserve facts as immutable records. They are useful when auditability, temporal history, and replay matter. Build queryable projections rather than expecting event-log storage to serve every read pattern directly.
+- **Analytical warehouses** are optimized for scans, joins across large historical datasets, and BI workloads. Keep transactional writes in an OLTP database and load the warehouse through batch or streaming pipelines.
 
 ## Architecture Diagram
 
