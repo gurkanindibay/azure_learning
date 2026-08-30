@@ -233,6 +233,26 @@ The first design consequence is therefore a cache or CDN for repeated media read
 
 **Example.** A 2,000-QPS API with a 300-ms report-generation endpoint should not make every web instance faster. Keep normal reads synchronous, put report generation on a queue, and return a job ID. This works because completion latency can differ from request latency. The trade-off is that clients must observe job status and workers must be idempotent. Partition state only after cache hit rate, indexes, batching, and replicas fail to meet the SLO.
 
+```mermaid
+flowchart TD
+	start([Measure peak QPS and request latency]) --> burst{Is load below<br/>1,000 QPS?}
+	burst -->|Yes| baseline[Use a simple stateless service<br/>behind a load balancer]
+	burst -->|No| scale[Scale service instances horizontally]
+	baseline --> hot{Are reads repeated<br/>and cacheable?}
+	scale --> hot
+	hot -->|Yes| cache[Add targeted cache or CDN]
+	hot -->|No| slow{Is a slow endpoint<br/>consuming capacity?}
+	cache --> slow
+	slow -->|Yes| isolate[Isolate the endpoint<br/>and queue slow work]
+	slow -->|No| spikes{Are spikes or queue age<br/>threatening the SLO?}
+	isolate --> spikes
+	spikes -->|Yes| async[Use asynchronous pipelines,<br/>rate limits, and backpressure]
+	spikes -->|No| verify[Verify CPU, connections,<br/>cache hit rate, and P99 latency]
+	async --> verify
+	verify -->|SLO still missed| hot
+	verify -->|SLO met| finish([Keep the simplest design])
+```
+
 ### Stateful data path
 
 | Workload signal | Prefer | Avoid or qualify |
@@ -246,6 +266,27 @@ The first design consequence is therefore a cache or CDN for repeated media read
 **Why these steps change.** A relational primary is usually the best starting point when the write rate and dataset fit on one machine: one transaction boundary makes uniqueness, joins, and state transitions easier to guarantee. Read replicas add read capacity, but asynchronous lag makes them unsuitable for read-after-write or financial correctness reads. A hot key is a concentration problem, so batching, coalescing, or changing the access pattern attacks the cause; another replica does not. Sharding becomes justified when one primary cannot meet throughput, capacity, or geographic locality, and the partition key must keep common queries local.
 
 **Example.** An order service at 300 writes/s with joins, uniqueness checks, and payment state transitions usually benefits from one relational primary. At 8,000 writes/s, first ask whether one customer, product, or counter receives most writes. If one counter is hot, batching increments or storing per-event facts may help more than adding shards. Only when the access pattern and data volume exceed one primary should a partitioned design become the next step.
+
+```mermaid
+flowchart TD
+	start([Measure reads, writes,<br/>data volume, and correctness]) --> writes{Does one primary<br/>meet write and capacity needs?}
+	writes -->|Yes| reads{Are reads heavy<br/>and freshness tolerant?}
+	writes -->|No| hot{Is one key or partition<br/>receiving most writes?}
+	hot -->|Yes| mitigate[Batch, coalesce, isolate tenants,<br/>or redesign the access pattern]
+	hot -->|No| partition[Choose an access-aligned<br/>partition key and shard state]
+	mitigate --> recheck{Does the primary<br/>now meet the SLO?}
+	recheck -->|Yes| reads
+	recheck -->|No| partition
+	reads -->|Yes| replica[Add read replicas<br/>for stale-tolerant queries]
+	reads -->|No| tx[Keep reads on the primary<br/>for read-after-write correctness]
+	replica --> lag{Is replica lag<br/>within the freshness target?}
+	lag -->|No| tx
+	lag -->|Yes| verify[Verify hot keys,<br/>query locality, and P99 latency]
+	tx --> verify
+	partition --> verify
+	verify -->|SLO still missed| hot
+	verify -->|SLO met| finish([Keep one transaction boundary<br/>where possible])
+```
 
 ### Cache, queues, and multi-region
 
