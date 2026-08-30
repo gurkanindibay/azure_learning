@@ -179,6 +179,25 @@ These are order-of-magnitude starting points for an interview, not hardware limi
 
 The useful question is not “What number forces me to use a distributed system?” It is “Which resource is constrained, and which design change relieves that constraint?” The examples below use deliberately rough numbers so that the reasoning remains visible. State the assumptions, round aggressively, and name the next bottleneck.
 
+```mermaid
+flowchart TD
+	start([Start with workload assumptions]) --> estimate[Estimate peak pressure<br/>QPS, storage, bandwidth, latency, and SLOs]
+	estimate --> constraint{Which resource is constrained?}
+	constraint -->|Request rate or burstiness| request[Scale the stateless request path]
+	constraint -->|Data volume or write pressure| data[Optimize the stateful data path]
+	constraint -->|Repeated reads| cache[Add cache or CDN<br/>when stale data is acceptable]
+	constraint -->|Slow or bursty work| queue[Queue asynchronous work<br/>and return a job status]
+	constraint -->|Geographic latency or availability| region[Consider multi-region<br/>with an explicit consistency model]
+	request --> checks[Check hit rate, lag, hot keys,<br/>and the next bottleneck]
+	data --> checks
+	cache --> checks
+	queue --> checks
+	region --> checks
+	checks --> validate[Validate against peak traffic,<br/>SLOs, correctness, and cost]
+	validate -->|Constraint remains| constraint
+	validate -->|Constraint relieved| finish([Stop adding components])
+```
+
 ### Estimate before adding components
 
 | Estimate | Fast approximation | Design consequence |
