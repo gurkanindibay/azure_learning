@@ -46,8 +46,8 @@ In the beginning, all application services, databases, and static assets run on 
 
 ```mermaid
 flowchart LR
-    USER["User (Browser / Mobile)"] -->|1. DNS Lookup (api.mysite.com)| DNS["DNS Server"]
-    DNS -->>|2. Returns Public IP| USER
+    USER["User (Browser / Mobile)"] -->|1. DNS Lookup api.mysite.com| DNS["DNS Server"]
+    DNS -->|2. Returns Public IP| USER
     USER -->|3. HTTP/HTTPS Request| APP["Single Server<br/>(Web Server + App Logic + MySQL DB)"]
 ```
 
