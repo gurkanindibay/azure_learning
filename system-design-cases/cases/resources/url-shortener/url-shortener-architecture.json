@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Global URL Shortener Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 720],
+    "views": [
+      {
+        "id": "redirect-path",
+        "label": "Redirect path",
+        "focus": ["visitor", "edge", "redirect", "cache", "mapping-store"],
+        "note": "Follow a low-latency alias lookup from the edge to durable storage."
+      },
+      {
+        "id": "create-path",
+        "label": "Create path",
+        "focus": ["creator", "api", "id-service", "mapping-store"],
+        "note": "Create a unique short alias before the durable mapping is accepted."
+      },
+      {
+        "id": "analytics-path",
+        "label": "Analytics path",
+        "focus": ["redirect", "events", "analytics", "analytics-store"],
+        "note": "Keep click analytics asynchronous so redirects remain fast."
+      }
+    ]
+  },
+  "components": [
+    {"id": "visitor", "type": "external", "label": "Visitor", "sublabel": "opens short URL", "pos": [40, 300], "size": [125, 62]},
+    {"id": "creator", "type": "external", "label": "Creator", "sublabel": "creates alias", "pos": [40, 110], "size": [125, 62]},
+    {"id": "edge", "type": "cloud", "label": "Global Edge", "sublabel": "DNS, TLS, routing", "pos": [240, 300], "size": [145, 62]},
+    {"id": "api", "type": "backend", "label": "Create API", "sublabel": "validate URL", "pos": [240, 110], "size": [145, 62]},
+    {"id": "redirect", "type": "backend", "label": "Redirect Service", "sublabel": "resolve alias", "pos": [470, 300], "size": [150, 62]},
+    {"id": "id-service", "type": "backend", "label": "ID Service", "sublabel": "Base62 aliases", "pos": [470, 110], "size": [150, 62]},
+    {"id": "cache", "type": "database", "label": "Redirect Cache", "sublabel": "hot alias mappings", "pos": [700, 230], "size": [150, 62]},
+    {"id": "mapping-store", "type": "database", "label": "Mapping Store", "sublabel": "durable alias to URL", "pos": [930, 230], "size": [165, 62]},
+    {"id": "events", "type": "messagebus", "label": "Click Events", "sublabel": "asynchronous stream", "pos": [700, 450], "size": [150, 62]},
+    {"id": "analytics", "type": "backend", "label": "Analytics Workers", "sublabel": "aggregate clicks", "pos": [930, 450], "size": [165, 62]},
+    {"id": "analytics-store", "type": "database", "label": "Analytics Store", "sublabel": "reports and trends", "pos": [1130, 450], "size": [130, 62]}
+  ],
+  "connections": [
+    {"from": "visitor", "to": "edge", "label": "GET /{alias}", "variant": "emphasis"},
+    {"from": "edge", "to": "redirect", "label": "route request", "variant": "emphasis"},
+    {"from": "redirect", "to": "cache", "label": "lookup alias", "labelDy": -32},
+    {"from": "redirect", "to": "mapping-store", "label": "read on cache miss", "labelAt": [906, 306]},
+    {"from": "creator", "to": "api", "label": "POST /urls", "variant": "emphasis"},
+    {"from": "api", "to": "id-service", "label": "allocate alias", "labelDy": -32},
+    {"from": "id-service", "to": "mapping-store", "label": "persist mapping", "fromSide": "bottom", "toSide": "top", "labelAt": [779, 306]},
+    {"from": "redirect", "to": "events", "label": "publish click", "variant": "dashed"},
+    {"from": "events", "to": "analytics", "label": "consume"},
+    {"from": "analytics", "to": "analytics-store", "label": "write aggregates", "labelDy": -32}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Fast Redirects", "items": ["Edge routing and a hot mapping cache minimize the redirect path.", "The durable store is consulted only after a cache miss."]},
+    {"dot": "emerald", "title": "Durable Creation", "items": ["A unique Base62 alias is assigned before the mapping is accepted.", "The mapping store remains the redirect source of truth."]},
+    {"dot": "amber", "title": "Async Analytics", "items": ["Click events leave the user-facing redirect path immediately.", "Workers aggregate reports without adding redirect latency."]}
+  ]
+}

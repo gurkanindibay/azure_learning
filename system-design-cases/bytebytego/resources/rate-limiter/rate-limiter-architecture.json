@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Distributed API Rate Limiter",
+    "quality_profile": "showcase",
+    "viewBox": [1360, 760],
+    "views": [
+      {"id": "admission", "label": "Admission decision", "focus": ["api-consumer", "gateway-middleware", "redis-cluster", "api-fleet"], "note": "Each request is atomically admitted or throttled before it reaches the protected API."},
+      {"id": "policy", "label": "Policy loading", "focus": ["rate-rule-store", "gateway-middleware", "redis-cluster"], "note": "Gateway middleware combines configured limits with Redis-held counters or token buckets."},
+      {"id": "throttle", "label": "Throttle response", "focus": ["gateway-middleware", "api-consumer", "operations-alert"], "note": "Exceeded limits return HTTP 429 with retry guidance; Redis timeouts fail open and alert operators."}
+    ]
+  },
+  "components": [
+    {"id": "api-consumer", "type": "external", "label": "API Consumer", "sublabel": "web, mobile, or bot", "pos": [40, 315], "size": [150, 64]},
+    {"id": "gateway-middleware", "type": "backend", "label": "Gateway Rate Limiter", "sublabel": "rule match and Lua evaluation", "pos": [270, 315], "size": [185, 64]},
+    {"id": "rate-rule-store", "type": "database", "label": "Rate Rule Store", "sublabel": "IP, user, key, and route limits", "pos": [270, 125], "size": [185, 64]},
+    {"id": "redis-cluster", "type": "database", "label": "Redis Counter Cluster", "sublabel": "atomic Lua token and window checks", "pos": [515, 125], "size": [215, 64]},
+    {"id": "api-fleet", "type": "backend", "label": "Protected API Fleet", "sublabel": "admitted requests only", "pos": [535, 315], "size": [185, 64]},
+    {"id": "http-429", "type": "cloud", "label": "HTTP 429 Response", "sublabel": "limit, remaining, retry-after", "pos": [535, 505], "size": [185, 64]},
+    {"id": "regional-redis", "type": "database", "label": "Regional Redis Peers", "sublabel": "eventual counter sync", "pos": [930, 125], "size": [190, 64]},
+    {"id": "operations-alert", "type": "external", "label": "On-Call Operations", "sublabel": "Redis timeout alert", "pos": [960, 505], "size": [190, 64]}
+  ],
+  "connections": [
+    {"from": "api-consumer", "to": "gateway-middleware", "label": "HTTP request", "variant": "emphasis", "labelDy": -28},
+    {"from": "rate-rule-store", "to": "gateway-middleware", "label": "load applicable rule", "fromSide": "bottom", "toSide": "top", "labelDy": 24},
+    {"from": "gateway-middleware", "to": "redis-cluster", "label": "run atomic Lua limit check", "variant": "emphasis", "fromSide": "top", "toSide": "bottom", "labelDy": -24},
+    {"from": "gateway-middleware", "to": "api-fleet", "label": "within limit", "variant": "emphasis", "labelDy": -28},
+    {"from": "gateway-middleware", "to": "http-429", "label": "limit exceeded", "fromSide": "bottom", "toSide": "left", "labelDy": 24},
+    {"from": "redis-cluster", "to": "regional-redis", "label": "async regional sync", "labelDy": -28},
+    {"from": "gateway-middleware", "to": "operations-alert", "label": "fail open on timeout", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 30}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Rule Evaluation", "items": ["Rules match an IP address, user ID, API key, or endpoint path.", "The gateway adds less than one millisecond before admitting an API request."]},
+    {"dot": "emerald", "title": "Atomic Accounting", "items": ["Redis stores compact token-bucket or sliding-window state.", "One Lua script increments, expires, and decides without a distributed lock."]},
+    {"dot": "amber", "title": "Degraded Operation", "items": ["Exceeded requests receive HTTP 429 and retry guidance.", "A Redis timeout permits traffic and creates an operational alert."]}
+  ]
+}

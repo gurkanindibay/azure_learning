@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hybrid News Feed Fan-Out Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 720],
+    "views": [
+      {"id": "publish", "label": "Publish path", "focus": ["publisher", "post-api", "post-store", "event-log", "fanout"], "note": "Normal posts are persisted and then distributed asynchronously."},
+      {"id": "normal-feed", "label": "Normal feed", "focus": ["fanout", "timeline-cache", "reader", "feed-api"], "note": "A precomputed timeline keeps normal-user reads fast."},
+      {"id": "celebrity-feed", "label": "Celebrity feed", "focus": ["fanout", "celebrity-cache", "feed-api", "reader"], "note": "Celebrity posts are merged at read time to avoid extreme write amplification."}
+    ]
+  },
+  "components": [
+    {"id":"publisher","type":"external","label":"Publisher","sublabel":"creates post","pos":[40,130],"size":[125,60]},
+    {"id":"reader","type":"external","label":"Reader","sublabel":"opens feed","pos":[40,390],"size":[125,60]},
+    {"id":"post-api","type":"backend","label":"Post Service","sublabel":"write API","pos":[245,130],"size":[145,60]},
+    {"id":"feed-api","type":"backend","label":"Feed Service","sublabel":"read and merge","pos":[245,390],"size":[145,60]},
+    {"id":"post-store","type":"database","label":"Post Store","sublabel":"durable content","pos":[475,130],"size":[145,60]},
+    {"id":"event-log","type":"messagebus","label":"Post Events","sublabel":"partitioned stream","pos":[475,270],"size":[145,60]},
+    {"id":"fanout","type":"backend","label":"Fan-Out Workers","sublabel":"follower routing","pos":[705,270],"size":[155,60]},
+    {"id":"timeline-cache","type":"database","label":"Timeline Cache","sublabel":"normal-user feeds","pos":[940,190],"size":[160,60]},
+    {"id":"celebrity-cache","type":"database","label":"Celebrity Cache","sublabel":"recent high-follower posts","pos":[940,390],"size":[190,60]},
+    {"id":"social-graph","type":"database","label":"Social Graph","sublabel":"followers and followees","pos":[705,500],"size":[155,60]}
+  ],
+  "connections": [
+    {"from":"publisher","to":"post-api","label":"create post","variant":"emphasis"},
+    {"from":"post-api","to":"post-store","label":"persist post"},
+    {"from":"post-api","to":"event-log","label":"publish event","fromSide":"bottom","toSide":"top"},
+    {"from":"event-log","to":"fanout","label":"consume post"},
+    {"from":"fanout","to":"timeline-cache","label":"fan out normal posts","fromSide":"top","toSide":"left"},
+    {"from":"reader","to":"feed-api","label":"GET /feed","variant":"emphasis"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"Publish","items":["Posts are durable before fan-out begins.","Workers route each post using the social graph."]},
+    {"dot":"emerald","title":"Fast Reads","items":["Normal-user feeds are precomputed in the timeline cache.","Read-time work stays bounded for typical users."]},
+    {"dot":"amber","title":"Celebrity Control","items":["High-follower posts avoid millions of timeline writes.","The feed service merges their recent posts when needed."]}
+  ]
+}

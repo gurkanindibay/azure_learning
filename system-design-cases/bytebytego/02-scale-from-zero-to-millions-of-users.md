@@ -30,6 +30,12 @@ flowchart TD
     S8 --> S9["9. Database Sharding & Microservices"]
 ```
 
+![Scale-to-millions target architecture showing GeoDNS and CDN at the edge, a load-balanced stateless web tier, cache-aside reads, asynchronous workers, and sharded databases.](resources/scale-to-millions/scale-to-millions-architecture.png)
+
+**Diagram description:** Global users are routed through GeoDNS and a CDN to a load-balanced stateless web tier. The application serves hot reads from cache, sends slow work through a queue to independently scalable workers, and routes durable data to partitioned database shards.
+
+[Open the interactive scale-to-millions target architecture diagram](resources/scale-to-millions/scale-to-millions-architecture.html)
+
 ---
 
 ## 2. Step-by-Step Scaling Evolution

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Event-Driven Real-Time Messaging Architecture", "quality_profile": "showcase", "viewBox": [1280, 680]},
+  "components": [
+    {"id":"devices","type":"external","label":"Client Devices","sublabel":"WebSocket sessions","pos":[35,280],"size":[140,60]},
+    {"id":"gateway","type":"cloud","label":"Connection Gateway","sublabel":"authenticate and route","pos":[235,280],"size":[160,60]},
+    {"id":"chat","type":"backend","label":"Chat Servers","sublabel":"session-aware ingress","pos":[455,280],"size":[155,60]},
+    {"id":"events","type":"messagebus","label":"Message Stream","sublabel":"partition by conversation","pos":[675,280],"size":[170,60]},
+    {"id":"fanout","type":"backend","label":"Fan-Out Workers","sublabel":"per-device routing","pos":[905,280],"size":[165,60]},
+    {"id":"inbox","type":"database","label":"Device Inboxes","sublabel":"Redis streams","pos":[1120,180],"size":[135,60]},
+    {"id":"history","type":"database","label":"Message History","sublabel":"durable store","pos":[1120,380],"size":[135,60]},
+    {"id":"push","type":"external","label":"Push Provider","sublabel":"offline wake-up","pos":[905,500],"size":[165,60]}
+  ],
+  "connections": [
+    {"from":"devices","to":"gateway","variant":"emphasis"},
+    {"from":"gateway","to":"chat"},
+    {"from":"chat","to":"events","variant":"emphasis"},
+    {"from":"events","to":"fanout"},
+    {"from":"fanout","to":"inbox","fromSide":"right","toSide":"left"},
+    {"from":"fanout","to":"history","fromSide":"right","toSide":"left"},
+    {"from":"fanout","to":"push","label":"notify offline device","fromSide":"bottom","toSide":"top","variant":"dashed","labelAt":[988,354]}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"Ordered Delivery", "items":["Conversation-keyed partitions preserve per-conversation order.","WebSocket servers keep the request path responsive."]},
+    {"dot":"emerald","title":"Durable Fan-Out", "items":["Workers persist history and create per-device delivery entries.","Inbox state lets clients catch up after reconnecting."]},
+    {"dot":"amber","title":"Offline Handling", "items":["Push notifications wake offline clients without replacing durable delivery.","At-least-once delivery requires idempotent client handling."]}
+  ]
+}

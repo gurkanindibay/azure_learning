@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "URL Shortener: Creation and Redirect Paths",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 700]
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "Browser and Mobile App", "sublabel": "POST shorten / GET short path", "pos": [40, 320], "size": [155, 68] },
+    { "id": "loadBalancer", "type": "cloud", "label": "Layer 7 Load Balancer", "sublabel": "routes shorten and redirect traffic", "pos": [255, 320], "size": [155, 68] },
+    { "id": "webServers", "type": "backend", "label": "Stateless Web Servers", "sublabel": "Base62 conversion and redirect response", "pos": [485, 320], "size": [175, 68] },
+    { "id": "bloomFilter", "type": "cloud", "label": "Bloom Filter", "sublabel": "rejects non-existent short paths", "pos": [485, 135], "size": [175, 68] },
+    { "id": "redis", "type": "database", "label": "Redis Cache Cluster", "sublabel": "short URL to long URL mapping", "pos": [735, 185], "size": [175, 68] },
+    { "id": "snowflake", "type": "backend", "label": "Snowflake ID Generator", "sublabel": "unique 64-bit identifiers", "pos": [735, 420], "size": [175, 68] },
+    { "id": "shardRouter", "type": "backend", "label": "Shard Routing Proxy", "sublabel": "hashes short URL to storage shard", "pos": [970, 320], "size": [175, 68] },
+    { "id": "urlShards", "type": "database", "label": "URL Mapping Shards", "sublabel": "MySQL or Cassandra mappings", "pos": [1085, 150], "size": [155, 68] },
+    { "id": "analytics", "type": "external", "label": "Redirect Analytics", "sublabel": "available when HTTP 302 is selected", "pos": [1085, 505], "size": [155, 68] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "URL Shortening Platform", "wraps": ["loadBalancer", "webServers", "bloomFilter", "redis", "snowflake", "shardRouter", "urlShards"], "pad": 34 }
+  ],
+  "connections": [
+    { "id": "client-ingress", "from": "browser", "to": "loadBalancer", "label": "HTTPS requests", "variant": "emphasis", "labelDy": 58 },
+    { "id": "ingress-web", "from": "loadBalancer", "to": "webServers", "label": "route request", "variant": "emphasis" },
+    { "id": "negative-check", "from": "webServers", "to": "bloomFilter", "label": "check short path", "fromSide": "top", "toSide": "bottom" },
+    { "id": "cache-lookup", "from": "webServers", "to": "redis", "label": "cache-aside lookup", "fromSide": "right", "toSide": "left" },
+    { "id": "allocate-id", "from": "webServers", "to": "snowflake", "label": "generate ID for Base62", "fromSide": "right", "toSide": "left" },
+    { "id": "write-mapping", "from": "webServers", "to": "shardRouter", "label": "read or write mapping", "variant": "emphasis" },
+    { "id": "select-shard", "from": "shardRouter", "to": "urlShards", "label": "hash(short URL)" },
+    { "id": "cache-populate", "from": "shardRouter", "to": "redis", "label": "populate on cache miss", "variant": "dashed", "fromSide": "top", "toSide": "right" },
+    { "id": "track-redirect", "from": "webServers", "to": "analytics", "label": "record 302 redirect", "variant": "dashed", "fromSide": "bottom", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Creation", "items": ["Snowflake IDs become compact Base62 paths", "The mapping is persisted through the shard router"] },
+    { "dot": "emerald", "title": "Redirection", "items": ["Bloom filter rejects known misses before storage", "Redis absorbs hot short-path lookups"] },
+    { "dot": "amber", "title": "HTTP Choice", "items": ["301 can let browsers cache a redirect", "302 keeps requests visible for click analytics"] }
+  ]
+}

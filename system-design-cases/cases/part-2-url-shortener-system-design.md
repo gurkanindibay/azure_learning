@@ -133,6 +133,12 @@ These numbers show a read‑heavy service that can fit state in a few terabytes,
 
 The architecture needs to separate the **writes (shortening)** and **reads (redirect) mechanisms**, while analytics will be handled asynchronously.
 
+![Global URL shortener architecture: creators use a create API and ID service to persist aliases, while visitors are routed through the global edge to a redirect service with a hot cache, durable mapping store, and asynchronous click analytics.](resources/url-shortener/url-shortener-architecture.png)
+
+**Diagram description:** The redirect path goes from visitor through the global edge to the redirect service. It checks the hot alias cache and reads the durable mapping store only on a miss; click events flow asynchronously to analytics workers. Creation is separate: the create API requests a Base62 alias, then persists the mapping.
+
+[Open the interactive URL shortener architecture diagram](resources/url-shortener/url-shortener-architecture.html)
+
 Below are detailed sequence diagrams for key flows and a deployment diagram.
 
 ![Sequence Diagram — URL Shortening High Level Flow](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*uCmC5g3Qj_nI2eGBv55M0w.png)

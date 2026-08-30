@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Payment Processing: Hosted Capture and Authoritative Webhook",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1080, 790]
+  },
+  "participants": [
+    { "id": "buyer", "type": "external", "label": "Buyer", "sublabel": "checkout" },
+    { "id": "client", "type": "frontend", "label": "Web / Mobile Client", "sublabel": "platform UI" },
+    { "id": "payment-service", "type": "backend", "label": "Payment Service", "sublabel": "orchestration" },
+    { "id": "psp", "type": "external", "label": "PSP", "sublabel": "hosted payment page" },
+    { "id": "payment-db", "type": "database", "label": "Payment DB", "sublabel": "order status" }
+  ],
+  "segments": [
+    { "from": 150, "to": 360, "label": "Register" },
+    { "from": 380, "to": 560, "label": "Capture outside platform" },
+    { "from": 580, "to": 735, "label": "Authoritative completion" }
+  ],
+  "messages": [
+    { "id": "start-checkout", "from": "buyer", "to": "client", "y": 190, "label": "start checkout", "variant": "default" },
+    { "id": "register-payment", "from": "client", "to": "payment-service", "y": 238, "label": "register checkout_id", "variant": "emphasis" },
+    { "id": "create-intent", "from": "payment-service", "to": "psp", "y": 286, "label": "create intent with nonce", "variant": "security" },
+    { "id": "payment-token", "from": "psp", "to": "payment-service", "y": 326, "label": "return payment token", "variant": "return" },
+    { "id": "hosted-page", "from": "payment-service", "to": "client", "y": 368, "label": "hosted-page token", "variant": "return" },
+    { "id": "card-capture", "from": "buyer", "to": "psp", "y": 426, "label": "enter card data in PSP iframe", "variant": "security" },
+    { "id": "browser-redirect", "from": "psp", "to": "client", "y": 522, "label": "browser success redirect", "variant": "return", "note": "Helpful UX signal; not financial authority." },
+    { "id": "signed-webhook", "from": "psp", "to": "payment-service", "y": 588, "label": "POST webhook: payment.succeeded", "variant": "security" },
+    { "id": "verify-and-store", "from": "payment-service", "to": "payment-db", "y": 640, "label": "verify HMAC; set SUCCESS", "variant": "security" },
+    { "id": "stored", "from": "payment-db", "to": "payment-service", "y": 682, "label": "status committed", "variant": "return" },
+    { "id": "confirmation", "from": "client", "to": "buyer", "y": 700, "label": "show order confirmation", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "client", "from": 190, "to": 700, "type": "frontend" },
+    { "participant": "payment-service", "from": 238, "to": 686, "type": "backend" },
+    { "participant": "psp", "from": 286, "to": 592, "type": "external" },
+    { "participant": "payment-db", "from": 635, "to": 686, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "PCI Boundary", "items": ["Card data is entered only in the PSP-hosted iframe.", "The platform receives a token, not a card number."] },
+    { "dot": "emerald", "title": "Completion Rule", "items": ["A browser redirect can be lost or forged.", "The signed server-to-server webhook commits SUCCESS."] }
+  ]
+}

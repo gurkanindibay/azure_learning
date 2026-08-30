@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Chat System: Real-Time Delivery and Presence",
+    "quality_profile": "showcase",
+    "viewBox": [1180, 680],
+    "views": [
+      {
+        "id": "live-delivery",
+        "label": "Live delivery",
+        "focus": ["sender", "chat-one", "sessions", "chat-two", "receiver"],
+        "note": "Route an online recipient through the global session map to its active chat server."
+      },
+      {
+        "id": "durable-history",
+        "label": "Durable history",
+        "focus": ["chat-one", "messages", "chat-two"],
+        "note": "Both WebSocket servers append chat history to the wide-column message store."
+      },
+      {
+        "id": "presence-and-offline",
+        "label": "Presence and offline delivery",
+        "focus": ["sender", "chat-one", "presence", "sessions", "push", "offline"],
+        "note": "Heartbeat state determines online routing; unavailable recipients receive a push notification."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "sender",
+      "type": "external",
+      "label": "Sender Device",
+      "sublabel": "active chat client",
+      "pos": [55, 280],
+      "size": [130, 64]
+    },
+    {
+      "id": "chat-one",
+      "type": "backend",
+      "label": "Chat Server 1",
+      "sublabel": "persistent WebSocket",
+      "pos": [275, 280],
+      "size": [145, 64]
+    },
+    {
+      "id": "sessions",
+      "type": "database",
+      "label": "Redis Cluster",
+      "sublabel": "session map + presence",
+      "pos": [505, 160],
+      "size": [160, 66]
+    },
+    {
+      "id": "messages",
+      "type": "database",
+      "label": "Cassandra Store",
+      "sublabel": "append-only message history",
+      "pos": [505, 405],
+      "size": [160, 66]
+    },
+    {
+      "id": "presence",
+      "type": "backend",
+      "label": "Presence Service",
+      "sublabel": "5s heartbeat, 30s TTL",
+      "pos": [735, 105],
+      "size": [160, 66]
+    },
+    {
+      "id": "chat-two",
+      "type": "backend",
+      "label": "Chat Server 2",
+      "sublabel": "recipient WebSocket",
+      "pos": [735, 280],
+      "size": [145, 64]
+    },
+    {
+      "id": "receiver",
+      "type": "external",
+      "label": "Recipient Device",
+      "sublabel": "online client",
+      "pos": [980, 280],
+      "size": [140, 64]
+    },
+    {
+      "id": "push",
+      "type": "cloud",
+      "label": "Push Gateway",
+      "sublabel": "APNs / FCM",
+      "pos": [735, 500],
+      "size": [150, 64]
+    },
+    {
+      "id": "offline",
+      "type": "external",
+      "label": "Offline Device",
+      "sublabel": "push notification target",
+      "pos": [980, 500],
+      "size": [140, 64]
+    }
+  ],
+  "connections": [
+    {"id": "sender-websocket", "from": "sender", "to": "chat-one", "label": "WebSocket message", "variant": "emphasis"},
+    {"id": "store-message-one", "from": "chat-one", "to": "messages", "label": "append message", "fromSide": "bottom", "toSide": "left"},
+    {"id": "session-lookup", "from": "chat-one", "to": "sessions", "label": "recipient server lookup", "fromSide": "top", "toSide": "left"},
+    {"id": "heartbeat", "from": "presence", "to": "sessions", "label": "heartbeat lease", "variant": "dashed", "labelDy": 29},
+    {"id": "internal-rpc", "from": "chat-one", "to": "chat-two", "label": "internal RPC", "variant": "emphasis"},
+    {"id": "recipient-websocket", "from": "chat-two", "to": "receiver", "label": "WebSocket push", "variant": "emphasis"},
+    {"id": "store-message-two", "from": "chat-two", "to": "messages", "label": "history read/write", "fromSide": "bottom", "toSide": "right", "via": [[807, 520], [700, 520]]},
+    {"id": "offline-push", "from": "chat-one", "to": "push", "label": "recipient offline", "variant": "dashed", "fromSide": "bottom", "toSide": "left"},
+    {"id": "push-delivery", "from": "push", "to": "offline", "label": "push alert", "variant": "dashed"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Routing", "items": ["Redis maps each recipient to an active chat server", "Internal RPC bridges servers without reconnecting the client"]},
+    {"dot": "emerald", "title": "Durability", "items": ["Cassandra keeps chronologically ordered conversation history", "Message IDs are monotonically increasing per chat session"]},
+    {"dot": "amber", "title": "Availability", "items": ["Presence leases expire after 30 seconds without a heartbeat", "Offline recipients fall back to APNs or FCM"]}
+  ]
+}

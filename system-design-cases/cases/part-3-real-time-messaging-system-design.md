@@ -118,6 +118,12 @@ This design separates the real‑time channel (WebSocket) from the persistent st
 
 ### Architecture Diagram:
 
+![Event-driven real-time messaging architecture: client devices connect through a gateway and chat servers to a conversation-partitioned message stream; fan-out workers persist history, populate device inboxes, and notify offline devices.](resources/real-time-messaging/real-time-messaging-architecture.png)
+
+**Diagram description:** WebSocket clients enter through a connection gateway and chat servers. Messages are appended to a conversation-partitioned stream, then fan-out workers persist history, create durable per-device inbox entries, and use push notifications only to wake offline clients.
+
+[Open the interactive real-time messaging architecture diagram](resources/real-time-messaging/real-time-messaging-architecture.html)
+
 ![High Level Design](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*UKqirA1QHq2lhIyw_8GrKQ.png)
 
 High Level Design

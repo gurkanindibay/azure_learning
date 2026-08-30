@@ -113,6 +113,12 @@ Back of the Envelop Estimation Notes
 
 ### Architecture diagram:
 
+![Hybrid news-feed fan-out architecture: posts are persisted and routed through an event stream; normal-user timelines are precomputed while high-follower posts remain available for read-time merging.](resources/news-feed/news-feed-hybrid-fanout.png)
+
+**Diagram description:** A post is stored before asynchronous fan-out. Fan-out workers precompute timelines for normal users, while the dedicated celebrity cache supports read-time merging to avoid extreme write amplification for high-follower accounts.
+
+[Open the interactive hybrid news-feed architecture diagram](resources/news-feed/news-feed-hybrid-fanout.html)
+
 ![High Level Architecture Design](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*1YHZkvCdt_7SrldUQhbs7A.png)
 
 High Level Architecture Design

@@ -115,6 +115,12 @@ High Level — System Design
 
 **Key flows:**
 
+![E-commerce checkout saga: the order service reserves inventory, authorizes and captures payment, persists the order, confirms inventory, and emits an order event; failures release the reservation.](resources/e-commerce-checkout/e-commerce-checkout-saga.png)
+
+**Diagram description:** The checkout saga coordinates inventory and payment without a distributed transaction. It reserves items and authorizes payment first, persists and confirms the order only after capture succeeds, and releases the reservation when payment fails.
+
+[Open the interactive e-commerce checkout saga diagram](resources/e-commerce-checkout/e-commerce-checkout-saga.html)
+
 ![Sequence Design — Key Flows](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*d9bwCs1xq-gSgmWHZ6cO9A.png)
 
 Sequence Design — Key Flows

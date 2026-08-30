@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Scale-to-Millions Target Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1360, 760],
+    "views": [
+      {"id": "edge", "label": "Global edge", "focus": ["global-users", "geo-dns", "cdn", "load-balancer"], "note": "Geo-aware routing and edge caching reduce origin load."},
+      {"id": "request", "label": "Request path", "focus": ["load-balancer", "web-tier", "cache-tier", "shard-router", "db-shards"], "note": "Stateless compute reads through cache and routes durable data by shard key."},
+      {"id": "async", "label": "Async work", "focus": ["web-tier", "task-queue", "worker-pool", "shard-router"], "note": "Long-running work is decoupled from the request path."}
+    ]
+  },
+  "components": [
+    {"id": "global-users", "type": "external", "label": "Global Users", "sublabel": "web and mobile", "pos": [40, 300], "size": [135, 64]},
+    {"id": "geo-dns", "type": "cloud", "label": "GeoDNS", "sublabel": "nearest healthy region", "pos": [235, 300], "size": [145, 64]},
+    {"id": "cdn", "type": "cloud", "label": "CDN Edge", "sublabel": "static asset cache", "pos": [430, 300], "size": [145, 64]},
+    {"id": "load-balancer", "type": "cloud", "label": "Load Balancer", "sublabel": "health-checked ingress", "pos": [625, 300], "size": [160, 64]},
+    {"id": "web-tier", "type": "backend", "label": "Stateless Web Tier", "sublabel": "autoscaled application nodes", "pos": [840, 300], "size": [180, 64]},
+    {"id": "cache-tier", "type": "database", "label": "Cache Tier", "sublabel": "Redis or Memcached", "pos": [840, 125], "size": [180, 64]},
+    {"id": "task-queue", "type": "messagebus", "label": "Task Queue", "sublabel": "asynchronous events", "pos": [840, 490], "size": [180, 64]},
+    {"id": "worker-pool", "type": "backend", "label": "Worker Pool", "sublabel": "background processing", "pos": [1080, 490], "size": [180, 64]},
+    {"id": "shard-router", "type": "backend", "label": "Shard Router", "sublabel": "partition-key routing", "pos": [1080, 300], "size": [180, 64]},
+    {"id": "db-shards", "type": "database", "label": "Database Shards", "sublabel": "primary and read replicas", "pos": [1080, 125], "size": [180, 64]}
+  ],
+  "connections": [
+    {"from": "global-users", "to": "geo-dns", "label": "resolve endpoint", "variant": "emphasis", "labelDy": -28},
+    {"from": "geo-dns", "to": "cdn", "label": "route by region", "labelDy": -28},
+    {"from": "cdn", "to": "load-balancer", "label": "dynamic requests", "labelDy": -28},
+    {"from": "load-balancer", "to": "web-tier", "label": "HTTPS request", "labelDy": -28},
+    {"from": "web-tier", "to": "cache-tier", "label": "cache-aside read", "fromSide": "top", "toSide": "bottom"},
+    {"from": "web-tier", "to": "task-queue", "label": "enqueue slow work", "fromSide": "bottom", "toSide": "top", "labelDx": 65, "labelDy": 24},
+    {"from": "task-queue", "to": "worker-pool", "label": "consume task", "labelDy": 56},
+    {"from": "web-tier", "to": "shard-router", "label": "read or write data", "labelDy": -28},
+    {"from": "worker-pool", "to": "shard-router", "label": "persist result", "fromSide": "top", "toSide": "bottom"},
+    {"from": "shard-router", "to": "db-shards", "label": "route by key", "fromSide": "top", "toSide": "bottom"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Scale at the Edge", "items": ["GeoDNS selects a healthy nearby region.", "The CDN absorbs static-content demand before it reaches compute."]},
+    {"dot": "emerald", "title": "Keep Compute Replaceable", "items": ["The load balancer spreads requests across stateless nodes.", "Shared cache and sharded data remove single-host limits."]},
+    {"dot": "amber", "title": "Decouple Slow Work", "items": ["The queue protects user-facing latency during spikes.", "Workers scale independently and persist through the shard router."]}
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Payment System: Durable Pay-In to Reconciliation",
+    "quality_profile": "showcase",
+    "viewBox": [1240, 760]
+  },
+  "components": [
+    { "id": "buyer", "type": "external", "label": "Buyer", "sublabel": "checkout request", "pos": [40, 280], "size": [120, 62] },
+    { "id": "gateway", "type": "cloud", "label": "API Gateway", "sublabel": "public payment API", "pos": [210, 280], "size": [135, 62] },
+    { "id": "payment-service", "type": "backend", "label": "Payment Service", "sublabel": "risk checks + state", "pos": [400, 280], "size": [150, 62] },
+    { "id": "payment-db", "type": "database", "label": "Payment DB", "sublabel": "orders + idempotency", "pos": [400, 105], "size": [150, 62] },
+    { "id": "event-stream", "type": "messagebus", "label": "Payment Event Stream", "sublabel": "durable order dispatch", "pos": [615, 280], "size": [160, 62] },
+    { "id": "executor", "type": "backend", "label": "Payment Executor", "sublabel": "PSP retry worker", "pos": [840, 280], "size": [150, 62] },
+    { "id": "psp", "type": "external", "label": "Payment Service Provider", "sublabel": "hosted card capture", "pos": [1060, 280], "size": [155, 62] },
+    { "id": "wallet", "type": "backend", "label": "Merchant Wallet", "sublabel": "seller balance", "pos": [615, 490], "size": [150, 62] },
+    { "id": "ledger", "type": "database", "label": "Double-Entry Ledger", "sublabel": "immutable journal", "pos": [840, 490], "size": [160, 62] },
+    { "id": "reconciliation", "type": "backend", "label": "Reconciliation Engine", "sublabel": "nightly three-way match", "pos": [615, 650], "size": [180, 62] },
+    { "id": "settlement-bank", "type": "external", "label": "Settlement Bank", "sublabel": "daily settlement file", "pos": [1060, 650], "size": [155, 62] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Payment platform: no card data", "wraps": ["gateway", "payment-service", "payment-db", "event-stream", "executor", "wallet", "ledger", "reconciliation"], "pad": 28 }
+  ],
+  "connections": [
+    { "id": "submit-payment", "from": "buyer", "to": "gateway", "label": "POST /v1/payments", "variant": "emphasis", "labelAt": [185, 356] },
+    { "id": "route-payment", "from": "gateway", "to": "payment-service", "label": "authenticated order", "labelAt": [373, 276] },
+    { "id": "record-idempotency", "from": "payment-service", "to": "payment-db", "label": "idempotency key + state", "fromSide": "top", "toSide": "bottom" },
+    { "id": "publish-order", "from": "payment-service", "to": "event-stream", "label": "payment order", "variant": "dashed", "labelAt": [583, 392] },
+    { "id": "consume-order", "from": "event-stream", "to": "executor", "label": "retry-safe execution", "labelAt": [808, 276] },
+    { "id": "charge-token", "from": "executor", "to": "psp", "label": "tokenized charge", "variant": "security", "labelAt": [1025, 356] },
+    { "id": "webhook-status", "from": "psp", "to": "payment-service", "label": "signed async status", "variant": "security", "fromSide": "bottom", "toSide": "right" },
+    { "id": "credit-seller", "from": "payment-service", "to": "wallet", "label": "credit balance", "fromSide": "bottom", "toSide": "top" },
+    { "id": "journal-payment", "from": "payment-service", "to": "ledger", "label": "balanced entries", "fromSide": "bottom", "toSide": "top" },
+    { "id": "ledger-extract", "from": "ledger", "to": "reconciliation", "label": "internal extract", "fromSide": "bottom", "toSide": "top" },
+    { "id": "settlement-file", "from": "settlement-bank", "to": "reconciliation", "label": "nightly settlement file", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Write Path", "items": ["The order is persisted before durable dispatch.", "Executor retries are isolated from checkout traffic."] },
+    { "dot": "amber", "title": "Financial Integrity", "items": ["PSP status returns by signed webhook.", "The ledger records equal debit and credit entries."] },
+    { "dot": "cyan", "title": "Safety Net", "items": ["Settlement files are matched against the internal journal.", "Discrepancies enter automated or finance review."] }
+  ]
+}

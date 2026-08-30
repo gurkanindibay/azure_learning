@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "E-Commerce Checkout Saga",
+    "quality_profile": "showcase",
+    "viewBox": [980, 860],
+    "column_fit": "spread"
+  },
+  "participants": [
+    {"id": "buyer", "type": "external", "label": "Buyer", "sublabel": "checkout"},
+    {"id": "order", "type": "backend", "label": "Order Service", "sublabel": "saga orchestrator"},
+    {"id": "inventory", "type": "backend", "label": "Inventory Service", "sublabel": "atomic reservation"},
+    {"id": "payment", "type": "external", "label": "Payment Gateway", "sublabel": "authorize and capture"},
+    {"id": "orders", "type": "database", "label": "Order Store", "sublabel": "durable order"},
+    {"id": "events", "type": "messagebus", "label": "Order Events", "sublabel": "fulfillment input"}
+  ],
+  "segments": [
+    {"from": 150, "to": 330, "label": "Reserve and authorize"},
+    {"from": 350, "to": 570, "label": "Commit checkout"},
+    {"from": 590, "to": 740, "label": "Compensate on failure"}
+  ],
+  "messages": [
+    {"from": "buyer", "to": "order", "y": 180, "label": "POST /checkout", "variant": "emphasis"},
+    {"from": "order", "to": "inventory", "y": 225, "label": "reserve items", "variant": "emphasis"},
+    {"from": "inventory", "to": "order", "y": 270, "label": "reservation id", "variant": "return"},
+    {"from": "order", "to": "payment", "y": 315, "label": "authorize payment", "variant": "emphasis"},
+    {"from": "payment", "to": "order", "y": 370, "label": "authorization approved", "variant": "return"},
+    {"from": "order", "to": "orders", "y": 415, "label": "persist pending order", "variant": "emphasis"},
+    {"from": "order", "to": "payment", "y": 460, "label": "capture authorization", "variant": "emphasis"},
+    {"from": "order", "to": "inventory", "y": 505, "label": "confirm deduction", "variant": "emphasis"},
+    {"from": "order", "to": "events", "y": 550, "label": "publish order placed", "variant": "dashed"},
+    {"from": "order", "to": "buyer", "y": 595, "label": "201 order confirmed", "variant": "return"},
+    {"from": "payment", "to": "order", "y": 650, "label": "authorization or capture failed", "variant": "dashed"},
+    {"from": "order", "to": "inventory", "y": 695, "label": "release reservation", "variant": "dashed"},
+    {"from": "order", "to": "buyer", "y": 720, "label": "return recoverable failure", "variant": "return"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Commit Path", "items": ["Reserve inventory before charging the buyer.", "Persist the order before downstream fulfillment."]},
+    {"dot": "amber", "title": "Compensation", "items": ["A failed payment releases the inventory reservation.", "The caller receives a recoverable outcome instead of a partial checkout."]}
+  ]
+}
