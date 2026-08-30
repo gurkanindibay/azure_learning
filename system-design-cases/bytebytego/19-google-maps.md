@@ -37,6 +37,10 @@ flowchart LR
     P3 <--> TRAFFIC_SVC
 ```
 
+![Archify diagram: Google Maps vector tiles, routing, and live traffic](resources/google-maps/google-maps-tiles-routing-traffic.png)
+
+[Open the interactive Archify diagram](resources/google-maps/google-maps-tiles-routing-traffic.html)
+
 ---
 
 ### Interview Clarification & Scope

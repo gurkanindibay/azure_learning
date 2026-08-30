@@ -96,6 +96,10 @@ classDiagram
     ConsumerGroup "1" --> "many" Partition : assigns
 ```
 
+![Archify diagram: distributed message queue log and replication](resources/distributed-message-queue/distributed-message-queue-log-replication.png)
+
+[Open the interactive Archify diagram](resources/distributed-message-queue/distributed-message-queue-log-replication.html)
+
 ### Partitioning Rules
 - **Keyed Messages**: $\text{Partition} = \text{hash}(\text{message\_key}) \pmod{\text{partition\_count}}$ (Guarantees strict per-entity ordering).
 - **Keyless Messages**: Round-robin / sticky batching across partitions for uniform load distribution.

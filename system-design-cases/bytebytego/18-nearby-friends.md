@@ -38,6 +38,10 @@ flowchart LR
     WS -.->|5. Distance = 12 mi > 5 mi: Drop Update| U3
 ```
 
+![Archify diagram: Nearby Friends real-time location fan-out](resources/nearby-friends/nearby-friends-websocket-fanout.png)
+
+[Open the interactive Archify diagram](resources/nearby-friends/nearby-friends-websocket-fanout.html)
+
 ---
 
 ### Interview Clarification & Scope

@@ -36,9 +36,9 @@ Status legend: `Not started` means no artifact exists; `Spec validated` means th
 | 15 Design YouTube | Upload and video delivery architecture | Complete |
 | 16 Design Google Drive | File synchronization architecture | Complete |
 | 17 Proximity Service | Geo-index query architecture | Complete |
-| 18 Nearby Friends | Location-update and discovery flow | Not started |
-| 19 Google Maps | Map-tile and routing architecture | Not started |
-| 20 Distributed Message Queue | Producer, broker, and consumer architecture | Not started |
+| 18 Nearby Friends | Location-update and discovery flow | Complete |
+| 19 Google Maps | Map-tile and routing architecture | Complete |
+| 20 Distributed Message Queue | Producer, broker, and consumer architecture | Complete |
 | 21 Metrics Monitoring and Alerting System | Metrics ingestion and alert evaluation | Not started |
 | 22 Ad Click Event Aggregation | Stream aggregation data flow | Not started |
 | 23 Hotel Reservation System | Reservation consistency workflow | Not started |
