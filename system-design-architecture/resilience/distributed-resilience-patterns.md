@@ -2,7 +2,7 @@
 type: System Design
 title: "Distributed Resilience Patterns — Key Takeaways"
 description: "Eight resilience patterns as engineering decisions: circuit breaker, retry with backoff, timeouts, bulkhead, rate limiting, fallback, DLQ, and graceful degradation — plus how they compose into a resilience choreography."
-timestamp: 2026-07-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-03T00:00:00Z }
 ---
 
 # Distributed Resilience Patterns — Key Takeaways

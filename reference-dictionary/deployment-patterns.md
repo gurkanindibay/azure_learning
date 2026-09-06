@@ -2,7 +2,7 @@
 type: Reference
 title: "Deployment & Release Patterns"
 description: "Two **identical environments** — Blue (current) and Green (new version). Traffic is switched from Blue to Green for zero-downtime deployments."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Deployment & Release Patterns

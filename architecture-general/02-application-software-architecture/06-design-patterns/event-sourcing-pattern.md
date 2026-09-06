@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Event Sourcing Pattern"
 description: "**Event Sourcing** is an architectural pattern where the state of an application is determined by a sequence of **events** rather than storing just the current state. Instead of updating a record i..."
 tags: [application-software-architecture, design-patterns]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Event Sourcing Pattern

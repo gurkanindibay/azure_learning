@@ -2,7 +2,7 @@
 type: System Design
 title: "SQL Query Optimization Patterns"
 description: "-- ❌ Leading wildcard — no index on email can help"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 14. SQL Query Optimization Patterns

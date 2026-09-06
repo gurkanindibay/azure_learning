@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Interview — Key Takeaways"
 description: "30 real-world system design scenarios with problem→strategy→tradeoff analysis covering APIs, databases, caching, queues, payments, reliability, and scaling."
-timestamp: 2026-07-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-30T00:00:00Z }
 ---
 
 # 33. System Design Interview — Key Takeaways

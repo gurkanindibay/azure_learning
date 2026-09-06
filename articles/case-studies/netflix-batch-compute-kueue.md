@@ -5,7 +5,7 @@ description: "Netflix's migration of millions of batch workloads from a custom C
 source: "https://netflixtechblog.com/how-netflix-simplified-batch-compute-with-kueue-87860682629c"
 author: "Alvin Bao, Alex Petrov, Jennifer Lai, Aidan Sherr, Samartha Chandrashekar"
 published: 2026-06-23
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 ---
 
 # How Netflix Simplified Batch Compute with Kueue

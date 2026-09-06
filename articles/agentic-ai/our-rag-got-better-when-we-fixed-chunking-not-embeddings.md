@@ -5,7 +5,7 @@ description: "Why swapping embedding models repeatedly failed to improve RAG acc
 source: "https://medium.com/@kp9810113/our-rag-got-better-when-we-fixed-chunking-not-embeddings-59a9a941d3a6"
 author: "The Concurrent Mind"
 published: 2026-08-09
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Our RAG Got Better When We Fixed Chunking, Not Embeddings

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design Consistent Hashing"
 description: "A comprehensive deep dive into consistent hashing: solving the modulo-N rehashing stampede, virtual nodes (V-nodes) for balanced distribution, mathematical data movement guarantees, and real-world implementations in DynamoDB and Cassandra."
 tags: [system-design, distributed-systems, consistent-hashing, hash-ring, virtual-nodes, dynamodb, cassandra, partitioning]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design Consistent Hashing

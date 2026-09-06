@@ -6,7 +6,7 @@ author:
   - "[[The Atomic Architect]]"
 published: 2026-06-07
 created: 2026-06-18
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 description: "PostgreSQL 18's asynchronous I/O subsystem changes the traditional index-first mental model for cold, scan-heavy queries."
 tags:
   - "clippings"

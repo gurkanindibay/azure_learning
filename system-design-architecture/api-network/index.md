@@ -1,9 +1,3 @@
----
-type: Index
-title: "APIs & Network Design"
-description: "System-design problems and strategies for API versioning, rate limiting, pagination patterns, reverse proxies, load balancers, and API gateways."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # APIs & Network Design
 

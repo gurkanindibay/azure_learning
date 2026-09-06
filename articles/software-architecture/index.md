@@ -1,9 +1,3 @@
----
-type: Index
-title: "Software Architecture — Source Articles"
-description: "Source articles for software architecture system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Software Architecture — Source Articles
 

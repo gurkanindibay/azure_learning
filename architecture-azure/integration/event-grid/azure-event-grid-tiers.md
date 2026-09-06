@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Event Grid Pricing Tiers"
 description: "Azure Event Grid pricing is based on the **resource type** you use rather than traditional service tiers. The main options are:"
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Event Grid Pricing Tiers

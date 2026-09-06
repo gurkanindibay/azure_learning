@@ -1,9 +1,3 @@
----
-type: Index
-title: "Concurrency Transactions — Source Articles"
-description: "Source articles for concurrency transactions system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Concurrency Transactions — Source Articles
 

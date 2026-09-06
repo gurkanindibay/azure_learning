@@ -5,7 +5,7 @@ source: "https://medium.com/codetodeploy/why-did-our-database-collapse-after-we-
 author:
   - "[[Lets Learn Now]]"
 published: 2026-08-14
-timestamp: 2026-08-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-14T00:00:00Z }
 description: "How Java virtual threads removed compute bottlenecks but triggered a database connection storm across multi-region Azure deployments, and how to safely size pools, apply backpressure, and shorten transactions."
 tags:
   - clippings

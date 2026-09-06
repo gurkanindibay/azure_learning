@@ -2,7 +2,7 @@
 type: Reference
 title: "System Design Diagram Enrichment Design"
 description: "Approved design for enriching substantive system-design material with Archify diagrams."
-timestamp: 2026-08-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-30T00:00:00Z }
 ---
 
 # System Design Diagram Enrichment Design

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A URL Shortener"
 description: "Design a high-throughput, globally available URL shortening service (like TinyURL or Bitly) featuring Base62 encoding, 301 vs. 302 redirection trade-offs, Bloom filter existence checks, distributed caching, and database sharding."
 tags: [system-design, distributed-systems, url-shortener, base62, redirection, caching, bloom-filter, tinyurl]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A URL Shortener

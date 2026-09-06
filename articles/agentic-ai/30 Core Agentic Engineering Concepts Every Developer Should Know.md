@@ -2,7 +2,7 @@
 type: Article
 title: "30 Core Agentic Engineering Concepts Every Developer Should Know"
 description: "The 20 foundational building blocks behind every AI agent framework — loops, state, multi-agent patterns, configuration, guardrails, and observability."
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 source: "https://x.com/sairahul1/status/2069351848742629693?s=20"
 author: "@sairahul1"
 ---

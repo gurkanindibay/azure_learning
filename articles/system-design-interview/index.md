@@ -1,9 +1,3 @@
----
-type: Index
-title: "System Design Interview — Source Articles"
-description: "Source articles for system design interview system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # System Design Interview — Source Articles
 

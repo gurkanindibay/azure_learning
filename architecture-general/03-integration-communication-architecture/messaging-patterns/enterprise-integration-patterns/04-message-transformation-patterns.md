@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Message Transformation Patterns"
 description: "Patterns for modifying message content, structure, and format as they flow through the system."
 tags: [integration-communication-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Message Transformation Patterns

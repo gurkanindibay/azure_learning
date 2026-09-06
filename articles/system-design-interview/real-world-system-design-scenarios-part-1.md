@@ -2,7 +2,7 @@
 type: Article
 title: "60+ Real-World System Design Scenarios to Prepare for Your Next Interview (Part 1)"
 description: "30 practical architecture problems covering APIs, databases, caching, queues, payments, reliability, and scaling with problem→strategy→tradeoff breakdowns."
-timestamp: 2026-07-30
+generated: { by: process:okf-migrate, at: 2026-07-30 }
 source: "https://medium.com/lets-code-future/60-real-world-system-design-scenarios-to-prepare-for-your-next-interview-part-1-5ff986d7b7bd"
 author: "Deep concept (based on Joud Awad's work)"
 ---

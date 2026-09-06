@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Network Security Services Comparison"
 description: "Azure provides multiple network security services that operate at different layers and serve complementary purposes. Understanding their differences is critical for designing a defense-in-depth arc..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Network Security Services Comparison

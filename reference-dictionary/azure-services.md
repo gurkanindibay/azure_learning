@@ -2,7 +2,7 @@
 type: Reference
 title: "Azure Services"
 description: "**Virtual Network** — Azure's fundamental private network building block, equivalent to a corporate LAN in the cloud. Every Azure resource that needs private connectivity is deployed into a VNet."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Services

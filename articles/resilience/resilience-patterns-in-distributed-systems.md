@@ -5,7 +5,7 @@ description: "Eight resilience patterns that matter in real systems — circuit 
 source: "https://codefarm0.medium.com/resilience-patterns-in-distributed-systems-bc847ee2533c"
 author: "Arvind Kumar"
 published: 2026-02-22
-timestamp: 2026-07-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-03T00:00:00Z }
 ---
 
 # Resilience Patterns in Distributed Systems

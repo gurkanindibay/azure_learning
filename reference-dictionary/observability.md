@@ -2,7 +2,7 @@
 type: Reference
 title: "Observability"
 description: "**Observability** — the ability to understand a system's internal state from its external outputs: logs, metrics, and traces."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Observability

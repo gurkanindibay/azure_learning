@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Proxy and Load Balancing Architecture"
 description: "Proxy and load balancing architecture encompasses the patterns, technologies, and strategies for distributing network traffic, securing applications at the edge, managing API traffic, and ensuring ..."
 tags: [cloud-infrastructure-platform-architecture, networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Proxy and Load Balancing Architecture

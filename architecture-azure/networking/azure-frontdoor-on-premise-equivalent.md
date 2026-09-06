@@ -2,7 +2,7 @@
 type: Azure Service
 title: "Replacing Azure Front Door in an On-Premises Environment"
 description: "Azure Front Door is a globally distributed Application Delivery Network (ADN) that combines several capabilities into a single managed service. Unlike traditional load balancers, it provides traffi..."
-timestamp: 2026-07-12T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-12T00:00:00Z }
 ---
 
 # Replacing Azure Front Door in an On-Premises Environment

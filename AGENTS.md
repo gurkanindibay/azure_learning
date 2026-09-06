@@ -10,7 +10,7 @@ This is a **technical knowledge base**, not a traditional software project. It c
 
 | Aspect | Value |
 |--------|-------|
-| Primary format | Markdown (`.md`) with YAML frontmatter (OKF v0.1) |
+| Primary format | Markdown (`.md`) with YAML frontmatter (OKF v0.2) |
 | Programming language | Python 3.11 (automation only) |
 | Build system | None |
 | Test framework | None — validation is via `okf_migrate.py`, `sync_taxonomy_reference.py`, and GitHub Actions |

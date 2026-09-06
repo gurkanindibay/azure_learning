@@ -2,7 +2,7 @@
 type: System Design
 title: "AI Agent Architecture — Key Takeaways"
 description: "User Request"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 21. AI Agent Architecture — Key Takeaways

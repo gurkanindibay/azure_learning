@@ -2,7 +2,7 @@
 type: System Design
 title: "Database ID Generation Strategies"
 description: "Clarifies the dual-layer ID strategy from sdi-50: expose non-enumerable UUIDs/ULIDs externally while keeping auto-increment BIGINTs internally for B-tree efficiency."
-timestamp: 2026-07-11T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-11T00:00:00Z }
 ---
 
 # Database ID Generation Strategies

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 OKF (Open Knowledge Format) Migration Script
-Applies OKF v0.1 standards to the azure_learning repository.
+Applies OKF v0.2 standards to the azure_learning repository.
 
 OKF Conformance Requirements:
 1. Every non-reserved .md file → YAML frontmatter with `type`
@@ -64,7 +64,7 @@ NO_INDEX_DIRS = {
     'unstructured-resources/articles/',
 }
 
-OKF_VERSION = '0.1'
+OKF_VERSION = '0.2'
 TODAY = datetime.now(timezone.utc).strftime('%Y-%m-%d')
 
 
@@ -256,7 +256,7 @@ def add_frontmatter(content: str, rel_path: str, force: bool = False) -> str:
     if tags:
         tag_str = ', '.join(tags)
         fm_lines.append(f'tags: [{tag_str}]')
-    fm_lines.append(f'timestamp: {TODAY}T00:00:00Z')
+    fm_lines.append(f'generated: {{ by: process:okf-migrate, at: {TODAY}T00:00:00Z }}')
     fm_lines.append('---')
     fm_lines.append('')
     
@@ -269,6 +269,28 @@ def should_exclude(rel_path: str) -> bool:
         if pattern in rel_path:
             return True
     return False
+
+
+def migrate_v02_metadata(content: str) -> str:
+    """Convert v0.1 timestamp metadata to the v0.2 generated field."""
+    if not has_frontmatter(content):
+        return content
+
+    fm_match = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+    if not fm_match:
+        return content
+
+    fm_text = fm_match.group(1)
+    if re.search(r'^generated:\s*', fm_text, re.MULTILINE):
+        return content
+
+    timestamp_match = re.search(r'^timestamp:\s*(\S+)\s*$', fm_text, re.MULTILINE)
+    if not timestamp_match:
+        return content
+
+    generated = f'generated: {{ by: process:okf-migrate, at: {timestamp_match.group(1)} }}'
+    migrated_fm = fm_text[:timestamp_match.start()] + generated + fm_text[timestamp_match.end():]
+    return content[:fm_match.start(1)] + migrated_fm + content[fm_match.end(1):]
 
 
 def is_reserved(filename: str) -> bool:
@@ -318,7 +340,10 @@ def migrate_file(filepath: Path, dry_run: bool = False) -> dict:
         return {'status': 'skipped', 'reason': 'reserved', 'file': str(rel_path)}
     
     with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
+        original_content = f.read()
+
+    content = migrate_v02_metadata(original_content)
+    metadata_changed = content != original_content
     
     # Check if already fully OKF-conformant with good metadata
     force_regenerate = False
@@ -330,6 +355,17 @@ def migrate_file(filepath: Path, dry_run: bool = False) -> dict:
             if has_type:
                 desc_match = re.search(r'^description:\s*"?(.*?)"?\s*$', fm_text, re.MULTILINE)
                 if desc_match and not is_poor_description(desc_match.group(1).strip('"')):
+                    if metadata_changed:
+                        if not dry_run:
+                            with open(filepath, 'w', encoding='utf-8') as f:
+                                f.write(content)
+                        return {
+                            'status': 'migrated',
+                            'reason': 'v02_metadata',
+                            'file': str(rel_path),
+                            'type': resolve_type(str(rel_path)),
+                            'title': extract_title(content.split('\n'), rel_path=str(rel_path)),
+                        }
                     return {'status': 'skipped', 'reason': 'already_okf', 'file': str(rel_path)}
                 # Has type but poor/missing description — force regenerate
                 force_regenerate = True
@@ -514,6 +550,27 @@ def create_root_log(dry_run: bool = False):
     print(f"[CREATED] {log_path}")
 
 
+def migrate_index_files(dry_run: bool = False) -> int:
+    """Remove frontmatter from non-root index files reserved by OKF."""
+    migrated = 0
+    for index_path in REPO_ROOT.rglob('index.md'):
+        if index_path == REPO_ROOT / 'index.md' or should_exclude(str(index_path.relative_to(REPO_ROOT))):
+            continue
+
+        content = index_path.read_text(encoding='utf-8')
+        if not has_frontmatter(content):
+            continue
+
+        match = re.match(r'^---\n.*?\n---\n?', content, re.DOTALL)
+        if not match:
+            continue
+
+        migrated += 1
+        if not dry_run:
+            index_path.write_text(content[match.end():], encoding='utf-8')
+    return migrated
+
+
 def validate_conformance() -> tuple[int, int, list[str]]:
     """Check OKF conformance. Returns (pass_count, fail_count, errors)."""
     errors = []
@@ -594,6 +651,10 @@ def main():
         result = migrate_readme_to_index(dirpath, dry_run=dry_run)
         if result['status'] in ('renamed', 'would_rename'):
             print(f"  {'[DRY-RUN] ' if dry_run else ''}{result['from']} → {result['to']}")
+
+    print("\n── Reserved index Metadata Migration ──")
+    index_migrated = migrate_index_files(dry_run=dry_run)
+    print(f"  {'Would remove metadata from' if dry_run else 'Removed metadata from'}: {index_migrated} index files")
     
     # Step 3: Add frontmatter to concept files
     print("\n── Frontmatter Migration ──")

@@ -2,7 +2,7 @@
 type: System Design
 title: "Software Design Patterns — Key Takeaways"
 description: "Architect-curated GoF and enterprise patterns — Creational, Structural, Behavioral, Enterprise, and Resilience — with problem→strategy→tradeoff structure."
-timestamp: 2026-06-19T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-19T00:00:00Z }
 ---
 
 # Software Design Patterns — Key Takeaways

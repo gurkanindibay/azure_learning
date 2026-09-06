@@ -1,7 +1,7 @@
 ---
 type: Unstructured Note
 description: "Go vs Java for Microservices: We Tried Both, Here’s What Happened"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 Go vs Java for Microservices: We Tried Both, Here’s What Happened

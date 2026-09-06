@@ -2,7 +2,7 @@
 type: Reference
 title: "HSM & Cryptographic Infrastructure"
 description: "A **physically hardened, tamper-resistant device** for cryptographic key protection and operations. HSMs generate, store, and use keys without ever exposing them to the application or OS."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # HSM & Cryptographic Infrastructure

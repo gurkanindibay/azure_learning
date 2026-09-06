@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Unique ID Generator In Distributed Systems"
 description: "Design a distributed, highly available, 64-bit unique ID generator (like Twitter Snowflake) supporting time-sortable numeric IDs, multi-datacenter deployment, high throughput (>10,000 IDs/sec), and clock synchronization resilience."
 tags: [system-design, distributed-systems, unique-id, snowflake, twitter, clock-synchronization, high-throughput]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Unique ID Generator In Distributed Systems

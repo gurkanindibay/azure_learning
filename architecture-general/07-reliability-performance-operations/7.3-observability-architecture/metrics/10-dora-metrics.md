@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "DORA Metrics"
 description: "**DORA Metrics** are four key metrics identified by the DevOps Research and Assessment (DORA) team through years of research. These metrics measure software delivery performance and organizational ..."
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # DORA Metrics

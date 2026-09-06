@@ -3,7 +3,7 @@ type: Azure Service
 title: "Choose the Right Consistency Level"
 description: "Each of the consistency models can be used for specific real-world scenarios. Each provides precise availability and performance tradeoffs backed by comprehensive SLAs. The following simple conside..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Choose the Right Consistency Level

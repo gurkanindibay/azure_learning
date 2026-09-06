@@ -3,7 +3,7 @@ type: System Design Case
 title: "Stock Exchange"
 description: "Design a high-frequency, ultra-low latency stock exchange (like NYSE, NASDAQ, or LMAX) featuring sub-millisecond matching, CPU core pinning, mmap shared memory, deterministic event sourcing, and high-availability Raft consensus."
 tags: [system-design, distributed-systems, high-frequency-trading, matching-engine, lmax-disruptor, order-book, low-latency, mmap]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Stock Exchange

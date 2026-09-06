@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Saga Pattern"
 description: "The **Saga Pattern** is a design pattern for managing data consistency across microservices in distributed transaction scenarios. Instead of using a single ACID transaction, a saga breaks the trans..."
 tags: [integration-communication-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Saga Pattern

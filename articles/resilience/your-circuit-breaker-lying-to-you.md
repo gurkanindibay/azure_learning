@@ -2,7 +2,7 @@
 type: Article
 title: "Your Circuit Breaker Is Lying to You"
 description: "The dashboard says **CLOSED**. Your users are still suffering."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Your Circuit Breaker Is Lying to You

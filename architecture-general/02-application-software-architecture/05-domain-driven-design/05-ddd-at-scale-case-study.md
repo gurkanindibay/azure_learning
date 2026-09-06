@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Domain-Driven Design at Scale: A $10M Case Study"
 description: "This case study, presented at QCon London 2025 by Leander Vanderbijl, documents a healthcare platform's $10M+ journey implementing Domain-Driven Design at scale. It reveals the hidden costs, critic..."
 tags: [application-software-architecture, domain-driven-design]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Domain-Driven Design at Scale: A $10M Case Study

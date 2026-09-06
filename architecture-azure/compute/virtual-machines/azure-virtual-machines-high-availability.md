@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Virtual Machines - High Availability and Dedicated Hosts"
 description: "Azure Virtual Machines provide various options for ensuring high availability and resiliency. This document covers key concepts including availability zones, dedicated hosts, and virtual machine sc..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Virtual Machines - High Availability and Dedicated Hosts

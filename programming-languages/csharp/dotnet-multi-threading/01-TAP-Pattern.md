@@ -3,7 +3,7 @@ type: Programming Guide
 title: "TAP (Task-based Asynchronous Pattern)"
 description: "**The Modern Standard** - Introduced in .NET Framework 4.0 and refined with async/await in C# 5.0."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # TAP (Task-based Asynchronous Pattern)

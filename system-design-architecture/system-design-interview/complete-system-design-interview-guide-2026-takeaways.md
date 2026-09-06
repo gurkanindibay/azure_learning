@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Interview Guide 2026 — Key Takeaways"
 description: "42 interview questions distilled into reusable architectural patterns with problem → strategy → tradeoff analysis covering scaling, caching, data consistency, rate limiting, and multi-tenancy."
-timestamp: 2026-07-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-03T00:00:00Z }
 ---
 
 # 16. System Design Interview Guide 2026 — Key Takeaways

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Synapse Link for Azure Cosmos DB"
 description: "Azure Synapse Link for Azure Cosmos DB is a cloud-native hybrid transactional and analytical processing (HTAP) capability that enables you to run **near real-time analytics** over operational data ..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Synapse Link for Azure Cosmos DB

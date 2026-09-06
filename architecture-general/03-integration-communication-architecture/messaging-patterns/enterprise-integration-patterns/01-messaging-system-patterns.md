@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Messaging System Patterns"
 description: "Core patterns for messaging infrastructure that enable communication between distributed systems."
 tags: [integration-communication-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Messaging System Patterns

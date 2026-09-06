@@ -2,7 +2,7 @@
 type: Article
 title: "Defensive Coding Approach"
 description: "Fifteen practical defensive coding techniques for writing resilient, secure, and maintainable software — covering input validation, assertions, fail-safe mechanisms, immutable data structures, and dependency management."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 ---
 
 > **Source**: [Sophia Dizon on Medium](https://medium.com/@sophiadizon/defensive-coding-approach-43bf3f3c007d) · Published 2024-01-02

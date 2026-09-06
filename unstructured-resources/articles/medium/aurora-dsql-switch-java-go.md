@@ -1,7 +1,7 @@
 ---
 type: Unstructured Note
 description: "AWS Switched Aurora DSQL From JVM To Rust — And Got 10× More Throughput. What Actually Changed?"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 AWS Switched Aurora DSQL From JVM To Rust — And Got 10× More Throughput. What Actually Changed?

@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Pipeline Bottlenecks — Key Takeaways"
 description: "High-throughput Kafka pipeline anti-patterns: consumer lag, rebalance storms, hot partitions, backpressure, retry amplification, and identifying where the real bottleneck lives."
-timestamp: 2026-08-01T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-01T00:00:00Z }
 ---
 
 # Kafka Pipeline Bottlenecks — Key Takeaways

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure ExpressRoute & BGP Routing Guide"
 description: "See [README](./index.md) for overview. See also [ExpressRoute Connectivity Models](./08-expressroute-connectivity-models.md)."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure ExpressRoute & BGP Routing Guide

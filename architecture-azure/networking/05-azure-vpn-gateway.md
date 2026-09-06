@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure VPN Gateway"
 description: "**Azure VPN Gateway** is a critical component for establishing secure, encrypted connections between your Azure virtual networks and other networks. It enables hybrid cloud architectures by bridgin..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure VPN Gateway

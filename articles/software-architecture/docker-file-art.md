@@ -2,7 +2,7 @@
 type: Article
 title: "Junior Devs Write Dockerfiles. Senior Devs Write These 5 Layers That Cut Build Time by 70%"
 description: "*By The Atomic Architect · 10 min read · May 29, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Junior Devs Write Dockerfiles. Senior Devs Write These 5 Layers That Cut Build Time by 70%

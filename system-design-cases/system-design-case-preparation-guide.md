@@ -2,7 +2,7 @@
 type: Reference
 title: "System Design Case Preparation Guide"
 description: "A categorized practice map for the system-design case library, interview preparation references, and scale-driven design heuristics."
-timestamp: 2026-08-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-30T00:00:00Z }
 ---
 
 # System Design Case Preparation Guide

@@ -2,7 +2,7 @@
 type: System Design
 title: "Message Brokers & Asynchronous Processing"
 description: "A[Need async messaging?] --> B{Replay history required?}"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 5. Message Brokers & Asynchronous Processing

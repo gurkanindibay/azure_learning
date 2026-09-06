@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic AI — Key Takeaways (Harness, Loop & Graph Engineering)"
 description: "Three-layer agent architecture breakdown: harness (scaffolding), loop (evidence-based feedback), and graph (explicit control flow) — with diagnostic triage for when each layer is the right fix."
-timestamp: 2026-08-08T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-08T00:00:00Z }
 ---
 
 # 37. Agentic AI — Key Takeaways

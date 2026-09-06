@@ -3,7 +3,7 @@ type: System Design Case
 title: "What is SSO (Single Sign-On)?"
 description: "A friend recently went through the irksome experience of being signed out from a number of websites they use daily. This event will be familiar to millions of web users, and it is a tedious process..."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # What is SSO (Single Sign-On)?

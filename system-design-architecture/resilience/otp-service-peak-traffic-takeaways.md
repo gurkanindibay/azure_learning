@@ -2,7 +2,7 @@
 type: System Design
 title: "OTP Service Resilience & Traffic Spikes — Key Takeaways"
 description: "How to design high-throughput OTP and notification delivery services to survive 100x traffic surges using multi-level rate limiting, retry storm elimination, provider failover, TTL queue buffering, and TOTP alternatives."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # OTP Service Resilience & Traffic Spikes — Key Takeaways

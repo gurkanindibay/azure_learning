@@ -2,7 +2,7 @@
 type: System Design
 title: "Circuit Breaker Honesty — Key Takeaways"
 description: "resilience4j:"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 23. Circuit Breaker Honesty — Key Takeaways

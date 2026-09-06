@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Roles Comprehensive Guide"
 description: "Azure uses **two separate and independent role-based access control (RBAC) systems**:"
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Roles Comprehensive Guide

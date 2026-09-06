@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka User Activity Tracking — Key Takeaways"
 description: "How Kafka emerges naturally as the right choice for user activity tracking at massive scale — a real interview deep dive into constraints-first system design."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # 30. Kafka User Activity Tracking — Key Takeaways

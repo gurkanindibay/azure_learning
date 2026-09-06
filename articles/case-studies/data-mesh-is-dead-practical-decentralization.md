@@ -2,7 +2,7 @@
 type: Article
 title: "Data Mesh Is Dead — And Here’s the Shockingly Better Way to Fix Your Data Chaos"
 description: "Why Killing the Hype Might Finally Save Your Data Teams, Your Sanity, and Your Platform Budget"
-timestamp: 2026-06-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-16T00:00:00Z }
 source: "https://cloudwithazeem.medium.com/data-mesh-architecture-problems-alternatives-1adcb75a0c44"
 author:
   - "[[Cloud With Azeem]]"

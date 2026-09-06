@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Message Construction Patterns"
 description: "Patterns for building and structuring messages for different communication needs."
 tags: [integration-communication-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Message Construction Patterns

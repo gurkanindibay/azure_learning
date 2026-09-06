@@ -2,7 +2,7 @@
 type: System Design
 title: "Architecture Principles — Key Takeaways"
 description: "Eleven foundational architecture principles that separate systems that scale gracefully from systems that accumulate technical debt until someone proposes a full rewrite."
-timestamp: 2026-06-19T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-19T00:00:00Z }
 ---
 
 # 40. Architecture Principles — Key Takeaways

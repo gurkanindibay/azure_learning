@@ -2,7 +2,7 @@
 type: System Design
 title: "Modern Java Evolution & Cloud-Native Runtime — Key Takeaways"
 description: "Production system-design problems and solutions across modern Java runtimes: Stream Gatherers, Scoped Values vs ThreadLocal, Structured Concurrency, FFM API, Generational ZGC, Compact Object Headers, and HTTP/3."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # 63. Modern Java Evolution & Cloud-Native Runtime — Key Takeaways

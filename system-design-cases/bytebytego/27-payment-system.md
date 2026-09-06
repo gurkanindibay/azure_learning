@@ -3,7 +3,7 @@ type: System Design Case
 title: "Payment System"
 description: "Design a mission-critical, highly reliable, and fault-tolerant payment system (like Stripe or Amazon Pay) supporting pay-in and pay-out flows, double-entry bookkeeping, idempotency, exactly-once delivery, and automated reconciliation."
 tags: [system-design, distributed-systems, financial-systems, idempotency, ledger, double-entry, psp, reconciliation]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Payment System

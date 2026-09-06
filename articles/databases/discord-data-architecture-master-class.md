@@ -2,7 +2,7 @@
 type: Article
 title: "Discord's Trillion-Message Architecture Is a Distributed Systems Masterclass"
 description: "*From a single MongoDB replica to 4 trillion messages — here's every engineering decision that actually mattered.*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Discord's Trillion-Message Architecture Is a Distributed Systems Masterclass

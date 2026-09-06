@@ -3,7 +3,7 @@ type: System Design Case
 title: "Hotel Reservation System"
 description: "Design a scalable, highly reliable hotel reservation system supporting room inventory tracking, dynamic pricing, 10% overbooking, high-concurrency reservation workflows, and race condition prevention."
 tags: [system-design, distributed-systems, concurrency, database-sharding, idempotency, caching, microservices]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Hotel Reservation System

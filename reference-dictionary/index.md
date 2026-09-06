@@ -1,9 +1,3 @@
----
-type: Reference
-title: "Reference Dictionary"
-description: "Repo-root reference dictionary for all technical terms used across this repository."
-timestamp: 2026-06-18T00:00:00Z
----
 
 # Reference Dictionary
 

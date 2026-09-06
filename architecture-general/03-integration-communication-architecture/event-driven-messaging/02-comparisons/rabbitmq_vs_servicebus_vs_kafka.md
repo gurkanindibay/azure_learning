@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "RabbitMQ vs Azure Service Bus vs Kafka"
 description: "Both RabbitMQ and Azure Service Bus are **\"Traditional Message Brokers\"**. They focus on complex routing, message guarantees, and individual message processing."
 tags: [integration-communication-architecture, event-driven, comparisons]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # RabbitMQ vs Azure Service Bus vs Kafka

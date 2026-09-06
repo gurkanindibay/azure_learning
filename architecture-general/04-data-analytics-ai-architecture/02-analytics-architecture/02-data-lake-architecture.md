@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Data Lake Architecture"
 description: "A Data Lake is a centralized repository that stores **raw data in its native format** at any scale. Unlike a data warehouse that requires structured, transformed data, a data lake embraces the **sc..."
 tags: [data-analytics-ai-architecture, analytics-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Data Lake Architecture

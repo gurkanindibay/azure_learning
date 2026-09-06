@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Claim Check Pattern"
 description: "Reduce message broker memory and bandwidth pressure by storing large message payloads in an external data store and transmitting only a lightweight reference token (claim check) across the messaging infrastructure."
 tags: [integration-communication-architecture, messaging-patterns]
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # Claim Check Pattern

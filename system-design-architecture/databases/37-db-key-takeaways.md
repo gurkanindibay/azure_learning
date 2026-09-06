@@ -2,7 +2,7 @@
 type: System Design
 title: "Database Connection Pool Architecture & Virtual Thread Contention — Key Takeaways"
 description: "Analysis of compute vs resource concurrency mismatch when migrating to Java virtual threads, multi-region connection multiplication formulas, connection pool backpressure, and transaction boundary hygiene."
-timestamp: 2026-08-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-14T00:00:00Z }
 ---
 
 # 37. Database Connection Pool Architecture & Virtual Thread Contention — Key Takeaways

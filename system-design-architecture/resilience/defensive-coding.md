@@ -2,7 +2,7 @@
 type: System Design
 title: "Defensive Coding — Key Takeaways"
 description: "Four practical defensive coding patterns with problem → strategy → tradeoff structure: input validation as a security boundary, assertions as development-time contracts, fail-safe batch processing, and defensive dependency management."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 ---
 
 # 51. Defensive Coding — Key Takeaways

@@ -2,7 +2,7 @@
 type: Article
 title: "Context Rot: The Silent Failure Mode of Long-Running AI Agents"
 description: "How long-running AI agents degrade when accumulating cognitive debris, and why context engineering, active governance, pruning, and working-set management are essential for reliability."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 source: "https://blog.stackademic.com/context-rot-the-silent-failure-mode-of-long-running-ai-agents-ae14616c0a88"
 author: "Everton Gomede, PhD"
 ---

@@ -12,7 +12,7 @@ tags:
   - "event-driven"
   - "session-consistency"
   - "system-design"
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # Amazon Cart Shows Old Data — System Design Deep Dive on Cache Invalidation and Distributed Session Consistency

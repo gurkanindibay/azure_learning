@@ -2,7 +2,7 @@
 type: System Design
 title: "News Feed System — Key Takeaways"
 description: "Hybrid fanout, timeline caches, celebrity problem, and CAP trade-offs in social-media feed design"
-timestamp: 2026-06-20T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-20T00:00:00Z }
 ---
 
 # 42. News Feed System — Key Takeaways

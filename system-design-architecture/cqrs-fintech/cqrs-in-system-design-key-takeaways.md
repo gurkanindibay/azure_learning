@@ -2,7 +2,7 @@
 type: System Design
 title: "CQRS in System Design — Key Takeaways"
 description: "Practical CQRS boundaries: separating command intent from query shape, accepting eventual consistency, and adopting CQRS only where the domain justifies it."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # CQRS in System Design — Key Takeaways

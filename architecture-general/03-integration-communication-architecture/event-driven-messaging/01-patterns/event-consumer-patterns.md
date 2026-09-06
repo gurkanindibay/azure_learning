@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Event Consumer Patterns"
 description: "Event consumer patterns address reliability, throughput, and state management challenges when consuming from high-throughput event streams. These patterns apply to any ordered-log event system (Kaf..."
 tags: [integration-communication-architecture, event-driven, patterns]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Event Consumer Patterns

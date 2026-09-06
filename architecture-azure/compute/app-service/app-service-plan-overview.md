@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure App Service Plan Overview"
 description: "**An App Service Plan defines a set of compute resources for a web app to run.**"
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure App Service Plan Overview

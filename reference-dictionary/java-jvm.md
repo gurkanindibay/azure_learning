@@ -2,7 +2,7 @@
 type: Reference
 title: "Java JVM & Memory Management"
 description: "Core JVM memory concepts — heap, stack, metaspace, garbage collection, and common OutOfMemoryError scenarios — for backend engineers running Java and Spring Boot services."
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # Java JVM & Memory Management

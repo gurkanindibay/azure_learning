@@ -3,7 +3,7 @@ type: System Design Case
 title: "Handling a large-scale outage"
 description: "This is a true story about handling a large-scale outage written by Staff Engineers at Discord Sahn Lam. About 10 years ago, I witnessed the most impactful UI bugs in my career. It was 9PM on a Fri..."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Handling a large-scale outage

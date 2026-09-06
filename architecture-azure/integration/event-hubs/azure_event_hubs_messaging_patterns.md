@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Event Hubs - Messaging Patterns with ASCII Diagrams"
 description: "Continuous ingestion and processing of high-volume event streams in real-time."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Event Hubs - Messaging Patterns with ASCII Diagrams

@@ -1,9 +1,3 @@
----
-type: Index
-title: "CQRS & Fintech"
-description: "System-design patterns for CQRS in fintech: command/query separation, payment systems, global payment architecture, and payment gateway design."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # CQRS & Fintech
 

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design YouTube"
 description: "Design a planetary-scale video sharing and streaming platform (like YouTube or Netflix) featuring DAG-based video transcoding pipelines, multi-bitrate adaptive bitrate streaming (HLS/DASH), CDN edge delivery, and pre-signed upload optimization."
 tags: [system-design, distributed-systems, video-streaming, youtube, hls, dash, transcoding, cdn, dag-pipeline]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design YouTube

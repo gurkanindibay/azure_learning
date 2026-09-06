@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Web Crawler"
 description: "Design a massively scalable, distributed web crawler (like Googlebot) featuring priority and politeness-aware URL Frontiers, DNS caching, duplicate content detection via hashing, robots.txt parsing, and spider trap mitigation."
 tags: [system-design, distributed-systems, web-crawler, url-frontier, politeness, bloom-filter, search-engine, simhash]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Web Crawler

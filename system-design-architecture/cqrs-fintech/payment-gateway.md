@@ -2,7 +2,7 @@
 type: System Design
 title: "CQRS — Payment Gateway Key Takeaways"
 description: "Architectural patterns for multi-provider payment gateway design: smart routing, provider failover, dynamic fee calculation, reconciliation, and sub-50ms routing at 20K TPS scale."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 ---
 
 # 49. CQRS — Payment Gateway Key Takeaways

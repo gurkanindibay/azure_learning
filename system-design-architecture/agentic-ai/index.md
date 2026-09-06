@@ -1,9 +1,3 @@
----
-type: Index
-title: "Agentic AI Systems"
-description: "System-design problems and strategies for agentic AI: multi-agent architectures, accountability, loop engineering, two-track workflows, and AI-assisted development."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Agentic AI Systems
 

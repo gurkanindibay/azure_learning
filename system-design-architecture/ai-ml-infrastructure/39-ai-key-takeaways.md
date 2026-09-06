@@ -2,7 +2,7 @@
 type: System Design
 title: "AI Content Watermarking & Provenance Architectures — Key Takeaways"
 description: "System design patterns for synthetic content governance: autoregressive statistical token watermarking (SynthID-Text g-value sampling bias), cryptographically signed provenance manifests (C2PA Content Credentials), and defense-in-depth tracking against adversarial paraphrasing and metadata stripping."
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 ---
 
 # 39. AI Content Watermarking & Provenance Architectures — Key Takeaways

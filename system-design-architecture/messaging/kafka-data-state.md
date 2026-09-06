@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Data & State Patterns — Production Deep-Dive Key Takeaways"
 description: "Production-depth insights from the Kafka data and state series: aggregate snapshots to bound replay cost, S3 archiving for infinite event retention, cryptographic erasure for GDPR compliance, polyglot persistence in CQRS, eventual consistency read-after-write, tombstones for key deletion, snapshot+delta bootstrap for large compacted topics, and the Fat Event vs Fetcher Pattern decision."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 55. Kafka Data & State Patterns — Production Deep-Dive Key Takeaways

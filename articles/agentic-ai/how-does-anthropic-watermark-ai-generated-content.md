@@ -5,7 +5,7 @@ description: "How Anthropic and Google implement AI content watermarking and pro
 source: "https://pub.towardsai.net/how-anthropic-watermarks-ai-content-47265b651657"
 author: "Dr. Leon Eversberg"
 published: 2026-08-18
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 tags:
   - "clippings"
   - "ai-watermarking"

@@ -2,7 +2,7 @@
 type: System Design
 title: "Semantic Caching for LLMs — Key Takeaways"
 description: "Architecture, vector similarity decision rules, ANN indexing, precision-recall threshold tradeoffs, user isolation, and multi-tier caching hierarchy for LLM applications."
-timestamp: 2026-08-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-24T00:00:00Z }
 ---
 
 # 64. Semantic Caching for LLMs — Key Takeaways

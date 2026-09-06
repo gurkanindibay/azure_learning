@@ -2,7 +2,7 @@
 type: Reference
 title: "System Design Case Preparation Guide Implementation Plan"
 description: "Implementation plan for the system-design case preparation guide."
-timestamp: 2026-08-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-30T00:00:00Z }
 ---
 
 # System Design Case Preparation Guide Implementation Plan

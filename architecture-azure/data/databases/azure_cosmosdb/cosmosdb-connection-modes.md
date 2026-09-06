@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Cosmos DB Connection Modes"
 description: "Azure Cosmos DB SDK supports two connection modes that determine how your application communicates with the Cosmos DB backend. Choosing the right connection mode is critical for optimizing latency ..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Cosmos DB Connection Modes

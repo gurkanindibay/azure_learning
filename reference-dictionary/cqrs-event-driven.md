@@ -2,7 +2,7 @@
 type: Reference
 title: "CQRS, Event Sourcing & Event-Driven Patterns"
 description: "**Command Query Responsibility Segregation** — an architectural pattern that separates write operations (commands, which change state) from read operations (queries, which serve data)."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # CQRS, Event Sourcing & Event-Driven Patterns

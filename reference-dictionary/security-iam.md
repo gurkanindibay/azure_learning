@@ -2,7 +2,7 @@
 type: Reference
 title: "Security, Identity & Access Management"
 description: "**Authentication** — the process of proving that a claimed identity is genuine. It answers the question 'Are you really who you say you are?'"
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # Security, Identity & Access Management

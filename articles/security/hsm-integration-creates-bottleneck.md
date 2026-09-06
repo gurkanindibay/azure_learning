@@ -2,7 +2,7 @@
 type: Article
 title: "HSM Integration Creates Architectural Bottlenecks — and the Design Cost of Cryptographic Operations"
 description: "HSM, modern ödeme mimarisinin en büyük çelişkisidir. Sistemin güvenliğini fiilen garanti eden tek bileşendir; ve tam olarak bu yüzden sistemi en fazla kısıtlayan bileşen de odur. Diğer her bileşeni..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # HSM Integration Creates Architectural Bottlenecks — and the Design Cost of Cryptographic Operations

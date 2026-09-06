@@ -2,7 +2,7 @@
 type: SRE Guide
 title: "Incidents Don't Start When We Declare Them"
 description: "Most incident metrics start from the moment an incident is declared. **But reality is different.**"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Incidents Don't Start When We Declare Them

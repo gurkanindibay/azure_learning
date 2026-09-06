@@ -3,7 +3,7 @@ type: System Design Case
 title: "Ad Click Event Aggregation"
 description: "Design a distributed, real-time ad click event aggregation system at Google/Meta scale supporting exactly-once processing, windowed rollups, star schema filtering, and fault-tolerant stream analytics."
 tags: [system-design, distributed-systems, stream-processing, kafka, flink, time-series]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Ad Click Event Aggregation

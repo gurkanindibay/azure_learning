@@ -2,7 +2,7 @@
 type: System Design
 title: "Authentication & Authorization — Key Takeaways"
 description: "Eight security concepts that separate confused vocabulary debates from coherent auth architecture."
-timestamp: 2026-06-17T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-17T00:00:00Z }
 ---
 
 # 36. Authentication & Authorization — Key Takeaways

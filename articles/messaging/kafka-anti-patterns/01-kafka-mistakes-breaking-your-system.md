@@ -2,7 +2,7 @@
 type: Article
 title: "10 Kafka Mistakes That Are Probably Breaking Your System Right Now"
 description: "*By Gaddam.Naveen · 9 min read · May 5, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 10 Kafka Mistakes That Are Probably Breaking Your System Right Now

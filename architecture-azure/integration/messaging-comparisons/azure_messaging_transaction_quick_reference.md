@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Messaging Services: Transaction Quick Reference"
 description: "Need Transactions? ──┬─→ YES ──→ Service Bus"
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Messaging Services: Transaction Quick Reference

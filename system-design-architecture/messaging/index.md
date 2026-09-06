@@ -1,9 +1,3 @@
----
-type: Index
-title: "Messaging & Event Streaming"
-description: "System-design problems and strategies for message brokers, Kafka patterns, offset commit strategies, real-time messaging, and distributed log architecture."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Messaging & Event Streaming
 

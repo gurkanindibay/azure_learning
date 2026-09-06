@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Networking Fundamentals - VPN vs Private Link"
 description: "**VPN** and **Private Link** are both Azure networking features, but they solve **completely different problems**. Understanding this distinction is crucial for designing secure Azure architectures."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - VPN vs Private Link

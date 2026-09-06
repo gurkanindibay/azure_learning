@@ -3,7 +3,7 @@ type: System Design Case
 title: "How to avoid crawling duplicate URLs at Google scale?"
 description: "Option 1: Use a Set data structure to check if a URL already exists or not. Set is fast, but it is not space-efficient. Option 2: Store URLs in a database and check if a new URL is in the database...."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # How to avoid crawling duplicate URLs at Google scale?

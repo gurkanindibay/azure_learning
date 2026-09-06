@@ -2,7 +2,7 @@
 type: System Design
 title: "16 Companies Every System Design Interview Is Based On — Key Takeaways"
 description: "How studying 16 at-scale products reveals the universal layered architecture and recurring tradeoffs behind most system design interview questions."
-timestamp: 2026-07-17T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-17T00:00:00Z }
 ---
 
 # 29. 16 Companies Every System Design Interview Is Based On — Key Takeaways

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Digital Wallet"
 description: "Design a high-throughput, fault-tolerant digital wallet system supporting 1,000,000 TPS, strict ACID financial consistency, event sourcing reproducibility, Raft consensus replication, and distributed Saga transfers."
 tags: [system-design, distributed-systems, event-sourcing, cqrs, raft-consensus, high-throughput, fintech, saga]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Digital Wallet

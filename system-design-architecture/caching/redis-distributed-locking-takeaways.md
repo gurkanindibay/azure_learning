@@ -2,7 +2,7 @@
 type: System Design
 title: "Redis Distributed Locking — Key Takeaways"
 description: "Mutual exclusion via atomic SET NX PX, safe Lua unlock scripts, exponential backoff retry, lock TTL sizing, and transactional boundary alignment for production distributed locks."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # 63. Redis Distributed Locking — Key Takeaways

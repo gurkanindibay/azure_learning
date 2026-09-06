@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Distributed Log Architecture — Key Takeaways"
 description: "Why Kafka's log-based, partition-driven design achieves 1M+ msg/s throughput while traditional centralized queues collapse — the architectural principles that make coordination-free, horizontally scalable messaging possible."
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 ---
 
 # 59. Kafka Distributed Log Architecture — Key Takeaways

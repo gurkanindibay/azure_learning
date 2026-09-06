@@ -5,7 +5,7 @@ description: "A production war story showing why Java's 1:1 OS-thread model has 
 source: "https://medium.com/@kp9810113/go-just-killed-the-java-thread-model-and-spring-boot-developers-are-panicking-2995839af28d"
 author: "The Concurrent Mind"
 published: 2026-06-15
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 tags:
   - "clippings"
 ---

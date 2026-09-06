@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Database for MySQL High Availability Options"
 description: "Azure Database for MySQL Flexible Server provides multiple high availability and disaster recovery options to meet different business continuity requirements. Understanding the differences between ..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Database for MySQL High Availability Options

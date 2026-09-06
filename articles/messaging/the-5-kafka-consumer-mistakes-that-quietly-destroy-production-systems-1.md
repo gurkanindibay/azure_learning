@@ -2,7 +2,7 @@
 type: Article
 title: "The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems"
 description: "The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems Every distributed system looks reliable… until the day it silently stops working. Let me tell you a story that every architect …"
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 source: "https://blog.stackademic.com/the-5-kafka-consumer-mistakes-that-quietly-destroy-production-systems-c03c997c12a0"
 author:
 - "[[Lets Learn Now]]"

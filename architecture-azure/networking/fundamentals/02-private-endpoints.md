@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Networking Fundamentals - Private Endpoints"
 description: "A **Private Endpoint** is a network interface that connects you privately and securely to a service powered by Azure Private Link. The private endpoint uses a private IP address from your VNet, eff..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - Private Endpoints

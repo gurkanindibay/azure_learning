@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Strangler Fig Pattern"
 description: "The **Strangler Fig Pattern** (also called Strangler Application Pattern) is an incremental migration strategy for gradually replacing a legacy system with a new system. Named after the strangler f..."
 tags: [application-software-architecture, design-patterns]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Strangler Fig Pattern

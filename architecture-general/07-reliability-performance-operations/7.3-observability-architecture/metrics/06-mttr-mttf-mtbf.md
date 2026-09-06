@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "MTTR, MTTF, MTBF: Reliability Time Metrics"
 description: "Reliability time metrics quantify how systems fail and recover. These metrics are essential for:"
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # MTTR, MTTF, MTBF: Reliability Time Metrics

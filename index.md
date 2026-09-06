@@ -1,10 +1,10 @@
 ---
-okf_version: "0.1"
+okf_version: "0.2"
 ---
 
 # Azure Learning Knowledge Bundle
 
-> **OKF Bundle**: This repository follows the [Open Knowledge Format (OKF) v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) for agent-friendly knowledge representation.
+> **OKF Bundle**: This repository follows the [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) for agent-friendly knowledge representation.
 
 A technical knowledge base covering Microsoft Azure services, cloud-agnostic architecture patterns, system design strategies, programming language guides (.NET, C#), SRE practices, and AI/agentic systems. Content is organized by domain and cross-referenced for both human and AI agent consumption.
 

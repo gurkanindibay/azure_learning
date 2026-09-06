@@ -2,7 +2,7 @@
 type: System Design
 title: "Delayed Job Scheduler — Key Takeaways"
 description: "Architectural patterns for low-level and distributed delayed job schedulers: in-memory min-heap timers, database row claiming with SKIP LOCKED, lease heartbeating with ownership guards, and at-least-once idempotency."
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 ---
 
 # Delayed Job Scheduler — Key Takeaways

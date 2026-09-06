@@ -2,7 +2,7 @@
 type: Article
 title: "Understanding PostgreSQL Logical Replication: The Complete End-to-End Flow"
 description: "Complete guide to PostgreSQL logical replication architecture, including WAL durability, LSN tracking, slot management, and apply worker internals."
-timestamp: 2026-08-01T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-01T00:00:00Z }
 ---
 
 > **Source**: [Understanding PostgreSQL Logical Replication](https://blog.devgenius.io/understanding-postgresql-logical-replication-the-complete-end-to-end-flow-8081ced8f765) by Nadeem Khan (NK), published 2026-02-14

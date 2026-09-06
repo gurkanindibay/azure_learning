@@ -2,7 +2,7 @@
 type: System Design
 title: "Async & Concurrency Patterns"
 description: "**Simplest fix (Java)**: Configure a named `ThreadPoolTaskExecutor` bean with explicit pool limits."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 8. Async & Concurrency Patterns

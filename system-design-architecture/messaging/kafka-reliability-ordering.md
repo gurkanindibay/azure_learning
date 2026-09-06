@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Reliability & Ordering — Production Deep-Dive Key Takeaways"
 description: "Production-depth insights from the Kafka reliability and ordering patterns series: dual-write failure modes, outbox publisher options (Debezium vs polling), DynamoDB conditional writes for idempotency, hot-partition mitigation, partition sizing, DLQ with persistent retry tracking, and retry topics with exponential backoff and jitter."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 54. Kafka Reliability & Ordering — Production Deep-Dive Key Takeaways

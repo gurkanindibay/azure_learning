@@ -5,7 +5,7 @@ description: "Why traditional Git hosting architectures with application-level r
 source: "https://medium.com/@kanishks772/your-git-repository-wasnt-designed-for-the-ai-era-bed59063d3bf"
 author: "The Latency Gambler"
 published: 2026-08-22
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 tags:
   - "clippings"
   - "git"

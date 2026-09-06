@@ -2,7 +2,7 @@
 type: Article
 title: ""I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me"
 description: "I was in a Java developer interview. Things were going well — I had answered questions about Spring Boot, microservices, and even a few LeetCode-style problems."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # "I Have a 10GB CSV File and Only 512MB RAM" — The Interview Question That Stumped Me

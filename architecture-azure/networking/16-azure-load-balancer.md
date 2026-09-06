@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Load Balancer"
 description: "**Purpose:** Distributes traffic across VMs or VM scale sets within a region, typically used for internal service-to-service traffic or for simple public TCP endpoints."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Load Balancer

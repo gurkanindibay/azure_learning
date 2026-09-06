@@ -1,9 +1,3 @@
----
-type: Index
-title: "AI/ML Infrastructure"
-description: "System-design patterns for AI and machine learning infrastructure: RAG architecture, LLM cost optimization, and vector search performance."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # AI/ML Infrastructure
 

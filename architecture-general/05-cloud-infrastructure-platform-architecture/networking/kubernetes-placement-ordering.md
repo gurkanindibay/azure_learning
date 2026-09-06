@@ -2,7 +2,7 @@
 type: Architecture Pattern
 title: "Kubernetes Placement Ordering and Locality-Aware Routing"
 description: "A scheduling and routing strategy that prioritizes pod-to-pod communication based on physical proximity within a Kubernetes cluster to reduce latency, cross-node bandwidth, and east-west traffic costs."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Kubernetes Placement Ordering and Locality-Aware Routing

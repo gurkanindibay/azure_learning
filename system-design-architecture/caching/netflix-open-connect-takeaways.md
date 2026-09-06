@@ -2,7 +2,7 @@
 type: System Design
 title: "Netflix Edge Caching — Key Takeaways"
 description: "How Netflix pre-positions content at the ISP edge and uses buffer-aware adaptive bitrate streaming to eliminate buffering at 260M+ scale."
-timestamp: 2026-07-17T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-17T00:00:00Z }
 ---
 
 # 31. Netflix Edge Caching — Key Takeaways

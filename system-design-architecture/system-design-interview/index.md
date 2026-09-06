@@ -1,9 +1,3 @@
----
-type: Index
-title: "System Design Interview"
-description: "System design interview frameworks, roadmaps, deep-dive strategies, and pragmatic design principles."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # System Design Interview
 

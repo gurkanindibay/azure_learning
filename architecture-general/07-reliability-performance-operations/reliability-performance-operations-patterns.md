@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Reliability, Performance & Operations – Patterns Reference"
 description: "This document provides a detailed reference of patterns for **reliability, performance, and operations** in distributed systems and cloud-native architectures."
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Reliability, Performance & Operations – Patterns Reference

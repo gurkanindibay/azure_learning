@@ -1,9 +1,3 @@
----
-type: Index
-title: "Security"
-description: "System-design problems and strategies for HSM integration, authentication, authorization, and Zero Trust security architecture."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Security
 

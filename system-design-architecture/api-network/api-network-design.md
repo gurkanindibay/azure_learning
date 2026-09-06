@@ -2,7 +2,7 @@
 type: System Design
 title: "APIs & Network Design"
 description: "Versioning approach:"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 4. APIs & Network Design

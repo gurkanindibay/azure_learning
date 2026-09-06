@@ -2,7 +2,7 @@
 type: Article
 title: "API Deprecation as a Migration Strategy"
 description: "Why treating API deprecation as a communication exercise instead of a migration strategy leaves deprecated versions alive — and how to enforce sunset dates with six actionable steps."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 source: "https://x.com/NnonyeluU/status/2068279613784989913"
 author: "Henry Nnonyelu (@NnonyeluU)"
 published: 2026-06-20

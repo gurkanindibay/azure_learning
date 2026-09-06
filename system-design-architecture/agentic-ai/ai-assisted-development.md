@@ -2,7 +2,7 @@
 type: System Design
 title: "AI-Assisted Software Development — The Five Levels"
 description: "Traditional system design assumes human throughput as the bottleneck. Under technical deflation, **the bottleneck shifts from coding speed to specification quality and review bandwidth**. Architect..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 22. AI-Assisted Software Development — The Five Levels

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "The System Design Question That Will Replace "Design Twitter": Build A Safe AI Agent Sandbox"
 description: "The scariest production incident is not the one where everything turns red. The scariest one is where the dashboard stays green while the system quietly does the wrong thing."
 tags: [ai-applications]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # The System Design Question That Will Replace "Design Twitter": Build A Safe AI Agent Sandbox

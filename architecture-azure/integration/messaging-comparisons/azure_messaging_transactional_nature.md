@@ -3,7 +3,7 @@ type: Azure Service
 title: "Transactional Nature of Azure Messaging Services"
 description: "This document compares the transactional capabilities and guarantees of Azure Event Grid, Service Bus, and Event Hubs for both message sending (publishing) and receiving (consuming) operations."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Transactional Nature of Azure Messaging Services

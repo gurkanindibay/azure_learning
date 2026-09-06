@@ -5,7 +5,7 @@ description: "System design deep dive on cascading failure prevention, circuit b
 source: "https://codefarm0.medium.com/one-microservice-failure-takes-down-entire-platform-system-design-deep-dive-on-circuit-breakers-71159bd0276a"
 author: "Arvind Kumar"
 published: 2026-08-02
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # One Microservice Failure Takes Down Entire Platform: System Design Deep Dive on Circuit Breakers, Bulkheads, Timeouts, and Resilience Engineering

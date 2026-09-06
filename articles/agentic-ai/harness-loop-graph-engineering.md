@@ -2,7 +2,7 @@
 type: Article
 title: "Harness, Loop, and Graph Engineering: Understand Clearly in 15 Minutes+"
 description: "A layered breakdown of agent architecture — harness (scaffolding), loop (feedback cycle), and graph (control flow) — with pseudocode, diagnostics, and common failure patterns."
-timestamp: 2026-08-08T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-08T00:00:00Z }
 source: "https://medium.com/ai-in-plain-english/harness-loop-and-graph-engineering-understand-clearly-in-10-minutes-bfaa86480724"
 author: "Nick T. (Ph.D.)"
 ---

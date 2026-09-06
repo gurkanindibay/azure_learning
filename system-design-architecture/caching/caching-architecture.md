@@ -2,7 +2,7 @@
 type: System Design
 title: "Caching Architecture"
 description: "def should_refresh(ttl_ms, delta=1000, beta=1.0):"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 3. Caching Architecture

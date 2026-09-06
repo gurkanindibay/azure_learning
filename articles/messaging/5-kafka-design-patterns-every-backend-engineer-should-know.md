@@ -2,7 +2,7 @@
 type: Article
 title: "5 Kafka Design Patterns Every Backend Engineer Should Know"
 description: "*By Abhinav · 4 min read · Mar 12, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 5 Kafka Design Patterns Every Backend Engineer Should Know

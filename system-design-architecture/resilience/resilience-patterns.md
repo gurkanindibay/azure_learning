@@ -2,7 +2,7 @@
 type: System Design
 title: "Resilience Patterns: Surviving Chaos at Scale"
 description: "Users stop receiving OTPs during login spikes. The failure is an **amplification feedback loop**:"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Resilience Patterns: Surviving Chaos at Scale

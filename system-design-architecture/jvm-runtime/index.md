@@ -1,9 +1,3 @@
----
-type: Index
-title: "JVM & Runtime Performance"
-description: "System-design problems and strategies for JVM memory management, GC tuning, Java vs Go threading models, and microservices runtime performance."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # JVM & Runtime Performance
 

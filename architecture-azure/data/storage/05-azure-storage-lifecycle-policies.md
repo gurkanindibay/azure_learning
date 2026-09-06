@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Storage Lifecycle Policies"
 description: "Azure Blob Storage lifecycle management offers a rule-based policy that you can use to transition blob data to appropriate access tiers or expire data at the end of the data lifecycle. Lifecycle po..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Storage Lifecycle Policies

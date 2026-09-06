@@ -2,7 +2,7 @@
 type: System Design
 title: "Payment Saga Pattern — Key Takeaways"
 description: "Saga pattern deep dive for payment systems: orchestration vs choreography, idempotency keys, outbox pattern, compensation workflows, and crash recovery."
-timestamp: 2026-08-01T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-01T00:00:00Z }
 ---
 
 # Payment Saga Pattern — Key Takeaways

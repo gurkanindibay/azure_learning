@@ -5,7 +5,7 @@ description: "A real-world case study of fixing duplicate events in a social new
 source: "https://medium.com/@systemdesignwithsage/how-mastering-idempotency-saved-our-event-driven-system-5ecbce1b1bd6"
 author: "System Design with Sage"
 published: 2026-01-19
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # How Mastering Idempotency Saved Our Event-Driven System

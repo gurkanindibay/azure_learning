@@ -2,7 +2,7 @@
 type: Reference
 title: "Design Patterns & Software Engineering Principles"
 description: "A **creational pattern** that ensures a class has only one instance and provides a global access point to it."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Design Patterns & Software Engineering Principles

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Container Apps - Deployment Methods"
 description: "Azure Container Apps (ACA) provides multiple deployment methods to suit different development workflows and CI/CD scenarios. You can deploy from source code, pre-built container images, container r..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Container Apps - Deployment Methods

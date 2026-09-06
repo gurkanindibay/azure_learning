@@ -5,7 +5,7 @@ description: "Causal consistency preserves cause-and-effect ordering of operatio
 source: "https://www.geeksforgeeks.org/system-design/causal-consistency-model-in-system-design/"
 author: "GeeksforGeeks"
 published: 2023-08-02
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 tags:
   - clippings
   - distributed-systems

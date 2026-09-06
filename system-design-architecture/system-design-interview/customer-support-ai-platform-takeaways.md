@@ -2,7 +2,7 @@
 type: System Design
 title: "Customer Support AI Platform — Key Takeaways"
 description: "Architectural patterns for building enterprise customer support platforms: durable ingestion backbones, pure-function SLA observation, grounded RAG resolvers, human-in-the-loop copilots, KB-gap detection, and tiered model routing."
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 ---
 
 # Customer Support AI Platform — Key Takeaways

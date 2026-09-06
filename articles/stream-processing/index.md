@@ -1,9 +1,3 @@
----
-type: Index
-title: "Stream Processing — Source Articles"
-description: "Source articles for stream processing system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Stream Processing — Source Articles
 

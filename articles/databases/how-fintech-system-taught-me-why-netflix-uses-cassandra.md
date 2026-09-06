@@ -2,7 +2,7 @@
 type: Article
 title: "How a Fintech System Taught Me Why Netflix Uses Cassandra"
 description: "A first-hand account of MongoDB primary node failure in a fintech loan system, and the architectural lessons that explain why Netflix chose Cassandra's masterless design over document databases."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 source: "https://medium.com/@himanshusingour7/how-fintech-systemtaught-me-why-netflix-uses-cassandra-e4752e74d8c3"
 author: "Himanshu Singour"
 published: 2026-02-05

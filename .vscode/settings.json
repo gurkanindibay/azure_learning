@@ -3,5 +3,5 @@
         "workspaceId": "84c82a29-c467-4bb2-bdd4-029001087927"
     },
     //"chat.utilitySmallModel": "deepseek/deepseek-v4-flash"
-    "chat.utilitySmallModel": "gemini-3.7-flash"
+    "chat.utilitySmallModel": "gemini-3.8-flash"
 }

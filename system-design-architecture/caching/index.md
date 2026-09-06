@@ -1,9 +1,3 @@
----
-type: Index
-title: "Caching Architecture"
-description: "System-design problems and strategies for caching: stampede prevention, invalidation, eviction, Redis internals, and hot-key mitigation."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Caching Architecture
 

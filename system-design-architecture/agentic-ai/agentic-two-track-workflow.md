@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic Two-Track Workflow: Key Takeaways"
 description: "Architectural patterns for human-agent collaboration using a spec track (high-attention) paired with an implementation track (low-attention), grounded in Theory of Constraints and Kanban."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 ---
 
 # 50. Agentic Two-Track Workflow — Key Takeaways

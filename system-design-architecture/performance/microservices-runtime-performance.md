@@ -2,7 +2,7 @@
 type: System Design
 title: "Microservices Runtime Performance — Java vs Go Benchmark Takeaways"
 description: "Key architectural takeaways from a 2026 Java (Helidon SE + Virtual Threads + Leyden AOT) vs Go (net/http) microservice benchmark — virtual threads, AOT compilation, TCP tuning, and benchmark methodology."
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # 29. Microservices Runtime Performance — Java vs Go Benchmark Takeaways

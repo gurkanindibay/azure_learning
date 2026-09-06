@@ -3,7 +3,7 @@ type: System Design Case
 title: "Scale From Zero To Millions Of Users"
 description: "A foundational guide detailing the step-by-step architectural evolution of scaling a web system from a single-server setup to millions of concurrent users with multi-tier decoupling, caching, CDNs, stateless web tiers, and database sharding."
 tags: [system-design, distributed-systems, scalability, caching, cdn, database-sharding, load-balancing, microservices]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Scale From Zero To Millions Of Users

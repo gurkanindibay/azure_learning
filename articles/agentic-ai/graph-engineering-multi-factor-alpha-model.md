@@ -6,7 +6,7 @@ source: "https://x.com/RohOnChain/status/2080296261576687751"
 author: "Roan (@RohOnChain)"
 published: 2026-07-23
 created: 2026-08-06
-timestamp: 2026-08-06T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-06T00:00:00Z }
 ---
 
 # How to Use Graph Engineering to Build a Multi-Factor Alpha Model

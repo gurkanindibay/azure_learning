@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Observability Techniques"
 description: "Distributed tracing tracks requests as they flow through multiple services in a distributed system, creating a complete picture of the request journey."
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Observability Techniques

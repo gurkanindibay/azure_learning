@@ -2,7 +2,7 @@
 type: Article
 title: "The API Design Patterns Nobody Teaches You"
 description: "Nobody really teaches you the API design patterns that matter — versioning, idempotency, pagination, error contracts. These are the tricks that separate the APIs that quietly scale from the ones th..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # The API Design Patterns Nobody Teaches You

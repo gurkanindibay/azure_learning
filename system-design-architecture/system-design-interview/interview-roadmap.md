@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Interview Roadmap: Key Takeaways"
 description: "**Trap**: Skipping a phase. Each phase feeds the next — skip requirements and your design has no foundation; skip math and you can't justify decisions; skip trade-offs and you appear junior."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 15. System Design Interview Roadmap: Key Takeaways

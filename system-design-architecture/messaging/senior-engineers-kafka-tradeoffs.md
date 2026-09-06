@@ -2,7 +2,7 @@
 type: System Design
 title: "Message Brokers & Async — Key Takeaways"
 description: "Senior Engineers Don't Start With Kafka — Architectural Tradeoffs and Requirement-First Design"
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # Message Brokers & Async — Key Takeaways

@@ -2,7 +2,7 @@
 type: Reference
 title: "Concurrency Models & Language Runtimes"
 description: "**GOMAXPROCS** — a Go runtime environment variable that sets the maximum number of OS threads that can execute Go code simultaneously."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Concurrency Models & Language Runtimes

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Terminal Operations Subdomain - Payment Systems"
 description: "The Terminal Operations subdomain manages the deployment, configuration, monitoring, and maintenance of payment terminals across merchant locations. This domain ensures reliable point-of-sale (POS)..."
 tags: [industry-specialized-architectures]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Terminal Operations Subdomain - Payment Systems

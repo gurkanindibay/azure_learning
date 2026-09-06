@@ -3,7 +3,7 @@ type: System Design Case
 title: "Proximity Service"
 description: "Design a high-scale location-based proximity service (like Yelp or Google Places) featuring spatial indexing algorithms (Geohash, Quadtree, Google S2), 8-neighbor boundary resolution, Redis geospatial caching, and high-throughput read scaling."
 tags: [system-design, distributed-systems, proximity-service, geohash, quadtree, google-s2, geospatial, yelp]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Proximity Service

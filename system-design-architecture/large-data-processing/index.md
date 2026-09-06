@@ -1,9 +1,3 @@
----
-type: Index
-title: "Large Data Processing"
-description: "System-design strategies for processing large datasets under constraints: streaming, checkpointing, backpressure, and framework selection."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Large Data Processing Under Constraints
 

@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Performance & Integration Patterns — Production Deep-Dive Key Takeaways"
 description: "Production-depth insights from the Kafka performance and integration series: orphaned S3 object cleanup in Claim Check, lazy loading vs presigned URL decision, S3 lifecycle cost management, local RocksDB state for zero-network stream-table joins, late-arriving data grace periods, compensating transaction design in Saga Choreography, and choreography vs orchestration tradeoffs."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 56. Kafka Performance & Integration Patterns — Production Deep-Dive Key Takeaways

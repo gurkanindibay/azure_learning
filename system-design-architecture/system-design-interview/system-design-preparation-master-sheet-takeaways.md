@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Preparation Master Sheet — Key Takeaways"
 description: "Six abilities tested in system design interviews, the 5-layer preparation model, 6-step answer framework, estimation techniques, and the 9-step practice loop that builds engineering judgment over diagram memory."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # 29. System Design Preparation Master Sheet — Key Takeaways

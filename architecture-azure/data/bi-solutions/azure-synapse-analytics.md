@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Synapse Analytics"
 description: "**Azure Synapse Analytics** is an enterprise analytics service that brings together **data integration**, **enterprise data warehousing**, and **big data analytics**. It provides a unified experien..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Synapse Analytics

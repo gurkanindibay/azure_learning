@@ -2,7 +2,7 @@
 type: System Design
 title: "Data Mesh & Medallion Architecture — Key Takeaways"
 description: "Why Data Mesh and Medallion Architecture succeed or fail, and how to evolve toward domain-driven, product-oriented data platforms."
-timestamp: 2026-06-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-16T00:00:00Z }
 ---
 
 # 35. Data Mesh & Medallion Architecture — Key Takeaways

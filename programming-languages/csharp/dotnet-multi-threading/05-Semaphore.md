@@ -3,7 +3,7 @@ type: Programming Guide
 title: "Semaphore and SemaphoreSlim"
 description: "Controls access to a resource pool with a maximum count. Useful for throttling concurrent operations."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Semaphore and SemaphoreSlim

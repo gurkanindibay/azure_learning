@@ -2,7 +2,7 @@
 type: System Design
 title: "Concurrency & Transactions — Payment Idempotency Takeaways"
 description: "Reusable strategies for preventing duplicate payments: business vs. retry identity, atomic idempotency persistence, gateway transaction references, layered protection, and idempotent consumers."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # 45. Concurrency & Transactions — Payment Idempotency Takeaways

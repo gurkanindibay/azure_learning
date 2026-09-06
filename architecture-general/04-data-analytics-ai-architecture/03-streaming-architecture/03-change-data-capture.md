@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Change Data Capture (CDC)"
 description: "Change Data Capture (CDC) is a pattern for **detecting and propagating data changes** from a source database to downstream systems in near real-time. Instead of periodic bulk extracts, CDC captures..."
 tags: [data-analytics-ai-architecture, streaming-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Change Data Capture (CDC)

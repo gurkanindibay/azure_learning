@@ -2,7 +2,7 @@
 type: System Design
 title: "Real-Time Messaging — Key Takeaways"
 description: "Reusable architectural patterns from designing a global real-time messaging platform: per-conversation Kafka partitioning, per-device Redis Streams inboxes, fan-out strategies, presence, multi-device sync, and reconnection safety."
-timestamp: 2026-06-21T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-21T00:00:00Z }
 ---
 
 # 43. Real-Time Messaging — Key Takeaways

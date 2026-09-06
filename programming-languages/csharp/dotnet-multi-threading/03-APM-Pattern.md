@@ -3,7 +3,7 @@ type: Programming Guide
 title: "APM (Asynchronous Programming Model)"
 description: "**Oldest Pattern** - Also known as the \"Begin/End\" pattern, found in legacy .NET code."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # APM (Asynchronous Programming Model)

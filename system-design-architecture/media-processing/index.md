@@ -1,9 +1,3 @@
----
-type: Index
-title: "Media Processing Pipelines"
-description: "System-design patterns for media processing: chunk splitting, parallel transcoding, and progressive content availability."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Media Processing Pipelines
 

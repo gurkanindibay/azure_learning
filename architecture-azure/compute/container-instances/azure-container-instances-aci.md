@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Container Instances (ACI)"
 description: "Azure Container Instances (ACI) is a service that enables you to run containers directly on Azure without managing virtual machines or adopting higher-level orchestration services. It's the fastest..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Container Instances (ACI)

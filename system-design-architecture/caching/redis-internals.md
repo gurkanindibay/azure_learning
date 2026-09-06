@@ -2,7 +2,7 @@
 type: System Design
 title: "Redis Internals — Key Takeaways"
 description: "I/O multiplexing, hash slots, Copy-on-Write persistence, Morris probabilistic counter, UNLINK async deletion, and server-assisted client-side caching"
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # 31. Redis Internals — Key Takeaways

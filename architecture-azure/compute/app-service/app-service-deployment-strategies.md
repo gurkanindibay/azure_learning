@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure App Service - Deployment Strategies"
 description: "Azure App Service provides multiple deployment methods and strategies to ensure smooth, reliable deployments of web applications. Understanding the right deployment approach is crucial for avoiding..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure App Service - Deployment Strategies

@@ -1,9 +1,3 @@
----
-type: Index
-title: "Databases — Source Articles"
-description: "Source articles for databases system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Databases — Source Articles
 

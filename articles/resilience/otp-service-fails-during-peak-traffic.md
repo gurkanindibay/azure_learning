@@ -5,7 +5,7 @@ description: "System Design Real Scenarios — A deep dive into multi-level rate
 source: "https://codefarm0.medium.com/otp-service-fails-during-peak-traffic-system-design-deep-dive-on-rate-limiting-retry-storms-7c2677aded90"
 author: "Arvind Kumar"
 published: 2026-08-01
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # OTP Service Fails During Peak Traffic: System Design Deep Dive on Rate Limiting, Retry Storms, Provider Failover, and Queue Buffering

@@ -3,7 +3,7 @@ type: System Design Case
 title: "How to learn design patterns?"
 description: "Besides reading a lot of well-written code, a good book guides us like a good teacher."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # How to learn design patterns?

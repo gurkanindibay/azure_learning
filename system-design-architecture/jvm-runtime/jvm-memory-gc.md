@@ -2,7 +2,7 @@
 type: System Design
 title: "JVM Memory & GC — Key Takeaways"
 description: "Production JVM memory failures and tuning strategies: heap sizing, stack overflow, metaspace leaks, full GC storms, memory leaks, thread explosion, and HashMap collision/treeification behavior."
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # 33. JVM Memory & GC — Key Takeaways

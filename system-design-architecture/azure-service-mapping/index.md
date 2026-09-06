@@ -1,9 +1,3 @@
----
-type: Index
-title: "Azure Service Mapping"
-description: "Quick lookup: system-design problem domain → Azure service recommendation."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Azure Service Mapping
 

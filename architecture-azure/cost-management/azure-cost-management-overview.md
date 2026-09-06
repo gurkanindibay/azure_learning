@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Cost Management and Billing"
 description: "**Azure Cost Management and Billing** is a suite of tools that helps you monitor, allocate, and optimize your Azure spending. It provides insights into where your money is being spent, enables you ..."
 tags: [cost]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Cost Management and Billing

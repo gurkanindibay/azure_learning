@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Chat System"
 description: "Design a real-time, globally distributed chat application (like WhatsApp or Facebook Messenger) supporting 1-on-1 messaging, group chats, WebSocket bidirectional communication, online presence heartbeats, and NoSQL message history."
 tags: [system-design, distributed-systems, chat-system, websockets, presence-service, cassandra, real-time, message-sync]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Chat System

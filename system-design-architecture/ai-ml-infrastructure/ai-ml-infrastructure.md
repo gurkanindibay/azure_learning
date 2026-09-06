@@ -2,7 +2,7 @@
 type: System Design
 title: "AI/ML Infrastructure: Patterns for Production LLM Systems"
 description: "LLMs generate text probabilistically — they predict the next token based on training data patterns. They have **no concept of truth**. This leads to hallucinations when:"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # AI/ML Infrastructure: Patterns for Production LLM Systems

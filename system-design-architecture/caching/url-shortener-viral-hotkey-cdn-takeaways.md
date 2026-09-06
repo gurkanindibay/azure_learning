@@ -2,7 +2,7 @@
 type: System Design
 title: "URL Shortener Viral Hot-Key & CDN Redirect Caching — Key Takeaways"
 description: "CDN edge caching for HTTP redirects, Redis Cluster hot-key limitations, local in-memory caching, request coalescing, and systematic troubleshooting methodology for read-heavy systems under viral traffic"
-timestamp: 2026-07-13T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-13T00:00:00Z }
 ---
 
 # 62. URL Shortener Viral Hot-Key & CDN Redirect Caching — Key Takeaways

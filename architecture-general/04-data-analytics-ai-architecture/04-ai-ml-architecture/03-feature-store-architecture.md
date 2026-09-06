@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Feature Store Architecture"
 description: "A Feature Store is a centralized platform for **defining, storing, serving, and governing ML features**. It bridges the gap between data engineering and ML by ensuring feature consistency across tr..."
 tags: [data-analytics-ai-architecture, ai-ml-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Feature Store Architecture

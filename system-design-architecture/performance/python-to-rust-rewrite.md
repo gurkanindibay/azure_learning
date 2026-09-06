@@ -2,7 +2,7 @@
 type: System Design
 title: "Microservices Runtime Performance — Python to Rust Rewrite Takeaways"
 description: "Production lessons from rewriting a Python asyncio service in Rust: when the GIL justifies a language change, the hidden velocity and hiring costs, and why the middle path often beats the full rewrite."
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 ---
 
 # 60. Microservices Runtime Performance — Python to Rust Rewrite Takeaways

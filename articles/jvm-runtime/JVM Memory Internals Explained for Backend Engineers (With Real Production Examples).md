@@ -2,7 +2,7 @@
 type: Article
 title: "JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)"
 description: "A practical walkthrough of JVM memory areas — heap, stack, metaspace, garbage collection, and thread memory — with real production examples and tuning guidance for backend engineers."
-timestamp: 2026-06-08T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-08T00:00:00Z }
 ---
 
 # JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)

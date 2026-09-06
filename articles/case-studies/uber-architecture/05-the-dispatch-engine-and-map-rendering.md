@@ -2,7 +2,7 @@
 type: Article
 title: "Uber Architecture – Part 5: The Dispatch Engine and Map Rendering"
 description: "*By Simranjeet Singh · 29 min read · Mar 30, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Uber Architecture – Part 5: The Dispatch Engine and Map Rendering

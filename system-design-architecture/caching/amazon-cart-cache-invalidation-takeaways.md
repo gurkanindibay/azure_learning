@@ -2,7 +2,7 @@
 type: System Design
 title: "Cache Invalidation & Distributed Session Consistency — Key Takeaways"
 description: "Three failure modes of cache invalidation, event-driven invalidation with outbox pattern, cross-region cache synchronization, and monitoring strategies for cache consistency."
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # 5. Cache Invalidation & Distributed Session Consistency — Key Takeaways

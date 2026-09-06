@@ -2,7 +2,7 @@
 type: System Design
 title: "Microservices & Service Design — Key Takeaways"
 description: "Warning signs that microservices have drifted into a distributed monolith and evidence-backed recovery strategies: bounded contexts, async events, and the Strangler Fig approach."
-timestamp: 2026-04-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-04-03T00:00:00Z }
 ---
 
 # 48. Microservices & Service Design — Key Takeaways

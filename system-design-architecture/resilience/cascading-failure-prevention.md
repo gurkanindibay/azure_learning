@@ -2,7 +2,7 @@
 type: System Design
 title: "Cascading Failure Prevention & Resilience Engineering — Key Takeaways"
 description: "How to prevent a single downstream slowdown or failure from cascading across microservices using circuit breakers, bulkheads, timeouts, retry budgets, and fallbacks."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Cascading Failure Prevention & Resilience Engineering — Key Takeaways

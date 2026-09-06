@@ -2,7 +2,7 @@
 type: System Design
 title: "Global Payment System — Key Takeaways"
 description: "Architectural patterns for designing a global payment system at PayPal scale: service boundaries, async messaging, idempotency, sagas, and resilience."
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 ---
 
 # 37. Global Payment System — Key Takeaways

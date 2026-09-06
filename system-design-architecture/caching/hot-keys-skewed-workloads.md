@@ -2,7 +2,7 @@
 type: System Design
 title: "Hot Keys & Skewed Workloads — Key Takeaways"
 description: "Replication, local caching, counter sharding, hot-key detection, and dedicated hot tiers for celebrity/hot-key problems"
-timestamp: 2026-06-27T12:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T12:00:00Z }
 ---
 
 # 61. Hot Keys & Skewed Workloads — Key Takeaways

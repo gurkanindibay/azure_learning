@@ -7,7 +7,7 @@ author:
   - "[[The Latency Gambler]]"
 published: 2026-06-14
 created: 2026-06-23
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 tags:
   - "clippings"
   - "ai-assisted-development"

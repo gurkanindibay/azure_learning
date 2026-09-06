@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic AI — Key Takeaways (Context Rot & Context Governance)"
 description: "Systems-level failure modes of long-running AI agents: cognitive debris, semantic contamination, working-set isolation, six-policy context governance, and structured evidence tracking."
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # 38. Agentic AI — Key Takeaways

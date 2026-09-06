@@ -2,7 +2,7 @@
 type: System Design
 title: "Causal Consistency — Key Takeaways"
 description: "Reusable patterns for preserving cause-and-effect ordering in distributed systems without requiring a global total order."
-timestamp: 2026-06-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-25T00:00:00Z }
 ---
 
 # 52. Causal Consistency — Key Takeaways

@@ -2,7 +2,7 @@
 type: Article
 title: "Uber Architecture – Part 3: Kafka Partitioning by Geography and the Hexagonal Grid"
 description: "*By Simranjeet Singh · 14 min read · Mar 25, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Uber Architecture – Part 3: Kafka Partitioning by Geography and the Hexagonal Grid

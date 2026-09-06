@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "OLTP Architecture"
 description: "OLTP (Online Transaction Processing) is an architectural pattern designed for high-throughput, low-latency transactional workloads. It powers operational systems where correctness, consistency, and..."
 tags: [data-analytics-ai-architecture, data-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # OLTP Architecture

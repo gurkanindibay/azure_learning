@@ -2,7 +2,7 @@
 type: System Design
 title: "Idempotency & Deduplication in Distributed Systems — Key Takeaways"
 description: "Reusable patterns from a system-design article on idempotency and deduplication: the three-layer defense model, idempotency keys with unique constraints, upsert-based idempotency, state-based guard conditions, SET-over-INCREMENT design, and the true scope of exactly-once semantics."
-timestamp: 2026-07-25T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-25T00:00:00Z }
 ---
 
 # 47. Idempotency & Deduplication in Distributed Systems — Key Takeaways

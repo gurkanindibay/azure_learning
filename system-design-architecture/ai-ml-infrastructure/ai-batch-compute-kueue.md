@@ -2,7 +2,7 @@
 type: System Design
 title: "AI/ML Infrastructure — Batch Compute with Kueue (Netflix)"
 description: "Key architectural takeaways from Netflix's migration of batch compute to Kueue: tenant hierarchy with reserved/shared capacity, open-source scheduling adoption, zero-lift migration strategy, and preemption-based fair sharing."
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 ---
 
 # AI/ML Infrastructure — Batch Compute with Kueue (Netflix)

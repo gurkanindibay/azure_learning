@@ -3,7 +3,7 @@ type: System Design Case
 title: "Metrics Monitoring and Alerting System"
 description: "A metrics monitoring and alerting system provides visibility into infrastructure health, tracks application performance, detects anomalies, and notifies on-call engineers of operational issues."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Metrics Monitoring and Alerting System

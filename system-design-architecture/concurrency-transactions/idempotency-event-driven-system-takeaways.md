@@ -2,7 +2,7 @@
 type: System Design
 title: "Idempotency in Event-Driven Systems — Key Takeaways"
 description: "Reusable patterns from a real-world newsfeed case study: deterministic keys, Redis SET NX gatekeeper, atomic state changes, dual-layer deduplication, and event replay auditing."
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # 46. Idempotency in Event-Driven Systems — Key Takeaways

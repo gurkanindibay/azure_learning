@@ -2,7 +2,7 @@
 type: System Design
 title: "Bank Ledger Concurrency & Locking — Key Takeaways"
 description: "Core takeaways from designing a high-concurrency bank ledger: lost updates, deadlocks, lock ordering, optimistic vs pessimistic locking, append-only ledgers, balance snapshots, constraint-driven idempotency, and cross-shard clearing accounts."
-timestamp: 2026-08-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-15T00:00:00Z }
 ---
 
 # 53. Bank Ledger Concurrency & Locking — Key Takeaways

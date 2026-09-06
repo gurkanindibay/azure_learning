@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Design Patterns — Key Takeaways"
 description: "11 reusable Kafka patterns covering state management, reliability, ordering, large-payload handling, distributed transactions, and stream-table joins."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 53. Kafka Design Patterns — Key Takeaways

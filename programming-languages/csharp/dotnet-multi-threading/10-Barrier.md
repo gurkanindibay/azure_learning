@@ -3,7 +3,7 @@ type: Programming Guide
 title: "Barrier"
 description: "Synchronizes a group of threads at a specific point, useful for phased algorithms."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Barrier

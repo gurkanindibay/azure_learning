@@ -6,7 +6,7 @@ Converts raw markdown files into OKF-compliant concept documents that follow
 the repository's content standards. Handles:
 
 - Content placement (which directory should the file go in?)
-- Frontmatter insertion (type, title, description, tags, timestamp)
+- Frontmatter insertion (type, title, description, tags, generated)
 - Heading normalization (H1 → H2 → H3 hierarchy)
 - Cross-reference formatting
 - Taxonomy alignment
@@ -161,7 +161,7 @@ def build_frontmatter(rel_path: str, body_lines: list[str]) -> str:
         fm_lines.append(f'title: "{title}"')
     if desc:
         fm_lines.append(f'description: "{desc}"')
-    fm_lines.append(f"timestamp: {TODAY}T00:00:00Z")
+    fm_lines.append(f"generated: {{ by: process:format-agent, at: {TODAY}T00:00:00Z }}")
     fm_lines.append("---")
     fm_lines.append("")
     return "\n".join(fm_lines)

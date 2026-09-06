@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Gateway Load Balancer"
 description: "**Azure Gateway Load Balancer** is a Layer 4 load balancing service designed specifically for transparently inserting third-party Network Virtual Appliances (NVAs) into the network traffic path. It..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Gateway Load Balancer

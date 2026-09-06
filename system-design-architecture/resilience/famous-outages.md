@@ -2,7 +2,7 @@
 type: System Design
 title: "Famous Outages — Resilience Key Takeaways"
 description: "Five real-world outages (Roblox, Cloudflare, Datadog, Meta, Atlassian) and the resilience anti-patterns they expose: circular observability dependencies, configuration blast radius, correlated failure domains, safety-mechanism amplification, and human-automation gaps."
-timestamp: 2026-06-19T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-19T00:00:00Z }
 ---
 
 # 39. Famous Outages — Resilience Key Takeaways

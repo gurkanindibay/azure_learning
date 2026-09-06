@@ -2,7 +2,7 @@
 type: System Design
 title: "JVM Thread Model vs Go Goroutines — Key Takeaways"
 description: "How Java's 1:1 OS-thread model creates a hidden concurrency ceiling under I/O pressure, how Go's M:N goroutine scheduler avoids it, the Virtual Thread pinning trap, and the Spring Boot 3.2 migration path."
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 ---
 
 # 47. JVM Thread Model vs Go Goroutines — Key Takeaways

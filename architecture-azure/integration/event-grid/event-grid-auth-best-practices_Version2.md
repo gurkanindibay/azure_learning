@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Event Grid Authentication and Authorization Best Practices"
 description: "This document outlines best practices for securing Azure Event Grid, focusing on authentication and authorization for publishing messages and managing subscriptions. These recommendations are based..."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Event Grid Authentication and Authorization Best Practices

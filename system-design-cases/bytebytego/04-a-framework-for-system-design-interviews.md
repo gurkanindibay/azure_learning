@@ -3,7 +3,7 @@ type: System Design Case
 title: "A Framework For System Design Interviews"
 description: "The definitive 4-step framework for navigating open-ended system design interviews: establishing scope, high-level blueprinting, deep-dive bottleneck resolution, operational wrap-up, and interview time management."
 tags: [system-design, interview-framework, engineering-methodology, distributed-systems, communication, best-practices]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # A Framework For System Design Interviews

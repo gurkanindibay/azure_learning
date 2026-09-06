@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Logic Apps Overview"
 description: "Azure Logic Apps is a cloud-based platform for creating and running automated workflows that integrate apps, data, services, and systems. It enables enterprise integration solutions with minimal code."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Logic Apps Overview

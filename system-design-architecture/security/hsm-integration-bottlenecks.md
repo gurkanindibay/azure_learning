@@ -2,7 +2,7 @@
 type: System Design
 title: "HSM Integration Bottlenecks — Key Takeaways"
 description: "Authorization target SLA:  200 ms"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 24. HSM Integration Bottlenecks — Key Takeaways

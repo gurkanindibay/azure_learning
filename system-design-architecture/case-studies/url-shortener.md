@@ -2,7 +2,7 @@
 type: System Design
 title: "URL Shortener — Key Takeaways"
 description: "Pre-allocated key generation, cache-aside redirection, CAP trade-offs, and multi-region URL shortening at billion-scale"
-timestamp: 2026-06-20T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-20T00:00:00Z }
 ---
 
 # 41. URL Shortener — Key Takeaways

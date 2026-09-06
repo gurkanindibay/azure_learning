@@ -2,7 +2,7 @@
 type: System Design
 title: "Million Notifications System Design — Key Takeaways"
 description: "System design patterns for large-scale push notification delivery: queue-based async processing, rate limiting, idempotency, batching, DLQs, worker autoscaling, and delivery tracking."
-timestamp: 2026-07-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-16T00:00:00Z }
 ---
 
 # 34. Million Notifications System Design — Key Takeaways

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Notification System"
 description: "Design a high-volume, multi-channel notification engine (APNs, FCM, SMS, Email) supporting dedicated channel message queues, template rendering, deduplication, user opt-out preferences, and reliable delivery."
 tags: [system-design, distributed-systems, notification-system, push-notification, apns, fcm, twilio, message-queues]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Notification System

@@ -2,7 +2,7 @@
 type: Article
 title: "I Will Never Walk Into a Backend Interview Without Solving These 20 Questions"
 description: "A practical baseline checklist of the specific technical concepts you need to understand before sitting across from a senior engineer."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # I Will Never Walk Into a Backend Interview Without Solving These 20 Questions

@@ -1,9 +1,3 @@
----
-type: Index
-title: "Case Studies"
-description: "Real-world system design case studies: Uber architecture, news feed design, URL shortener, and data mesh architecture."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Case Studies
 

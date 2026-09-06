@@ -3,7 +3,7 @@ type: System Design Case
 title: "What is the future of online payments?"
 description: "I don’t know the answer, but I do know one of the candidates is the blockchain. As a fan of technology, I always seek new solutions to old challenges. A book that explains a lot about an emerging p..."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # What is the future of online payments?

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure SQL Migration Decision Tree"
 description: "Migrating an on-premises SQL Server database to Azure requires choosing the right **service** (SQL Database, Managed Instance, or SQL Server on VMs) and the appropriate **tier** (General Purpose, B..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure SQL Migration Decision Tree

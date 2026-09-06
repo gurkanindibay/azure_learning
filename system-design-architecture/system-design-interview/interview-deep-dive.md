@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Learning Roadmap — Key Takeaways"
 description: "Vertical vs horizontal scaling, caching, CAP theorem, replication, sharding, and real-world design patterns — a no-BS system design learning guide"
-timestamp: 2026-06-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-16T00:00:00Z }
 ---
 
 # 34. System Design Learning Roadmap — Key Takeaways

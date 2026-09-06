@@ -5,7 +5,7 @@ description: "A Netflix engineer's approach to reducing AI agent costs by compre
 source: "https://medium.com/@kanishks772/a-netflix-engineer-may-have-just-saved-ai-companies-millions-3a7d905bea98"
 author: "The Latency Gambler (Kanishk S.)"
 published: 2026-07-21
-timestamp: 2026-07-31T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-31T00:00:00Z }
 ---
 
 # Headroom — Content-Aware Token Compression for AI Agents

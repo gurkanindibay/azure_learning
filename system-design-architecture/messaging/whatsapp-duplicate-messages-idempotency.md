@@ -2,7 +2,7 @@
 type: System Design
 title: "WhatsApp Duplicate Messages — At-Least-Once Delivery & Idempotency"
 description: "Three-layer deduplication strategy, idempotency key pattern, and monitoring for duplicate message detection in distributed messaging systems."
-timestamp: 2026-07-18T21:52:51Z
+generated: { by: process:okf-migrate, at: 2026-07-18T21:52:51Z }
 ---
 
 # 31. WhatsApp Duplicate Messages — At-Least-Once Delivery & Idempotency

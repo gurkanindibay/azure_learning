@@ -3,7 +3,7 @@ type: System Design Case
 title: "S3-Like Object Storage"
 description: "Design a petabyte-scale, distributed object storage system (like AWS S3 or Ceph RADOS) featuring 11 9's durability, append-only container files, Reed-Solomon erasure coding, metadata sharding, and multipart uploads."
 tags: [system-design, distributed-systems, storage-systems, erasure-coding, object-storage, raft, compaction]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # S3-Like Object Storage

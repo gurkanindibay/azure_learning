@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure App Service Pricing Tiers"
 description: "Azure App Service offers six pricing tiers (also called SKUs or service plans), each designed for different workload types and requirements. The tier you choose determines the compute resources, fe..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure App Service Pricing Tiers

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Nearby Friends"
 description: "Design a real-time, high-throughput location-sharing system (like Facebook Nearby Friends or Apple Find My) handling 334,000 update QPS and 13 million fan-out deliveries per second using WebSockets, Redis Pub/Sub, and distributed spatial filtering."
 tags: [system-design, distributed-systems, nearby-friends, websockets, redis-pubsub, real-time, geospatial, zookeeper]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Nearby Friends

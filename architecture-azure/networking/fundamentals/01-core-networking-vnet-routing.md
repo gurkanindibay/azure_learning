@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Networking Fundamentals - Core Networking, VNet, and Routing"
 description: "Azure networking services provide the foundation for connecting and securing Azure resources. Understanding Virtual Networks (VNets) and Private Endpoints is essential because many Azure services r..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - Core Networking, VNet, and Routing

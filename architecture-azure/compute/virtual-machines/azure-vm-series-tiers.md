@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Virtual Machine Series and Tiers"
 description: "Azure offers a wide variety of virtual machine sizes optimized for different workloads. Each VM series is designed to provide optimal performance for specific use cases, from general-purpose comput..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Virtual Machine Series and Tiers

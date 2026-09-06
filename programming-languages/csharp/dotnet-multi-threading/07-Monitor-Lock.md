@@ -3,7 +3,7 @@ type: Programming Guide
 title: "Monitor and Lock"
 description: "The `lock` keyword is syntactic sugar for `Monitor.Enter` and `Monitor.Exit`. Used for protecting critical sections within a single process."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Monitor and Lock

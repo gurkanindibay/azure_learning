@@ -2,7 +2,7 @@
 
 > **Repository Type**: Technical documentation repository with supporting automation tooling  
 > **Focus**: Cloud architecture, software engineering patterns, programming languages (.NET, C#), system design, and AI/agentic systems  
-> **OKF Conformance**: This repository follows [Open Knowledge Format (OKF) v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) — all concept `.md` files carry YAML frontmatter with a `type` field; directory listings use `index.md`
+> **OKF Conformance**: This repository follows [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) — all concept `.md` files carry YAML frontmatter with a `type` field; directory listings use `index.md`
 
 ## Repository Structure
 

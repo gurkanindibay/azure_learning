@@ -3,7 +3,7 @@ type: Azure Service
 title: "Cosmos DB Consistency Levels vs Relational Database Isolation Levels"
 description: "This document compares Azure Cosmos DB consistency levels with SQL Server transaction isolation levels to help developers understand the conceptual mappings and differences between these two approa..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Cosmos DB Consistency Levels vs Relational Database Isolation Levels

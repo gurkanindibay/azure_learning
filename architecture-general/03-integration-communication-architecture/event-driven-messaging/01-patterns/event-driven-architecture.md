@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Event-Driven Architecture (EDA)"
 description: "Event-Driven Architecture (EDA) is an architectural paradigm where the production, detection, consumption, and reaction to events drive the system's behavior. Events represent significant changes i..."
 tags: [integration-communication-architecture, event-driven, patterns]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Event-Driven Architecture (EDA)

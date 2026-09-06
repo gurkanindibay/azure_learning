@@ -5,7 +5,7 @@ description: "A decision-driven guide to choosing microservices patterns for dec
 source: "https://medium.com/codefarm-java-ecosystem/microservices-patterns-engineering-decision-framework-dbf56cf20c65"
 author: "Arvind Kumar"
 published: 2026-05-06
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # Microservices Patterns — Engineering Decision Framework

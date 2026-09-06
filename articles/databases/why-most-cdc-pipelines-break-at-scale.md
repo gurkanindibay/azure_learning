@@ -5,7 +5,7 @@ source: "https://cloudwithazeem.medium.com/why-most-cdc-pipelines-break-at-scale
 author:
   - "[[Cloud With Azeem]]"
 published: 2026-08-11
-timestamp: 2026-08-11T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-11T00:00:00Z }
 description: "Beyond simple log parsing: The real-world traps of Change Data Capture across databases, Kafka, and data warehouses, and patterns for resilient change streams."
 tags:
   - clippings

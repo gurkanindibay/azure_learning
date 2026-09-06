@@ -3,7 +3,7 @@ type: ArchitectureGuide
 title: Apache Flink Enterprise Architecture Guide
 description: An exhaustive architectural breakdown of Apache Flink, mapping its optimal use cases, Kafka-less intake strategies, core source/sink mechanics, and production-proven real-world examples.
 tags: [data-engineering, stream-processing, apache-flink, distributed-systems, cloud-architecture]
-timestamp: 2026-06-28T12:22:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T12:22:00Z }
 ---
 
 # Apache Flink Comprehensive Architecture & Implementation Guide

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Hybrid Benefit"
 description: "Azure Hybrid Benefit is a licensing benefit that helps you significantly reduce the costs of running workloads in the cloud. It allows you to use your on-premises licenses with Software Assurance o..."
 tags: [cost]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Hybrid Benefit

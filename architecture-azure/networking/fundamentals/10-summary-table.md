@@ -2,7 +2,7 @@
 type: Azure Service
 title: "Azure Networking Fundamentals - Summary Table"
 tags: [networking]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - Summary Table

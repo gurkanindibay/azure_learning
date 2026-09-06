@@ -5,7 +5,7 @@ description: "How Meesho's engineering team cut Redis infrastructure costs by ~9
 source: "https://medium.com/@kanishks772/a-90-redis-cost-reduction-sounds-impossible-until-you-look-under-the-hood-4e1702b4aae8"
 author: "The Latency Gambler"
 published: 2026-07-22
-timestamp: 2026-07-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-30T00:00:00Z }
 ---
 
 # A 90% Redis Cost Reduction Sounds Impossible Until You Look Under the Hood

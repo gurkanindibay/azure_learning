@@ -2,7 +2,7 @@
 type: Reference
 title: "API Design Patterns"
 description: "The mechanism for evolving an API without breaking existing clients."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # API Design Patterns

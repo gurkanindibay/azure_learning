@@ -2,7 +2,7 @@
 type: System Design
 title: "REST API Senior Patterns — Key Takeaways"
 description: "Production-grade patterns for partial updates (JSON Merge Patch), ETag-based concurrency control, and sparse fieldsets — the patterns that make a REST API contract-grade."
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 ---
 
 # 46. REST API Senior Patterns — Key Takeaways

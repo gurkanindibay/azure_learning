@@ -2,7 +2,7 @@
 type: System Design
 title: "Database ID Architecture & Key Selection — Key Takeaways"
 description: "B-tree indexing pathology of random UUIDv4, time-ordered identifier mechanics (UUIDv7, ULID, TSID), and optimal key selection strategies for high-scale relational databases."
-timestamp: 2026-08-08T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-08T00:00:00Z }
 ---
 
 # 36. Database ID Architecture & Key Selection — Key Takeaways

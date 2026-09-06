@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Hybrid Messaging Patterns"
 description: "Combining Azure Service Bus, Event Hubs, and Event Grid to build resilient, observable, and scalable messaging platforms."
 tags: [integration-communication-architecture, event-driven, patterns]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Hybrid Messaging Patterns

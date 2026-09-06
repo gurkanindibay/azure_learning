@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Data Factory"
 description: "**Azure Data Factory (ADF)** is a cloud-based ETL (Extract, Transform, Load) and data integration service that enables you to create data-driven workflows for orchestrating data movement and transf..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Data Factory

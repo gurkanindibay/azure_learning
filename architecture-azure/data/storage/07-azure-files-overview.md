@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Files Overview"
 description: "Azure Files offers **fully managed file shares in the cloud** that are accessible via industry-standard protocols. Azure file shares can be mounted concurrently by cloud or on-premises deployments,..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Files Overview

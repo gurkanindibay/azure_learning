@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Load Balancing and Traffic Management Services - Feature Comparison"
 description: "This document provides a comprehensive feature-based comparison of Azure's load balancing and traffic management services to help you choose the right service for your needs."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Load Balancing and Traffic Management Services - Feature Comparison

@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Networking Fundamentals - ExpressRoute Global Reach and BGP"
 description: "**Azure ExpressRoute** provides a private, dedicated connection between your on-premises infrastructure and Azure datacenters. Unlike VPN connections that traverse the public internet, ExpressRoute..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - ExpressRoute Global Reach and BGP

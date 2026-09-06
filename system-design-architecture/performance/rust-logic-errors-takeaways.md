@@ -2,7 +2,7 @@
 type: System Design
 title: "Runtime Performance — Rust Logic Errors Takeaways"
 description: "Reusable design lessons from a Python-to-Rust migration: compiler guarantees, wildcard pitfalls, and policy-level correctness checks."
-timestamp: 2026-07-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-18T00:00:00Z }
 ---
 
 # 61. Runtime Performance — Rust Logic Errors Takeaways

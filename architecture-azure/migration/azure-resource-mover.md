@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Resource Mover"
 description: "**Azure Resource Mover** is a native Azure service designed to move Azure resources between resource groups, subscriptions, and regions. It simplifies the process of relocating Azure-native resourc..."
 tags: [migration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Resource Mover

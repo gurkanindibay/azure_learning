@@ -3,7 +3,7 @@ type: Programming Guide
 title: "EAP (Event-based Asynchronous Pattern)"
 description: "**Legacy Pattern** - Common in older .NET Framework code and some UI components."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # EAP (Event-based Asynchronous Pattern)

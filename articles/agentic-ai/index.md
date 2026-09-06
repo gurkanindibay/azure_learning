@@ -1,9 +1,3 @@
----
-type: Index
-title: "Agentic Ai — Source Articles"
-description: "Source articles for agentic ai system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Agentic Ai — Source Articles
 

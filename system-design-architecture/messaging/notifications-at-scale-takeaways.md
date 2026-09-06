@@ -2,7 +2,7 @@
 type: System Design
 title: "Notifications at Scale — Key Takeaways"
 description: "Architectural patterns for high-volume fanout workloads: asynchronous request decoupling, durable queue buffering, worker self-throttling, idempotent delivery, batching, DLQs, progressive enqueuing, and decoupled analytics."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Notifications at Scale — Key Takeaways

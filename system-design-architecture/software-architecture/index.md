@@ -1,9 +1,3 @@
----
-type: Index
-title: "Software Architecture"
-description: "System-design patterns for software architecture: design patterns (GoF + Enterprise), architecture principles, service design, and Docker optimization."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Software Architecture
 

@@ -5,7 +5,7 @@ description: "Production-proven approach to database sharding and table partitio
 source: "https://medium.com/codetutorials/how-to-shard-and-partition-databases-for-1-billion-orders-0ba00ba10491"
 author: "Umesh Kumar Yadav"
 published: 2026-04-21
-timestamp: 2026-07-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-26T00:00:00Z }
 ---
 
 # How to Shard and Partition Databases for 1 Billion Orders

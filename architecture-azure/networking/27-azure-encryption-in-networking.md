@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Encryption in Networking Context"
 description: "Network security is not only about segmentation and filtering. It also requires protecting data:"
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Encryption in Networking Context

@@ -2,7 +2,7 @@
 type: System Design
 title: "E-Commerce Checkout Consistency — Key Takeaways"
 description: "Reusable transaction and consistency patterns from designing a scalable e-commerce platform: atomic inventory reservation, saga orchestration, compensating transactions, idempotent payment, and subdomain consistency models."
-timestamp: 2026-06-21T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-21T00:00:00Z }
 ---
 
 # 44. E-Commerce Checkout Consistency — Key Takeaways

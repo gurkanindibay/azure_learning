@@ -2,7 +2,7 @@
 type: System Design
 title: "Database Decisions — Key Takeaways"
 description: "System-design database decisions: SQL vs NoSQL, ACID, indexing, read replicas, CAP, sharding, isolation levels, B-Tree vs LSM-Tree, WAL, Bloom filters, 2PC, Saga, and CDC."
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 ---
 
 # 38. Database Decisions — Key Takeaways

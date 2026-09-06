@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design Google Drive"
 description: "Design a cloud file storage and synchronization platform (like Google Drive or Dropbox) featuring block-level chunking, delta sync, content-addressable deduplication, conflict resolution, and WebSocket notification sync."
 tags: [system-design, distributed-systems, google-drive, dropbox, delta-sync, block-storage, deduplication, s3]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design Google Drive

@@ -1,9 +1,3 @@
----
-type: Index
-title: "Resilience Patterns"
-description: "System-design problems and strategies for resilience: circuit breakers, retry patterns, bulkheads, outage anti-patterns, and defensive coding."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Resilience Patterns
 

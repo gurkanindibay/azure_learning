@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Identity & Principal Objects"
 description: "This document provides a **complete, structured explanation** of Azure identity concepts:"
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Identity & Principal Objects

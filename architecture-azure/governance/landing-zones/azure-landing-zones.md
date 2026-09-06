@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Landing Zones"
 description: "An **Azure Landing Zone** is a pre-configured, scalable cloud environment that provides the foundational infrastructure, governance, security, and networking required to host workloads in Azure. It..."
 tags: [governance]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Landing Zones

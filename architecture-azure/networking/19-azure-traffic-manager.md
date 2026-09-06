@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Traffic Manager"
 description: "**Layer/scope:** DNS-based global routing service (not a Layer 4/7 reverse proxy)."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Traffic Manager

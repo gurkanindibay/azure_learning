@@ -2,7 +2,7 @@
 type: Reference
 title: "System Design Diagram Enrichment Implementation Plan"
 description: "Implementation plan for Archify enrichment of substantive system-design cases and source articles."
-timestamp: 2026-08-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-30T00:00:00Z }
 ---
 
 # System Design Diagram Enrichment Implementation Plan

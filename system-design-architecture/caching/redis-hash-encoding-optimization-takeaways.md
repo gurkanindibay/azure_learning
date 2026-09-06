@@ -2,7 +2,7 @@
 type: System Design
 title: "Redis Hash Encoding & Cost Optimization — Key Takeaways"
 description: "How grouping fields into Redis hashes, tuning encoding thresholds (ziplist/listpack), Lua batching, and Protobuf compression achieved ~90% cost reduction at Meesho."
-timestamp: 2026-07-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-30T00:00:00Z }
 ---
 
 # 40. Redis Hash Encoding & Cost Optimization — Key Takeaways

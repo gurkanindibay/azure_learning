@@ -2,7 +2,7 @@
 type: System Design
 title: "Large Data Processing Under Constraints"
 description: "try (BufferedReader reader = new BufferedReader(new FileReader(\"large.csv\"))) {"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 13. Large Data Processing Under Constraints

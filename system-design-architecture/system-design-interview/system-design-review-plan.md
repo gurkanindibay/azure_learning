@@ -2,7 +2,7 @@
 type: System Design
 title: "System Design Interview Review Plan — Phase-by-Phase Checklist"
 description: "A parallel 29-check review checklist aligned to the 7-phase interview structure. Run each phase's checks before advancing — internalize until the checks become automatic during the real interview."
-timestamp: 2026-07-05T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-05T00:00:00Z }
 ---
 
 # System Design Interview Review Plan

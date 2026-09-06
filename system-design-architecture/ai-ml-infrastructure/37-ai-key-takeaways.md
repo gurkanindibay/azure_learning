@@ -2,7 +2,7 @@
 type: System Design
 title: "RAG Chunking vs. Embeddings — Key Takeaways"
 description: "Why fixing document chunking boundaries and inspecting raw retrieved context dramatically improves RAG accuracy and answer relevance, while embedding model churn fails to solve broken context."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # 37. RAG Chunking vs. Embeddings — Key Takeaways

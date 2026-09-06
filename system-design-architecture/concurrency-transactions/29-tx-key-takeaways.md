@@ -2,7 +2,7 @@
 type: System Design
 title: "Concurrency & Transactions — Payment Race Condition Takeaways"
 description: "Reusable concurrency and idempotency strategies from a payment-service incident that caused duplicate charges."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # 29. Concurrency & Transactions — Payment Race Condition Takeaways

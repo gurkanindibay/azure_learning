@@ -3,7 +3,7 @@ type: Azure Service
 title: "AKS Microservices State Management"
 description: "When deploying containerized microservice-based applications to Azure Kubernetes Service (AKS), choosing the right solution for state management is crucial for maintaining application functionality..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # AKS Microservices State Management

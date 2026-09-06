@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Debit Card Subdomain - Payment Systems"
 description: "The Debit Card subdomain manages debit card transactions, account balance verification, and real-time fund transfers within a payment ecosystem. This domain ensures immediate debiting of customer a..."
 tags: [industry-specialized-architectures]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Debit Card Subdomain - Payment Systems

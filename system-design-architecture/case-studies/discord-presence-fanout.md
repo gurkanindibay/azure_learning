@@ -2,7 +2,7 @@
 type: System Design
 title: "Discord Presence at 200M Users — Key Takeaways"
 description: "Presence is a fanout problem, not a storage problem: WebSocket gateways, pub/sub between gateways, lazy subscriptions, heartbeats, and gateway failure recovery with concrete math."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Discord Presence at 200M Users — Key Takeaways

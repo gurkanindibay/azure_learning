@@ -3,7 +3,7 @@ type: Azure Service
 title: "E-Commerce Platform Monitoring & Observability Scenario"
 description: "**Challenge**: Experiencing intermittent performance issues, customer complaints about checkout failures, and lack of visibility into system health across multiple Azure services."
 tags: [observability]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # E-Commerce Platform Monitoring & Observability Scenario

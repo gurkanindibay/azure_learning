@@ -3,7 +3,7 @@ type: Azure Service
 title: "Microsoft Graph Delegated Permissions for Signed-In Users"
 description: "When an Azure App Service web app needs to retrieve Microsoft Entra ID signed-in user information using Microsoft Graph, it must use **delegated permissions**. This document explains the mechanism ..."
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Microsoft Graph Delegated Permissions for Signed-In Users

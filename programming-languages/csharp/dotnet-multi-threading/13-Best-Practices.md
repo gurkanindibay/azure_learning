@@ -3,7 +3,7 @@ type: Programming Guide
 title: "Best Practices and Guidelines"
 description: "Comprehensive best practices for .NET asynchronous and multithreading programming."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Best Practices and Guidelines

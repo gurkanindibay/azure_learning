@@ -2,7 +2,7 @@
 type: Article
 title: "System Design Interview: Resumable Uploads for Huge Files"
 description: "How platforms like Google Drive and YouTube support resumable uploads via chunking, upload sessions, idempotency, and direct-to-storage patterns."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # System Design Interview: Resumable Uploads for Huge Files

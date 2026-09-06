@@ -3,7 +3,7 @@ type: Programming Guide
 title: "ReaderWriterLockSlim"
 description: "Optimizes scenarios with many readers and few writers. Allows multiple concurrent readers but exclusive writer access."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # ReaderWriterLockSlim

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "System Management Patterns"
 description: "Patterns for operating, monitoring, and troubleshooting messaging systems."
 tags: [integration-communication-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # System Management Patterns

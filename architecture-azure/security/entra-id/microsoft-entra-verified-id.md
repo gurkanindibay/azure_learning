@@ -3,7 +3,7 @@ type: Azure Service
 title: "Microsoft Entra Verified ID: Concept Summary"
 description: "Microsoft Entra Verified ID is Microsoft's implementation of decentralized identity and verifiable credentials."
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Microsoft Entra Verified ID: Concept Summary

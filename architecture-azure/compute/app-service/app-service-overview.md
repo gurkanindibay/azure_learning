@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure App Service Overview"
 description: "Azure App Service is a fully managed Platform as a Service (PaaS) offering for hosting web applications, REST APIs, and mobile backends. It provides a managed environment that handles infrastructur..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure App Service Overview

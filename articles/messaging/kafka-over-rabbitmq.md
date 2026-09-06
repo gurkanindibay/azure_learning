@@ -2,7 +2,7 @@
 type: Article
 title: "Kafka vs RabbitMQ — Why One Is 10× Faster and the Other Won’t Admit It"
 description: "*By CodersWorld · 5 min read · Jan 18, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Kafka vs RabbitMQ — Why One Is 10× Faster and the Other Won’t Admit It

@@ -2,7 +2,7 @@
 type: Article
 title: "If You Truly Understand These 8 Things, You’ll Never Be Confused About Auth Again"
 description: "A practical walkthrough of identity, authentication, authorization, sessions, JWT, OAuth2, TLS, mTLS, and Zero Trust as layers of one security model."
-timestamp: 2026-06-17T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-17T00:00:00Z }
 ---
 
 # If You Truly Understand These 8 Things, You’ll Never Be Confused About Auth Again

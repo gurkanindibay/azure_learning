@@ -2,7 +2,7 @@
 type: System Design
 title: "Netflix Ads Event Processing Pipeline — Key Takeaways"
 description: "Architectural takeaways from Netflix's Ads Event Processing Pipeline across VOD and Live: transient KV registries, Flink stream sessionization, stateful stream-stream joins, route-to-data cross-region forwarding, in-stream deduplication, and shadow canary migrations."
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # Netflix Ads Event Processing Pipeline — Key Takeaways

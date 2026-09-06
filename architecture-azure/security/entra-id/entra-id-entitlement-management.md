@@ -3,7 +3,7 @@ type: Azure Service
 title: "Microsoft Entra Entitlement Management"
 description: "Microsoft Entra Entitlement Management is an identity governance feature that enables organizations to manage identity and access lifecycle at scale. It automates access request workflows, access a..."
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Microsoft Entra Entitlement Management

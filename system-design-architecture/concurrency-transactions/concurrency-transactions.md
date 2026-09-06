@@ -2,7 +2,7 @@
 type: System Design
 title: "Concurrency & Transactions"
 description: "Concurrency and transaction patterns: double-booking, isolation levels, distributed locks, database invariants, and idempotency."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 2. Concurrency & Transactions

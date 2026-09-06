@@ -3,7 +3,7 @@ type: System Design Case
 title: "Google Maps"
 description: "Design a planetary navigation and mapping platform (like Google Maps) featuring multi-resolution vector map tiling (Web Mercator), hierarchical graph routing with Contraction Hierarchies (A*), and real-time streaming traffic ETA recalculation."
 tags: [system-design, distributed-systems, google-maps, navigation, routing-tiles, contraction-hierarchies, vector-tiles, kafka, flink]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Google Maps

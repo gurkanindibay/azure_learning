@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure SQL Deployment Decision Guide: Scenarios & Best Practices"
 description: "Choosing the right Azure SQL deployment option can be challenging given the variety of products, tiers, and compute models available. This document provides real-world scenarios to help you make in..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure SQL Deployment Decision Guide: Scenarios & Best Practices

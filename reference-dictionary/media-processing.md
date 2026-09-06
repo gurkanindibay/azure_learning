@@ -2,7 +2,7 @@
 type: Reference
 title: "Media Processing & Async Pipelines"
 description: "Splitting video at **keyframe (Group of Pictures) boundaries** for clean cuts. Chunks cut at keyframes can be decoded independently; chunks cut mid-GOP produce artifacts."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Media Processing & Async Pipelines

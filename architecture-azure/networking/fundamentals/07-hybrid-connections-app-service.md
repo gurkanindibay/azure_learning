@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Networking Fundamentals - Hybrid Connections in App Service"
 description: "**Hybrid Connections** is an Azure Relay feature that enables Azure App Service and Azure Functions to securely access on-premises resources without requiring firewall changes or VPN infrastructure."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Networking Fundamentals - Hybrid Connections in App Service

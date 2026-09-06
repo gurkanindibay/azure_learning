@@ -6,7 +6,7 @@ source: "https://x.com/AnatoliKopadze/status/2068328135611822149?s=20"
 author:
   - "[[@AnatoliKopadze]]"
 published: 2026-06-20
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 tags:
   - "clippings"
 ---

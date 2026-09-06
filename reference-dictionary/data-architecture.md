@@ -2,7 +2,7 @@
 type: Reference
 title: "Data Architecture & Distributed Systems"
 description: "**CAP Theorem** — in a distributed system, you can guarantee only two of three: Consistency, Availability, Partition Tolerance."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # Data Architecture & Distributed Systems

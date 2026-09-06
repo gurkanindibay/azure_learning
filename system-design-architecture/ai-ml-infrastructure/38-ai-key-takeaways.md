@@ -2,7 +2,7 @@
 type: System Design
 title: "On-Device MoE Inference & Flash Weight Streaming — Key Takeaways"
 description: "How selective demand-paged expert offloading and read-compute overlapping enable massive Mixture-of-Experts models (284B parameters) to execute on memory-constrained edge hardware (12GB RAM) by transforming memory capacity bottlenecks into flash storage bandwidth challenges."
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # 38. On-Device MoE Inference & Flash Weight Streaming — Key Takeaways

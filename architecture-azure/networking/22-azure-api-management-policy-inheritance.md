@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure API Management — Policy Inheritance and `<base />` Element"
 description: "Azure API Management (APIM) allows policies to be defined at multiple scopes:"
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure API Management — Policy Inheritance and `<base />` Element

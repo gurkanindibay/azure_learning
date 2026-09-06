@@ -3,7 +3,7 @@ type: Azure Service
 title: "Zone Redundancy vs Geo Redundancy in Azure"
 description: "Azure provides different redundancy options to protect your data against various types of failures. The two main types are **Zone Redundancy (ZRS)** and **Geo-Redundancy (GRS)**. Understanding the ..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Zone Redundancy vs Geo Redundancy in Azure

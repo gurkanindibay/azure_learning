@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "OLAP Architecture"
 description: "OLAP (Online Analytical Processing) is an architectural pattern optimized for complex analytical queries over large, historical datasets. It powers business intelligence (BI), reporting, and decisi..."
 tags: [data-analytics-ai-architecture, data-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # OLAP Architecture

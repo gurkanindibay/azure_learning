@@ -2,7 +2,7 @@
 type: System Design
 title: "Git Repository Infrastructure for the AI Agent Era — Key Takeaways"
 description: "System design patterns for scaling version control hosting under autonomous AI coding agent workloads: overcoming Git DAG pointer-chasing latency, addressing the fixed floor and consensus ceiling of application-level replication, and implementing log-first storage architectures with object storage WALs and ephemeral on-demand caches."
-timestamp: 2026-08-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-26T00:00:00Z }
 ---
 
 # 39. Git Repository Infrastructure for the AI Agent Era — Key Takeaways

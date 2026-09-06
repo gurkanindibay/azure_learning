@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Cosmos DB Backup and Restore"
 description: "Azure Cosmos DB provides built-in backup capabilities to protect your data. There are two primary backup modes available: **Continuous backup** and **Periodic backup**. Understanding the difference..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Cosmos DB Backup and Restore

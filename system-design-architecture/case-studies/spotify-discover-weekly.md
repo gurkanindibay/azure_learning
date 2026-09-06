@@ -2,7 +2,7 @@
 type: System Design
 title: "Spotify Discover Weekly — Key Takeaways"
 description: "Architecture of Spotify's recommendation engine: Implicit Collaborative Filtering via Matrix Factorization, Cultural NLP vectorization, Raw Audio CNN spectrogram analysis, and Offline Batch Processing tradeoffs."
-timestamp: 2026-08-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-27T00:00:00Z }
 ---
 
 # Spotify Discover Weekly — Key Takeaways

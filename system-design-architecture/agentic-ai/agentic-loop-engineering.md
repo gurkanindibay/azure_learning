@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic Loop Engineering — Key Takeaways"
 description: "Six reusable patterns for building production agentic loops: loop anatomy, verify gate, maker/checker separation, loop viability test, build order, and cost-per-accepted-change metric."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 57. Agentic Loop Engineering — Key Takeaways

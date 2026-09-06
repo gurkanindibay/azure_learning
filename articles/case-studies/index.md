@@ -1,9 +1,3 @@
----
-type: Index
-title: "Case Studies — Source Articles"
-description: "Source articles for case studies system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Case Studies — Source Articles
 

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Apdex Score: Application Performance Index"
 description: "**Apdex** (Application Performance Index) is an open standard for measuring user satisfaction with application response time. It converts complex response time data into a single score between 0 an..."
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Apdex Score: Application Performance Index

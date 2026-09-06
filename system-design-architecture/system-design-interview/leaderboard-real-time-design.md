@@ -2,7 +2,7 @@
 type: System Design
 title: "Real-Time Leaderboard Design — Key Takeaways"
 description: "Architectural patterns for real-time leaderboards at scale: Redis Sorted Sets, Kafka event streaming, dual-write persistence, multi-dimension ranking, and WebSocket push."
-timestamp: 2026-07-02T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-02T00:00:00Z }
 ---
 
 # Real-Time Leaderboard Design — Key Takeaways

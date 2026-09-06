@@ -2,7 +2,7 @@
 type: Article
 title: "PART 1 — Distinguished Engineer — Behavioural Interview Questions"
 description: "Behavioural interview questions and STAR-model answers for Distinguished Engineer roles, covering technical leadership, influence without authority, production incidents, mentoring, and trade-off decisions."
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 source: "https://medium.com/@rameshwar.blog/part-1-distinguished-engineer-behavioural-interview-questions-323af57f1d53"
 author:
   - "Rameshwar Singh"

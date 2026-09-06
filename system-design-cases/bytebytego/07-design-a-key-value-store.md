@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Key-Value Store"
 description: "Design a highly available, linearly scalable distributed key-value store (like DynamoDB or Cassandra) featuring consistent hashing, tunable quorum consistency, vector clocks, gossip failure detection, Merkle trees, and LSM-tree storage engines."
 tags: [system-design, distributed-systems, key-value-store, dynamodb, cassandra, cap-theorem, vector-clocks, lsm-tree, merkle-tree]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Key-Value Store

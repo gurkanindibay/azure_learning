@@ -2,7 +2,7 @@
 type: System Design
 title: "CDC Pipeline Scale Failures & Resilient Change Streams — Key Takeaways"
 description: "Production failure modes of Change Data Capture across polling, triggers, WAL streaming, Kafka partitioning, Netflix DBLog non-blocking snapshots, and warehouse idempotent MERGE reconciliation."
-timestamp: 2026-08-11T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-11T00:00:00Z }
 ---
 
 # 38. CDC Pipeline Scale Failures & Resilient Change Streams — Key Takeaways

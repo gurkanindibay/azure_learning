@@ -2,7 +2,7 @@
 type: Article
 title: "Stop Designing REST APIs Like a Mid-Level Dev: 4 Advanced Patterns Senior Engineers Use Instead"
 description: "Four production-grade REST API patterns — idempotency keys, JSON Merge Patch, ETag-based concurrency control, and sparse fieldsets — that separate good APIs from contract-grade APIs."
-timestamp: 2026-03-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-03-16T00:00:00Z }
 source: "https://blog.stackademic.com/stop-designing-rest-apis-like-a-mid-level-dev-4advanced-patterns-senior-engineers-use-instead-c8ecbd116b27"
 author: "HabibWahid"
 ---

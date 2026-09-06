@@ -2,7 +2,7 @@
 type: Article
 title: "Junior Devs Use `Task.Run`. Senior Devs Use These 4 Async Patterns Instead"
 description: "*Generated as a C#/.NET companion to HabibWahid's original Java/Spring article*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Junior Devs Use `Task.Run`. Senior Devs Use These 4 Async Patterns Instead

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Service Mesh Architecture"
 description: "Service mesh is a dedicated infrastructure layer for handling service-to-service communication in microservices architectures. It abstracts networking concerns away from application code by using s..."
 tags: [cloud-infrastructure-platform-architecture, networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Service Mesh Architecture

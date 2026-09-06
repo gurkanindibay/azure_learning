@@ -3,7 +3,7 @@ type: Unstructured Note
 title: "Query Optimization 1"
 description: "- **Review of Previous Material:** MPR started the meeting by reviewing the material from the last session, focusing on hash joins and external merge sort. They asked participants to work through e..."
 tags: [notes, azure]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 

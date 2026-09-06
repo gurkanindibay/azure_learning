@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A News Feed System"
 description: "Design a high-scale social media news feed system (like Facebook or Twitter) featuring hybrid fan-out architecture (Push vs. Pull), multi-tier Redis caching, graph query decoupling, and high-throughput timeline aggregation."
 tags: [system-design, distributed-systems, news-feed, fan-out, redis, social-graph, caching, scalability]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A News Feed System

@@ -2,7 +2,7 @@
 type: System Design
 title: "SQL System Design: From Fresher to Staff Engineer"
 description: "S1[\"<b>Step 1: Single Instance</b><br/>One DB, one connection<br/>⏱️ 0 operational overhead\"]"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 19. SQL System Design: From Fresher to Staff Engineer

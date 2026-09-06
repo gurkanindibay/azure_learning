@@ -2,7 +2,7 @@
 type: System Design
 title: "Cache Idempotency — Key Takeaways"
 description: "Reusable retry-safety and deduplication strategies for high-throughput services facing network timeouts."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # 30. Cache Idempotency — Key Takeaways

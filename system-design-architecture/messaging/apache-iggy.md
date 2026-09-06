@@ -2,7 +2,7 @@
 type: System Design
 title: "Apache Iggy — Key Takeaways"
 description: "Traditional async runtime  →  syscalls + context switches + copying"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 27. Apache Iggy — Key Takeaways

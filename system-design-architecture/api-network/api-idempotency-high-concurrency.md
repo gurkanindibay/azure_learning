@@ -2,7 +2,7 @@
 type: System Design
 title: "API Idempotency Under High Concurrency — Key Takeaways"
 description: "Architectural patterns for guaranteeing API idempotency at scale: token-based validation, Redis atomic Lua scripts, optimistic locking, state machines, and defense-in-depth strategies."
-timestamp: 2026-07-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-03T00:00:00Z }
 ---
 
 # API Idempotency Under High Concurrency — Key Takeaways

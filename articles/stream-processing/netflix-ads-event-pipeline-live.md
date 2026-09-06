@@ -5,7 +5,7 @@ description: "How Netflix re-architected its revenue-critical Ads Event Pipeline
 source: "https://netflixtechblog.medium.com/behind-the-scenes-evolving-netflixs-ads-event-pipeline-for-live-part-ii-826ebf9ad9fb"
 author: "Kinesh Satiya, Yogesh Nagarur (Netflix Technology Blog)"
 published: 2026-08-17
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # Behind the Scenes: Evolving Netflix’s Ads Event Pipeline for Live — Part II

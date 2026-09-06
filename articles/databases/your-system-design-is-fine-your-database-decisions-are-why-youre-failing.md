@@ -5,7 +5,7 @@ source: "https://medium.com/@kanishks772/your-system-design-is-fine-your-databas
 author:
   - "[[The Latency Gambler]]"
 published: 2026-04-24
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 description: "A system-design interview guide to the database decisions that actually matter: SQL vs NoSQL, ACID, indexing, scaling reads/writes, CAP, sharding, isolation levels, storage internals, and distributed transactions."
 tags:
   - clippings

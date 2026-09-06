@@ -5,7 +5,7 @@ source: "https://medium.com/@cloudwithazeem/the-database-architecture-trap-almos
 author:
   - "[[Cloud With Azeem]]"
 published: 2026-08-08
-timestamp: 2026-08-08T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-08T00:00:00Z }
 description: "Why random UUIDs (UUIDv4) as primary keys break relational database performance at scale due to B-tree fragmentation, buffer pool churn, and page splits, and how time-ordered identifiers (UUIDv7, ULID, TSID) solve it."
 tags:
   - clippings

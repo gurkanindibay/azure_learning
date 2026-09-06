@@ -2,7 +2,7 @@
 type: Azure Service
 description: "🔐 System-Assigned vs User-Assigned Managed Identity"
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 🔐 System-Assigned vs User-Assigned Managed Identity

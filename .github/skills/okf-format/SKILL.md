@@ -37,7 +37,7 @@ Use the decision tree from `.github/copilot-instructions.md`:
 type: <Azure Service | Architecture Pattern | System Design | Reference | ...>
 title: "<title>"
 description: "<one-line summary>"
-timestamp: <ISO 8601>
+generated: { by: process:format-agent, at: <ISO 8601 datetime with offset> }
 ---
 ```
 

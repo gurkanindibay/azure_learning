@@ -2,7 +2,7 @@
 type: System Design
 title: "Concurrency & Transactions — Checkout Scaling vs. Inventory Protection Takeaways"
 description: "Reusable patterns from high-scale checkout: why throughput engineering doesn't prevent overselling, pessimistic-lock serialization bottlenecks, distributed reservation-expiry cleanup, eventual consistency as product decision, and impossible-state prevention as architectural driver."
-timestamp: 2026-07-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-18T00:00:00Z }
 ---
 
 # Concurrency & Transactions — Checkout Scaling vs. Inventory Protection Takeaways

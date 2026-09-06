@@ -2,7 +2,7 @@
 type: System Design
 title: "AI Agent Architecture — Key Takeaways"
 description: "Graph engineering patterns for multi-agent coordination: progression from prompts to graphs, maker-checker validation, parallel factor fanout, and multi-model tier architecture."
-timestamp: 2026-08-06T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-06T00:00:00Z }
 ---
 
 # 36. AI Agent Architecture — Key Takeaways

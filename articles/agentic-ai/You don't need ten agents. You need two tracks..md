@@ -2,7 +2,7 @@
 type: Article
 title: "You don't need ten agents. You need two tracks."
 description: "A two-track agentic development workflow: a high-attention spec track (PRD + technical design) paired with a low-attention implementation track, bounded by the Theory of Constraints."
-timestamp: 2026-06-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 source: "https://x.com/hugobarauna/status/2067690067288572209"
 author: "Hugo Baraúna (@hugobarauna)"
 published: 2026-06-18

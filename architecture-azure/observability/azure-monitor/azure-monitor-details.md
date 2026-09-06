@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Monitor"
 description: "**Azure Monitor** is a comprehensive monitoring solution for collecting, analyzing, and responding to monitoring data from cloud and on-premises environments. It provides full-stack observability a..."
 tags: [observability]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Monitor

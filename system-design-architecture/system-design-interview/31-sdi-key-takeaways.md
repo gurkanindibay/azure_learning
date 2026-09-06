@@ -2,7 +2,7 @@
 type: System Design
 title: "Why the Standard Template Fails — Key Takeaways"
 description: "Seven architectural concepts that separate template-memorizers from senior engineers: constraint-driven design, cache stampede, partition key hot spots, PACELC consistency, storage engine fundamentals, and operational failure design."
-timestamp: 2026-07-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-26T00:00:00Z }
 ---
 
 # 31. Why the Standard Template Fails — Key Takeaways

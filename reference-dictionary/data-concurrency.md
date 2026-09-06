@@ -2,7 +2,7 @@
 type: Reference
 title: "Data, Concurrency & Transactions"
 description: "Database transactions, isolation levels, locking primitives, and concurrency guarantees."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Data, Concurrency & Transactions

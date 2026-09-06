@@ -2,7 +2,7 @@
 type: System Design
 title: "Thread Pool Design — Key Takeaways"
 description: "Key architectural takeaways from the thread pool design article covering I/O-bound sizing, bounded queues, backpressure, task persistence, and message-broker decoupling for high-throughput batch processing."
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # Thread Pool Design for High-Throughput Batch Processing — Key Takeaways

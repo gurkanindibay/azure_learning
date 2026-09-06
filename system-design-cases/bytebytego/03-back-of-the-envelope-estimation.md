@@ -3,7 +3,7 @@ type: System Design Case
 title: "Back-of-the-Envelope Estimation"
 description: "A comprehensive reference guide and mental models for back-of-the-envelope calculations in system design interviews: powers of two, latency numbers every programmer should know, availability SLAs (nines), and step-by-step calculation formulas."
 tags: [system-design, distributed-systems, estimation, latency, availability, capacity-planning, back-of-the-envelope]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Back-of-the-Envelope Estimation

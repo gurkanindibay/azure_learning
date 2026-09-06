@@ -2,7 +2,7 @@
 type: Guide
 title: "Dayanıklılık (Resilience) Müfredatı — Temelden İleri Seviyeye"
 description: "Dağıtık sistemlerde dayanıklılık kalıplarını temelden ileri seviyeye kadar kapsayan Türkçe öğrenme programı."
-timestamp: 2026-08-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-10T00:00:00Z }
 ---
 
 # Dayanıklılık (Resilience) Müfredatı

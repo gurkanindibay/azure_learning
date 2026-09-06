@@ -3,7 +3,7 @@ type: System Design Case
 title: "Why is a solid-state drive (SSD) fast?"
 description: "“A solid state drive reads up to 10 times faster and writes up to 20 times faster than a hard disk drive.” [1]. “An SSD is a flash-memory based data storage device. Bits are stored into cells, whic..."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Why is a solid-state drive (SSD) fast?

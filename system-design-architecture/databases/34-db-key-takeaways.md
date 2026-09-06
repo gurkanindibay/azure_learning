@@ -2,7 +2,7 @@
 type: System Design
 title: "PACELC Theorem — Key Takeaways"
 description: "PACELC extends CAP by addressing the latency-consistency tradeoff during normal operation, with practical data replication strategies."
-timestamp: 2026-07-31T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-31T00:00:00Z }
 ---
 
 # 34. PACELC Theorem — Key Takeaways

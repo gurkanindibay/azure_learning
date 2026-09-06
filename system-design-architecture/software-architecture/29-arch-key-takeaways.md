@@ -2,7 +2,7 @@
 type: System Design
 title: "Architecture Principles — Key Takeaways"
 description: "Software Engineering Is Quietly Becoming a Coordination Problem"
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # 29. Architecture Principles — Key Takeaways

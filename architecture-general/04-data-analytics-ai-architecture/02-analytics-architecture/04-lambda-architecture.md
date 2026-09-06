@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Lambda Architecture"
 description: "Lambda Architecture is a **big data processing pattern** that combines batch and stream processing to handle massive datasets with both accuracy and low latency. Proposed by Nathan Marz, it splits ..."
 tags: [data-analytics-ai-architecture, analytics-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Lambda Architecture

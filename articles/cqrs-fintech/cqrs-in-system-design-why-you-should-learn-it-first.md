@@ -2,7 +2,7 @@
 type: Article
 title: "CQRS in System Design: Why You Should Learn It First"
 description: "An introduction to Command Query Responsibility Segregation: separating command and query responsibilities, when CQRS helps, and common mistakes."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # CQRS in System Design: Why You Should Learn It First

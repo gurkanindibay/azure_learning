@@ -3,7 +3,7 @@ type: Azure Service
 title: "Microsoft Entra ID Access Reviews"
 description: "Microsoft Entra ID Access Reviews is a feature within Microsoft Entra ID Identity Governance that enables organizations to efficiently manage group memberships, access to enterprise applications, a..."
 tags: [security]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Microsoft Entra ID Access Reviews

@@ -2,7 +2,7 @@
 type: Article
 title: "7 Coding Patterns I Stole From Senior Engineers"
 description: "Most developers do not become better because they learn more syntax. They become better because they stop making code harder than it needs to be."
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 source: "https://medium.com/skillstuff/7-coding-patterns-i-stole-from-senior-engineers-c95f757e52a6"
 author:
   - "[[CodeByUmar]]"

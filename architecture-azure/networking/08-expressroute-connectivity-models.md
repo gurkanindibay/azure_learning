@@ -3,7 +3,7 @@ type: Azure Service
 title: "ExpressRoute Connectivity Models"
 description: "ExpressRoute allows you to create a connection in two ways: the **Service Provider** model and the **ExpressRoute Direct** model. Within the Service Provider model there are three paths: CloudExcha..."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # ExpressRoute Connectivity Models

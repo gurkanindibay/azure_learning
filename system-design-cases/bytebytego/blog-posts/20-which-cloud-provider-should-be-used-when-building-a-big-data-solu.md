@@ -3,7 +3,7 @@ type: System Design Case
 title: "Which cloud provider should be used when building a big data solution?"
 description: "big data solution? The diagram below illustrates the detailed comparison of AWS, Google Cloud, and Microsoft Azure."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Which cloud provider should be used when building a big data solution?

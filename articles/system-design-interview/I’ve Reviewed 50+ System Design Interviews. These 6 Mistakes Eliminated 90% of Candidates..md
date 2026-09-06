@@ -2,7 +2,7 @@
 type: Article
 title: "I’ve Reviewed 50+ System Design Interviews. These 6 Mistakes Eliminated 90% of Candidates."
 description: "Six recurring failure patterns in senior system design interviews — and what the top 10% of candidates do differently."
-timestamp: 2026-06-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-22T00:00:00Z }
 source: "https://blog.stackademic.com/ive-reviewed-50-system-design-interviews-these-6-mistakes-eliminated-90-of-candidates-6feffb7e7f70"
 author: "ProdRescue By Devrim"
 published: 2026-04-20

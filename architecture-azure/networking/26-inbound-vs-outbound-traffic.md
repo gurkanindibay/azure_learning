@@ -3,7 +3,7 @@ type: Azure Service
 title: "Inbound vs Outbound Traffic in Azure Networking"
 description: "Teams often describe traffic direction from different viewpoints:"
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Inbound vs Outbound Traffic in Azure Networking

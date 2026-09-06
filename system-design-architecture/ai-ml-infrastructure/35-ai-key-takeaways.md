@@ -2,7 +2,7 @@
 type: System Design
 title: "Headroom — Content-Aware Token Compression — Key Takeaways"
 description: "1. **Audit token spend first**: Separate what was sent from what the answer actually used — identify the worst offenders (logs, tool outputs, RAG chunks)."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # 35. Headroom — Content-Aware Token Compression — Key Takeaways

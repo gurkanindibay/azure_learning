@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Real-World Scenarios — Key Takeaways"
 description: "Architectural patterns extracted from 10 industry-grade Kafka interview scenarios: partition key design, idempotency, CDC, schema evolution, consumer lag, event-time semantics, and integration hub patterns."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # Kafka Real-World Scenarios — Key Takeaways

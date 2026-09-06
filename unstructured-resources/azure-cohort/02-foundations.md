@@ -3,7 +3,7 @@ type: Unstructured Note
 title: "Foundations"
 description: "MPR Room name=> Instructor Johannes Gehrke"
 tags: [notes, azure]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 

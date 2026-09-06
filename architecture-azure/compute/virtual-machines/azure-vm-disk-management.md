@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Virtual Machine Disk Management"
 description: "Azure Virtual Machines use disks for operating system storage, temporary storage, and persistent data storage. Understanding how to manage these disks efficiently, including attaching and detaching..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Virtual Machine Disk Management

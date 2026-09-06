@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Functions - Hosting Plans"
 description: "Azure Functions offers multiple hosting plans that determine how your function app scales, the resources available, and the pricing model. Choosing the right hosting plan is critical for meeting yo..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Functions - Hosting Plans

@@ -1,9 +1,3 @@
----
-type: Index
-title: "Resilience — Source Articles"
-description: "Source articles for resilience system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Resilience — Source Articles
 

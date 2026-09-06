@@ -1,7 +1,7 @@
 ---
 type: System Design
 title: "Azure Service Mapping"
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 ---
 
 # 7. Azure Service Mapping

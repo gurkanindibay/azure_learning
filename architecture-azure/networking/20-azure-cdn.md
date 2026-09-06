@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure CDN (Content Delivery Network)"
 description: "**Layer/scope:** Global content delivery network for caching and accelerating static content."
 tags: [networking]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure CDN (Content Delivery Network)

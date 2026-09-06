@@ -2,7 +2,7 @@
 type: System Design
 title: "Agent Harness — The Anatomy of Production AI Agents"
 description: "CPU[CPU = Raw LLM]"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 28. Agent Harness — The Anatomy of Production AI Agents

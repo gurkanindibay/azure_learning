@@ -5,7 +5,7 @@ description: "A deep dive into thread pool design for I/O-bound workloads, cover
 source: "https://medium.com/@umeshcapg/interviewer-how-would-you-design-a-thread-pool-to-send-10-million-sms-messages-in-one-hour-04c69e1d4e1c"
 author: "Umesh Kumar Yadav"
 published: 2026-07-17
-timestamp: 2026-07-24T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 ---
 
 # How Would You Design a Thread Pool to Send 10 Million SMS Messages in One Hour

@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Rate Limiter"
 description: "Design a high-throughput, distributed API rate limiter supporting multiple rate-limiting algorithms (Token Bucket, Sliding Window Counter), Redis Lua atomic script execution, multi-datacenter synchronization, and standard HTTP 429 headers."
 tags: [system-design, distributed-systems, rate-limiter, redis, lua-scripts, api-gateway, sliding-window, algorithms]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Rate Limiter

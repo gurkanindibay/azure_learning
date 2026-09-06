@@ -2,7 +2,7 @@
 type: Reference
 title: "Networking"
 description: "**Hub-and-Spoke** — a network topology where a central hub VNet hosts shared services and spoke VNets host workloads."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Networking

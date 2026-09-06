@@ -3,7 +3,7 @@ type: System Design Case
 title: "Design A Search Autocomplete System"
 description: "Design a sub-millisecond search autocomplete (typeahead) engine (like Google Search) using optimized Trie prefix trees with node-level top-K caching, asynchronous MapReduce aggregation pipelines, and distributed Trie sharding."
 tags: [system-design, distributed-systems, search-autocomplete, trie, prefix-tree, mapreduce, caching, typeahead]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Design A Search Autocomplete System

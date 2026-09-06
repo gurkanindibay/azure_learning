@@ -1,6 +1,3 @@
----
-okf_version: "0.1"
----
 
 # ByteByteGo — System Design Interview Cases
 

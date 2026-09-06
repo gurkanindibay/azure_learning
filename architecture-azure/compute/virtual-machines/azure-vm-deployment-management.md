@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Virtual Machines - Deployment and Management"
 description: "Azure Virtual Machines can be deployed and managed using various tools and methods. Each approach offers different capabilities for customization, automation, and integration with existing workflow..."
 tags: [compute]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Virtual Machines - Deployment and Management

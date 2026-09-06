@@ -6,7 +6,7 @@ source: "https://medium.com/@kevalbalar1995/modular-monolith-architecture-in-c-t
 author:
   - "[[Keval]]"
 published: 2026-07-03
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 tags:
   - "clippings"
 ---

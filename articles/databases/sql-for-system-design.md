@@ -2,7 +2,7 @@
 type: Article
 title: "SQL for System Design: From Fresher to Staff Engineer"
 description: "Everything you need to make intelligent decisions about when, why, and how to use SQL in production systems."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # SQL for System Design: From Fresher to Staff Engineer

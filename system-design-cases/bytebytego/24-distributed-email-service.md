@@ -3,7 +3,7 @@ type: System Design Case
 title: "Distributed Email Service"
 description: "Design a distributed, highly scalable, and fault-tolerant email service (like Gmail or Outlook) supporting 1 billion users, petabyte-scale storage, real-time push, full-text search, and high email deliverability."
 tags: [system-design, distributed-systems, storage-systems, lsm-tree, elasticsearch, websocket, email-deliverability]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Distributed Email Service

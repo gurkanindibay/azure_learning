@@ -2,7 +2,7 @@
 type: System Design
 title: "Concurrency & Transactions — Flash-Sale Inventory Takeaways"
 description: "Race conditions, atomic updates, Redis edge protection, queue serialization, and multi-region inventory strategies for flash-sale overselling prevention."
-timestamp: 2026-07-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-18T00:00:00Z }
 ---
 
 # 30. Concurrency & Transactions — Flash-Sale Inventory Takeaways

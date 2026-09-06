@@ -6,7 +6,7 @@ author:
   - "[[CodersWorld]]"
 published: 2026-01-13
 created: 2026-06-27
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 description: "Inside Kafka's Distributed Architecture That Handles 1M+ Events Per Second While Legacy Message Queues Fail Under Load"
 tags:
   - "clippings"

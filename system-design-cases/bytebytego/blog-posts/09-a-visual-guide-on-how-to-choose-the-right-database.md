@@ -3,7 +3,7 @@ type: System Design Case
 title: "A visual guide on how to choose the right Database"
 description: "Picking a database is a long-term commitment so the decision shouldn’t be made lightly. The important thing to keep in mind is to choose the right database for the right job."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # A visual guide on how to choose the right Database

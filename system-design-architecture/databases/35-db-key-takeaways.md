@@ -2,7 +2,7 @@
 type: System Design
 title: "PostgreSQL Logical Replication Internals — Key Takeaways"
 description: "WAL-based CDC internals: logical decoding, replication slot lifecycle, and the publication/subscription model for selective table replication."
-timestamp: 2026-08-01T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-01T00:00:00Z }
 ---
 
 # 35. PostgreSQL Logical Replication Internals — Key Takeaways

@@ -3,7 +3,7 @@ type: Unstructured Note
 title: "Single Node Qp"
 description: "- **Introduction and Agenda:** Marius introduced the session on query processing and execution, mentioning that Connor Cullingham from the fabric team contributed to the material but could not atte..."
 tags: [notes, azure]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 **Key Topics:**

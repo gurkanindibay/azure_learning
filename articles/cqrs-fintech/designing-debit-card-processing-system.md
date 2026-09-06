@@ -6,7 +6,7 @@ source: "https://codefarm0.medium.com/designing-a-debit-card-processing-system-p
 author: "Arvind Kumar (CodeFarm)"
 published: 2026-02-26
 created: 2026-06-30
-timestamp: 2026-06-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-30T00:00:00Z }
 tags:
   - fintech
   - system-design

@@ -2,7 +2,7 @@
 type: System Design
 title: "Dockerfile Optimization — Key Takeaways"
 description: "FROM node:20-slim"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 26. Dockerfile Optimization — Key Takeaways

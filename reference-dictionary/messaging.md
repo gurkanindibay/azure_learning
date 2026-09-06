@@ -2,7 +2,7 @@
 type: Reference
 title: "Message Brokers & Asynchronous Messaging"
 description: "The unit of **parallelism and ordering** in Kafka. Messages within a partition are strictly ordered. Partitions enable horizontal scaling — each partition can be consumed by only one consumer in a ..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Message Brokers & Asynchronous Messaging

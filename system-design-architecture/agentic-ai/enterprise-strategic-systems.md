@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic AI for Enterprise Strategic Systems: Key Takeaways"
 description: "SC[Signal Collection] --> SI[Signal Interpretation]"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 17. Agentic AI for Enterprise Strategic Systems: Key Takeaways

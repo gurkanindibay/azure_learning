@@ -5,7 +5,7 @@ description: "The reliability best practice that quietly creates data corruption
 source: "https://medium.com/@kakamber07/the-hidden-cost-of-idempotency-everyone-ignores-96b5caf38ded"
 author: "Adonis"
 published: 2026-02-03
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 tags:
   - idempotency
   - distributed-systems

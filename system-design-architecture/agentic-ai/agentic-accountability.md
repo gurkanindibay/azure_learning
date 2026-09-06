@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic AI Accountability — Key Takeaways"
 description: "Every AI-generated output shipped to production needs a named human owner, a context freshness check, and a mandatory review gate."
-timestamp: 2026-06-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-23T00:00:00Z }
 ---
 
 # 45. Agentic AI Accountability — Key Takeaways

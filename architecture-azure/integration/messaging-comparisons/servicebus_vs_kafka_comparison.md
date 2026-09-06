@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Service Bus vs Apache Kafka — Focused Comparison"
 description: "This document compares **Azure Service Bus** and **Apache Kafka**, with a focus on: Queues, Topics, Partitions, and Push vs Pull models. This is intended to clarify how each system treats fundament..."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Service Bus vs Apache Kafka — Focused Comparison

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "The USE Method"
 description: "The **USE Method** is a methodology for analyzing the performance of any system by examining **Utilization**, **Saturation**, and **Errors** of every resource. It was developed by **Brendan Gregg**..."
 tags: [reliability-performance-operations]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # The USE Method

@@ -5,7 +5,7 @@ description: "How Netflix evolved its advertising event processing architecture 
 source: "https://netflixtechblog.com/behind-the-scenes-building-a-robust-ads-event-processing-pipeline-e4e86caf9249"
 author: "Kinesh Satiya (Netflix Technology Blog)"
 published: 2025-05-09
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # Behind the Scenes: Building a Robust Ads Event Processing Pipeline

@@ -3,7 +3,7 @@ type: System Design Case
 title: "The Learning Continues: Real-World Architecture Catalog & Engineering Resources"
 description: "Comprehensive curriculum index, landmark distributed systems whitepapers, categorized real-world system architecture studies, and premier technology company engineering blogs."
 tags: [system-design, distributed-systems, architecture, reading-list, whitepapers, engineering-blogs, reference]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # The Learning Continues: Real-World Architectures & Resources

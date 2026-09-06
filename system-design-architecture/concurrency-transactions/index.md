@@ -1,9 +1,3 @@
----
-type: Index
-title: "Concurrency & Transactions"
-description: "System-design problems and strategies for distributed concurrency, transaction isolation, idempotency, and causal consistency."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Concurrency & Transactions
 

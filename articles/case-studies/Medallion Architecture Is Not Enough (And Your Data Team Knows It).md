@@ -9,7 +9,7 @@ created: 2026-06-16
 description: "Why Bronze-Silver-Gold looks clean on slides but breaks down in real data platforms"
 tags:
   - "clippings"
-timestamp: 2026-06-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-16T00:00:00Z }
 ---
 
 # Medallion Architecture Is Not Enough (And Your Data Team Knows It)

@@ -2,7 +2,7 @@
 type: Reference
 title: "Architecture & Cloud Patterns"
 description: "**Domain-Driven Design** — a software design approach centered on domain modeling. The team builds a shared model of the business domain using a precise, agreed-upon language."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Architecture & Cloud Patterns

@@ -2,7 +2,7 @@
 type: System Design
 title: "Idempotency Hidden Costs — Key Takeaways"
 description: "Reusable patterns from the hidden costs of idempotency at scale: state explosion, false confidence, money bugs, observability gaps, end-to-end requirements, and correct success semantics."
-timestamp: 2026-06-28T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 ---
 
 # 45. Idempotency Hidden Costs — Key Takeaways

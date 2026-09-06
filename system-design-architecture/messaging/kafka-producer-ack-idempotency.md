@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Producer Acknowledgment & Idempotency — Key Takeaways"
 description: "How producer acknowledgment failures create duplicate events, and the strategies to make consumers idempotent through Event IDs, atomic deduplication, transactional boundaries, and shared dedup stores."
-timestamp: 2026-06-27T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 ---
 
 # 29. Kafka Producer Acknowledgment & Idempotency — Key Takeaways

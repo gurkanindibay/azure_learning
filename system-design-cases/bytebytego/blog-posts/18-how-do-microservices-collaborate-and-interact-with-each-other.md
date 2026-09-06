@@ -3,7 +3,7 @@ type: System Design Case
 title: "How do microservices collaborate and interact with each other?"
 description: "other? There are two ways: **orchestration** and **choreography**. The diagram below illustrates the collaboration of microservices. Choreography is like having a choreographer set all the rules. T..."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # How do microservices collaborate and interact with each other?

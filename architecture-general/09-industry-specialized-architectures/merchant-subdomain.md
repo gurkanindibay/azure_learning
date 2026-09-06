@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Merchant Subdomain - Payment Systems"
 description: "The Merchant subdomain manages all merchant-related operations including merchant onboarding, payment processing, settlement, and relationship management. This domain serves as the bridge between m..."
 tags: [industry-specialized-architectures]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Merchant Subdomain - Payment Systems

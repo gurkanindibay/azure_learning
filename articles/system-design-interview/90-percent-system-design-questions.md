@@ -2,7 +2,7 @@
 type: Article
 title: "90% of System Design Interviews in 2026 Are Just These 14 Concepts Repeated"
 description: "*By Priyansh · 5 min read · Apr 19, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 90% of System Design Interviews in 2026 Are Just These 14 Concepts Repeated

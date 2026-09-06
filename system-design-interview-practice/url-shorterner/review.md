@@ -2,7 +2,7 @@
 type: System Design Review
 title: "URL Shortener Interview Case Review"
 description: "Evaluation, correctness findings, and improvement guidance for the URL shortener system design interview case"
-timestamp: 2026-07-12T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-12T00:00:00Z }
 ---
 
 # URL Shortener Interview Case Review

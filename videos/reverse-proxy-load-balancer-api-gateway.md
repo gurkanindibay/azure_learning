@@ -2,7 +2,7 @@
 type: Video Notes
 title: "Reverse Proxy vs Load Balancer vs API Gateway: The Real Difference?"
 description: "This video breaks down the architectural differences, use cases, and overlapping capabilities of Reverse Proxies, Load Balancers, and API Gateways, demonstrating how they serve as complementary lay..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Reverse Proxy vs Load Balancer vs API Gateway: The Real Difference?

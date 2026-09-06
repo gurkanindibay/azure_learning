@@ -3,7 +3,7 @@ type: System Design Case
 title: "Deployment strategies"
 description: "Deploying or upgrading services is risky. In this post, we explore risk mitigation strategies. The diagram below illustrates the common ones."
 tags: [system-design]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Deployment strategies

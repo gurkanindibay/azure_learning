@@ -5,7 +5,7 @@ description: "How good intentions quietly turn into the worst of both worlds —
 source: "https://medium.com/@erwindev/when-microservices-become-distributed-monoliths-warning-signs-and-recovery-65af6086da3a"
 author: "Erwin Hermanto"
 published: 2026-04-03
-timestamp: 2026-04-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-04-03T00:00:00Z }
 ---
 
 # When Microservices Become Distributed Monoliths: Warning Signs and Recovery

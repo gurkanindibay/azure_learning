@@ -5,7 +5,7 @@ description: "How BigMoeOnEdge ran a 284B parameter MoE model on a 12GB RAM mobi
 source: "https://medium.com/@kanishks772/a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone-ae8abaa402e6"
 author: "The Latency Gambler"
 published: 2026-08-17
-timestamp: 2026-08-23T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 ---
 
 # A 284 Billion Parameter AI Model Just Ran on a 12GB Phone

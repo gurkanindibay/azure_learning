@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Event Services Reference Guide"
 description: "This document consolidates the full conversation and provides a structured reference for Azure Event Grid, Event Hubs, and Service Bus, including comparisons, architecture diagrams, decision guides..."
 tags: [integration]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Event Services Reference Guide

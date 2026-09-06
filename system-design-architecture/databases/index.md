@@ -1,9 +1,3 @@
----
-type: Index
-title: "Databases & Query Performance"
-description: "System-design problems and strategies for database indexing, pagination, query optimization, SQL system design, and database technology decisions."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Databases & Query Performance
 

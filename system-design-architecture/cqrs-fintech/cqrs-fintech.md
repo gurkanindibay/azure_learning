@@ -2,7 +2,7 @@
 type: System Design
 title: "CQRS for Fintech — Key Takeaways"
 description: "Can this request be accepted?"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 25. CQRS for Fintech — Key Takeaways

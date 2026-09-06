@@ -1,9 +1,3 @@
----
-type: System Design
-title: "System Design Interview: Problem → Strategy Reference"
-description: "Look up a problem by architecture domain and find the strategy, tradeoff, and Azure implementation."
-timestamp: 2026-06-15T00:00:00Z
----
 
 # System Design Interview: Problem → Strategy Reference
 

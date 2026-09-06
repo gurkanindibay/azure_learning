@@ -3,7 +3,7 @@ type: System Design Case
 title: "Real-Time Gaming Leaderboard"
 description: "Design a real-time, highly scalable gaming leaderboard system supporting millions of concurrent players, sub-second score updates, fast top-N and relative rank lookups using Redis Sorted Sets and distributed sharding."
 tags: [system-design, distributed-systems, redis, skip-list, caching, gaming, serverless]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Real-Time Gaming Leaderboard

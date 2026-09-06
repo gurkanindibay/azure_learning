@@ -1,9 +1,3 @@
----
-type: Index
-title: "Articles — Domain-Organized Source Material"
-description: "Source articles organized by system-design domain. Each domain directory contains original articles used as upstream sources for system-design-architecture/ takeaways."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Articles — Domain-Organized Source Material
 

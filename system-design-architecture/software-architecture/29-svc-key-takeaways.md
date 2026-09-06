@@ -2,7 +2,7 @@
 type: System Design
 title: "Microservices & Service Design — Engineering Decision Takeaways"
 description: "Decision points for decomposing services, selecting communication styles, isolating data and failures, and operating a microservices system."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 ---
 
 # 29. Microservices & Service Design — Engineering Decision Takeaways

@@ -2,7 +2,7 @@
 type: Reference
 title: "Geospatial & Spatial Indexing"
 description: "Spatial indexing algorithms, space-filling curves, hierarchical grid systems, geospatial data structures, map tiling, geocoding, and location-based services (LBS)."
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Geospatial & Spatial Indexing

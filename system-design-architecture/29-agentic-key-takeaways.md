@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic AI — Key Takeaways"
 description: "Production agentic engineering requires explicit verification, context architecture, harness design, and human ownership."
-timestamp: 2026-09-06T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 ---
 
 # 29. Agentic AI — Key Takeaways

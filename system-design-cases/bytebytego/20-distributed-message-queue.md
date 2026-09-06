@@ -3,7 +3,7 @@ type: System Design Case
 title: "Distributed Message Queue"
 description: "Design a high-throughput, horizontally scalable distributed message queue (like Apache Kafka or Pulsar) featuring append-only commit logs, zero-copy data transfer, partition replication (ISR), and transactional exactly-once delivery."
 tags: [system-design, distributed-systems, message-queue, kafka, pulsar, commit-log, zero-copy, isr, exactly-once]
-timestamp: 2026-08-22T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 ---
 
 # Distributed Message Queue

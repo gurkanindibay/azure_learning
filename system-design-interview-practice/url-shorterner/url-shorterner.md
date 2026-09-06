@@ -2,7 +2,7 @@
 type: System Design Case
 title: "URL Shortener"
 description: "System design interview case for a global URL shortener with custom aliases and click analytics"
-timestamp: 2026-07-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-15T00:00:00Z }
 ---
 
 # URL Shortener

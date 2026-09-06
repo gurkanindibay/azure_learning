@@ -2,7 +2,7 @@
 type: System Design
 title: "Redis Rate Limiting Patterns — Key Takeaways"
 description: "Atomic token bucket with Lua, sorted-set rolling windows, concurrent request limiting, gradual load shedding, and fail-open pattern — production patterns from Stripe and ClassDojo for distributed rate limiting."
-timestamp: 2026-07-03T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-03T00:00:00Z }
 ---
 
 # 62. Redis Rate Limiting Patterns — Key Takeaways

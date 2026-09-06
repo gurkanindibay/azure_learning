@@ -2,7 +2,7 @@
 type: System Design
 title: "Kafka Offset Commit Strategies — Key Takeaways"
 description: "Auto commit, manual commit, batch processing, per-record commit, transactions, rebalancing, and strategy selection — what actually works in production"
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # 32. Kafka Offset Commit Strategies — Key Takeaways

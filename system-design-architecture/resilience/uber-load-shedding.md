@@ -2,7 +2,7 @@
 type: System Design
 title: "Uber Intelligent Load Management — Key Takeaways"
 description: "How Uber evolved from static quota-based rate limiting to a unified, priority-aware load shedding engine with PID control, achieving 80% throughput increase and ~70% P99 latency reduction."
-timestamp: 2026-07-19T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-19T00:00:00Z }
 ---
 
 # Uber Intelligent Load Management — Key Takeaways

@@ -2,7 +2,7 @@
 type: Article
 title: "Idempotency Keys Prevent Duplicate Side Effects"
 description: "How idempotency keys, deduplication state, and downstream key propagation make retries safe under network timeouts."
-timestamp: 2026-07-10T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 source: "https://medium.com/javarevisited/interviewer-if-your-backend-handles-850-requests-per-second-and-network-timeouts-happen-how-do-413b8b988456"
 author: "Umesh Kumar Yadav"
 published: 2026-05-08

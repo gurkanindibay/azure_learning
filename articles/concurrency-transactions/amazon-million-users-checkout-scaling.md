@@ -2,7 +2,7 @@
 type: Article
 title: "Amazon: 1 Million Users Clicked Checkout At Once — The Real Problem Wasn't Scaling"
 description: "Why high-scale checkout systems are designed around preventing impossible inventory states, not throughput. Covers reservation models, distributed cleanup, idempotency, sagas, and the gap between scaling and consistency."
-timestamp: 2026-07-18T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-18T00:00:00Z }
 ---
 
 > **Source**: [Level Up Coding](https://levelup.gitconnected.com/amazon-1-million-users-clicked-checkout-at-once-the-real-problem-wasnt-scaling-f7956a102f9c) — Sagar Yadav, 2026-07-13  

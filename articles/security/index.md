@@ -1,9 +1,3 @@
----
-type: Index
-title: "Security — Source Articles"
-description: "Source articles for security system-design topics."
-timestamp: 2026-06-27T00:00:00Z
----
 
 # Security — Source Articles
 

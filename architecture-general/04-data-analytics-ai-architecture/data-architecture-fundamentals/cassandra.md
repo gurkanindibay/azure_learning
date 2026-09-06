@@ -2,7 +2,7 @@
 type: Architecture Pattern
 title: "Apache Cassandra"
 description: "Distributed, masterless NoSQL database for high write throughput, tunable consistency, and multi-region availability"
-timestamp: 2026-07-16T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-16T00:00:00Z }
 ---
 
 # Apache Cassandra

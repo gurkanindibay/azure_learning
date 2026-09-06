@@ -2,7 +2,7 @@
 type: System Design
 title: "Agentic Core Engineering — Key Takeaways"
 description: "Twelve reusable patterns distilled from 20 foundational agentic concepts: loop mechanics, state management, multi-agent coordination, configuration layers, guardrails, and observability."
-timestamp: 2026-06-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 ---
 
 # 58. Agentic Core Engineering — Key Takeaways

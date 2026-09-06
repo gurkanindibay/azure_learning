@@ -3,7 +3,7 @@ type: Azure Service
 title: "Azure Blob Storage API"
 description: "Azure Blob Storage provides a RESTful API and client SDKs for managing binary large objects (blobs). This document covers the key API operations for working with blob metadata, properties, and comm..."
 tags: [data]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Azure Blob Storage API

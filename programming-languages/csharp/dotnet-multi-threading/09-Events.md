@@ -3,7 +3,7 @@ type: Programming Guide
 title: "Events (ManualResetEvent & AutoResetEvent)"
 description: "Event-based synchronization primitives for signaling between threads."
 tags: [csharp, dotnet]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Events (ManualResetEvent & AutoResetEvent)

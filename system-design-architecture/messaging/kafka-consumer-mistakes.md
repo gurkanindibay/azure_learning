@@ -2,7 +2,7 @@
 type: System Design
 title: "Message Brokers & Async — Key Takeaways"
 description: "The 5 Kafka Consumer Mistakes That Quietly Destroy Production Systems"
-timestamp: 2026-06-15T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 ---
 
 # 30. Message Brokers & Async — Key Takeaways

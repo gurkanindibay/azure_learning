@@ -2,7 +2,7 @@
 type: System Design
 title: "Sharding & Partitioning Strategies — Key Takeaways"
 description: "Production-proven database sharding and partitioning strategies: gene-based sharding, vertical/horizontal split, Snowflake ID routing, cross-shard queries, dual-write migration, and hotspot prevention."
-timestamp: 2026-07-26T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-26T00:00:00Z }
 ---
 
 # 39. Sharding & Partitioning Strategies — Key Takeaways

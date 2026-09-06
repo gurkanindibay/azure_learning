@@ -2,7 +2,7 @@
 type: System Design
 title: "Payment Events & Duplicate Processing — Key Takeaways"
 description: "Idempotency through database guardrails, separation of delivery from business correctness, and payment state machines with retry-safe transitions."
-timestamp: 2026-07-04T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 ---
 
 # Payment Events & Duplicate Processing — Key Takeaways

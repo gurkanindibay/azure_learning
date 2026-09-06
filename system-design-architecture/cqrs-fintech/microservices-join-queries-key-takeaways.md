@@ -2,7 +2,7 @@
 type: System Design
 title: "Microservices Join Queries — Key Takeaways"
 description: "Solving cross-service data aggregation: API Composition for simple queries, CQRS read models with CDC for complex filtering, and when to choose each."
-timestamp: 2026-07-17T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-07-17T00:00:00Z }
 ---
 
 # Microservices Join Queries — Key Takeaways

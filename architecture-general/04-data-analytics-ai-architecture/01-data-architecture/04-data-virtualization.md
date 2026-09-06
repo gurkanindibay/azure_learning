@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Data Virtualization"
 description: "Data Virtualization is an architectural approach that provides a **unified, abstracted access layer** over disparate data sources without physically moving or copying data. It enables querying acro..."
 tags: [data-analytics-ai-architecture, data-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Data Virtualization

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "Ubiquitous Language"
 description: "**Ubiquitous Language** is a shared vocabulary used by all team members—developers, domain experts, product owners, and stakeholders—when discussing the domain. It bridges the gap between technical..."
 tags: [application-software-architecture, domain-driven-design]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Ubiquitous Language

@@ -3,7 +3,7 @@ type: Architecture Pattern
 title: "MLOps Architecture"
 description: "MLOps (Machine Learning Operations) extends DevOps principles to machine learning systems — establishing **CI/CD/CT** (Continuous Integration, Delivery, and Training) pipelines for ML models. MLOps..."
 tags: [data-analytics-ai-architecture, ai-ml-architecture]
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # MLOps Architecture

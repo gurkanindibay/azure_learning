@@ -2,7 +2,7 @@
 type: System Design
 title: "Pragmatic System Design: Key Takeaways"
 description: "**Case study**: A team proposed 2× API servers, Redis cache, 2× read replicas, and a load balancer ($350/month, +293%) for a system serving 423 users at 145ms p95. The existing single-server setup ..."
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # 18. Pragmatic System Design: Key Takeaways

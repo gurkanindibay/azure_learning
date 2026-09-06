@@ -2,7 +2,7 @@
 type: System Design
 title: "Redis Data Structure Selection — Key Takeaways"
 description: "How to choose the right Redis data structure for common architectural problems: leaderboards, unique counting, message queuing, membership testing, and object storage — with tradeoffs and real-world examples."
-timestamp: 2026-08-01T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-08-01T00:00:00Z }
 ---
 
 # 41. Redis Data Structure Selection — Key Takeaways

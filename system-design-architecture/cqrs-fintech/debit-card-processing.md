@@ -2,7 +2,7 @@
 type: System Design
 title: "Debit Card Processing — Key Takeaways"
 description: "Architectural patterns for real-time debit card processing: PIN verification, multi-protocol bank integration, real-time balance checking, limit enforcement, and transaction reversal at scale."
-timestamp: 2026-06-30T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-30T00:00:00Z }
 ---
 
 # Debit Card Processing — Key Takeaways

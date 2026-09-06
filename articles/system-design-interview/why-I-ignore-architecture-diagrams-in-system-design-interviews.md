@@ -2,7 +2,7 @@
 type: Article
 title: "Why I Ignore Architecture Diagrams in System Design Reviews"
 description: "*By Bhavyansh Yadav · 9 min read · Feb 23, 2026*"
-timestamp: 2026-06-14T00:00:00Z
+generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 ---
 
 # Why I Ignore Architecture Diagrams in System Design Reviews
