@@ -184,6 +184,7 @@ flowchart LR
 
 ### 1. File-Based Storage with `mmap` & RocksDB
 
+To avoid remote network overhead (such as sending events to Kafka and querying remote databases), Command queues, Event stores, and States are colocated directly on local NVMe disks using **memory-mapped files (`mmap`)**.
 Each Raft node stores its own local copy of the shard's data on local NVMe. The **committed append-only event log is the source of truth**. RocksDB or SQLite is a rebuildable local projection of that log, used to answer balance queries quickly; it is not a second source of truth. `mmap` is only an efficient way to access the local log file. It does not provide replication or consistency by itself.
 
 ```mermaid
@@ -195,18 +196,19 @@ flowchart TD
             MEM_STATE["In-Memory State Cache"]
         end
         subgraph DiskStore["Sequential NVMe Storage"]
-            WAL["Committed Append-Only Event Log<br/>(source of truth)"]
-            ROCKS[("Local RocksDB or SQLite<br/>(derived balance projection)")]
-            SNAP[("Derived State Snapshot")]
+            WAL["Append-Only Event Log (Sequential Write)"]
+            ROCKS[("Local RocksDB / SQLite (LSM-Tree State)")]
+            SNAP[("State Snapshots (Hourly Checkpoints)")]
         end
     end
 
-    MMAP --> WAL
-    WAL --> ROCKS
-    ROCKS <--> MEM_STATE
+    MMAP <--> WAL
+    MEM_STATE <--> ROCKS
     ROCKS --> SNAP
 ```
 
+- **Sequential I/O**: Appending events to disk sequentially achieves speeds exceeding **$100{,}000\text{ writes/sec}$** per server.
+- **Snapshots**: Periodic checkpoints saved to HDFS/S3 allow the state machine to recover instantly without replaying millions of past events from day zero.
 - **Write order**: The leader appends an event, replicates it through Raft, waits for a quorum, and then marks it committed. Nodes apply committed events to their local projection.
 - **Recovery order**: If RocksDB/SQLite or the memory cache is lost, the node restores the latest snapshot and replays later committed events from the log. The log remains authoritative.
 - **Snapshots**: Periodic checkpoints saved to HDFS/S3 speed recovery, but a snapshot is a derived checkpoint and can be regenerated from the event log.
@@ -241,6 +243,7 @@ flowchart TD
 
 ### 3. Distributed Raft Sharding & CQRS Push Architecture
 
+To achieve $1{,}000{,}000\text{ TPS}$, accounts are partitioned across multiple independent Raft consensus groups. A distributed Saga coordinator executes transfers across partitions.
 To achieve $1{,}000{,}000\text{ TPS}$, accounts are partitioned across multiple independent Raft consensus groups. **Sharding chooses the owner partition; Raft replicates that partition.** Raft does not synchronize every account with every database.
 
 For example, Account A may belong to Shard 1 and Account B may belong to Shard 2:
@@ -268,6 +271,8 @@ sequenceDiagram
     autonumber
     actor User as User A
     participant COORD as Saga Coordinator / Reverse Proxy
+    participant P1 as Partition 1 (Raft Leader A)
+    participant P2 as Partition 2 (Raft Leader B)
     participant P1 as Shard 1 Leader (owns A)
     participant P2 as Shard 2 Leader (owns B)
 
@@ -291,6 +296,7 @@ sequenceDiagram
 
 ---
 
+## 4. Architectural Summary
 The two local Raft commits above are not one global Raft commit. Shard 1 guarantees that its replicas agree about the debit, and Shard 2 guarantees that its replicas agree about the credit. The Saga phase table tracks whether the overall transfer is `STARTED`, `DEBITED`, `COMPLETED`, or needs retry/compensation.
 
 ## 4. Balance Check Read Path
