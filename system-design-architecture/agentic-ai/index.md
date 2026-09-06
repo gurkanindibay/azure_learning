@@ -28,6 +28,7 @@ Problems and strategies for designing agentic AI systems: enterprise multi-agent
 | [37-agentic-key-takeaways.md](37-agentic-key-takeaways.md) | `agentic-42` – `agentic-45` | Harness six components, Evidence-based loop stopping, Graph control flow, Diagnostic triage |
 | [38-agentic-key-takeaways.md](38-agentic-key-takeaways.md) | `agentic-46` – `agentic-50` | Cognitive debris, Context governor six policies, Staleness decay pruning, Governed context first, Structured evidence tables |
 | [39-agentic-key-takeaways.md](39-agentic-key-takeaways.md) | `agentic-51` – `agentic-54` | Git DAG pointer chasing, Agentic workload inversion, Application-level replication bottlenecks, Log-first object storage architecture |
+| [29-agentic-key-takeaways.md](29-agentic-key-takeaways.md) | `agentic-55` – `agentic-64` | Verification boundary, harness quality, context engineering, trajectory evaluation, orchestration economics |
 
 ## Cross-References
 

@@ -45,6 +45,9 @@ timestamp: 2026-06-14T00:00:00Z
 | Token | [`#token`](#token) |
 | LLM-as-Judge | [`#llm-as-judge`](#llm-as-judge) |
 | Context Engineering | [`#context-engineering`](#context-engineering) |
+| Vibe Coding | [`#vibe-coding`](#vibe-coding) |
+| Trajectory Evaluation | [`#trajectory-evaluation`](#trajectory-evaluation) |
+| Agent Skills | [`#agent-skills`](#agent-skills) |
 | Ralph Loop | [`#ralph-loop`](#ralph-loop) |
 | Two-Track Agentic Workflow | [`#two-track-agentic-workflow`](#two-track-agentic-workflow) |
 | Attention-Weighted Parallelism | [`#attention-weighted-parallelism`](#attention-weighted-parallelism) |
@@ -2370,6 +2373,66 @@ Abstract, unobserved mathematical dimensions discovered by dimensionality reduct
 
 ### Also see
 - [Matrix Factorization](#matrix-factorization) · [Collaborative Filtering](#collaborative-filtering) · [Embedding](#embedding)
+
+---
+
+## Vibe Coding
+
+An AI-assisted development workflow in which a developer accepts generated code with minimal specification, verification, or understanding of the implementation. It is useful for low-stakes prototypes but does not provide the controls required for production correctness.
+
+### Key Characteristics
+- **Prompt-and-accept flow**: The developer asks for a change, runs the result, and feeds failures back to the model.
+- **Low upfront cost**: Little specification or evaluation infrastructure is required.
+- **Verification boundary**: Without deterministic tests and trajectory evaluation, sophisticated tooling can still be vibe coding.
+
+### When to Use
+- Low-risk prototypes, experiments, and disposable tools where production correctness and long-term maintenance are not primary constraints.
+
+### When NOT to Use
+- Payment, authentication, healthcare, data integrity, or other production workflows where failures are costly or difficult to detect.
+
+### Also see
+- [Agentic AI](#agentic-ai) · [Verification Loop (AI)](#verification-loop-ai) · [Technical Deflation](#technical-deflation)
+
+---
+
+## Trajectory Evaluation
+
+Evaluation of the sequence of reasoning and tool-use steps an agent took, in addition to checking whether its final output is correct. It detects unsafe assumptions, unnecessary actions, or process failures that can be hidden by a correct result.
+
+### Key Characteristics
+- **Path-aware**: Reviews tool calls, intermediate decisions, and state transitions.
+- **Complementary**: Does not replace deterministic tests of the final artifact.
+- **Diagnostic**: Helps identify where an agent diverged before the final failure or accidental success.
+
+### When to Use
+- Production coding agents, long-running workflows, and high-impact tasks where the path matters as much as the result.
+
+### When NOT to Use
+- Simple, deterministic transformations whose complete behavior is already covered by cheap automated tests.
+
+### Also see
+- [Verification Loop (AI)](#verification-loop-ai) · [Agent Tracing](#agent-tracing) · [Evidence-Based Stopping](#evidence-based-stopping)
+
+---
+
+## Agent Skills
+
+Structured, portable packages of procedural knowledge that an agent loads when a task matches their trigger conditions. Skills keep specialized instructions, constraints, examples, and verification rules out of the universal system context until they are needed.
+
+### Key Characteristics
+- **On-demand loading**: Specialized knowledge is retrieved for relevant tasks rather than injected into every request.
+- **Explicit triggers**: A skill declares when it applies and what behavior it governs.
+- **Versioned procedure**: The package can be reviewed and changed independently of the base agent prompt.
+
+### When to Use
+- Agents serving multiple domains or repositories with distinct workflows, policies, and technical conventions.
+
+### When NOT to Use
+- A single stable instruction that applies to every task and is cheaper and clearer to keep in the base context.
+
+### Also see
+- [Context Engineering](#context-engineering) · [Workflow Files](#workflow-files) · [Agent Harness](#agent-harness)
 
 
 

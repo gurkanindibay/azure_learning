@@ -14,6 +14,7 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 
 ## Articles
 
+- [Google’s New SDLC Guide Draws a Hard Line Between Vibe Coding and Agentic Engineering](google-new-sdlc-guide-vibe-coding-agentic-engineering.md)
 - [30 Core Agentic Engineering Concepts Every Developer Should Know](30 Core Agentic Engineering Concepts Every Developer Should Know.md)
 - [You don't need ten agents. You need two tracks.](You don't need ten agents. You need two tracks..md)
 - [build-ai-for-enterprise-strategic-systems](build-ai-for-enterprise-strategic-systems.md)
