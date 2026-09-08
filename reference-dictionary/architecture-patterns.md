@@ -66,6 +66,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Time Bucketing | [`#time-bucketing`](#time-bucketing) |
 | Log-First Storage Architecture | [`#log-first-storage-architecture`](#log-first-storage-architecture) |
 | Application-Level Replication | [`#application-level-replication`](#application-level-replication) |
+| Recovery Point Objective (RPO) | [`#recovery-point-objective-rpo`](#recovery-point-objective-rpo) |
+| Recovery Time Objective (RTO) | [`#recovery-time-objective-rto`](#recovery-time-objective-rto) |
 
 ---
 
@@ -1212,3 +1214,41 @@ A **replication and high-availability architecture** where complete copies of ap
 
 ### Also see
 - [Log-First Storage Architecture](#log-first-storage-architecture) · [Consensus Protocol](data-concurrency.md#consensus-protocol) · [Raft](data-concurrency.md#raft)
+
+## Recovery Point Objective (RPO)
+
+The maximum acceptable amount of data loss measured in time after a failure. An RPO of 15 minutes means the recovery design must limit lost committed data to roughly the previous 15 minutes.
+
+### Key Characteristics
+- Drives replication, backup frequency, and log-shipping design.
+- Is measured in data recency, not service downtime.
+- Must be validated through restoration and failover tests.
+
+### When to Use
+- When selecting backup, replication, and disaster-recovery strategies.
+- When translating business data-loss tolerance into an architectural requirement.
+
+### When NOT to Use
+- Do not treat RPO as a substitute for [Recovery Time Objective (RTO)](#recovery-time-objective-rto); a system can restore quickly while losing too much data.
+
+### Also see
+- [Recovery Time Objective (RTO)](#recovery-time-objective-rto) · [Replication](data-architecture.md#replication)
+
+## Recovery Time Objective (RTO)
+
+The maximum acceptable duration of service unavailability after a failure. An RTO of one hour means the recovery process must restore the required service within roughly one hour.
+
+### Key Characteristics
+- Drives failover automation, standby capacity, and recovery runbooks.
+- Is measured in downtime, not data loss.
+- Must include detection, decision, restoration, and validation time.
+
+### When to Use
+- When choosing active-active, active-passive, backup-restore, or manual recovery designs.
+- When setting operational recovery targets and testing disaster recovery.
+
+### When NOT to Use
+- Do not treat RTO as a general availability percentage; it describes recovery from a defined failure scenario.
+
+### Also see
+- [Recovery Point Objective (RPO)](#recovery-point-objective-rpo) · [Active-Active](deployment-patterns.md#active-active)

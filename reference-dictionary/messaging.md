@@ -78,6 +78,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Stream Sessionization | [`#stream-sessionization`](#stream-sessionization) |
 | Stream-Stream Join | [`#stream-stream-join`](#stream-stream-join) |
 | In-Stream Keyed Deduplication | [`#in-stream-keyed-deduplication`](#in-stream-keyed-deduplication) |
+| Batch Processing vs Stream Processing | [`#batch-processing-vs-stream-processing`](#batch-processing-vs-stream-processing) |
 
 ---
 
@@ -98,6 +99,26 @@ A technique where the **message sender generates a unique message ID** and uses 
 ### When NOT to Use
 - Fire-and-forget telemetry where duplicates are harmless
 - Systems where the server assigns message IDs and clients never retry
+
+## Batch Processing vs Stream Processing
+
+**Batch processing** collects data and processes it together at scheduled or trigger-based intervals. **Stream processing** evaluates data continuously as it arrives, reducing result latency while requiring explicit handling for unbounded state, event time, and recovery.
+
+### Key Characteristics
+- Batch jobs optimize efficiency for finite or accumulated datasets.
+- Stream processors trade simpler bounded execution for continuous low-latency results.
+- Hybrid systems often use streaming for operational decisions and batch processing for reconciliation or historical recomputation.
+
+### When to Use
+- Use batch processing for periodic reports, large finite transformations, and workloads where latency can be delayed.
+- Use stream processing for continuously changing results, alerts, and time-sensitive decisions.
+
+### When NOT to Use
+- Do not use streaming for a small, finite job whose latency and state requirements do not justify a continuously running system.
+- Do not use batch processing when stale results would violate the product requirement.
+
+### Also see
+- [Event-Time](#event-time) · [Watermarking](#watermarking) · [Apache Flink](#apache-flink)
 
 ### Also see
 - [Idempotent Consumer](#idempotent-consumer) · [At-Least-Once Semantics](#at-least-once-semantics) · [Producer Acknowledgement](#producer-acknowledgement) · [Idempotency](cqrs-event-driven.md#idempotency)
