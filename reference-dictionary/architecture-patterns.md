@@ -68,6 +68,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Application-Level Replication | [`#application-level-replication`](#application-level-replication) |
 | Recovery Point Objective (RPO) | [`#recovery-point-objective-rpo`](#recovery-point-objective-rpo) |
 | Recovery Time Objective (RTO) | [`#recovery-time-objective-rto`](#recovery-time-objective-rto) |
+| Expand and Contract Pattern | [`#expand-and-contract-pattern`](#expand-and-contract-pattern) |
+| Functional Core Imperative Shell | [`#functional-core-imperative-shell`](#functional-core-imperative-shell) |
 
 ---
 
@@ -1252,3 +1254,58 @@ The maximum acceptable duration of service unavailability after a failure. An RT
 
 ### Also see
 - [Recovery Point Objective (RPO)](#recovery-point-objective-rpo) · [Active-Active](deployment-patterns.md#active-active)
+
+---
+
+## Expand and Contract Pattern
+
+An **evolutionary architecture and migration pattern** (also known as the **Parallel Change Pattern**) that allows non-breaking, continuous changes to database schemas, APIs, messaging contracts, and system interfaces. The transition occurs in distinct, reversible phases: first **expanding** the interface to support both old and new representations concurrently, incrementally migrating consumers and populating data, and finally **contracting** the interface by removing obsolete elements once telemetry confirms zero usage.
+
+### Key Characteristics
+- Phased rollout: Expand (add new structure) → Dual-Write / Migrate → Contract (retire legacy structure)
+- Eliminates "big bang" deployments requiring synchronized lockstep release of producers and consumers
+- Supports zero-downtime rolling deployments across distributed services
+- Cleanly separates structural refactoring from behavioral modifications
+
+### When to Use
+- Migrating database column names, types, or table structures in high-availability production databases
+- Evolving public REST/GraphQL APIs or event contracts consumed by independent teams or mobile apps
+- Refactoring internal service interfaces or domain aggregate models across multiple deployable services
+
+### When NOT to Use
+- Green-field development or early prototypes where breaking changes carry zero migration risk
+- Internal, private methods or modules with a single caller within a single compilation unit
+- When immediate schema changes are strictly trivial and fully supported by transactional DDL without consumer impact
+
+### Also see
+- [Deployment Coupling](deployment-patterns.md#deployment-coupling)
+- [Strangler Fig](#strangler-fig)
+- [Blue-Green](deployment-patterns.md#blue-green)
+
+---
+
+## Functional Core Imperative Shell
+
+An **architectural decomposition pattern** that strictly isolates pure, deterministic business logic from impure, side-effecting I/O operations. The **Functional Core** consists of pure functions that evaluate domain rules, calculations, and invariants without any dependencies on databases, networks, clocks, or file systems. The **Imperative Shell** wraps around the core, responsible for fetching external data, passing it into the core for decisions, and executing side effects (database writes, messaging, notifications) dictated by the core's return values.
+
+### Key Characteristics
+- Policy decides, execution acts: decision rules are decoupled from infrastructural side effects
+- Deterministic, blazing-fast unit tests: the functional core can be tested thoroughly in memory without mocks or containers
+- High cohesion: business policies reside exclusively in the core; workflow coordination resides in the shell
+- Explicit decision return types (e.g., decision records, commands, or events) returned to the shell for execution
+
+### When to Use
+- Complex domain workflows with intricate conditional rules, pricing engines, or eligibility gates
+- Systems where business rules must be rigorously verified with comprehensive unit testing
+- Long-lived enterprise applications seeking to avoid tight coupling to frameworks and ORMs
+
+### When NOT to Use
+- Simple CRUD applications or pass-through proxies where there is virtually no business logic to isolate
+- Trivial scripts or micro-utilities where separating core and shell introduces unjustified layer indirection
+- High-throughput streaming pipelines where zero-allocation mutable pipelines are required
+
+### Also see
+- [Separation of Concerns](design-patterns.md#separation-of-concerns)
+- [Hexagonal Architecture](#hexagonal-architecture)
+- [Clean Architecture](#clean-architecture)
+

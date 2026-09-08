@@ -9,6 +9,7 @@ Source articles covering software architecture patterns, strategies, and case st
 ## Articles
 
 - [7-coding-patterns-i-stole-from-senior-engineers](7-coding-patterns-i-stole-from-senior-engineers.md)
+- [8-coding-patterns-that-turn-good-code-into-good-architecture](8-coding-patterns-that-turn-good-code-into-good-architecture.md)
 - [The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems](The 11 Architecture Principles Every Senior Engineer Pretends to Know — A Practical Guide for Java and AI Systems.md)
 - [When Microservices Become Distributed Monoliths Warning Signs and Recovery](When Microservices Become Distributed Monoliths Warning Signs and Recovery.md)
 - [microservices-patterns-engineering-decision-framework](microservices-patterns-engineering-decision-framework.md)

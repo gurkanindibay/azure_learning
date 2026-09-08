@@ -37,6 +37,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Architecture Decision Record | [`#architecture-decision-record`](#architecture-decision-record) |
 | Anti-pattern | [`#anti-pattern`](#anti-pattern) |
 | Service Provider Interface (SPI) | [`#service-provider-interface`](#service-provider-interface) |
+| Make Invalid States Unrepresentable | [`#make-invalid-states-unrepresentable`](#make-invalid-states-unrepresentable) |
+| Guard Clause | [`#guard-clause`](#guard-clause) |
 
 ---
 
@@ -510,3 +512,57 @@ A **pluggable extension mechanism** where a platform defines a set of interfaces
 - [Decorator Pattern](#decorator-pattern)
 - [Loose Coupling](#loose-coupling)
 - [Forward Deployed Engineer (FDE)](architecture-patterns.md#forward-deployed-engineer)
+
+---
+
+## Make Invalid States Unrepresentable
+
+A **type-driven domain modeling principle** that leverages algebraic data types (sum types, sealed interfaces, tagged unions, or discriminated records) to design data structures such that illegal business states cannot be expressed or compiled. Rather than creating generic objects filled with optional/nullable fields and relying on defensive runtime checks, distinct lifecycle stages are modeled as distinct, specialized types.
+
+### Key Characteristics
+- Replaces ambiguous optional fields with explicit state variants (e.g., `Pending`, `Authorized`, `Completed`, `Failed`)
+- Type system enforces state-specific invariants at compile time (e.g., only a `CompletedPayment` possesses a `transactionId`)
+- Eliminates defensive null checks and boolean status flag validation across downstream consumers
+- Complements pattern matching and exhaustive compiler checks (e.g., Java sealed interfaces, TypeScript discriminated unions, Rust enums, C# pattern matching)
+
+### When to Use
+- Complex entities with distinct lifecycle states and differing required fields per state (e.g., payments, orders, KYC workflows)
+- Core domain models where state corruption or invalid combinations lead to financial or operational defects
+- When APIs or state machines transition through mutually exclusive phases
+
+### When NOT to Use
+- Flat, uniform DTOs without conditional fields or varying lifecycle states
+- Simple CRUD interfaces where all properties are genuinely optional or independently editable
+- Languages lacking sum types, sealed hierarchies, or tagged unions where the pattern requires excessive manual boilerplate
+
+### Also see
+- [Immutability](#immutability)
+- [Fail Fast](#fail-fast)
+- [Single Source of Truth](#single-source-of-truth)
+
+---
+
+## Guard Clause
+
+A **code organization and flow-control pattern** (also called the **Bouncer Pattern**) that checks preconditions, validation constraints, and edge cases at the very beginning of a function or method, exiting immediately (via return or exception) if conditions are not met. This prevents deep conditional nesting (the "arrow anti-pattern") and keeps the primary happy-path execution flow linear and prominent.
+
+### Key Characteristics
+- Early exits: preconditions are evaluated and failed fast before any primary business logic executes
+- Linear reading order: method logic reads top-to-bottom without nested `if/else` ladders
+- Specific error signaling: each rejected precondition triggers a distinct, meaningful domain exception or error contract
+- Flattens method indentation to minimal nesting levels
+
+### When to Use
+- Validating method arguments, security permissions, or entity existence at the boundary of domain methods
+- Replacing deeply nested conditional trees where the happy path is buried
+- Anywhere fail-fast behavior is required before triggering expensive I/O or state mutations
+
+### When NOT to Use
+- In environments or frameworks that strictly mandate single-entry-single-exit (SESE) structure for memory cleanup (rare in modern garbage-collected languages)
+- When cleanup logic or telemetry must unconditionally execute upon every exit path unless wrapped in `try/finally`
+- When multiple validation errors must be collected simultaneously (e.g., form validation returning all invalid fields at once)
+
+### Also see
+- [Fail Fast](#fail-fast)
+- [Separation of Concerns](#separation-of-concerns)
+
