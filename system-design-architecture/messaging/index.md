@@ -27,6 +27,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [million-notifications-system-design.md](million-notifications-system-design.md) | `broker-90` – `broker-96` | Queue-based async processing, Provider rate limiting, Idempotent notification, Batch delivery, DLQ, Campaign generation scaling, Delivery tracking |
 | [whatsapp-duplicate-messages-idempotency.md](whatsapp-duplicate-messages-idempotency.md) | `broker-97` – `broker-101` | At-least-once delivery, Three-layer dedup, Idempotency key, Server-crash recovery, Duplicate monitoring |
 | [notifications-at-scale-takeaways.md](notifications-at-scale-takeaways.md) | `broker-111` – `broker-118` | Asynchronous acceptance/delivery decoupling, Durable queue buffering, Worker self-throttling, Idempotent delivery, Batching, DLQs, Progressive enqueuing, Decoupled analytics |
+| [event-driven-architecture-questions-takeaways.md](event-driven-architecture-questions-takeaways.md) | `broker-119` – `broker-128` | Out-of-order consistency, Versioned aggregates, Tripartite failure separation, EDA fit boundaries, Replay-safe consumers, Outbox capabilities/limits, Schema evolution, Event vs Message semantics, Distributed tracing, Compensating events, Distributed monolith prevention |
 
 ## Cross-References
 

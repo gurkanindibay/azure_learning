@@ -234,8 +234,10 @@ takeaway_domains:
       - "system-design-architecture/messaging/million-notifications-system-design.md"
       - "system-design-architecture/messaging/notifications-at-scale-takeaways.md"
       - "system-design-architecture/messaging/kafka-pipeline-bottlenecks.md"
+      - "system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md"
       - "articles/messaging/notifications-at-scale-what-breaks-100-to-1m-users.md"
       - "articles/messaging/million-notifications-system-design.md"
+      - "articles/messaging/10-event-driven-architecture-questions.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"

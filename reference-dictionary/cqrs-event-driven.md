@@ -44,6 +44,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Async Workflow | [`#async-workflow`](#async-workflow) |
 | Deterministic Processing | [`#deterministic-processing`](#deterministic-processing) |
 | Orchestrator-based Saga | [`#orchestrator-based-saga`](#orchestrator-based-saga) |
+| Compensating Event | [`#compensating-event`](#compensating-event) |
+| Event vs Message | [`#event-vs-message`](#event-vs-message) |
+| Versioned Aggregates | [`#versioned-aggregates`](#versioned-aggregates) |
 
 ---
 
@@ -652,4 +655,113 @@ A **Saga implementation pattern** where a central orchestrator service maintains
 
 ### Also see
 - [Saga Pattern](data-concurrency.md#saga-pattern) · [Compensating Transaction](data-concurrency.md#compensating-transaction) · [Idempotency](#idempotency) · [Outbox Pattern](#outbox-pattern) · [Choreography-based Saga](messaging.md#choreography-based-saga)
+
+---
+
+## Compensating Event
+
+A domain event published to semantically revert, counteract, or adjust the state changes of a previously emitted event in an append-only event log. Rather than mutating or deleting historical records in an event stream, the system preserves complete historical auditability by recording corrections as explicit new facts.
+
+### Key Characteristics
+- **Preserves Log Immutability**: The historical event stream remains unmodified; corrections are forward-only state transitions.
+- **Audit Compliance**: Financial, medical, and legal regulations mandate a permanent record of both the initial (erroneous) action and its subsequent correction.
+- **Explicit Domain Modeling**: Modeled as first-class domain occurrences (e.g., `PaymentRefunded`, `OrderQuantityAdjusted`, `InventoryReservationReleased`) rather than generic rollback markers.
+- **Projection Reconciliation**: Downstream read models and materialized views apply the compensating event to transition to the corrected state.
+
+### When to Use
+- Correcting bad data, bugs, or user errors in event-sourced or ledger-based architectures.
+- Managing rollbacks in choreography-based Sagas when a multi-step business transaction fails midway.
+- Financial systems, payment gateways, inventory allocation, and compliance workflows.
+
+### When NOT to Use
+- Transient in-memory errors that occur prior to committing an event to the persistent event log (use standard exception handling).
+- Purely ephemeral cache invalidations or telemetry streams where exact historical accuracy is not required.
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Ledger](#ledger) · [Compensating Transaction](data-concurrency.md#compensating-transaction) · [Orchestrator-based Saga](#orchestrator-based-saga)
+
+---
+
+## Event vs Message
+
+The fundamental architectural distinction between **Events** (notifications that an immutable domain fact has occurred in the past) and **Messages / Commands** (instructions directed to a specific recipient requesting a future action).
+
+| Dimension | Event | Message / Command |
+|:---|:---|:---|
+| **Semantics** | Past fact: *"This happened"* (`OrderPlaced`) | Future intent: *"Do this"* (`ProcessPayment`) |
+| **Addressing** | Broadcast / Pub-Sub (publisher is unaware of consumers) | Point-to-Point / Queue (sender targets specific handler) |
+| **Coupling** | Loose (consumers adapt to the publisher's domain event) | Tight (sender expects a specific handler and contract) |
+| **Mutability** | Strictly immutable historical fact | Ephemeral instruction consumed upon execution |
+| **Expectation** | Zero expectation of a specific outcome or direct response | Expects execution and potential acknowledgement/result |
+
+### Key Characteristics
+- **Prevents Orchestration Drift**: Conflating events with commands leads to "event-driven architecture in name only", creating tight coupling masked by asynchronous transport.
+- **Clear Routing Semantics**: Events belong on broadcast topics (Kafka, Event Grid); Commands belong on dedicated work queues (RabbitMQ, Service Bus Queues).
+
+### When to Use
+- Use **Events** for state synchronization, cross-domain notifications, analytics, and read-model projections.
+- Use **Messages/Commands** for task execution, worker job queues, and explicit Saga orchestration.
+
+### When NOT to Use
+- Do not use broadcast events when you require guaranteed single-worker execution with direct response (use Commands).
+- Do not use targeted command queues for public cross-boundary domain notifications.
+
+### Also see
+- [Event-Driven Architecture](#event-driven-architecture) · [Event Carried State Transfer](#event-carried-state-transfer) · [Kafka vs RabbitMQ](messaging.md#kafka-vs-rabbitmq)
+
+---
+
+## Versioned Aggregates
+
+A domain-driven design and concurrency pattern where an aggregate root maintains a strictly monotonically increasing version number (`version: int` or sequence counter). When domain events are emitted or applied, the version number is incremented and validated to ensure causal consistency, prevent lost updates, and detect out-of-order event arrivals.
+
+### Core Mechanics & Examples
+
+#### 1. Write Path: Optimistic Concurrency Control (OCC)
+Prevents write-write race conditions when concurrent requests modify the same entity:
+```sql
+-- Thread A & Thread B both load order 'ord-101' at version 2
+-- Thread A succeeds:
+UPDATE orders 
+SET status = 'CANCELLED', version = 3 
+WHERE id = 'ord-101' AND version = 2; -- 1 row updated (Success)
+
+-- Thread B fails (avoids overwriting Thread A's cancellation):
+UPDATE orders 
+SET status = 'PAID', version = 3 
+WHERE id = 'ord-101' AND version = 2; -- 0 rows updated (OptimisticLockException)
+```
+
+#### 2. Read Path: Out-of-Order Consumer Gating
+Guards async read models/search indexes when events arrive out of sequence (e.g., `v3: Discontinued` arrives before `v2: PriceDiscounted`):
+- **Stale / Duplicate (`event.version <= doc.version`)**: Drop silently (prevents old price from overwriting final archived state).
+- **Sequential (`event.version == doc.version + 1`)**: Apply mutation and advance `doc.version = event.version`.
+- **Gap Detected (`event.version > doc.version + 1`)**: Buffer event in a retry store until missing version arrives.
+
+#### 3. Role Summary Across Layers
+
+| Architecture Layer | Version Mechanism | Failure Prevented |
+|:---|:---|:---|
+| **Write Model (Transactional DB)** | Atomic check-and-increment (`WHERE version = expected`) | Lost updates & race conditions |
+| **Read Model (Materialized Views)** | Version gating (`WHERE version < event.version`) | Stale overwrites from out-of-order events |
+| **Event Store (Event Sourcing)** | `PRIMARY KEY(aggregate_id, version)` constraint | Branching/forked history on the same entity |
+
+### Key Characteristics
+- **Optimistic Concurrency Control (OCC)**: Validates state versions at commit time rather than holding heavy distributed locks.
+- **Out-of-Order Detection**: Provides downstream consumers with a mathematical signal to detect gaps or drop obsolete records.
+- **Causal Consistency**: Establishes unambiguous lineage for all state mutations across distributed boundaries.
+
+### When to Use
+- Event-sourced entities, financial accounts, order lifecycles, and distributed state machines.
+- Distributed event consumers where network reordering or partition rebalancing delivers events out of sequence.
+- Materialized read-model projections requiring strict version gating.
+
+### When NOT to Use
+- Simple append-only time-series metrics where order between independent samples does not impact domain state.
+- Write-heavy telemetry streams where OCC conflicts would cause excessive retry contention.
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Optimistic Concurrency Control](data-concurrency.md#optimistic-concurrency-control) · [Idempotency](#idempotency) · [Event Replay](#event-replay) · [Deterministic Consumer](messaging.md#deterministic-consumer)
+
+
 
