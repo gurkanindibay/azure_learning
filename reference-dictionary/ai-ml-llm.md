@@ -110,6 +110,8 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Cold-Start Problem (Recommendation Systems) | [`#cold-start-problem-recommendation-systems`](#cold-start-problem-recommendation-systems) |
 | Acoustic Feature Extraction | [`#acoustic-feature-extraction`](#acoustic-feature-extraction) |
 | Latent Factors | [`#latent-factors`](#latent-factors) |
+| pgvector | [`#pgvector`](#pgvector) |
+| FAISS (Facebook AI Similarity Search) | [`#faiss`](#faiss) |
 
 
 ---
@@ -2496,6 +2498,53 @@ Contextual information (instructions, documentation, schemas, or memory) retriev
 
 ### Also see
 - [Context Engineering](#context-engineering) · [Context Rot (Lost in the Middle)](#context-rot) · [Agent Skills](#agent-skills) · [Context Governor](#context-governor)
+
+---
+
+## pgvector {#pgvector}
+
+An open-source vector similarity search extension for PostgreSQL that enables storing, indexing, and querying high-dimensional vector embeddings alongside traditional relational data within the same database engine. Supports exact and approximate nearest neighbor (ANN) search using HNSW (Hierarchical Navigable Small World) and IVFFlat (Inverted File Flat) index structures across L2 distance, inner product, and cosine distance metrics.
+
+### Key Characteristics
+- **Unified Relational & Semantic Queries**: Allows vector distance calculations (`<=>`, `<->`, `<#>`) to execute within standard SQL `WHERE`, `JOIN`, and `ORDER BY` clauses alongside relational constraints (e.g., live stock availability, pricing, user permissions).
+- **Index Algorithms**: Provides both IVFFlat (inverted file clustering for fast index builds and low memory) and HNSW (multi-layer graph search for high recall and fast query execution at scale).
+- **ACID & Operational Simplicity**: Inherits PostgreSQL's MVCC, WAL replication, point-in-time recovery (PITR), and operational tooling, eliminating the need to maintain, synchronize, and monitor a separate dedicated vector database.
+- **Transactional Consistency**: Changes to product catalog attributes or inventory status are immediately visible to hybrid semantic queries without eventual consistency drift between storage and index.
+
+### When to Use
+- Catalog and semantic search applications where vector similarity must be tightly filtered by live, fast-changing business attributes (e.g., retail store inventory, localized pricing, tenancy isolation).
+- RAG applications and agentic systems built on existing PostgreSQL infrastructure seeking to avoid the operational overhead of a standalone vector database cluster.
+
+### When NOT to Use
+- Pure unconstrained vector search at billion-scale with no relational filtering requirements, where specialized standalone vector clusters (e.g., Milvus, Pinecone, FAISS) offer higher raw lookup throughput and lower memory footprint.
+- Systems with severe database CPU constraints where building large HNSW indexes impacts core transactional OLTP latency.
+
+### Also see
+- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [FAISS](#faiss) · [GIN Index (Generalized Inverted Index)](databases.md#gin-index) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
+
+---
+
+## FAISS (Facebook AI Similarity Search) {#faiss}
+
+An open-source C++ library (with Python bindings) developed by Meta AI for efficient similarity search, clustering, and dense vector retrieval. FAISS implements highly optimized algorithms for Approximate Nearest Neighbor (ANN) search, including product quantization (PQ), inverted file indexes (IVF), and GPU acceleration, designed to search through collections of dense vectors that may exceed RAM limits.
+
+### Key Characteristics
+- **Blazing Fast In-Memory & GPU Search**: Highly optimized SIMD and CUDA implementations deliver ultra-low latency vector distance calculations across millions to billions of vectors.
+- **Advanced Quantization**: Supports scalar and product quantization (IVFPQ) to compress 1024+ dimensional float vectors into compact byte codes, allowing billions of embeddings to fit within memory.
+- **Standalone In-Memory Model**: Operates as a computational library rather than a full-featured database; does not provide transactional storage, ACID guarantees, or native multi-field document indexing.
+- **Weak Dynamic Attribute Filtering**: Lacks integrated relational predicate evaluation at query time, typically requiring either pre-filtering via partitioned indexes or post-filtering candidate vectors in the application layer (which degrades recall).
+
+### When to Use
+- Offline batch vector clustering, duplicate detection, or massive recommendation candidate generation (e.g., Spotify Discover Weekly, visual similarity clusters).
+- Pure high-throughput semantic vector retrieval over static, unconstrained document corpuses where relational filtering is minimal or absent.
+
+### When NOT to Use
+- Search systems requiring dynamic, transactional filtering against rapidly changing relational attributes (e.g., store stock, live pricing, tenant permissions) where post-filtering causes heavy recall degradation and high zero-result search rates.
+- Production environments where maintaining separate index synchronization pipelines for hundreds of tenant-specific indexes introduces unacceptable operational complexity.
+
+### Also see
+- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [pgvector](#pgvector) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
+
 
 
 

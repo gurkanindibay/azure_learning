@@ -67,6 +67,8 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 | LSN Lag | [`#lsn-lag`](#lsn-lag) |
 | Monotonic Timestamp Guard | [`#monotonic-timestamp-guard`](#monotonic-timestamp-guard) |
 | Low-Watermark / High-Watermark | [`#low-watermark-high-watermark`](#low-watermark-high-watermark) |
+| GIN Index (Generalized Inverted Index) | [`#gin-index`](#gin-index) |
+| tsvector & ts_rank | [`#tsvector-ts-rank`](#tsvector-ts-rank) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1293,3 +1295,52 @@ WAL / Binlog Stream Processing:
 
 ### Also see
 - [Non-Blocking Incremental Snapshot](#non-blocking-incremental-snapshot) · [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Watermarking](messaging.md#watermarking) · [38. CDC Pipeline Scale Failures](../../system-design-architecture/databases/38-db-key-takeaways.md#db-38-log-based-cdc-bootstrapping--non-blocking-incremental-snapshots)
+
+---
+
+## GIN Index (Generalized Inverted Index) {#gin-index}
+
+An inverted index data structure implemented in PostgreSQL designed for handling composite or multi-valued attributes, such as text documents (`tsvector`), JSONB documents, arrays, and trigrams (`pg_trgm`). Unlike a B-tree index which maps a single scalar key to row pointers, a GIN index breaks multi-valued elements into distinct component keys (lexemes, JSON keys/values, array elements) and maps each component key to a posting list or B-tree of row pointers (TIDs).
+
+### Key Characteristics
+- **Multi-Valued Element Decomposition**: An item containing 10 terms is represented across 10 distinct posting entries, enabling queries that test for element containment (`@>`), overlap (`&&`), or boolean text search (`@@`).
+- **High Read Efficiency for Containment**: Ideal for queries matching arbitrary combinations of tags, attributes, or search words where traditional B-trees would require massive composite index permutations.
+- **Write Amplification on Volatile Fields**: Updating an item whose indexed field changes requires updating every corresponding posting list; however, if non-indexed columns (such as inventory count or price) are updated in separate tables or columns, the GIN index incurs zero re-indexing overhead.
+- **Fast Update Buffer (`fastupdate`)**: PostgreSQL buffers pending GIN insertions into a temporary flat structure to amortize posting tree insertion costs, flushing to the main index periodically or during `VACUUM`.
+
+### When to Use
+- Implementing full-text search directly inside PostgreSQL using `tsvector` and `websearch_to_tsquery`.
+- Indexing JSONB document columns where arbitrary path or key/value containment queries are executed.
+- Querying array containment or tag intersections across large catalogs.
+
+### When NOT to Use
+- Standard scalar column lookups (IDs, timestamps, numbers) where B-tree indexes are significantly faster and smaller.
+- High-frequency write columns where the indexed array or document text itself mutates on every transaction.
+- Nearest-neighbor vector distance searches (use `pgvector` HNSW/IVFFlat indexes instead).
+
+### Also see
+- [Inverted Index](#inverted-index) · [B-Tree](#b-tree) · [tsvector & ts_rank](#tsvector-ts-rank) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-41-document-denormalization-vs-relational-normalization-for-write-heavy-catalogs)
+
+---
+
+## tsvector & ts_rank {#tsvector-ts-rank}
+
+PostgreSQL's native full-text search data types and ranking functions. `tsvector` represents a sorted list of normalized, deduplicated distinct words (lexemes) extracted from text along with their positions and weights. `ts_rank` computes a relevance score measuring how well matching query terms (`tsquery`) match the document vector, taking into account term frequency and positional proximity.
+
+### Key Characteristics
+- **Linguistic Normalization**: Automatically applies language-specific parsers, stop-word elimination, and stemming (e.g., "running", "runs" normalize to the lexeme "run").
+- **Positional Metadata & Weighting**: Preserves integer positions for proximity searching and supports assignable weights (`A`, `B`, `C`, `D`) for prioritizing titles over descriptions during ranking.
+- **Boolean & Phrase Search (`@@`)**: Matches against `tsquery` expressions supporting boolean operators (`&`, `|`, `!`) and phrase search (`<->`).
+- **Integrated Storage Engine Execution**: Executes directly inside the SQL relational pipeline, allowing relevance scoring (`ts_rank`) to be evaluated in the same plan as relational joins, foreign key lookups, and transactional `WHERE` clauses.
+
+### When to Use
+- In-database lexical and keyword search across e-commerce products, articles, user profiles, or documentation catalogs.
+- Combining text relevance ranking with real-time relational filters (e.g., live stock availability, user permissions, merchant ID).
+
+### When NOT to Use
+- Semantic or conceptual search where words share meaning but not lexical stems (e.g., "healthy breakfast" matching "organic oatmeal"); use vector embeddings (`pgvector`) instead.
+- Massive multi-node distributed log analytics across terabytes of raw unstructured machine logs (where Elasticsearch/OpenSearch clusters are optimized).
+
+### Also see
+- [GIN Index (Generalized Inverted Index)](#gin-index) · [Inverted Index](#inverted-index) · [pgvector](ai-ml-llm.md#pgvector) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-42-computation-pushdown-in-database-joins--filtering-vs-application-tier-assembly)
+

@@ -70,6 +70,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Recovery Time Objective (RTO) | [`#recovery-time-objective-rto`](#recovery-time-objective-rto) |
 | Expand and Contract Pattern | [`#expand-and-contract-pattern`](#expand-and-contract-pattern) |
 | Functional Core Imperative Shell | [`#functional-core-imperative-shell`](#functional-core-imperative-shell) |
+| Computation Pushdown (In-Database Processing) | [`#computation-pushdown`](#computation-pushdown) |
 
 ---
 
@@ -1308,4 +1309,29 @@ An **architectural decomposition pattern** that strictly isolates pure, determin
 - [Separation of Concerns](design-patterns.md#separation-of-concerns)
 - [Hexagonal Architecture](#hexagonal-architecture)
 - [Clean Architecture](#clean-architecture)
+
+---
+
+## Computation Pushdown (In-Database Processing) {#computation-pushdown}
+
+An architectural pattern that executes data filtering, joining, ranking, and aggregation directly within the underlying storage or database engine where data resides, rather than retrieving broad raw datasets over the network into application-tier memory for post-processing.
+
+### Key Characteristics
+- **Network & Serialization Elimination**: Avoids moving massive candidate record sets across network hops and eliminates repetitive JSON/serialization overhead between tiers.
+- **Query Optimizer Synergy**: Allows database query planners to leverage compound indexes, storage-level statistics, and hardware locality (e.g., fast NVMe IOPS) to discard unneeded records as early as possible.
+- **Guaranteed Result Set Completeness**: Prevents the "candidate discard" defect where application-level filtering overfetch candidates (e.g., from an external search index) only to discard out-of-stock or invalid items, returning sparse or empty pages to clients.
+- **Relational & Search Co-location**: Joins full-text search results or vector similarities directly with live transactional state (e.g., real-time inventory, user permissions, merchant rules) in a single atomic query plan.
+
+### When to Use
+- Search and retrieval pipelines where search matches must be filtered by volatile transactional state (e.g., e-commerce search filtered by live local store stock).
+- High-throughput analytical queries, reporting dashboards, and aggregate calculations where data volumes make moving rows to application servers inefficient.
+- High-concurrency APIs where minimizing network round-trips is paramount to meeting strict latency SLAs.
+
+### When NOT to Use
+- Heavy, arbitrary CPU-bound algorithmic computations (e.g., complex image rendering, deep learning model training) that cannot be expressed via SQL, extensions, or stored procedures and would saturate database CPUs.
+- Highly multi-tenant systems where pushing complex compute into a shared database compromises database isolation and starves other tenants of OLTP connection resources.
+
+### Also see
+- [Route-to-Data Pattern](#route-to-data-pattern) · [GIN Index (Generalized Inverted Index)](databases.md#gin-index) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-42-computation-pushdown-in-database-joins--filtering-vs-application-tier-assembly)
+
 

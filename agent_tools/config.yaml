@@ -98,6 +98,8 @@ takeaway_domains:
       - "articles/databases/the-database-architecture-trap-almost-everyone-falls-for.md"
       - "articles/databases/why-did-our-database-collapse-after-we-migrated-to-virtual-threads.md"
       - "articles/databases/why-most-cdc-pipelines-break-at-scale.md"
+      - "system-design-architecture/databases/39-db-key-takeaways.md"
+      - "articles/databases/elasticsearch-is-dead-instacart-proved-it.md"
   tx:
     file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"
@@ -491,6 +493,11 @@ takeaway_keywords:
   conductor mode: agentic
   orchestrator mode: agentic
   agent skills: agentic
+  elasticsearch: db
+  full-text search: db
+  gin index: db
+  pgvector: db
+  computation pushdown: db
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -543,6 +550,8 @@ dictionary_domains:
       - disposable repositories
       - coding agents
       - agentic sandboxing
+      - pgvector
+      - faiss
 
   api-design.md:
     title: "API Design"
@@ -607,6 +616,8 @@ dictionary_domains:
       - time bucketing
       - log-first storage
       - application-level replication
+      - computation pushdown
+      - in-database processing
   networking.md:
     title: "Networking"
     keywords:
@@ -927,6 +938,10 @@ dictionary_domains:
       - cdc tombstone
       - lsn lag
       - monotonic timestamp guard
+      - gin index
+      - gin
+      - tsvector
+      - ts_rank
 
   security-iam.md:
     title: "Security, Identity & Access Management"
