@@ -48,6 +48,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Vibe Coding | [`#vibe-coding`](#vibe-coding) |
 | Trajectory Evaluation | [`#trajectory-evaluation`](#trajectory-evaluation) |
 | Agent Skills | [`#agent-skills`](#agent-skills) |
+| Conductor Mode | [`#conductor-mode`](#conductor-mode) |
+| Orchestrator Mode | [`#orchestrator-mode`](#orchestrator-mode) |
+| Dynamic Context | [`#dynamic-context`](#dynamic-context) |
 | Ralph Loop | [`#ralph-loop`](#ralph-loop) |
 | Two-Track Agentic Workflow | [`#two-track-agentic-workflow`](#two-track-agentic-workflow) |
 | Attention-Weighted Parallelism | [`#attention-weighted-parallelism`](#attention-weighted-parallelism) |
@@ -2433,6 +2436,66 @@ Structured, portable packages of procedural knowledge that an agent loads when a
 
 ### Also see
 - [Context Engineering](#context-engineering) · [Workflow Files](#workflow-files) · [Agent Harness](#agent-harness)
+
+---
+
+## Conductor Mode
+
+A hands-on, synchronous AI development interaction mode where the developer remains directly in the IDE, observing code generation line by line and guiding the agent with prompt corrections in real time.
+
+### Key Characteristics
+- **Real-time supervision**: High immediate control and visibility over every keystroke and generation step.
+- **Cognitive comfort**: Matches traditional developer debugging and pair-programming intuition.
+- **Throughput ceiling**: Human attention remains on the critical path, bounding productivity to serial interactive speed.
+
+### When to Use
+- Exploratory coding, unfamiliar frameworks, tight debugging loops, and high-ambiguity initial implementations.
+
+### When NOT to Use
+- Routine, well-specified, or high-volume tasks that can run autonomously in parallel sandboxes.
+
+### Also see
+- [Orchestrator Mode](#orchestrator-mode) · [Two-Track Agentic Workflow](#two-track-agentic-workflow) · [Vibe Coding](#vibe-coding)
+
+---
+
+## Orchestrator Mode
+
+An asynchronous, goal-driven operational mode where the developer specifies objectives, constraints, and acceptance criteria, allowing agents to execute autonomously in background sandboxes and submit changes as pull requests.
+
+### Key Characteristics
+- **Decoupled execution**: Developer acts as a specifier and evaluator rather than a real-time monitor.
+- **Parallel throughput**: Multiple agents can execute independently across isolated branches or worktrees.
+- **Prerequisite infrastructure**: Requires robust agent harnesses, automated evaluation suites, and strict verification gates.
+
+### When to Use
+- Well-scoped features, migrations, test generation, and large-scale refactorings backed by strong CI/eval suites.
+
+### When NOT to Use
+- Ill-defined problems lacking clear verification criteria or when harness and eval infrastructure are absent (which degenerates into unmonitored vibe coding).
+
+### Also see
+- [Conductor Mode](#conductor-mode) · [Agent Harness](#agent-harness) · [Trajectory Evaluation](#trajectory-evaluation) · [Review Gate](#review-gate)
+
+---
+
+## Dynamic Context
+
+Contextual information (instructions, documentation, schemas, or memory) retrieved and injected into an agent's context window on demand based on task triggers, rather than statically loaded into every prompt.
+
+### Key Characteristics
+- **Token efficiency**: Keeps the base prompt small and avoids paying context costs on irrelevant tasks.
+- **Signal preservation**: Prevents attention degradation and instruction drowning ("lost in the middle").
+- **Architectural boundary**: The split between static constraints (always loaded) and dynamic knowledge (retrieved on demand) is a versioned system design decision.
+
+### When to Use
+- Multi-domain repositories, large rule sets, domain-specific documentation, and modular agent skills.
+
+### When NOT to Use
+- Fundamental universal constraints, system identity, and security boundaries that must govern every interaction unconditionally.
+
+### Also see
+- [Context Engineering](#context-engineering) · [Context Rot (Lost in the Middle)](#context-rot) · [Agent Skills](#agent-skills) · [Context Governor](#context-governor)
 
 
 

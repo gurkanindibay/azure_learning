@@ -7,25 +7,25 @@ author:
 published: 2026-06-26
 created: 2026-09-06
 description: "How Google’s new SDLC framework replaces vibe coding with structured agentic engineering for safer, more reliable AI-powered software delivery."
+tags:
   - "clippings"
 ---
-## How Google’s new SDLC framework replaces vibe coding with structured agentic engineering for safer, more reliable AI-powered software delivery.
+
+# Google’s New SDLC Guide Draws a Hard Line Between Vibe Coding and Agentic Engineering
+
+> **Subtitle**: How Google’s new SDLC framework replaces vibe coding with structured agentic engineering for safer, more reliable AI-powered software delivery.
 
 ![](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*I3mtqaM0OlNVL6loMx-oug.png)
 
-A split-panel illustration contrasting vibe coding chaotic, fast, unverified against agentic engineering structured, deliberate, production-ready. The dividing line between them is verification.
+*A split-panel illustration contrasting vibe coding (chaotic, fast, unverified) against agentic engineering (structured, deliberate, production-ready). The dividing line between them is verification.*
 
 In February 2025, Andrej Karpathy posted something that quietly broke the internet. He described a new way of programming where you “fully give in to the vibes, embrace exponentials, and forget that the code even exists.” Prompt. Accept. Run. If it breaks, paste the error back and try again.
-The term went viral instantly. Not because it was new developers were already working this way. It just finally had a name.
-# Google’s New SDLC Guide Draws a Hard Line Between Vibe Coding and Agentic Engineering
 
-How Google’s new SDLC framework replaces vibe coding with structured agentic engineering for safer, more reliable AI-powered software delivery.
+The term went viral instantly. Not because it was new — developers were already working this way. It just finally had a name.
+
 Sixteen months later, Google published a 50-page whitepaper titled [The New SDLC With Vibe Coding](https://www.kaggle.com/whitepaper-the-new-SDLC-with-vibe-coding), co-authored by Addy Osmani, Shubham Saboo, and Sokratis Kartakis. The paper is technically dense, carefully structured, and worth reading in full. But its central message is uncomfortable: vibe coding worked fine for prototypes. It is quietly destroying production systems, and most engineering teams don’t realize it yet because the damage accumulates slowly.
 
-**The architectural decision of what belongs in static versus dynamic context is not a configuration detail. It is a first-class engineering trade-off that should be versioned, reviewed, and treated with the same rigor as any other system design decision.**
 This piece breaks down what the guide actually argues, where it draws the hard line, and what it means for anyone building software with AI agents in 2026.
-
-**Edge cases. Implicit business logic that exists in institutional memory but not in any document. Integration points between services built by different teams years apart. Subtle correctness requirements that only become visible under real load or real user behavior.**
 ## Why Vibe Coding Isn’t Enough Anymore
 
 Vibe coding succeeded because it lowered the floor. Developers could prototype features in minutes, non-engineers could build functional tools, and the feedback loop between idea and running code collapsed from days to hours. That is genuinely valuable. Dismissing it entirely is engineering snobbery.

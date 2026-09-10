@@ -7,9 +7,9 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 # 29. Agentic AI — Key Takeaways
 
-> **Parent**: [System Design Interview Reference](index.md)
-> **Source**: [Google’s New SDLC Guide Draws a Hard Line Between Vibe Coding and Agentic Engineering](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md)
-> **Dictionary**: [AI/ML, LLM & Agentic AI](../reference-dictionary/ai-ml-llm.md)
+> **Parent**: [System Design Interview Reference](../index.md)
+> **Source**: [Google’s New SDLC Guide Draws a Hard Line Between Vibe Coding and Agentic Engineering](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md)
+> **Dictionary**: [AI/ML, LLM & Agentic AI](../../reference-dictionary/ai-ml-llm.md)
 > **Taxonomy Reference**: §12.1 AI Application Patterns
 
 ## Contents
@@ -29,7 +29,7 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 ## agentic-55: Verification is the boundary between prototyping and engineering
 
-> **Source**: [Verification boundary](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-spectrum-where-are-you-actually-operating)
+> **Source**: [Verification boundary](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-spectrum-where-are-you-actually-operating)
 
 | | |
 |:---|:---|
@@ -40,11 +40,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Verification adds latency and implementation cost, but converts invisible failures into observable decisions.
 
-**Cross-reference**: [Verification Loop (AI)](../reference-dictionary/ai-ml-llm.md#verification-loop-ai) · [Agent Harness](agent-harness.md)
+**Cross-reference**: [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai) · [Agent Harness](agent-harness.md)
 
 ## agentic-56: Production correctness exceeds prototype correctness
 
-> **Source**: [Production risk](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#why-vibe-coding-isnt-enough-anymore)
+> **Source**: [Production risk](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#why-vibe-coding-isnt-enough-anymore)
 
 | | |
 |:---|:---|
@@ -55,11 +55,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Risk-based controls slow low-risk work when applied too broadly, so teams need an explicit threshold rather than one process for everything.
 
-**Cross-reference**: [Review Gate](../reference-dictionary/ai-ml-llm.md#review-gate) · [Accountability Gap](agentic-accountability.md)
+**Cross-reference**: [Review Gate](../../reference-dictionary/ai-ml-llm.md#review-gate) · [Accountability Gap](agentic-accountability.md)
 
 ## agentic-57: Output correctness does not prove process correctness
 
-> **Source**: [Evaluation spectrum](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-spectrum-where-are-you-actually-operating)
+> **Source**: [Evaluation spectrum](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-spectrum-where-are-you-actually-operating)
 
 | | |
 |:---|:---|
@@ -70,11 +70,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Trajectory evaluation improves diagnosability but increases telemetry volume, rubric design effort, and evaluation cost.
 
-**Cross-reference**: [Agent Tracing](../reference-dictionary/ai-ml-llm.md#agent-tracing) · [Evidence-Based Stopping](../reference-dictionary/ai-ml-llm.md#evidence-based-stopping)
+**Cross-reference**: [Agent Tracing](../../reference-dictionary/ai-ml-llm.md#agent-tracing) · [Evidence-Based Stopping](../../reference-dictionary/ai-ml-llm.md#evidence-based-stopping)
 
 ## agentic-58: The harness controls agent behavior
 
-> **Source**: [Agent = Model + Harness](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#agent-model-harness)
+> **Source**: [Agent = Model + Harness](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#agent-model-harness)
 
 | | |
 |:---|:---|
@@ -85,11 +85,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: A stronger harness improves reliability but becomes an operational system that must be maintained and tested.
 
-**Cross-reference**: [Agent Harness](../reference-dictionary/ai-ml-llm.md#agent-harness) · [Agent Harness](agent-harness.md)
+**Cross-reference**: [Agent Harness](../../reference-dictionary/ai-ml-llm.md#agent-harness) · [Agent Harness](agent-harness.md)
 
 ## agentic-59: Context is a versioned system-design decision
 
-> **Source**: [Context Engineering](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#context-engineering-the-real-competitive-moat)
+> **Source**: [Context Engineering](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#context-engineering-the-real-competitive-moat)
 
 | | |
 |:---|:---|
@@ -100,11 +100,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Dynamic retrieval reduces noise and cost but introduces retrieval misses, freshness concerns, and more runtime behavior to observe.
 
-**Cross-reference**: [Context Engineering](../reference-dictionary/ai-ml-llm.md#context-engineering) · [Context Governor](../reference-dictionary/ai-ml-llm.md#context-governor)
+**Cross-reference**: [Context Engineering](../../reference-dictionary/ai-ml-llm.md#context-engineering) · [Context Governor](../../reference-dictionary/ai-ml-llm.md#context-governor)
 
 ## agentic-60: Load specialized knowledge on demand
 
-> **Source**: [Agent Skills](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#context-engineering-the-real-competitive-moat)
+> **Source**: [Agent Skills](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#context-engineering-the-real-competitive-moat)
 
 | | |
 |:---|:---|
@@ -115,11 +115,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: On-demand specialization keeps the base context lean but makes trigger coverage and skill versioning part of correctness.
 
-**Cross-reference**: [Context Engineering](../reference-dictionary/ai-ml-llm.md#context-engineering) · [Workflow Files](../reference-dictionary/ai-ml-llm.md#workflow-files)
+**Cross-reference**: [Context Engineering](../../reference-dictionary/ai-ml-llm.md#context-engineering) · [Workflow Files](../../reference-dictionary/ai-ml-llm.md#workflow-files)
 
 ## agentic-61: Human attention belongs at the 80/20 boundary
 
-> **Source**: [The 80% Problem](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-80-problem-why-speed-is-the-trap)
+> **Source**: [The 80% Problem](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-80-problem-why-speed-is-the-trap)
 
 | | |
 |:---|:---|
@@ -130,11 +130,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Focused review increases leverage, but requires accurate risk classification and does not eliminate the need for baseline automated checks.
 
-**Cross-reference**: [Human Ownership](../reference-dictionary/ai-ml-llm.md#human-ownership) · [Accountability Gap](agentic-accountability.md)
+**Cross-reference**: [Human Ownership](../../reference-dictionary/ai-ml-llm.md#human-ownership) · [Accountability Gap](agentic-accountability.md)
 
 ## agentic-62: Orchestration requires a different control model
 
-> **Source**: [Conductor and orchestrator modes](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#conductor-or-orchestrator-the-role-transition-that-is-already-happening)
+> **Source**: [Conductor and orchestrator modes](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#conductor-or-orchestrator-the-role-transition-that-is-already-happening)
 
 | | |
 |:---|:---|
@@ -145,11 +145,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: Throughput rises, but developers lose immediate visibility and need stronger observability, ownership, and rollback mechanisms.
 
-**Cross-reference**: [Agent Sandboxing](../reference-dictionary/ai-ml-llm.md#agent-sandboxing) · [Multi-Agent Coordination Patterns](../reference-dictionary/ai-ml-llm.md#multi-agent-coordination-patterns)
+**Cross-reference**: [Agent Sandboxing](../../reference-dictionary/ai-ml-llm.md#agent-sandboxing) · [Multi-Agent Coordination Patterns](../../reference-dictionary/ai-ml-llm.md#multi-agent-coordination-patterns)
 
 ## agentic-63: Agentic engineering trades CapEx for lower marginal cost
 
-> **Source**: [Agentic engineering economics](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-economics-no-one-is-talking-about-plainly)
+> **Source**: [Agentic engineering economics](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#the-economics-no-one-is-talking-about-plainly)
 
 | | |
 |:---|:---|
@@ -160,11 +160,11 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: The infrastructure pays back only at sufficient scale; prototypes and low-stakes work may rationally remain lightweight.
 
-**Cross-reference**: [Cost Per Accepted Change](../reference-dictionary/ai-ml-llm.md#cost-per-accepted-change) · [Technical Deflation](../reference-dictionary/ai-ml-llm.md#technical-deflation)
+**Cross-reference**: [Cost Per Accepted Change](../../reference-dictionary/ai-ml-llm.md#cost-per-accepted-change) · [Technical Deflation](../../reference-dictionary/ai-ml-llm.md#technical-deflation)
 
 ## agentic-64: Specification and feedback loops make autonomy governable
 
-> **Source**: [What this means going forward](../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#what-this-means-going-forward)
+> **Source**: [What this means going forward](../../articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md#what-this-means-going-forward)
 
 | | |
 |:---|:---|
@@ -175,4 +175,4 @@ generated: { by: process:okf-migrate, at: 2026-09-06T00:00:00Z }
 
 **Tradeoff**: More structure limits improvisation and requires maintenance, but it makes behavior repeatable enough to improve systematically.
 
-**Cross-reference**: [Loop Contract](../reference-dictionary/ai-ml-llm.md#loop-contract) · [Review Gate](../reference-dictionary/ai-ml-llm.md#review-gate) · [Agentic Loop Engineering](agentic-loop-engineering.md)
+**Cross-reference**: [Loop Contract](../../reference-dictionary/ai-ml-llm.md#loop-contract) · [Review Gate](../../reference-dictionary/ai-ml-llm.md#review-gate) · [Agentic Loop Engineering](agentic-loop-engineering.md)
