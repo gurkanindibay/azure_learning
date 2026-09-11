@@ -59,6 +59,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Operational Transformation (OT) | [`#operational-transformation-ot`](#operational-transformation-ot) |
 | Chandy-Lamport Algorithm | [`#chandy-lamport-algorithm`](#chandy-lamport-algorithm) |
 | FOR UPDATE SKIP LOCKED | [`#for-update-skip-locked`](#for-update-skip-locked) |
+| Unit-Level Row Modeling | [`#unit-level-row-modeling`](#unit-level-row-modeling) |
 
 ---
 
@@ -684,7 +685,7 @@ Temporarily setting aside stock for an in-flight checkout or order, reducing the
 - Systems without a reliable reservation-expiry mechanism
 
 ### Also see
-- [Atomic Conditional Update](#atomic-conditional-update) · [Overselling](#overselling) · [Saga Pattern](#saga-pattern)
+- [Atomic Conditional Update](#atomic-conditional-update) · [Overselling](#overselling) · [Unit-Level Row Modeling](#unit-level-row-modeling) · [FOR UPDATE SKIP LOCKED](#for-update-skip-locked) · [Bounded Working Pool](architecture-patterns.md#bounded-working-pool) · [Saga Pattern](#saga-pattern)
 - **Caution**: the reservation expiry/cleanup mechanism is itself a distributed coordination problem. In multi-replica environments, a naive cron-based cleanup job will run N times and cause duplicate releases. Use leader election, distributed locks, or TTL-based expiration in the data store (Redis `EXPIRE`, `FOR UPDATE SKIP LOCKED`) to ensure only one process releases expired reservations.
 
 ---
@@ -1122,6 +1123,7 @@ RETURNING *;
 - **Distributed Job & Task Queues**: Multiple worker processes polling a relational table for pending tasks (e.g., delayed job schedulers, email dispatchers, payment settlement batches).
 - **Work Stealing & Sharded Workers**: Sweeping expired leases or abandoned tasks concurrently without worker collision.
 - **Relational Work Queues under Moderate Throughput**: Systems handling thousands of tasks per second directly within PostgreSQL, MySQL, or SQL Server before reaching the scale threshold that justifies dedicated brokers (Kafka/RabbitMQ).
+- **High-Contention Resource & Inventory Reservation**: Claiming fungible inventory units in parallel during flash sales (e.g., Shopify checkout) using unit-level row modeling, avoiding single-row lock serialization.
 
 ### When NOT to Use
 - **High-Throughput Event Streaming**: Workloads requiring tens of thousands to millions of events per second (use Kafka, Event Hubs, or Pulsar).
@@ -1129,4 +1131,44 @@ RETURNING *;
 - **Data Warehousing & OLAP**: Analytical batch queries where reading a complete, consistent snapshot of all matching data is required.
 
 ### Also see
-- [Task Claiming](#task-claiming) · [Pessimistic Locking](#pessimistic-locking) · [Lease-Based Lock](#lease-based-lock) · [Delayed Job Scheduler](architecture-patterns.md#delayed-job-scheduler)
+- [Task Claiming](#task-claiming) · [Pessimistic Locking](#pessimistic-locking) · [Lease-Based Lock](#lease-based-lock) · [Unit-Level Row Modeling](#unit-level-row-modeling) · [Inventory Reservation](#inventory-reservation) · [Bounded Working Pool](architecture-patterns.md#bounded-working-pool) · [Delayed Job Scheduler](architecture-patterns.md#delayed-job-scheduler)
+
+---
+
+## Unit-Level Row Modeling
+
+A database schema modeling pattern where instead of tracking resource or stock quantities as an aggregated scalar integer column (`quantity = 10`) on a single entity row, each individual sellable, reservable, or allocatable unit is represented as its own discrete row (`inventory_units`). This fundamentally eliminates hot-spot row-lock serialization during concurrent transactions, enabling concurrent clients to lock disjoint, non-overlapping rows in parallel (especially when paired with [`FOR UPDATE SKIP LOCKED`](#for-update-skip-locked)).
+
+```sql
+-- Anti-pattern: Single row counter creates serial lock queue
+UPDATE inventory SET quantity = quantity - 1 WHERE product_id = 42;
+
+-- Unit-Level Row Modeling: Concurrent checkouts lock distinct physical rows
+SELECT id FROM inventory_units
+WHERE product_id = 42 AND status = 'available'
+LIMIT 3
+FOR UPDATE SKIP LOCKED;
+
+UPDATE inventory_units
+SET status = 'reserved', reservation_id = :res_id
+WHERE id IN (...);
+```
+
+### Key Characteristics
+- **Row-Lock De-concentration**: Transforms an $O(N)$ serialized wait-queue on a single hot row into $O(1)$ parallel row acquisitions across distinct physical rows.
+- **Queue-Free Concurrency**: When combined with `SKIP LOCKED`, multiple transactions requesting units of the same SKU claim mutually exclusive subsets of available rows without blocking each other.
+- **State Lineage & Unit Traceability**: Enables individual lifecycle tracking per physical unit (e.g., serial numbers, expiry dates, warranty tags, reservation timestamps).
+- **Requires Working Set Bounding**: Without bounding, high-volume catalogs with millions of units experience table bloat, index depth degradation, and buffer pool churn; typically paired with a [Bounded Working Pool](architecture-patterns.md#bounded-working-pool).
+
+### When to Use
+- **High-Contention Flash Sales & Checkout**: E-commerce checkouts where thousands of transactions race for the same hot inventory SKUs within milliseconds.
+- **Seat, Ticket, & Slot Booking**: Allocating numbered or fungible event tickets, airline seats, or hotel rooms under surge demand.
+- **Finite Resource Leasing**: Token buckets, worker leases, or license tokens managed inside relational datastores.
+
+### When NOT to Use
+- **Low-Contention CRUD**: Standard e-commerce or catalog systems where write concurrency on individual SKUs rarely exceeds single-digit QPS (simple atomic conditional updates suffice).
+- **Unbounded Massive Inventories Without Capping**: Multi-million unit items modeled naively without a replenishment pool, which wastes storage and degrades B-tree index performance.
+- **Strictly Continuous/Floating Quantities**: Commodities measured in fractional quantities (e.g., fuel volume, currency balances, raw materials) where discrete unit rows are impractical.
+
+### Also see
+- [FOR UPDATE SKIP LOCKED](#for-update-skip-locked) · [Inventory Reservation](#inventory-reservation) · [Lock Contention](#lock-contention) · [Bounded Working Pool](architecture-patterns.md#bounded-working-pool) · [Atomic Conditional Update](#atomic-conditional-update)

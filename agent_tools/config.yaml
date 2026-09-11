@@ -100,6 +100,8 @@ takeaway_domains:
       - "articles/databases/why-most-cdc-pipelines-break-at-scale.md"
       - "system-design-architecture/databases/39-db-key-takeaways.md"
       - "articles/databases/elasticsearch-is-dead-instacart-proved-it.md"
+      - "system-design-architecture/databases/40-db-key-takeaways.md"
+      - "articles/databases/shopify-replaced-redis-with-mysql.md"
   tx:
     file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"
@@ -498,6 +500,10 @@ takeaway_keywords:
   gin index: db
   pgvector: db
   computation pushdown: db
+  unit-level row modeling: db
+  bounded working pool: db
+  skip locked: db
+  inventory reservation: db
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────

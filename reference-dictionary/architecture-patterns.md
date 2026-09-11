@@ -71,6 +71,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Expand and Contract Pattern | [`#expand-and-contract-pattern`](#expand-and-contract-pattern) |
 | Functional Core Imperative Shell | [`#functional-core-imperative-shell`](#functional-core-imperative-shell) |
 | Computation Pushdown (In-Database Processing) | [`#computation-pushdown`](#computation-pushdown) |
+| Bounded Working Pool | [`#bounded-working-pool`](#bounded-working-pool) |
 
 ---
 
@@ -1333,5 +1334,43 @@ An architectural pattern that executes data filtering, joining, ranking, and agg
 
 ### Also see
 - [Route-to-Data Pattern](#route-to-data-pattern) · [GIN Index (Generalized Inverted Index)](databases.md#gin-index) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-42-computation-pushdown-in-database-joins--filtering-vs-application-tier-assembly)
+
+---
+
+## Bounded Working Pool
+
+A concurrency and storage-sizing pattern where a high-contention, fine-grained reservation table (such as a [Unit-Level Row Modeling](data-concurrency.md#unit-level-row-modeling) table) maintains a capped, bounded quantity of active records (e.g., ~1,000 units per hot entity) rather than materializing physical rows for the entire underlying inventory. As checkout transactions claim and drain rows from the pool, an asynchronous or threshold-triggered replenishment loop refills the working pool from a durable aggregate ledger, decoupling transactional row-level lock concurrency from catalog storage volume.
+
+```
+Total Inventory Ledger: 50,000 units (Aggregate Row)
+                │
+                ▼ (Refill when pool drops < 50%)
+    ┌────────────────────────┐
+    │  Bounded Working Pool  │
+    │  (Max 1,000 unit rows) │
+    └────────────────────────┘
+                │
+                ▼ (FOR UPDATE SKIP LOCKED)
+   Parallel Checkout Transactions
+```
+
+### Key Characteristics
+- **Storage & Index Decoupling**: Prevents multi-million row table explosions in high-concurrency reservation tables, keeping B-tree indexes shallow and index blocks resident in the database buffer cache.
+- **Watermark-Triggered Replenishment**: Uses high/low watermarks (e.g., refill when available rows drop below 50% of cap) to batch replenishment queries efficiently from the aggregate ledger.
+- **Contention Frontier Isolation**: Isolates row-level locking strictly to the active reservation frontier where contention exists, leaving quiescent backlog stock unmaterialized.
+- **Asynchronous Archival/Eviction**: Consumed or committed units are pruned or migrated out of the hot working pool to maintain bounded physical table size over time.
+
+### When to Use
+- **High-Contention Checkout with Large Inventories**: E-commerce platforms running flash sales on items with massive catalog depth (tens of thousands of units per SKU) using unit-per-row reservation modeling.
+- **Pre-Allocated Voucher & Token Pools**: Distributing unique redemption codes, licensing tokens, or session handles from a pre-warmed relational buffer.
+- **Bounded Resource Leases**: Ephemeral worker or container lease allocation tables where active slots are maintained within a fixed capacity window.
+
+### When NOT to Use
+- **Low-Stock or Unique Items**: One-of-a-kind goods, antiques, or limited-run inventory (e.g., <50 units) where total stock is already smaller than a pool threshold.
+- **Unbounded Bursts Exceeding Pool Size**: Scenarios where a single transaction or instantaneous burst requires more units than the pool cap, unless fallback synchronous top-up is supported.
+- **Purely In-Memory Token Buckets**: Ephemeral rate-limiting tokens that do not require transactional ACID persistence and can be served from Redis or memory.
+
+### Also see
+- [Unit-Level Row Modeling](data-concurrency.md#unit-level-row-modeling) · [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Inventory Reservation](data-concurrency.md#inventory-reservation) · [40. High-Contention Inventory Reservations](../../system-design-architecture/databases/40-db-key-takeaways.md#db-48-bounded-working-pool--dynamic-replenishment-pattern-for-unit-level-modeling)
 
 
