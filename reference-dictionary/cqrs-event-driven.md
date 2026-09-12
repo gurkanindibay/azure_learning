@@ -47,6 +47,8 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Compensating Event | [`#compensating-event`](#compensating-event) |
 | Event vs Message | [`#event-vs-message`](#event-vs-message) |
 | Versioned Aggregates | [`#versioned-aggregates`](#versioned-aggregates) |
+| Synchronous Core, Asynchronous Shell | [`#synchronous-core-asynchronous-shell`](#synchronous-core-asynchronous-shell) |
+| Window of Uncertainty | [`#window-of-uncertainty`](#window-of-uncertainty) |
 
 ---
 
@@ -762,6 +764,74 @@ Guards async read models/search indexes when events arrive out of sequence (e.g.
 
 ### Also see
 - [Event Sourcing](#event-sourcing) · [Optimistic Concurrency Control](data-concurrency.md#optimistic-concurrency-control) · [Idempotency](#idempotency) · [Event Replay](#event-replay) · [Deterministic Consumer](messaging.md#deterministic-consumer)
+
+---
+
+## Synchronous Core, Asynchronous Shell
+
+An architectural integration pattern that bifurcates operations into two distinct execution tiers:
+1. **Synchronous Core**: Strict, transactional business operations (such as payment authorization, inventory reservation, and invariant validation) executed atomically within the immediate client request/response path against an authoritative ACID database.
+2. **Asynchronous Shell**: Non-critical, decoupled side effects (such as confirmation notifications, loyalty point accruals, analytics ingestion, and search index updates) emitted as events off the back of the committed transaction and processed asynchronously via message brokers.
+
+```mermaid
+flowchart TD
+    Client["Client / Upstream Caller"] -->|"1. POST /checkout (Sync Request)"| Core["Synchronous Core"]
+    subgraph SyncTier["Synchronous Core Tier (Immediate Settlement)"]
+        Core -->|"2. Atomic Debit + Reserve"| DB[("Primary Database (ACID)")]
+        DB -->|"3. Commit OK"| Core
+    end
+    Core -->|"4. Immediate HTTP 200 OK"| Client
+    
+    subgraph AsyncTier["Asynchronous Shell Tier (Eventual Settlement)"]
+        Core -->|"5. Publish Event (Post-Commit / Outbox)"| Broker["Message Broker"]
+        Broker --> Email["Email Notification Service"]
+        Broker --> Loyalty["Loyalty Rewards Service"]
+        Broker --> Analytics["Analytics & Data Warehouse"]
+    end
+```
+
+### Key Characteristics
+- **Bifurcated Execution Boundary**: Critical state changes occur under immediate strong consistency; peripheral reactions occur under eventual consistency.
+- **Latency Protection**: Keeps slow, external, or rate-limited integrations (email APIs, analytics) off the end-user request path.
+- **Cognitive Simplicity**: Eliminates the need for complex distributed compensating sagas on the core transactional path while retaining the decoupled scalability of event-driven architecture for downstream reactions.
+- **Post-Commit Emission**: Events are published only *after* the local transaction successfully commits (typically utilizing the Transactional Outbox pattern or change data capture).
+
+### When to Use
+- E-commerce checkout flows (immediate debit + stock reservation; async receipt email + points accrual).
+- Financial ledger postings (immediate balance deduction; async fraud reporting + notification).
+- User onboarding (immediate credential storage and session creation; async welcome email + CRM sync).
+
+### When NOT to Use
+- Pure read-only reporting workloads with no side effects.
+- Completely asynchronous batch/stream ETL pipelines where no immediate user interaction or client blocking exists.
+- Workflows where all downstream steps are strictly transactional and must succeed or fail in lockstep with the core (requires two-phase commit or immediate synchronous orchestration).
+
+### Also see
+- [Outbox Pattern](#outbox-pattern) · [Post-Commit Dispatch](#post-commit-dispatch) · [Event-Driven Architecture](#event-driven-architecture) · [CQRS](#cqrs)
+
+---
+
+## Window of Uncertainty
+
+The temporal interval in a distributed or asynchronously integrated system during which an operation has been initiated, but its eventual outcome (success, failure, or compensation) remains undecided and cannot yet be authoritatively confirmed to the caller.
+
+### Key Characteristics
+- **Indeterminate State**: Neither the initiating service nor the waiting client knows whether the operation will ultimately settle successfully or require rollback.
+- **UX Degradation**: Forces interactive frontends into artificial blocking states (spinners, "processing your order" dialogs) or polling loops.
+- **Failure Ambiguity**: If a timeout, network partition, or consumer crash occurs during this window, recovery requires querying idempotency state stores, reconciling against compensating transactions, or human intervention.
+- **Inherent to Distributed Sagas**: Converting an atomic local transaction into an asynchronous choreography across multiple services introduces this window between each event hop.
+
+### When to Consider
+- Designing distributed transaction workflows, choreographies, and sagas.
+- Evaluating whether a business workflow can tolerate eventual consistency or requires an atomic synchronous core.
+- Defining client timeout, retry, and polling policies for asynchronous job endpoints (`202 Accepted`).
+
+### When to Eliminate
+- High-stakes customer checkout, instant fund transfers, and live booking flows where users expect immediate deterministic confirmation.
+- Sub-second SLA APIs where client contracts forbid indeterminate pending states.
+
+### Also see
+- [Eventual Consistency](#eventual-consistency) · [Orchestrator-based Saga](#orchestrator-based-saga) · [Synchronous Core, Asynchronous Shell](#synchronous-core-asynchronous-shell) · [Idempotency](#idempotency)
 
 
 

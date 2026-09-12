@@ -69,6 +69,7 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 | Low-Watermark / High-Watermark | [`#low-watermark-high-watermark`](#low-watermark-high-watermark) |
 | GIN Index (Generalized Inverted Index) | [`#gin-index`](#gin-index) |
 | tsvector & ts_rank | [`#tsvector-ts-rank`](#tsvector-ts-rank) |
+| Read Replica | [`#read-replica`](#read-replica) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1343,4 +1344,29 @@ PostgreSQL's native full-text search data types and ranking functions. `tsvector
 
 ### Also see
 - [GIN Index (Generalized Inverted Index)](#gin-index) · [Inverted Index](#inverted-index) · [pgvector](ai-ml-llm.md#pgvector) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-42-computation-pushdown-in-database-joins--filtering-vs-application-tier-assembly)
+
+---
+
+## Read Replica {#read-replica}
+
+A read-only copy of a primary database instance that synchronizes data asynchronously or semi-synchronously from the primary via transaction log streaming (e.g., PostgreSQL WAL streaming, MySQL binary logging). Read replicas allow systems to scale read throughput horizontally by routing read-only queries, analytical reporting, and search indexing away from the primary OLTP instance.
+
+### Key Characteristics
+- **Dedicated Read Offloading**: Directs read traffic (such as product catalog queries, dashboard generation, internal reporting) away from the write coordinator, preserving primary CPU, RAM, and buffer cache for ACID transactional commits.
+- **Asymmetric Scaling**: Replicas can be scaled horizontally (adding multiple read nodes behind a read load balancer or connection pool) independently of the primary write node.
+- **Replication Lag (Eventual Consistency)**: Because replication across nodes is typically asynchronous to minimize primary write latency, read replicas can experience momentary lag behind the primary, resulting in read-your-writes anomalies if not explicitly routed.
+- **High Availability & Failover Target**: In addition to read scaling, replicas serve as warm standby candidates for automatic failover in disaster recovery setups.
+
+### When to Use
+- Read-heavy systems (e.g., 90:10 read-to-write ratio) where the primary database experiences CPU or connection exhaustion from read queries.
+- Separating heavy reporting, analytical aggregation, or background batch processing from interactive customer-facing transactions.
+- Multi-region read acceleration: deploying read replicas closer to geographically distributed users.
+
+### When NOT to Use
+- Systems where every read requires strict serializable read-your-writes consistency immediately following a write (unless routed explicitly to the primary or guarded with LSN/watermark checking).
+- Write-heavy workloads where write throughput is the primary bottleneck (adding read replicas increases replication overhead on the primary without alleviating write contention).
+- When a caching layer (e.g., Redis) or CDN can absorb the read traffic more cheaply and with lower latency.
+
+### Also see
+- [Connection Pooling](#connection-pooling) · [Buffer Pool](#buffer-pool) · [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Cache-Aside](caching.md#cache-aside) · [PACELC Theorem](data-concurrency.md#pacelc-theorem)
 

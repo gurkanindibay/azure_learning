@@ -243,9 +243,11 @@ takeaway_domains:
       - "system-design-architecture/messaging/notifications-at-scale-takeaways.md"
       - "system-design-architecture/messaging/kafka-pipeline-bottlenecks.md"
       - "system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md"
+      - "system-design-architecture/messaging/when-to-avoid-event-driven-architecture-takeaways.md"
       - "articles/messaging/notifications-at-scale-what-breaks-100-to-1m-users.md"
       - "articles/messaging/million-notifications-system-design.md"
       - "articles/messaging/10-event-driven-architecture-questions.md"
+      - "articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"
@@ -680,6 +682,8 @@ dictionary_domains:
       - ledger
       - idempotency
       - outbox
+      - synchronous core
+      - window of uncertainty
   data-concurrency.md:
     title: "Data & Concurrency"
     keywords:
@@ -943,6 +947,7 @@ dictionary_domains:
       - durability
       - hyperloglog
       - connection pooling
+      - read replica
       - connection storm
       - connection acquisition latency
       - database backpressure

@@ -28,3 +28,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [how-kafka-really-works-60m-events-pipeline](how-kafka-really-works-60m-events-pipeline.md)
 - [whatsapp-duplicate-messages-at-least-once-delivery-idempotency](whatsapp-duplicate-messages-at-least-once-delivery-idempotency.md)
 - [Notifications at Scale: What Breaks When You Go From 100 Users to 1,000,000](notifications-at-scale-what-breaks-100-to-1m-users.md)
+- [When Should You Avoid Event-Driven Architecture Even If You Need to Scale?](when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md)
