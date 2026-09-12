@@ -80,6 +80,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | In-Stream Keyed Deduplication | [`#in-stream-keyed-deduplication`](#in-stream-keyed-deduplication) |
 | Batch Processing vs Stream Processing | [`#batch-processing-vs-stream-processing`](#batch-processing-vs-stream-processing) |
 | Deterministic Consumer | [`#deterministic-consumer`](#deterministic-consumer) |
+| Resolved State Consumption | [`#resolved-state-consumption`](#resolved-state-consumption) |
 
 ---
 
@@ -1466,7 +1467,26 @@ An asynchronous event consumer engineered so that processing a given sequence of
 ### Also see
 - [Idempotent Consumer](#idempotent-consumer) · [Replay (Kafka Reprocessing)](#replay-kafka-reprocessing) · [Deterministic Processing](cqrs-event-driven.md#deterministic-processing) · [Versioned Aggregates](cqrs-event-driven.md#versioned-aggregates)
 
+---
 
+## Resolved State Consumption
 
+An architectural pattern where downstream services consume already-reconciled, authoritative entity state emitted by the aggregate-owning service, rather than independently consuming and re-ordering raw, out-of-order event streams.
 
+### Key Characteristics
+- **Centralized Ordering Logic**: Only the authoritative service owning the aggregate executes version validation, guard checks, and concurrency control.
+- **Deduplication of Complexity**: Downstream systems receive clean, monotonically updated state projections (e.g., `OrderStateUpdated { id, version: 3, state: 'COMPLETED' }`) instead of raw, potentially reordered lifecycle deltas (`OrderCreated`, `PaymentCaptured`, `PaymentRefunded`).
+- **Elimination of Multi-Implementation Divergence**: Prevents the failure mode where ten different consumer teams each implement subtly different sorting, buffering, or race-resolution rules against the same raw event topic.
+- **Contract Boundary Clarity**: Establishes a clean interface between internal domain aggregate transitions and external integration events.
 
+### When to Use
+- Multi-service event-driven architectures where downstream services need current entity facts for search indexes, notifications, or reporting.
+- High-scale systems where downstream consumer teams should not need deep internal domain context to reason about entity ordering.
+- Systems with at-least-once messaging brokers where rebalances and retries frequently invert raw message delivery.
+
+### When NOT to Use
+- Event sourcing rebuilds within the owning service itself (the owning service must process the full raw event history).
+- Pure event-notification triggers where downstream services immediately call back into the owning service via synchronous RPC for current state.
+
+### Also see
+- [Versioned Aggregates](cqrs-event-driven.md#versioned-aggregates) · [Idempotent Consumer](#idempotent-consumer) · [Single Source of Truth](architecture-patterns.md#single-source-of-truth)

@@ -24,6 +24,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Causal Consistency | [`#causal-consistency`](#causal-consistency) |
 | Causal Ordering | [`#causal-ordering`](#causal-ordering) |
 | Change Data Capture (CDC) | [`#change-data-capture`](#change-data-capture) |
+| Clock Skew | [`#clock-skew`](#clock-skew) |
 | Compensating Transaction | [`#compensating-transaction`](#compensating-transaction) |
 | Deterministic Key | [`#deterministic-key`](#deterministic-key) |
 | Distributed Lock | [`#distributed-lock`](#distributed-lock) |
@@ -182,6 +183,30 @@ A mechanism that observes and propagates changes made to a database (inserts, up
 - As a replacement for transactional business logic; events describe what happened, they do not enforce correctness
 
 **Also see**: [Outbox Pattern](cqrs-event-driven.md#outbox-pattern), [Event-Driven Architecture](cqrs-event-driven.md#event-driven-architecture)
+
+---
+
+## Clock Skew
+
+The difference in time reading between physical quartz or system clocks on different physical servers, virtual machines, or container nodes within a distributed system. Clock skew makes physical wall-clock timestamps (`System.currentTimeMillis()`, ISO-8601 strings) unreliable for establishing strict causal order or determining which distributed event happened first.
+
+### Key Characteristics
+- **Ubiquitous in Cloud Environments**: Virtualized instances, container throttling, and hypervisor pauses exacerbate physical clock drift even with NTP synchronization.
+- **Microsecond vs Millisecond Divergence**: Standard NTP synchronization maintains precision within 10–100ms; cloud virtualization can experience sudden skew leaps of several hundred milliseconds.
+- **Causal Violation Danger**: An event created earlier in true physical time on a fast-clock node may receive a later timestamp than an event created subsequently on a slow-clock node, inverting business causality.
+- **Non-monotonicity**: NTP step adjustments can cause local system time to jump backwards, corrupting duration calculations and event sorting.
+
+### When to Pay Attention
+- Event-driven ordering decisions: Never rely on `event.timestamp` for sequence or state machine transitions.
+- Lease timeouts and lock expiries in distributed coordination (e.g., Chubby, ZooKeeper, etcd).
+- Distributed database conflict resolution (e.g., Last-Write-Wins in Cassandra/DynamoDB).
+
+### When NOT to Rely on Wall-Clock Time
+- When determining the chronological order of domain events across distinct microservices or producer nodes. Use [Lamport Clocks](#lamport-clocks), [Vector Clocks](#vector-clocks), or monotonically increasing entity version numbers on [Versioned Aggregates](cqrs-event-driven.md#versioned-aggregates) instead.
+- When evaluating optimistic concurrency conditions or idempotent state machine transitions.
+
+### Also see
+- [Lamport Clocks](#lamport-clocks) · [Vector Clocks](#vector-clocks) · [Causal Ordering](#causal-ordering) · [Versioned Aggregates](cqrs-event-driven.md#versioned-aggregates)
 
 ---
 

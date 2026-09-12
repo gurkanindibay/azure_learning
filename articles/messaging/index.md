@@ -29,3 +29,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [whatsapp-duplicate-messages-at-least-once-delivery-idempotency](whatsapp-duplicate-messages-at-least-once-delivery-idempotency.md)
 - [Notifications at Scale: What Breaks When You Go From 100 Users to 1,000,000](notifications-at-scale-what-breaks-100-to-1m-users.md)
 - [When Should You Avoid Event-Driven Architecture Even If You Need to Scale?](when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md)
+- [How to Guarantee Business Consistency in Event-Driven Architecture When Events Arrive Out of Order](how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md)

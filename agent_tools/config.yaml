@@ -248,6 +248,8 @@ takeaway_domains:
       - "articles/messaging/million-notifications-system-design.md"
       - "articles/messaging/10-event-driven-architecture-questions.md"
       - "articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md"
+      - "system-design-architecture/messaging/event-driven-business-consistency-takeaways.md"
+      - "articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"
