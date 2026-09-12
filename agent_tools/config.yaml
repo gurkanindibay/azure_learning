@@ -250,6 +250,8 @@ takeaway_domains:
       - "articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md"
       - "system-design-architecture/messaging/event-driven-business-consistency-takeaways.md"
       - "articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md"
+      - "system-design-architecture/messaging/event-loss-duplicates-reprocessing-takeaways.md"
+      - "articles/messaging/how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"
@@ -515,6 +517,12 @@ takeaway_keywords:
   structured outputs: agentic
   semantic drift: ai
   logit: ai
+  event loss: broker
+  duplicate events: broker
+  reprocessing: broker
+  side-effect gating: cqrs
+  synthetic event key: cqrs
+  deduplication ttl: broker
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -686,6 +694,8 @@ dictionary_domains:
       - outbox
       - synchronous core
       - window of uncertainty
+      - side-effect gating
+      - synthetic event key
   data-concurrency.md:
     title: "Data & Concurrency"
     keywords:
@@ -849,6 +859,7 @@ dictionary_domains:
       - worker self-throttling
       - progressive enqueuing
       - stream sessionization
+      - bounded deduplication ttl
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:

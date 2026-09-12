@@ -81,6 +81,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Batch Processing vs Stream Processing | [`#batch-processing-vs-stream-processing`](#batch-processing-vs-stream-processing) |
 | Deterministic Consumer | [`#deterministic-consumer`](#deterministic-consumer) |
 | Resolved State Consumption | [`#resolved-state-consumption`](#resolved-state-consumption) |
+| Bounded Deduplication TTL | [`#bounded-deduplication-ttl`](#bounded-deduplication-ttl) |
 
 ---
 
@@ -1490,3 +1491,27 @@ An architectural pattern where downstream services consume already-reconciled, a
 
 ### Also see
 - [Versioned Aggregates](cqrs-event-driven.md#versioned-aggregates) · [Idempotent Consumer](#idempotent-consumer) · [Single Source of Truth](architecture-patterns.md#single-source-of-truth)
+
+---
+
+## Bounded Deduplication TTL
+
+An operational configuration strategy for consumer-side deduplication stores where processed message identifiers are assigned a finite time-to-live (TTL) sized strictly to exceed the maximum plausible network retry and consumer rebalance horizon, guaranteeing idempotency during active delivery while preventing unbounded storage growth.
+
+### Key Characteristics
+- **Bounded Storage Footprint**: Constrains memory and disk usage in distributed caches (e.g., Redis) or database tables to a steady-state volume proportional to current event throughput rather than cumulative historical volume.
+- **Redelivery Horizon Sizing**: The TTL duration is derived from the system's operational parameters: $\text{TTL} > \text{MaxProducerRetryWindow} + \text{MaxConsumerRebalanceTimeout} + \text{ConsumerLagMargin}$ (typically 24 to 72 hours).
+- **Auto-Eviction**: Relies on database or cache native TTL expiry mechanisms (e.g., Redis key expiration, DynamoDB/Cosmos DB TTL) to prune obsolete records without requiring batch cleanup cron jobs.
+- **Layered Defense**: Accompanied by domain version checks or aggregate guards to handle ultra-long-tail duplicates that arrive after the TTL expires.
+
+### When to Use
+- High-throughput message consumer pipelines processing millions of events daily.
+- Distributed deduplication stores hosted in memory-constrained databases (Redis, Hazelcast) or billable-per-GB serverless databases.
+- At-least-once messaging systems where retries and rebalances resolve within hours.
+
+### When NOT to Use
+- Financial audit logs and regulatory ledgers where records of processed transactions must be retained permanently.
+- Systems that lack aggregate-level version guards and regularly perform manual offset rewinds back weeks or months.
+
+### Also see
+- [Idempotent Consumer](#idempotent-consumer) · [Atomic Deduplication](#atomic-deduplication) · [Deduplication Store](#deduplication-store) · [Idempotency State Explosion](cqrs-event-driven.md#idempotency-state-explosion)

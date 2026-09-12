@@ -30,3 +30,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [Notifications at Scale: What Breaks When You Go From 100 Users to 1,000,000](notifications-at-scale-what-breaks-100-to-1m-users.md)
 - [When Should You Avoid Event-Driven Architecture Even If You Need to Scale?](when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md)
 - [How to Guarantee Business Consistency in Event-Driven Architecture When Events Arrive Out of Order](how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md)
+- [How to Handle Event Loss, Duplicate Events, and Reprocessing in Event-Driven Architecture](how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md)

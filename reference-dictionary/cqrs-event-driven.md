@@ -49,6 +49,8 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Versioned Aggregates | [`#versioned-aggregates`](#versioned-aggregates) |
 | Synchronous Core, Asynchronous Shell | [`#synchronous-core-asynchronous-shell`](#synchronous-core-asynchronous-shell) |
 | Window of Uncertainty | [`#window-of-uncertainty`](#window-of-uncertainty) |
+| Side-Effect Gating | [`#side-effect-gating`](#side-effect-gating) |
+| Synthetic Event Key | [`#synthetic-event-key`](#synthetic-event-key) |
 
 ---
 
@@ -832,6 +834,53 @@ The temporal interval in a distributed or asynchronously integrated system durin
 
 ### Also see
 - [Eventual Consistency](#eventual-consistency) · [Orchestrator-based Saga](#orchestrator-based-saga) · [Synchronous Core, Asynchronous Shell](#synchronous-core-asynchronous-shell) · [Idempotency](#idempotency)
+
+---
+
+## Side-Effect Gating
+
+An architectural pattern and execution guard in event-driven architecture and event sourcing where event consumers explicitly distinguish between live stream processing and historical event replay, suppressing external, non-idempotent real-world actions (such as credit card charges, email/SMS dispatch, or third-party webhooks) while executing pure internal state derivation.
+
+### Key Characteristics
+- **Separation of Concerns**: Decouples mathematical state transitions ($\text{State}_t = f(\text{State}_{t-1}, \text{Event}_t)$) from external I/O dispatch.
+- **Context-Aware Suppression**: Uses execution context flags (e.g., `is_replay = true`) or distinct consumer group topologies to disable downstream notification and payment triggers during offset rewinds.
+- **Safe Disaster Recovery & Projections**: Enables operators to rewind offsets and rebuild read models from historical event logs without spamming users or triggering duplicate billing.
+- **Pure Function State**: Ensures that aggregate state machines depend solely on the event history rather than external side-effect responses.
+
+### When to Use
+- Rebuilding materialized read models or projections from the beginning of an event stream.
+- Replaying historical Kafka/Event Hubs topics after deploying a bug fix to domain logic.
+- Event-sourced architectures where aggregates emit external side-effect commands.
+
+### When NOT to Use
+- Simple CRUD applications without event replay capabilities.
+- Pure stream transformations where every event is meant for external forwarding and no state derivation exists.
+
+### Also see
+- [Event Replay](#event-replay) · [Deterministic Processing](#deterministic-processing) · [Deterministic Consumer](messaging.md#deterministic-consumer) · [Idempotency](#idempotency)
+
+---
+
+## Synthetic Event Key
+
+A deterministically generated unique identifier produced by hashing immutable business payload fields (e.g., entity ID, event type, sequence/version, and creation timestamp) or concatenating natural business components when events emitted by legacy systems or third-party sources lack an explicit unique ID.
+
+### Key Characteristics
+- **Deterministic Derivation**: Produces identical keys for duplicate deliveries of the same business event: $\text{Key} = \text{SHA256}(\text{payload})$.
+- **Consumer-Side Uniqueness Contract**: Enables downstream consumers to construct an idempotency key and maintain a deduplication store even when producers fail to assign UUIDs.
+- **Collision Resistance**: Relies on cryptographic hashing (e.g., SHA-256) across all immutable attributes to prevent distinct events from colliding into the same dedup key.
+- **Producer Assignment Preference**: Best treated as a fallback; assigning a UUID at producer creation time is always preferred over retrofitting synthetic keys downstream.
+
+### When to Use
+- Ingesting events from legacy, third-party, or webhook sources that do not provide unique message or event IDs.
+- Constructing deduplication keys for idempotent consumers processing unkeyed event streams.
+
+### When NOT to Use
+- When events already carry a natural, globally unique producer-generated UUID or message ID.
+- Mutable payloads where field values change between retries, which would produce conflicting hashes for the same business event.
+
+### Also see
+- [Event ID](#event-id) · [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Atomic Deduplication](messaging.md#atomic-deduplication)
 
 
 
