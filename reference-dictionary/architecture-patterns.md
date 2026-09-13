@@ -26,7 +26,6 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Database Per Service | [`#database-per-service`](#database-per-service) |
 | Strangler Fig | [`#strangler-fig`](#strangler-fig) |
 | Anti-Corruption Layer | [`#anti-corruption-layer`](#anti-corruption-layer) |
-| Architecture Tests | [`#architecture-tests`](#architecture-tests) |
 | Modular Monolith | [`#modular-monolith`](#modular-monolith) |
 | Shared Kernel | [`#shared-kernel`](#shared-kernel) |
 | Sidecar Pattern | [`#sidecar-pattern`](#sidecar-pattern) |
@@ -72,10 +71,6 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Functional Core Imperative Shell | [`#functional-core-imperative-shell`](#functional-core-imperative-shell) |
 | Computation Pushdown (In-Database Processing) | [`#computation-pushdown`](#computation-pushdown) |
 | Bounded Working Pool | [`#bounded-working-pool`](#bounded-working-pool) |
-| Mutation Testing | [`#mutation-testing`](#mutation-testing) |
-| Mutant | [`#mutant`](#mutant) |
-| Mutation Score | [`#mutation-score`](#mutation-score) |
-| Test Oracle Problem | [`#test-oracle-problem`](#test-oracle-problem) |
 
 ---
 
@@ -208,45 +203,6 @@ A **translation layer** that protects a bounded context from external model corr
 
 **Also see**: [Bounded Context](#bounded-context), [Strangler Fig](#strangler-fig)
 
----
-
-## Architecture Tests
-
-Automated tests that verify a codebase obeys its declared **architectural boundaries** — for example, that a module's Core project does not reference another module's Infrastructure project. Often implemented with reflection or dependency-analysis libraries (NetArchTest, ArchUnit, NDepend).
-
-### Key Characteristics
-- **Rule-driven**: encode constraints such as "Catalog.Core may not reference Orders.Core"
-- **Fast feedback**: run in CI like unit tests and fail the build on violation
-- **Living documentation**: make the intended architecture explicit and enforceable
-- **Boundary preservation**: prevent the gradual erosion that turns a modular monolith into a big ball of mud
-
-### When to Use
-- Modular monoliths or layered architectures where compile-time project structure enforces boundaries
-- Codebases where implicit dependencies historically caused regressions
-- Teams that want architecture review to be automated and deterministic
-
-### When NOT to Use
-- Trivial prototypes where project structure overhead outweighs boundary risk
-- When rules are too coarse and produce false positives that teams bypass
-- As a substitute for clear domain modeling — tests cannot fix wrong boundaries
-
-### Also see
-- [Modular Monolith](#modular-monolith) · [Bounded Context](#bounded-context) · [Separation of Concerns](design-patterns.md#separation-of-concerns)
-
----
-
-## Modular Monolith
-
-A **single deployment unit** organized internally into clear, self-contained modules aligned to business capabilities or bounded contexts. Each module owns its own domain logic, data access and public contract, but the application is built and deployed as one artifact.
-
-### Key Characteristics
-- **Single deployable unit**: one build, one deployment, one runtime process
-- **Strong internal boundaries**: modules communicate only through published contracts or events
-- **In-process performance**: cross-module calls are method calls, avoiding network latency and serialization
-- **Optional extraction path**: a well-isolated module can later be extracted into a separate service when scale or team autonomy demands it
-
-### When to Use
-- New products where domain boundaries are still emerging
 - Teams without the platform maturity to operate many services
 - Workloads where cross-module transactions and joins are common
 - Scenarios that need the simplicity of a monolith with the maintainability of clean boundaries
@@ -257,7 +213,7 @@ A **single deployment unit** organized internally into clear, self-contained mod
 - When a single component must scale by orders of magnitude independently
 
 ### Also see
-- [Monolith](#monolith) · [Microservices](#microservices) · [Bounded Context](#bounded-context) · [Shared Kernel](#shared-kernel) · [Architecture Tests](#architecture-tests)
+- [Monolith](#monolith) · [Microservices](#microservices) · [Bounded Context](#bounded-context) · [Shared Kernel](#shared-kernel) · [Architecture Tests](testing.md#architecture-tests)
 
 ---
 
@@ -1376,129 +1332,5 @@ Total Inventory Ledger: 50,000 units (Aggregate Row)
 
 ### Also see
 - [Unit-Level Row Modeling](data-concurrency.md#unit-level-row-modeling) · [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Inventory Reservation](data-concurrency.md#inventory-reservation) · [40. High-Contention Inventory Reservations](../../system-design-architecture/databases/40-db-key-takeaways.md#db-48-bounded-working-pool--dynamic-replenishment-pattern-for-unit-level-modeling)
-
----
-
-## Mutation Testing
-
-A fault-based software verification methodology where deliberate, synthetic semantic errors ("mutants") are introduced into source code to evaluate the sensitivity, rigor, and fault-detection capability of an existing test suite. Unlike passive line or branch coverage—which measures only whether code was executed—mutation testing evaluates assertion efficacy by verifying whether at least one test fails when the program logic is altered.
-
-```
-Original Source Code ──→ AST Mutation Engine ──→ Generated Mutants (x+y → x-y, a>b → a>=b)
-                                                        │
-                                                        ▼
-                                          Test Suite Execution (Unchanged)
-                                           ├── At least 1 test fails ──→ [KILLED]   (Effective assertion)
-                                           └── All tests pass ──────────→ [SURVIVED] (Assertion blind spot)
-```
-
-### Key Characteristics
-- **Fault-based sensitivity measurement**: Injects artificial defects (relational operator flips, arithmetic inversions, statement deletions, return value nullification) into the AST to test the tests.
-- **Assertion efficacy over reachability**: Distinguishes between "decorative tests" (which execute code to inflate coverage numbers without asserting state) and robust tests that break when logic deviates.
-- **Compile/Type pre-filtering**: Modern frameworks (e.g., Stryker with TypeScript checker) filter out syntactically invalid or non-compiling mutants before wasting test runner cycles.
-- **Computational intensity**: Generates dozens or hundreds of codebase variants, requiring compute optimization, AST scope pruning, and asynchronous execution.
-
-### When to Use
-- Auditing the quality of AI-generated or autonomous agent codebases where voluminous test suites may harbor shared blind spots.
-- Core business logic, pricing engines, state machines, financial ledgers, and authorization policies where silent logical regressions cause direct damage.
-- Verifying whether test suites written under strict TDD actually guard business invariants rather than nominal execution paths.
-
-### When NOT to Use
-- Synchronous PR-blocking CI/CD checks for rapid prototyping, as full mutation passes across large suites take orders of magnitude longer than standard unit test runs (better suited for nightly asynchronous pipelines).
-- Pure UI view components, static configuration files, DTO schemas, and simple formatting helpers with no branching logic.
-- As a substitute for specification correctness: mutation testing measures test sensitivity to code changes, not whether the test assertions match the true product requirements.
-
-### Also see
-- [Mutant](#mutant) · [Mutation Score](#mutation-score) · [Test Oracle Problem](#test-oracle-problem) · [Architecture Tests](#architecture-tests) · [Verification Loop (AI)](ai-ml-llm.md#verification-loop-ai)
-
----
-
-## Mutant
-
-A syntactically valid variation of a program's source code created by introducing a single deliberate, artificial defect (mutation) into the Abstract Syntax Tree (AST). Mutants are executed against the existing test suite and categorized into distinct execution states:
-
-| Mutant Status | Definition | Implication & Action |
-|:---|:---|:---|
-| **Killed** | A test failed when executed against the mutated code. | **Desired outcome**: Proves the test suite is sensitive to that logical alteration. |
-| **Survived** | Every test passed despite the injected defect. | **Actionable finding**: The code is reached, but assertions are too weak or coarse to notice the failure. |
-| **No Coverage (Uncovered)** | No test executes the mutated line of code. | **High urgency finding**: Total verification blind spot; test coverage must be authored from scratch. |
-| **Compile / Type Error** | Mutant produces code rejected by compiler or type checker. | **Contextual noise**: Automatically discarded before executing the test runner pool. |
-| **Equivalent Mutant** | Syntactic mutation that produces identical runtime semantics. | **Theoretical ceiling**: Cannot be killed by any test; represents natural ceiling on mutation scores. |
-
-### Key Characteristics
-- **Fine-grained mutation operators**: Common operators include boundary swaps (`>` $\to$ `>=`), arithmetic flips (`+` $\to$ `-`), equality inversions (`===` $\to$ `!==`), and return-value nullification.
-- **Clear triage hierarchy**: Uncovered mutants represent missing tests (highest urgency); survived mutants represent weak assertions; killed mutants represent healthy verification.
-- **Equivalent mutant challenge**: A small percentage of mutants cannot be killed because the semantic behavior is unchanged (e.g., optimizing loop counter logic), requiring team tolerance below 100%.
-
-### When to Use
-- Pinpointing exact lines, conditional branches, and arithmetic operators that lack explicit assertion coverage.
-- Providing autonomous AI coding agents with concrete, line-level feedback on where to write targeted edge-case assertions.
-
-### When NOT to Use
-- Evaluating non-functional requirements such as network throughput, connection pooling efficiency, or memory allocation patterns.
-
-### Also see
-- [Mutation Testing](#mutation-testing) · [Mutation Score](#mutation-score) · [Test Oracle Problem](#test-oracle-problem)
-
----
-
-## Mutation Score
-
-A quantitative software quality metric representing the percentage of valid mutants killed by a test suite:
-
-$$\text{Mutation Score} = \frac{\text{Killed Mutants}}{\text{Total Valid Mutants Attempted}} \times 100$$
-
-It serves as the authoritative metric for test assertion rigor, overcoming the false sense of security created by raw line or branch coverage.
-
-### Key Characteristics
-- **Dual-Score Diagnostic**: Comprehensive tools (such as Stryker) report both the **Total Mutation Score** (killed divided by all attempted mutants) and the **Covered Mutation Score** (killed divided only by mutants with test coverage).
-  - *Diverged scores* (e.g., 50% vs 90%): Existing tests are rigorous, but large sections of code have zero test coverage.
-  - *Converged scores* (e.g., 82% vs 85%): Test coverage is broad and uniform; remaining gaps are subtle assertion weaknesses.
-- **File-Level Granularity**: Aggregate repository scores mask localized failures (e.g., an overall 80% suite score can conceal a critical pricing file sitting at 52%).
-- **Upstream Investment Indicator**: A high mutation score cannot be faked by adding boilerplate test calls; it directly reflects investment in reusable assertion harnesses.
-
-### When to Use
-- Setting objective quality bars for critical software modules in nightly CI/CD regression pipelines.
-- Benchmarking test harness maturity across teams and AI code-generation workflows.
-- Identifying high-risk modules during refactoring, legacy migration, or architectural modernization.
-
-### When NOT to Use
-- Enforcing rigid 100% score requirements across an entire repository, which leads to diminishing returns spent wrestling with equivalent mutants.
-- As a substitute for specification reviews: a 95% mutation score does not prove the test asserts the correct business requirement.
-
-### Also see
-- [Mutation Testing](#mutation-testing) · [Mutant](#mutant) · [Test Oracle Problem](#test-oracle-problem) · [Architecture Tests](#architecture-tests)
-
----
-
-## Test Oracle Problem
-
-The fundamental challenge in software testing of determining whether the observed execution behavior and output of a program is correct for a given set of inputs. An **oracle** is the mechanism, human, or specification that provides the authoritative ground truth of what a system *should* produce.
-
-In the era of AI-generated code, the test oracle problem manifests in a critical failure mode: the **Shared Oracle Dilemma**. When an AI model or prompt co-generates both the implementation code and its corresponding unit tests, both artifacts share the same prompt context and potentially flawed interpretation of requirements. If the AI hallucinates or misinterprets a requirement, it produces a test that expects the flawed behavior and code that satisfies it. The test suite passes 100% green, yet the software ships with an objective business bug.
-
-```
-Requirements Spec ──→ [AI Model / Context] ──┬──→ Implementation Code (Flawed)
-                                             └──→ Test Assertions (Matches Flaw!)
-                                                            │
-                                                            ▼
-                                               Suite Passes (False Green)
-```
-
-### Key Characteristics
-- **Independence requirement**: An effective test oracle must be derived independently from the implementation code and its generative context.
-- **TDD limitation under AI co-generation**: Practicing Test-Driven Development (writing tests first) does not eliminate the shared oracle trap if the same model writes the test and the implementation from the same misunderstood spec.
-- **Separation of sensitivity and correctness**: Fault-based verification (such as [Mutation Testing](#mutation-testing)) measures test sensitivity (does the test react when logic changes?), but cannot validate oracle truth (is the test expecting the right outcome?).
-
-### When to Use
-- Designing verification harnesses for autonomous AI agents, LLM-generated codebases, and vibe coding pipelines.
-- Architectural reviews evaluating why green test suites with high coverage failed to prevent production outages.
-- Designing multi-layered verification strategies that combine property-based testing, mutation testing, and spec-driven contract verification.
-
-### When NOT to Use
-- Simple deterministic algorithms with mathematically proven or standardized outputs (e.g., standard cryptographic hashing, sorting algorithms).
-
-### Also see
-- [Mutation Testing](#mutation-testing) · [Mutant](#mutant) · [Mutation Score](#mutation-score) · [Verification Loop (AI)](ai-ml-llm.md#verification-loop-ai) · [Agent Harness](../../system-design-architecture/agentic-ai/agent-harness.md)
 
 

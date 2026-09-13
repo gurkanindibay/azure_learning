@@ -13,7 +13,7 @@ generated: { by: process:format-agent, at: 2026-09-13T00:00:00Z }
 > **Purpose**: Formalize the systems engineering and verification architecture required to establish trust in AI-generated software. Addresses the fundamental breakdown in the human-to-code review ratio, the shared test oracle trap, the deceptive nature of high line coverage, and the operational patterns needed to run fault-based testing at enterprise scale.  
 
 > **Also see**: [Agent Harness](agent-harness.md) (`harness-01`–`harness-10`), [Agentic Loop Engineering](agentic-loop-engineering.md) (`agentic-15`–`agentic-22`), [Agentic Accountability](agentic-accountability.md) (`agentic-08`–`agentic-12`), [Verification Boundary in Agentic SDLC](29-agentic-key-takeaways.md) (`agentic-55`–`agentic-64`), [AI Engineer Systems Architecture](40-agentic-key-takeaways.md) (`agentic-65`–`agentic-71`)  
-> **Dictionary**: [Mutation Testing](../../reference-dictionary/architecture-patterns.md#mutation-testing), [Mutant](../../reference-dictionary/architecture-patterns.md#mutant), [Mutation Score](../../reference-dictionary/architecture-patterns.md#mutation-score), [Test Oracle Problem](../../reference-dictionary/architecture-patterns.md#test-oracle-problem), [Architecture Tests](../../reference-dictionary/architecture-patterns.md#architecture-tests), [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)  
+> **Dictionary**: [Mutation Testing](../../reference-dictionary/testing.md#mutation-testing), [Mutant](../../reference-dictionary/testing.md#mutant), [Mutation Score](../../reference-dictionary/testing.md#mutation-score), [Test Oracle Problem](../../reference-dictionary/testing.md#test-oracle-problem), [Architecture Tests](../../reference-dictionary/testing.md#architecture-tests), [Verification Loop (AI)](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)  
 > **Azure Services**: [Azure Pipelines / GitHub Actions (Continuous Delivery)](../../architecture-azure/devops/), [Azure Container Instances (Isolated Ephemeral Test Runners)](../../architecture-azure/compute/)  
 > **Taxonomy Reference**: §12.1 AI Application Patterns, §8.1 Continuous Integration & Delivery Runtime  
 
@@ -265,11 +265,11 @@ sequenceDiagram
   - [§12.1 AI Application Patterns](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md) — Autonomous agent development & code generation safeguards
   - [§8.1 Continuous Integration & Delivery Runtime](../../architecture-general/10-practicality-taxonomy/architecture_taxonomy_reference.md#8-devops-delivery--runtime-architecture) — Asynchronous verification pipelines and quality gates
 - **Reference Dictionary**:
-  - [`Mutation Testing`](../../reference-dictionary/architecture-patterns.md#mutation-testing)
-  - [`Mutant`](../../reference-dictionary/architecture-patterns.md#mutant)
-  - [`Mutation Score`](../../reference-dictionary/architecture-patterns.md#mutation-score)
-  - [`Test Oracle Problem`](../../reference-dictionary/architecture-patterns.md#test-oracle-problem)
-  - [`Architecture Tests`](../../reference-dictionary/architecture-patterns.md#architecture-tests)
+  - [`Mutation Testing`](../../reference-dictionary/testing.md#mutation-testing)
+  - [`Mutant`](../../reference-dictionary/testing.md#mutant)
+  - [`Mutation Score`](../../reference-dictionary/testing.md#mutation-score)
+  - [`Test Oracle Problem`](../../reference-dictionary/testing.md#test-oracle-problem)
+  - [`Architecture Tests`](../../reference-dictionary/testing.md#architecture-tests)
   - [`Verification Loop (AI)`](../../reference-dictionary/ai-ml-llm.md#verification-loop-ai)
 - **Azure Cloud Implementations**:
   - [Azure DevOps Pipelines](../../architecture-azure/devops/) — Scheduled nightly verification stages

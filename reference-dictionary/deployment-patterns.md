@@ -173,6 +173,8 @@ A high-availability deployment pattern where **multiple data centers or regions 
 
 ## Shadow Testing
 
+> **Primary definition**: See [Shadow Testing](testing.md#shadow-testing) in Software Testing & Verification.
+
 A validation technique where production traffic is **duplicated and sent to a new version or service without affecting real users**. Responses are compared between the old and new systems to detect regressions.
 
 ### Key Characteristics
@@ -188,7 +190,7 @@ A validation technique where production traffic is **duplicated and sent to a ne
 - When the operation has side effects (e.g., payments, writes) that cannot be isolated
 - Without a safe way to capture, compare and discard shadow responses
 
-**Also see**: [Canary Deployment](#canary-deployment), [Progressive Delivery](#progressive-delivery)
+**Also see**: [Shadow Testing](testing.md#shadow-testing), [Canary Deployment](#canary-deployment), [Progressive Delivery](#progressive-delivery)
 
 ---
 

@@ -1058,3 +1058,27 @@ dictionary_domains:
       - geofencing
       - gis
 
+  testing.md:
+    title: "Software Testing & Verification"
+    keywords:
+      - test
+      - testing
+      - mutation testing
+      - mutant
+      - mutation score
+      - test oracle
+      - test oracle problem
+      - stryker
+      - pitest
+      - architecture tests
+      - archunit
+      - netarchtest
+      - shadow testing
+      - property-based testing
+      - hypothesis
+      - quickcheck
+      - contract testing
+      - pact
+      - verification
+      - assertion
+

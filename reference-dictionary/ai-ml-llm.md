@@ -1130,7 +1130,7 @@ An **AI agent architecture** where two specialized agents work in tandem: one ac
 ### Also see
 - [Agentic AI](#agentic-ai)
 - [Agent Harness](#agent-harness)
-- [Shadow Testing](resilience.md#shadow-testing)
+- [Shadow Testing](testing.md#shadow-testing)
 - [Verification Loop (AI)](#verification-loop-ai)
 
 ---

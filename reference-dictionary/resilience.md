@@ -511,6 +511,8 @@ A database query technique where **user-supplied values are passed as separate p
 
 ## Shadow Testing
 
+> **Primary definition**: See [Shadow Testing](testing.md#shadow-testing) in Software Testing & Verification.
+
 A **validation technique** where production traffic is replicated and replayed in an isolated, non-production environment to compare the behavior of a legacy system against a new or modified system. Unlike traditional testing, shadow testing uses real production payloads — often morphed to test adversarial edge cases — without affecting live users.
 
 ### Key Characteristics
@@ -530,6 +532,7 @@ A **validation technique** where production traffic is replicated and replayed i
 - When the cost of running a full parallel environment outweighs the migration risk
 
 ### Also see
+- [Shadow Testing](testing.md#shadow-testing)
 - [Circuit Breaker](#circuit-breaker)
 - [Chaos Engineering](#chaos-engineering)
 - [Defense in Depth](#defense-in-depth)

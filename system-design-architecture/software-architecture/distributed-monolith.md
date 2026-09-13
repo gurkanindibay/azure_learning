@@ -113,7 +113,7 @@ generated: { by: process:okf-migrate, at: 2026-04-03T00:00:00Z }
 
 **Tradeoff**: The initial solution layout is more complex than a flat project structure. New team members need to understand the layering rules, and refactoring across module boundaries requires updating published contracts first. The discipline pays off only if the rules are enforced automatically.
 
-> **Also see**: [Architecture Tests](../../reference-dictionary/architecture-patterns.md#architecture-tests) · [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · [arch-02: Separation of Concerns](software-architecture/architecture-principles.md#arch-02-separation-of-concerns) · [arch-04: Loose Coupling](software-architecture/architecture-principles.md#arch-04-loose-coupling--high-cohesion)
+> **Also see**: [Architecture Tests](../../reference-dictionary/testing.md#architecture-tests) · [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context) · [arch-02: Separation of Concerns](software-architecture/architecture-principles.md#arch-02-separation-of-concerns) · [arch-04: Loose Coupling](software-architecture/architecture-principles.md#arch-04-loose-coupling--high-cohesion)
 
 ---
 
