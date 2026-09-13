@@ -26,4 +26,5 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [How Does Anthropic Watermark AI-Generated Content?](how-does-anthropic-watermark-ai-generated-content.md)
 - [Your Git Repository Wasn’t Designed for the AI Era](your-git-repository-wasnt-designed-for-the-ai-era.md)
 - [Software Engineer to AI Engineer: Best Move 2026](software-engineer-to-ai-engineer-best-move-2026.md)
+- [Mutation Testing Closes the Trust Gap in AI Generated Code](mutation-testing-closes-the-trust-gap-in-ai-generated-code.md)
 

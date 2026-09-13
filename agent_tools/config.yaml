@@ -192,6 +192,8 @@ takeaway_domains:
       - "articles/agentic-ai/your-git-repository-wasnt-designed-for-the-ai-era.md"
       - "articles/agentic-ai/google-new-sdlc-guide-vibe-coding-agentic-engineering.md"
       - "articles/agentic-ai/software-engineer-to-ai-engineer-best-move-2026.md"
+      - "system-design-architecture/agentic-ai/41-agentic-key-takeaways.md"
+      - "articles/agentic-ai/mutation-testing-closes-the-trust-gap-in-ai-generated-code.md"
   prag:
     file: "system-design-interview/pragmatic-takeaways.md"
     desc: "Pragmatic System Design"
@@ -523,6 +525,11 @@ takeaway_keywords:
   side-effect gating: cqrs
   synthetic event key: cqrs
   deduplication ttl: broker
+  mutation testing: agentic
+  mutation score: agentic
+  mutant: agentic
+  stryker: agentic
+  test oracle: agentic
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -643,6 +650,11 @@ dictionary_domains:
       - application-level replication
       - computation pushdown
       - in-database processing
+      - mutation testing
+      - mutant
+      - mutation score
+      - test oracle
+      - stryker
   networking.md:
     title: "Networking"
     keywords:
