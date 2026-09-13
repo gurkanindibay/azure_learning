@@ -1,0 +1,12 @@
+{
+  "include": [
+    "ai-powered-engineering/python",
+    "agent_tools",
+    "scripts"
+  ],
+  "extraPaths": [
+    "ai-powered-engineering/python"
+  ],
+  "venvPath": "ai-powered-engineering/python",
+  "venv": ".venv"
+}

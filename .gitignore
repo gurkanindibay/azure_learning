@@ -1,5 +1,32 @@
+# General
 .DS_Store
 temp_file.txt
-*/__pycache__/*
 *.log
-agent_tools/__pycache__/*
+
+# Python
+**/__pycache__/
+*__pycache__*
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# .NET / C#
+**/[Bb]in/
+**/[Oo]bj/
+**/.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+TestResults/
+**/TestResults/
+*.trx
+*.coverage

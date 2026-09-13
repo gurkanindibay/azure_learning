@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/PatchMaster.Benchmarks/PatchMaster.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/PatchMaster.Agents/PatchMaster.Agents.csproj" />
+    <Project Path="src/PatchMaster.Cli/PatchMaster.Cli.csproj" />
+    <Project Path="src/PatchMaster.Core/PatchMaster.Core.csproj" />
+    <Project Path="src/PatchMaster.Graph/PatchMaster.Graph.csproj" />
+    <Project Path="src/PatchMaster.Harness/PatchMaster.Harness.csproj" />
+    <Project Path="src/PatchMaster.Loop/PatchMaster.Loop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PatchMaster.Tests/PatchMaster.Tests.csproj" />
+  </Folder>
+</Solution>

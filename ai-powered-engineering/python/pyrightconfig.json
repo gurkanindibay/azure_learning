@@ -1,0 +1,17 @@
+{
+  "include": [
+    "src",
+    "tests",
+    "benchmarks/runner.py"
+  ],
+  "exclude": [
+    "benchmarks/fixtures",
+    ".venv"
+  ],
+  "extraPaths": [
+    "."
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "reportMissingImports": "none"
+}

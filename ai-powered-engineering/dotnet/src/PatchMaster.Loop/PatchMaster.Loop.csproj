@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PatchMaster.Core\PatchMaster.Core.csproj" />
+    <ProjectReference Include="..\PatchMaster.Harness\PatchMaster.Harness.csproj" />
+    <ProjectReference Include="..\PatchMaster.Agents\PatchMaster.Agents.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
