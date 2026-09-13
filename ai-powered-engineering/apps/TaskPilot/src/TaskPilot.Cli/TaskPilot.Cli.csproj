@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaskPilot.Core\TaskPilot.Core.csproj" />
+    <ProjectReference Include="..\TaskPilot.Infrastructure\TaskPilot.Infrastructure.csproj" />
+    <ProjectReference Include="..\TaskPilot.Services\TaskPilot.Services.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

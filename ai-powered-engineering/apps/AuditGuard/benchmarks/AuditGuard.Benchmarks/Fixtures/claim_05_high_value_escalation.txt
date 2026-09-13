@@ -1,0 +1,11 @@
+--- Apex Tech Hardware ---
+Date: 2026-09-04
+Receipt #: ATH-33201
+
+- 1x Thunderbolt Dock: $280.00
+- 1x 4K Monitor: $350.00
+
+Subtotal: $630.00
+Tax: $50.40
+Tip: $0.00
+Total: $680.40

@@ -1,0 +1,10 @@
+--- Metro Office Supplies ---
+Date: 2026-09-07
+Receipt #: MOS-9182
+
+- 1x Notebook: $12.00
+- 1x Gel Pens Pack: $8.00
+
+Tax: $1.60
+Tip: $0.00
+Total: $21.60

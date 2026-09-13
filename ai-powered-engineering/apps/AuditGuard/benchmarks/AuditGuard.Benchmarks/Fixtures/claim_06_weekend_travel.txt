@@ -1,0 +1,10 @@
+--- Metro Airport Shuttle ---
+Date: 2026-09-13
+Receipt #: MAS-7712
+
+- 1x Airport Express Shuttle: $65.00
+
+Subtotal: $65.00
+Tax: $0.00
+Tip: $10.00
+Total: $75.00

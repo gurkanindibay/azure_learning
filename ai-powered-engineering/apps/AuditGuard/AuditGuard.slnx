@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/AuditGuard.Benchmarks/AuditGuard.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AuditGuard.Agents/AuditGuard.Agents.csproj" />
+    <Project Path="src/AuditGuard.Cli/AuditGuard.Cli.csproj" />
+    <Project Path="src/AuditGuard.Core/AuditGuard.Core.csproj" />
+    <Project Path="src/AuditGuard.Graph/AuditGuard.Graph.csproj" />
+    <Project Path="src/AuditGuard.Harness/AuditGuard.Harness.csproj" />
+    <Project Path="src/AuditGuard.Loop/AuditGuard.Loop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AuditGuard.Tests/AuditGuard.Tests.csproj" />
+  </Folder>
+</Solution>

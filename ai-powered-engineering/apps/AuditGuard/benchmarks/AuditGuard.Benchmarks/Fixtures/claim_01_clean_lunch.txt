@@ -1,0 +1,12 @@
+--- Blue Harbour Bistro ---
+Date: 2026-09-10
+Receipt #: BH-88219
+
+- 1x Grilled Salmon Lunch: $26.00
+- 1x Caesar Salad: $11.50
+- 1x Sparkling Water: $4.50
+
+Subtotal: $42.00
+Tax: $3.78
+Tip: $6.00
+Total: $51.78

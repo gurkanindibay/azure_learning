@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskPilot.Cli/TaskPilot.Cli.csproj" />
+    <Project Path="src/TaskPilot.Core/TaskPilot.Core.csproj" />
+    <Project Path="src/TaskPilot.Infrastructure/TaskPilot.Infrastructure.csproj" />
+    <Project Path="src/TaskPilot.Services/TaskPilot.Services.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskPilot.Tests/TaskPilot.Tests.csproj" />
+  </Folder>
+</Solution>

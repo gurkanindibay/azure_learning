@@ -84,13 +84,25 @@ ai-powered-engineering/
     ├── src/                           # Core, Harness, Agents, Loop, Graph, CLI
     ├── tests/                         # 9 xUnit unit tests (100% passing)
     └── benchmarks/                    # 4 C# benchmark fixtures & evaluation runner
+└── apps/
+    └── AuditGuard/                    # Agent-Powered Business Application (.NET 8)
+        ├── README.md                  # Autonomous Expense Audit Microservice
+        ├── AuditGuard.slnx            # Solution file
+        ├── src/                       # Core, Harness, Loop, Agents, Graph, CLI
+        ├── tests/                     # 12 xUnit unit tests (100% passing)
+        └── benchmarks/                # 6 real-world benchmark fixtures & evaluation runner
+    └── TaskPilot/                     # Standalone Business Application (.NET 8/10)
+        ├── README.md                  # Standalone Task & Workflow Management App
+        ├── TaskPilot.sln              # Solution file (Zero Agent Dependencies)
+        ├── src/                       # Core, Infrastructure, Services, Cli
+        └── tests/                     # 13 xUnit unit tests (100% passing)
 ```
 
 ---
 
 ## 4. Quick Execution Guide
 
-### Run Python Solution
+### Run Python PatchMaster Solution
 ```bash
 cd ai-powered-engineering/python
 source .venv/bin/activate
@@ -102,7 +114,7 @@ pytest tests -v
 python benchmarks/runner.py
 ```
 
-### Run .NET Solution
+### Run .NET PatchMaster Solution
 ```bash
 cd ai-powered-engineering/dotnet
 
@@ -112,3 +124,32 @@ dotnet test tests/PatchMaster.Tests
 # 2. Run benchmark evaluation suite
 dotnet run --project benchmarks/PatchMaster.Benchmarks
 ```
+
+### Run .NET AuditGuard (Agent-Powered App)
+```bash
+cd ai-powered-engineering/apps/AuditGuard
+
+# 1. Run unit tests
+dotnet test
+
+# 2. Run benchmark evaluation suite
+dotnet run --project benchmarks/AuditGuard.Benchmarks
+
+# 3. Run interactive audit CLI
+dotnet run --project src/AuditGuard.Cli -- --sample
+```
+
+### Run .NET TaskPilot (Standalone App)
+```bash
+cd ai-powered-engineering/apps/TaskPilot
+
+# 1. Run unit tests
+dotnet test
+
+# 2. Run standalone CLI
+dotnet run --project src/TaskPilot.Cli -- seed
+dotnet run --project src/TaskPilot.Cli -- list
+dotnet run --project src/TaskPilot.Cli -- summary
+```
+
+
