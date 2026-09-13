@@ -70,6 +70,7 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 | GIN Index (Generalized Inverted Index) | [`#gin-index`](#gin-index) |
 | tsvector & ts_rank | [`#tsvector-ts-rank`](#tsvector-ts-rank) |
 | Read Replica | [`#read-replica`](#read-replica) |
+| N+1 Query Problem | [`#n1-query-problem`](#n1-query-problem) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1369,4 +1370,28 @@ A read-only copy of a primary database instance that synchronizes data asynchron
 
 ### Also see
 - [Connection Pooling](#connection-pooling) · [Buffer Pool](#buffer-pool) · [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Cache-Aside](caching.md#cache-aside) · [PACELC Theorem](data-concurrency.md#pacelc-theorem)
+
+---
+
+## N+1 Query Problem {#n1-query-problem}
+
+An Object-Relational Mapping (ORM) and data-access performance anti-pattern where **fetching 1 parent entity or collection triggers $N$ separate, sequential database queries to load child relationships**, causing extreme database round-trip latency and connection pool exhaustion.
+
+### Key Characteristics
+- Occurs when entity relationships are configured with lazy loading (`FetchType.LAZY`) and iterated over in application code without an explicit eager fetch plan
+- Multiplies network round-trips: loading 100 parent records with 1 child collection executes $1 + 100 = 101$ network trips, scaling latency linearly ($O(N \times \text{RTT})$)
+- Incurred silently in production because local development environments run on low latency (e.g., `<0.1`ms localhost) and minimal seed data, concealing query volume
+- Mitigated architecturally via query join fetching (`JOIN FETCH`), declarative entity graphs (`@EntityGraph`), or batch fetching (`WHERE id IN (?, ?, ...)` via Hibernate `@BatchSize`)
+
+### When to Use
+- Diagnostic terminology applied during database profiling, APM query count alerts, and ORM query performance audits
+- Architectural justification for enforcing query count assertions in integration tests and prohibiting naive collection traversals in service layers
+
+### When NOT to Use
+- Does not apply to systems using hand-optimized SQL, CQRS read projections with flat DTO joins, or document databases where relationships are pre-aggregated within a single document
+
+### Also see
+- [Connection Pooling](#connection-pooling) — pool exhaustion is the primary failure mode of N+1 cascades
+- [Read Replica](#read-replica) — offloading read queries does not solve underlying N+1 round-trip amplification
+
 

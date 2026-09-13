@@ -10,3 +10,5 @@ Source articles covering jvm runtime patterns, strategies, and case studies.
 
 - [JVM Memory Internals Explained for Backend Engineers (With Real Production Examples)](JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md)
 - [Modern Java Has Changed More Than You Think](modern-java-has-changed-more-than-you-think.md)
+- [These Spring Boot Patterns Are Outdated](these-spring-boot-patterns-are-outdated.md)
+

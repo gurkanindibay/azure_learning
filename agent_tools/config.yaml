@@ -273,8 +273,11 @@ takeaway_domains:
       - "system-design-architecture/jvm-runtime/jvm-memory-gc.md"
       - "system-design-architecture/jvm-runtime/jvm-thread-model-vs-go.md"
       - "system-design-architecture/jvm-runtime/modern-java-evolution-takeaways.md"
+      - "system-design-architecture/jvm-runtime/65-jvm-key-takeaways.md"
       - "articles/jvm-runtime/JVM Memory Internals Explained for Backend Engineers (With Real Production Examples).md"
       - "articles/jvm-runtime/modern-java-has-changed-more-than-you-think.md"
+      - "articles/jvm-runtime/these-spring-boot-patterns-are-outdated.md"
+
   sdi:
     file: "system-design-interview/interview-roadmap.md"
     desc: "System Design Interview"
@@ -530,6 +533,16 @@ takeaway_keywords:
   mutant: agentic
   stryker: agentic
   test oracle: agentic
+  spring boot: jvm
+  spring: jvm
+  constructor injection: jvm
+  autowired: jvm
+  field injection: jvm
+  configurationproperties: jvm
+  restclient: jvm
+  securityfilterchain: jvm
+  n+1: jvm
+
 
 
 # ── Agent 3: Dictionary Agent ───────────────────────────────────────────────
@@ -947,6 +960,12 @@ dictionary_domains:
       - compact object headers
       - generational zgc
       - lazy constants
+      - constructor injection
+      - aop proxy
+      - self-invocation
+      - configurationproperties
+      - restclient
+      - spring boot
 
   databases.md:
     title: "Databases & Database Engines"
@@ -985,6 +1004,8 @@ dictionary_domains:
       - gin
       - tsvector
       - ts_rank
+      - n+1
+      - n+1 query
 
   security-iam.md:
     title: "Security, Identity & Access Management"
@@ -1005,6 +1026,7 @@ dictionary_domains:
       - openid
       - mfa
       - bearer
+      - securityfilterchain
 
   data-architecture.md:
     title: "Data Architecture & Distributed Systems"

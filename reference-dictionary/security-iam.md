@@ -28,6 +28,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 | Salt and Pepper | [`#salt-and-pepper`](#salt-and-pepper) |
 | Replay Attack | [`#replay-attack`](#replay-attack) |
 | TOTP (Time-based One-Time Password) | [`#totp-time-based-one-time-password`](#totp-time-based-one-time-password) |
+| SecurityFilterChain | [`#securityfilterchain`](#securityfilterchain) |
 
 ---
 
@@ -348,6 +349,35 @@ An open-standard algorithm (**RFC 6238**) that computes a dynamic, short-lived (
 
 ---
 
+## SecurityFilterChain
+
+### securityfilterchain
+
+A component-based configuration architecture introduced in modern Spring Security (and mandatory in Spring Security 6.0+) that defines an **ordered chain of servlet filters as a managed Spring bean** (`SecurityFilterChain`), completely replacing inheritance-based configuration (`WebSecurityConfigurerAdapter`).
+
+### Key Characteristics
+- Configured as a `@Bean public SecurityFilterChain filterChain(HttpSecurity http)` factory method
+- Replaces class inheritance with functional, lambda-based DSL composition (`authorizeHttpRequests`, `requestMatchers`)
+- Supports multiple distinct `SecurityFilterChain` beans ordered via `@Order`, enabling separate filter chains for public APIs, internal microservices, and admin consoles within the same application
+- Decouples security filter rules from the servlet container lifecycle, facilitating modular testing
+
+### When to Use
+- Standard security configuration for all Spring Boot 3.x and Spring Security 6+ web applications
+- Configuring endpoint authorization (`requestMatchers("/api/public/**").permitAll()`), OAuth2 resource servers, and JWT authentication filters
+- Implementing multi-tenant or multi-chain security policies with distinct security rules per URI pattern
+
+### When NOT to Use
+- Legacy Spring Boot 2.x applications that have not yet migrated away from `WebSecurityConfigurerAdapter` and `antMatchers`
+- Non-Spring Java servlet architectures using native container security constraints
+
+### Also see
+- [Authentication](#authentication) — verified within filter chain execution
+- [Authorization](#authorization) — enforced at request matching boundaries
+- [JWT (JSON Web Token)](#jwt-json-web-token) — validated by filter chain bearer token interceptors
+
+---
+
 > **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.
+
 
 

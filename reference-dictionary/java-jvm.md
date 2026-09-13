@@ -49,6 +49,10 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 | Compact Object Headers | [`#compact-object-headers`](#compact-object-headers) |
 | Generational ZGC | [`#generational-zgc`](#generational-zgc) |
 | Lazy Constants | [`#lazy-constants`](#lazy-constants) |
+| Constructor Injection | [`#constructor-injection`](#constructor-injection) |
+| AOP Proxy Self-Invocation | [`#aop-proxy-self-invocation`](#aop-proxy-self-invocation) |
+| Type-Safe Configuration Properties | [`#type-safe-configuration-properties`](#type-safe-configuration-properties) |
+| RestClient | [`#restclient`](#restclient) |
 
 ---
 
@@ -715,5 +719,115 @@ A Java language and runtime preview feature that provides a **thread-safe, high-
 ### Also see
 - [CallerRunsPolicy](#callerrunspolicy) — concurrency policy
 - [HashMap](#hashmap) — common data structure initialized lazily
+
+---
+
+## Constructor Injection
+
+### constructor-injection
+
+A dependency injection pattern where an object's required dependencies are **passed exclusively through its constructor** during instantiation, enabling immutability, explicit contracts, and container-independent testability.
+
+### Key Characteristics
+- Mandates that dependencies be declared as `private final` fields
+- Guarantees that an object cannot be instantiated in a partially-initialized or invalid state
+- Eliminates reliance on reflection or bytecode manipulation to satisfy dependencies
+- Enables pure POJO unit testing without initializing a Spring `ApplicationContext`
+- Serves as architectural telemetry: constructors requiring >5 dependencies clearly signal a Single Responsibility Principle (SRP) violation
+
+### When to Use
+- Default dependency injection mechanism for all Spring beans, services, controllers, and repositories
+- When building robust domain services that require non-nullable, immutable collaborators
+- When optimizing unit test execution speed by eliminating container bootstrapping
+
+### When NOT to Use
+- Optional or circular dependencies that cannot be resolved at construction time (though circular dependencies usually indicate an architectural design flaw that should be refactored)
+- Legacy framework integration points where reflection-based lifecycle callbacks are strictly mandated
+
+### Also see
+- [AOP Proxy Self-Invocation](#aop-proxy-self-invocation) — Spring container interception mechanics
+- [Type-Safe Configuration Properties](#type-safe-configuration-properties) — configuration binding via constructor records
+
+---
+
+## AOP Proxy Self-Invocation
+
+### aop-proxy-self-invocation
+
+A fundamental limitation of proxy-based Aspect-Oriented Programming (AOP) where **internal method calls within the same class bypass the dynamic proxy interceptor chain**, silently disabling cross-cutting concerns like `@Transactional`, `@Async`, `@Cacheable`, and `@Secured`.
+
+### Key Characteristics
+- Dynamic proxies (JDK dynamic proxies or CGLIB) intercept calls only when an external caller invokes methods through the Spring proxy bean reference
+- Internal calls (`this.targetMethod()`) execute directly on the target instance reference without routing through the proxy wrapper
+- Methods annotated with private or protected visibility cannot be intercepted by standard Spring proxy mechanisms
+- Creates deceptive failure modes that pass superficial code reviews because the annotation appears syntactically valid
+
+### When to Use
+- Knowledge of this limitation must be applied when designing service boundaries and transactional units of work
+- Enforces collaborator service extraction: moving transactional or cached logic to distinct public collaborator beans
+
+### When NOT to Use
+- Do NOT use internal self-invocation when relying on declarative transaction management, asynchronous dispatch, or cache invalidation
+- Avoid relying on `AopContext.currentProxy()` workarounds, which tightly couple business logic to Spring AOP infrastructure
+
+### Also see
+- [Constructor Injection](#constructor-injection) — enables clean collaborator injection
+- [Virtual Threads](#virtual-threads) — alternative concurrency handling for async boundaries
+
+---
+
+## Type-Safe Configuration Properties
+
+### type-safe-configuration-properties
+
+A Spring Boot configuration binding pattern (`@ConfigurationProperties`) that **binds external environment properties into strongly-typed, cohesive, and validated domain models** at application startup.
+
+### Key Characteristics
+- Replaces ad-hoc string-based `@Value` property injection across individual classes
+- Enforces fail-fast startup validation using standard JSR-380 annotations (`@NotBlank`, `@Min`, `@NotNull`, `@Pattern`)
+- Supports hierarchical property structures, collections, nested objects, and `java.time.Duration` / `DataSize` conversions
+- Generates configuration metadata (`spring-configuration-metadata.json`) enabling IDE autocomplete and documentation
+- Compatible with Java 17+ immutable `record` definitions
+
+### When to Use
+- Grouping related configuration settings for external APIs, databases, message brokers, or subsystem feature flags
+- Validating critical configuration invariants (e.g., URL formatting, timeout bounds) to prevent runtime crashes
+- Providing discoverable configuration contracts for DevOps and platform teams
+
+### When NOT to Use
+- Single, isolated, one-off framework toggles where a full configuration class provides minimal organizational value
+
+### Also see
+- [Constructor Injection](#constructor-injection) — used with constructor binding in configuration records
+- [RestClient](#restclient) — configured via type-safe property models
+
+---
+
+## RestClient
+
+### restclient
+
+A **fluent, synchronous HTTP client** introduced in Spring Framework 6.1 and Spring Boot 3.2 that combines the modern functional programming model of `WebClient` with the synchronous execution model of `RestTemplate`.
+
+### Key Characteristics
+- Synchronous, blocking execution model that does not require Project Reactor (`Mono` / `Flux`) or Netty dependencies
+- Fluent, builder-style API with clean URI template expansion, header manipulation, and status code interception (`onStatus`)
+- Pluggable HTTP request factories supporting Java's standard `HttpClient`, Apache HttpClient, and OkHttp
+- Seamlessly pairs with Java 21 Virtual Threads (`spring.threads.virtual.enabled=true`) for high-concurrency synchronous I/O
+- Successor to the maintenance-mode `RestTemplate` for modern microservice RPC
+
+### When to Use
+- Making synchronous REST API calls between microservices in Spring Boot 3.2+ applications
+- Building client abstractions where straightforward imperative programming and readable linear stack traces are preferred
+- High-concurrency I/O services powered by Virtual Threads
+
+### When NOT to Use
+- Reactive streaming architectures requiring reactive backpressure, Server-Sent Events (SSE), or full non-blocking WebFlux stacks (use `WebClient`)
+- Legacy applications constrained to Spring Boot 2.x or Java 8/11 runtimes (use `RestTemplate` or Apache HttpClient)
+
+### Also see
+- [Virtual Threads](#virtual-threads) — enables RestClient to scale to high concurrent request volumes
+- [Type-Safe Configuration Properties](#type-safe-configuration-properties) — supplies client connection settings
+
 
 
