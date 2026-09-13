@@ -96,6 +96,17 @@ ai-powered-engineering/
         ├── TaskPilot.sln              # Solution file (Zero Agent Dependencies)
         ├── src/                       # Core, Infrastructure, Services, Cli
         └── tests/                     # 13 xUnit unit tests (100% passing)
+    └── CacheShield/                   # Standalone Application Manufactured by DevFactory (.NET 8)
+        ├── README.md                  # High-Performance Multi-Tier Cache Microservice
+        ├── CacheShield.sln            # Solution file (Zero Agent Dependencies)
+        ├── src/                       # Core, Infrastructure, Services, Cli
+        └── tests/                     # 4 xUnit unit tests (100% passing)
+└── factory/
+    └── DevFactory/                    # Autonomous Software Development Factory Platform (.NET 8/10)
+        ├── README.md                  # Factory Architecture & Assembly Line Guide
+        ├── DevFactory.sln             # Solution file
+        ├── src/                       # Core, Harness (Roslyn AST), Loop, Agents, Graph, Cli
+        └── tests/                     # 6 xUnit unit tests (100% passing)
 ```
 
 ---
@@ -125,18 +136,26 @@ dotnet test tests/PatchMaster.Tests
 dotnet run --project benchmarks/PatchMaster.Benchmarks
 ```
 
-### Run .NET AuditGuard (Agent-Powered App)
+### Run Autonomous Software Development Factory (`DevFactory`)
 ```bash
-cd ai-powered-engineering/apps/AuditGuard
+cd ai-powered-engineering/factory/DevFactory
+
+# 1. Run factory unit tests
+dotnet test
+
+# 2. Run autonomous manufacturing assembly line (manufactures standalone app in seconds!)
+dotnet run --project src/DevFactory.Cli -- demo
+```
+
+### Run Manufactured Standalone Application (`CacheShield`)
+```bash
+cd ai-powered-engineering/apps/CacheShield
 
 # 1. Run unit tests
 dotnet test
 
-# 2. Run benchmark evaluation suite
-dotnet run --project benchmarks/AuditGuard.Benchmarks
-
-# 3. Run interactive audit CLI
-dotnet run --project src/AuditGuard.Cli -- --sample
+# 2. Run standalone CLI
+dotnet run --project src/CacheShield.Cli
 ```
 
 ### Run .NET TaskPilot (Standalone App)
@@ -151,5 +170,6 @@ dotnet run --project src/TaskPilot.Cli -- seed
 dotnet run --project src/TaskPilot.Cli -- list
 dotnet run --project src/TaskPilot.Cli -- summary
 ```
+
 
 

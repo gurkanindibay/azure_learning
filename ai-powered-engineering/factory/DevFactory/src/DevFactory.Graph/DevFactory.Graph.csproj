@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DevFactory.Core\DevFactory.Core.csproj" />
+    <ProjectReference Include="..\DevFactory.Harness\DevFactory.Harness.csproj" />
+    <ProjectReference Include="..\DevFactory.Loop\DevFactory.Loop.csproj" />
+    <ProjectReference Include="..\DevFactory.Agents\DevFactory.Agents.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

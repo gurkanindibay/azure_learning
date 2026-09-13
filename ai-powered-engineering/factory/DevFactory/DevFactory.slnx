@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DevFactory.Agents/DevFactory.Agents.csproj" />
+    <Project Path="src/DevFactory.Cli/DevFactory.Cli.csproj" />
+    <Project Path="src/DevFactory.Core/DevFactory.Core.csproj" />
+    <Project Path="src/DevFactory.Graph/DevFactory.Graph.csproj" />
+    <Project Path="src/DevFactory.Harness/DevFactory.Harness.csproj" />
+    <Project Path="src/DevFactory.Loop/DevFactory.Loop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DevFactory.Tests/DevFactory.Tests.csproj" />
+  </Folder>
+</Solution>
