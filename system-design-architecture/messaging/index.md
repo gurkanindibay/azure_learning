@@ -31,6 +31,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [when-to-avoid-event-driven-architecture-takeaways.md](when-to-avoid-event-driven-architecture-takeaways.md) | `broker-129` – `broker-133` | Strict transactional invariants, Window of uncertainty, Sub-second latency paths, Queueing delay vs lag, Operational maturity prerequisites, Boring scaling ladder, Synchronous Core with Asynchronous Shell |
 | [event-driven-business-consistency-takeaways.md](event-driven-business-consistency-takeaways.md) | `broker-134` – `broker-140` | False broker ordering assumptions, Versioned aggregates guard clause, Single-writer ownership, Resolved state consumption, Clock skew & logical clocks, OCC without locks, Discard observability vs DLQ, Multi-service Sagas |
 | [event-loss-duplicates-reprocessing-takeaways.md](event-loss-duplicates-reprocessing-takeaways.md) | `broker-141` – `broker-146` | Tripartite failure surface separation, Producer/broker durability invariants, Atomic deduplication boundary, Deterministic replay & side-effect gating, Bounded dedup store TTL, Downstream idempotency keys |
+| [uber-kafka-scale-takeaways.md](uber-kafka-scale-takeaways.md) | `broker-147` – `broker-152` | Federated Kafka clusters, Decoupled uReplicator & Apache Helix, Pipeline auditing (Chaperone), Consumer proxy abstraction, Poison pill DLQs & intentional replay, Tiered storage economics |
 
 ## Cross-References
 

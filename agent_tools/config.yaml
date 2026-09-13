@@ -254,6 +254,8 @@ takeaway_domains:
       - "articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md"
       - "system-design-architecture/messaging/event-loss-duplicates-reprocessing-takeaways.md"
       - "articles/messaging/how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md"
+      - "system-design-architecture/messaging/uber-kafka-scale-takeaways.md"
+      - "articles/messaging/how-uber-handles-trillions-of-kafka-messages-without-bringing-everything-down.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"
@@ -885,6 +887,12 @@ dictionary_domains:
       - progressive enqueuing
       - stream sessionization
       - bounded deduplication ttl
+      - federated kafka
+      - ureplicator
+      - chaperone
+      - consumer proxy
+      - tiered storage
+      - pipeline audit
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:

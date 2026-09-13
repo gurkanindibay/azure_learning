@@ -82,6 +82,11 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Deterministic Consumer | [`#deterministic-consumer`](#deterministic-consumer) |
 | Resolved State Consumption | [`#resolved-state-consumption`](#resolved-state-consumption) |
 | Bounded Deduplication TTL | [`#bounded-deduplication-ttl`](#bounded-deduplication-ttl) |
+| Federated Kafka Clusters | [`#federated-kafka-clusters`](#federated-kafka-clusters) |
+| uReplicator | [`#ureplicator`](#ureplicator) |
+| Pipeline Audit Service (Chaperone Pattern) | [`#pipeline-audit-service-chaperone-pattern`](#pipeline-audit-service-chaperone-pattern) |
+| Consumer Proxy Pattern | [`#consumer-proxy-pattern`](#consumer-proxy-pattern) |
+| Kafka Tiered Storage | [`#kafka-tiered-storage`](#kafka-tiered-storage) |
 
 ---
 
@@ -1515,3 +1520,119 @@ An operational configuration strategy for consumer-side deduplication stores whe
 
 ### Also see
 - [Idempotent Consumer](#idempotent-consumer) · [Atomic Deduplication](#atomic-deduplication) · [Deduplication Store](#deduplication-store) · [Idempotency State Explosion](cqrs-event-driven.md#idempotency-state-explosion)
+
+---
+
+## Federated Kafka Clusters
+
+An infrastructure architecture pattern where an organization splits its message streaming estate into multiple independent, dedicated Kafka clusters segmented by business domain, workload criticality, data residency, or tenant SLA, rather than scaling a single monolithic cluster.
+
+### Key Characteristics
+- **Blast Radius Containment**: A broker crash, runaway topic, misconfigured producer spike, or Zookeeper/KRaft metadata lockup is isolated to a single cluster, preventing enterprise-wide outages.
+- **Routing Layer Abstraction**: Client producers interact with a routing gateway or smart SDK that maps logical topic names to physical target clusters, hiding physical cluster endpoints from application code.
+- **Workload Tiering**: Allows tailoring cluster configurations (e.g., dedicated Tier-0 NVMe clusters for real-time payments vs. lower-cost, high-retention clusters for batch analytics and telemetry).
+- **Independent Maintenance**: Enables rolling OS upgrades, Kafka version patching, and configuration changes cluster-by-cluster without risk to unaffected workloads.
+
+### When to Use
+- Large-scale enterprises where messaging throughput exceeds hundreds of thousands of events per second across dozens of independent engineering teams.
+- Systems requiring strict physical isolation between high-SLA revenue-generating traffic and loss-tolerant asynchronous background telemetry.
+- Multi-region or multi-cloud topologies where data must adhere to regional sovereign boundaries.
+
+### When NOT to Use
+- Small-to-medium systems where a single 3-to-5 node Kafka cluster comfortably handles all traffic with low operational overhead.
+- Environments lacking automated cluster provisioning and cross-cluster replication tooling.
+
+### Also see
+- [Distributed Commit Log](#distributed-commit-log) · [Bulkhead](resilience.md#bulkhead) · [Blast Radius](resilience.md#blast-radius)
+
+---
+
+## uReplicator
+
+An open-source distributed cross-cluster replication engine for Apache Kafka, originally created by Uber, that uses Apache Helix for dynamic partition management to eliminate the fleet-wide stop-the-world rebalance pauses endemic to standard MirrorMaker 1.0.
+
+### Key Characteristics
+- **Decoupled Coordination**: Separates partition assignment management (handled centrally by an Apache Helix controller) from data consumption and replication (executed by a fleet of worker nodes).
+- **Non-Blocking Dynamic Rebalancing**: When topic partitions are added, removed, or workers fail, Helix reassigns only the impacted partitions directly to healthy workers without triggering full consumer group rebalance cycles across the entire fleet.
+- **Dynamic Topic Discovery & Auto-Scaling**: Automatically detects newly created topics and scales replication capacity based on observed partition throughput and consumer lag.
+- **High Throughput Across Regions**: Built specifically to sustain multi-datacenter active-active data synchronization at millions of messages per second.
+
+### When to Use
+- High-scale multi-cluster Kafka topologies where native MirrorMaker 1 consumer group rebalances cause severe latency spikes and cross-region replication lag.
+- Complex replication topologies requiring dynamic partition redistribution and fine-grained workload placement across replication workers.
+
+### When NOT to Use
+- Modern Kafka deployments running Kafka 3.x+ where MirrorMaker 2 (KIP-382 built on Kafka Connect) natively provides cooperative rebalancing and dynamic topic replication without requiring an external Apache Helix cluster.
+- Simple single-cluster deployments or cross-cluster links with low partition counts.
+
+### Also see
+- [Rebalance](#rebalance) · [Consumer Group](#consumer-group) · [Offset Alignment](#offset-alignment)
+
+---
+
+## Pipeline Audit Service (Chaperone Pattern)
+
+An independent end-to-end accounting and auditing pattern for distributed event-driven architectures that collects aggregate message counts across pipeline checkpoints to detect and pinpoint message loss in real time.
+
+### Key Characteristics
+- **Tiered Checkpoint Counters**: Collects timestamp-windowed message counters at key infrastructural transitions: edge gateway ingress, regional broker arrival, cross-DC replication, and consumer database sinks.
+- **Event-Time Window Bucketing**: Counts are aggregated into deterministic time buckets (e.g., 10-minute windows based on original message creation timestamps) regardless of network latency or arrival time.
+- **Discrepancy Localization**: Continuously compares adjacent tier counts; any difference ($\text{Count}_{\text{Tier } N} \neq \text{Count}_{\text{Tier } N+1}$) triggers automated alerts pinpointing the exact network link, buffer, or proxy where loss occurred.
+- **Passive Reliability Transformation**: Converts undetectable, silent transit data loss into observable, actionable engineering alerts.
+
+### When to Use
+- Enterprise-scale streaming pipelines where even 0.001% message loss represents thousands of dropped business events (e.g., driver location pings, financial ledger items, ride state changes).
+- Multi-tier messaging pipelines comprising multiple brokers, proxies, replication bridges, and persistent sinks.
+
+### When NOT to Use
+- Small monolithic architectures where producers write directly to an ACID database.
+- Low-volume systems where end-to-end distributed tracing (OpenTelemetry span tracking) already provides 100% trace coverage without aggregate statistical counters.
+
+### Also see
+- [At-Least-Once Semantics](#at-least-once-semantics) · [Observability](observability.md#observability) · [Event-Time](#event-time)
+
+---
+
+## Consumer Proxy Pattern
+
+An architectural integration pattern where client applications consume messages from a message broker through an intermediate proxy service layer rather than directly embedding broker-specific client libraries.
+
+### Key Characteristics
+- **Protocol Encapsulation**: Hides complex broker mechanics—partition assignment, consumer group heartbeats, group rebalances, commit policies, and low-level thread loops—behind simple RPC protocols (e.g., gRPC push/pull or HTTP/2).
+- **Simplified Application Contract**: Applications expose a basic processing interface: *receive message batch $\rightarrow$ execute business logic $\rightarrow$ return status code (ACK / NACK / RETRY)*.
+- **Centralized Flow Control**: The proxy cluster centrally enforces backpressure, rate limiting, and failure buffering, shielding the broker from client-driven rebalance storms or connection floods.
+- **Independent Fleet Evolution**: Broker endpoint migrations, security protocol upgrades (SASL/mTLS), and library updates occur in the proxy layer with zero changes to polyglot microservice codebases.
+
+### When to Use
+- Large engineering organizations with thousands of microservices across diverse programming languages (Java, Go, Python, Node.js) where maintaining bespoke Kafka consumer configurations is error-prone.
+- Architectures deploying push-based compute layers (e.g., serverless functions, Kubernetes ingress) that cannot sustain persistent Kafka TCP connections and heartbeat loops.
+
+### When NOT to Use
+- Ultra-low latency trading or real-time gaming systems where the extra network hop (<2ms) and serialization step cannot be tolerated.
+- Simple architectures with only a few microservices in a single language with established broker client libraries.
+
+### Also see
+- [Competing Consumers](#competing-consumers) · [Proxy Pattern](design-patterns.md#proxy-pattern) · [Consumer Group](#consumer-group)
+
+---
+
+## Kafka Tiered Storage
+
+A storage architecture for Apache Kafka that decouples high-performance local disk storage from long-term historical retention by offloading sealed log segments to scalable, low-cost cloud object storage.
+
+### Key Characteristics
+- **Hot vs. Cold Separation**: Active, append-only log segments and recent reads remain on fast broker-local storage (NVMe/SSD, OS page cache). Sealed segments past a configurable local retention window are copied asynchronously to object storage (e.g., S3, Azure Blob Storage).
+- **Transparent Consumer Fetching**: Brokers serve consumer fetch requests seamlessly regardless of whether the requested offset resides on local NVMe or remote object storage, requiring zero changes to consumer code.
+- **Stateless Broker Scaling**: Because historical data lives in remote object storage, adding new brokers or rebalancing partitions requires copying only lightweight active segments, reducing rebalance durations from days to minutes.
+- **Cost-Effective Infinite Retention**: Reduces storage costs by up to 80-90% compared to local enterprise SSD arrays, enabling Kafka to serve as an economical, permanent event source of truth for analytics and historical backfills.
+
+### When to Use
+- Event streams requiring long retention periods (weeks, months, or years) for historical reprocessing, model re-training, or compliance audits.
+- Large Kafka clusters where broker disk capacity limits cluster sizing and causes days-long partition rebalance times.
+
+### When NOT to Use
+- Workloads with very short retention requirements (e.g., 2 to 4 hours) where all data naturally expires before offloading to object storage.
+- On-premise bare-metal deployments without access to high-throughput object storage or S3-compatible endpoints.
+
+### Also see
+- [Distributed Commit Log](#distributed-commit-log) · [Log Segment](#log-segment) · [Replay (Kafka Reprocessing)](#replay-kafka-reprocessing)
