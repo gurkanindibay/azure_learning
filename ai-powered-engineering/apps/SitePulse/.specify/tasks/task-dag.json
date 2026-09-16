@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "project": "SitePulse (Full-Stack Android + Spring Boot + PostgreSQL)",
+  "tasks": [
+    {
+      "id": "task-01",
+      "name": "Core Domain Models & Financial Value Objects",
+      "module": "android-domain",
+      "status": "COMPLETED",
+      "depends_on": [],
+      "spec_ref": "SPEC-001",
+      "description": "Implement Daire, Kisi, AidatBorcu, and Money value object with strict BigDecimal precision."
+    },
+    {
+      "id": "task-02",
+      "name": "KMK Statutory Delay Fee Calculation Engine",
+      "module": "android-domain",
+      "status": "COMPLETED",
+      "depends_on": ["task-01"],
+      "spec_ref": "SPEC-001",
+      "description": "Calculate 5% monthly delay penalty pro-rated per day per Article 20 of KMK with unit tests."
+    },
+    {
+      "id": "task-03",
+      "name": "Dashboard State Management & ViewModel",
+      "module": "android-ui",
+      "status": "COMPLETED",
+      "depends_on": ["task-01", "task-02"],
+      "spec_ref": "SPEC-001",
+      "description": "Implement DashboardUiState and DashboardViewModel with reactive StateFlow."
+    },
+    {
+      "id": "task-04",
+      "name": "Material 3 Dashboard Compose Screens",
+      "module": "android-ui",
+      "status": "COMPLETED",
+      "depends_on": ["task-03"],
+      "spec_ref": "SPEC-001",
+      "description": "Build Hero Balance Card, Quick Action Grid, and TopBar matching prototype.html."
+    },
+    {
+      "id": "task-05",
+      "name": "PostgreSQL Schema & Flyway Migrations",
+      "module": "backend-db",
+      "status": "COMPLETED",
+      "depends_on": [],
+      "spec_ref": "SPEC-001",
+      "description": "Design relational schema (siteler, bloklar, bagimsiz_bolumler, aidat_borclari) with NUMERIC(15, 2) columns."
+    },
+    {
+      "id": "task-06",
+      "name": "Spring Boot 3 JPA Entities & Repositories",
+      "module": "backend-service",
+      "status": "COMPLETED",
+      "depends_on": ["task-05"],
+      "spec_ref": "SPEC-001",
+      "description": "Map PostgreSQL tables to Java 21 Spring Data JPA entities with optimistic locking (@Version)."
+    },
+    {
+      "id": "task-07",
+      "name": "Spring Boot REST API for Resident Dashboard",
+      "module": "backend-api",
+      "status": "COMPLETED",
+      "depends_on": ["task-06"],
+      "spec_ref": "SPEC-001",
+      "description": "Expose GET /api/v1/residents/{unitId}/dashboard endpoint calculating real-time KMK interest."
+    },
+    {
+      "id": "task-08",
+      "name": "Offline Room Cache & Repository Layer",
+      "module": "android-data",
+      "status": "PENDING",
+      "depends_on": ["task-01", "task-07"],
+      "spec_ref": "SPEC-001",
+      "description": "Local SQLite/Room database caching for resident dashboard data synchronized with Spring REST API."
+    }
+  ]
+}
