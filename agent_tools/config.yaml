@@ -309,6 +309,8 @@ takeaway_domains:
     desc: "Microservices & Service Design"
     related_files:
       - "system-design-architecture/software-architecture/distributed-monolith.md"
+      - "system-design-architecture/software-architecture/microservices-misconceptions-takeaways.md"
+      - "articles/software-architecture/10-microservices-misconceptions-you-must-unlearn.md"
 
 # Keyword → domain prefix suggestions for auto-detection
 # [manual] Add entries to improve prefix suggestion accuracy
@@ -670,6 +672,8 @@ dictionary_domains:
       - mutation score
       - test oracle
       - stryker
+      - nanoservice
+      - dual-protocol
   networking.md:
     title: "Networking"
     keywords:
@@ -691,6 +695,8 @@ dictionary_domains:
       - reverse proxy
       - edge computing
       - latency optimization
+      - north-south
+      - east-west
   caching.md:
     title: "Caching"
     keywords:

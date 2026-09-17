@@ -14,7 +14,8 @@ Patterns and principles for software architecture: classic design patterns (GoF)
 | [29-arch-key-takeaways.md](29-arch-key-takeaways.md) | `arch-01` – `arch-07` | Coordination cost, Modular monolith, Idempotency, Async workflows, Outbox pattern, Observability, Developer productivity |
 | [8-coding-patterns-architecture-takeaways.md](8-coding-patterns-architecture-takeaways.md) | `arch-01` – `arch-08` | Explicit state modeling, Anti-corruption boundary, Functional core imperative shell, Structured error contracts, Idempotency & retries, Guard clauses, Domain naming, Expand and contract |
 | [distributed-monolith.md](distributed-monolith.md) | `svc-01` – `svc-06` | Distributed monolith anti-pattern, Deployment coupling via synchronous call chains, Strangler Fig + Anti-Corruption Layer recovery, Modular monolith as default, Compile-time module boundaries, In-process contracts and events |
-| [29-svc-key-takeaways.md](29-svc-key-takeaways.md) | `svc-07` – `svc-14` | Service decomposition, API gateway, service discovery, sync vs async communication, database per service, Saga, failure isolation, operational control |
+| [29-svc-key-takeaways.md](29-svc-key-takeaways.md) | `svc-07` – `svc-16` | Service decomposition, API gateway, service discovery, sync vs async communication, database per service, Saga, failure isolation, operational control |
+| [microservices-misconceptions-takeaways.md](microservices-misconceptions-takeaways.md) | `svc-17` – `svc-26` | Business capability ownership, Logical data ownership, Dual-protocol (REST/gRPC), Edge gateway vs discovery, Kafka vs REST, K8s DNS vs registries, North-South vs East-West, Nanoservices anti-pattern, Compensating sagas, Trade-off modeling |
 | [dockerfile-optimization.md](dockerfile-optimization.md) | `docker-01` – `docker-08` | Layer ordering, .dockerignore, Multi-stage builds, Cache mounts, Base-image pinning, Build profiling |
 
 ## Cross-References

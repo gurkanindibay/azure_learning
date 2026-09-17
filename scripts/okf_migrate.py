@@ -36,6 +36,7 @@ EXCLUDE_PATTERNS = [
     '.copilot-instructions.md',
     'accessibility-guidelines.md',
     'architecture_taxonomy_reference.md',  # Auto-generated
+    'ai-powered-engineering/',
 ]
 
 # Reserved OKF filenames (must not have concept frontmatter)

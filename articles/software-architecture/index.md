@@ -21,3 +21,4 @@ Source articles covering software architecture patterns, strategies, and case st
 - [software-engineering-quietly-becoming-coordination-problem](software-engineering-quietly-becoming-coordination-problem.md)
 - [forward-deployed-engineer-cultural-fit-interview-questions](forward-deployed-engineer-cultural-fit-interview-questions.md)
 - [microservices-join-queries-solutions](microservices-join-queries-solutions.md)
+- [10-microservices-misconceptions-you-must-unlearn](10-microservices-misconceptions-you-must-unlearn.md)

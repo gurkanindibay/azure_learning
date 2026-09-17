@@ -42,6 +42,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | DMARC | [`#dmarc`](#dmarc) |
 | Robots Exclusion Protocol | [`#robots-exclusion-protocol`](#robots-exclusion-protocol) |
 | Politeness Policy | [`#politeness-policy`](#politeness-policy) |
+| North-South Traffic | [`#north-south-traffic`](#north-south-traffic) |
+| East-West Traffic | [`#east-west-traffic`](#east-west-traffic) |
 
 ---
 
@@ -826,5 +828,49 @@ A **rate-limiting and scheduling architecture pattern implemented by web crawler
 
 ### Also see
 - [Robots Exclusion Protocol](#robots-exclusion-protocol) · [Backpressure](resilience.md#backpressure) · [Rate Limiting](api-design.md#rate-limiting)
+
+---
+
+## North-South Traffic
+
+Network traffic that moves **vertically across a perimeter boundary**, entering or exiting a datacenter, cloud Virtual Private Cloud (VPC), or Kubernetes cluster from external clients (web browsers, mobile applications, third-party partners). Managed at the edge by Ingress Controllers, Reverse Proxies, and API Gateways.
+
+### Key Characteristics
+- **Perimeter Security Boundary**: Crosses from untrusted public networks into a trusted private network tier
+- **Edge Capabilities**: Enforces SSL/TLS termination, OAuth2/OIDC token validation, WAF inspection, DDoS mitigation, and global IP rate limiting
+- **Contract Decoupling**: Often leverages the Backend for Frontend (BFF) pattern or API translation layer to insulate internal service topologies from public clients
+- **Protocol Dominance**: Predominantly uses standard HTTP/1.1 and HTTP/2 with JSON payloads, REST, or GraphQL for broad client compatibility
+
+### When to Use
+- Managing ingress from mobile applications, SPAs, external customers, or third-party webhooks
+- Establishing centralized rate limiting, API key quotas, and threat mitigation at the system edge
+
+### When NOT to Use
+- For internal inter-service communication between pods or microservices inside the same secure VPC/cluster (use [East-West Traffic](#east-west-traffic) routing)
+
+### Also see
+- [East-West Traffic](#east-west-traffic) · [API Gateway](#api-gateway) · [Load Balancer](#load-balancer) · [Reverse Proxy and Gateway](../system-design-architecture/api-network/reverse-proxy-lb-gateway.md)
+
+---
+
+## East-West Traffic
+
+Network traffic that flows **horizontally between internal components** (microservices, worker pods, distributed caches, and database clusters) within the same datacenter, VPC, or Kubernetes cluster boundary. Typically managed by Service Meshes, dynamic service registries, or internal RPC proxies.
+
+### Key Characteristics
+- **High-Bandwidth & Low-Latency**: Operates over high-speed private networking (VNet/VPC peering, cluster SDN) where latency per hop must be measured in sub-milliseconds
+- **Zero-Trust Security**: Enforces cryptographic service identities and wire encryption via mutual TLS (mTLS) with SPIFFE/SPIRE or service mesh sidecars
+- **Observability & Resiliency**: Carries distributed tracing contexts (W3C TraceContext, B3), correlation IDs, client-side load balancing, circuit breaking, and retry policies
+- **Optimized Transport**: Frequently utilizes binary protocols such as gRPC (HTTP/2 + Protocol Buffers), Avro, or asynchronous messaging (Kafka, gRPC)
+
+### When to Use
+- Microservice-to-microservice remote procedure calls within a private cluster or service mesh
+- Cross-service event streaming, caching queries, and transactional saga coordination
+
+### When NOT to Use
+- Exposing endpoints directly to untrusted public internet clients (requires an edge [North-South Traffic](#north-south-traffic) API Gateway)
+
+### Also see
+- [North-South Traffic](#north-south-traffic) · [Service Mesh](#service-mesh) · [Smart Client](#smart-client) · [Locality-Aware Routing](#locality-aware-routing)
 
 

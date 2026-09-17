@@ -71,6 +71,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Functional Core Imperative Shell | [`#functional-core-imperative-shell`](#functional-core-imperative-shell) |
 | Computation Pushdown (In-Database Processing) | [`#computation-pushdown`](#computation-pushdown) |
 | Bounded Working Pool | [`#bounded-working-pool`](#bounded-working-pool) |
+| Nanoservices | [`#nanoservices`](#nanoservices) |
+| Dual-Protocol Architecture | [`#dual-protocol-architecture`](#dual-protocol-architecture) |
 
 ---
 
@@ -203,6 +205,18 @@ A **translation layer** that protects a bounded context from external model corr
 
 **Also see**: [Bounded Context](#bounded-context), [Strangler Fig](#strangler-fig)
 
+---
+
+## Modular Monolith
+
+A **monolithic architecture** where code is structured into strictly bounded, autonomous modules with explicit public contracts and compile-time boundary enforcement, while deployed and operated as a single runtime process and database.
+
+### Key Characteristics
+- **Single Deployment Unit**: Deploys as a unified binary, avoiding distributed network latency, RPC failure modes, and container sprawl.
+- **Enforced Module Boundaries**: Uses language-level visibility (e.g., C# internal/public, Java modules) or architecture tests (ArchUnit/NetArchTest) to prevent cross-module coupling.
+- **In-Process Contracts**: Modules interact via strongly typed in-memory interfaces, domain events, or mediators rather than HTTP/REST.
+
+### When to Use
 - Teams without the platform maturity to operate many services
 - Workloads where cross-module transactions and joins are common
 - Scenarios that need the simplicity of a monolith with the maintainability of clean boundaries
@@ -1332,5 +1346,50 @@ Total Inventory Ledger: 50,000 units (Aggregate Row)
 
 ### Also see
 - [Unit-Level Row Modeling](data-concurrency.md#unit-level-row-modeling) · [FOR UPDATE SKIP LOCKED](data-concurrency.md#for-update-skip-locked) · [Inventory Reservation](data-concurrency.md#inventory-reservation) · [40. High-Contention Inventory Reservations](../../system-design-architecture/databases/40-db-key-takeaways.md#db-48-bounded-working-pool--dynamic-replenishment-pattern-for-unit-level-modeling)
+
+---
+
+## Nanoservices
+
+An **architectural anti-pattern** where a system is decomposed into services that are excessively granular, typically isolating individual data attributes, fields, or single trivial functions (e.g., `UserEmailService`, `UserAddressService`) instead of cohesive business capabilities.
+
+### Key Characteristics
+- **Network Latency Amplification**: Simple user actions require dozens or hundreds of synchronous network hops, compounding tail latencies and cascading failure probabilities.
+- **Transactional Fragmentation**: Lacks transactional boundaries, forcing complex distributed sagas or two-phase commits across trivially related fields.
+- **High Coordination Overhead**: High deployment coupling where modifying a single business feature requires synchronized releases across multiple repositories.
+- **Operational Burden**: Each nanoservice incurs dedicated CI/CD pipelines, container overhead, monitoring dashboards, and alerting configurations that dwarf its business utility.
+
+### When to Use
+- **Never as a primary architectural decomposition**: Nanoservices are almost universally an anti-pattern.
+- **FaaS / Serverless Functions**: Isolated serverless event handlers (e.g., image resizing or webhook processing) may resemble nanoservices in size, but they remain decoupled single-purpose background workers rather than synchronous domain building blocks.
+
+### When NOT to Use
+- Decomposing core domain models; always prefer cohesive [Bounded Contexts](#bounded-context), business capabilities, or a [Modular Monolith](#modular-monolith).
+
+### Also see
+- [Distributed Monolith](#distributed-monolith) · [Bounded Context](#bounded-context) · [Modular Monolith](#modular-monolith) · [Microservices Architecture Misconceptions](../system-design-architecture/software-architecture/microservices-misconceptions-takeaways.md#svc-24-bounded-complexity-vs-nanoservice-anti-pattern)
+
+---
+
+## Dual-Protocol Architecture
+
+An architectural communication pattern that establishes **distinct protocols for edge ingress versus internal microservice communication**, typically combining standard HTTP/REST/JSON for public-facing clients with high-performance binary RPC (e.g., gRPC over HTTP/2) for internal east-west traffic.
+
+### Key Characteristics
+- **Bimodal Transport**: Leverages REST/JSON at the perimeter for browser/mobile compatibility, public SDK simplicity, and CDN caching, while leveraging gRPC for internal low-latency microservice hops.
+- **Protocol Transcoding**: Uses ingress API Gateways or sidecar proxies (e.g., Envoy `grpc-json-transcoder`) to automatically translate incoming external HTTP/JSON requests into internal gRPC calls.
+- **Type Safety & Binary Efficiency**: Internal services benefit from Protocol Buffers schema compilation, multiplexed persistent TCP streams, and reduced CPU/network overhead.
+- **Separation of Concerns**: Decouples external contract evolution and deprecation cycles from high-frequency internal RPC optimizations.
+
+### When to Use
+- High-scale systems with polyglot internal services requiring microsecond-level RPC latency and strong contract typing.
+- Platforms supporting public APIs, browser SPAs, and native mobile clients that cannot easily run full gRPC-Web or HTTP/2 client stacks.
+
+### When NOT to Use
+- Small teams or simple CRUD applications where maintaining dual schemas (OpenAPI + Protobuf) and transcoding gateways creates unnecessary cognitive overhead.
+- Purely internal backend systems with no public client ingress (standardize on gRPC directly).
+
+### Also see
+- [North-South Traffic](networking.md#north-south-traffic) · [East-West Traffic](networking.md#east-west-traffic) · [gRPC](networking.md#grpc) · [API Gateway](networking.md#api-gateway)
 
 
