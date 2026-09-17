@@ -95,6 +95,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Solves atomicity between DB write and event publish.
 - Does *not* solve consumer idempotency, ordering, or downstream consistency.
 
+> **Deep Dive**: [What the Outbox Pattern Actually Solves — and What It Doesn’t](what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md)
+
 ---
 
 ## 6. How do you evolve event schemas when multiple consumer versions are already running?

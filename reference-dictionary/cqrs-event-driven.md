@@ -51,6 +51,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Window of Uncertainty | [`#window-of-uncertainty`](#window-of-uncertainty) |
 | Side-Effect Gating | [`#side-effect-gating`](#side-effect-gating) |
 | Synthetic Event Key | [`#synthetic-event-key`](#synthetic-event-key) |
+| Polling Relay | [`#polling-relay`](#polling-relay) |
+| Transaction Log Tailing | [`#transaction-log-tailing`](#transaction-log-tailing) |
+| Outbox Pruning | [`#outbox-pruning`](#outbox-pruning) |
 
 ---
 
@@ -201,21 +204,29 @@ An **append-only, immutable record of financial movement** where every entry is 
 
 ## Outbox Pattern
 
-A pattern that solves the **dual-write problem** — ensuring a database write and a message/event publish happen atomically.
+An architectural pattern that solves the **dual-write problem** by atomically persisting state mutations and outbound event notifications within the exact same database transaction, decoupling the relational write from external network publishing.
 
 ```
-WRONG:   DB write → Publish event  (gap: crash between steps)
-RIGHT:   DB write + Outbox write (same TX) → Publisher reads outbox → Event published
+WRONG:   DB write → Publish event (Gap: crash between steps leaves state out of sync)
+RIGHT:   DB write + Outbox row (same ACID TX) → Relay publisher dispatches to broker
 ```
 
-| Principle | Detail |
-|:---|:---|
-| **Same transaction** | Business data and outbox event committed atomically |
-| **Separate publisher** | Dedicated process reads outbox and publishes reliably |
-| **At-least-once** | Publisher retries; consumers must be idempotent |
-| **Order preserved** | Events published in transaction commit order |
+### Key Characteristics
+- **Local Transactional Atomicity**: Both the aggregate record and the outbox row commit together or roll back together, eliminating silent event loss.
+- **At-Least-Once Delivery**: Because a relay may crash after publishing but before marking the outbox row published, downstream consumers **must** be idempotent.
+- **Relay Decoupling**: Relay mechanism is decoupled from the transaction path, implemented either via a polling worker ([Polling Relay](#polling-relay)) or log-based Change Data Capture ([Transaction Log Tailing](#transaction-log-tailing)).
+- **Scope Boundary**: Solves single-service write atomicity only; does **not** solve distributed multi-service consensus (requires Sagas) or consumer ordering across multiple partitions.
 
-**Also see**: [Dual-Write Problem](#dual-write-problem), [Idempotency](#idempotency) · [Messaging](messaging.md)
+### When to Use
+- Any microservice or bounded context that updates a database and must notify external consumers via an asynchronous message broker (Kafka, RabbitMQ, Service Bus).
+- Event-driven systems requiring guaranteed event emission without distributed two-phase commit (2PC / XA) transactions.
+
+### When NOT to Use
+- High-throughput ingestion where the extra database write amplification of inserting and deleting outbox rows creates a storage or I/O bottleneck (prefer direct event stream ingestion like Event Hubs or Kafka).
+- Workflows spanning multiple independent services that require coordinated rollback (use the Saga pattern instead).
+- When events do not represent committed transactional facts.
+
+**Also see**: [Dual-Write Problem](#dual-write-problem), [Polling Relay](#polling-relay), [Transaction Log Tailing](#transaction-log-tailing), [Outbox Pruning](#outbox-pruning), [Post-Commit Dispatch](#post-commit-dispatch), [Idempotency](#idempotency) · [Messaging](messaging.md)
 
 ---
 
@@ -882,5 +893,73 @@ A deterministically generated unique identifier produced by hashing immutable bu
 ### Also see
 - [Event ID](#event-id) · [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Atomic Deduplication](messaging.md#atomic-deduplication)
 
+---
 
+## Polling Relay
 
+An implementation strategy for the **Outbox Pattern** where an asynchronous background worker process periodically queries the database outbox table for unpublished events, publishes them to a message broker (e.g., Kafka, Service Bus), and marks them as published or deletes them.
+
+### Key Characteristics
+- **Simplicity**: Implemented entirely within standard application code using standard SQL queries (`SELECT ... WHERE status = 'PENDING' ORDER BY created_at LIMIT N`).
+- **Database Query Overhead**: Continuously issues read queries against the operational database, which can create connection pool pressure and table lock contention at high volumes.
+- **Latency Floor**: Publishing latency is bounded by the polling frequency (typically 500ms to 5 seconds); sub-second real-time streaming is not achieved.
+- **Indexing Requirement**: Requires composite indexes (e.g., `(status, created_at)`) to prevent full table scans as outbox rows accumulate.
+
+### When to Use
+- Low-to-moderate transactional throughput (< 500 transactions per second).
+- Teams seeking minimal operational complexity without managing additional infrastructure like CDC connectors.
+- Environments where sub-second publishing latency is not a strict business SLA.
+
+### When NOT to Use
+- High-throughput, write-heavy platforms where continuous polling queries degrade primary database transaction throughput.
+- Ultra-low latency pipelines requiring instant downstream event dispatch (prefer [Transaction Log Tailing](#transaction-log-tailing)).
+
+### Also see
+- [Outbox Pattern](#outbox-pattern) · [Transaction Log Tailing](#transaction-log-tailing) · [Outbox Pruning](#outbox-pruning) · [Post-Commit Dispatch](#post-commit-dispatch)
+
+---
+
+## Transaction Log Tailing
+
+An outbox publisher implementation where an external agent or connector (such as Debezium or Kafka Connect) directly tails the database transaction log or write-ahead log (WAL in PostgreSQL, binlog in MySQL, Change Feed in Cosmos DB) to stream committed outbox table insertions to the message broker without executing application-level SQL polling queries.
+
+### Key Characteristics
+- **Zero Polling Overhead**: Does not execute `SELECT` queries or compete with application transactions for connection pools or query execution slots.
+- **Near Real-Time Latency**: Events are streamed almost immediately after the database transaction commits to disk, achieving sub-second end-to-end dispatch.
+- **Infrastructure Dependency**: Requires running and monitoring dedicated streaming infrastructure (e.g., Kafka Connect, Debezium clusters, replication slots).
+- **Transaction Log Management**: Requires tuning WAL/binlog disk retention to avoid database disk saturation if connector lag or network outages stall consumption.
+
+### When to Use
+- High-throughput transactional systems (> 1,000 transactions per second) where polling queries would saturate database compute.
+- Latency-sensitive event-driven architectures requiring immediate downstream propagation of state changes.
+
+### When NOT to Use
+- Low-throughput or simple architectures where the operational overhead of managing Debezium or Kafka Connect outweighs the benefits of log streaming (use [Polling Relay](#polling-relay)).
+- Cloud databases or shared database-as-a-service tiers that restrict access to low-level replication slots or binary logs.
+
+### Also see
+- [Outbox Pattern](#outbox-pattern) · [Polling Relay](#polling-relay) · [Data & Concurrency: Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture) · [Event Backbone](#event-backbone)
+
+---
+
+## Outbox Pruning
+
+The operational practice and lifecycle management of deleting, truncating, or archiving published records from an outbox table to prevent table bloat, maintain index efficiency, and keep polling queries performant.
+
+### Key Characteristics
+- **Table Bloat Mitigation**: Prevents unbounded table growth that degrades database query cache hit rates and bloats storage.
+- **Pruning Strategies**:
+  - *Immediate Deletion*: Deleting the outbox row within the same transaction that confirms publication to the broker.
+  - *Scheduled Batch Deletion*: Running an off-peak background cleanup job to remove rows where `status = 'PUBLISHED' AND published_at < NOW() - INTERVAL '7 DAYS'`.
+  - *Partition Truncation*: Partitioning the outbox table by day or week and dropping expired partitions instantaneously without row-level lock contention.
+- **Transient Buffer Model**: Enforces the architectural rule that the outbox table is a transient delivery queue, not a permanent business audit log.
+
+### When to Use
+- Any production implementation of the Outbox Pattern, especially when utilizing a Polling Relay where query speed directly correlates with outbox table size.
+- Systems with high transaction velocity generating millions of events per week.
+
+### When NOT to Use
+- Systems where the outbox table is explicitly designed as the immutable, authoritative event store (e.g., in strict Event Sourcing implementations where events are never deleted).
+
+### Also see
+- [Outbox Pattern](#outbox-pattern) · [Polling Relay](#polling-relay) · [Databases: Write Amplification](../reference-dictionary/databases.md) · [Databases: Table Partitioning](../reference-dictionary/databases.md)

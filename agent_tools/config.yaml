@@ -256,6 +256,8 @@ takeaway_domains:
       - "articles/messaging/how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md"
       - "system-design-architecture/messaging/uber-kafka-scale-takeaways.md"
       - "articles/messaging/how-uber-handles-trillions-of-kafka-messages-without-bringing-everything-down.md"
+      - "system-design-architecture/messaging/outbox-pattern-capabilities-limits-takeaways.md"
+      - "articles/messaging/what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"

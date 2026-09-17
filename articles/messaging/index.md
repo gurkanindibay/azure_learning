@@ -32,3 +32,4 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [How to Guarantee Business Consistency in Event-Driven Architecture When Events Arrive Out of Order](how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md)
 - [How to Handle Event Loss, Duplicate Events, and Reprocessing in Event-Driven Architecture](how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md)
 - [How Uber Handles Trillions of Kafka Messages Without Bringing Everything Down](how-uber-handles-trillions-of-kafka-messages-without-bringing-everything-down.md)
+- [What the Outbox Pattern Actually Solves — and What It Doesn’t](what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md)
