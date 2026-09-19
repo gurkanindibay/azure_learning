@@ -37,6 +37,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Use versioned aggregates, event timestamps vs processing time, and idempotent state transitions.
 - Accept that *some consistency must be enforced at the domain boundary*, not downstream.
 
+> **Deep Dive**: [How to Guarantee Business Consistency in Event-Driven Architecture When Events Arrive Out of Order](how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md)
+
 ---
 
 ## 2. How do you handle event loss, duplicate events, and reprocessing — and why are these three different problems?
@@ -52,6 +54,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - **Duplicates** → idempotent consumers.
 - **Reprocessing** → deterministic consumers with replay-safe logic.
 
+> **Deep Dive**: [How to Handle Event Loss, Duplicate Events, and Reprocessing in Event-Driven Architecture](how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md)
+
 ---
 
 ## 3. When should you not use event-driven architecture even if scalability is required?
@@ -65,6 +69,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 ### Indicative solution thinking
 - Avoid EDA for strict transactional workflows or low-latency request/response paths.
 - Use it where *decoupling is more valuable than immediacy*.
+
+> **Deep Dive**: [When Should You Avoid Event-Driven Architecture Even If You Need to Scale?](when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md)
 
 ---
 
@@ -80,6 +86,9 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Separate derived state from source of truth.
 - Make consumers deterministic and version-aware.
 - Guard side effects (emails, payments) explicitly.
+
+> **Deep Dive**: [How to Design Event-Driven Consumers That Survive Replaying Millions of Old Events](how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md)
+
 
 ---
 

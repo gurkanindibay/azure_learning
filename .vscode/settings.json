@@ -9,5 +9,6 @@
     ],
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/ai-powered-engineering/python"
-    ]
+    ],
+    "java.compile.nullAnalysis.mode": "automatic"
 }

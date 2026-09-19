@@ -54,6 +54,10 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Polling Relay | [`#polling-relay`](#polling-relay) |
 | Transaction Log Tailing | [`#transaction-log-tailing`](#transaction-log-tailing) |
 | Outbox Pruning | [`#outbox-pruning`](#outbox-pruning) |
+| State-Effect Separation | [`#state-effect-separation`](#state-effect-separation) |
+| Event Upcasting | [`#event-upcasting`](#event-upcasting) |
+| Rebuild-and-Cutover | [`#rebuild-and-cutover`](#rebuild-and-cutover) |
+
 
 ---
 
@@ -963,3 +967,73 @@ The operational practice and lifecycle management of deleting, truncating, or ar
 
 ### Also see
 - [Outbox Pattern](#outbox-pattern) · [Polling Relay](#polling-relay) · [Databases: Write Amplification](../reference-dictionary/databases.md) · [Databases: Table Partitioning](../reference-dictionary/databases.md)
+
+---
+
+## State-Effect Separation
+
+An architectural boundary pattern in event-driven systems where consumers that derive state (e.g., read models, projections, search indexes, caches) are strictly decoupled from consumers that trigger external, irreversible real-world side effects (e.g., sending emails, invoking payment gateways, dispatching push notifications).
+
+### Key Characteristics
+- **Pure State Derivation**: The state consumer behaves as a pure mathematical function of the immutable event log ($S_t = f(S_{t-1}, E_t)$), relying on zero live database queries, zero current timestamps, and zero non-deterministic inputs. It can safely be replayed arbitrarily many times.
+- **Dedicated Side-Effect Consumers**: Side effects are owned by a dedicated, independent consumer group tracking its own broker offsets.
+- **Effect Ledgers**: Side-effect consumers enforce idempotency via an explicit ledger table (`hasFired(eventId)`), ensuring external actions execute at most once even during stream replays or retries.
+- **Replay Isolation**: Replaying historical events to rebuild or repair a read model never touches or triggers the side-effect consumer.
+
+### When to Use
+- Any event-driven architecture where event consumption involves both internal materialized view updates and external real-world actions.
+- Systems requiring the capability to reprocess historical Kafka/broker topics from offset zero without re-emailing or re-charging customers.
+
+### When NOT to Use
+- Pure stateless notification dispatchers where no internal state or read model is maintained.
+- Simple synchronous architectures where state changes and side effects are coordinated via immediate request-response workflows.
+
+### Also see
+- [Side-Effect Gating](#side-effect-gating) · [Deterministic Processing](#deterministic-processing) · [Ledger](#ledger) · [Read Model](#read-model) · [Idempotent Consumer](messaging.md#idempotent-consumer)
+
+---
+
+## Event Upcasting
+
+A deterministic transformation pattern in event sourcing and event-driven architectures where historical event payloads conforming to older schema versions are updated in-memory to the current schema version during consumer deserialization, prior to executing state transition or projection logic.
+
+### Key Characteristics
+- **Log Immutability Preservation**: Historical events on the persistent broker log or event store remain permanently unaltered in their original serialized form.
+- **Stateless In-Memory Chaining**: Upcasters operate as a pipeline of incremental transformation functions ($v1 \to v2 \to v3$), injecting backward-compatible defaults or restructuring fields deterministically.
+- **Self-Contained Transformations**: Upcasters do not perform live database lookups or depend on volatile system context, ensuring identical output across any replay.
+- **Elimination of One-Off Migration Scripts**: Embedding upcasting directly into application consumer logic eliminates the need for out-of-band batch database migration scripts.
+
+### When to Use
+- Event sourcing and CQRS systems where schema contracts evolve over time and aggregate streams or read models must be replayed from genesis.
+- Long-retention event streaming platforms (Kafka, Event Hubs) storing multi-year immutable audit histories.
+
+### When NOT to Use
+- Ephemeral messaging queues where messages are consumed immediately and deleted, with zero historical retention or replay requirements.
+- Systems utilizing Schema Registries with strict backward/forward schema compatibility where additive optional fields suffice without structural transformations.
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Projection](#projection) · [Deterministic Processing](#deterministic-processing) · [Schema Evolution](messaging.md#schema-evolution)
+
+---
+
+## Rebuild-and-Cutover
+
+An operational and architectural deployment pattern for event-driven read models (also known as Blue-Green Read Model Rebuild) where historical event logs are replayed into an isolated shadow database table or index while live traffic continues querying the active read model, followed by an atomic read cutover once the shadow store reaches stream parity.
+
+### Key Characteristics
+- **Zero Query Degradation**: Avoids in-place table truncation or mutation, ensuring client applications never see incomplete or half-rebuilt state during multi-hour replay operations.
+- **Isolated Shadow Storage**: The replay worker writes exclusively to a newly provisioned table, collection, or search index (e.g., `orders_summary_v2`).
+- **Atomic Pointer Switch**: Read traffic is redirected instantaneously using a database view, synonym, alias, or application configuration toggle.
+- **Zero-Downtime Rollback**: If verification tests detect inconsistencies in the newly rebuilt store, operators can revert the view/alias pointer back to the previous version with zero latency impact.
+
+### When to Use
+- Rebuilding materialized projections or search indexes following logic bug fixes, indexing strategy overhauls, or schema refactoring.
+- High-availability event-driven systems where read models must remain fully available to queries during massive historical replays.
+
+### When NOT to Use
+- Very small, ephemeral datasets where in-place table re-creation takes milliseconds and can be executed within a scheduled maintenance window.
+- Systems constrained by extreme database storage limits that cannot accommodate a temporary 2x storage footprint during the rebuild phase.
+
+### Also see
+- [Read Model](#read-model) · [Projection](#projection) · [Event Replay](#event-replay) · [State-Effect Separation](#state-effect-separation)
+

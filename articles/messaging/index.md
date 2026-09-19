@@ -33,3 +33,5 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [How to Handle Event Loss, Duplicate Events, and Reprocessing in Event-Driven Architecture](how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md)
 - [How Uber Handles Trillions of Kafka Messages Without Bringing Everything Down](how-uber-handles-trillions-of-kafka-messages-without-bringing-everything-down.md)
 - [What the Outbox Pattern Actually Solves — and What It Doesn’t](what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md)
+- [How to Design Event-Driven Consumers That Survive Replaying Millions of Old Events](how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md)
+
