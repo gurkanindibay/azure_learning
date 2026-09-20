@@ -34,6 +34,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [uber-kafka-scale-takeaways.md](uber-kafka-scale-takeaways.md) | `broker-147` – `broker-152` | Federated Kafka clusters, Decoupled uReplicator & Apache Helix, Pipeline auditing (Chaperone), Consumer proxy abstraction, Poison pill DLQs & intentional replay, Tiered storage economics |
 | [outbox-pattern-capabilities-limits-takeaways.md](outbox-pattern-capabilities-limits-takeaways.md) | `broker-153` – `broker-158` | Dual-write atomicity gap, Transactional staging, At-least-once relay boundary, False exactly-once expectations, Consumer idempotency requirement, Broker partition keying, Polling relay vs CDC / Debezium, Outbox table bloat & pruning lifecycle, Local atomicity vs multi-service Sagas |
 | [event-driven-consumer-replay-takeaways.md](event-driven-consumer-replay-takeaways.md) | `broker-159` – `broker-164` | State-Effect Separation, Pure state derivation, Dedicated replay consumer groups, Blue-green read model rebuild & cutover, Throttled checkpointed consumption, In-memory event upcasting, Determinism snapshot testing |
+| [event-driven-cross-service-debugging-takeaways.md](event-driven-cross-service-debugging-takeaways.md) | `broker-165` – `broker-170` | Distributed Correlation ID, Tripartite identity (Event/Correlation/Causation ID), Distributed context propagation, Event envelope pattern, Consumer lag triage, Context-rich dead-letter topics |
 
 
 ## Cross-References

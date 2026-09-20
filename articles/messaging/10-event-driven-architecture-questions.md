@@ -151,6 +151,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Debug via *event timelines*, not service logs alone.
 - Design observability from day one.
 
+> **Deep Dive**: [How to Debug a Production Issue That Spans 10 Event-Driven Services](how-to-debug-a-production-issue-that-spans-10-event-driven-services.md)
+
 ---
 
 ## 9. Should events be immutable forever, or can they be corrected later?

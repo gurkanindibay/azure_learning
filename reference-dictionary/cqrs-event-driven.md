@@ -57,6 +57,10 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | State-Effect Separation | [`#state-effect-separation`](#state-effect-separation) |
 | Event Upcasting | [`#event-upcasting`](#event-upcasting) |
 | Rebuild-and-Cutover | [`#rebuild-and-cutover`](#rebuild-and-cutover) |
+| Correlation ID | [`#correlation-id`](#correlation-id) |
+| Causation ID | [`#causation-id`](#causation-id) |
+| Event Envelope | [`#event-envelope`](#event-envelope) |
+| Distributed Context Propagation | [`#distributed-context-propagation`](#distributed-context-propagation) |
 
 
 ---
@@ -1036,4 +1040,96 @@ An operational and architectural deployment pattern for event-driven read models
 
 ### Also see
 - [Read Model](#read-model) · [Projection](#projection) · [Event Replay](#event-replay) · [State-Effect Separation](#state-effect-separation)
+
+---
+
+## Correlation ID
+
+A globally unique identifier generated at the initiation of a business workflow and carried across all distributed microservices, message brokers, and database operations belonging to that single end-to-end transaction.
+
+### Key Characteristics
+- **Workflow-Scoped Invariant**: Unlike an Event ID (unique per message), a Correlation ID remains constant across the entire multi-service lifecycle of a request or business event flow.
+- **Cross-Boundary Thread**: Propagates through HTTP headers, broker record headers (Kafka/Event Hubs), and logging contexts (MDC), turning disjoint per-service log streams into a single queryable timeline.
+- **Root Cause Localization**: Enables operators to execute a single query (e.g., `correlation_id = 'abc123'`) to narrow down an incident spanning dozens of services to the exact component where the flow stopped or failed.
+- **Non-Invasive Protocol**: Typically carried in transport headers/envelopes rather than domain payload schemas, avoiding domain model pollution.
+
+### When to Use
+- Distributed microservices, event-driven architectures, and asynchronous message flows spanning multiple service boundaries.
+- Auditing, end-to-end request tracing, customer support ticket investigation, and distributed root cause analysis.
+
+### When NOT to Use
+- Monolithic, single-process applications where local in-memory call stacks and thread IDs provide complete execution context.
+- High-frequency low-level metric telemetry where individual events are purely statistical and not part of an identifiable user or business transaction.
+
+### Also see
+- [Causation ID](#causation-id) · [Event Envelope](#event-envelope) · [Distributed Context Propagation](#distributed-context-propagation) · [Event ID](#event-id) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Causation ID
+
+An identifier attached to an event or command that explicitly references the `event_id` of the immediate predecessor event or action that caused it, enabling the reconstruction of a hierarchical cause-and-effect tree (DAG).
+
+### Key Characteristics
+- **Direct Parent Reference**: Points specifically to the single event that directly triggered the current processing action ($E_{\text{parent}} \to E_{\text{child}}$).
+- **DAG Lineage Reconstruction**: While a Correlation ID groups all events in a workflow as a flat set, Causation IDs allow observability platforms to construct the exact directed acyclic graph of concurrent branches, retries, and cascading effects.
+- **Tripartite Identity Triad**: Forms a complete lineage triad alongside Event ID (self identity) and Correlation ID (root workflow identity).
+- **Branch Fault Attribution**: Unambiguously isolates which parallel branch in a fan-out workflow produced an error or timed out.
+
+### When to Use
+- Complex event-driven topologies with asynchronous fan-out, saga choreography, or multi-step reactive pipelines.
+- Systems requiring forensic auditability, lineage tracking, and automated failure attribution in distributed workflows.
+
+### When NOT to Use
+- Purely linear, single-threaded synchronous pipelines where parent-child relationships map 1:1 to chronological timestamps without branching.
+- Architectures with minimal metadata budgets where flat correlation IDs provide sufficient operational visibility.
+
+### Also see
+- [Correlation ID](#correlation-id) · [Event ID](#event-id) · [Event Envelope](#event-envelope) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Event Envelope
+
+An architectural messaging pattern that encapsulates a pure domain business payload within a standardized outer structure containing transport, routing, governance, and observability metadata.
+
+### Key Characteristics
+- **Domain-Infrastructure Decoupling**: Business domain entities (payloads) remain focused purely on domain state, while transport headers (metadata) manage infrastructure concerns.
+- **Standardized Metadata Header Set**: Carries universal governance fields such as `event_id`, `correlation_id`, `causation_id`, `traceparent`, `event_type`, `schema_version`, and `published_at`.
+- **Zero-Deserialization Routing**: Enables message brokers, API gateways, stream routers, and audit collectors to filter, route, or index events by inspecting headers without deserializing the business payload.
+- **Independent Schema Evolution**: Domain payload schemas can evolve using Avro/Protobuf without breaking infrastructure monitoring or routing components.
+
+### When to Use
+- Enterprise event-driven architectures, event backbones, and event streaming platforms (Kafka, Event Hubs, Service Bus).
+- Systems implementing polyglot microservices where a uniform message envelope standardizes cross-team communication and observability.
+
+### When NOT to Use
+- Ultra-low-latency financial market data or high-frequency IoT sensor telemetry where every byte of bandwidth and serialization overhead is constrained.
+- Internal in-memory messaging or intra-aggregate event handling within a single domain boundary.
+
+### Also see
+- [Correlation ID](#correlation-id) · [Distributed Context Propagation](#distributed-context-propagation) · [Event Carried State Transfer](#event-carried-state-transfer) · [Schema Evolution](messaging.md#schema-evolution)
+
+---
+
+## Distributed Context Propagation
+
+The systematic mechanism of injecting, transmitting, and extracting distributed tracing and correlation metadata across asynchronous and synchronous boundaries in a distributed system.
+
+### Key Characteristics
+- **Async Boundary Traversal**: Bridges the gap where synchronous thread-local request contexts terminate upon publishing a message to a broker log, re-establishing span continuity on the consumer side.
+- **W3C Standards Compliance**: Standardizes trace representation using W3C TraceContext specifications (`traceparent`, `tracestate`) across heterogeneous technologies and languages.
+- **Orphan Trace Prevention**: Explicitly links downstream consumer spans to remote producer spans as child spans, preventing fractured traces and ensuring complete distributed flamegraphs.
+- **Automated / Interceptor Instrumentation**: Implemented via middleware, client interceptors, or OpenTelemetry SDK hooks to eliminate manual header parsing in application business logic.
+
+### When to Use
+- Distributed microservices communicating over asynchronous messaging brokers (Kafka, RabbitMQ, Event Hubs, Service Bus) or HTTP/gRPC networks.
+- End-to-end APM distributed tracing, latency profiling, bottleneck identification, and SLO monitoring.
+
+### When NOT to Use
+- Monolithic applications where in-process call stacks and profilers already provide unbroken execution traces.
+- Offline batch processing of unindexed file archives where requests are decoupled from live business interactions.
+
+### Also see
+- [Event Envelope](#event-envelope) · [Correlation ID](#correlation-id) · [Event-Driven Architecture](#event-driven-architecture)
 
