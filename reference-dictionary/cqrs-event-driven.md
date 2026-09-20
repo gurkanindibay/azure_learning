@@ -61,6 +61,8 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Causation ID | [`#causation-id`](#causation-id) |
 | Event Envelope | [`#event-envelope`](#event-envelope) |
 | Distributed Context Propagation | [`#distributed-context-propagation`](#distributed-context-propagation) |
+| Disguised Command Anti-Pattern | [`#disguised-command-anti-pattern`](#disguised-command-anti-pattern) |
+| Naming Litmus Test | [`#naming-litmus-test`](#naming-litmus-test) |
 
 
 ---
@@ -730,7 +732,7 @@ The fundamental architectural distinction between **Events** (notifications that
 - Do not use targeted command queues for public cross-boundary domain notifications.
 
 ### Also see
-- [Event-Driven Architecture](#event-driven-architecture) · [Event Carried State Transfer](#event-carried-state-transfer) · [Kafka vs RabbitMQ](messaging.md#kafka-vs-rabbitmq)
+- [Event-Driven Architecture](#event-driven-architecture) · [Event Carried State Transfer](#event-carried-state-transfer) · [Disguised Command Anti-Pattern](#disguised-command-anti-pattern) · [Naming Litmus Test](#naming-litmus-test) · [Kafka vs RabbitMQ](messaging.md#kafka-vs-rabbitmq)
 
 ---
 
@@ -1132,4 +1134,45 @@ The systematic mechanism of injecting, transmitting, and extracting distributed 
 
 ### Also see
 - [Event Envelope](#event-envelope) · [Correlation ID](#correlation-id) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Disguised Command Anti-Pattern
+
+An architectural anti-pattern in event-driven systems where an imperative instruction targeted at a single specific actor (e.g., `PaymentShouldBeCharged`, `InventoryShouldReserve`) is wrapped in event-shaped pub/sub clothing and published to a broadcast topic. This creates tight point-to-point coupling between producer and consumer while hiding the dependency inside a topic name rather than an explicit API interface or queue contract.
+
+### Key Characteristics
+- **Hidden Coupling (Invisible RPC)**: The producer implicitly depends on a specific consumer reacting in an exact way, but the dependency is invisible in source code and compile-time type checks.
+- **Fragile Failure Modes**: If the target service's subscription drops or fails silently, no direct error is returned to the upstream caller; if a second subscriber is attached, actions execute multiple times (e.g., double-charging).
+- **Misused Pub/Sub Infrastructure**: Uses a 1-to-many broadcast broker construct (topic) to execute a 1-to-1 targeted command workflow.
+
+### When to Use
+- **Never**: This is an anti-pattern. If command execution is required, use point-to-point queues or explicit Saga orchestration; if event notification is desired, use past-tense domain facts (`OrderPlaced`).
+
+### When NOT to Use
+- Avoid whenever designing asynchronous messaging contracts or topic naming conventions.
+
+### Also see
+- [Event vs Message](#event-vs-message) · [Naming Litmus Test](#naming-litmus-test) · [Orchestrator-based Saga](#orchestrator-based-saga) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Naming Litmus Test
+
+A design-time heuristic used during architecture and code reviews to verify whether a proposed asynchronous message payload represents an authentic domain event or a disguised command.
+
+### Key Characteristics
+- **Multi-Subscriber Invariant Check**: Evaluates the question: *"If two or more independent services subscribed to this topic tomorrow, would each reaction be valid, or would it corrupt business state / double-execute side effects?"*
+- **Past-Tense vs Imperative Validation**: Genuine events represent immutable past facts (`OrderPlaced`, past-tense noun phrase); disguised commands represent future intentions or modal instructions (`PaymentShouldBeCharged`, imperative/modal verb phrase).
+- **Topology Alignment**: Ensures genuine events map to broadcast topics (Kafka, Event Grid) while commands map to point-to-point queues (Service Bus Queues, SQS) or direct RPC.
+
+### When to Use
+- Pull request reviews, schema registry contract reviews, and event modeling workshops (EventStorming).
+- Auditing legacy event brokers for hidden point-to-point coupling.
+
+### When NOT to Use
+- Internal method or function signatures within a single process where compiler type-checking and direct invocations are already explicit.
+
+### Also see
+- [Event vs Message](#event-vs-message) · [Disguised Command Anti-Pattern](#disguised-command-anti-pattern) · [Event-Driven Architecture](#event-driven-architecture)
 

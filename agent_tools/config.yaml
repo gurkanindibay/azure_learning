@@ -262,6 +262,8 @@ takeaway_domains:
       - "articles/messaging/how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md"
       - "system-design-architecture/messaging/event-driven-cross-service-debugging-takeaways.md"
       - "articles/messaging/how-to-debug-a-production-issue-that-spans-10-event-driven-services.md"
+      - "system-design-architecture/messaging/event-driven-vs-message-driven-takeaways.md"
+      - "articles/messaging/the-real-difference-between-event-driven-and-message-driven-systems.md"
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"

@@ -136,6 +136,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Messages describe *commands expecting action*.
 - Mixing the two leads to tight coupling and fragile flows.
 
+> **Deep Dive**: [The Real Difference Between Event-Driven and Message-Driven Systems](the-real-difference-between-event-driven-and-message-driven-systems.md)
+
 ---
 
 ## 8. How do you debug a production issue when a single business flow spans 10 event-driven services?
