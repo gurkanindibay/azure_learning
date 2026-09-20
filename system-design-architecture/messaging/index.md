@@ -36,6 +36,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [event-driven-consumer-replay-takeaways.md](event-driven-consumer-replay-takeaways.md) | `broker-159` – `broker-164` | State-Effect Separation, Pure state derivation, Dedicated replay consumer groups, Blue-green read model rebuild & cutover, Throttled checkpointed consumption, In-memory event upcasting, Determinism snapshot testing |
 | [event-driven-cross-service-debugging-takeaways.md](event-driven-cross-service-debugging-takeaways.md) | `broker-165` – `broker-170` | Distributed Correlation ID, Tripartite identity (Event/Correlation/Causation ID), Distributed context propagation, Event envelope pattern, Consumer lag triage, Context-rich dead-letter topics |
 | [event-driven-vs-message-driven-takeaways.md](event-driven-vs-message-driven-takeaways.md) | `broker-171` – `broker-176` | Fact vs Instruction semantics, Disguised Command anti-pattern, Multi-Subscriber Naming Litmus Test, Silent failure modes, Choreography vs Orchestration, Broker neutrality |
+| [event-immutability-and-corrections-takeaways.md](event-immutability-and-corrections-takeaways.md) | `broker-177` – `broker-182` | Historical immutability, Compensating events, Consumer-driven interpretation, Unified monotonic versioning, Cryptographic shredding (GDPR), Kafka compaction vs tiered retention |
 
 
 ## Cross-References

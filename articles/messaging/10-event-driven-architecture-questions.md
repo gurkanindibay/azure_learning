@@ -170,6 +170,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Model corrections as compensating events, not edits.
 - Let consumers decide how to interpret history.
 
+> **Deep Dive**: [Should Events Be Immutable Forever, or Can They Be Corrected Later?](should-events-be-immutable-forever-or-can-they-be-corrected-later.md)
+
 ---
 
 ## 10. How do you prevent an event-driven system from becoming a distributed monolith over time?

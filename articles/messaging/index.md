@@ -36,4 +36,5 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [How to Design Event-Driven Consumers That Survive Replaying Millions of Old Events](how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md)
 - [How to Debug a Production Issue That Spans 10 Event-Driven Services](how-to-debug-a-production-issue-that-spans-10-event-driven-services.md)
 - [The Real Difference Between Event-Driven and Message-Driven Systems](the-real-difference-between-event-driven-and-message-driven-systems.md)
+- [Should Events Be Immutable Forever, or Can They Be Corrected Later?](should-events-be-immutable-forever-or-can-they-be-corrected-later.md)
 

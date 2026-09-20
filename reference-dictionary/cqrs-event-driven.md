@@ -63,6 +63,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Distributed Context Propagation | [`#distributed-context-propagation`](#distributed-context-propagation) |
 | Disguised Command Anti-Pattern | [`#disguised-command-anti-pattern`](#disguised-command-anti-pattern) |
 | Naming Litmus Test | [`#naming-litmus-test`](#naming-litmus-test) |
+| Crypto-Shredding | [`#crypto-shredding`](#crypto-shredding) |
+| Temporal Fact | [`#temporal-fact`](#temporal-fact) |
+| Reversing Entry | [`#reversing-entry`](#reversing-entry) |
 
 
 ---
@@ -1175,4 +1178,69 @@ A design-time heuristic used during architecture and code reviews to verify whet
 
 ### Also see
 - [Event vs Message](#event-vs-message) · [Disguised Command Anti-Pattern](#disguised-command-anti-pattern) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Crypto-Shredding
+
+**Crypto-Shredding** (also known as *Cryptographic Shredding* or *Key-Deletion Erasure*) — a privacy and data compliance technique where sensitive or personal data (PII) is encrypted at write time with an entity-specific cryptographic key (e.g., unique per `user_id`). When a deletion or "Right to be Forgotten" request (GDPR Article 17 / CCPA) is received, the data owner's specific encryption key is deleted from the Key Management Service, rendering the encrypted historical payloads in immutable append-only event logs (such as Kafka or Event Hubs) permanently and mathematically unrecoverable.
+
+### Key Characteristics
+- **Immutable Log Preservation**: The physical event broker log segments, partition offsets, event shells, metadata, and non-PII transaction IDs remain 100% intact and append-only without requiring log rewrites.
+- **Provable Unrecoverability**: Without the symmetric key (e.g., AES-256 GCM), ciphertext in historical events cannot be decrypted, fulfilling data protection regulatory requirements.
+- **Granular Key Lifecycle**: Requires managing individual keys per user or tenant within a secure KeyStore or Cloud Key Vault.
+
+### When to Use
+- Managing personal or sensitive data in append-only distributed event stores (Kafka, Azure Event Hubs, AWS Kinesis, EventStoreDB) subject to GDPR, CCPA, or HIPAA erasure mandates.
+- High-throughput event-driven systems where re-indexing or rewriting multi-terabyte topic logs is operationally impossible.
+
+### When NOT to Use
+- When raw unencrypted PII must be queried directly using full-text search across historical log payloads.
+- When key management system latency and key storage limits cannot accommodate millions of ephemeral keys.
+
+### Also see
+- [Cryptographic Erasure](#cryptographic-erasure) · [Event Sourcing](#event-sourcing) · [HSM](../reference-dictionary/hsm-cryptography.md#hsm)
+
+---
+
+## Temporal Fact
+
+A **Temporal Fact** — the core conceptual invariant of Event-Driven Architecture and Event Sourcing stating that an event is an immutable record of what the system observed and believed to be true at a specific moment in time. Even if an event is later discovered to contain mistaken data (e.g., a software bug calculating incorrect taxes), "wrong at the time" remains an undeniable historical reality because downstream systems, customers, and external audits already consumed and acted upon that information.
+
+### Key Characteristics
+- **Historical Honesty**: Past events are never retroactively modified or deleted; corrections are modeled exclusively as new additive facts with their own timestamps.
+- **Audit & Timeline Integrity**: Enables reconstructing the exact state and beliefs of the enterprise at any historical timestamp ($T$).
+- **Decoupled Consumer Interpretation**: Allows different downstream projections to derive current state (applying latest updates) while audit projections preserve full chronological history.
+
+### When to Use
+- Designing event schemas, bounded context contracts, and aggregate state machines in event-driven systems.
+- Financial ledgers, healthcare records, compliance workflows, and multi-service event backbones.
+
+### When NOT to Use
+- Ephemeral, loss-tolerant telemetry where only instantaneous gauge values matter and history has zero business value.
+
+### Also see
+- [Event Sourcing](#event-sourcing) · [Compensating Event](#compensating-event) · [Reversing Entry](#reversing-entry) · [Event-Driven Architecture](#event-driven-architecture)
+
+---
+
+## Reversing Entry
+
+A **Reversing Entry** — an event modeling pattern derived from double-entry accounting where errors in historical records are corrected by publishing an explicit offsetting or compensating transaction rather than modifying or erasing the original record.
+
+### Key Characteristics
+- **Additive Correction**: Leaves the faulty historical event (`InvoiceIssued` with $10 tax) untouched on the immutable log and appends an offsetting or correction event (`InvoiceCorrected` with $15 tax, or a reversal of -$10 followed by +$15).
+- **Audit Trail Traceability**: Preserves both the initial decision and the corrective action, allowing auditors to trace the exact sequence of business operations.
+- **Monotonic Version Progression**: Handled by aggregates as the next sequential monotonic version ($V_{N+1}$) using standard idempotency and version guards.
+
+### When to Use
+- Financial transactions, billing systems, inventory reservations, and any domain requiring strict accounting reconciliation.
+- Correcting errors in event-sourced aggregates without breaking downstream consumers.
+
+### When NOT to Use
+- When correcting transient in-flight drafting state before an aggregate has emitted its first public domain event.
+
+### Also see
+- [Compensating Event](#compensating-event) · [Temporal Fact](#temporal-fact) · [Ledger](#ledger) · [Versioned Aggregates](#versioned-aggregates)
+
 
