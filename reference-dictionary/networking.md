@@ -44,6 +44,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Politeness Policy | [`#politeness-policy`](#politeness-policy) |
 | North-South Traffic | [`#north-south-traffic`](#north-south-traffic) |
 | East-West Traffic | [`#east-west-traffic`](#east-west-traffic) |
+| Connection Reuse Ratio | [`#connection-reuse-ratio`](#connection-reuse-ratio) |
 
 ---
 
@@ -872,5 +873,35 @@ Network traffic that flows **horizontally between internal components** (microse
 
 ### Also see
 - [North-South Traffic](#north-south-traffic) · [Service Mesh](#service-mesh) · [Smart Client](#smart-client) · [Locality-Aware Routing](#locality-aware-routing)
+
+---
+
+## Connection Reuse Ratio
+
+A core **networking and API gateway operational efficiency metric** that measures the proportion of upstream HTTP requests dispatched over existing, pre-warmed persistent TCP/TLS connections versus new connections requiring full network handshakes:
+
+$$\text{Connection Reuse Ratio} = \frac{\text{Reused Persistent Connections}}{\text{Total Dispatched Requests}} \times 100\%$$
+
+### Key Characteristics
+
+- **Production Health Benchmark**: In well-tuned API gateways and service meshes with persistent connection pooling and HTTP/2 multiplexing, target production values are $>99\%$.
+- **Early Degradation Signal**: A drop below $90\%$ immediately warns of connection pool exhaustion, overly aggressive idle keep-alive timeouts (premature connection termination), DNS flapping, or upstream server restarts.
+- **Latency Impact**: High connection reuse eliminates 1–3 round-trip times (RTT) and asymmetric TLS handshake encryption math ($10\text{--}50\,\text{ms}$) per request.
+- **Kernel Socket Preservation**: Prevents TCP socket port exhaustion and `TIME_WAIT` socket proliferation on egress network interfaces.
+
+### When to Use
+
+- Monitoring and alerting for API gateways, reverse proxies, and service mesh sidecars handling high-throughput ingress/egress.
+- Tuning HTTP keep-alive timeouts, connection pool sizes, and upstream client worker configurations.
+- Capacity planning and diagnosing mysterious latency spikes or socket exhaustion errors during peak traffic surges.
+
+### When NOT to Use
+
+- Stateless one-off CLI tools or batch jobs that execute a single HTTP request and terminate immediately.
+- Connectionless transport protocols (such as raw UDP or DNS queries).
+
+### Also see
+
+- [API Gateway](#api-gateway) · [Zero-Copy Transfer](#zero-copy-transfer) · [North-South Traffic](#north-south-traffic) · [gw-08: Per-Request TCP/TLS Handshake Exhaustion vs Persistent Connection Pooling](../system-design-architecture/api-network/api-gateway-bottlenecks-takeaways.md#gw-08-per-request-tcptls-handshake-exhaustion-vs-persistent-connection-pooling)
 
 

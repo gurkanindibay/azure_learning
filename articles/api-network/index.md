@@ -13,3 +13,5 @@ Source articles covering api network patterns, strategies, and case studies.
 - [stop-designing-rest-apis-advanced-patterns-senior-engineers](stop-designing-rest-apis-advanced-patterns-senior-engineers.md)
 - [system-design-interview-api-rate-limiter-distributed](system-design-interview-api-rate-limiter-distributed.md)
 - [api-idempotency-high-concurrency](api-idempotency-high-concurrency.md)
+- [api-gateway-becomes-a-bottleneck](api-gateway-becomes-a-bottleneck.md)
+

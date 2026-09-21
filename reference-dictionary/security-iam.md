@@ -29,6 +29,8 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 | Replay Attack | [`#replay-attack`](#replay-attack) |
 | TOTP (Time-based One-Time Password) | [`#totp-time-based-one-time-password`](#totp-time-based-one-time-password) |
 | SecurityFilterChain | [`#securityfilterchain`](#securityfilterchain) |
+| Authentication Offloading | [`#authentication-offloading`](#authentication-offloading) |
+| Token Introspection Cache | [`#token-introspection-cache`](#token-introspection-cache) |
 
 ---
 
@@ -377,7 +379,64 @@ A component-based configuration architecture introduced in modern Spring Securit
 
 ---
 
+## Authentication Offloading
+
+The architectural practice of **extracting CPU-intensive cryptographic signature verification, token validation, and identity lookups away from central application gateways or microservices into dedicated proxies, sidecars, or an independent authentication tier**. Once verified at the boundary, the caller's validated identity context is propagated downstream via trusted internal headers (or mutual TLS claims), allowing routing gateways and upstream services to execute zero-crypto business processing.
+
+### Key Characteristics
+
+- **Cryptographic Isolation**: Decouples heavy asymmetric cryptographic math (e.g., RSA/ECDSA signature checks taking 0.5–1ms of CPU time) from the low-latency routing path.
+- **Architectural Topologies**: Commonly implemented as an **Auth Sidecar** (co-located Envoy/auth proxy process with local cached public keys) or a **Stateless Tier-1 Auth Gateway** dedicated exclusively to token validation.
+- **Trusted Context Token Propagation**: Passes signed, pre-verified identity context (`X-User-Id`, `X-Tenant-Id`, `X-Roles`) downstream across secured VPC/service-mesh boundaries.
+- **Independent Elasticity**: Allows the authentication cluster to autoscale horizontally in response to cryptographic load spikes without scaling the data routing gateway instances.
+
+### When to Use
+
+- High-throughput API gateways and microservice clusters where JWT validation causes gateway CPU starvation (100% CPU) during peak traffic.
+- Zero-trust service mesh architectures where edge ingress authenticates external tokens once and injects internal mTLS identities.
+- Heterogeneous microservice ecosystems using multiple programming languages, eliminating duplicated JWT validation libraries and inconsistent validation bugs across services.
+
+### When NOT to Use
+
+- Simple monolithic applications or low-throughput APIs where direct framework-level token validation adds negligible CPU overhead.
+- Systems with unencrypted or untrusted internal networks where passing internal identity headers introduces severe spoofing vulnerabilities without mTLS.
+
+### Also see
+
+- [Authentication](#authentication) · [JWT (JSON Web Token)](#jwt-json-web-token) · [Token Introspection Cache](#token-introspection-cache) · [Zero Trust](#zero-trust) · [gw-07: In-Path JWT Verification vs Auth Offloading](../system-design-architecture/api-network/api-gateway-bottlenecks-takeaways.md#gw-07-in-path-jwt-cryptographic-verification-saturation-vs-dedicated-auth-offloading)
+
+---
+
+## Token Introspection Cache
+
+A **caching layer that stores the verified status and decoded claims of access tokens in high-speed local memory for a bounded duration**, eliminating repeated cryptographic verification or remote OAuth2 authorization server introspection calls for active sessions.
+
+### Key Characteristics
+
+- **Drastic Latency Reduction**: Reduces token validation time from ~1ms (local RSA verification) or 10–50ms (remote OAuth2 `/introspect` network call) down to $<0.05\,\text{ms}$ on a local LRU cache hit.
+- **Bounded Short TTL**: Employs short time-to-live windows (e.g., 60–300 seconds) to balance high cache hit ratios against the risk of delayed token revocation visibility.
+- **Local LRU Eviction**: Maintained in process memory (e.g., Guava, Caffeine, or sidecar RAM) to avoid introducing distributed cache network bottlenecks.
+- **Cryptographic Hash Keying**: Tokens are keyed by their SHA-256 hash or `jti` (JWT ID) claim to bound cache key memory footprint.
+
+### When to Use
+
+- High-volume API gateways processing multiple rapid API calls from the same active client session.
+- Architectures using opaque OAuth2 reference tokens that require remote authorization server introspection.
+- Read-heavy microservice environments where identical access tokens are transmitted repeatedly across sequential sub-requests.
+
+### When NOT to Use
+
+- Critical high-security operations (e.g., immediate privilege revocation or fund transfers) where stale tokens cannot be tolerated even for a few seconds.
+- Systems with long token rotation intervals without a fast invalidation or revocation broadcast mechanism (e.g., Redis pub/sub or Webhooks).
+
+### Also see
+
+- [Authentication](#authentication) · [Authentication Offloading](#authentication-offloading) · [JWT (JSON Web Token)](#jwt-json-web-token) · [OAuth2](#oauth2)
+
+---
+
 > **Convention**: Every term anchor follows `domain-file.md#lowercase-hyphenated-term`. Always link to the primary definition, never to a cross-reference.
+
 
 
 

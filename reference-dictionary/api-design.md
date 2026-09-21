@@ -53,6 +53,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Leaky Bucket | [`#leaky-bucket`](#leaky-bucket) |
 | Server-Sent Events | [`#server-sent-events`](#server-sent-events) |
 | Long Polling | [`#long-polling`](#long-polling) |
+| Hybrid Token Bucket | [`#hybrid-token-bucket`](#hybrid-token-bucket) |
 
 ---
 
@@ -958,3 +959,32 @@ A **hybrid rate-limiting algorithm** that combines the low memory footprint of t
 
 ### Also see
 - [Token Bucket](#token-bucket) · [Sliding Window Log](#sliding-window-log) · [Fixed Window](#fixed-window) · [Rate Limiting](#rate-limiting)
+
+---
+
+## Hybrid Token Bucket
+
+A **distributed, multi-tiered rate-limiting pattern** that combines ultra-low latency local in-memory token buckets with periodic asynchronous synchronization against a centralized quota coordinator (such as Redis or Memcached). Each API gateway node satisfies incoming requests instantly against its local token partition without network I/O, while a background thread periodically reconciles token consumption and redistributes global quotas every 50–100ms.
+
+### Key Characteristics
+
+- **Sub-Microsecond Latency**: Checks and decrements occur purely in local gateway process RAM ($<1\,\mu\text{s}$), completely eliminating synchronous network roundtrips to Redis on the critical request path.
+- **Massive Load Reduction**: Reduces centralized database/cache traffic by up to $99.99\%$ (e.g., from 100,000 requests/sec down to 10–20 sync batches/sec).
+- **Proportional Quota Allocation**: Central coordinator dynamically adjusts local node allowances based on real-time traffic distribution across gateway instances.
+- **Resilient Degradation**: If the centralized cache fails or becomes partitioned, gateway nodes fall back gracefully to local rate limits without dropping user traffic.
+- **Soft Window Boundary**: Tolerates bounded transient over-consumption during rapid burst spikes within the short synchronization interval ($\le 100\,\text{ms}$).
+
+### When to Use
+
+- High-throughput API gateways and reverse proxies handling $>10,\!000$ RPS where per-request Redis roundtrips saturate cache CPU or introduce unacceptable tail latency.
+- Distributed microservice architectures requiring fair-share rate limiting across dynamically autoscaled gateway clusters.
+- Cost-sensitive deployments seeking to minimize Redis memory and network bandwidth costs under massive traffic volume.
+
+### When NOT to Use
+
+- Low-traffic services ($<500$ RPS) where centralized atomic Redis operations (e.g., Lua scripts, `INCR`) execute comfortably within latency budgets.
+- Strict financial or security endpoints where absolute, zero-tolerance hard global limits must be guaranteed down to the exact individual transaction (e.g., credit card authorization attempts).
+
+### Also see
+
+- [Token Bucket](#token-bucket) · [Rate Limiting](#rate-limiting) · [Hierarchical Rate Limiting](#hierarchical-rate-limiting) · [gw-10: Centralized Redis Rate Limiting vs Hybrid Token Bucket](../system-design-architecture/api-network/api-gateway-bottlenecks-takeaways.md#gw-10-centralized-redis-rate-limiting-roundtrips-vs-hybrid-token-bucket)

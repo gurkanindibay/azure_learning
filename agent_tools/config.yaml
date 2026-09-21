@@ -172,6 +172,11 @@ takeaway_domains:
   gw:
     file: "api-network/reverse-proxy-lb-gateway.md"
     desc: "Reverse Proxy, LB & API Gateway"
+    related_files:
+      - "system-design-architecture/api-network/reverse-proxy-lb-gateway.md"
+      - "system-design-architecture/api-network/api-gateway-bottlenecks-takeaways.md"
+      - "articles/api-network/api-gateway-becomes-a-bottleneck.md"
+
   agentic:
     file: "agentic-ai/enterprise-strategic-systems.md"
     desc: "Agentic AI"
