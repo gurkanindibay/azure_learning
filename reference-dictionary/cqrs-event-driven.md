@@ -66,6 +66,8 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Crypto-Shredding | [`#crypto-shredding`](#crypto-shredding) |
 | Temporal Fact | [`#temporal-fact`](#temporal-fact) |
 | Reversing Entry | [`#reversing-entry`](#reversing-entry) |
+| Public Event | [`#public-event`](#public-event) |
+| Internal Event | [`#internal-event`](#internal-event) |
 
 
 ---
@@ -1242,5 +1244,49 @@ A **Reversing Entry** — an event modeling pattern derived from double-entry ac
 
 ### Also see
 - [Compensating Event](#compensating-event) · [Temporal Fact](#temporal-fact) · [Ledger](#ledger) · [Versioned Aggregates](#versioned-aggregates)
+
+---
+
+## Public Event
+
+A **Public Event** (also known as an **Integration Event**) — a deliberately designed, published event schema intended for consumption across bounded contexts and microservice boundaries. Public events form an external contract, exposing only stable, minimal business facts and intentionally concealing internal domain models, database columns, and aggregate implementation details.
+
+### Key Characteristics
+- **Deliberate Contract**: Treated as a formal public API contract subject to backward-compatibility guarantees, schema review, and deprecation policies.
+- **Data Minimization**: Contains only the core attributes required by external consumers (e.g., `{ sku, finalPrice, currency }`), preventing internal state leakage.
+- **Producer Autonomy**: Allows the producing service to refactor its internal database tables, storage representations, and algorithms without affecting downstream consumers.
+- **Consumer-Driven Evolution**: Validated against registered consumer expectations using Consumer-Driven Contract (CDC) testing.
+
+### When to Use
+- Communicating state transitions and business facts across domain boundaries and microservices.
+- Establishing an enterprise-wide event backbone or external partner webhooks.
+
+### When NOT to Use
+- Intra-service communication within a single bounded context or aggregate where fine-grained domain events or event-sourcing records are more appropriate.
+
+### Also see
+- [Internal Event](#internal-event) · [Event Carried State Transfer](#event-carried-state-transfer) · [Event-Driven Architecture](#event-driven-architecture) · [Bounded Context](architecture-patterns.md#bounded-context)
+
+---
+
+## Internal Event
+
+An **Internal Event** (also known as a **Domain Event**) — an event emitted and consumed strictly within the private boundary of a single microservice or bounded context. Internal events reflect fine-grained aggregate state transitions, audit chronicles, or event-sourcing streams and are never exposed directly to external consumers on public topics.
+
+### Key Characteristics
+- **Private Encapsulation**: Tightly coupled to the producer's internal domain model, database structures, and business logic without cross-service coordination risk.
+- **High Granularity**: May contain intermediate calculation fields, private aggregate IDs, and detailed state snapshots needed for local projections or event reconstruction.
+- **Freedom to Refactor**: The owning team can alter, rename, or delete internal event structures at will during internal refactoring sprints.
+
+### When to Use
+- Event sourcing inside a single service aggregate boundary.
+- Local audit logging, state reconstruction, or decoupled background processing within a single service.
+
+### When NOT to Use
+- Broadcasting business facts to external downstream services—external consumers must only subscribe to sanitized Public Events.
+
+### Also see
+- [Public Event](#public-event) · [Event Sourcing](#event-sourcing) · [Bounded Context](architecture-patterns.md#bounded-context)
+
 
 

@@ -73,6 +73,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Bounded Working Pool | [`#bounded-working-pool`](#bounded-working-pool) |
 | Nanoservices | [`#nanoservices`](#nanoservices) |
 | Dual-Protocol Architecture | [`#dual-protocol-architecture`](#dual-protocol-architecture) |
+| Lockstep Deployment | [`#lockstep-deployment`](#lockstep-deployment) |
 
 ---
 
@@ -1391,5 +1392,28 @@ An architectural communication pattern that establishes **distinct protocols for
 
 ### Also see
 - [North-South Traffic](networking.md#north-south-traffic) · [East-West Traffic](networking.md#east-west-traffic) · [gRPC](networking.md#grpc) · [API Gateway](networking.md#api-gateway)
+
+---
+
+## Lockstep Deployment
+
+A **Lockstep Deployment** (also known as a **Synchronized Deployment** or **Coordinated Release Train**) — an architectural anti-pattern in distributed systems where multiple independent microservices or components must be compiled, tested, and deployed simultaneously in a specific sequence to prevent runtime failures or schema incompatibilities.
+
+### Key Characteristics
+- **Loss of Autonomy**: Destroys the primary benefit of microservice architectures (independent deployability and team autonomy) by requiring company-wide change freezes and cross-team deployment coordination.
+- **Root Causes**: Typically caused by leaked internal schemas in event payloads or RPC contracts, shared database access, duplicated business rules, or unmanaged breaking changes.
+- **Compounding Blast Radius**: A failure or rollback in any single service within the lockstep release forces the entire deployment train to abort or roll back.
+- **Symptom of Distributed Monolith**: Indicates that services are only decoupled at the network transport layer while remaining tightly coupled at the domain and schema layers.
+
+### When to Use
+- **Never as a desired architectural state**: Lockstep deployments represent technical debt and boundary decay.
+- **Rare, Planned Cutover Events**: Acceptable only during catastrophic zero-downtime database structural migrations or initial greenfield system rollouts before public traffic begins.
+
+### When NOT to Use
+- Standard day-to-day feature releases, service updates, and bug fixes across distributed microservices.
+
+### Also see
+- [Distributed Monolith](#distributed-monolith) · [Coordination Cost](#coordination-cost) · [Public Event](cqrs-event-driven.md#public-event) · [Expand and Contract Pattern](#expand-and-contract-pattern)
+
 
 

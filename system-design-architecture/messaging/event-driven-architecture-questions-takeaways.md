@@ -214,8 +214,8 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 **Tradeoff**: Requires mapping layers (Domain Entity → Public Event Contract) at the producer, adding a translation step for each event emitted.
 
-> **Dictionary**: [Distributed Monolith](../../reference-dictionary/architecture-patterns.md#distributed-monolith), [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context)  
-> **Related**: [Distributed Monolith Deep Dive](../software-architecture/distributed-monolith.md)  
+> **Dictionary**: [Distributed Monolith](../../reference-dictionary/architecture-patterns.md#distributed-monolith), [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context), [Public Event](../../reference-dictionary/cqrs-event-driven.md#public-event), [Lockstep Deployment](../../reference-dictionary/architecture-patterns.md#lockstep-deployment)  
+> **Related**: [`broker-183` – `broker-188`](event-driven-distributed-monolith-prevention-takeaways.md), [Distributed Monolith Deep Dive](../software-architecture/distributed-monolith.md)  
 
 ---
 
@@ -232,5 +232,6 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 | 7 | Event-Driven vs Message-Driven Systems | [The Real Difference Between Event and Message Driven](../../articles/messaging/the-real-difference-between-event-driven-and-message-driven-systems.md) | [`broker-171` – `broker-176`](event-driven-vs-message-driven-takeaways.md) |
 | 8 | Cross-Service Flow Debugging | [How to Debug a Production Issue Spanning 10 Services](../../articles/messaging/how-to-debug-a-production-issue-that-spans-10-event-driven-services.md) | [`broker-165` – `broker-170`](event-driven-cross-service-debugging-takeaways.md) |
 | 9 | Event Immutability vs Corrections | [Should Events Be Immutable Forever](../../articles/messaging/should-events-be-immutable-forever-or-can-they-be-corrected-later.md) | [`broker-177` – `broker-182`](event-immutability-and-corrections-takeaways.md) |
-| 10 | Distributed Monolith Prevention | *Enforce domain boundaries & avoid internal data leakage* | [`broker-128`](#broker-128-anti-degradation-governance-against-eda-distributed-monoliths) |
+| 10 | Distributed Monolith Prevention | [How to Stop an Event-Driven System From Becoming a Distributed Monolith](../../articles/messaging/how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md) | [`broker-183` – `broker-188`](event-driven-distributed-monolith-prevention-takeaways.md) |
+
   

@@ -266,6 +266,9 @@ takeaway_domains:
       - "articles/messaging/the-real-difference-between-event-driven-and-message-driven-systems.md"
       - "system-design-architecture/messaging/event-immutability-and-corrections-takeaways.md"
       - "articles/messaging/should-events-be-immutable-forever-or-can-they-be-corrected-later.md"
+      - "system-design-architecture/messaging/event-driven-distributed-monolith-prevention-takeaways.md"
+      - "articles/messaging/how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md"
+
   cache:
     file: "caching/redis-internals.md"
     desc: "Caching & Redis Internals"

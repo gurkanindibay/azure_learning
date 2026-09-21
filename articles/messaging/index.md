@@ -37,4 +37,6 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [How to Debug a Production Issue That Spans 10 Event-Driven Services](how-to-debug-a-production-issue-that-spans-10-event-driven-services.md)
 - [The Real Difference Between Event-Driven and Message-Driven Systems](the-real-difference-between-event-driven-and-message-driven-systems.md)
 - [Should Events Be Immutable Forever, or Can They Be Corrected Later?](should-events-be-immutable-forever-or-can-they-be-corrected-later.md)
+- [How to Stop an Event-Driven System From Becoming a Distributed Monolith](how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md)
+
 

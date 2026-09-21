@@ -194,6 +194,8 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Avoid consumers relying on internal fields of other domains.
 - Periodically review event contracts like public APIs.
 
+> **Deep Dive**: [How to Stop an Event-Driven System From Becoming a Distributed Monolith](how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md)
+
 ---
 
 ## 10 Event-Driven Architecture Questions — Deep Dive Matrix
@@ -209,5 +211,6 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 | 7 | Event-Driven vs Message-Driven Systems | [The Real Difference Between Event and Message Driven](the-real-difference-between-event-driven-and-message-driven-systems.md) | [`broker-171` – `broker-176`](../../system-design-architecture/messaging/event-driven-vs-message-driven-takeaways.md) |
 | 8 | Debugging Production Flows Across 10 Services | [How to Debug a Production Issue Spanning 10 Services](how-to-debug-a-production-issue-that-spans-10-event-driven-services.md) | [`broker-165` – `broker-170`](../../system-design-architecture/messaging/event-driven-cross-service-debugging-takeaways.md) |
 | 9 | Event Immutability vs Corrections | [Should Events Be Immutable Forever](should-events-be-immutable-forever-or-can-they-be-corrected-later.md) | [`broker-177` – `broker-182`](../../system-design-architecture/messaging/event-immutability-and-corrections-takeaways.md) |
-| 10 | Preventing EDA Distributed Monoliths | *Enforce domain boundaries & avoid internal data leakage* | [`broker-128`](../../system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths) |
+| 10 | Preventing EDA Distributed Monoliths | [How to Stop an Event-Driven System From Becoming a Distributed Monolith](how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md) | [`broker-183` – `broker-188`](../../system-design-architecture/messaging/event-driven-distributed-monolith-prevention-takeaways.md) |
+
 
