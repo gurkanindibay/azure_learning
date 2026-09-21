@@ -41,6 +41,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 > **Dictionary**: [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency), [Versioned Aggregates](../../reference-dictionary/cqrs-event-driven.md#versioned-aggregates), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)  
 > **Azure**: [Cosmos DB Optimistic Concurrency Control](../../architecture-azure/data/databases/azure_cosmosdb/)  
+> **Related**: [`broker-134` – `broker-140`](event-driven-business-consistency-takeaways.md)  
 
 ---
 
@@ -59,7 +60,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 **Tradeoff**: Implementing all three layers requires distinct tooling and operational discipline (e.g., deduplication caches, schema registries, side-effect guards) rather than relying solely on broker configuration.
 
 > **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Deterministic Consumer](../../reference-dictionary/messaging.md#deterministic-consumer)  
-> **Related**: [`broker-02`](message-brokers-async.md#broker-02-offset-commit-failure), [`broker-78`](kafka-real-world-scenarios.md#broker-78-idempotent-payment-processing-with-retries)  
+> **Related**: [`broker-141` – `broker-146`](event-loss-duplicates-reprocessing-takeaways.md), [`broker-02`](message-brokers-async.md#broker-02-offset-commit-failure), [`broker-78`](kafka-real-world-scenarios.md#broker-78-idempotent-payment-processing-with-retries)  
 
 ---
 
@@ -79,7 +80,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 **Tradeoff**: Using synchronous REST/gRPC alongside asynchronous EDA results in a hybrid architecture requiring clear team guidelines on communication style per boundary.
 
 > **Dictionary**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture), [Saga Pattern](../../reference-dictionary/architecture-patterns.md#saga-pattern)  
-> **Related**: [`svc-01`](../software-architecture/29-svc-key-takeaways.md)  
+> **Related**: [`broker-129` – `broker-133`](when-to-avoid-event-driven-architecture-takeaways.md), [`svc-01`](../software-architecture/29-svc-key-takeaways.md)  
 
 ---
 
@@ -97,7 +98,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 **Tradeoff**: Requires architectural separation of read-model projection from outbound communication, increasing the number of micro-components.
 
 > **Dictionary**: [Event Replay](../../reference-dictionary/cqrs-event-driven.md#event-replay), [Deterministic Processing](../../reference-dictionary/cqrs-event-driven.md#deterministic-processing)  
-> **Related**: [`broker-43`](kafka-data-state.md#broker-43-aggregate-snapshot-to-bound-replay-cost)  
+> **Related**: [`broker-159` – `broker-164`](event-driven-consumer-replay-takeaways.md), [`broker-43`](kafka-data-state.md#broker-43-aggregate-snapshot-to-bound-replay-cost)  
 
 ---
 
@@ -116,7 +117,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 **Tradeoff**: Increases publisher database write load (two tables written per transaction) and requires a CDC de-queuer (e.g., Debezium, polling worker), while still mandating full consumer-side defenses.
 
 > **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)  
-> **Related**: [`broker-35`](kafka-reliability-ordering.md#broker-35-dual-write-failure-modes), [`broker-36`](kafka-reliability-ordering.md#broker-36-outbox-publisher-selection)  
+> **Related**: [`broker-153` – `broker-158`](outbox-pattern-capabilities-limits-takeaways.md), [`broker-35`](kafka-reliability-ordering.md#broker-35-dual-write-failure-modes), [`broker-36`](kafka-reliability-ordering.md#broker-36-outbox-publisher-selection)  
 
 ---
 
@@ -135,7 +136,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 **Tradeoff**: Schema registries add infrastructure overhead and CI/CD validation steps; maintaining dual-topic versions during breaking migrations increases operational overhead.
 
 > **Dictionary**: [Schema Contract (Event as Public API)](../../reference-dictionary/messaging.md#schema-contract-event-as-public-api), [Schema Registry](../../reference-dictionary/messaging.md#schema-registry)  
-> **Related**: [`broker-82`](kafka-real-world-scenarios.md#broker-82-schema-evolution-with-compatibility-governance)  
+> **Related**: [`broker-82`](kafka-real-world-scenarios.md#broker-82-schema-evolution-with-compatibility-governance), [`broker-163`](event-driven-consumer-replay-takeaways.md#broker-163-historical-schema-drift-vs-in-memory-deterministic-event-upcasting)  
 
 ---
 
@@ -155,6 +156,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 > **Dictionary**: [Event vs Message](../../reference-dictionary/cqrs-event-driven.md#event-vs-message), [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture)  
 > **Azure**: [Event Grid (Events) vs Service Bus (Commands/Messages)](../../architecture-azure/integration/)  
+> **Related**: [`broker-171` – `broker-176`](event-driven-vs-message-driven-takeaways.md)  
 
 ---
 
@@ -174,6 +176,8 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 > **Dictionary**: [Distributed Tracing](../../reference-dictionary/observability.md#distributed-tracing), [Correlation ID](../../reference-dictionary/observability.md#correlation-id)  
 > **Azure**: [Application Insights Distributed Tracing](../../architecture-azure/observability/)  
+> **Related**: [`broker-165` – `broker-170`](event-driven-cross-service-debugging-takeaways.md)  
+  
 
 ---
 
@@ -191,8 +195,8 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 **Tradeoff**: Increases the total number of events in the log and requires projection models to handle reversal and correction events gracefully.
 
-> **Dictionary**: [Compensating Event](../../reference-dictionary/cqrs-event-driven.md#compensating-event), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Ledger](../../reference-dictionary/cqrs-event-driven.md#ledger)  
-> **Related**: [`cqrs-01`](../cqrs-fintech/cqrs-fintech.md)  
+> **Dictionary**: [Compensating Event](../../reference-dictionary/cqrs-event-driven.md#compensating-event), [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Ledger](../../reference-dictionary/cqrs-event-driven.md#ledger), [Temporal Fact](../../reference-dictionary/cqrs-event-driven.md#temporal-fact)  
+> **Related**: [`broker-177` – `broker-182`](event-immutability-and-corrections-takeaways.md), [`cqrs-01`](../cqrs-fintech/cqrs-fintech.md)  
 
 ---
 
@@ -212,3 +216,21 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 > **Dictionary**: [Distributed Monolith](../../reference-dictionary/architecture-patterns.md#distributed-monolith), [Event Carried State Transfer](../../reference-dictionary/cqrs-event-driven.md#event-carried-state-transfer), [Bounded Context](../../reference-dictionary/architecture-patterns.md#bounded-context)  
 > **Related**: [Distributed Monolith Deep Dive](../software-architecture/distributed-monolith.md)  
+
+---
+
+## 10 Event-Driven Architecture Questions — Deep Dive Series Matrix
+
+| # | Question & Core Topic | Source Deep Dive Article | Dedicated System Design Takeaways |
+|:---|:---|:---|:---|
+| 1 | Out-of-Order Consistency & Invariants | [How to Guarantee Business Consistency](../../articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md) | [`broker-134` – `broker-140`](event-driven-business-consistency-takeaways.md) |
+| 2 | Event Loss, Duplicates & Reprocessing | [How to Handle Event Loss, Duplicates & Reprocessing](../../articles/messaging/how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md) | [`broker-141` – `broker-146`](event-loss-duplicates-reprocessing-takeaways.md) |
+| 3 | When to Avoid Event-Driven Architecture | [When Should You Avoid EDA](../../articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md) | [`broker-129` – `broker-133`](when-to-avoid-event-driven-architecture-takeaways.md) |
+| 4 | Consumer Replays at Scale | [How to Design Consumers That Survive Replays](../../articles/messaging/how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md) | [`broker-159` – `broker-164`](event-driven-consumer-replay-takeaways.md) |
+| 5 | What the Outbox Pattern Solves & Doesn't | [What the Outbox Pattern Actually Solves](../../articles/messaging/what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md) | [`broker-153` – `broker-158`](outbox-pattern-capabilities-limits-takeaways.md) |
+| 6 | Schema Evolution Across Multiple Consumers | *Treat events as immutable public contracts; additive evolution* | [`broker-124`](#broker-124-multi-version-consumer-event-schema-evolution) |
+| 7 | Event-Driven vs Message-Driven Systems | [The Real Difference Between Event and Message Driven](../../articles/messaging/the-real-difference-between-event-driven-and-message-driven-systems.md) | [`broker-171` – `broker-176`](event-driven-vs-message-driven-takeaways.md) |
+| 8 | Cross-Service Flow Debugging | [How to Debug a Production Issue Spanning 10 Services](../../articles/messaging/how-to-debug-a-production-issue-that-spans-10-event-driven-services.md) | [`broker-165` – `broker-170`](event-driven-cross-service-debugging-takeaways.md) |
+| 9 | Event Immutability vs Corrections | [Should Events Be Immutable Forever](../../articles/messaging/should-events-be-immutable-forever-or-can-they-be-corrected-later.md) | [`broker-177` – `broker-182`](event-immutability-and-corrections-takeaways.md) |
+| 10 | Distributed Monolith Prevention | *Enforce domain boundaries & avoid internal data leakage* | [`broker-128`](#broker-128-anti-degradation-governance-against-eda-distributed-monoliths) |
+  

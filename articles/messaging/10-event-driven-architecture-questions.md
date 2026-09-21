@@ -17,11 +17,18 @@ tags:
 
 # 10 Event-Driven Architecture Questions That Separate Architects from Framework Users
 
+> **Series**: Master Index & Series Cover for [10 Event-Driven Architecture Questions](10-event-driven-architecture-questions.md)  
+> **Author**: Arvind Kumar  
+> **Source**: [Codefarm Medium](https://codefarm0.medium.com/10-event-driven-architecture-questions-that-separate-architects-from-framework-users-d673024c7557)  
+> **Takeaways**: [Event-Driven Architecture Senior Questions — Key Takeaways](../../system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md) (`broker-119` – `broker-128`)
+
 Event-Driven Architecture (EDA) looks simple on slides: *publish events, consume events, scale infinitely*.  
 Reality is messier. Most production failures in EDA don’t come from brokers — they come from **wrong assumptions**.
 
 The questions below are the ones that **actually matter in interviews and real systems**.  
 If you can reason through these, you’re not just “using Kafka” — you’re designing systems.
+
+![10 Event-Driven Architecture Questions That Separate Architects from Framework Users](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*OfJNon7THvwOkg7vtavM9Q.png)
 
 ---
 
@@ -186,3 +193,21 @@ If you can reason through these, you’re not just “using Kafka” — you’r
 - Enforce clear ownership of events.
 - Avoid consumers relying on internal fields of other domains.
 - Periodically review event contracts like public APIs.
+
+---
+
+## 10 Event-Driven Architecture Questions — Deep Dive Matrix
+
+| # | Question & Core Topic | Deep Dive Source Article | Key System Design Takeaways |
+|:---|:---|:---|:---|
+| 1 | Out-of-Order Events & Business Consistency | [How to Guarantee Business Consistency](how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md) | [`broker-134` – `broker-140`](../../system-design-architecture/messaging/event-driven-business-consistency-takeaways.md) |
+| 2 | Event Loss, Duplicates & Reprocessing | [How to Handle Event Loss, Duplicates & Reprocessing](how-to-handle-event-loss-duplicate-events-and-reprocessing-in-event-driven-architecture.md) | [`broker-141` – `broker-146`](../../system-design-architecture/messaging/event-loss-duplicates-reprocessing-takeaways.md) |
+| 3 | When to Avoid Event-Driven Architecture | [When Should You Avoid EDA](when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md) | [`broker-129` – `broker-133`](../../system-design-architecture/messaging/when-to-avoid-event-driven-architecture-takeaways.md) |
+| 4 | Replaying Millions of Old Events | [How to Design Consumers That Survive Replays](how-to-design-event-driven-consumers-that-survive-replaying-millions-of-old-events.md) | [`broker-159` – `broker-164`](../../system-design-architecture/messaging/event-driven-consumer-replay-takeaways.md) |
+| 5 | What the Outbox Pattern Solves & Doesn't | [What the Outbox Pattern Actually Solves](what-the-outbox-pattern-actually-solves-and-what-it-doesnt.md) | [`broker-153` – `broker-158`](../../system-design-architecture/messaging/outbox-pattern-capabilities-limits-takeaways.md) |
+| 6 | Schema Evolution Across Multiple Consumers | *Treat events as immutable public contracts; additive evolution* | [`broker-124`](../../system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md#broker-124-multi-version-consumer-event-schema-evolution) |
+| 7 | Event-Driven vs Message-Driven Systems | [The Real Difference Between Event and Message Driven](the-real-difference-between-event-driven-and-message-driven-systems.md) | [`broker-171` – `broker-176`](../../system-design-architecture/messaging/event-driven-vs-message-driven-takeaways.md) |
+| 8 | Debugging Production Flows Across 10 Services | [How to Debug a Production Issue Spanning 10 Services](how-to-debug-a-production-issue-that-spans-10-event-driven-services.md) | [`broker-165` – `broker-170`](../../system-design-architecture/messaging/event-driven-cross-service-debugging-takeaways.md) |
+| 9 | Event Immutability vs Corrections | [Should Events Be Immutable Forever](should-events-be-immutable-forever-or-can-they-be-corrected-later.md) | [`broker-177` – `broker-182`](../../system-design-architecture/messaging/event-immutability-and-corrections-takeaways.md) |
+| 10 | Preventing EDA Distributed Monoliths | *Enforce domain boundaries & avoid internal data leakage* | [`broker-128`](../../system-design-architecture/messaging/event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths) |
+
