@@ -50,6 +50,10 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | SWIFT Network | [`#swift-network`](#swift-network) |
 | ISO 20022 | [`#iso-20022`](#iso-20022) |
 | Kernel Bypass (DPDK/Solarflare) | [`#kernel-bypass-dpdksolarflare`](#kernel-bypass-dpdksolarflare) |
+| Digital Wallet | [`#digital-wallet`](#digital-wallet) |
+| Wallet Top-Up | [`#wallet-top-up`](#wallet-top-up) |
+| P2P Transfer (Peer-to-Peer) | [`#p2p-transfer-peer-to-peer`](#p2p-transfer-peer-to-peer) |
+| Wallet-to-Bank Transfer (Payout) | [`#wallet-to-bank-transfer-payout`](#wallet-to-bank-transfer-payout) |
 
 ---
 
@@ -908,3 +912,97 @@ A **networking architecture technique** that allows user-space applications to r
 
 ### Also see
 - [Matching Engine](#matching-engine) · [LMAX Disruptor](#lmax-disruptor)
+
+---
+
+## Digital Wallet
+
+A **stored-value financial system** (closed-loop, semi-closed, or open-loop) that maintains electronic balances on behalf of users, facilitating atomic balance updates, top-ups from external payment methods, peer-to-peer transfers, merchant payments, and cash-out withdrawals while enforcing strict regulatory limits and double-entry accounting.
+
+### Key Characteristics
+- **Prepaid Stored Value**: Represents electronic money issued against customer fiat currency deposits.
+- **Double-Entry Ledger Architecture**: Separates balance snapshot caching from the immutable transaction ledger of debits and credits.
+- **Atomic Concurrency Control**: Uses distributed locking (e.g., Redis Redlock) and row-level database transactions (`SELECT FOR UPDATE`) to prevent race conditions and overdrafts.
+- **Multi-Rail Interoperability**: Integrates with cards, bank rails (ACH, UPI, SEPA), and external payment gateways for money movement.
+- **Tiered KYC & Compliance**: Enforces daily, monthly, and per-transaction limits based on customer verification tier (min-KYC vs. full-KYC).
+
+### When to Use
+- Fintech applications, super-apps, and e-commerce platforms requiring seamless in-app checkout, instant refunds, or closed-loop rewards.
+- Peer-to-peer remittance platforms and instant payment ecosystems.
+
+### When NOT to Use
+- Systems where the merchant only acts as a pass-through payment gateway and does not hold user funds.
+- Traditional retail banking accounts governed by statutory banking charters (unless operating under an e-money or PPI license).
+
+### Also see
+- [Ledger (Double-Entry)](#ledger-double-entry) · [Wallet Top-Up](#wallet-top-up) · [P2P Transfer (Peer-to-Peer)](#p2p-transfer-peer-to-peer) · [Wallet-to-Bank Transfer (Payout)](#wallet-to-bank-transfer-payout) · [KYC (Know Your Customer)](#kyc-know-your-customer)
+
+---
+
+## Wallet Top-Up
+
+The process of **injecting funds into a digital wallet** from external funding sources (bank accounts, debit/credit cards, UPI, net banking) via payment gateways, updating the user's available balance upon verified settlement or authorization webhook.
+
+### Key Characteristics
+- **Two-Phase Ingestion**: Initiates with a pending transaction state, confirmed via asynchronous gateway webhooks or redirect callbacks.
+- **Idempotency Safeguards**: Guards against duplicate webhook deliveries using unique transaction tokens and database idempotency keys.
+- **Double-Entry Flow**: Debits a gateway clearing account while crediting the user's internal wallet liability account.
+- **Velocity Limit Validation**: Verifies top-up caps against customer KYC status and fraud risk rules before initiating external charges.
+
+### When to Use
+- Adding money to prepaid instruments, digital wallets, or merchant store credit accounts.
+- Auto-reload workflows triggered when a wallet drops below a predefined balance threshold.
+
+### When NOT to Use
+- Direct pass-through card payments where funds bypass the wallet and settle directly to a merchant.
+- Inter-wallet balance transfers (use P2P transfers).
+
+### Also see
+- [Digital Wallet](#digital-wallet) · [Payment Gateway](#payment-gateway) · [Clearing Account](#clearing-account) · [Idempotency Key](../reference-dictionary/cqrs-event-driven.md#idempotency)
+
+---
+
+## P2P Transfer (Peer-to-Peer)
+
+The **real-time electronic movement of funds between two digital wallet accounts** within the same wallet ecosystem, executing debit and credit operations atomically without passing through external banking rails.
+
+### Key Characteristics
+- **Zero Interbank Latency**: Executes instantaneously within the wallet's internal ledger without third-party clearing delay.
+- **Deadlock-Free Lock Ordering**: Acquires distributed locks on sender and receiver wallet IDs in a deterministic order (e.g., sorted lexicographically) to prevent circular wait deadlocks.
+- **Atomic Balance & Ledger Update**: Debits sender wallet, credits receiver wallet, and inserts corresponding ledger journal entries within a single ACID database transaction.
+- **Rolling Velocity Limit Checking**: Enforces P2P sending/receiving volume caps and peer relationship risk scoring.
+
+### When to Use
+- Person-to-person money transfers, bill splitting, and gift transfers between platform users.
+- Sub-second internal value transfers between user sub-accounts.
+
+### When NOT to Use
+- Cross-platform or interbank transfers requiring external settlement networks (e.g., ACH, Wire, SEPA).
+- Commercial merchant checkouts with merchant fees and escrow requirements (use Merchant Payments).
+
+### Also see
+- [Digital Wallet](#digital-wallet) · [Ledger (Double-Entry)](#ledger-double-entry) · [Wallet-to-Bank Transfer (Payout)](#wallet-to-bank-transfer-payout)
+
+---
+
+## Wallet-to-Bank Transfer (Payout)
+
+The process of **withdrawing stored value from a digital wallet back into a linked external bank account** (also known as cash-out or disbursement), requiring fund reservation, interbank rail initiation, and final settlement confirmation.
+
+### Key Characteristics
+- **Balance Reservation (Hold)**: Moves funds from `available_balance` to `held_balance` immediately upon request to prevent double-spending during processing.
+- **Asynchronous Payout Rails**: Dispatches payout instructions to external banking networks (IMPS, NEFT, ACH, SEPA Instant) via banking APIs or payout aggregators.
+- **Two-Phase Completion / Reversal**: On payout success, permanently burns the held balance and credits the bank settlement account; on failure, rolls back the held balance back to available balance.
+- **Regulatory Compliance & AML**: Mandates full-KYC verification and daily withdrawal limits in accordance with central bank payment system regulations.
+
+### When to Use
+- Allowing wallet users to withdraw stored funds to verified personal bank accounts.
+- Merchant payout disbursements and creator economy earnings withdrawals.
+
+### When NOT to Use
+- Immediate in-app purchases or merchant payments.
+- Simple internal balance reallocations that do not touch external banking rails.
+
+### Also see
+- [Digital Wallet](#digital-wallet) · [Settlement](#settlement) · [Bank Adapter](#bank-adapter) · [Transaction Reversal](#transaction-reversal)
+
