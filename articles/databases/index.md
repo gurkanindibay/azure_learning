@@ -26,3 +26,4 @@ Source articles covering databases patterns, strategies, and case studies.
 - [why-most-cdc-pipelines-break-at-scale](why-most-cdc-pipelines-break-at-scale.md)
 - [elasticsearch-is-dead-instacart-proved-it](elasticsearch-is-dead-instacart-proved-it.md)
 - [shopify-replaced-redis-with-mysql](shopify-replaced-redis-with-mysql.md)
+- [i-increased-the-database-connection-pool-then-my-api-got-slower](i-increased-the-database-connection-pool-then-my-api-got-slower.md)

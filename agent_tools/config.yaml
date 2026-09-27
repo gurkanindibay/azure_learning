@@ -102,6 +102,8 @@ takeaway_domains:
       - "articles/databases/elasticsearch-is-dead-instacart-proved-it.md"
       - "system-design-architecture/databases/40-db-key-takeaways.md"
       - "articles/databases/shopify-replaced-redis-with-mysql.md"
+      - "system-design-architecture/databases/41-db-key-takeaways.md"
+      - "articles/databases/i-increased-the-database-connection-pool-then-my-api-got-slower.md"
   tx:
     file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"

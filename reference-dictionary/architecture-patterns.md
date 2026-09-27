@@ -74,6 +74,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Nanoservices | [`#nanoservices`](#nanoservices) |
 | Dual-Protocol Architecture | [`#dual-protocol-architecture`](#dual-protocol-architecture) |
 | Lockstep Deployment | [`#lockstep-deployment`](#lockstep-deployment) |
+| Little's Law | [`#littles-law`](#littles-law) |
 
 ---
 
@@ -1414,6 +1415,34 @@ A **Lockstep Deployment** (also known as a **Synchronized Deployment** or **Coor
 
 ### Also see
 - [Distributed Monolith](#distributed-monolith) · [Coordination Cost](#coordination-cost) · [Public Event](cqrs-event-driven.md#public-event) · [Expand and Contract Pattern](#expand-and-contract-pattern)
+
+---
+
+## Little's Law {#littles-law}
+
+A fundamental theorem in queueing theory (formulated by John Little in 1961) stating that the long-term average number of items in a stationary queueing system $L$ is equal to the long-term average effective arrival rate $\lambda$ multiplied by the average time $W$ that an item spends in the system:
+
+$$L = \lambda W \quad \text{or} \quad \text{Concurrency} \approx \text{Throughput} \times \text{Latency}$$
+
+In software architecture and system design, Little's Law governs capacity planning, thread pool sizing, database connection pool sizing, and in-flight request limits.
+
+### Key Characteristics
+- **Distribution-independent**: Holds true regardless of arrival distribution (Poisson, bursty), service time distribution, or internal queuing discipline (FIFO, LIFO, priority).
+- **In-flight work estimation**: Enables calculating the exact number of concurrent database connections, HTTP requests, or thread workers needed to sustain a target throughput SLA without queue buildup.
+- **Queueing vs. capacity boundary**: Demonstrates that increasing concurrency beyond $L = \lambda W$ does not increase throughput ($\lambda$); instead, it increases wait time ($W$), pushing systems into saturation and contention collapse.
+- **Capacity sizing formula**: Used to calculate required resources: $\text{Connections} = \text{Target QPS} \times \text{Average Query Duration}$.
+
+### When to Use
+- Sizing thread pools, worker queues, and database connection pools (e.g., HikariCP, PgBouncer).
+- Estimating server capacity and autoscaling thresholds under projected peak traffic.
+- Validating whether a reported latency increase is caused by capacity exhaustion or increased queue wait times.
+
+### When NOT to Use
+- Non-stationary or unstable systems where arrival rate $\lambda$ exceeds maximum service capacity (system is exploding, queues grow infinitely).
+- Systems with transient batch bursts where steady-state assumptions do not hold over the observation window.
+
+### Also see
+- [Connection Pooling](databases.md#connection-pooling) · [Contention Collapse](databases.md#contention-collapse) · [Database Backpressure](databases.md#database-backpressure) · [Back-of-the-Envelope Estimation](#back-of-the-envelope-estimation)
 
 
 

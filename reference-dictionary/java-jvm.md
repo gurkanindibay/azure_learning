@@ -53,6 +53,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 | AOP Proxy Self-Invocation | [`#aop-proxy-self-invocation`](#aop-proxy-self-invocation) |
 | Type-Safe Configuration Properties | [`#type-safe-configuration-properties`](#type-safe-configuration-properties) |
 | RestClient | [`#restclient`](#restclient) |
+| HikariCP | [`#hikaricp`](#hikaricp) |
 
 ---
 
@@ -828,6 +829,30 @@ A **fluent, synchronous HTTP client** introduced in Spring Framework 6.1 and Spr
 ### Also see
 - [Virtual Threads](#virtual-threads) — enables RestClient to scale to high concurrent request volumes
 - [Type-Safe Configuration Properties](#type-safe-configuration-properties) — supplies client connection settings
+
+---
+
+## HikariCP {#hikaricp}
+
+A lightweight, zero-overhead, ultra-fast **JDBC connection pool library for Java and the JVM**, and the default connection pool in Spring Boot 2.x and 3.x.
+
+### Key Characteristics
+- **Bytecode optimization**: Employs Javassist bytecode generation and specialized data structures (e.g., `FastList` eliminating array range checks, `ConcurrentBag` lock-free item tracking) to achieve microsecond-level connection borrow and return operations.
+- **Concurrency gate**: Rather than manufacturing database capacity, HikariCP bounds the number of application threads allowed to interact with the database concurrently via `maximumPoolSize`.
+- **Fail-fast timeout controls**: Features strict `connectionTimeout` (default 30,000ms, recommended 2,000–5,000ms for web APIs) and `validationTimeout` to fail fast and shed load during database saturation.
+- **Metric exposure**: Native Micrometer and Dropwizard metrics exposing `hikaricp.connections.acquire` (wait time), `hikaricp.connections.active`, `hikaricp.connections.pending`, and `hikaricp.connections.timeout`.
+
+### When to Use
+- Default connection pooling provider for all relational database access (PostgreSQL, MySQL, Oracle, SQL Server) in Spring Boot and JVM backend services.
+- Microservices requiring high-throughput connection acquisition with low CPU and memory footprint.
+- Systems requiring fine-grained pool telemetry to detect thread contention and connection leaks.
+
+### When NOT to Use
+- Reactive non-blocking database access using R2DBC (use `r2dbc-pool` instead).
+- Serverless functions (e.g., AWS Lambda, Azure Functions) with rapid ephemeral lifecycles where persistent application-side pooling is replaced by cloud-native proxies (e.g., RDS Proxy, Azure Flexible Server PgBouncer).
+
+### Also see
+- [Connection Pooling](databases.md#connection-pooling) · [Connection Acquisition Latency](databases.md#connection-acquisition-latency) · [Database Backpressure](databases.md#database-backpressure) · [Virtual Threads](#virtual-threads)
 
 
 

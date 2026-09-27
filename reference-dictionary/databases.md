@@ -71,6 +71,7 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 | tsvector & ts_rank | [`#tsvector-ts-rank`](#tsvector-ts-rank) |
 | Read Replica | [`#read-replica`](#read-replica) |
 | N+1 Query Problem | [`#n1-query-problem`](#n1-query-problem) |
+| Contention Collapse | [`#contention-collapse`](#contention-collapse) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1393,5 +1394,29 @@ An Object-Relational Mapping (ORM) and data-access performance anti-pattern wher
 ### Also see
 - [Connection Pooling](#connection-pooling) — pool exhaustion is the primary failure mode of N+1 cascades
 - [Read Replica](#read-replica) — offloading read queries does not solve underlying N+1 round-trip amplification
+
+---
+
+## Contention Collapse {#contention-collapse}
+
+A pathological system state in shared database engines and distributed concurrency systems where **increasing load or concurrency beyond the saturation threshold causes aggregate throughput to drop precipitously rather than plateauing, while response times degrade exponentially**.
+
+### Key Characteristics
+- **Vicious queuing feedback loop**: As concurrent queries or transactions compete for fixed hardware resources (CPU scheduling cores, memory bus, lock tables, buffer pool latches, WAL flush queues), individual execution durations increase.
+- **Resource holding bloat**: Slower queries hold database connections, row locks, and shared memory latches longer, compounding wait times for queued incoming requests.
+- **Context-switching penalty**: OS kernel CPU utilization shifts from productive user-space query execution to kernel-space context switching, spinlock resolution, and latch contention.
+- **Tail latency explosion**: First detectable in $P_{95}$ and $P_{99}$ latency metrics long before average $P_{50}$ latency degrades noticeably.
+
+### When to Use
+- Diagnosing database performance degradation where adding connections or threads worsens throughput and latency.
+- Capacity planning, stress testing, and establishing safe concurrency limits (bulkheads) for client connection pools (HikariCP, PgBouncer).
+- Setting auto-throttling and load-shedding policies before system collapse occurs.
+
+### When NOT to Use
+- Linear resource exhaustion where the system gracefully plateaus at maximum throughput without a sharp drop-off (smooth saturation).
+- Single-query performance bugs that are independent of concurrent workload volume.
+
+### Also see
+- [Connection Pooling](#connection-pooling) · [Connection Storm](#connection-storm) · [Connection Acquisition Latency](#connection-acquisition-latency) · [Database Backpressure](#database-backpressure) · [Little's Law](architecture-patterns.md#littles-law)
 
 

@@ -22,6 +22,7 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [38-db-key-takeaways.md](38-db-key-takeaways.md) | `db-37` – `db-40` | State polling vs mutation streaming failure modes, Netflix DBLog non-blocking snapshots, Stream partition ordering, Warehouse idempotent MERGE |
 | [39-db-key-takeaways.md](39-db-key-takeaways.md) | `db-41` – `db-44` | Document denormalization vs relational normalization for write-heavy catalogs, In-database computation pushdown, pgvector vs standalone FAISS, Search engine liability boundary |
 | [40-db-key-takeaways.md](40-db-key-takeaways.md) | `db-45` – `db-49` | High-contention inventory reservations, Dual-write elimination via relational consolidation, Unit-level row modeling, Non-blocking FOR UPDATE SKIP LOCKED, Bounded working pool pattern |
+| [41-db-key-takeaways.md](41-db-key-takeaways.md) | `db-50` – `db-54` | Database connection pool sizing & contention, Connection as a concurrency gate, Little's Law & saturation curve, Latency decomposition, Autoscaling connection multiplier, Multi-tier PgBouncer multiplexing |
 
 
 
