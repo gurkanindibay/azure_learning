@@ -68,6 +68,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Reversing Entry | [`#reversing-entry`](#reversing-entry) |
 | Public Event | [`#public-event`](#public-event) |
 | Internal Event | [`#internal-event`](#internal-event) |
+| Event Ordering | [`#event-ordering`](#event-ordering) |
+| Out-of-Order Event | [`#out-of-order-event`](#out-of-order-event) |
+| Late-Arriving Event | [`#late-arriving-event`](#late-arriving-event) |
 
 
 ---
@@ -1288,5 +1291,65 @@ An **Internal Event** (also known as a **Domain Event**) — an event emitted an
 ### Also see
 - [Public Event](#public-event) · [Event Sourcing](#event-sourcing) · [Bounded Context](architecture-patterns.md#bounded-context)
 
+---
 
+## Event Ordering
 
+The guarantee or architectural mechanism ensuring that a sequence of business events representing state transitions of an entity are processed in the exact order they occurred or were intended to be applied, either through partition keying, logical sequence numbers, or event sourcing projection replay.
+
+### Key Characteristics
+- **Transport vs Business Ordering**: Broker FIFO guarantees (such as Kafka single-partition ordering) ensure delivery sequence within a partition but cannot prevent producer-side ordering errors or multi-path reordering.
+- **Entity Locality**: Enforced at the messaging layer by consistently keying all lifecycle events with the root entity ID (`order_id`).
+- **Logical Clocks & Sequence Numbers**: Monotonically increasing numbers assigned by the producing aggregate to detect gaps and out-of-sequence arrivals at the application layer.
+
+### When to Use
+- Workflows where subsequent state transitions are strictly dependent on previous states (e.g., `OrderPlaced` → `PaymentReceived` → `OrderShipped` → `OrderDelivered`).
+- Financial ledgers, inventory tracking, and state machine transitions.
+
+### When NOT to Use
+- Independent telemetry, high-volume sensor metrics, or commutative operations where arrival order does not alter final state.
+
+### Also see
+- [Out-of-Order Event](#out-of-order-event) · [Late-Arriving Event](#late-arriving-event) · [Event Sourcing](#event-sourcing) · [Partition Key](messaging.md#partition-key) · [Message Ordering](messaging.md#message-ordering)
+
+---
+
+## Out-of-Order Event
+
+An **Out-of-Order Event** is an event that arrives at a consumer out of chronological sequence relative to other events belonging to the same entity or transaction, typically caused by network retries, multi-partition routing, consumer group rebalancing, or multi-service producer latency variations.
+
+### Key Characteristics
+- **Gap Detection**: Consumers detect missing predecessor events by comparing the event's sequence number against `last_processed_sequence`.
+- **Three-Way Branching**: Evaluated as process immediately (`seq == last + 1`), safe discard (`seq <= last`), or buffer (`seq > last + 1`).
+- **Stateful Buffering**: Requires consumers to temporarily hold future events in memory or an external store (e.g., Redis sorted sets) until predecessor events arrive or a timeout expires.
+
+### When to Use
+- State machine consumers that must prevent inverted execution (e.g., preventing delivery confirmation before order dispatch).
+- Event streaming pipelines operating across multi-tenant or multi-service boundaries.
+
+### When NOT to Use
+- Commutative event architectures where operations can be applied in arbitrary order without state corruption.
+
+### Also see
+- [Event Ordering](#event-ordering) · [Late-Arriving Event](#late-arriving-event) · [Versioned Aggregates](#versioned-aggregates) · [Sliding Window](caching.md#sliding-window)
+
+---
+
+## Late-Arriving Event
+
+A **Late-Arriving Event** is an event that arrives at a consumer after subsequent lifecycle events for the same entity have already been processed, often delayed by hours or days due to prolonged network partitions, producer retries, or extended consumer backlog recovery.
+
+### Key Characteristics
+- **Semantic Bifurcation**: Processing strategy depends strictly on whether the event is an idempotent state snapshot or a non-idempotent cumulative delta.
+- **Idempotent Snapshot Discard**: State updates (e.g., `AddressUpdated`) superseded by higher versions can be safely dropped as silent no-ops.
+- **Non-Idempotent Delta Compensation**: Cumulative mutations (e.g., `BalanceDebited`, `InventoryDeducted`) cannot be discarded and require compensating ledger entries or human reconciliation queues.
+
+### When to Use
+- Designing resilient consumers that handle backlog draining, cross-region replication latency, and offline mobile sync.
+- Financial ledgers and inventory systems with strict auditing requirements.
+
+### When NOT to Use
+- Ephemeral presence notifications or cache invalidation events where stale messages have zero business impact.
+
+### Also see
+- [Out-of-Order Event](#out-of-order-event) · [Event Ordering](#event-ordering) · [Compensating Event](#compensating-event) · [Idempotency](#idempotency)
