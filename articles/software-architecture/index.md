@@ -22,3 +22,4 @@ Source articles covering software architecture patterns, strategies, and case st
 - [forward-deployed-engineer-cultural-fit-interview-questions](forward-deployed-engineer-cultural-fit-interview-questions.md)
 - [microservices-join-queries-solutions](microservices-join-queries-solutions.md)
 - [10-microservices-misconceptions-you-must-unlearn](10-microservices-misconceptions-you-must-unlearn.md)
+- [10-popular-architecture-practices-harm](10-popular-architecture-practices-harm.md)

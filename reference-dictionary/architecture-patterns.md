@@ -75,6 +75,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Dual-Protocol Architecture | [`#dual-protocol-architecture`](#dual-protocol-architecture) |
 | Lockstep Deployment | [`#lockstep-deployment`](#lockstep-deployment) |
 | Little's Law | [`#littles-law`](#littles-law) |
+| Temporal Coupling | [`#temporal-coupling`](#temporal-coupling) |
+| Backend for Frontend (BFF) | [`#backend-for-frontend-bff`](#backend-for-frontend-bff) |
 
 ---
 
@@ -1444,5 +1446,60 @@ In software architecture and system design, Little's Law governs capacity planni
 ### Also see
 - [Connection Pooling](databases.md#connection-pooling) · [Contention Collapse](databases.md#contention-collapse) · [Database Backpressure](databases.md#database-backpressure) · [Back-of-the-Envelope Estimation](#back-of-the-envelope-estimation)
 
+---
 
+## Temporal Coupling {#temporal-coupling}
+
+A form of coupling where the correctness or availability of one service's operation depends on another service being reachable and responsive at the exact moment of the call. Unlike data coupling (shared schema) or behavioral coupling (shared logic), temporal coupling is about time: if the dependency is slow or down, the caller is blocked or fails.
+
+Temporal coupling most commonly appears when a central data-owning service is called live on every request from every consumer. During peak traffic or when the owner degrades, every dependent flow degrades simultaneously.
+
+### Key Characteristics
+- **Runtime dependency**: The consuming service cannot complete its work unless the owning service responds within the call window.
+- **Blast radius amplification**: One degraded service can cause cascading slowdowns across all services that call it synchronously.
+- **Invisible during low traffic**: Temporal coupling is silent when the dependency is fast; it only surfaces under load or during incidents.
+- **Distinguishable from data ownership**: Having one authoritative owner for data is fine and necessary; the problem is requiring live calls to that owner for every read.
+
+### When to Use (i.e., when live calls are acceptable)
+- Data that must be exact at the moment of use: account balance checks before a payment, inventory reservation at checkout.
+- Low-fan-out: only one or two services depend on the data owner.
+- The owner has a higher SLA than any local-copy staleness tolerance.
+
+### When NOT to Use
+- Reference or configuration data that can tolerate seconds or minutes of staleness (product catalog, user preferences, tax rates).
+- High-fan-out scenarios where many services call the same owner, magnifying the blast radius.
+- When the owner's SLA is lower than the consumer's availability target.
+
+### Mitigation
+Separate write ownership from read availability: the central service owns writes; consumers maintain local read replicas updated asynchronously via events. Consumers serve reads from local copies even when the owner is degraded.
+
+### Also see
+- [Read/Write Path Separation](#readwrite-path-separation) · [arch-30 Temporal Coupling via Source of Truth](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-30-temporal-coupling-via-source-of-truth) · [CQRS Takeaways](../system-design-architecture/cqrs-fintech/cqrs-fintech.md)
+
+---
+
+## Backend for Frontend (BFF) {#backend-for-frontend-bff}
+
+An architectural pattern where each client type (web, iOS, Android, third-party partner) gets a dedicated thin API backend owned by the client team, rather than calling a shared API gateway that aggregates data from multiple services. The BFF is responsible only for shaping, filtering, and aggregating responses for its specific client.
+
+First articulated by Sam Newman (2015) as a solution to the "general-purpose API" problem in microservices, where a single API gateway accumulates client-specific logic and becomes a shared-ownership bottleneck.
+
+### Key Characteristics
+- **Client team ownership**: The BFF is owned and deployed by the team that owns the client, not a central platform team. Changes ship independently without waiting on a gateway team queue.
+- **Response shaping**: Aggregates and transforms backend data into the exact shape the client needs, avoiding over-fetching and under-fetching.
+- **Independent release cadence**: Each BFF can be versioned, scaled, and deployed on the client's own schedule.
+- **Limited blast radius**: A failure or deploy of one BFF does not affect other clients.
+
+### When to Use
+- Multiple clients with meaningfully different data requirements (e.g., mobile needs compact payloads; web needs richer data).
+- Teams want to ship client changes without a shared-gateway bottleneck.
+- The shared gateway is accumulating business logic that belongs closer to the client.
+
+### When NOT to Use
+- A single client type with stable requirements — the overhead of a separate service is not warranted.
+- When cross-cutting concerns (auth, rate limiting, TLS termination) are the only gateway function — keep those in the shared gateway.
+- Small teams where owning an extra service per client exceeds team capacity.
+
+### Also see
+- [Reverse Proxy, LB & API Gateway Takeaways](../system-design-architecture/api-network/reverse-proxy-lb-gateway.md) · [arch-29 Bloated API Gateway](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-29-bloated-api-gateway) · [Microservices](#microservices)
 
