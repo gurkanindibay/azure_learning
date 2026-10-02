@@ -72,6 +72,11 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 | Read Replica | [`#read-replica`](#read-replica) |
 | N+1 Query Problem | [`#n1-query-problem`](#n1-query-problem) |
 | Contention Collapse | [`#contention-collapse`](#contention-collapse) |
+| Asynchronous Commit | [`#asynchronous-commit`](#asynchronous-commit) |
+| HOT Update (Heap-Only Tuple) | [`#hot-update`](#hot-update) |
+| fillfactor | [`#fillfactor`](#fillfactor) |
+| PostgreSQL COPY Protocol | [`#postgresql-copy-protocol`](#postgresql-copy-protocol) |
+| Checkpoint | [`#checkpoint`](#checkpoint) |
 
 ## effective_io_concurrency {#effective-io-concurrency}
 
@@ -1419,4 +1424,114 @@ A pathological system state in shared database engines and distributed concurren
 ### Also see
 - [Connection Pooling](#connection-pooling) · [Connection Storm](#connection-storm) · [Connection Acquisition Latency](#connection-acquisition-latency) · [Database Backpressure](#database-backpressure) · [Little's Law](architecture-patterns.md#littles-law)
 
+
+---
+
+## Asynchronous Commit {#asynchronous-commit}
+
+A PostgreSQL durability mode (`synchronous_commit = off`) in which a transaction returns success immediately after its WAL record is written to the in-memory WAL buffer, without waiting for the WAL writer to flush it to disk. The internal `walwriter` process flushes WAL blocks on a configurable delay (`wal_writer_delay`, default 10 ms) or when buffers fill.
+
+### Key Characteristics
+- Does **not** risk database corruption or loss of structural consistency — only committed-but-unflushed transactions from the last flush window can be lost.
+- Reduces the per-commit `fsync()` serialization bottleneck, enabling 5–10× higher commit throughput on NVMe drives.
+- Can be set per-session or per-transaction (`SET LOCAL synchronous_commit = off`).
+
+### When to Use
+- High-throughput ingestion workloads where losing up to 10–20 ms of data on a hard crash is acceptable: telemetry, event feeds, activity logs, metrics, time-series.
+
+### When NOT to Use
+- Financial transactions, payment records, audit logs, or any domain where zero data loss is required.
+- Tables replicated synchronously to a standby (the standby may still require a physical flush).
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Checkpoint](#checkpoint) · [Durability](#durability)
+
+---
+
+## HOT Update (Heap-Only Tuple) {#hot-update}
+
+A PostgreSQL optimization that allows an `UPDATE` to a row to be written entirely within the same heap page as the old version, skipping all secondary index updates, when two conditions are met: (1) the page has sufficient free space, and (2) none of the updated columns are part of any secondary index.
+
+### Key Characteristics
+- The updated tuple is linked to the old tuple via an in-page "HOT chain" pointer; index entries continue pointing to the original tuple location.
+- Eliminates index-level write amplification for non-indexed column updates.
+- Reduces WAL volume because no index page changes are written.
+
+### When to Use
+- Tables with frequent `UPDATE` operations on non-indexed columns (e.g., `status`, `last_seen`, `counter`) where write amplification from index maintenance is measured and significant.
+- Combined with a reduced `fillfactor` to guarantee free space is available on each page.
+
+### When NOT to Use
+- When the updated column is part of any secondary index (HOT is automatically suppressed; the optimizer detects this at execution time).
+- Tables that are insert-only — HOT applies only to in-place updates of existing rows.
+
+### Also see
+- [fillfactor](#fillfactor) · [B-Tree Page Split](#b-tree-page-split) · [Write-Ahead Log (WAL)](#write-ahead-log-wal)
+
+---
+
+## fillfactor {#fillfactor}
+
+A PostgreSQL storage parameter that controls what percentage of each heap page is filled with live tuples during initial INSERT operations. The remaining space is reserved as free space for `UPDATE` operations, enabling HOT in-place updates without requiring a new page allocation.
+
+### Key Characteristics
+- Default: `100` (pages filled completely; no reserved slack space).
+- Setting `fillfactor = 80` reserves 20% of each page, trading storage efficiency for HOT update eligibility.
+- Applies per-table: `ALTER TABLE t SET (fillfactor = 80)`.
+- Also applies to indexes: index `fillfactor` reduces page splits under sequential key insertion.
+
+### When to Use
+- Tables with heavy `UPDATE` workloads on non-indexed columns, where HOT optimization is the intended write-path strategy.
+- B-Tree indexes on monotonically increasing keys (e.g., timestamps) to reduce page splits.
+
+### When NOT to Use
+- Insert-only tables with no `UPDATE` activity — the reserved space is wasted.
+- Tables under severe storage constraints where space efficiency is critical.
+
+### Also see
+- [HOT Update (Heap-Only Tuple)](#hot-update) · [B-Tree Page Split](#b-tree-page-split)
+
+---
+
+## PostgreSQL COPY Protocol {#postgresql-copy-protocol}
+
+A PostgreSQL bulk-load interface that streams rows directly into table heap pages, bypassing the SQL parser, query planner, and rewriter. Clients issue `COPY table FROM STDIN WITH (FORMAT binary)` and stream binary-encoded rows via the libpq COPY sub-protocol.
+
+### Key Characteristics
+- Bypasses `pg_parse`, `pg_analyze`, and `pg_rewrite` entirely — rows go directly to the executor's heap insertion path.
+- The binary format eliminates text parsing and type casting overhead on both client and server.
+- Native driver libraries expose streaming APIs: `pgcopy` (Go), `NpgsqlCopyBinaryImporter` (.NET), `asyncpg.copy_records_to_table` (Python).
+- Benchmarks consistently show 3–5× higher throughput than parameterized multi-row `INSERT` queries.
+
+### When to Use
+- Bulk data ingestion pipelines, ETL loads, and high-throughput event streams where insert rate is the primary concern.
+- Replacing multi-value `INSERT` batches when those still cannot reach throughput targets.
+
+### When NOT to Use
+- Row-level constraint violations need to be caught and retried individually — a single constraint violation aborts the entire `COPY` batch.
+- Logical replication or triggers that must fire per-row may not fire correctly through COPY under all configurations.
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Asynchronous Commit](#asynchronous-commit)
+
+---
+
+## Checkpoint {#checkpoint}
+
+A periodic PostgreSQL operation in which the background checkpointer process flushes all dirty shared-buffer pages to disk and writes a checkpoint record to the WAL. After a checkpoint, PostgreSQL can safely recycle or delete older WAL segment files, bounding crash recovery time.
+
+### Key Characteristics
+- Triggered by two conditions: time (`checkpoint_timeout`, default 5 min) or WAL volume (`max_wal_size`, default 1 GB), whichever comes first.
+- `checkpoint_completion_target` (default 0.5) spreads dirty-page writes across a fraction of the checkpoint interval to smooth disk I/O.
+- A **forced checkpoint** fires immediately when `max_wal_size` is exceeded, concentrating all dirty-page writes into a short burst that stalls backend workers.
+- `pg_stat_bgwriter` exposes checkpoint frequency, I/O timing, and forced-vs-scheduled ratios for monitoring.
+
+### When to Use
+- Tuning `max_wal_size`, `checkpoint_timeout`, and `checkpoint_completion_target` is mandatory before deploying high-throughput PostgreSQL workloads (> 10,000 writes/sec).
+
+### When NOT to Use
+- Do not set `checkpoint_timeout` or `max_wal_size` very high on databases where crash recovery time (MTTR) is strictly bounded — larger intervals mean more WAL to replay after a crash.
+
+### Also see
+- [Write-Ahead Log (WAL)](#write-ahead-log-wal) · [Asynchronous Commit](#asynchronous-commit) · [LSN (Log Sequence Number)](#lsn)
 

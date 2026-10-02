@@ -104,6 +104,8 @@ takeaway_domains:
       - "articles/databases/shopify-replaced-redis-with-mysql.md"
       - "system-design-architecture/databases/41-db-key-takeaways.md"
       - "articles/databases/i-increased-the-database-connection-pool-then-my-api-got-slower.md"
+      - "system-design-architecture/databases/42-db-key-takeaways.md"
+      - "articles/databases/how-to-scale-postgresql-to-100k-writes-per-second-without-sharding.md"
   tx:
     file: "concurrency-transactions/concurrency-transactions.md"
     desc: "Concurrency & Transactions"
@@ -495,6 +497,16 @@ takeaway_keywords:
   lsn lag: db
   warehouse reconciliation: db
   idempotent merge: db
+  synchronous_commit: db
+  asynchronous commit: db
+  hot update: db
+  fillfactor: db
+  fill factor: db
+  copy protocol: db
+  checkpoint: db
+  walwriter: db
+  wal_writer_delay: db
+  write amplification: db
   context rot: agentic
   context governor: agentic
   cognitive debris: agentic
@@ -1046,6 +1058,17 @@ dictionary_domains:
       - ts_rank
       - n+1
       - n+1 query
+      - asynchronous commit
+      - synchronous_commit
+      - hot update
+      - heap-only tuple
+      - fillfactor
+      - fill factor
+      - copy protocol
+      - checkpoint
+      - walwriter
+      - wal_writer_delay
+      - write amplification
 
   security-iam.md:
     title: "Security, Identity & Access Management"

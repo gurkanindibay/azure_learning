@@ -23,6 +23,7 @@ Problems and strategies covering database indexing, query performance tuning, SQ
 | [39-db-key-takeaways.md](39-db-key-takeaways.md) | `db-41` – `db-44` | Document denormalization vs relational normalization for write-heavy catalogs, In-database computation pushdown, pgvector vs standalone FAISS, Search engine liability boundary |
 | [40-db-key-takeaways.md](40-db-key-takeaways.md) | `db-45` – `db-49` | High-contention inventory reservations, Dual-write elimination via relational consolidation, Unit-level row modeling, Non-blocking FOR UPDATE SKIP LOCKED, Bounded working pool pattern |
 | [41-db-key-takeaways.md](41-db-key-takeaways.md) | `db-50` – `db-54` | Database connection pool sizing & contention, Connection as a concurrency gate, Little's Law & saturation curve, Latency decomposition, Autoscaling connection multiplier, Multi-tier PgBouncer multiplexing |
+| [42-db-key-takeaways.md](42-db-key-takeaways.md) | `db-55` – `db-60` | PostgreSQL single-node write scaling, Asynchronous commit & fsync bottleneck, Ingestion batching (multi-value INSERT & COPY protocol), HOT updates via fillfactor, WAL buffer & checkpoint tuning, Declarative time-range partitioning, NVMe/PgBouncer hardware topology |
 
 
 
