@@ -77,6 +77,11 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Little's Law | [`#littles-law`](#littles-law) |
 | Temporal Coupling | [`#temporal-coupling`](#temporal-coupling) |
 | Backend for Frontend (BFF) | [`#backend-for-frontend-bff`](#backend-for-frontend-bff) |
+| Kill Switch | [`#kill-switch`](#kill-switch) |
+| Warm Standby | [`#warm-standby`](#warm-standby) |
+| Vendor Lock-in | [`#vendor-lock-in`](#vendor-lock-in) |
+| Premature Optimization | [`#premature-optimization`](#premature-optimization) |
+| Speculative Generalization | [`#speculative-generalization`](#speculative-generalization) |
 
 ---
 
@@ -1502,4 +1507,116 @@ First articulated by Sam Newman (2015) as a solution to the "general-purpose API
 
 ### Also see
 - [Reverse Proxy, LB & API Gateway Takeaways](../system-design-architecture/api-network/reverse-proxy-lb-gateway.md) · [arch-29 Bloated API Gateway](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-29-bloated-api-gateway) · [Microservices](#microservices)
+
+---
+
+## Kill Switch {#kill-switch}
+
+A configuration flag or toggle that can immediately disable a specific system behaviour, integration, or feature in production without a code deployment. Unlike a feature flag, a kill switch is specifically designed as an incident-response lever — its primary purpose is to reduce blast radius during an outage or bug.
+
+### Key Characteristics
+- Binary (on/off) with no gradual rollout semantics
+- Takes effect within seconds to minutes without a deployment
+- Has a designated owner responsible for monitoring and toggling
+- Typically backed by a remote configuration store (e.g., feature-flag service, database row, environment variable)
+
+### When to Use
+- To disable a misbehaving third-party integration without redeploying
+- To stop a runaway background job consuming excessive resources
+- To fall back to a safe degraded mode during an active incident
+
+### When NOT to Use
+- As a permanent configuration option for different tenants or environments (use feature flags or environment config instead)
+- As a substitute for fixing the underlying bug — the switch buys time, not a solution
+- When the toggle itself is not monitored or tested in the off state
+
+### Also see
+- [Feature Flag](deployment-patterns.md#feature-flag) · [arch-24 Configuration Explosion](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-24-configuration-explosion)
+
+---
+
+## Warm Standby {#warm-standby}
+
+A high-availability deployment pattern where a secondary (standby) instance or region is kept running and partially synchronised but handles little or no live traffic. On a primary failure, traffic is redirected to the warm standby, which is already initialised and can accept requests within seconds to a few minutes.
+
+### Key Characteristics
+- Standby is running and reachable but receives no or minimal production traffic
+- Data replication keeps the standby close to current state (seconds to minutes of lag)
+- Failover is faster than a cold standby (which requires provisioning) but slower than an active-active topology
+- Cost is roughly double a single-region deployment
+
+### When to Use
+- When recovery time objective (RTO) is measured in seconds to low minutes rather than zero
+- When the business requires higher availability than a single region but the cost of active-active is not justified
+- For many SaaS products where 99.9% availability (≈ 8.8 h downtime/year) is acceptable
+
+### When NOT to Use
+- When zero-downtime is contractually required and hard dependencies support active-active replication
+- When database replication lag would cause unacceptable data loss during failover (evaluate against RPO)
+
+### Also see
+- [Recovery Point Objective (RPO)](#recovery-point-objective-rpo) · [Recovery Time Objective (RTO)](#recovery-time-objective-rto) · [arch-31 Chasing Nines](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-31-chasing-nines)
+
+---
+
+## Vendor Lock-in {#vendor-lock-in}
+
+A situation in which a system's architecture, data model, or operational workflows become so tightly coupled to a specific vendor's proprietary features or APIs that migrating to an alternative vendor requires significant redesign, data transformation, and risk.
+
+### Key Characteristics
+- Typically accumulates gradually as teams adopt vendor-specific extensions (e.g., PostgreSQL array columns, Kafka log replay, AWS Lambda event sources)
+- Migration cost includes schema translation, behaviour parity verification, and data migration — not just API substitution
+- Generic abstraction layers intended to prevent lock-in often eliminate the vendor-specific features that justified the choice
+
+### When to Use
+- Accepting intentional lock-in is rational when switching cost is lower than the daily friction of an abstraction layer, or when no equivalent alternative exists
+
+### When NOT to Use
+- Do not conflate lock-in avoidance with generic abstraction from day one; defer abstraction until two real backends need to be supported simultaneously
+
+### Also see
+- [arch-25 Premature Vendor Abstraction](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-25-premature-vendor-abstraction) · [Anti-Corruption Layer](#anti-corruption-layer) · [Strangler Fig](#strangler-fig)
+
+---
+
+## Premature Optimization {#premature-optimization}
+
+The practice of investing engineering effort to improve performance, scalability, or efficiency before a measured bottleneck justifies that investment. Coined by Donald Knuth: *"Premature optimization is the root of all evil."* In architecture, it manifests as over-engineering (early microservices, early caching, early multi-region) before real usage patterns are known.
+
+### Key Characteristics
+- Decisions are made on assumptions about future load rather than measurements of current load
+- Complexity is added (and must be maintained) before it delivers value
+- Often produces optimisation of the wrong bottleneck, because the real bottleneck is only visible at real scale
+
+### When to Use
+- Optimisation is justified when a measured signal (profiling, load test result, production alert) identifies a real bottleneck that will be hit within the current growth window
+
+### When NOT to Use
+- When traffic is hypothetical or load estimates are order-of-magnitude guesses
+- For hard-to-reverse architectural decisions (service splits, data model changes) made before a single production user exists
+
+### Also see
+- [arch-23 Premature Scale](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-23-premature-scale) · [arch-28 Cache as Fix](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-28-cache-as-fix) · [YAGNI](design-patterns.md#yagni)
+
+---
+
+## Speculative Generalization {#speculative-generalization}
+
+An engineering anti-pattern in which a system or component is made more general, configurable, or abstract than current requirements demand, in anticipation of future needs that may never arrive. Named as a code smell in Martin Fowler's *Refactoring*. In architecture, it appears as excessive configuration surfaces, unused abstraction layers, and premature multi-tenancy hooks.
+
+### Key Characteristics
+- Unused code paths, configuration keys, or abstraction layers exist solely for hypothetical future use cases
+- Increases cognitive load for every developer who must understand all generalised paths, not just the ones in use
+- Unused paths rot: they accumulate bugs and drift from tested behaviour
+- When the imagined future arrives, its reality rarely matches the earlier generalisation — so the feature is rewritten and the generalisation must also be removed
+
+### When to Use
+- Generalisation is appropriate only when a second, real, concrete use case already exists or is contractually committed
+- Feature flags and kill switches are the sanctioned exception — they serve operational safety, not speculative features
+
+### When NOT to Use
+- When the second use case is described as *"we might need this one day"* without a committed customer or timeline
+
+### Also see
+- [YAGNI](design-patterns.md#yagni) · [arch-24 Configuration Explosion](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-24-configuration-explosion) · [Kill Switch](#kill-switch)
 
