@@ -17,6 +17,7 @@ Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Gen
 | [37-ai-key-takeaways.md](37-ai-key-takeaways.md) | `ai-25` – `ai-27` | RAG chunking vs embeddings: structure-aware chunking, noise-resilient semantic chunking, qualitative chunk inspection audit |
 | [38-ai-key-takeaways.md](38-ai-key-takeaways.md) | `ai-28` – `ai-30` | On-device MoE inference: selective demand-paged expert loading, asynchronous read-compute overlapping, flash throughput-centric edge AI |
 | [39-ai-key-takeaways.md](39-ai-key-takeaways.md) | `ai-31` – `ai-33` | AI content watermarking & provenance: imperceptible statistical token watermarking, cryptographic C2PA content credentials, dual-layer governance |
+| [40-ai-key-takeaways.md](40-ai-key-takeaways.md) | `ai-34` – `ai-38` | Decision-oriented AI models (Jev/System One Models): generation vs. decision axis, typed decision primitives (Noul/Choice/Score), calibrated confidence routing (RLCD), decision models as agentic subsystems, valid-output vs. correct-output semantic gap |
 
 
 ## Cross-References

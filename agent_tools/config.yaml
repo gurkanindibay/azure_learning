@@ -163,6 +163,8 @@ takeaway_domains:
       - "articles/agentic-ai/our-rag-got-better-when-we-fixed-chunking-not-embeddings.md"
       - "articles/agentic-ai/a-284-billion-parameter-ai-model-just-ran-on-a-12gb-phone.md"
       - "articles/agentic-ai/how-does-anthropic-watermark-ai-generated-content.md"
+      - "system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md"
+      - "articles/agentic-ai/jev-typesafe-ai-decision-model.md"
 
   media:
     file: "media-processing/media-processing-pipelines.md"

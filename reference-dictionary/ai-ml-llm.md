@@ -117,6 +117,10 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | LLMOps | [`#llmops`](#llmops) |
 | Semantic Drift | [`#semantic-drift`](#semantic-drift) |
 | Logit (Logits) | [`#logit`](#logit) |
+| System One Model | [`#system-one-model`](#system-one-model) |
+| Jev (Decision Model) | [`#jev-decision-model`](#jev-decision-model) |
+| RLCD (Reinforcement Learning for Calibrated Decisions) | [`#rlcd`](#rlcd) |
+| Noul / Choice / Score (Decision Primitives) | [`#noul-choice-score`](#noul-choice-score) |
 
 ---
 
@@ -2671,3 +2675,130 @@ The unnormalized, raw prediction scores (real numbers spanning $(-\infty, +\inft
 
 ### Also see
 - [Token](#token) · [Structured Outputs](#structured-outputs) · [AI Engineering](#ai-engineering) · [Generative Watermarking](#generative-watermarking) · [40. Software Engineer to AI Engineer Systems Architecture](../../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-68-output-determinism--reliability-engineering-via-structured-outputs)
+
+---
+
+## System One Model
+
+A category of AI model introduced by TypeSafe AI (2026) that is optimized for **bounded, structured decision-making** rather than open-ended text generation. Where a Large Language Model (LLM) produces arbitrary text from a prompt, a System One Model selects from a predefined decision space and returns a label together with a calibrated confidence score.
+
+The name contrasts with the generative-model paradigm ("System Two"-style long-form reasoning) by analogy to Kahneman's cognitive dual-process theory: fast, instinctive judgment vs. deliberate generation.
+
+### Key Characteristics
+
+- **Bounded output space**: Possible outputs are declared upfront (e.g., `{YES, NO}` or `{LOW, MEDIUM, HIGH}`); the model cannot return values outside this set.
+- **Calibrated confidence**: Each decision is accompanied by a probability score trained to reflect empirical accuracy (see [RLCD](#rlcd)).
+- **Decision-optimized training**: The model is trained to maximize calibration and decision accuracy, not text fluency or perplexity on a language corpus.
+- **No format hallucination**: The output format is guaranteed by the model contract; application code does not need to parse or validate enum values.
+
+### When to Use
+
+- Classification, routing, moderation, and scoring tasks where the answer belongs to a known, finite set.
+- High-volume micro-decisions inside agentic AI loops where LLM token cost and latency are prohibitive.
+- Compliance-sensitive automation that requires an auditable, threshold-based decision trail.
+
+### When NOT to Use
+
+- Tasks requiring open-ended text generation: explanation, code synthesis, summarization, conversation.
+- Domains where the decision space is unknown or evolving — System One Models require upfront category definition.
+- Prototyping or exploration phases where flexible LLM output reveals unanticipated answer categories.
+
+### Also see
+- [Jev (Decision Model)](#jev-decision-model) · [RLCD](#rlcd) · [Noul / Choice / Score](#noul-choice-score) · [LLM](#llm) · [Structured Outputs](#structured-outputs) · [Guardrails (AI)](#guardrails-ai)
+- [40. Decision-Oriented AI Models — Key Takeaways](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
+
+---
+
+## Jev (Decision Model)
+
+The first **System One Model** released by TypeSafe AI (September 15, 2026). Jev is a decision-oriented AI model that accepts a question and a bounded decision space, then returns one of the predefined labels together with a calibrated confidence probability.
+
+Jev exposes three typed decision primitives — [Noul, Choice, and Score](#noul-choice-score) — as its output interface. It is positioned not as a replacement for generative LLMs but as a complementary layer in a composed AI stack:
+
+```
+LLM   → generation & reasoning
+Jev   → structured decisions
+Code  → deterministic logic
+Human → high-stakes or uncertain cases
+```
+
+### Key Characteristics
+
+- **Bounded outputs**: Jev cannot return a value outside the declared decision space — eliminating format hallucination while not guaranteeing semantic correctness.
+- **Calibrated confidence via RLCD**: Confidence scores are trained to be empirically meaningful for threshold-based automation.
+- **Pricing**: $42 per billion input tokens (at launch, 2026); low-latency range of tens to hundreds of milliseconds.
+- **Use cases**: Customer support routing, invoice anomaly detection, agentic loop step verification, AI guardrails, policy compliance checking.
+
+### When to Use
+
+- Software needs a fast, cheap, typed decision from a known categorical space.
+- Replacing LLM JSON-mode calls with a model purpose-built for decision calibration.
+- Implementing tiered automation with confidence thresholds (`> 0.95 auto-resolve`, `0.70–0.95 human review`).
+
+### When NOT to Use
+
+- When the output must explain reasoning or produce narrative text — use an LLM.
+- When the decision space is not yet well-defined.
+- As a substitute for empirical evaluation: Jev's bounded output provides format guarantees only; calibration must be validated on production data.
+
+### Also see
+- [System One Model](#system-one-model) · [RLCD](#rlcd) · [Noul / Choice / Score](#noul-choice-score) · [LLM](#llm) · [Hallucination](#hallucination)
+- [40. Decision-Oriented AI Models — Key Takeaways](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
+
+---
+
+## RLCD
+
+**Reinforcement Learning for Calibrated Decisions** — the training approach used by TypeSafe AI to train [Jev](#jev-decision-model). RLCD optimizes a decision model not just for label accuracy but for **probabilistic calibration**: the emitted confidence score should reflect real-world empirical accuracy (i.e., events assigned probability 0.90 should occur approximately 90% of the time).
+
+This distinguishes RLCD from standard classification fine-tuning, which optimizes accuracy or cross-entropy loss but does not explicitly enforce calibration of the output probability distribution.
+
+### Key Characteristics
+
+- **Objective**: Maximize calibration (Brier score, Expected Calibration Error) in addition to label accuracy.
+- **Motivation**: Software automation requires actionable probability thresholds; uncalibrated confidence is more dangerous than prose because it creates false certainty.
+- **Contrast with LLMs**: LLMs generate token probabilities for perplexity minimization — not for externally interpretable decision confidence.
+
+### When to Use
+
+- Any decision model that will drive threshold-based automation (auto-block, auto-resolve, escalate).
+- Compliance and audit contexts requiring quantified uncertainty estimates.
+
+### When NOT to Use
+- Generative tasks where fluency and coherence matter more than calibrated probability output.
+
+### Also see
+- [Jev (Decision Model)](#jev-decision-model) · [System One Model](#system-one-model) · [Noul / Choice / Score](#noul-choice-score)
+- [ai-36: Calibrated Confidence Routing](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-36-calibrated-confidence-routing--actionable-thresholds-for-automation)
+
+---
+
+## Noul / Choice / Score
+
+The three **typed decision primitives** exposed by [Jev](#jev-decision-model) (TypeSafe AI). Each primitive defines the shape of the output decision and its confidence representation:
+
+| Primitive | Semantics | Output shape | Example |
+|:---|:---|:---|:---|
+| **Noul** | Binary (yes/no) decision with confidence | `label ∈ {YES, NO}` + `p ∈ [0, 1]` | `is_fraud = YES, 0.97` |
+| **Choice** | Categorical selection from an enum with confidence | `label ∈ {A, B, C, …}` + `p ∈ [0, 1]` | `team = PAYMENTS, 0.96` |
+| **Score** | Numeric judgment (regression-style) with confidence | `value ∈ [0, 1]` + `p ∈ [0, 1]` | `urgency_score = 0.84` |
+
+### Key Characteristics
+
+- **Type-safe contract**: The model enforces output membership within the declared space — application code receives a typed label, not a string to parse.
+- **Confidence bundled**: Every primitive includes a calibrated probability, enabling threshold-based routing without additional LLM calls or extraction logic.
+- **Composable**: Multiple primitives can be queried independently for a single input, replacing a single LLM call that returns a composite JSON object.
+
+### When to Use
+
+- Anywhere a software system needs an AI judgment that maps cleanly to a binary flag, an enum, or a numeric risk score.
+- Replacing ad hoc LLM JSON-mode + parser patterns with a typed, model-enforced contract.
+
+### When NOT to Use
+
+- When the answer space is open-ended or unknown at query time.
+- When explanation or chain-of-thought reasoning is required alongside the decision.
+
+### Also see
+- [Jev (Decision Model)](#jev-decision-model) · [System One Model](#system-one-model) · [RLCD](#rlcd) · [Structured Outputs](#structured-outputs)
+- [ai-35: Typed Decision Primitives](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-35-noul-choice-score--decision-primitives-as-a-typed-interface)

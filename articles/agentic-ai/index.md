@@ -27,4 +27,5 @@ Source articles covering agentic ai patterns, strategies, and case studies.
 - [Your Git Repository Wasn’t Designed for the AI Era](your-git-repository-wasnt-designed-for-the-ai-era.md)
 - [Software Engineer to AI Engineer: Best Move 2026](software-engineer-to-ai-engineer-best-move-2026.md)
 - [Mutation Testing Closes the Trust Gap in AI Generated Code](mutation-testing-closes-the-trust-gap-in-ai-generated-code.md)
+- [Jev Explained: Why TypeSafe AI Built an AI Model That Makes Decisions Instead of Generating Text](jev-typesafe-ai-decision-model.md)
 
