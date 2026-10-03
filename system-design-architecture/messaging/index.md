@@ -39,6 +39,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 | [event-immutability-and-corrections-takeaways.md](event-immutability-and-corrections-takeaways.md) | `broker-177` – `broker-182` | Historical immutability, Compensating events, Consumer-driven interpretation, Unified monotonic versioning, Cryptographic shredding (GDPR), Kafka compaction vs tiered retention |
 | [event-driven-distributed-monolith-prevention-takeaways.md](event-driven-distributed-monolith-prevention-takeaways.md) | `broker-183` – `broker-188` | Public vs internal event separation, Single-domain fact ownership, Multi-hop choreography depth, Acyclic event topology, Consumer-driven contracts (CDC), Schema registry boundaries |
 | [event-ordering-and-kafka-partitioning-takeaways.md](event-ordering-and-kafka-partitioning-takeaways.md) | `broker-189` – `broker-194` | Broker partition ordering reality, Entity partition key discipline, Application-layer sequence numbering, Sliding window buffers, Timeout reconciliation flows, Late idempotent vs non-idempotent events, Event sourcing projection replay |
+| [kafka-complete-guide-takeaways.md](kafka-complete-guide-takeaways.md) | `broker-195` – `broker-204` | Event Streaming vs Queue vs Pub/Sub, Message Key & partition routing, ISR replication & leader election, At-Most/At-Least/Exactly-Once delivery, Producer batching & linger.ms tuning, acks setting selection, Rebalance Storm & Cooperative Sticky Assignor, Schema Registry & Avro evolution, Outbox Pattern, Hot partition key cardinality |
 
 
 

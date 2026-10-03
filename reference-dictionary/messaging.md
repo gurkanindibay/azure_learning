@@ -87,6 +87,14 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Pipeline Audit Service (Chaperone Pattern) | [`#pipeline-audit-service-chaperone-pattern`](#pipeline-audit-service-chaperone-pattern) |
 | Consumer Proxy Pattern | [`#consumer-proxy-pattern`](#consumer-proxy-pattern) |
 | Kafka Tiered Storage | [`#kafka-tiered-storage`](#kafka-tiered-storage) |
+| KRaft | [`#kraft`](#kraft) |
+| Cooperative Sticky Assignor | [`#cooperative-sticky-assignor`](#cooperative-sticky-assignor) |
+| RecordAccumulator | [`#recordaccumulator`](#recordaccumulator) |
+| Avro | [`#avro`](#avro) |
+| SASL | [`#sasl`](#sasl) |
+| Redpanda | [`#redpanda`](#redpanda) |
+| KStream | [`#kstream`](#kstream) |
+| Sticky Partitioner | [`#sticky-partitioner`](#sticky-partitioner) |
 
 ---
 
@@ -1636,3 +1644,200 @@ A storage architecture for Apache Kafka that decouples high-performance local di
 
 ### Also see
 - [Distributed Commit Log](#distributed-commit-log) · [Log Segment](#log-segment) · [Replay (Kafka Reprocessing)](#replay-kafka-reprocessing)
+
+---
+
+## KRaft
+
+Kafka Raft Metadata Mode (**KRaft**) is a built-in consensus protocol introduced in Apache Kafka 3.x that replaces the external dependency on Apache ZooKeeper for cluster metadata management. KRaft embeds a Raft-based quorum controller directly within the Kafka broker process.
+
+### Key Characteristics
+- **No ZooKeeper dependency**: Eliminates the requirement to operate, monitor, and tune a separate ZooKeeper ensemble alongside Kafka.
+- **Embedded quorum controller**: A subset of brokers (`process.roles=controller`) forms a Raft quorum that elects a controller and replicates partition metadata via a dedicated internal topic (`__cluster_metadata`).
+- **Faster controller failover**: Because metadata is replicated continuously via Raft, controller failover completes in seconds rather than the tens of seconds required under ZooKeeper-based Kafka.
+- **Simpler operational topology**: One fewer distributed system to deploy, monitor, and upgrade.
+- **GA since Kafka 3.3**: ZooKeeper mode is deprecated and removed in Kafka 4.0.
+
+### When to Use
+- All new Kafka deployments on Kafka 3.3 or later — KRaft is the recommended and eventually only mode.
+- When simplifying infrastructure by eliminating the ZooKeeper operational burden.
+
+### When NOT to Use
+- Legacy Kafka versions below 3.3 that do not support KRaft mode (use ZooKeeper mode for those).
+- Migrations in progress — plan a rolling migration from ZooKeeper to KRaft following the official migration tooling.
+
+### Also see
+- [Replication Factor](#replication-factor) · [ISR (In-Sync Replica)](#isr-in-sync-replica) · [Distributed Commit Log](#distributed-commit-log)
+
+---
+
+## Cooperative Sticky Assignor
+
+A Kafka consumer group partition assignment strategy that performs **incremental, non-disruptive rebalances** by revoking only the specific partitions that need to move, rather than revoking all partitions from all consumers simultaneously.
+
+### Key Characteristics
+- **Incremental rebalance**: Only partitions that must be transferred to a newly joining or departing consumer are revoked. All other consumers continue processing uninterrupted during the rebalance.
+- **Sticky**: Re-assigns previously held partitions back to the same consumer after rebalance whenever possible, maximizing local state re-use (critical for Kafka Streams stateful processors).
+- **Two-phase protocol**: Requires 2–3 rebalance rounds to reach a stable assignment vs. 1 for the classic assignor, but this is negligible compared to a full stop-the-world pause.
+- **Configured via**: `partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor`
+- **Available since**: Kafka 2.4 (client) / Kafka 2.5 (broker-side support fully stable).
+
+### When to Use
+- All production consumer groups, especially those with stateful processing (Kafka Streams, Flink) where partition migration is expensive.
+- Groups prone to Rebalance Storms due to slow startup times or heavy per-batch processing.
+
+### When NOT to Use
+- Consumer groups using older Kafka clients (pre-2.4) that do not support the cooperative protocol.
+- Simple, stateless consumers where the classic `RangeAssignor` is sufficient and the operational team prefers simplicity.
+
+### Also see
+- [Rebalance](#rebalance) · [Consumer Group](#consumer-group) · [Kafka Streams](#kafka-streams)
+
+---
+
+## RecordAccumulator
+
+An in-memory buffer within the Kafka **Producer client** that accumulates outgoing records into batches before transmitting them to the broker. It is the core mechanism behind Kafka's producer-side batching and throughput optimization.
+
+### Key Characteristics
+- **Per-partition queues**: The `RecordAccumulator` maintains a separate deque of `ProducerBatch` objects for each topic-partition. Records are appended to the current open batch for their target partition.
+- **Batch triggers**: A batch is sent when either `batch.size` bytes are accumulated OR `linger.ms` milliseconds have elapsed since the first record was added — whichever comes first.
+- **Compression scope**: Compression (`snappy`, `lz4`, `zstd`) is applied at the batch level inside the `RecordAccumulator`, improving compression ratios by operating on multiple related records together.
+- **Backpressure**: If all partition queues are full (controlled by `buffer.memory`), the `send()` call blocks for up to `max.block.ms` before throwing a `TimeoutException`.
+
+### When to Use
+- Understanding and tuning Kafka producer throughput by adjusting `batch.size` and `linger.ms`.
+- Diagnosing producer-side latency or memory pressure issues.
+
+### When NOT to Use
+- `RecordAccumulator` is an internal implementation detail — do not reference it in application business logic. Tune its behavior through the public producer configuration API instead.
+
+### Also see
+- [Message Batching](#message-batching) · [Producer Acknowledgement](#producer-acknowledgement) · [Idempotent Producer](#idempotent-producer)
+
+---
+
+## Avro
+
+Apache Avro is a binary data serialization format defined by a JSON schema. In Kafka ecosystems, Avro is the dominant serialization format used alongside a **[Schema Registry](#schema-registry)** to enforce schema contracts between producers and consumers.
+
+### Key Characteristics
+- **Schema-embedded binary encoding**: Data is serialized as compact binary (not JSON text). The schema ID (not the full schema) is prepended to each message; the full schema is fetched from the Schema Registry on first use and cached.
+- **Schema evolution**: Avro defines formal compatibility modes (BACKWARD, FORWARD, FULL) that allow schemas to evolve without breaking existing producers or consumers, subject to evolution rules (e.g., new fields must have defaults for BACKWARD compatibility).
+- **Language neutrality**: Schemas are defined in JSON; code generators (`avro-tools`, `avro-maven-plugin`) produce language-specific classes for Java, Python, Go, etc.
+- **Compact on wire**: Removes field names from the binary payload (unlike JSON), yielding 60–80% smaller messages at typical Kafka message sizes.
+
+### When to Use
+- Kafka pipelines where multiple teams share topics and schema governance is required to prevent breaking changes.
+- High-throughput pipelines where JSON's verbosity is a bandwidth bottleneck.
+- Multi-language environments where a language-neutral schema format is needed.
+
+### When NOT to Use
+- Simple pipelines with a single producer and consumer in the same codebase — plain JSON is simpler and easier to debug.
+- Systems without an operational Schema Registry — Avro without a registry loses its primary governance benefit.
+- Event payloads requiring human readability in transit (use JSON or Protobuf with human-readable options).
+
+### Also see
+- [Schema Registry](#schema-registry) · [Schema Contract (Event as Public API)](#schema-contract-event-as-public-api) · [Kafka Connect](#kafka-connect)
+
+---
+
+## SASL
+
+**Simple Authentication and Security Layer** (SASL) is a framework that adds authentication support to network protocols without tying the protocol to a specific authentication mechanism. In Apache Kafka, SASL is the standard authentication layer used to verify client identity before allowing connection to a broker.
+
+### Key Characteristics
+- **Mechanism-agnostic**: Kafka supports multiple SASL mechanisms: `PLAIN` (username/password in cleartext — use only with TLS), `SCRAM-SHA-256`, `SCRAM-SHA-512` (salted challenge-response, no password on wire), `GSSAPI` (Kerberos), and `OAUTHBEARER` (token-based, for cloud IAM integration).
+- **Three-layer Kafka security model**: SASL provides authentication (who are you?). SSL/TLS provides encryption (is traffic encrypted?). ACLs provide authorization (what are you allowed to do?).
+- **SASL/SCRAM** is the most common production choice for non-Kerberos environments: it verifies a shared secret using a challenge-response without transmitting the password.
+- **SASL/OAUTHBEARER** integrates with cloud identity providers (Azure AD, Okta, AWS IAM) for token-based, short-lived credential authentication.
+
+### When to Use
+- Any Kafka cluster that must restrict which clients can connect (i.e., all production clusters).
+- `SASL/SCRAM` for on-premise or self-managed Kafka with username/password management.
+- `SASL/OAUTHBEARER` for cloud-native Kafka (Confluent Cloud, MSK, Event Hubs) with short-lived token rotation.
+
+### When NOT to Use
+- Local development or internal-only test clusters where network-level isolation is sufficient.
+- Do not use `SASL/PLAIN` without TLS — passwords are transmitted in cleartext.
+
+### Also see
+- [Kafka Connect](#kafka-connect) · [Consumer Group](#consumer-group) · [Security, Identity & Access Management](security-iam.md)
+
+---
+
+## Redpanda
+
+Redpanda is a Kafka-API-compatible streaming platform written in C++ that replaces the Java Virtual Machine (JVM) with a user-space I/O architecture to eliminate Garbage Collection pauses and reduce operational overhead.
+
+### Key Characteristics
+- **100% Kafka API compatibility**: Existing Kafka producers, consumers, and admin clients connect to Redpanda without code changes. Kafka Connect, Kafka Streams, and Schema Registry clients are fully compatible.
+- **No JVM / No GC**: Written in C++ using the Seastar framework with kernel-bypass I/O (io_uring on Linux). Eliminates JVM GC pauses, providing predictable sub-millisecond tail latencies.
+- **No ZooKeeper, no KRaft controller separation**: Redpanda uses its own Raft implementation for all metadata and data replication, with no separate metadata quorum process.
+- **Single binary**: The entire cluster (including the equivalent of Kafka's broker + KRaft controller) runs as a single process per node, simplifying deployment.
+- **Built-in Schema Registry and REST Proxy**: These are included as first-class features without separate deployments.
+- **Higher single-node throughput**: Benchmarks show 2–10× higher throughput per node compared to Apache Kafka at equivalent hardware, primarily due to eliminating GC overhead and using kernel-bypass I/O.
+
+### When to Use
+- Latency-sensitive streaming pipelines where JVM GC pauses (even with G1GC or ZGC) are unacceptable.
+- Environments where operational simplicity (single binary, no ZooKeeper) is valued over ecosystem maturity.
+- Drop-in replacement for Kafka where full API compatibility is required but lower resource cost is desired.
+
+### When NOT to Use
+- Organizations heavily invested in Confluent's proprietary ecosystem (ksqlDB, Confluent Control Center), which have no Redpanda equivalents.
+- Workloads requiring mature Kafka Streams stateful processing — Redpanda does not implement Kafka Streams natively (use it with an external Flink or consumer-side state store instead).
+- Teams who rely on Kafka's large, established community and extensive third-party tooling over Redpanda's growing but smaller ecosystem.
+
+### Also see
+- [Kafka vs RabbitMQ](#kafka-vs-rabbitmq) · [Distributed Commit Log](#distributed-commit-log) · [KRaft](#kraft)
+
+---
+
+## KStream
+
+A **KStream** is the primary abstraction in Apache Kafka Streams representing an **unbounded, continuously flowing stream of events**, where each record represents a discrete fact that occurred at a point in time. Unlike a KTable (which represents the latest state per key), a KStream retains every event and never overwrites previous records.
+
+### Key Characteristics
+- **Append-only semantics**: Every new record is treated as an independent fact. Two records with the same key are two distinct events, not an update.
+- **Stateless and stateful operations**: KStreams support map, filter, flatMap (stateless) as well as windowed aggregations and joins (stateful, backed by a RocksDB local state store).
+- **Stream-Table Duality**: A KStream can be converted to a KTable (aggregating or compacting into current state), and a KTable can be converted back into a changelog KStream.
+- **Inter-KStream Joins**: Two KStreams can be joined within a time window to correlate related events (e.g., join `orders` and `payments` streams that arrive within 30 seconds of each other).
+- **Source and sink**: A KStream reads from one or more Kafka topics (source) and can write results to another Kafka topic (sink) via `.to()` or branch to multiple topics.
+
+### When to Use
+- Real-time per-event transformations, enrichment, or routing (e.g., filter fraudulent transactions, enrich orders with user data).
+- Windowed aggregations where the history of events within a time window matters (e.g., count orders per product per minute).
+- Joining two event streams to detect correlated facts within a time window.
+
+### When NOT to Use
+- When you need the current state per key (latest value), not the full event history — use a [KTable](#ktable) instead.
+- When your processing logic requires a SQL-like interface — consider ksqlDB on top of Kafka Streams.
+- For batch processing of bounded datasets — use Apache Flink or Spark instead of Kafka Streams.
+
+### Also see
+- [KTable](#ktable) · [Stream-Table Duality](#stream-table-duality) · [Kafka Streams](#kafka-streams) · [Apache Flink](#apache-flink)
+
+---
+
+## Sticky Partitioner
+
+The **Sticky Partitioner** is Apache Kafka's default producer-side partitioning strategy (since Kafka 2.4) for messages sent **without a Message Key**. Instead of distributing keyless messages one-by-one in round-robin fashion across all partitions, it accumulates messages into a single partition's batch until the batch is full or `linger.ms` expires, then "sticks" to that partition for the next batch — and so on, rotating lazily.
+
+### Key Characteristics
+- **Batch-coherent**: All messages accumulated during a single batch window go to the same partition, maximising `batch.size` fill rate and compression effectiveness before rotating.
+- **Rotation trigger**: The assignor rotates to the next partition only when the current batch is sent (i.e., when `batch.size` is reached or `linger.ms` elapses), not per-message.
+- **Even distribution over time**: Because batches rotate in sequence, partitions receive roughly equal message counts over time — without the per-message overhead of pure round-robin.
+- **No ordering guarantee**: As with all keyless partitioning, there is no per-entity ordering guarantee across partitions. Use a Message Key when ordering matters.
+- **Replaces legacy Round-Robin Partitioner**: The older `RoundRobinPartitioner` distributed messages one at a time, producing tiny under-filled batches. The Sticky Partitioner eliminates this inefficiency.
+
+### When to Use
+- Producing keyless messages where ordering is not required and throughput is the priority (e.g., metrics, click-events, log lines).
+- Replacing a low-cardinality Message Key that causes hot partitions — drop the key entirely and let the Sticky Partitioner distribute load evenly.
+- Any high-volume pipeline where maximising batch fill rate is more important than per-message partition control.
+
+### When NOT to Use
+- When per-entity ordering is required — use a high-cardinality Message Key instead.
+- When an external system requires deterministic partition assignment (e.g., a partition-aware consumer that routes to different downstream sinks based on partition number).
+
+### Also see
+- [Hot Partition](#hot-partition) · [Message Batching](#message-batching) · [RecordAccumulator](#recordaccumulator) · [Cooperative Sticky Assignor](#cooperative-sticky-assignor)

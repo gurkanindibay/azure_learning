@@ -39,5 +39,6 @@ Source articles covering messaging patterns, strategies, and case studies.
 - [Should Events Be Immutable Forever, or Can They Be Corrected Later?](should-events-be-immutable-forever-or-can-they-be-corrected-later.md)
 - [How to Stop an Event-Driven System From Becoming a Distributed Monolith](how-to-stop-an-event-driven-system-from-becoming-a-distributed-monolith.md)
 - [Order Events Arrive Out of Sequence: System Design Deep Dive on Event Ordering and Kafka Partitioning](order-events-arrive-out-of-sequence-system-design-deep-dive-on-event-ordering-and-kafka-partitioning.md)
+- [Apache Kafka — The Complete Guide from Zero to Production](apache-kafka-complete-guide-zero-to-production.md)
 
 
