@@ -880,7 +880,7 @@ graph TD
 
 **Tradeoff**: Seven metrics create alert fatigue if thresholds are too tight. Focus on metrics 2 (acceptance rate) and 6 (oscillation frequency) as leading indicators — they detect problems before users complain.
 
-> **Dictionary**: [Consumer Lag](../../../reference-dictionary/messaging.md#consumer-lag) | **Azure**: [Application Insights](../../../architecture-azure/observability/) (metrics, alerts, dashboards) + [Azure Monitor](../../../architecture-azure/observability/) | **Taxonomy**: §7.1 Observability & Monitoring, §3.3 Event-Driven & Messaging
+> **Dictionary**: [Consumer Lag](../../../reference-dictionary/kafka.md#consumer-lag) | **Azure**: [Application Insights](../../../architecture-azure/observability/) (metrics, alerts, dashboards) + [Azure Monitor](../../../architecture-azure/observability/) | **Taxonomy**: §7.1 Observability & Monitoring, §3.3 Event-Driven & Messaging
 
 ---
 

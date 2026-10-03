@@ -900,43 +900,93 @@ dictionary_domains:
       - memory stall
       - cooperative cancellation
   messaging.md:
-    title: "Messaging"
+    title: "General Messaging & Async Patterns"
     keywords:
-      - kafka
-      - rabbitmq
-      - pubsub
-      - queue
-      - topic
-      - partition
-      - offset
-      - consumer group
-      - dlq
-      - poison message
+      - choreography
+      - orchestration
+      - communication pattern
+      - configuration server
+      - client-side deduplication
+      - batch processing
+      - delivery cursor
+      - redis streams
+      - per-device inbox
       - competing consumers
-      - claim check
-      - large payload
       - atomic deduplication
       - deduplication store
-      - distributed commit log
-      - message batching
+      - deduplication window
+      - dual-write migration
+      - global secondary index
+      - three-layer deduplication
+      - worker self-throttling
+      - progressive enqueuing
+      - bounded deduplication ttl
       - fanout
       - fanout on write
       - fanout on read
       - hybrid fanout
+      - queue
+      - pubsub
+      - message broker
+  kafka.md:
+    title: "Apache Kafka"
+    keywords:
+      - kafka
+      - partition
+      - offset
+      - consumer group
+      - consumer lag
+      - rebalance
+      - dlq
+      - poison message
+      - claim check
+      - large payload
+      - distributed commit log
+      - message batching
       - apache flink
       - flink
       - stream processing
       - write-ahead buffer
-      - worker self-throttling
-      - progressive enqueuing
       - stream sessionization
-      - bounded deduplication ttl
+      - stream-stream join
+      - in-stream keyed deduplication
+      - deterministic consumer
+      - resolved state consumption
       - federated kafka
       - ureplicator
       - chaperone
       - consumer proxy
       - tiered storage
       - pipeline audit
+      - kraft
+      - zookeeper
+      - cooperative sticky assignor
+      - recordaccumulator
+      - avro
+      - schema registry
+      - sasl
+      - redpanda
+      - kstream
+      - ktable
+      - kafka streams
+      - kafka connect
+      - kafka transactions
+      - idempotent producer
+      - idempotent consumer
+      - producer acknowledgement
+      - isr
+      - replication factor
+      - log segment
+      - watermarking
+      - event-time
+      - offset alignment
+      - hot partition
+      - sticky partitioner
+      - at-least-once
+      - exactly-once
+      - rabbitmq
+      - compacted topic
+      - retry topic
   resilience.md:
     title: "Resilience & Fault Tolerance"
     keywords:

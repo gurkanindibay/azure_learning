@@ -11,7 +11,7 @@ generated: { by: process:okf-migrate, at: 2026-07-25T00:00:00Z }
 > **Source**: [Idempotency and Deduplication in Distributed Systems](../../articles/concurrency-transactions/idempotency-deduplication-distributed-systems.md) — Nidhi Jain, Level Up Coding, 2026
 
 > **Also see**: [Concurrency & Transactions](concurrency-transactions.md) (tx-04 Idempotency), [Idempotency in Event-Driven Systems](idempotency-event-driven-system-takeaways.md) (tx-48–tx-52), [Idempotency Hidden Costs](idempotency-hidden-costs.md) (tx-13–tx-18)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Idempotent Producer](../../reference-dictionary/messaging.md#idempotent-producer), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Deduplication Window](../../reference-dictionary/messaging.md#deduplication-window), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock), [Upsert](../../reference-dictionary/databases.md#upsert), [Two Generals Problem](../../reference-dictionary/architecture-patterns.md#two-generals-problem), [Deterministic Processing](../../reference-dictionary/architecture-patterns.md#deterministic-processing)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Idempotent Producer](../../reference-dictionary/kafka.md#idempotent-producer), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Deduplication Window](../../reference-dictionary/messaging.md#deduplication-window), [Saga Pattern](../../reference-dictionary/data-concurrency.md#saga-pattern), [Distributed Lock](../../reference-dictionary/data-concurrency.md#distributed-lock), [Upsert](../../reference-dictionary/databases.md#upsert), [Two Generals Problem](../../reference-dictionary/architecture-patterns.md#two-generals-problem), [Deterministic Processing](../../reference-dictionary/architecture-patterns.md#deterministic-processing)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -48,7 +48,7 @@ generated: { by: process:okf-migrate, at: 2026-07-25T00:00:00Z }
 
 **Tradeoff**: Three layers add operational complexity but provide defense in depth — each layer catches what the layers above it miss. Infrastructure reduces volume, application makes remaining duplicates harmless, and critical-operation patterns protect the truly non-idempotent actions.
 
-> **Dictionary**: [Idempotent Producer](../../reference-dictionary/messaging.md#idempotent-producer), [Deduplication Window](../../reference-dictionary/messaging.md#deduplication-window), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
+> **Dictionary**: [Idempotent Producer](../../reference-dictionary/kafka.md#idempotent-producer), [Deduplication Window](../../reference-dictionary/messaging.md#deduplication-window), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics)
 > **Azure**: Service Bus duplicate detection (infrastructure layer); Azure Cache for Redis SETNX (critical operations layer)
 
 ---
@@ -76,7 +76,7 @@ The unique constraint serializes concurrent attempts: if two consumers race on t
 
 **Tradeoff**: Requires an additional DB table and a write on every message. For high-throughput systems, the idempotency store can become a bottleneck — partition by `idempotencyKey` hash and apply TTL-based cleanup to bound storage.
 
-> **Dictionary**: [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Dictionary**: [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 > **Azure**: Cosmos DB unique key constraints on `/idempotencyKey`; Azure SQL `UNIQUE` constraint with `IGNORE_DUP_KEY`
 
 ---

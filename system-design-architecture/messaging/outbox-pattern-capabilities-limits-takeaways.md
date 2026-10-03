@@ -95,7 +95,7 @@ sequenceDiagram
 
 **Tradeoff**: Prevents duplicate downstream state corruption, but places the responsibility of deduplication and idempotency verification on every downstream consumer rather than relying solely on the producer or publisher.
 
-> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)  
+> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)  
 > **Azure**: [Azure Service Bus Duplicate Detection](../../architecture-azure/integration/service-bus/), [Azure Event Hubs](../../architecture-azure/integration/event-hubs/)  
 > **Related**: [`broker-60`](kafka-producer-ack-idempotency.md#broker-60-idempotent-consumer-with-event-ids), [`broker-143`](event-loss-duplicates-reprocessing-takeaways.md#broker-143-atomic-deduplication-boundary-for-consumer-crashes-prior-to-commit)
 

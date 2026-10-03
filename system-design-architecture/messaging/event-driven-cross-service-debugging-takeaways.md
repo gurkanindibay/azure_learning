@@ -222,7 +222,7 @@ flowchart TD
 
 **Tradeoff**: Requires real-time consumer lag metrics exporting (e.g., Burrow, Prometheus Kafka exporter, Azure Monitor metrics), but prevents incorrect failure diagnosis and unnecessary disruptive operational restarts.
 
-> **Dictionary**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group), [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)  
+> **Dictionary**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group), [Offset Commit](../../reference-dictionary/kafka.md#offset-commit)  
 > **Azure Services**: [Azure Monitor Metrics](../../architecture-azure/observability/azure_monitor/), [Azure Event Hubs](../../architecture-azure/integration/azure_event_hubs/)  
 > **Related**: [`broker-102`](kafka-pipeline-bottlenecks.md#broker-102-consumer-lag-detection), [`broker-106`](kafka-pipeline-bottlenecks.md#broker-106-backpressure--tell-producers-to-stop), [`broker-170`](#broker-170-silent-processing-failure-dropouts-vs-context-rich-dead-letter-topic-routing)  
 
@@ -262,6 +262,6 @@ flowchart LR
 
 **Tradeoff**: Requires provisioning and monitoring DLT infrastructure along with building operational replay workflows, but prevents head-of-line partition stalls while capturing full forensic context for incident triage.
 
-> **Dictionary**: [Dead-Letter Topic](../../reference-dictionary/messaging.md#dead-letter-queue), [Poison Message](../../reference-dictionary/messaging.md#poison-message), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)  
+> **Dictionary**: [Dead-Letter Topic](../../reference-dictionary/messaging.md#dead-letter-queue), [Poison Message](../../reference-dictionary/kafka.md#poison-message), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)  
 > **Azure Services**: [Azure Service Bus Dead-Letter Queue](../../architecture-azure/integration/azure_service_bus/), [Azure Event Hubs](../../architecture-azure/integration/azure_event_hubs/), [Application Insights](../../architecture-azure/observability/application_insights/)  
 > **Related**: [`broker-16`](kafka-design-patterns.md#broker-16-dead-letter-queue), [`broker-37`](kafka-reliability-ordering.md#broker-37-dlq-retry-tracking), [`broker-107`](kafka-pipeline-bottlenecks.md#broker-107-poison-messages--dlq-design), [`broker-169`](#broker-169-timeline-discontinuity-vs-consumer-lag-triage-for-unprocessed-backlogs)  

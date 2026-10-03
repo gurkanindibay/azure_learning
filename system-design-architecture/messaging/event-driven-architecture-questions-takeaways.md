@@ -59,7 +59,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 **Tradeoff**: Implementing all three layers requires distinct tooling and operational discipline (e.g., deduplication caches, schema registries, side-effect guards) rather than relying solely on broker configuration.
 
-> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Deterministic Consumer](../../reference-dictionary/messaging.md#deterministic-consumer)  
+> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/kafka.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Deterministic Consumer](../../reference-dictionary/kafka.md#deterministic-consumer)  
 > **Related**: [`broker-141` – `broker-146`](event-loss-duplicates-reprocessing-takeaways.md), [`broker-02`](message-brokers-async.md#broker-02-offset-commit-failure), [`broker-78`](kafka-real-world-scenarios.md#broker-78-idempotent-payment-processing-with-retries)  
 
 ---
@@ -116,7 +116,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 **Tradeoff**: Increases publisher database write load (two tables written per transaction) and requires a CDC de-queuer (e.g., Debezium, polling worker), while still mandating full consumer-side defenses.
 
-> **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)  
+> **Dictionary**: [Outbox Pattern](../../reference-dictionary/cqrs-event-driven.md#outbox-pattern), [Dual-Write Problem](../../reference-dictionary/cqrs-event-driven.md#dual-write-problem), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)  
 > **Related**: [`broker-153` – `broker-158`](outbox-pattern-capabilities-limits-takeaways.md), [`broker-35`](kafka-reliability-ordering.md#broker-35-dual-write-failure-modes), [`broker-36`](kafka-reliability-ordering.md#broker-36-outbox-publisher-selection)  
 
 ---
@@ -135,7 +135,7 @@ generated: { by: process:format-agent, at: 2026-09-08T21:45:00+03:00 }
 
 **Tradeoff**: Schema registries add infrastructure overhead and CI/CD validation steps; maintaining dual-topic versions during breaking migrations increases operational overhead.
 
-> **Dictionary**: [Schema Contract (Event as Public API)](../../reference-dictionary/messaging.md#schema-contract-event-as-public-api), [Schema Registry](../../reference-dictionary/messaging.md#schema-registry)  
+> **Dictionary**: [Schema Contract (Event as Public API)](../../reference-dictionary/kafka.md#schema-contract-event-as-public-api), [Schema Registry](../../reference-dictionary/kafka.md#schema-registry)  
 > **Related**: [`broker-82`](kafka-real-world-scenarios.md#broker-82-schema-evolution-with-compatibility-governance), [`broker-163`](event-driven-consumer-replay-takeaways.md#broker-163-historical-schema-drift-vs-in-memory-deterministic-event-upcasting)  
 
 ---

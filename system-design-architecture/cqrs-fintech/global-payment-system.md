@@ -102,7 +102,7 @@ generated: { by: process:okf-migrate, at: 2026-06-18T00:00:00Z }
 
 **Tradeoff**: Async adds eventual consistency and requires idempotent consumers, but it prevents a slow notification or fraud service from stalling the entire payment flow.
 
-> 📖 **Dictionary**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> 📖 **Dictionary**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 
 ---
 

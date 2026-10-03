@@ -579,7 +579,7 @@ A database operation that **inserts a row if it does not exist, or updates it if
 - When INSERT-only with constraint-violation handling provides clearer auditability of which events were duplicates
 
 ### Also see
-- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer)
+- [Idempotency](../reference-dictionary/cqrs-event-driven.md#idempotency) · [Atomic Conditional Update](../reference-dictionary/data-concurrency.md#atomic-conditional-update) · [Idempotent Consumer](../reference-dictionary/kafka.md#idempotent-consumer)
 
 ---
 

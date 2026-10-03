@@ -67,7 +67,7 @@ flowchart TD
 
 **Tradeoff**: Prevents simplistic "silver-bullet" architectural thinking, requiring separate operational runbooks, configuration profiles, and code paths for producer durability, consumer deduplication, and replay workflows.
 
-> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Deterministic Consumer](../../reference-dictionary/messaging.md#deterministic-consumer)  
+> **Dictionary**: [At-Least-Once Delivery](../../reference-dictionary/messaging.md), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Deterministic Consumer](../../reference-dictionary/kafka.md#deterministic-consumer)  
 > **Azure**: [Azure Event Hubs](../../architecture-azure/integration/event-hubs/), [Azure Service Bus](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-120`](event-driven-architecture-questions-takeaways.md#broker-120-tripartite-separation-of-event-loss-duplicates-and-reprocessing), [`broker-134`](event-driven-business-consistency-takeaways.md#broker-134-false-broker-ordering-guarantees-vs-redelivery-and-rebalance-reality)  
 
@@ -107,7 +107,7 @@ sequenceDiagram
 
 **Tradeoff**: Marginally increases write latency due to replica network roundtrips, and temporarily rejects producer writes if broker hardware failures cause the number of healthy replicas to fall below `min.insync.replicas`.
 
-> **Dictionary**: [ISR (In-Sync Replica)](../../reference-dictionary/messaging.md#isr-in-sync-replica), [Producer Acknowledgement](../../reference-dictionary/messaging.md#producer-acknowledgement), [Replication Factor](../../reference-dictionary/messaging.md#replication-factor), [Idempotent Producer](../../reference-dictionary/messaging.md#idempotent-producer)  
+> **Dictionary**: [ISR (In-Sync Replica)](../../reference-dictionary/kafka.md#isr-in-sync-replica), [Producer Acknowledgement](../../reference-dictionary/kafka.md#producer-acknowledgement), [Replication Factor](../../reference-dictionary/kafka.md#replication-factor), [Idempotent Producer](../../reference-dictionary/kafka.md#idempotent-producer)  
 > **Azure**: [Azure Event Hubs Availability Zones](../../architecture-azure/integration/event-hubs/)  
 > **Related**: [`broker-59`](kafka-producer-ack-idempotency.md#broker-59), [`broker-63`](kafka-producer-ack-idempotency.md#broker-63)  
 
@@ -158,7 +158,7 @@ sequenceDiagram
 
 **Tradeoff**: Requires that the deduplication store and the business entity reside within the same transactional storage boundary (or support two-phase commit / transactional outbox), adding an insert overhead to each processed event.
 
-> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Consumer Offset](../../reference-dictionary/messaging.md#consumer-offset)  
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Consumer Offset](../../reference-dictionary/messaging.md#consumer-offset)  
 > **Azure**: [Azure Cosmos DB Transactions](../../architecture-azure/data/databases/azure_cosmosdb/), [Azure SQL Database](../../architecture-azure/data/databases/azure_sql/)  
 > **Related**: [`broker-60`](kafka-producer-ack-idempotency.md#broker-60), [`broker-61`](kafka-producer-ack-idempotency.md#broker-61), [`broker-62`](kafka-producer-ack-idempotency.md#broker-62)  
 
@@ -194,7 +194,7 @@ flowchart TD
 
 **Tradeoff**: Prevents simple monolythic consumers from mixing state updates and notification calls; requires separating consumer group responsibilities and maintaining explicit replay-aware flags.
 
-> **Dictionary**: [Deterministic Consumer](../../reference-dictionary/messaging.md#deterministic-consumer), [Event Replay](../../reference-dictionary/cqrs-event-driven.md#event-replay), [Side-Effect Gating](../../reference-dictionary/cqrs-event-driven.md#side-effect-gating)  
+> **Dictionary**: [Deterministic Consumer](../../reference-dictionary/kafka.md#deterministic-consumer), [Event Replay](../../reference-dictionary/cqrs-event-driven.md#event-replay), [Side-Effect Gating](../../reference-dictionary/cqrs-event-driven.md#side-effect-gating)  
 > **Azure**: [Azure Functions Event Hubs Trigger](../../architecture-azure/compute/functions/)  
 > **Related**: [`broker-135`](event-driven-business-consistency-takeaways.md#broker-135-versioned-aggregates-with-guard-clause-silent-discard), [`broker-137`](event-driven-business-consistency-takeaways.md#broker-137-logical-clocks-and-monotonic-counters-vs-physical-clock-drift)  
 

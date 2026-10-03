@@ -149,7 +149,7 @@ flowchart LR
 >
 > **Tradeoff**: Increases asynchronous architecture complexity, requiring distributed job tracking, dead-letter queues (DLQ), and status-polling mechanisms for frontends.
 >
-> **Also see**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **Also see**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 

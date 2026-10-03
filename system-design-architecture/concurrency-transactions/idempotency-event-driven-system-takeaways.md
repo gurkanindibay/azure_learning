@@ -11,7 +11,7 @@ generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 > **Source**: [How Mastering Idempotency Saved Our Event-Driven System](../../articles/concurrency-transactions/how-mastering-idempotency-saved-event-driven-system.md) — System Design with Sage, 2026
 
 > **Also see**: [Concurrency & Transactions](concurrency-transactions.md) (tx-04 Idempotency), [Idempotency Hidden Costs](idempotency-hidden-costs.md) (tx-13–tx-18)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Deduplication Store](../../reference-dictionary/messaging.md#deduplication-store), [Fanout on Write](../../reference-dictionary/messaging.md#fanout-on-write), [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Deduplication Store](../../reference-dictionary/messaging.md#deduplication-store), [Fanout on Write](../../reference-dictionary/messaging.md#fanout-on-write), [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ---
@@ -47,7 +47,7 @@ generated: { by: process:okf-migrate, at: 2026-07-24T00:00:00Z }
 
 **Tradeoff**: Deterministic keys require the producer to generate stable IDs before emitting events. This adds upfront coordination but eliminates the need for application-level deduplication logic on the write path.
 
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 > **Azure**: Cosmos DB unique key constraints; Azure SQL `UNIQUE` constraint with `IGNORE_DUP_KEY`
 
 ---

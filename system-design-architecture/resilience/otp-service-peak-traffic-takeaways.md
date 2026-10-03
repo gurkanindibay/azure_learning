@@ -98,7 +98,7 @@ generated: { by: process:okf-migrate, at: 2026-08-22T00:00:00Z }
 
 **Tradeoff**: Queued delivery introduces slight delivery latency (5–30 seconds) during extreme spikes, but guarantees message processing without dropping requests or paying for expired deliveries.
 
-**Related**: [Queue with TTL](../../reference-dictionary/resilience.md#queue-with-ttl), [Backpressure](../../reference-dictionary/resilience.md#backpressure), [Load Shedding](../../reference-dictionary/resilience.md#load-shedding), [Dead Letter Queue](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+**Related**: [Queue with TTL](../../reference-dictionary/resilience.md#queue-with-ttl), [Backpressure](../../reference-dictionary/resilience.md#backpressure), [Load Shedding](../../reference-dictionary/resilience.md#load-shedding), [Dead Letter Queue](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 

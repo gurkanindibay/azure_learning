@@ -119,7 +119,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Storage lifecycle** | Set expiry/lifecycle rules on the object store to prevent unbounded growth |
 
 > **Also see**: [Message Brokers & Async — broker-01](messaging/message-brokers-async.md#broker-01-broker-selection)
-> **Dictionary**: [Claim Check Pattern](../../reference-dictionary/messaging.md#claim-check)
+> **Dictionary**: [Claim Check Pattern](../../reference-dictionary/kafka.md#claim-check)
 
 ---
 
@@ -141,7 +141,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Observability** | DLQ message count is a leading indicator of upstream schema or logic issues |
 
 > **Also see**: [Message Brokers — broker-03](messaging/message-brokers-async.md#broker-03-poison-messages)
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message)
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/kafka.md#poison-message)
 
 ---
 
@@ -163,7 +163,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Complexity** | Requires careful atomic check-and-mark; two-phase check with DB transactions |
 
 > **Also see**: [Message Brokers — broker-02](messaging/message-brokers-async.md#broker-02-offset-commit-failure), [Concurrency — tx-04](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency)
-> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 
 ---
 
@@ -207,7 +207,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Compaction lag** | The dirty log is compacted asynchronously; very recent old values may still be visible briefly |
 
 > **Also see**: [Stream-Table Duality — broker-33](#broker-33), [Event Sourcing — broker-24](#broker-24)
-> **Dictionary**: [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic)
+> **Dictionary**: [Compacted Topic](../../reference-dictionary/kafka.md#compacted-topic)
 
 ---
 
@@ -229,7 +229,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Consumer parallelism** | Max concurrency = partition count; add partitions before scaling consumers |
 
 > **Also see**: [Message Brokers — broker-04](messaging/message-brokers-async.md#broker-04-message-ordering), [Real-Time Messaging — broker-18](messaging/real-time-messaging.md#broker-18)
-> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
+> **Dictionary**: [Partition](../../reference-dictionary/kafka.md#partition), [Message Ordering](../../reference-dictionary/kafka.md#message-ordering)
 
 ---
 
@@ -251,7 +251,7 @@ generated: { by: process:okf-migrate, at: 2026-06-26T00:00:00Z }
 | **Reprocessing** | Stream-table joins are sensitive to table bootstrap order; replay requires coordinating both |
 
 > **Also see**: [Stream Processing — flink-01](stream-processing/stream-processing-flink.md), [Compacted Topic — broker-31](#broker-31)
-> **Dictionary**: [Stream-Table Duality](../../reference-dictionary/messaging.md#stream-table-duality), [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic)
+> **Dictionary**: [Stream-Table Duality](../../reference-dictionary/kafka.md#stream-table-duality), [Compacted Topic](../../reference-dictionary/kafka.md#compacted-topic)
 
 ---
 

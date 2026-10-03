@@ -45,7 +45,7 @@ Problems and strategies for designing message-based and event-driven systems: br
 
 ## Cross-References
 
-- **Dictionary**: [Messaging](../../reference-dictionary/messaging.md), [CQRS/Events](../../reference-dictionary/cqrs-event-driven.md)
+- **Dictionary**: [Apache Kafka](../../reference-dictionary/kafka.md), [General Messaging](../../reference-dictionary/messaging.md), [CQRS/Events](../../reference-dictionary/cqrs-event-driven.md)
 - **Azure**: [Event Hubs](../../architecture-azure/integration/), [Service Bus](../../architecture-azure/integration/)
 - **Related**: [Stream Processing](../stream-processing/), [CQRS & Fintech](../cqrs-fintech/), [Resilience](../resilience/)
 - **Taxonomy**: §3.3 Event-Driven & Messaging

@@ -74,4 +74,4 @@ generated: { by: process:okf-migrate, at: 2026-07-17T00:00:00Z }
 
 **Tradeoff**: Studying 16 systems in depth takes time — more than reading a theory textbook. The payoff is that future novel problems stop looking novel; they appear as variations on patterns already internalized. This is the difference between knowing a pattern's definition and knowing when to reach for it without being prompted.
 
-> **Cross-reference**: [Interview Roadmap](interview-roadmap.md) — see sdi-01 for the 7-phase interview rhythm that builds on this constraint-first approach | **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key)
+> **Cross-reference**: [Interview Roadmap](interview-roadmap.md) — see sdi-01 for the 7-phase interview rhythm that builds on this constraint-first approach | **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Idempotency Key](../../reference-dictionary/cqrs-event-driven.md#idempotency-key)

@@ -181,7 +181,7 @@ flowchart LR
 
 **Tradeoff**: Direct commands and dedicated queues require explicit timeout and backpressure management, but eliminate untraceable silent transaction dropouts in production.
 
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Competing Consumers](../../reference-dictionary/messaging.md#competing-consumers), [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag)  
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Competing Consumers](../../reference-dictionary/messaging.md#competing-consumers), [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag)  
 > **Azure**: [Azure Service Bus Dead-Lettering](../../architecture-azure/integration/service-bus/), [Azure Application Insights](../../architecture-azure/observability/application-insights/)  
 > **Related**: [`broker-141`](event-loss-duplicates-reprocessing-takeaways.md#broker-141-tripartite-failure-surface-separation-in-at-least-once-delivery), [`broker-170`](event-driven-cross-service-debugging-takeaways.md#broker-170-silent-processing-failure-dropouts-vs-context-rich-dead-letter-topic-routing), [`broker-172`](#broker-172-disguised-command-anti-pattern-invisible-rpc-over-pubsub)  
 
@@ -272,7 +272,7 @@ flowchart TD
 
 **Tradeoff**: Requires team education, schema registry validation, and automated pull-request linters, but prevents architectural rot and protects event streaming platforms from turning into unmaintainable distributed monoliths.
 
-> **Dictionary**: [Schema Registry](../../reference-dictionary/messaging.md#schema-registry), [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log), [Event Backbone](../../reference-dictionary/cqrs-event-driven.md#event-backbone)  
+> **Dictionary**: [Schema Registry](../../reference-dictionary/kafka.md#schema-registry), [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log), [Event Backbone](../../reference-dictionary/cqrs-event-driven.md#event-backbone)  
 > **Azure**: [Azure Event Hubs Schema Registry](../../architecture-azure/integration/event-hubs/), [Azure Service Bus Topics vs Queues](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-126`](event-driven-architecture-questions-takeaways.md#broker-126-distributed-production-flow-debugging-across-poly-service-eda), [`broker-128`](event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths), [`broker-171`](#broker-171-fact-vs-instruction-semantics-event-vs-command-separation)  
 

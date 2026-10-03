@@ -49,7 +49,7 @@ flowchart TD
 
 **Tradeoff**: Prevents simplistic reactive event handlers; requires consumers to verify aggregate status or maintain local ordering logic.
 
-> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering), [Event Ordering](../../reference-dictionary/cqrs-event-driven.md#event-ordering), [Out-of-Order Event](../../reference-dictionary/cqrs-event-driven.md#out-of-order-event)  
+> **Dictionary**: [Partition](../../reference-dictionary/kafka.md#partition), [Message Ordering](../../reference-dictionary/kafka.md#message-ordering), [Event Ordering](../../reference-dictionary/cqrs-event-driven.md#event-ordering), [Out-of-Order Event](../../reference-dictionary/cqrs-event-driven.md#out-of-order-event)  
 > **Azure**: [Azure Event Hubs Partitions](../../architecture-azure/integration/event-hubs/), [Azure Service Bus Message Sessions](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-134`](event-driven-business-consistency-takeaways.md#broker-134-false-broker-ordering-guarantees-vs-redelivery-and-rebalance-reality), [`broker-119`](event-driven-architecture-questions-takeaways.md#broker-119-business-consistency-with-eventually-consistent-out-of-order-events), [`tx-01`](../concurrency-transactions/concurrency-transactions.md#tx-01-double-booking)  
 
@@ -81,7 +81,7 @@ flowchart LR
 
 **Tradeoff**: Keying by entity concentrates all load for a single entity onto one partition. While ideal for standard entity lifecycles, extreme hot entities (e.g., a viral merchant account) can create hot partitions that bottleneck consumer throughput.
 
-> **Dictionary**: [Partition Key](../../reference-dictionary/messaging.md#partition-key), [Hot Partition](../../reference-dictionary/messaging.md#hot-partition), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)  
+> **Dictionary**: [Partition Key](../../reference-dictionary/messaging.md#partition-key), [Hot Partition](../../reference-dictionary/kafka.md#hot-partition), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)  
 > **Azure**: [Event Hubs Partition Key](../../architecture-azure/integration/event-hubs/), [Service Bus Message Sessions](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-77`](kafka-real-world-scenarios.md#broker-77-partition-key-design-distribution-vs-ordering), [`broker-83`](kafka-real-world-scenarios.md#broker-83-consumer-lag-hot-partitions-and-rebalancing), [`broker-134`](event-driven-business-consistency-takeaways.md#broker-134-false-broker-ordering-guarantees-vs-redelivery-and-rebalance-reality)  
 

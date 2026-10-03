@@ -48,7 +48,7 @@ flowchart TD
 
 **Tradeoff**: Pushes the cognitive and architectural responsibility of ordering into application domain logic instead of relying on transport primitives, requiring explicit aggregate versioning.
 
-> **Dictionary**: [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)  
+> **Dictionary**: [Eventual Consistency](../../reference-dictionary/cqrs-event-driven.md#eventual-consistency), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)  
 > **Azure**: [Azure Event Hubs Partitions](../../architecture-azure/integration/event-hubs/), [Azure Service Bus Message Sessions](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-119`](event-driven-architecture-questions-takeaways.md#broker-119-business-consistency-with-eventually-consistent-out-of-order-events), [`broker-120`](event-driven-architecture-questions-takeaways.md#broker-120-tripartite-separation-of-event-loss-duplicates-and-reprocessing), [`tx-01`](../concurrency-transactions/concurrency-transactions.md#tx-01-double-booking)  
 
@@ -83,7 +83,7 @@ flowchart TD
 
 **Tradeoff**: Out-of-order intermediate transitions are dropped. If an entity requires sequential execution of every step without gaps (e.g. strict ledger calculations), gaps must be buffered in a local holding store until missing versions arrive.
 
-> **Dictionary**: [Versioned Aggregates](../../reference-dictionary/cqrs-event-driven.md#versioned-aggregates), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)  
+> **Dictionary**: [Versioned Aggregates](../../reference-dictionary/cqrs-event-driven.md#versioned-aggregates), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)  
 > **Azure**: [Azure Cosmos DB Optimistic Concurrency Control](../../architecture-azure/data/databases/azure_cosmosdb/)  
 > **Related**: [`broker-119`](event-driven-architecture-questions-takeaways.md#broker-119-business-consistency-with-eventually-consistent-out-of-order-events), [`broker-122`](event-driven-architecture-questions-takeaways.md#broker-122-replay-safe-consumer-design-for-high-volume-historical-reprocessing)  
 
@@ -116,7 +116,7 @@ flowchart LR
 
 **Tradeoff**: Increases the scope of the owning service to publish clean resolved-state integration events, but prevents ordering logic fragmentation across all dependent microservices.
 
-> **Dictionary**: [Resolved State Consumption](../../reference-dictionary/messaging.md#resolved-state-consumption), [Single Source of Truth](../../reference-dictionary/architecture-patterns.md#single-source-of-truth)  
+> **Dictionary**: [Resolved State Consumption](../../reference-dictionary/kafka.md#resolved-state-consumption), [Single Source of Truth](../../reference-dictionary/architecture-patterns.md#single-source-of-truth)  
 > **Azure**: [Azure Service Bus Topics & Subscriptions](../../architecture-azure/integration/service-bus/), [Azure Event Grid Domains](../../architecture-azure/integration/event-grid/)  
 > **Related**: [`broker-124`](event-driven-architecture-questions-takeaways.md#broker-124-multi-version-consumer-event-schema-evolution), [`broker-128`](event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths)  
 
@@ -179,7 +179,7 @@ A steady, low baseline rate of discards is expected normal behavior in distribut
 
 **Tradeoff**: Requires telemetry instrumentation and threshold tuning, but keeps DLQs clean and actionable while preserving deep operational visibility.
 
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag)  
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag)  
 > **Azure**: [Azure Monitor Metrics & Alerts](../../architecture-azure/observability/application-insights/), [Azure Service Bus Dead-Letter Subqueues](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-126`](event-driven-architecture-questions-takeaways.md#broker-126-distributed-production-flow-debugging-across-poly-service-eda), [`broker-131`](when-to-avoid-event-driven-architecture-takeaways.md#broker-131-operational-maturity-preconditions-for-event-driven-systems)  
 
@@ -250,7 +250,7 @@ flowchart LR
     "strategy": "Enforce version checks exclusively within the authoritative service owning the aggregate; downstream services consume the resolved entity state rather than independently trying to reconstruct ordering from raw event streams.",
     "tradeoff": "Increases the scope of the owning service to publish clean resolved-state integration events, but prevents ordering logic fragmentation and bugs across all dependent microservices.",
     "links": {
-      "dictionary": "../../reference-dictionary/messaging.md#resolved-state-consumption",
+      "dictionary": "../../reference-dictionary/kafka.md#resolved-state-consumption",
       "azure": "../../architecture-azure/integration/service-bus/",
       "source": "../../articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md"
     }
@@ -283,7 +283,7 @@ flowchart LR
     "strategy": "Keep stale event discards silent to the business aggregate while emitting operational discard metrics and alerting on abnormal rate spikes, reserving DLQs strictly for non-retryable poison message failures.",
     "tradeoff": "Requires telemetry instrumentation and threshold tuning, but keeps DLQs clean and actionable while preserving deep operational visibility.",
     "links": {
-      "dictionary": "../../reference-dictionary/messaging.md#dead-letter-queue-dlq",
+      "dictionary": "../../reference-dictionary/kafka.md#dead-letter-queue-dlq",
       "azure": "../../architecture-azure/observability/application-insights/",
       "source": "../../articles/messaging/how-to-guarantee-business-consistency-in-event-driven-architecture-when-events-arrive-out-of-order.md"
     }

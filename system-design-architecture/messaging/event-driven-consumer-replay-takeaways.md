@@ -98,7 +98,7 @@ sequenceDiagram
 
 **Tradeoff**: Requires temporary broker partition read bandwidth and double consumer CPU allocation, but isolates production traffic entirely from replay disruption.
 
-> **Dictionary**: [Consumer Group](../../reference-dictionary/messaging.md#consumer-group), [Offset Management](../../reference-dictionary/messaging.md#offset-management), [Event Replay](../../reference-dictionary/cqrs-event-driven.md#event-replay)  
+> **Dictionary**: [Consumer Group](../../reference-dictionary/kafka.md#consumer-group), [Offset Management](../../reference-dictionary/messaging.md#offset-management), [Event Replay](../../reference-dictionary/cqrs-event-driven.md#event-replay)  
 > **Azure Services**: [Azure Event Hubs Consumer Groups](../../architecture-azure/integration/azure_event_hubs/)  
 > **Related**: [`broker-08e`](message-brokers-async.md#broker-08e-wrong-consumer-group-usage), [`broker-141`](event-loss-duplicates-reprocessing-takeaways.md#broker-141-tripartite-failure-surface-separation-in-at-least-once-delivery)  
 
@@ -255,6 +255,6 @@ flowchart TD
 
 **Tradeoff**: Requires investing in testing infrastructure to capture and replay event fixtures, but guarantees mathematical correctness and prevents disastrous operational incidents in production.
 
-> **Dictionary**: [Deterministic Processing](../../reference-dictionary/cqrs-event-driven.md#deterministic-processing), [Deterministic Consumer](../../reference-dictionary/messaging.md#deterministic-consumer), [State-Effect Separation](../../reference-dictionary/cqrs-event-driven.md#state-effect-separation)  
+> **Dictionary**: [Deterministic Processing](../../reference-dictionary/cqrs-event-driven.md#deterministic-processing), [Deterministic Consumer](../../reference-dictionary/kafka.md#deterministic-consumer), [State-Effect Separation](../../reference-dictionary/cqrs-event-driven.md#state-effect-separation)  
 > **Azure Services**: [Azure Pipelines / GitHub Actions (CI Replay Tests)](../../architecture-azure/devops/)  
 > **Related**: [`broker-144`](event-loss-duplicates-reprocessing-takeaways.md#broker-144-deterministic-consumer-replay--side-effect-gating-during-reprocessing), [`broker-76`](kafka-user-activity-tracking.md#broker-76-replay-safe-idempotent-processing)  

@@ -13,7 +13,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 > **Purpose**: Extract reusable architectural patterns for handling duplicate payment events in distributed systems.
 
 > **Also see**: [cqrs-03: Idempotency Before the Ledger](cqrs-fintech.md#cqrs-03-idempotency-before-the-ledger-command) · [tx: The Hidden Cost of Idempotency](../concurrency-transactions/the-hidden-cost-of-idempotency.md)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics) · [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer) · [Deduplication](../../reference-dictionary/messaging.md#deduplication) · [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics) · [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer) · [Deduplication](../../reference-dictionary/messaging.md#deduplication) · [Offset Commit](../../reference-dictionary/kafka.md#offset-commit)
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging
 
 ---
@@ -41,7 +41,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 >
 > **Tradeoff**: A single indexed insert/lookup is cheap and scales well because it removes coordination between consumers. However, this requires globally unique business identifiers generated before the event is published, and the database becomes a hard dependency for correctness — if the DB is unavailable, no payments can be processed at all.
 >
-> **Cross-reference**: [cqrs-03: Idempotency Before the Ledger](cqrs-fintech.md#cqrs-03-idempotency-before-the-ledger-command) · [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
+> **Cross-reference**: [cqrs-03: Idempotency Before the Ledger](cqrs-fintech.md#cqrs-03-idempotency-before-the-ledger-command) · [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics)
 
 ---
 
@@ -58,7 +58,7 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 >
 > **Tradeoff**: This separation creates a cleaner mental model and forces explicit correctness handling at each layer, but it means the application code must implement idempotency rather than delegating it to the messaging infrastructure. The benefit is that correctness becomes testable and verifiable independent of the message broker.
 >
-> **Cross-reference**: [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics) · [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Cross-reference**: [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics) · [Offset Commit](../../reference-dictionary/kafka.md#offset-commit) · [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 
 ---
 
@@ -81,6 +81,6 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 
 ## Cross-References
 
-- **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [API Idempotency](../../reference-dictionary/cqrs-event-driven.md#api-idempotency) · [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics) · [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer) · [Deduplication](../../reference-dictionary/messaging.md#deduplication) · [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery)
+- **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency) · [API Idempotency](../../reference-dictionary/cqrs-event-driven.md#api-idempotency) · [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics) · [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer) · [Deduplication](../../reference-dictionary/messaging.md#deduplication) · [Offset Commit](../../reference-dictionary/kafka.md#offset-commit) · [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery)
 - **Related Patterns**: [cqrs-03: Idempotency Before the Ledger](cqrs-fintech.md#cqrs-03-idempotency-before-the-ledger-command) · [cqrs-05: Risk Creates Actions](cqrs-fintech.md#cqrs-05-risk-creates-actions-never-rewrites-history) · [cqrs-32: Transaction Reversal](debit-card-processing.md#cqrs-32-transaction-reversal-confirm-before-reversing)
 - **Azure Services**: [Event Hubs](../../architecture-azure/integration/) · [Cosmos DB](../../architecture-azure/data/) (unique-key constraint enforcement)

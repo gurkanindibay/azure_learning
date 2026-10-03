@@ -55,7 +55,7 @@ The real contract: **your processing must be idempotent**. No offset strategy ca
 | **Mental model shift** | Offset commit is not a "done" signal; it's a "resume from here" marker with semantic implications |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#broker-02-offset-commit-failure) — Offset commit failure, at-least-once semantics
-> **Dictionary**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Dictionary**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 > **Azure**: Azure Event Hubs uses a similar offset/sequence-number model via EventProcessorClient
 > **Taxonomy**: Messaging Patterns
 
@@ -93,7 +93,7 @@ msg1, msg2, msg3 → LOST
 | **Acceptable for** | Logs, metrics, clickstream analytics, telemetry |
 
 > **Also see**: [broker-11 Manual Commit](#broker-11) — The safe alternative
-> **Dictionary**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Dictionary**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 > **Azure**: Event Hubs EventProcessorClient defaults to automatic checkpointing with similar risks
 > **Taxonomy**: Messaging Patterns
 
@@ -129,7 +129,7 @@ public void consume(String message, Acknowledgment ack) {
 | **Requires idempotency** | Duplicates are inevitable — processing must handle them |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#broker-02-offset-commit-failure) — At-least-once semantics & idempotency
-> **Dictionary**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Dictionary**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 > **Azure**: Service Bus supports PeekLock + Complete (manual) vs ReceiveAndDelete (auto) with similar semantics
 > **Taxonomy**: Messaging Patterns
 
@@ -167,7 +167,7 @@ public void consume(List<String> messages, Acknowledgment ack) {
 | **Poison message isolation** | One bad message shouldn't block the entire batch — send to DLQ |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#broker-03-poison-messages) — Dead letter queues & retry strategies
-> **Dictionary**: [Dead Letter Queue](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message)
+> **Dictionary**: [Dead Letter Queue](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/kafka.md#poison-message)
 > **Azure**: Event Hubs EventProcessorClient processes batches natively; use try/catch per event
 > **Taxonomy**: Messaging Patterns
 
@@ -200,7 +200,7 @@ public void consume(ConsumerRecord<String, String> record,
 | **Use with idempotency** | Still possible duplicates on crash between process() and ACK |
 
 > **Also see**: [broker-11 Manual Commit](#broker-11) — Batched variant for higher throughput
-> **Dictionary**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)
+> **Dictionary**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit)
 > **Taxonomy**: Messaging Patterns
 
 ---
@@ -234,7 +234,7 @@ public void process(ConsumerRecord<String, String> record) {
 | **idempotent producer required** | `enable.idempotence=true` is a prerequisite |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#broker-06-producer-durability-tuning) — Producer acks, idempotent producers
-> **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Kafka Transactions](../../reference-dictionary/messaging.md#kafka-transactions)
+> **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Kafka Transactions](../../reference-dictionary/kafka.md#kafka-transactions)
 > **Azure**: Event Hubs + Azure Functions with idempotent output binding provides similar guarantees
 > **Taxonomy**: Messaging Patterns
 
@@ -275,7 +275,7 @@ Consumer polls batch
 | **Session timeout** | `session.timeout.ms` controls heartbeat-based failure detection (separate from poll interval) |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#rebalance-side-effects) — Rebalance side effects
-> **Dictionary**: [Rebalance](../../reference-dictionary/messaging.md#rebalance), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)
+> **Dictionary**: [Rebalance](../../reference-dictionary/kafka.md#rebalance), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)
 > **Azure**: Event Hubs has a similar lease-based partition ownership model with configurable timeouts
 > **Taxonomy**: Messaging Patterns
 
@@ -307,7 +307,7 @@ Consumer polls batch
 | **Test under load** | Rebalance behavior only manifests under real processing timelines |
 
 > **Also see**: [broker-15 Rebalancing](#broker-15) — max.poll.interval.ms in depth
-> **Dictionary**: [Consumer Group](../../reference-dictionary/messaging.md#consumer-group), [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag)
+> **Dictionary**: [Consumer Group](../../reference-dictionary/kafka.md#consumer-group), [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag)
 > **Taxonomy**: Messaging Patterns
 
 ---
@@ -339,6 +339,6 @@ Consumer polls batch
 | **Audit trails for payments** | Financial systems need more than exactly-once — they need proof of exactly-once |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md#broker-01-broker-selection) — Broker selection decision tree
-> **Dictionary**: [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Dictionary**: [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 > **Azure**: Match to Service Bus (sessions, DLQ) or Event Hubs (checkpointing, EventProcessorClient) based on failure cost
 > **Taxonomy**: Messaging Patterns

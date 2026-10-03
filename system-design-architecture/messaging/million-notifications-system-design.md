@@ -12,7 +12,7 @@ generated: { by: process:okf-migrate, at: 2026-07-16T00:00:00Z }
 > **Purpose**: Extract reusable architectural patterns for designing large-scale notification delivery systems that handle spikey workloads without overwhelming application servers or downstream providers.
 
 > **Also see**: [Message Brokers & Async](message-brokers-async.md), [Kafka Consumer Mistakes](kafka-consumer-mistakes.md)
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting), [Backpressure](../../reference-dictionary/messaging.md#backpressure)
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Rate Limiting](../../reference-dictionary/api-design.md#rate-limiting), [Backpressure](../../reference-dictionary/messaging.md#backpressure)
 > **Azure Services**: [Azure Service Bus](../azure-service-mapping/), [Event Hubs](../../architecture-azure/integration/event-hubs/), [Azure Functions](../../architecture-azure/compute/azure-functions/)
 
 ---

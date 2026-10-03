@@ -10,7 +10,7 @@ generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 > **Parent**: [System Design Interview Reference](../index.md)
 > **Source**: [System Design Interview: How Would You Prevent a Payment from Being Processed Twice?](../../articles/concurrency-transactions/system-design-interview-prevent-payment-processed-twice.md)
 > **Related**: [Concurrency & Transactions](concurrency-transactions.md#tx-04-idempotency), [Transaction Patterns](transaction-patterns.md#tx-12-payment-idempotency), [Idempotency Hidden Costs](idempotency-hidden-costs.md)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Business Identity](../../reference-dictionary/fintech.md#business-identity), [Retry Identity](../../reference-dictionary/fintech.md#retry-identity), [Merchant Transaction Identifier](../../reference-dictionary/fintech.md#merchant-transaction-identifier)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Idempotency-Key](../../reference-dictionary/api-design.md#idempotency-key), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Business Identity](../../reference-dictionary/fintech.md#business-identity), [Retry Identity](../../reference-dictionary/fintech.md#retry-identity), [Merchant Transaction Identifier](../../reference-dictionary/fintech.md#merchant-transaction-identifier)
 > **Taxonomy Reference**: §2.3 Concurrency & Asynchronous Processing
 
 ## Contents
@@ -87,7 +87,7 @@ generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 
 **Tradeoff**: Consumer logic becomes more careful and must be tested under redelivery, but it is the only reliable way to achieve exactly-once outcomes across asynchronous boundaries.
 
-**Also see**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
+**Also see**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics)
 
 ## tx-30: Exactly-once as idempotent outcome
 
@@ -100,4 +100,4 @@ generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 
 **Tradeoff**: The system must model execution identity, in-progress states, and final outcomes explicitly; "success" must mean the operation is complete and durable, not merely accepted.
 
-**Also see**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+**Also see**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)

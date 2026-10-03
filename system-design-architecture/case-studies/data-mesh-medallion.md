@@ -241,7 +241,7 @@ generated: { by: process:okf-migrate, at: 2026-06-16T00:00:00Z }
 
 **Tradeoff**: Streaming Medallion requires different infrastructure (stream processors, event logs) and different skills (windowing, watermarking, state management) vs. the familiar batch ETL/ELT toolchain.
 
-> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
+> **Dictionary**: [Medallion Architecture](../../reference-dictionary/data-architecture.md#medallion-architecture), [Kafka vs RabbitMQ](../../reference-dictionary/kafka.md#kafka-vs-rabbitmq), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics) · **Taxonomy**: §4 Data & Analytics, §3.3 Event-Driven & Messaging
 
 ---
 

@@ -456,7 +456,7 @@ A **globally unique identifier** assigned to every business event at production 
 - When the consumer can derive idempotency from natural business keys (e.g., `order_id` + `version`)
 
 ### Also see
-- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
+- [Idempotency](#idempotency) · [Token-Based Idempotency](#token-based-idempotency) · [Outbox Pattern](#outbox-pattern) · [Idempotent Consumer](../reference-dictionary/kafka.md#idempotent-consumer) · [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
 
 ---
 

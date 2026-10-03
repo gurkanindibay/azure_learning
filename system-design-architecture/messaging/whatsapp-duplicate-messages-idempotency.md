@@ -12,7 +12,7 @@ generated: { by: process:okf-migrate, at: 2026-07-18T21:52:51Z }
 > **Purpose**: Three-layer deduplication architecture for messaging platforms: client-generated idempotency keys, server-side unique constraints, and receiver-side dedup caches.
 
 > **Also see**: [Kafka Producer Ack & Idempotency](kafka-producer-ack-idempotency.md), [Real-Time Messaging](real-time-messaging.md)
-> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **Dictionary**: [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency), [At-Least-Once Delivery](../../reference-dictionary/messaging.md#at-least-once-delivery), [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 > **Taxonomy**: §3.3 Event-Driven & Messaging
 
 ## Contents

@@ -12,7 +12,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 > **Purpose**: Constraints-first system design for high-throughput user activity tracking with Kafka.
 
 > **Also see**: [Senior Engineers' Kafka Tradeoffs](senior-engineers-kafka-tradeoffs.md) · [Kafka Consumer Mistakes](kafka-consumer-mistakes.md)
-> **Dictionary**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [Offset Commit](../../reference-dictionary/messaging.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Partitioning](../../reference-dictionary/messaging.md#partitioning)
+> **Dictionary**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag), [Offset Commit](../../reference-dictionary/kafka.md#offset-commit), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Partitioning](../../reference-dictionary/messaging.md#partitioning)
 > **Taxonomy Reference**: §3.2 Messaging Patterns, §7.1 Reliability Architecture
 
 ---
@@ -57,7 +57,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 >
 > **Tradeoff**: Async publishing can drop events during extreme backpressure. This is acceptable when analytics can tolerate some loss but user flows cannot tolerate added latency. If zero data loss is required, use a local write-ahead buffer before async publish.
 >
-> **Cross-reference**: [Producer Acknowledgements](../../reference-dictionary/messaging.md#producer-acknowledgement) · [Batching & Compression](../../reference-dictionary/messaging.md#batching)
+> **Cross-reference**: [Producer Acknowledgements](../../reference-dictionary/kafka.md#producer-acknowledgement) · [Batching & Compression](../../reference-dictionary/messaging.md#batching)
 
 ---
 
@@ -74,7 +74,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 >
 > **Tradeoff**: Schema governance adds friction to rapid iteration. The cost is justified when multiple independent teams consume the same event stream — without it, every producer change becomes a cascading consumer outage.
 >
-> **Cross-reference**: [Schema Registry](../../reference-dictionary/messaging.md#schema-registry) · [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Backward Compatibility](../../reference-dictionary/api-design.md#backward-compatibility)
+> **Cross-reference**: [Schema Registry](../../reference-dictionary/kafka.md#schema-registry) · [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing) · [Backward Compatibility](../../reference-dictionary/api-design.md#backward-compatibility)
 
 ---
 
@@ -91,7 +91,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 >
 > **Tradeoff**: Accepting lag as normal requires discipline to distinguish healthy lag from pathological lag. The metric to watch is *rate of lag change after traffic normalizes*, not absolute lag.
 >
-> **Cross-reference**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag) · [Kafka Consumer Mistakes](kafka-consumer-mistakes.md#broker-02) · [Real-Time Messaging](real-time-messaging.md)
+> **Cross-reference**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag) · [Kafka Consumer Mistakes](kafka-consumer-mistakes.md#broker-02) · [Real-Time Messaging](real-time-messaging.md)
 
 ---
 
@@ -108,4 +108,4 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 >
 > **Tradeoff**: Idempotent processing adds complexity to consumer logic (deduplication stores, deterministic side effects). The alternative — fragile consumers that corrupt on replay — is far more expensive in production.
 >
-> **Cross-reference**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer) · [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics) · [Kafka Consumer Mistakes](kafka-consumer-mistakes.md#broker-01)
+> **Cross-reference**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer) · [Offset Commit](../../reference-dictionary/kafka.md#offset-commit) · [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics) · [Kafka Consumer Mistakes](kafka-consumer-mistakes.md#broker-01)

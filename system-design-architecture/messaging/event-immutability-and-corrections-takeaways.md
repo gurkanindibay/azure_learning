@@ -244,7 +244,7 @@ flowchart TD
 
 **Tradeoff**: Retaining uncompacted topics increases total storage footprint, mitigated by offloading historical segments to tiered cloud object storage.
 
-> **Dictionary**: [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic), [Log Retention](../../reference-dictionary/messaging.md#log-retention), [Event Backbone](../../reference-dictionary/cqrs-event-driven.md#event-backbone)  
+> **Dictionary**: [Compacted Topic](../../reference-dictionary/kafka.md#compacted-topic), [Log Retention](../../reference-dictionary/messaging.md#log-retention), [Event Backbone](../../reference-dictionary/cqrs-event-driven.md#event-backbone)  
 > **Azure**: [Azure Event Hubs (Capture to Blob Storage)](../../architecture-azure/integration/event-hubs/), [Azure Blob Storage](../../architecture-azure/data/storage/azure_blob_storage/)  
 > **Related**: [`broker-27`](kafka-design-patterns.md#broker-27-compacted-topic-as-a-state-snapshot), [`broker-42`](kafka-data-state.md#broker-42-cold-data-archival-to-s3), [`broker-152`](uber-kafka-scale-takeaways.md#broker-152-tiered-storage-economics-for-high-retention-kafka-clusters)  
 

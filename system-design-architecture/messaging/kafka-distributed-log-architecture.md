@@ -57,7 +57,7 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 | **Replay** | Full history replay becomes trivial — rewind offsets and re-process |
 | **Complexity** | Moves coordination burden from broker to consumer; requires consumer discipline around offset management |
 
-> **Cross-reference**: [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Partition](../../reference-dictionary/messaging.md#partition) · [Kafka vs RabbitMQ](../../reference-dictionary/messaging.md#kafka-vs-rabbitmq)
+> **Cross-reference**: [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log) · [Partition](../../reference-dictionary/kafka.md#partition) · [Kafka vs RabbitMQ](../../reference-dictionary/kafka.md#kafka-vs-rabbitmq)
 
 ---
 
@@ -79,7 +79,7 @@ Producer → Broker (store+track)     Producer → Broker (append only)
 | **Backpressure is natural** | Slow consumers simply fall behind (consumer lag); producers are unaffected |
 | **Replay is free** | Reset offsets to re-process the entire history without broker reconfiguration |
 
-> **Cross-reference**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Cross-reference**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit) · [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag) · [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 
 ---
 
@@ -120,7 +120,7 @@ Topic "orders" (3 partitions, 3 brokers):
 | **Ordering scope** | Strict ordering only within a partition; global ordering across the topic is not guaranteed |
 | **Follower reads (KIP-392)** | Consumer configured with `client.rack` + `RackAwareReplicaSelector` reads from the closest replica (leader or follower). Reduces cross-region network cost at the expense of reading slightly stale data (replication lag). Not about throughput — about locality. |
 
-> **Cross-reference**: [Partition](../../reference-dictionary/messaging.md#partition) · [Rebalance](../../reference-dictionary/messaging.md#rebalance) · [Hot Partition](../../reference-dictionary/messaging.md#hot-partition) · [Partition Count Decision (broker-39)](messaging/kafka-reliability-ordering.md#broker-39)
+> **Cross-reference**: [Partition](../../reference-dictionary/kafka.md#partition) · [Rebalance](../../reference-dictionary/kafka.md#rebalance) · [Hot Partition](../../reference-dictionary/kafka.md#hot-partition) · [Partition Count Decision (broker-39)](messaging/kafka-reliability-ordering.md#broker-39)
 
 ---
 
@@ -146,7 +146,7 @@ Topic "orders" (3 partitions, 3 brokers):
 | **Zero-copy constraints** | Only works when consuming from disk cache; messages not yet flushed to disk still involve memory copies |
 | **Not for low-latency use cases** | If messages must be delivered in single-digit milliseconds, batching and linger.ms must be minimized or disabled |
 
-> **Cross-reference**: [Zero-Copy Transfer](../../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Message Batching](../../reference-dictionary/messaging.md#message-batching)
+> **Cross-reference**: [Zero-Copy Transfer](../../reference-dictionary/architecture-patterns.md#zero-copy-transfer) · [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log) · [Message Batching](../../reference-dictionary/kafka.md#message-batching)
 
 ---
 
@@ -180,7 +180,7 @@ Produce → Store → Deliver → Delete    Produce → Append → Retain (by po
 | **No built-in per-message ACK** | The broker doesn't know if a consumer successfully processed a message; consumers must handle idempotency |
 | **Mental model shift** | Teams accustomed to "fire and forget" queues must learn offset management and consumer group semantics |
 
-> **Cross-reference**: [Consumer-Managed Offsets](#broker-60) · [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)
+> **Cross-reference**: [Consumer-Managed Offsets](#broker-60) · [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log) · [Offset Commit](../../reference-dictionary/kafka.md#offset-commit)
 
 ---
 
@@ -207,7 +207,7 @@ Kafka appends to the active segment until it reaches the configured size limit (
 | **Segment file count** | Many small segments increase file descriptor usage; tune `log.segment.bytes` for the workload |
 | **Compaction** | Compacted topics retain only the latest value per key; old segments are cleaned by a background thread |
 
-> **Cross-reference**: [Partitions Physically Distributed](#broker-61) · [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log) · [Partition](../../reference-dictionary/messaging.md#partition)
+> **Cross-reference**: [Partitions Physically Distributed](#broker-61) · [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log) · [Partition](../../reference-dictionary/kafka.md#partition)
 
 ---
 
@@ -247,7 +247,7 @@ Topic "events" — 3 partitions, replication factor 3:
 | **Write latency** | Followers replicate asynchronously by default; `acks=all` adds latency waiting for ISR confirmation |
 | **Leader election on failure** | When a broker fails, followers on other brokers are promoted; controlled by the cluster controller |
 
-> **Cross-reference**: [Partitions Physically Distributed](#broker-61) · [ISR (In-Sync Replicas)](../../reference-dictionary/messaging.md#isr-in-sync-replica) · [acks=all + min.insync.replicas](#broker-89)
+> **Cross-reference**: [Partitions Physically Distributed](#broker-61) · [ISR (In-Sync Replicas)](../../reference-dictionary/kafka.md#isr-in-sync-replica) · [acks=all + min.insync.replicas](#broker-89)
 
 ---
 
@@ -281,4 +281,4 @@ Example: replication_factor=3, min.insync.replicas=2, acks=all
 | **Write latency** | Each additional ISR member adds network round-trip time to the write path |
 | **Common production config** | `replication_factor=3, min.insync.replicas=2, acks=all` — durable and available with 3-node cluster |
 
-> **Cross-reference**: [Producer Durability Tuning (broker-06)](message-brokers-async.md#broker-06-producer-durability-tuning) · [ISR (In-Sync Replica)](../../reference-dictionary/messaging.md#isr-in-sync-replica) · [Partition-Level Replication](#broker-88)
+> **Cross-reference**: [Producer Durability Tuning (broker-06)](message-brokers-async.md#broker-06-producer-durability-tuning) · [ISR (In-Sync Replica)](../../reference-dictionary/kafka.md#isr-in-sync-replica) · [Partition-Level Replication](#broker-88)

@@ -87,7 +87,7 @@ Replay path:
 | **Schema evolution** | S3-archived events must carry their schema version; use Glue Schema Registry references embedded in the message header |
 
 > **Also see**: [broker-43 Snapshots](#broker-43), [Event Sourcing Overview — broker-24](messaging/kafka-design-patterns.md#broker-24)
-> **Dictionary**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect)
+> **Dictionary**: [Event Sourcing](../../reference-dictionary/cqrs-event-driven.md#event-sourcing), [Kafka Connect](../../reference-dictionary/kafka.md#kafka-connect)
 
 ---
 
@@ -194,7 +194,7 @@ Additionally, route all events for the same aggregate to the same partition (usi
 | **Complexity** | Every updater must handle partial documents; schema must allow nullable fields for incomplete records |
 
 > **Also see**: [Partition Key — broker-32](messaging/kafka-design-patterns.md#broker-32), [Idempotent Consumer — broker-29](messaging/kafka-design-patterns.md#broker-29)
-> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Rebalance](../../reference-dictionary/messaging.md#rebalance)
+> **Dictionary**: [CQRS](../../reference-dictionary/cqrs-event-driven.md#cqrs), [Rebalance](../../reference-dictionary/kafka.md#rebalance)
 
 ---
 
@@ -226,7 +226,7 @@ Also partition the compacted topic to allow parallel bootstrap: each consumer re
 | **Operational overhead** | Requires a snapshot export job and coordination between snapshot offset and Kafka offsets |
 
 > **Also see**: [Compacted Topic Overview — broker-31](messaging/kafka-design-patterns.md#broker-31), [broker-43 Event Sourcing Snapshots](#broker-43)
-> **Dictionary**: [Compacted Topic](../../reference-dictionary/messaging.md#compacted-topic), [Partition](../../reference-dictionary/messaging.md#partition)
+> **Dictionary**: [Compacted Topic](../../reference-dictionary/kafka.md#compacted-topic), [Partition](../../reference-dictionary/kafka.md#partition)
 
 ---
 

@@ -52,7 +52,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Hot partition risk** | A viral group chat can still saturate one partition; monitor partition-level throughput. |
 
 > **Also see**: [broker-04 Message Ordering](messaging/message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering), [Consistent Hashing](../../reference-dictionary/networking.md#consistent-hashing)
+> **Dictionary**: [Partition](../../reference-dictionary/kafka.md#partition), [Message Ordering](../../reference-dictionary/kafka.md#message-ordering), [Consistent Hashing](../../reference-dictionary/networking.md#consistent-hashing)
 > **Azure**: Event Hubs supports partition keys for per-entity ordering; Service Bus sessions enforce FIFO per session ID.
 
 ---
@@ -75,7 +75,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **At-least-once** | Network flakes cause redelivery; clients deduplicate by `message_id`. |
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md)
-> **Dictionary**: [Redis Streams](../../reference-dictionary/messaging.md#redis-streams), [Per-Device Inbox](../../reference-dictionary/messaging.md#per-device-inbox), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Dictionary**: [Redis Streams](../../reference-dictionary/messaging.md#redis-streams), [Per-Device Inbox](../../reference-dictionary/messaging.md#per-device-inbox), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 > **Azure**: Azure Cache for Redis supports Redis Streams; combine with Event Hubs for the durable ordered log.
 
 ---
@@ -144,7 +144,7 @@ Partition = abs(hash(conversation_id)) % total_partitions
 | **Causal consistency** | Replies are ordered after the messages they reference within a conversation. |
 
 > **Also see**: [Message Ordering](messaging/message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Causal Ordering](../../reference-dictionary/data-concurrency.md#causal-ordering), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
+> **Dictionary**: [Causal Ordering](../../reference-dictionary/data-concurrency.md#causal-ordering), [Message Ordering](../../reference-dictionary/kafka.md#message-ordering)
 > **Azure**: Event Hubs capture to Azure Storage lets late-joining devices replay the ordered log.
 
 ---

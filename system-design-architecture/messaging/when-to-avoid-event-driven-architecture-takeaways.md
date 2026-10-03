@@ -72,7 +72,7 @@ flowchart LR
 
 **Tradeoff**: Synchronous paths couple client-server availability and require aggressive circuit breaking, timeouts, and load shedding, whereas asynchronous message buffers absorb surges at the cost of latency predictability.
 
-> **Dictionary**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [API Idempotency](../../reference-dictionary/cqrs-event-driven.md#api-idempotency)  
+> **Dictionary**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag), [API Idempotency](../../reference-dictionary/cqrs-event-driven.md#api-idempotency)  
 > **Azure**: [Azure Application Gateway](../../architecture-azure/networking/application-gateway/), [Azure API Management](../../architecture-azure/integration/api-management/)  
 > **Related**: [`cb-01`](../resilience/23-circuit-breaker-key-takeaways.md#cb-01), [`apipat-01`](../api-network/20-api-design-patterns-key-takeaways.md#apipat-01), [`perf-01`](../performance/29-microservices-runtime-performance.md#perf-01)
 
@@ -89,7 +89,7 @@ flowchart LR
 
 **Tradeoff**: Increases upfront engineering investment in platform engineering and SRE tooling before delivering business features, but prevents catastrophic operational blindness in production.
 
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [Schema Registry](../../reference-dictionary/messaging.md#schema-registry)  
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag), [Schema Registry](../../reference-dictionary/kafka.md#schema-registry)  
 > **Azure**: [Azure Monitor & Application Insights](../../architecture-azure/observability/application_insights/), [Azure Service Bus Dead-Lettering](../../architecture-azure/integration/service-bus/)  
 > **Related**: [`broker-126`](event-driven-architecture-questions-takeaways.md#broker-126-distributed-production-flow-debugging-across-poly-service-eda), [`broker-128`](event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths), [`resilience-01`](../resilience/10-resilience-patterns.md#resilience-01)
 
@@ -171,7 +171,7 @@ flowchart TD
     "strategy": "Keep latency-critical request paths synchronous using low-overhead RPC (gRPC) or optimized HTTP/REST with keep-alive connections; avoid routing sub-second user paths through intermediate message brokers.",
     "tradeoff": "Synchronous paths couple client-server availability and require aggressive circuit breaking, timeouts, and load shedding, whereas asynchronous message buffers absorb surges at the cost of latency predictability.",
     "links": {
-      "dictionary": "../../reference-dictionary/messaging.md#consumer-lag",
+      "dictionary": "../../reference-dictionary/kafka.md#consumer-lag",
       "azure": "../../architecture-azure/networking/application-gateway/",
       "source": "../../articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md"
     }
@@ -182,7 +182,7 @@ flowchart TD
     "strategy": "Treat operational maturity as a hard prerequisite for EDA: establish distributed tracing, automated consumer lag monitoring, DLQ alerting with playbooks, and schema evolution governance before migrating production workloads to event brokers.",
     "tradeoff": "Increases upfront engineering investment in platform engineering and SRE tooling before delivering business features, but prevents catastrophic operational blindness in production.",
     "links": {
-      "dictionary": "../../reference-dictionary/messaging.md#dead-letter-queue-dlq",
+      "dictionary": "../../reference-dictionary/kafka.md#dead-letter-queue-dlq",
       "azure": "../../architecture-azure/observability/application_insights/",
       "source": "../../articles/messaging/when-should-you-avoid-event-driven-architecture-even-if-you-need-to-scale.md"
     }

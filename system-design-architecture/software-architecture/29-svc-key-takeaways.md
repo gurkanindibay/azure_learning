@@ -95,7 +95,7 @@ generated: { by: process:okf-migrate, at: 2026-07-10T00:00:00Z }
 
 **Tradeoff**: Synchronous calls are easier to reason about but propagate latency and failures. Asynchronous flows improve isolation and scale, but require eventual-consistency handling, tracing, retries, and replay or deduplication strategies.
 
-**Also see**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
+**Also see**: [Event-Driven Architecture](../../reference-dictionary/cqrs-event-driven.md#event-driven-architecture) · [Message Ordering](../../reference-dictionary/kafka.md#message-ordering)
 
 ---
 

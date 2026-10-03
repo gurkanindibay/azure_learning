@@ -59,7 +59,7 @@ generated: { by: process:takeaways-agent, at: "2026-10-03T01:11:00+03:00" }
 
 **See also**:
 - [Event Ordering and Kafka Partitioning Takeaways](event-ordering-and-kafka-partitioning-takeaways.md)
-- [Sticky Partitioner](../../reference-dictionary/messaging.md#sticky-partitioner)
+- [Sticky Partitioner](../../reference-dictionary/kafka.md#sticky-partitioner)
 
 ---
 
@@ -112,7 +112,7 @@ Exactly-Once requires **Idempotent Producers** (broker deduplicates by sequence 
 | **Problem** | A producer sending one message per network call creates extreme overhead: high latency per message and low throughput at scale. |
 | **Root cause** | Each individual network round-trip has fixed overhead (TCP handshake amortization, broker write latency). Sending messages one-by-one multiplies this overhead by message count. |
 
-**Strategy**: Configure the **[RecordAccumulator](../../reference-dictionary/messaging.md#recordaccumulator)** to batch messages before sending:
+**Strategy**: Configure the **[RecordAccumulator](../../reference-dictionary/kafka.md#recordaccumulator)** to batch messages before sending:
 
 ```properties
 batch.size=65536       # 64 KB — larger batches = fewer round trips
@@ -125,7 +125,7 @@ Even a `linger.ms=5` allows hundreds of messages to batch, dramatically reducing
 **Tradeoff**: `linger.ms > 0` introduces a small artificial delay for the first message in a batch. This is acceptable for throughput-oriented pipelines but unacceptable for ultra-low-latency use cases (use `linger.ms=0` and accept lower throughput).
 
 **See also**:
-- [RecordAccumulator](../../reference-dictionary/messaging.md#recordaccumulator)
+- [RecordAccumulator](../../reference-dictionary/kafka.md#recordaccumulator)
 - [Kafka Performance & Integration](kafka-performance-integration.md)
 
 ---
@@ -162,7 +162,7 @@ For `acks=all`, pair with `min.insync.replicas=2` to ensure at least 2 brokers m
 | **Problem** | A Kafka consumer group enters an infinite rebalance loop: consumers continuously join/leave, preventing any partition from being processed long enough to make progress. |
 | **Root cause** | The classic "stop-the-world" rebalance revokes all partitions from all consumers simultaneously. Slow startup or slow processing causes heartbeat misses during the pause, triggering another rebalance before the first completes. |
 
-**Strategy**: Replace the default `RangeAssignor` with the **[Cooperative Sticky Assignor](../../reference-dictionary/messaging.md#cooperative-sticky-assignor)**:
+**Strategy**: Replace the default `RangeAssignor` with the **[Cooperative Sticky Assignor](../../reference-dictionary/kafka.md#cooperative-sticky-assignor)**:
 
 ```properties
 partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
@@ -179,7 +179,7 @@ Additionally, tune consumer timing to prevent false heartbeat failures:
 
 **See also**:
 - [Kafka Pipeline Bottlenecks](kafka-pipeline-bottlenecks.md)
-- [Cooperative Sticky Assignor](../../reference-dictionary/messaging.md#cooperative-sticky-assignor)
+- [Cooperative Sticky Assignor](../../reference-dictionary/kafka.md#cooperative-sticky-assignor)
 
 ---
 
@@ -190,7 +190,7 @@ Additionally, tune consumer timing to prevent false heartbeat failures:
 | **Problem** | A producer renames a JSON field (e.g., `customer_name` → `user_name`). Downstream consumers that expect the old field name silently receive `null` or crash. |
 | **Root cause** | Raw JSON has no enforced schema contract. Any team can change the payload structure without coordinating with all consuming teams. |
 
-**Strategy**: Adopt a **[Schema Registry](../../reference-dictionary/messaging.md#schema-registry)** with **[Avro](../../reference-dictionary/messaging.md#avro)** (or Protobuf):
+**Strategy**: Adopt a **[Schema Registry](../../reference-dictionary/kafka.md#schema-registry)** with **[Avro](../../reference-dictionary/kafka.md#avro)** (or Protobuf):
 
 1. Producers register a schema before publishing; the Schema ID is embedded in each message header.
 2. Consumers validate incoming messages against the registered schema.
@@ -199,8 +199,8 @@ Additionally, tune consumer timing to prevent false heartbeat failures:
 **Tradeoff**: Avro binary is not human-readable (unlike JSON), making debugging harder without a schema viewer. Schema Registry adds an external dependency that becomes a critical infrastructure component.
 
 **See also**:
-- [Schema Registry](../../reference-dictionary/messaging.md#schema-registry)
-- [Avro](../../reference-dictionary/messaging.md#avro)
+- [Schema Registry](../../reference-dictionary/kafka.md#schema-registry)
+- [Avro](../../reference-dictionary/kafka.md#avro)
 - [Event-Driven Distributed Monolith Prevention](event-driven-distributed-monolith-prevention-takeaways.md)
 
 ---
@@ -223,7 +223,7 @@ Additionally, tune consumer timing to prevent false heartbeat failures:
 
 **See also**:
 - [Outbox Pattern Capabilities & Limits](outbox-pattern-capabilities-limits-takeaways.md)
-- [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect)
+- [Kafka Connect](../../reference-dictionary/kafka.md#kafka-connect)
 
 ---
 
@@ -239,14 +239,14 @@ Additionally, tune consumer timing to prevent false heartbeat failures:
 - **High-cardinality keys** (user IDs, order IDs, device IDs): safe — distribute events evenly.
 - **Low-cardinality keys** (status codes, promo codes, event types): dangerous — must use a composite key or no key.
 
-If ordering is not strictly required for the hot use case, drop the Message Key entirely and let the **[Sticky Partitioner](../../reference-dictionary/messaging.md#sticky-partitioner)** distribute messages round-robin across all partitions.
+If ordering is not strictly required for the hot use case, drop the Message Key entirely and let the **[Sticky Partitioner](../../reference-dictionary/kafka.md#sticky-partitioner)** distribute messages round-robin across all partitions.
 
 **Tradeoff**: Removing the key sacrifices per-entity ordering across partitions. For events where ordering genuinely matters, use a composite key (e.g., `userId:eventType`) that maintains cardinality while providing order guarantees.
 
 **See also**:
 - [Kafka Pipeline Bottlenecks](kafka-pipeline-bottlenecks.md)
 - [Event Ordering and Kafka Partitioning Takeaways](event-ordering-and-kafka-partitioning-takeaways.md)
-- [Sticky Partitioner](../../reference-dictionary/messaging.md#sticky-partitioner)
+- [Sticky Partitioner](../../reference-dictionary/kafka.md#sticky-partitioner)
 
 ---
 

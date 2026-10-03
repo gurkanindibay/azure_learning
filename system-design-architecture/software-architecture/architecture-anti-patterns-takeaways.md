@@ -131,7 +131,7 @@ generated: { by: process:format-agent, at: 2026-09-30T23:12:00+03:00 }
 
 **Tradeoff**: The outbox pattern adds a relay process and polling overhead. Without it, dual-write failures cause silent data drift that surfaces as customer support tickets.
 
-**Cross-reference**: [Outbox Pattern](../../reference-dictionary/messaging.md#outbox-pattern) · [Idempotency](../../reference-dictionary/architecture-patterns.md#idempotency) · [arch-08 Idempotency](architecture-principles.md#arch-08-idempotency) · [DLQ](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+**Cross-reference**: [Outbox Pattern](../../reference-dictionary/messaging.md#outbox-pattern) · [Idempotency](../../reference-dictionary/architecture-patterns.md#idempotency) · [arch-08 Idempotency](architecture-principles.md#arch-08-idempotency) · [DLQ](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 

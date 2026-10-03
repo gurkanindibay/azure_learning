@@ -12,7 +12,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 > **Purpose**: Kafka consumer reliability patterns for production messaging pipelines.
 
 > **Also see**: [Message Brokers & Async](messaging/message-brokers-async.md)
-> **Dictionary**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect), [Offset Commit](../../reference-dictionary/messaging.md#offset-commit)
+> **Dictionary**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag), [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Kafka Connect](../../reference-dictionary/kafka.md#kafka-connect), [Offset Commit](../../reference-dictionary/kafka.md#offset-commit)
 > **Taxonomy Reference**: §3.2 Messaging Patterns, §7.1 Reliability Architecture
 
 ---
@@ -40,7 +40,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 >
 > **Tradeoff**: Committing after processing improves correctness but can cause reprocessing after a crash if the commit fails. Idempotent handlers are required for true at-least-once semantics.
 >
-> **Cross-reference**: [Offset Commit](../../reference-dictionary/messaging.md#offset-commit) · [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Cross-reference**: [Offset Commit](../../reference-dictionary/kafka.md#offset-commit) · [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 
 ---
 
@@ -57,7 +57,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 >
 > **Tradeoff**: Fine-grained lag alerts can be noisy during traffic spikes; pair with trend-based alerts and consumer autoscaling where possible.
 >
-> **Cross-reference**: [Consumer Lag](../../reference-dictionary/messaging.md#consumer-lag) · [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)
+> **Cross-reference**: [Consumer Lag](../../reference-dictionary/kafka.md#consumer-lag) · [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)
 
 ---
 
@@ -74,7 +74,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 >
 > **Tradeoff**: Independent regional groups process every message in every region, increasing total consumption cost and requiring downstream systems to handle regional duplicates if the topic is not region-partitioned.
 >
-> **Cross-reference**: [Consumer Group](../../reference-dictionary/messaging.md#consumer-group) · [Partition](../../reference-dictionary/messaging.md#partition)
+> **Cross-reference**: [Consumer Group](../../reference-dictionary/kafka.md#consumer-group) · [Partition](../../reference-dictionary/kafka.md#partition)
 
 ---
 
@@ -91,7 +91,7 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 >
 > **Tradeoff**: Longer retention increases storage cost and replay time. Archiving to object storage trades immediate random access for much lower cost and indefinite retention.
 >
-> **Cross-reference**: [Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect) · [Partition](../../reference-dictionary/messaging.md#partition)
+> **Cross-reference**: [Kafka Connect](../../reference-dictionary/kafka.md#kafka-connect) · [Partition](../../reference-dictionary/kafka.md#partition)
 
 ---
 
@@ -108,4 +108,4 @@ generated: { by: process:okf-migrate, at: 2026-06-15T00:00:00Z }
 >
 > **Tradeoff**: DLTs add operational complexity (retry semantics, ordering changes, DLT reprocessing). Retries can also delay processing and violate ordering guarantees within a partition.
 >
-> **Cross-reference**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq) · [Poison Message](../../reference-dictionary/messaging.md#poison-message)
+> **Cross-reference**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq) · [Poison Message](../../reference-dictionary/kafka.md#poison-message)

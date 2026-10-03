@@ -79,7 +79,7 @@ Kafka uses simple vocabulary for its components:
 docker run -d --name kafka-server -p 9092:9092 apache/kafka:3.7.0
 ```
 
-> **Note**: KRaft mode replaces the historical dependency on Apache ZooKeeper. See [KRaft](../../reference-dictionary/messaging.md#kraft) for details.
+> **Note**: KRaft mode replaces the historical dependency on Apache ZooKeeper. See [KRaft](../../reference-dictionary/kafka.md#kraft) for details.
 
 #### Your first topic, producer, and consumer
 
@@ -175,7 +175,7 @@ Before Kafka 3.x, metadata (which broker leads which partition) was managed by *
 - Faster controller failover
 - Simpler deployment topology
 
-See [KRaft](../../reference-dictionary/messaging.md#kraft).
+See [KRaft](../../reference-dictionary/kafka.md#kraft).
 
 ### 3. Delivery Guarantees
 
@@ -195,7 +195,7 @@ See [KRaft](../../reference-dictionary/messaging.md#kraft).
 
 ### 1. Producer Deep Dive — Batching and Acks
 
-Producers buffer outgoing messages in the **[RecordAccumulator](../../reference-dictionary/messaging.md#recordaccumulator)** before sending batches over the network.
+Producers buffer outgoing messages in the **[RecordAccumulator](../../reference-dictionary/kafka.md#recordaccumulator)** before sending batches over the network.
 
 Key tuning settings:
 
@@ -249,7 +249,7 @@ A **Rebalance** occurs when Kafka redistributes partitions across consumers — 
 3. Kafka assumes Consumer 1 died → triggers another rebalance.
 4. Loop continues → kitchen stops making coffee indefinitely.
 
-**Fix: [Cooperative Sticky Assignor](../../reference-dictionary/messaging.md#cooperative-sticky-assignor)**
+**Fix: [Cooperative Sticky Assignor](../../reference-dictionary/kafka.md#cooperative-sticky-assignor)**
 
 Instead of revoking *all* partitions from *everyone*, Kafka only revokes the specific partitions that need to move. Other consumers keep processing without interruption. A 10-second shutdown becomes a seamless handoff.
 
@@ -271,17 +271,17 @@ Consumer Lag = (Latest message offset on partition) − (Last committed offset b
 
 Common formats:
 - **JSON**: Human-readable, but no schema enforcement → brittle.
-- **[Avro](../../reference-dictionary/messaging.md#avro)**: Binary format with a schema embedded in a Schema Registry → compact, schema-enforced.
+- **[Avro](../../reference-dictionary/kafka.md#avro)**: Binary format with a schema embedded in a Schema Registry → compact, schema-enforced.
 - **Protobuf**: Google's binary format — even faster than Avro, requires code generation.
 
-The **[Schema Registry](../../reference-dictionary/messaging.md#schema-registry)** acts as a contract enforcer:
+The **[Schema Registry](../../reference-dictionary/kafka.md#schema-registry)** acts as a contract enforcer:
 - Producers register a schema before publishing.
 - Consumers validate incoming data against the schema.
 - Schema evolution rules prevent breaking changes.
 
 ### 2. Kafka Connect — the Integration Hub
 
-**[Kafka Connect](../../reference-dictionary/messaging.md#kafka-connect)** is a framework for streaming data between Kafka and external systems without custom code.
+**[Kafka Connect](../../reference-dictionary/kafka.md#kafka-connect)** is a framework for streaming data between Kafka and external systems without custom code.
 
 | Direction | Connector Type | Example |
 |:---|:---|:---|
@@ -298,8 +298,8 @@ Core abstractions:
 
 | Abstraction | Represents | Analogy |
 |:---|:---|:---|
-| **[KStream](../../reference-dictionary/messaging.md#kstream)** | Unbounded stream of events | A live order ticket feed |
-| **[KTable](../../reference-dictionary/messaging.md#ktable)** | Changelog / current state | A leaderboard |
+| **[KStream](../../reference-dictionary/kafka.md#kstream)** | Unbounded stream of events | A live order ticket feed |
+| **[KTable](../../reference-dictionary/kafka.md#ktable)** | Changelog / current state | A leaderboard |
 
 ### 4. Event-Driven Architecture Patterns
 
@@ -326,7 +326,7 @@ Core abstractions:
 | Layer | Mechanism | Purpose |
 |:---|:---|:---|
 | Encryption | SSL/TLS | Encrypts data in transit |
-| Authentication | [SASL](../../reference-dictionary/messaging.md#sasl)/SCRAM | Verifies client identity without transmitting the password |
+| Authentication | [SASL](../../reference-dictionary/kafka.md#sasl)/SCRAM | Verifies client identity without transmitting the password |
 | Authorization | ACLs | Controls which clients can read/write which topics and consumer groups |
 
 ### 2. Monitoring — The Big Three Metrics
@@ -347,7 +347,7 @@ Monitoring stack: **Prometheus + Grafana** with JMX exporters on each broker.
 
 **Cause**: A low-cardinality key (e.g., promo code `CORP100`) hashes to the same partition repeatedly.
 
-**Fix**: Remove the Message Key if strict ordering is not required and let the [Sticky Partitioner](../../reference-dictionary/messaging.md#sticky-partitioner) distribute load evenly.
+**Fix**: Remove the Message Key if strict ordering is not required and let the [Sticky Partitioner](../../reference-dictionary/kafka.md#sticky-partitioner) distribute load evenly.
 
 #### Slow Consumer
 
@@ -376,7 +376,7 @@ Monitoring stack: **Prometheus + Grafana** with JMX exporters on each broker.
 | API compatibility | Native | 100% Kafka-compatible |
 | Latency profile | Predictable ms | Ultra-low, predictable |
 
-See [Redpanda](../../reference-dictionary/messaging.md#redpanda) for details.
+See [Redpanda](../../reference-dictionary/kafka.md#redpanda) for details.
 
 ### 5. Real-World Use Cases
 

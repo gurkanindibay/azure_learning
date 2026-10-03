@@ -48,8 +48,8 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Duplication risk** | Without idempotency, every retry risks a duplicate business side-effect |
 | **Kafka's role** | Kafka guarantees durability but has no visibility into whether the producer received the ack |
 
-> **Also see**: [Atomic Deduplication — broker-61](#broker-61), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
-> **Dictionary**: [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Also see**: [Atomic Deduplication — broker-61](#broker-61), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
+> **Dictionary**: [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
 
 ---
 
@@ -71,7 +71,7 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Producer responsibility** | Event ID generation must be deterministic — same business event = same ID across retries |
 
 > **Also see**: [Atomic Deduplication — broker-61](#broker-61), [Transactional Boundary — broker-62](#broker-62)
-> **Dictionary**: [Event ID](../../reference-dictionary/cqrs-event-driven.md#event-id), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)
+> **Dictionary**: [Event ID](../../reference-dictionary/cqrs-event-driven.md#event-id), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Idempotency](../../reference-dictionary/cqrs-event-driven.md#idempotency)
 
 ---
 
@@ -93,7 +93,7 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Error handling** | Consumers must handle the constraint-violation error gracefully (skip, not crash) |
 
 > **Also see**: [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Transactional Boundary — broker-62](#broker-62)
-> **Dictionary**: [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **Dictionary**: [Atomic Deduplication](../../reference-dictionary/messaging.md#atomic-deduplication), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 
 ---
 
@@ -141,8 +141,8 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Both needed** | Producer idempotency reduces log duplicates; consumer idempotency is still mandatory for business correctness |
 | **Kafka transactions** | Similarly only cover read-process-write within Kafka — not external database updates |
 
-> **Also see**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
-> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Kafka Transactions](../../reference-dictionary/messaging.md#kafka-transactions)
+> **Also see**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics)
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Kafka Transactions](../../reference-dictionary/kafka.md#kafka-transactions)
 
 ---
 
@@ -165,7 +165,7 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Retention window** | Must exceed `max.poll.interval.ms` + `retention.ms` to cover worst-case redelivery |
 
 > **Also see**: [Atomic Deduplication — broker-61](#broker-61)
-> **Dictionary**: [Consumer Group](../../reference-dictionary/messaging.md#consumer-group), [Rebalance](../../reference-dictionary/messaging.md#rebalance)
+> **Dictionary**: [Consumer Group](../../reference-dictionary/kafka.md#consumer-group), [Rebalance](../../reference-dictionary/kafka.md#rebalance)
 
 ---
 
@@ -186,5 +186,5 @@ generated: { by: process:okf-migrate, at: 2026-06-27T00:00:00Z }
 | **Implementation burden** | Requires producer discipline (Event IDs), consumer idempotency, and shared dedup infrastructure |
 | **Failure modes** | Still vulnerable to bugs in Event ID generation or dedup store corruption |
 
-> **Also see**: [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
-> **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics)
+> **Also see**: [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)
+> **Dictionary**: [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics)

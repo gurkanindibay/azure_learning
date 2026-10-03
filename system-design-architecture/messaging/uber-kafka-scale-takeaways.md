@@ -65,7 +65,7 @@ flowchart TD
 
 **Tradeoff**: Increases fleet management overhead (monitoring multiple clusters, balancing capacity across clusters); requires cross-cluster replication infrastructure when data must cross federation boundaries.
 
-> **Dictionary**: [Federated Kafka Clusters](../../reference-dictionary/messaging.md#federated-kafka-clusters), [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log), [Bulkhead](../../reference-dictionary/resilience.md#bulkhead)  
+> **Dictionary**: [Federated Kafka Clusters](../../reference-dictionary/kafka.md#federated-kafka-clusters), [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log), [Bulkhead](../../reference-dictionary/resilience.md#bulkhead)  
 > **Azure**: [Azure Event Hubs Dedicated Tier](../../architecture-azure/integration/event-hubs/azure-event-hubs-tiers.md)  
 > **Related**: [`broker-111`](notifications-at-scale-takeaways.md#broker-111-synchronous-in-request-loops-cause-api-collapse), [`broker-128`](event-driven-architecture-questions-takeaways.md#broker-128-anti-degradation-governance-against-eda-distributed-monoliths), [`resilience-01`](../resilience/resilience-patterns.md#resilience-01-otp-service-fails-during-peak-traffic)  
 
@@ -120,7 +120,7 @@ flowchart TD
 
 **Tradeoff**: Introduces additional coordination infrastructure (Apache Helix / Zookeeper / KRaft dependencies) and operational complexity compared to stock MirrorMaker 2 (KIP-382).
 
-> **Dictionary**: [uReplicator](../../reference-dictionary/messaging.md#ureplicator), [Rebalance](../../reference-dictionary/messaging.md#rebalance), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)  
+> **Dictionary**: [uReplicator](../../reference-dictionary/kafka.md#ureplicator), [Rebalance](../../reference-dictionary/kafka.md#rebalance), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)  
 > **Azure**: [Azure Event Hubs Geo-Replication & Disaster Recovery](../../architecture-azure/integration/event-hubs/azure-event-hubs-tiers.md)  
 > **Related**: [`broker-103`](kafka-pipeline-bottlenecks.md#broker-103-adding-consumers-can-make-the-system-slower), [`broker-120`](event-driven-architecture-questions-takeaways.md#broker-120-tripartite-separation-of-event-loss-duplicates-and-reprocessing)  
 
@@ -176,7 +176,7 @@ flowchart LR
 
 **Tradeoff**: Adds telemetry bandwidth and requires dedicated stream processing infrastructure to collect, window, and reconcile audit metrics in near real time.
 
-> **Dictionary**: [Pipeline Audit Service (Chaperone Pattern)](../../reference-dictionary/messaging.md#pipeline-audit-service-chaperone-pattern), [At-Least-Once Semantics](../../reference-dictionary/messaging.md#at-least-once-semantics), [Observability](../../reference-dictionary/observability.md#observability)  
+> **Dictionary**: [Pipeline Audit Service (Chaperone Pattern)](../../reference-dictionary/kafka.md#pipeline-audit-service-chaperone-pattern), [At-Least-Once Semantics](../../reference-dictionary/kafka.md#at-least-once-semantics), [Observability](../../reference-dictionary/observability.md#observability)  
 > **Azure**: [Azure Monitor Architecture](../../architecture-azure/observability/azure-monitor/azure-monitor-details.md)  
 > **Related**: [`broker-139`](event-driven-business-consistency-takeaways.md#broker-139-operational-discard-observability-vs-dead-letter-queue-pollution), [`broker-142`](event-loss-duplicates-reprocessing-takeaways.md#broker-142-producer--broker-durability-invariants-vs-un-replicated-leader-data-loss), [`arch-10`](../software-architecture/architecture-principles.md#arch-10-observability)  
 
@@ -227,7 +227,7 @@ flowchart TD
 
 **Tradeoff**: Adds an extra network hop (typically <2ms over local gRPC); introduces an additional proxy tier that must be sized, scaled, and operated.
 
-> **Dictionary**: [Consumer Proxy Pattern](../../reference-dictionary/messaging.md#consumer-proxy-pattern), [Competing Consumers](../../reference-dictionary/messaging.md#competing-consumers), [Proxy Pattern](../../reference-dictionary/design-patterns.md#proxy-pattern)  
+> **Dictionary**: [Consumer Proxy Pattern](../../reference-dictionary/kafka.md#consumer-proxy-pattern), [Competing Consumers](../../reference-dictionary/messaging.md#competing-consumers), [Proxy Pattern](../../reference-dictionary/design-patterns.md#proxy-pattern)  
 > **Azure**: [Azure Service Bus Messaging Architecture](../../architecture-azure/integration/service-bus/azure-service-bus-tiers.md)  
 > **Related**: [`broker-102`](kafka-pipeline-bottlenecks.md#broker-102-the-first-bottleneck-is-never-kafka), [`broker-103`](kafka-pipeline-bottlenecks.md#broker-103-adding-consumers-can-make-the-system-slower), [`broker-105`](kafka-pipeline-bottlenecks.md#broker-105-one-slow-event-blocks-an-entire-partition)  
 
@@ -272,7 +272,7 @@ sequenceDiagram
 
 **Tradeoff**: Out-of-order processing for the failed record relative to subsequent records in the partition; requires consumers to be idempotent when messages are replayed.
 
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message), [Replay (Kafka Reprocessing)](../../reference-dictionary/messaging.md#replay-kafka-reprocessing)  
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/kafka.md#poison-message), [Replay (Kafka Reprocessing)](../../reference-dictionary/kafka.md#replay-kafka-reprocessing)  
 > **Azure**: [Azure Service Bus Dead-Letter Sub-Queues](../../architecture-azure/integration/service-bus/azure-service-bus-tiers.md)  
 > **Related**: [`broker-107`](kafka-pipeline-bottlenecks.md#broker-107-poison-messages-need-dead-letter-queues), [`broker-144`](event-loss-duplicates-reprocessing-takeaways.md#broker-144-deterministic-consumer-replay--side-effect-gating-during-reprocessing), [`broker-146`](event-loss-duplicates-reprocessing-takeaways.md#broker-146-defense-in-depth-downstream-idempotency-keys-for-non-idempotent-side-effects)  
 
@@ -322,7 +322,7 @@ flowchart TD
 
 **Tradeoff**: Cold-tier fetches incur higher initial latency and network transfer egress costs; requires object storage availability and compatible Kafka versions supporting Tiered Storage (e.g., Kafka 3.6+ KIP-405 or enterprise distributions).
 
-> **Dictionary**: [Kafka Tiered Storage](../../reference-dictionary/messaging.md#kafka-tiered-storage), [Distributed Commit Log](../../reference-dictionary/messaging.md#distributed-commit-log), [Compact Object Headers](../../reference-dictionary/java-jvm.md#compact-object-headers)  
+> **Dictionary**: [Kafka Tiered Storage](../../reference-dictionary/kafka.md#kafka-tiered-storage), [Distributed Commit Log](../../reference-dictionary/kafka.md#distributed-commit-log), [Compact Object Headers](../../reference-dictionary/java-jvm.md#compact-object-headers)  
 > **Azure**: [Azure Blob Storage Cold Tier & Lifecycle Management](../../architecture-azure/data/storage/04-azure-storage-access-tiers-rehydration.md)  
 > **Related**: [`broker-44`](kafka-data-state.md#broker-44-s3-archiving-for-infinite-event-retention), [`broker-59`](kafka-distributed-log-architecture.md#broker-59-distributed-commit-log-vs-centralized-queue), [`broker-87`](kafka-distributed-log-architecture.md#broker-87-log-segments--the-physical-storage-unit), [`db-27`](../databases/34-db-key-takeaways.md#db-27-quorum-based-hybrid-replication--rwn)  
 

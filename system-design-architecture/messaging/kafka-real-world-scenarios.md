@@ -38,7 +38,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: Per-user ordering is preserved, but cross-user ordering is lost. Uneven user activity can create hot partitions — plan for partition rebalancing or use a compound key if some users dominate.
 
-> **Dictionary**: [Partition](../reference-dictionary/messaging.md#partition), [Message Ordering](../reference-dictionary/messaging.md#message-ordering), [Message Batching](../reference-dictionary/messaging.md#message-batching)
+> **Dictionary**: [Partition](../reference-dictionary/kafka.md#partition), [Message Ordering](../reference-dictionary/kafka.md#message-ordering), [Message Batching](../reference-dictionary/kafka.md#message-batching)
 
 ---
 
@@ -53,7 +53,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: The deduplication store adds latency and operational complexity. If the store is unavailable, the system must either block (safety over availability) or accept duplicates (availability over safety) — choose based on business requirements.
 
-> **Dictionary**: [Idempotent Consumer](../reference-dictionary/messaging.md#idempotent-consumer), [Exactly-Once Semantics](../reference-dictionary/messaging.md#exactly-once-semantics), [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
+> **Dictionary**: [Idempotent Consumer](../reference-dictionary/kafka.md#idempotent-consumer), [Exactly-Once Semantics](../reference-dictionary/kafka.md#exactly-once-semantics), [Atomic Deduplication](../reference-dictionary/messaging.md#atomic-deduplication)
 
 ---
 
@@ -68,7 +68,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: The system becomes eventually consistent. A shipping service might see an `OrderPlaced` event before inventory confirms availability. This requires compensation patterns (sagas) and careful state management per consumer.
 
-> **Dictionary**: [Kafka vs RabbitMQ](../reference-dictionary/messaging.md#kafka-vs-rabbitmq), [Distributed Commit Log](../reference-dictionary/messaging.md#distributed-commit-log)
+> **Dictionary**: [Kafka vs RabbitMQ](../reference-dictionary/kafka.md#kafka-vs-rabbitmq), [Distributed Commit Log](../reference-dictionary/kafka.md#distributed-commit-log)
 > **Related**: [CQRS & Event-Driven](../reference-dictionary/cqrs-event-driven.md)
 
 ---
@@ -84,7 +84,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: The aggregation layer adds processing latency and operational complexity. Window choices (size, slide interval) affect both accuracy and freshness — smaller windows = fresher data but more computation.
 
-> **Dictionary**: [Stream-Table Duality](../reference-dictionary/messaging.md#stream-table-duality), [KTable](../reference-dictionary/messaging.md#ktable)
+> **Dictionary**: [Stream-Table Duality](../reference-dictionary/kafka.md#stream-table-duality), [KTable](../reference-dictionary/kafka.md#ktable)
 
 ---
 
@@ -99,7 +99,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: CDC adds infrastructure (connectors, Kafka) and the source database must expose its transaction log. Schema changes in the source database must be carefully coordinated with downstream consumers.
 
-> **Dictionary**: [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture), [Distributed Commit Log](../reference-dictionary/messaging.md#distributed-commit-log)
+> **Dictionary**: [Change Data Capture](../reference-dictionary/data-concurrency.md#change-data-capture), [Distributed Commit Log](../reference-dictionary/kafka.md#distributed-commit-log)
 
 ---
 
@@ -114,7 +114,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: Schema governance adds friction to development — teams can't freely change their data model. The Schema Registry becomes a critical runtime dependency. Versioning discipline must be enforced organizationally, not just technically.
 
-> **Dictionary**: [Schema Registry](../reference-dictionary/messaging.md#schema-registry), [Schema Contract](../reference-dictionary/messaging.md#schema-contract-event-as-public-api)
+> **Dictionary**: [Schema Registry](../reference-dictionary/kafka.md#schema-registry), [Schema Contract](../reference-dictionary/kafka.md#schema-contract-event-as-public-api)
 
 ---
 
@@ -129,7 +129,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: Scaling consumers helps only up to the partition count — beyond that, you must increase partitions (which can break ordering) or optimize per-consumer throughput. Lag monitoring is reactive by nature; there's always some delay between the spike and the response.
 
-> **Dictionary**: [Consumer Lag](../reference-dictionary/messaging.md#consumer-lag), [Consumer Group](../reference-dictionary/messaging.md#consumer-group), [Rebalance](../reference-dictionary/messaging.md#rebalance)
+> **Dictionary**: [Consumer Lag](../reference-dictionary/kafka.md#consumer-lag), [Consumer Group](../reference-dictionary/kafka.md#consumer-group), [Rebalance](../reference-dictionary/kafka.md#rebalance)
 
 ---
 
@@ -144,7 +144,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: Longer watermark grace periods improve accuracy (more late events included) but increase result latency. Shorter watermarks give fresher results but may miss late data. Uneven device traffic can create skewed partitions requiring custom partitioning strategies.
 
-> **Dictionary**: [Event-Time](#), [Processing-Time](#), [Watermarking](#), [Hot Partition](../reference-dictionary/messaging.md#hot-partition)
+> **Dictionary**: [Event-Time](#), [Processing-Time](#), [Watermarking](#), [Hot Partition](../reference-dictionary/kafka.md#hot-partition)
 
 ---
 
@@ -159,7 +159,7 @@ generated: { by: process:okf-migrate, at: 2026-06-28T00:00:00Z }
 
 **Tradeoff**: Kafka Connect adds another component to operate and monitor. Not all connectors are production-grade — test community connectors thoroughly. Connect's distributed mode adds deployment complexity but provides fault tolerance.
 
-> **Dictionary**: [Kafka Connect](../reference-dictionary/messaging.md#kafka-connect), [Dead Letter Queue (DLQ)](../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **Dictionary**: [Kafka Connect](../reference-dictionary/kafka.md#kafka-connect), [Dead Letter Queue (DLQ)](../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 

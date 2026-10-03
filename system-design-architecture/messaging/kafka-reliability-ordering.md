@@ -122,7 +122,7 @@ Set TTL to the replay window (typically 7 days) to auto-expire old markers witho
 | **Cost** | DynamoDB on-demand mode scales cost with message volume; batch idempotency writes for very high throughput |
 
 > **Also see**: [Idempotent Consumer Overview — broker-29](messaging/kafka-design-patterns.md#broker-29), [tx-04](concurrency-transactions/concurrency-transactions.md#tx-04-idempotency)
-> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer), [Exactly-Once Semantics](../../reference-dictionary/messaging.md#exactly-once-semantics)
+> **Dictionary**: [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer), [Exactly-Once Semantics](../../reference-dictionary/kafka.md#exactly-once-semantics)
 
 ---
 
@@ -153,7 +153,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **Partition change risk** | Adding partitions changes which partition a key hashes to, breaking ordering for pre-change keys |
 
 > **Also see**: [Partition Key Overview — broker-32](messaging/kafka-design-patterns.md#broker-32), [Message Brokers — broker-04](messaging/message-brokers-async.md#broker-04-message-ordering)
-> **Dictionary**: [Hot Partition](../../reference-dictionary/messaging.md#hot-partition), [Partition](../../reference-dictionary/messaging.md#partition), [Message Ordering](../../reference-dictionary/messaging.md#message-ordering)
+> **Dictionary**: [Hot Partition](../../reference-dictionary/kafka.md#hot-partition), [Partition](../../reference-dictionary/kafka.md#partition), [Message Ordering](../../reference-dictionary/kafka.md#message-ordering)
 
 ---
 
@@ -183,7 +183,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **Over-partitioning cost** | Each partition has a memory footprint on brokers and coordinators; excessive partition count increases leader election time on broker failures |
 
 > **Also see**: [Message Brokers — broker-05](messaging/message-brokers-async.md#broker-05-stream-processing), [broker-32 Partition Key](messaging/kafka-design-patterns.md#broker-32)
-> **Dictionary**: [Partition](../../reference-dictionary/messaging.md#partition), [Consumer Group](../../reference-dictionary/messaging.md#consumer-group)
+> **Dictionary**: [Partition](../../reference-dictionary/kafka.md#partition), [Consumer Group](../../reference-dictionary/kafka.md#consumer-group)
 
 ---
 
@@ -209,7 +209,7 @@ When high cardinality is impossible (e.g., a "system-wide config" key), apply **
 | **DLQ growth** | Set topic retention (e.g., 30 days) and CloudWatch alarms on DLQ lag; a growing DLQ is a signal of systemic upstream issues |
 
 > **Also see**: [DLQ Overview — broker-28](messaging/kafka-design-patterns.md#broker-28), [Resilience Patterns — resilience-01](resilience/resilience-patterns.md)
-> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/messaging.md#poison-message)
+> **Dictionary**: [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq), [Poison Message](../../reference-dictionary/kafka.md#poison-message)
 
 ---
 
@@ -242,7 +242,7 @@ The main consumer never sleeps — it commits the offset and routes the failed m
 | **Ordering** | Retried messages arrive as new messages with new offsets; per-entity ordering is not preserved across retry tiers |
 
 > **Also see**: [DLQ — broker-40](#broker-40), [Resilience Patterns — resilience-01](resilience/resilience-patterns.md), [broker-28 DLQ Overview](messaging/kafka-design-patterns.md#broker-28)
-> **Dictionary**: [Retry Topic](../../reference-dictionary/messaging.md#retry-topic), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **Dictionary**: [Retry Topic](../../reference-dictionary/kafka.md#retry-topic), [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 

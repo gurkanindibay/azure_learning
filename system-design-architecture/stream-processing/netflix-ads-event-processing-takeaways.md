@@ -10,7 +10,7 @@ generated: { by: process:okf-migrate, at: 2026-08-23T00:00:00Z }
 > **Parent**: [System Design Interview Reference](../index.md)  
 > **Source**: [Part I: Building a Robust Ads Event Processing Pipeline](../../articles/stream-processing/netflix-ads-event-processing-pipeline.md), [Part II: Evolving Netflix's Ads Event Pipeline for Live](../../articles/stream-processing/netflix-ads-event-pipeline-live.md)  
 > **Related**: [Stream Processing (Apache Flink)](stream-processing-flink.md), [Async & Concurrency Patterns](async-concurrency-patterns.md), [Message Brokers & Async](../messaging/message-brokers-async.md)  
-> **Dictionary**: [Stream-Stream Join](../../reference-dictionary/messaging.md#stream-stream-join), [In-Stream Keyed Deduplication](../../reference-dictionary/messaging.md#in-stream-keyed-deduplication), [Stream Sessionization](../../reference-dictionary/messaging.md#stream-sessionization), [Route-to-Data Pattern](../../reference-dictionary/architecture-patterns.md#route-to-data-pattern), [Deterministic Traffic Dialing](../../reference-dictionary/deployment-patterns.md#deterministic-traffic-dialing), [Server-Side Ad Insertion (SSAI)](../../reference-dictionary/media-processing.md#server-side-ad-insertion-ssai), [Frequency Capping](../../reference-dictionary/architecture-patterns.md#frequency-capping), [Apache Flink](../../reference-dictionary/messaging.md#apache-flink)  
+> **Dictionary**: [Stream-Stream Join](../../reference-dictionary/kafka.md#stream-stream-join), [In-Stream Keyed Deduplication](../../reference-dictionary/kafka.md#in-stream-keyed-deduplication), [Stream Sessionization](../../reference-dictionary/kafka.md#stream-sessionization), [Route-to-Data Pattern](../../reference-dictionary/architecture-patterns.md#route-to-data-pattern), [Deterministic Traffic Dialing](../../reference-dictionary/deployment-patterns.md#deterministic-traffic-dialing), [Server-Side Ad Insertion (SSAI)](../../reference-dictionary/media-processing.md#server-side-ad-insertion-ssai), [Frequency Capping](../../reference-dictionary/architecture-patterns.md#frequency-capping), [Apache Flink](../../reference-dictionary/kafka.md#apache-flink)  
 > **Azure Services**: [Azure Stream Analytics](../../architecture-azure/data/), [Event Hubs](../../architecture-azure/integration/), [Azure Cache for Redis](../../architecture-azure/databases/)  
 > **Taxonomy Reference**: §3.3 Event-Driven & Messaging, §4.2 Stream Analytics & Real-Time Processing
 
@@ -145,7 +145,7 @@ Raw Telemetry Events (Kafka)
 **Tradeoff**: Maintaining state for millions of concurrent in-flight sessions requires substantial RocksDB / in-memory state storage in Flink and fine-tuned checkpointing configuration.
 
 > **Azure**: **Azure Stream Analytics** with `SESSIONWINDOW` or self-managed **Apache Flink on AKS / HDInsight** writing aggregated sessions to **Azure Data Lake Storage** / **Synapse Analytics**.  
-> **General**: [Stream Sessionization](../../reference-dictionary/messaging.md#stream-sessionization), [Windowing Patterns](stream-processing-flink.md#flink-04-windowing--aggregating-infinite-streams)
+> **General**: [Stream Sessionization](../../reference-dictionary/kafka.md#stream-sessionization), [Windowing Patterns](stream-processing-flink.md#flink-04-windowing--aggregating-infinite-streams)
 
 ---
 
@@ -275,7 +275,7 @@ Client Device ── (3. Fires Playback Heartbeat) ──► Kafka: `ad-events` 
 **Tradeoff**: Eliminates database writes as a single point of failure on the ad-serving hot path and enables elastic scaling. However, requires managing stateful streaming infrastructure, operator state TTL policies, and out-of-order stream buffering.
 
 > **Azure**: Ad serving microservices on **AKS** log decisions to **Azure Event Hubs**; **Azure Stream Analytics** (with temporal joins) or **Apache Flink on AKS** matches decisions with device telemetry and writes to downstream event hubs.  
-> **General**: [Stream-Stream Join](../../reference-dictionary/messaging.md#stream-stream-join), [Read/Write Path Separation](../../reference-dictionary/architecture-patterns.md#readwrite-path-separation)
+> **General**: [Stream-Stream Join](../../reference-dictionary/kafka.md#stream-stream-join), [Read/Write Path Separation](../../reference-dictionary/architecture-patterns.md#readwrite-path-separation)
 
 ---
 
@@ -309,7 +309,7 @@ Client Device ── (3. Fires Playback Heartbeat) ──► Kafka: `ad-events` 
 **Tradeoff**: Replaces multi-region continuous state replication with an event-driven WAN forwarding hop. Only the small fraction (~0.1%) of roaming client events pays the network hop, reducing inter-region data transfer costs by >99%. Requires reliable inter-region broker forwarding pipelines.
 
 > **Azure**: Regional **Azure API Management** or **Event Hubs** ingress gateways inspect origin metadata in tokens and forward cross-region traffic over the **Azure Global Backbone Network** to the originating region's Event Hub.  
-> **General**: [Route-to-Data Pattern](../../reference-dictionary/architecture-patterns.md#route-to-data-pattern), [Message Routing](../../reference-dictionary/messaging.md#message-ordering)
+> **General**: [Route-to-Data Pattern](../../reference-dictionary/architecture-patterns.md#route-to-data-pattern), [Message Routing](../../reference-dictionary/kafka.md#message-ordering)
 
 ---
 
@@ -349,7 +349,7 @@ Client Device ── (3. Fires Playback Heartbeat) ──► Kafka: `ad-events` 
 **Tradeoff**: Retains sub-second checkpointing and high throughput in the real-time streaming pipeline. The 0.001% long tail experiences an hourly processing delay, which is fully acceptable for financial accounting and historical reporting.
 
 > **Azure**: **Azure Stream Analytics** with 60-minute window writes unmatched/expired records to **Azure Data Lake Storage Gen2**; a scheduled **Azure Synapse / Databricks Spark job** performs long-tail joining and reconciles downstream billing datasets.  
-> **General**: [Lambda / Kappa Hybrid Architecture](stream-processing-flink.md#flink-01-lambda-architecture--two-systems-two-codebases), [Dead Letter Queue (DLQ)](../../reference-dictionary/messaging.md#dead-letter-queue-dlq)
+> **General**: [Lambda / Kappa Hybrid Architecture](stream-processing-flink.md#flink-01-lambda-architecture--two-systems-two-codebases), [Dead Letter Queue (DLQ)](../../reference-dictionary/kafka.md#dead-letter-queue-dlq)
 
 ---
 
@@ -385,7 +385,7 @@ Client Playback Event ──► Hash ID Generation: MD5(ad_id + event_type + off
 **Tradeoff**: Eliminates external database overhead and race conditions on the hot path. While in-stream state drops >99.99% of duplicates, rare cross-region re-routes or job crash replays may emit duplicates beyond the short TTL window; downstream financial consumers must remain idempotent.
 
 > **Azure**: Partition events by hash key in **Azure Stream Analytics** or **Flink on AKS** using in-memory state; write enriched events with stable transaction IDs into **Azure Cosmos DB** with idempotent document writes.  
-> **General**: [In-Stream Keyed Deduplication](../../reference-dictionary/messaging.md#in-stream-keyed-deduplication), [Idempotent Consumer](../../reference-dictionary/messaging.md#idempotent-consumer)
+> **General**: [In-Stream Keyed Deduplication](../../reference-dictionary/kafka.md#in-stream-keyed-deduplication), [Idempotent Consumer](../../reference-dictionary/kafka.md#idempotent-consumer)
 
 ---
 
