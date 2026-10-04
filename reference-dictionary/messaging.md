@@ -40,6 +40,8 @@ generated: { by: process:okf-migrate, at: 2026-10-03T10:17:00+03:00 }
 | Worker Self-Throttling | [`#worker-self-throttling`](#worker-self-throttling) |
 | Progressive Enqueuing | [`#progressive-enqueuing`](#progressive-enqueuing) |
 | Bounded Deduplication TTL | [`#bounded-deduplication-ttl`](#bounded-deduplication-ttl) |
+| Distributed Spaghetti | [`#distributed-spaghetti`](#distributed-spaghetti) |
+| Workflow-as-Code | [`#workflow-as-code`](#workflow-as-code) |
 
 ---
 
@@ -567,4 +569,49 @@ An operational configuration strategy for consumer-side deduplication stores whe
 - [Idempotent Consumer](#idempotent-consumer) · [Atomic Deduplication](#atomic-deduplication) · [Deduplication Store](#deduplication-store) · [Idempotency State Explosion](cqrs-event-driven.md#idempotency-state-explosion)
 
 ---
+
+
+## Distributed Spaghetti
+
+An architectural anti-pattern that emerges when event-driven choreography is misapplied to complex, multi-step business transactions. Rather than achieving loose coupling, the end-to-end workflow rules, state transitions, and compensating rollback actions become implicitly fragmented across dozens of service event handlers. This produces an unobservable, untraceable web of hidden dependencies where understanding or changing the process requires reading and deploying multiple codebases simultaneously.
+
+### Key Characteristics
+- **Scattered Business Logic**: No single service or component contains the complete definition of the business process.
+- **Hidden Coupling via Event Chains**: Services appear decoupled because they only interact with a message broker, but are strictly coupled through the implicit sequencing and payload contracts of the multi-hop event graph.
+- **Nightmarish Failure Handling**: Rollbacks and compensations require cascading events that must succeed in reverse order without a coordinator to supervise or retry failed steps.
+- **Impaired Incident Response**: During production outages, reconstructing the state of a stuck transaction requires querying and correlating event logs across multiple disparate systems.
+
+### When to Use
+- **Anti-pattern**: Avoid as a deliberate architectural choice. Identify it as an operational warning sign that choreography has exceeded its complexity boundary (typically >3–4 steps or whenever conditional compensation is required).
+
+### When NOT to Use
+- Never intentionally design for distributed choreography across complex multi-step flows; migrate the coordinating logic to an explicit state machine or workflow orchestrator.
+
+### Also see
+- [Choreography](#choreography) · [Orchestration](#orchestration) · [Distributed Monolith](architecture-patterns.md#distributed-monolith) · [Orchestrator-based Saga](cqrs-event-driven.md#orchestrator-based-saga)
+
+---
+
+
+## Workflow-as-Code
+
+An orchestration architecture pattern (exemplified by engines such as Temporal, Cadence, and Azure Durable Functions) where long-running distributed state machines, retries, and compensation flows are authored directly in general-purpose programming languages (e.g., TypeScript, Go, Java, Python, C#) rather than declarative JSON/YAML DSLs or graphical drag-and-drop canvases.
+
+### Key Characteristics
+- **Turing-Complete Control Flow**: Standard programming language constructs (`if/else`, `for`, `try/catch`, `async/await`) govern step sequencing, branching, and timeouts.
+- **Deterministic Replay Execution**: The underlying engine intercepts execution and rebuilds local variable state by replaying an append-only event history upon process crashes or worker restarts.
+- **Workflow vs Activity Separation**: Pure deterministic workflow logic coordinates state transitions, while non-deterministic side effects (database queries, HTTP calls, third-party APIs) are strictly delegated to retried Activity workers.
+- **Testability & Refactoring Safety**: Workflows benefit from native IDE autocomplete, static type checking, automated unit tests, and compiler-backed refactoring.
+
+### When to Use
+- Multi-step business processes with complex failure recovery, conditional branches, or long-running timers (e-commerce checkout, payment processing, customer onboarding).
+- Teams that require robust unit testing, CI/CD validation, and code-based review processes for their workflow definitions.
+- When escaping rigid, non-versionable JSON/YAML orchestration DSLs.
+
+### When NOT to Use
+- High-throughput fire-and-forget event streaming or telemetry pipelines where pub/sub brokers (Kafka, Event Hubs) are required.
+- Simple single-step async tasks where durable execution introduces unnecessary infrastructure overhead.
+
+### Also see
+- [Orchestration](#orchestration) · [Deterministic Processing](cqrs-event-driven.md#deterministic-processing) · [Async Workflow](cqrs-event-driven.md#async-workflow) · [Choreography](#choreography)
 
