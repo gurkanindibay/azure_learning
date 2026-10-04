@@ -15,3 +15,5 @@ Source articles covering cqrs fintech patterns, strategies, and case studies.
 - [Designing a Debit Card Processing System: PIN Authentication, Bank Integration & Real-Time Balance Checks](designing-debit-card-processing-system.md)
 - [Designing a Digital Wallet System: Balance Management, Top-Up & P2P Transfers](designing-digital-wallet-system.md)
 - [Payment Deducted But Order Failed: System Design Deep Dive on the Saga Pattern and Distributed Transactions](payment-deducted-order-failed-saga-pattern.md)
+- [Payment Events and Duplicate Processing](payment-events-and-duplicate-processing.md)
+- [System Design: Build a Stripe-Style Payment Gateway (Real Spring Boot Code)](build-stripe-style-payment-gateway-spring-boot.md)

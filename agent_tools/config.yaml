@@ -229,6 +229,18 @@ takeaway_domains:
   cqrs:
     file: "cqrs-fintech/cqrs-fintech.md"
     desc: "CQRS for Fintech"
+    related_files:
+      - "system-design-architecture/cqrs-fintech/cqrs-fintech.md"
+      - "system-design-architecture/cqrs-fintech/global-payment-system.md"
+      - "system-design-architecture/cqrs-fintech/payment-gateway.md"
+      - "system-design-architecture/cqrs-fintech/debit-card-processing.md"
+      - "system-design-architecture/cqrs-fintech/payment-events-duplicate-processing.md"
+      - "system-design-architecture/cqrs-fintech/cqrs-in-system-design-key-takeaways.md"
+      - "system-design-architecture/cqrs-fintech/microservices-join-queries-key-takeaways.md"
+      - "system-design-architecture/cqrs-fintech/payment-saga-pattern.md"
+      - "system-design-architecture/cqrs-fintech/digital-wallet-system.md"
+      - "system-design-architecture/cqrs-fintech/stripe-payment-gateway-takeaways.md"
+      - "articles/cqrs-fintech/build-stripe-style-payment-gateway-spring-boot.md"
   docker:
     file: "software-architecture/dockerfile-optimization.md"
     desc: "Docker Optimization"

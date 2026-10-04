@@ -18,6 +18,7 @@ Problems and strategies for CQRS-based fintech systems: command/query separation
 | [microservices-join-queries-key-takeaways.md](microservices-join-queries-key-takeaways.md) | `cqrs-44` – `cqrs-46` | API Composition pattern, Cross-service filtering limits, CDC-backed read models for complex queries |
 | [payment-saga-pattern.md](payment-saga-pattern.md) | `cqrs-47` – `cqrs-53` | Saga pattern for payments, Orchestration vs choreography, Idempotency keys, Outbox pattern, Compensation workflows, Crash recovery, Saga monitoring |
 | [digital-wallet-system.md](digital-wallet-system.md) | `cqrs-54` – `cqrs-61` | Atomic balance updates, Multi-method top-up ingestion, Deadlock-free P2P transfers, Merchant batch settlement, Withdrawal hold state, Database sharding, KYC limits, Distributed lock scaling |
+| [stripe-payment-gateway-takeaways.md](stripe-payment-gateway-takeaways.md) | `cqrs-62` – `cqrs-68` | Multi-tier idempotency, Payment state machine, Exponential backoff retries, Webhook deduplication, Distributed Saga, Settlement reconciliation, Read/write caching |
 
 ## Cross-References
 

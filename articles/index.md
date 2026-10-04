@@ -14,7 +14,7 @@ Source articles organized by system-design domain. Each domain directory maps to
 | [caching/](caching/) | 10 | [caching/](../system-design-architecture/caching/) |
 | [case-studies/](case-studies/) | 5 | [case-studies/](../system-design-architecture/case-studies/) |
 | [concurrency-transactions/](concurrency-transactions/) | 12 | [concurrency-transactions/](../system-design-architecture/concurrency-transactions/) |
-| [cqrs-fintech/](cqrs-fintech/) | 7 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
+| [cqrs-fintech/](cqrs-fintech/) | 9 | [cqrs-fintech/](../system-design-architecture/cqrs-fintech/) |
 | [databases/](databases/) | 17 | [databases/](../system-design-architecture/databases/) |
 | [jvm-runtime/](jvm-runtime/) | 3 | [jvm-runtime/](../system-design-architecture/jvm-runtime/) |
 | [messaging/](messaging/) | 19 | [messaging/](../system-design-architecture/messaging/) |

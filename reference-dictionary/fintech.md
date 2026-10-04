@@ -54,6 +54,10 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Wallet Top-Up | [`#wallet-top-up`](#wallet-top-up) |
 | P2P Transfer (Peer-to-Peer) | [`#p2p-transfer-peer-to-peer`](#p2p-transfer-peer-to-peer) |
 | Wallet-to-Bank Transfer (Payout) | [`#wallet-to-bank-transfer-payout`](#wallet-to-bank-transfer-payout) |
+| Payment Intent | [`#payment-intent`](#payment-intent) |
+| Payment State Machine | [`#payment-state-machine`](#payment-state-machine) |
+| Authorize and Capture | [`#authorize-and-capture`](#authorize-and-capture) |
+| Webhook Signature Verification | [`#webhook-signature-verification`](#webhook-signature-verification) |
 
 ---
 
@@ -1006,3 +1010,109 @@ The process of **withdrawing stored value from a digital wallet back into a link
 ### Also see
 - [Digital Wallet](#digital-wallet) · [Settlement](#settlement) · [Bank Adapter](#bank-adapter) · [Transaction Reversal](#transaction-reversal)
 
+
+---
+
+## Payment Intent
+
+The **stateful domain entity that tracks a payment transaction lifecycle** from intent declaration and payment method collection through customer authentication (3D Secure), authorization hold, and final settlement or cancellation. Popularized by Stripe, it decouples the creation of payment intent from payment execution details.
+
+### Key Characteristics
+- **Lifecycle Coordination**: Unifies complex asynchronous customer actions (e.g., 3DS challenge, biometric authentication, mobile banking approval) without losing payment context.
+- **Idempotency Binding**: Strictly coupled with an `Idempotency-Key` header so that network retries or repeated client submissions return the same existing intent record rather than triggering duplicate transactions.
+- **Explicit Intent States**: Transitions through well-defined lifecycle states (`requires_payment_method`, `requires_action`, `processing`, `requires_capture`, `succeeded`, `canceled`).
+- **Client/Server Separation**: Allows the backend to securely initiate a transaction and generate a client secret, letting the client SDK handle PCI-sensitive payment input without transmitting raw card details to merchant application servers.
+
+### When to Use
+- Modern payment gateways handling multi-step asynchronous payment flows, Strong Customer Authentication (SCA / PSD2), or 3D Secure.
+- E-commerce architectures where front-end checkout clients coordinate with backend payment services and third-party processors.
+- Scenarios requiring flexible two-phase payments (delayed capture after physical goods fulfillment).
+
+### When NOT to Use
+- Internal ledger transfers or synchronous closed-loop wallet reallocations that complete atomically without external user interaction.
+- Simple synchronous payment switches where authentication and settlement occur in a single binary ISO 8583 message.
+
+### Also see
+- [Payment Gateway](#payment-gateway)
+- [Payment Processor](#payment-processor)
+- [Payment State Machine](#payment-state-machine)
+- [Authorize and Capture](#authorize-and-capture)
+
+---
+
+## Payment State Machine
+
+A **deterministic finite-state machine (FSM) that governs the allowable lifecycle transitions of a financial transaction**, preventing illegal status regressions (e.g., transitioning from `CAPTURED` back to `PENDING`), preventing double charges, and enforcing immutable audit logging for every state change.
+
+### Key Characteristics
+- **Strict Transition Guardrails**: Enforces a strict transition matrix (e.g., `INITIATED` → `PENDING` → `AUTHORIZED` → `CAPTURED` → `REFUNDED` / `FAILED`), throwing fatal domain exceptions on unauthorized transitions.
+- **Immutable State History**: Appends an immutable audit record to a dedicated history table (`payment_status_history`) for every state shift, capturing previous status, new status, trigger event, reason, and timestamp.
+- **Terminal State Immutability**: Flags terminal states (`CAPTURED`, `FAILED`, `REFUNDED`) as unalterable, enabling safe edge caching in Redis and halting redundant asynchronous webhook processing.
+- **Concurrency Control**: Prevents race conditions during simultaneous webhook deliveries or user retries using optimistic concurrency control (`@Version` column) or atomic conditional database updates (`UPDATE payments SET status = :new WHERE id = :id AND status = :expected`).
+
+### When to Use
+- Core payment processing services, digital wallets, and payment gateways handling distributed money movement.
+- Asynchronous checkout flows where client polling, webhook notifications, and reconciliation jobs can trigger concurrent state updates.
+- Highly regulated financial systems requiring end-to-end auditability and compliance with SOC 2 / PCI-DSS audit trails.
+
+### When NOT to Use
+- Ephemeral request-response pipelines where transactions are stateless or handled completely within a single third-party redirect.
+- Generic non-financial workflows where eventual consistency without strict transition constraints is acceptable.
+
+### Also see
+- [Financial States](#financial-states)
+- [Payment Intent](#payment-intent)
+- [Transaction Reversal](#transaction-reversal)
+- [Idempotency Guard](cqrs-event-driven.md#idempotency)
+
+---
+
+## Authorize and Capture
+
+A **two-phase credit and debit card transaction model** that separates fund reservation (authorization) from actual fund clearing and transfer (capture), giving merchants the operational flexibility to fulfill orders before charging customers.
+
+### Key Characteristics
+- **Phase 1: Authorization (Hold)**: Checks card validity, performs anti-fraud risk scoring, verifies credit limit, and reserves the requested amount on the customer account (authorization hold, typically valid for 7 days) without moving money.
+- **Phase 2: Capture (Settlement)**: Submits the actual transaction to the acquiring bank for clearing and settlement; can occur immediately (auth-and-capture) or upon event completion (e.g., physical order shipment).
+- **Partial Capture & Release**: Allows capturing an amount lower than the authorized amount (releasing the remaining held balance immediately) or canceling the authorization entirely before capture without paying full interchange fees.
+- **Fee & Dispute Protection**: Avoids costly interchange refund fees and chargebacks that occur when orders are canceled or returned before fulfillment.
+
+### When to Use
+- E-commerce platforms where items may be out of stock, backordered, or shipped in split packages.
+- Ride-sharing, car rentals, and hotels where an initial estimate (pre-authorization) is adjusted for tips, tolls, fuel, or incidental damage upon checkout.
+- High-ticket retail where manual order verification or fraud screening is required before settling funds.
+
+### When NOT to Use
+- Instant digital goods purchases, subscriptions, or SaaS billing where services are delivered immediately (use immediate capture).
+- Direct bank transfer networks (e.g. SEPA Instant, Pix, UPI) that clear immediately and do not support two-phase card holds.
+
+### Also see
+- [Debit Card Authorization](#debit-card-authorization)
+- [Payment Gateway](#payment-gateway)
+- [Payment Processor](#payment-processor)
+- [Settlement](#settlement)
+
+---
+
+## Webhook Signature Verification
+
+A **cryptographic security mechanism used to authenticate asynchronous event notifications from third-party payment providers** (e.g., Stripe, Adyen, PayPal), ensuring that incoming HTTP payloads are authentic, untampered, and originated by the legitimate provider.
+
+### Key Characteristics
+- **HMAC SHA-256 Signatures**: The provider computes an HMAC SHA-256 digest over the timestamp and raw JSON payload using a shared webhook secret, transmitting the signature in an HTTP header (e.g., `Stripe-Signature`).
+- **Replay Attack Defense**: Encodes an epoch timestamp in the signed header; the gateway rejects events whose timestamps deviate beyond a configured tolerance window (e.g., 5 minutes) to prevent replay attacks.
+- **Constant-Time Comparison**: Employs constant-time byte array comparison (`MessageDigest.isEqual`) to prevent timing side-channel attacks during signature validation.
+- **Immediate Acknowledgment Flow**: Verifies the signature synchronously, persists the raw event to an idempotent event store (`webhook_events`), returns HTTP 200 immediately, and hands off business processing to asynchronous background workers or Kafka queues.
+
+### When to Use
+- All public-facing webhook ingestion endpoints receiving external payment, chargeback, dispute, or KYC event notifications.
+- Asynchronous payment gateways integrating third-party PSPs (Payment Service Providers) over the public internet.
+
+### When NOT to Use
+- Private microservice communication within a secure VPC perimeter where mutual TLS (mTLS) and internal service tokens already establish identity.
+- Synchronous API request-response interactions where the client directly authenticates via bearer API keys or OAuth2 tokens.
+
+### Also see
+- [Payment Gateway](#payment-gateway)
+- [HMAC](hsm-cryptography.md#hmac-hash-based-message-authentication-code)
+- [Idempotent Consumer](cqrs-event-driven.md#idempotent-consumer)
