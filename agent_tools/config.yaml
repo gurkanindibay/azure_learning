@@ -321,6 +321,9 @@ takeaway_domains:
   sdi:
     file: "system-design-interview/interview-roadmap.md"
     desc: "System Design Interview"
+    related_files:
+      - "system-design-architecture/system-design-interview/50-senior-staff-scenarios-takeaways.md"
+      - "articles/system-design-interview/system-design-interview-questions-50-senior-staff-scenarios.md"
   mesh:
     file: "case-studies/data-mesh-medallion.md"
     desc: "Data Mesh & Medallion Architecture"

@@ -44,6 +44,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Overselling | [`#overselling`](#overselling) |
 | Pessimistic Locking | [`#pessimistic-locking`](#pessimistic-locking) |
 | Read-Your-Own-Writes | [`#read-your-own-writes`](#read-your-own-writes) |
+| Read-After-Write Consistency | [`#read-after-write-consistency`](#read-after-write-consistency) |
 | Saga Pattern | [`#saga-pattern`](#saga-pattern) |
 | Two-Phase Commit (2PC) | [`#two-phase-commit-2pc`](#two-phase-commit-2pc) |
 | Sharding | [`#sharding`](#sharding) |
@@ -984,7 +985,7 @@ Where:
 
 ---
 
-## Read-Your-Own-Writes
+## Read-Your-Own-Writes / Read-After-Write Consistency {#read-after-write-consistency}
 
 A **session-level consistency guarantee** that ensures a user always sees the effects of their own updates after writing — even if other users may observe stale data. It is the minimum consistency level required for any user-facing system where a user expects to see their own changes reflected immediately.
 

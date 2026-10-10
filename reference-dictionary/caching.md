@@ -30,6 +30,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Version Stamps | [`#version-stamps`](#version-stamps) |
 | Session Affinity | [`#session-affinity`](#session-affinity) |
 | Cross-Region Invalidation | [`#cross-region-invalidation`](#cross-region-invalidation) |
+| Stale-While-Revalidate | [`#stale-while-revalidate`](#stale-while-revalidate) |
 | **Cache Failures & Resiliency** | |
 | Cache Stampede | [`#cache-stampede`](#cache-stampede) |
 | Cache Penetration | [`#cache-penetration`](#cache-penetration) |
@@ -342,6 +343,29 @@ The mechanism by which a cache invalidation performed in one geographic region i
 - Strongly consistent data (inventory, payments) — read directly from the database instead
 
 **Also see**: [Event-Driven Invalidation](#event-driven-invalidation) · [Session Affinity](#session-affinity) · [Replication Lag](../data-architecture.md#replication-lag) · [CAP Theorem](../architecture-patterns.md#cap-theorem)
+
+---
+
+## Stale-While-Revalidate
+
+A caching pattern and HTTP `Cache-Control` directive that allows a cache to immediately return an existing (stale) cached response to the client while simultaneously triggering a background asynchronous request to revalidate and update the cache entry.
+
+### Key Characteristics
+- **Zero-latency reads**: Cache hits return instantly from memory or local cache, hiding upstream revalidation latency from the end user.
+- **Eliminates cache stampedes**: When an item expires, the first request receives the stale data and triggers an asynchronous refresh; concurrent incoming requests continue receiving stale data rather than storming the primary database.
+- **Bounded staleness**: Configured with a time window (e.g., `max-age=60, stale-while-revalidate=300`) defining how long stale data is acceptable before a synchronous block is enforced.
+
+### When to Use
+- High-read workloads where sub-second freshness is not strictly required (news feeds, product catalogs, weather data, user profile summaries).
+- Protecting backing datastores from burst traffic and cache stampede spikes on popular keys.
+- CDN and edge caching architectures serving global web assets.
+
+### When NOT to Use
+- Real-time financial balances, payment authorization, or stock trading execution where stale data produces catastrophic business errors.
+- Read-after-write critical paths where users must immediately see their own committed updates.
+
+### Also see
+- [Cache Stampede](#cache-stampede) · [TTL (Time-To-Live)](#ttl-time-to-live) · [Request Coalescing](#request-coalescing) · [Stale Read Rate](#stale-read-rate)
 
 ### Cache Failures & Resiliency
 

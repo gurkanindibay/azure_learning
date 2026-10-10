@@ -27,3 +27,4 @@ Source articles covering system design interview patterns, strategies, and case 
 - [Customer Support System Design Interview: Building an AI-Powered Support Platform (From MVP to GenAI)](customer-support-ai-platform-system-design-interview.md)
 - [50 Shades of System Design](50-shades-of-system-design.md)
 - [why-standard-template-fails-system-design-interviews](why-standard-template-fails-system-design-interviews.md)
+- [System Design Interview Questions: 50 Senior & Staff-Level Scenarios](system-design-interview-questions-50-senior-staff-scenarios.md)

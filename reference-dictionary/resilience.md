@@ -52,6 +52,9 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Provider Failover | [`#provider-failover`](#provider-failover) |
 | Client-Side Resend Backoff | [`#client-side-resend-backoff`](#client-side-resend-backoff) |
 | Queue with TTL | [`#queue-with-ttl`](#queue-with-ttl) |
+| Fail-Open vs Fail-Closed | [`#fail-open-vs-fail-closed`](#fail-open-vs-fail-closed) |
+| Admission Control | [`#admission-control`](#admission-control) |
+| Three-State Ambiguity | [`#three-state-ambiguity`](#three-state-ambiguity) |
 
 ---
 
@@ -806,6 +809,76 @@ A message queue buffering and load-leveling pattern that **attaches an explicit 
 
 ### Also see
 - [Dead Letter Queue](messaging.md#dead-letter-queue-dlq) · [Backpressure](#backpressure) · [Load Shedding](#load-shedding) · [CoDel](#codel-controlled-delay) · [OTP Resilience Takeaways](../system-design-architecture/resilience/otp-service-peak-traffic-takeaways.md#resilience-31-burst-traffic-saturation--queue-buffering-with-ttl-discard)
+
+---
+
+## Fail-Open vs Fail-Closed
+
+An architectural decision policy defining how a protective or intermediary component (such as a rate limiter, authentication service, fraud filter, or web application firewall) behaves when it encounters an internal failure, timeout, or total unavailability.
+
+### Key Characteristics
+- **Fail-Open (Optimistic Availability)**: When the protective component fails, the system permits the request to proceed. Prioritizes end-user availability and business continuity over enforcement of security, rate limits, or validation checks.
+- **Fail-Closed (Defensive Security/Protection)**: When the protective component fails, the system immediately rejects the request (typically returning HTTP 429, 503, or 500). Prioritizes system safety, downstream dependency protection, and financial/security boundaries over availability.
+- **Context-dependent selection**: A public content catalog or marketing feed might fail-open on rate limiter failure; an expensive AI inference endpoint or high-risk financial transfer API must fail-closed to avoid catastrophic backend exhaustion or fraud.
+
+### When to Use
+- **Fail-Open**: Non-critical telemetry, public read-only content APIs, recommendation widgets, and auxiliary logging checks where service outages are worse than unthrottled traffic.
+- **Fail-Closed**: Payment authorizations, inventory deductions, authentication/permission validations, and resource-heavy operations that would destroy downstream databases if unmetered.
+
+### When NOT to Use
+- Fail-Open on security boundaries (e.g., bypassing auth tokens when Key Vault or Entra ID is degraded).
+- Fail-Closed on superficial UI enrichments that needlessly bring down core transaction processing.
+
+### Also see
+- [Rate Limiting](api-design.md#rate-limiting) · [Defense in Depth](#defense-in-depth) · [Circuit Breaker](#circuit-breaker) · [Graceful Degradation](#graceful-degradation)
+
+---
+
+## Admission Control
+
+A proactive gatekeeping mechanism that intercepts incoming requests and evaluates current downstream resource saturation (such as database connection pool exhaustion, CPU/memory limits, or thread pool starvation) before allowing execution to proceed, immediately shedding or queuing excess load to prevent system collapse.
+
+### Key Characteristics
+- **Downstream-aware gating**: Rather than relying solely on upstream traffic rates, admission control monitors downstream constrained resources (e.g., database connection pool availability, active query concurrency).
+- **Prevents autoscaling collapse**: Protects databases when stateless application tiers autoscale horizontally from 20 to 200 instances, ensuring that aggregate connection demands do not exceed the database's fixed capacity.
+- **Fail-fast signaling**: Rejects admitted traffic early with HTTP 429 (Too Many Requests) or HTTP 503 (Service Unavailable) before expensive database queries or thread allocations occur.
+
+### When to Use
+- High-concurrency microservices connected to relational databases (PostgreSQL, MySQL, SQL Server) with finite connection pools.
+- Protecting downstream legacy systems or external APIs with strict concurrency ceilings.
+- Autoscaling web tiers where instance count can surge faster than database capacity can expand.
+
+### When NOT to Use
+- Fully serverless, globally distributed datastores with elastic serverless connection routing (e.g., Azure Cosmos DB, DynamoDB) where client connection pooling is not a bottleneck.
+- As a substitute for database query optimization, indexing, or read replicas.
+
+### Also see
+- [Load Shedding](#load-shedding) · [Backpressure](#backpressure) · [Connection Pooling](databases.md#connection-pooling) · [Connection Storm](databases.md#connection-storm)
+
+---
+
+## Three-State Ambiguity
+
+A fundamental distributed systems reality where a timed-out remote call (such as an HTTP request to a payment gateway or third-party service) leaves the client in an indeterminate state: the operation could have failed before arrival, succeeded with a lost response, or still be executing remotely.
+
+### Key Characteristics
+- **The three possible states**:
+  1. **Success**: The remote service processed the request, but the network failed before returning the acknowledgment.
+  2. **Failure**: The request failed to reach the remote service, or the remote service encountered an internal error.
+  3. **In-Flight / Unknown**: The request reached the remote service and is still running or waiting in an internal queue.
+- **Forbids naive retries**: Blithely resending a timed-out request without idempotency guarantees creates duplicate charges, double bookings, or corrupted state.
+- **Requires dual mechanisms**: Demands client-generated **Idempotency Keys** paired with server-side reconciliation, status check endpoints, or out-of-band webhook notifications.
+
+### When to Use
+- Any remote API call involving state mutation, financial transactions, ticket booking, or external third-party integrations subject to network latency or transient timeouts.
+- Designing timeout hierarchies and retry policies across distributed microservices.
+
+### When NOT to Use
+- Purely read-only, idempotent GET requests where retrying produces no side effects.
+- In-memory function invocations within a single monolithic process boundary.
+
+### Also see
+- [Idempotency](cqrs-event-driven.md#idempotency) · [Timeout](#timeout) · [Two Generals Problem](data-concurrency.md#two-generals-problem) · [Compensating Transaction](data-concurrency.md#compensating-transaction)
 
 ---
 

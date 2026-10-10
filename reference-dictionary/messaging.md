@@ -42,6 +42,7 @@ generated: { by: process:okf-migrate, at: 2026-10-03T10:17:00+03:00 }
 | Bounded Deduplication TTL | [`#bounded-deduplication-ttl`](#bounded-deduplication-ttl) |
 | Distributed Spaghetti | [`#distributed-spaghetti`](#distributed-spaghetti) |
 | Workflow-as-Code | [`#workflow-as-code`](#workflow-as-code) |
+| Backlog Recovery Time | [`#backlog-recovery-time`](#backlog-recovery-time) |
 
 ---
 
@@ -614,4 +615,28 @@ An orchestration architecture pattern (exemplified by engines such as Temporal, 
 
 ### Also see
 - [Orchestration](#orchestration) · [Deterministic Processing](cqrs-event-driven.md#deterministic-processing) · [Async Workflow](cqrs-event-driven.md#async-workflow) · [Choreography](#choreography)
+
+---
+
+## Backlog Recovery Time
+
+An operational calculation that determines the real-world duration required for an asynchronous consumer fleet to completely drain an accumulated message lag backlog during or after an incident.
+
+### Key Characteristics
+- **Net Drain Rate formula**: Recovery time is governed strictly by the **net processing surplus**, not the gross consumer fleet throughput:
+  $$T_{\text{recovery}} = \frac{\text{Accumulated Backlog}}{\text{Consumer Processing Rate} - \text{Producer Ingestion Rate}}$$
+- **The capacity illusion**: If producers continuously generate 40,000 msg/sec and consumers process 50,000 msg/sec, the net drain rate is only 10,000 msg/sec. An 80-million message backlog requires 8,000 seconds (~2.2 hours) to drain, despite consumers processing 50,000 msg/sec.
+- **Downstream saturation risk**: Adding more consumer threads or replicas only helps if downstream systems (databases, third-party APIs) have spare capacity; otherwise, scaling consumers further saturates the shared bottleneck and extends recovery time.
+
+### When to Use
+- Post-incident post-mortems and capacity planning for Kafka, Event Hubs, RabbitMQ, and queue worker fleets.
+- Calculating dynamic SLA recovery estimates during production backpressure events.
+- Sizing emergency consumer fleets to achieve specific recovery time objectives (RTO).
+
+### When NOT to Use
+- Systems with zero ongoing ingestion (where incoming producer rate is 0, making gross rate equal to net drain rate).
+- Batch architectures where queues are paused before processing commences.
+
+### Also see
+- [Backpressure](resilience.md#backpressure) · [Worker Self-Throttling](#worker-self-throttling) · [Consumer Group Lag](kafka.md#consumer-group-lag) · [Partition Hotspot](kafka.md#partition-hotspot)
 
