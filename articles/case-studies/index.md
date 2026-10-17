@@ -8,7 +8,7 @@ Source articles covering case studies patterns, strategies, and case studies.
 
 ## Articles
 
-- [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](Medallion Architecture Is Not Enough (And Your Data Team Knows It).md)
+- [Medallion Architecture Is Not Enough (And Your Data Team Knows It)](<Medallion Architecture Is Not Enough (And Your Data Team Knows It).md>)
 - [data-mesh-is-dead-practical-decentralization](data-mesh-is-dead-practical-decentralization.md)
 - [uber-architecture/01-why-tracking-5-million-drivers-is-hard](uber-architecture/01-why-tracking-5-million-drivers-is-hard.md)
 - [uber-architecture/02-the-ingestion-edge](uber-architecture/02-the-ingestion-edge.md)
@@ -17,5 +17,6 @@ Source articles covering case studies patterns, strategies, and case studies.
 - [uber-architecture/05-the-dispatch-engine-and-map-rendering](uber-architecture/05-the-dispatch-engine-and-map-rendering.md)
 - [uber-architecture/06-surge-pricing-during-rain](uber-architecture/06-surge-pricing-during-rain.md)
 - [Netflix Batch Compute with Kueue](netflix-batch-compute-kueue.md)
+- [Reliable GPU Compute for Large Training & Inference Jobs](netflix-reliable-gpu-compute.md)
 - [discord-presence-200m-users](discord-presence-200m-users.md)
 - [How Spotify Builds Your Discover Weekly Before You Even Wake Up](how-spotify-builds-discover-weekly.md)

@@ -121,6 +121,14 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Jev (Decision Model) | [`#jev-decision-model`](#jev-decision-model) |
 | RLCD (Reinforcement Learning for Calibrated Decisions) | [`#rlcd`](#rlcd) |
 | Noul / Choice / Score (Decision Primitives) | [`#noul-choice-score`](#noul-choice-score) |
+| Gang Scheduling (Distributed AI) | [`#gang-scheduling`](#gang-scheduling) |
+| Goodput (AI/ML Infrastructure) | [`#goodput-ai`](#goodput-ai) |
+| Elastic Fabric Adapter (EFA) | [`#elastic-fabric-adapter`](#elastic-fabric-adapter) |
+| Dynamic Resource Allocation (DRA) | [`#dynamic-resource-allocation-dra`](#dynamic-resource-allocation-dra) |
+| Multi-Instance GPU (MIG) | [`#multi-instance-gpu-mig`](#multi-instance-gpu-mig) |
+| DCGM (Data Center GPU Manager) | [`#dcgm`](#dcgm) |
+| Xid / SXid Errors | [`#xid-errors`](#xid-errors) |
+| NCCL (NVIDIA Collective Communications Library) | [`#nccl`](#nccl) |
 
 ---
 
@@ -2528,7 +2536,7 @@ An open-source vector similarity search extension for PostgreSQL that enables st
 - Systems with severe database CPU constraints where building large HNSW indexes impacts core transactional OLTP latency.
 
 ### Also see
-- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [FAISS](#faiss) · [GIN Index (Generalized Inverted Index)](databases.md#gin-index) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
+- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [FAISS](#faiss) · [GIN Index (Generalized Inverted Index)](databases.md#gin-index) · [39. Search Architecture at Scale](../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
 
 ---
 
@@ -2551,7 +2559,7 @@ An open-source C++ library (with Python bindings) developed by Meta AI for effic
 - Production environments where maintaining separate index synchronization pipelines for hundreds of tenant-specific indexes introduces unacceptable operational complexity.
 
 ### Also see
-- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [pgvector](#pgvector) · [39. Search Architecture at Scale](../../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
+- [Vector Database](#vector-database) · [Vector Search (ANN)](#vector-search-ann) · [pgvector](#pgvector) · [39. Search Architecture at Scale](../system-design-architecture/databases/39-db-key-takeaways.md#db-43-in-database-vector-search-pgvector-vs-standalone-ann-stores-faiss)
 
 ---
 
@@ -2575,7 +2583,7 @@ The software engineering discipline focused on building, integrating, orchestrat
 - Simple manual prompt crafting in a consumer chat UI without code, telemetry, or system architecture.
 
 ### Also see
-- [Agentic AI](#agentic-ai) · [Agent Harness](#agent-harness) · [LLMOps](#llmops) · [Structured Outputs](#structured-outputs) · [40. Software Engineer to AI Engineer Systems Architecture](../../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-65-the-8020-systems-rule--ai-engineering-as-distributed-systems-scaffolding)
+- [Agentic AI](#agentic-ai) · [Agent Harness](#agent-harness) · [LLMOps](#llmops) · [Structured Outputs](#structured-outputs) · [40. Software Engineer to AI Engineer Systems Architecture](../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-65-the-8020-systems-rule--ai-engineering-as-distributed-systems-scaffolding)
 
 ---
 
@@ -2599,7 +2607,7 @@ An inference-time decoding constraint mechanism provided by foundation model API
 - Systems requiring streaming ultra-low latency where compiling complex nested JSON schemas introduces an unacceptable initial cold-start delay.
 
 ### Also see
-- [Tool Calling](#tool-calling) · [Guardrails (AI)](#guardrails-ai) · [AI Engineering](#ai-engineering) · [Logit (Logits)](#logit) · [40. Software Engineer to AI Engineer Systems Architecture](../../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-68-output-determinism--reliability-engineering-via-structured-outputs)
+- [Tool Calling](#tool-calling) · [Guardrails (AI)](#guardrails-ai) · [AI Engineering](#ai-engineering) · [Logit (Logits)](#logit) · [40. Software Engineer to AI Engineer Systems Architecture](../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-68-output-determinism--reliability-engineering-via-structured-outputs)
 
 ---
 
@@ -2623,7 +2631,7 @@ The operational lifecycle, engineering practices, and platform infrastructure re
 - Traditional supervised machine learning pipelines (e.g., XGBoost, scikit-learn), which follow standard MLOps workflows (feature stores, model registries, dataset drift).
 
 ### Also see
-- [Model Routing by Complexity](#model-routing-by-complexity) · [Semantic Caching](caching.md#semantic-caching) · [LLM-as-Judge](#llm-as-judge) · [Trajectory Evaluation](#trajectory-evaluation) · [Circuit Breaker](resilience.md#circuit-breaker) · [40. Software Engineer to AI Engineer Systems Architecture](../../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-71-llmops-production-tier--runtime-governance-and-cost-quality-observability)
+- [Model Routing by Complexity](#model-routing-by-complexity) · [Semantic Caching](caching.md#semantic-caching) · [LLM-as-Judge](#llm-as-judge) · [Trajectory Evaluation](#trajectory-evaluation) · [Circuit Breaker](resilience.md#circuit-breaker) · [40. Software Engineer to AI Engineer Systems Architecture](../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-71-llmops-production-tier--runtime-governance-and-cost-quality-observability)
 
 ---
 
@@ -2647,7 +2655,7 @@ The gradual shift, divergence, or degradation in the meaning, probabilistic outp
 - Single-turn deterministic prompt bugs where the model consistently fails on an edge case due to inadequate prompt instructions rather than temporal distribution changes.
 
 ### Also see
-- [LLMOps](#llmops) · [Trajectory Evaluation](#trajectory-evaluation) · [Context Rot (Lost in the Middle)](#context-rot) · [Semantic Contamination](#semantic-contamination) · [Grounding Rate](#grounding-rate) · [36. AI/ML Infrastructure](../../system-design-architecture/ai-ml-infrastructure/36-ai-key-takeaways.md#ai-22-data-drift-detection-pipeline)
+- [LLMOps](#llmops) · [Trajectory Evaluation](#trajectory-evaluation) · [Context Rot (Lost in the Middle)](#context-rot) · [Semantic Contamination](#semantic-contamination) · [Grounding Rate](#grounding-rate) · [36. AI/ML Infrastructure](../system-design-architecture/ai-ml-infrastructure/36-ai-key-takeaways.md#ai-22-data-drift-detection-pipeline)
 
 ---
 
@@ -2674,7 +2682,7 @@ The unnormalized, raw prediction scores (real numbers spanning $(-\infty, +\inft
 - Traditional classification evaluation where calibrated probabilistic outputs ($[0, 1]$) or precision/recall metrics are required by downstream business logic.
 
 ### Also see
-- [Token](#token) · [Structured Outputs](#structured-outputs) · [AI Engineering](#ai-engineering) · [Generative Watermarking](#generative-watermarking) · [40. Software Engineer to AI Engineer Systems Architecture](../../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-68-output-determinism--reliability-engineering-via-structured-outputs)
+- [Token](#token) · [Structured Outputs](#structured-outputs) · [AI Engineering](#ai-engineering) · [Generative Watermarking](#generative-watermarking) · [40. Software Engineer to AI Engineer Systems Architecture](../system-design-architecture/agentic-ai/40-agentic-key-takeaways.md#agentic-68-output-determinism--reliability-engineering-via-structured-outputs)
 
 ---
 
@@ -2705,7 +2713,7 @@ The name contrasts with the generative-model paradigm ("System Two"-style long-f
 
 ### Also see
 - [Jev (Decision Model)](#jev-decision-model) · [RLCD](#rlcd) · [Noul / Choice / Score](#noul-choice-score) · [LLM](#llm) · [Structured Outputs](#structured-outputs) · [Guardrails (AI)](#guardrails-ai)
-- [40. Decision-Oriented AI Models — Key Takeaways](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
+- [40. Decision-Oriented AI Models — Key Takeaways](../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
 
 ---
 
@@ -2743,7 +2751,7 @@ Human → high-stakes or uncertain cases
 
 ### Also see
 - [System One Model](#system-one-model) · [RLCD](#rlcd) · [Noul / Choice / Score](#noul-choice-score) · [LLM](#llm) · [Hallucination](#hallucination)
-- [40. Decision-Oriented AI Models — Key Takeaways](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
+- [40. Decision-Oriented AI Models — Key Takeaways](../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md)
 
 ---
 
@@ -2769,7 +2777,7 @@ This distinguishes RLCD from standard classification fine-tuning, which optimize
 
 ### Also see
 - [Jev (Decision Model)](#jev-decision-model) · [System One Model](#system-one-model) · [Noul / Choice / Score](#noul-choice-score)
-- [ai-36: Calibrated Confidence Routing](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-36-calibrated-confidence-routing--actionable-thresholds-for-automation)
+- [ai-36: Calibrated Confidence Routing](../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-36-calibrated-confidence-routing--actionable-thresholds-for-automation)
 
 ---
 
@@ -2801,4 +2809,245 @@ The three **typed decision primitives** exposed by [Jev](#jev-decision-model) (T
 
 ### Also see
 - [Jev (Decision Model)](#jev-decision-model) · [System One Model](#system-one-model) · [RLCD](#rlcd) · [Structured Outputs](#structured-outputs)
-- [ai-35: Typed Decision Primitives](../../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-35-noul-choice-score--decision-primitives-as-a-typed-interface)
+- [ai-35: Typed Decision Primitives](../system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md#ai-35-noul-choice-score--decision-primitives-as-a-typed-interface)
+
+---
+
+## Gang Scheduling
+
+**Gang Scheduling** (also known as gang execution or all-or-nothing scheduling) — a resource scheduling and execution pattern in distributed systems where all parallel tasks or worker ranks of a job must be scheduled, allocated, and launched concurrently across compute nodes. In distributed deep learning training (e.g., PyTorch Distributed, Megatron-LM), all GPU ranks execute in lockstep, exchanging tensor activations and gradients at every forward and backward pass.
+
+Because workers synchronize via collective communication barriers (such as [NCCL](#nccl) AllReduce), the entire job advances only as fast as its slowest participant. If a single rank, GPU, or network adapter fails or degrades, the entire job blocks or terminates.
+
+### Key Characteristics
+
+- **All-or-Nothing Allocation**: A job cannot start or make useful progress with a partial subset of requested workers; all ranks must be concurrently scheduled.
+- **Lockstep Synchronization**: Compute phases alternate with collective communication barriers; iteration latency is governed by $T_{\text{step}} = \max_i(T_i)$.
+- **Straggler Multiplier**: A single degraded component (thermal throttling, PCIe bus congestion, packet loss on a fabric link) slows down every participating GPU in the gang.
+- **Fail-Stop Dynamics**: Hardware loss on any single worker terminates the entire gang run unless checkpoint recovery and elastic resumption are implemented.
+
+### When to Use
+
+- Large-scale distributed neural network training across multi-node GPU clusters (LLMs, foundation models, multimodal models).
+- High-Performance Computing (HPC) simulations relying on MPI where processes frequently exchange boundary conditions.
+- Real-time collective inference jobs spanning multiple tensor-parallel GPUs.
+
+### When NOT to Use
+
+- Embarrassingly parallel batch workloads (parameter sweeps, image transcoding) where tasks run independently without inter-worker communication.
+- Asynchronous parameter server architectures where workers push updates independently without waiting for peers.
+- Standard web request/response microservices.
+
+### Also see
+- [Goodput (AI/ML)](#goodput-ai) · [NCCL](#nccl) · [Elastic Fabric Adapter (EFA)](#elastic-fabric-adapter) · [Dynamic Resource Allocation (DRA)](#dynamic-resource-allocation-dra)
+- [ai-39: Gang Scheduling & The Straggler Multiplier](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-39-gang-scheduling--the-straggler-multiplier-in-distributed-training)
+
+---
+
+## Goodput (AI/ML)
+
+**Goodput** (in AI/ML Infrastructure) — the proportion of scheduled GPU compute time and cluster capacity that performs productive, forward-progress training or serving steps, as opposed to total raw node uptime. In distributed GPU training, raw infrastructure uptime can report 100% even while effective goodput approaches 0% due to stragglers, data-loading stalls, synchronization delays, or uncommitted iterations lost to crashes.
+
+$$\text{Goodput} = \frac{\text{Time spent on useful, committed training steps}}{\text{Total scheduled GPU wall-clock time}}$$
+
+### Key Characteristics
+
+- **Semantic Metric**: Measures actual computational value delivered rather than passive virtual machine availability.
+- **Exposes Stragglers**: Captures the penalty when hundreds of GPUs idle waiting for one degraded neighbor at an AllReduce barrier.
+- **Factors in Rollbacks**: Accounts for GPU-hours burned between a crash and the last valid checkpoint that must be recomputed.
+- **SLO Driver**: Governs core service-level objectives for large training fleets alongside availability, job-start success, and job completion rate.
+
+### When to Use
+
+- Tracking efficiency and return-on-investment across multi-million-dollar GPU training and fine-tuning clusters.
+- Evaluating whether proactive node drainage and checkpoint recovery are more cost-effective than tolerating a slow worker.
+- Capacity planning and tuning data-loader pipeline throughput against tensor compute times.
+
+### When NOT to Use
+
+- Measuring simple web service availability where instances operate independently and uptime directly reflects serving capacity.
+- Workloads where progress is not checkpointed or measured in discrete forward iterations.
+
+### Also see
+- [Gang Scheduling](#gang-scheduling) · [NCCL](#nccl) · [DCGM](#dcgm)
+- [ai-39: Gang Scheduling & The Straggler Multiplier](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-39-gang-scheduling--the-straggler-multiplier-in-distributed-training)
+
+---
+
+## Elastic Fabric Adapter (EFA)
+
+**Elastic Fabric Adapter (EFA)** — a customized network interface controller (NIC) built by AWS for EC2 instances that provides Operating System bypass (OS bypass) and high-bandwidth, ultra-low-latency inter-node communication required for distributed GPU training and HPC workloads.
+
+EFA leverages the Scalable Reliable Datagram (SRD) protocol, which sprays packets across multiple network paths and handles packet loss/out-of-order delivery directly in hardware, avoiding TCP head-of-line blocking and congestion collapse in distributed collective communications.
+
+### Key Characteristics
+
+- **OS Bypass (Userspace Networking)**: Userland applications communicate directly with the network hardware via libfabric, bypassing kernel system calls and context switches.
+- **SRD Protocol**: Multipaths traffic across non-interfering network routes to minimize tail latency and eliminate incast congestion.
+- **Multi-Rail Architecture**: High-end GPU instances (e.g., AWS P4de/P5) attach multiple EFA adapters (up to 32 interfaces per host) providing terabits of cross-node bandwidth.
+- **Link State Sensitivity**: If one EFA interface drops or links degrade, collective operations fall back to lower bandwidth without crashing, quietly degrading gang throughput.
+
+### When to Use
+
+- Multi-node distributed deep learning training using [NCCL](#nccl) over Libfabric (`aws-ofi-nccl`).
+- Tightly coupled distributed simulations (CFD, weather modeling, molecular dynamics) using MPI.
+- Cross-node model-parallel and pipeline-parallel foundation model serving.
+
+### When NOT to Use
+
+- General microservice REST or gRPC APIs that operate reliably over standard Amazon VPC networking (ENA).
+- Single-node multi-GPU workloads where communication is contained within NVLink/NVSwitch domains.
+
+### Also see
+- [NCCL](#nccl) · [Gang Scheduling](#gang-scheduling) · [Dynamic Resource Allocation (DRA)](#dynamic-resource-allocation-dra)
+- [ai-40: Layered Hardware Health Checking](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-40-layered-hardware-health-checking--fail-closed-diagnostics)
+
+---
+
+## Dynamic Resource Allocation (DRA)
+
+**Dynamic Resource Allocation (DRA)** — a Kubernetes API and scheduling framework (introduced in Kubernetes v1.26+ and stabilized in v1.31+) that replaces the legacy Device Plugin mechanism for specialized hardware resources such as GPUs, FPGAs, and high-speed network interfaces.
+
+Unlike legacy device plugins that expose hardware as coarse integer counts (`nvidia.com/gpu: 1`), DRA models resources as expressive **ResourceClaims** with structured parameters, enabling topology-aware scheduling, device partitioning, and fine-grained hardware lifecycle management.
+
+### Key Characteristics
+
+- **Topology-Aware Placement**: Allows the scheduler to match GPUs, network adapters (EFAs), and CPUs that share the same PCIe root complex or NUMA domain, avoiding cross-bus bandwidth degradation.
+- **Expressive Capability Matching**: Pods request hardware attributes (e.g., minimum VRAM, compute capability, tensor core support) rather than rigid device model names.
+- **Device-Level Granularity**: Enables cordoning and recycling a single damaged GPU on an 8-GPU host without draining or terminating the remaining healthy devices.
+- **Composable Allocation**: Allows multiple pods to safely share or partition hardware devices under strict resource class specifications.
+
+### When to Use
+
+- Orchestrating heterogeneous GPU clusters running mixed training and inference workloads.
+- Complex multi-accelerator nodes where PCIe and NUMA topology alignment directly impacts inter-device throughput.
+- Modern Kubernetes node management frameworks (such as [Karpenter](https://karpenter.sh/)) supporting fine-grained device allocation.
+
+### When NOT to Use
+
+- Legacy Kubernetes clusters (< v1.26) where only traditional device plugins are supported.
+- Standard homogeneous CPU/memory workloads with no specialized accelerator dependencies.
+
+### Also see
+- [Multi-Instance GPU (MIG)](#multi-instance-gpu-mig) · [Elastic Fabric Adapter (EFA)](#elastic-fabric-adapter) · [DCGM](#dcgm)
+- [ai-44: Topology-Aware Allocation & Fine-Grained GPU Slicing](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-44-topology-aware-allocation--fine-grained-gpu-slicing)
+
+---
+
+## Multi-Instance GPU (MIG)
+
+**Multi-Instance GPU (MIG)** — a hardware-level virtualization technology available on modern NVIDIA architectures (such as A100 and H100) that physically partitions a single GPU into up to seven independent GPU instances.
+
+Each MIG instance possesses fully dedicated hardware resources: guaranteed compute cores, memory crossbar paths, L2 cache slices, and High-Bandwidth Memory (HBM). This guarantees strict quality-of-service (QoS) and hardware-level fault isolation across multi-tenant workloads.
+
+### Key Characteristics
+
+- **Hardware-Enforced Isolation**: Unlike software time-slicing (e.g., CUDA MPS), memory errors, memory hogs, or application crashes in one MIG slice cannot affect neighboring slices.
+- **Zero Cross-Talk**: Dedicated memory controllers ensure consistent, deterministic latency for latency-sensitive inference workloads.
+- **Dynamic Reconfigurability**: GPU partition profiles (e.g., 1g.10gb, 2g.20gb, 3g.40gb, 7g.80gb) can be reconfigured dynamically at runtime without rebooting the host machine.
+- **Predictable Utilization**: Eliminates GPU underutilization for small models without compromising security or multi-tenant boundary integrity.
+
+### When to Use
+
+- Multi-tenant model serving and inference hosting where individual models do not require a full 80GB/140GB GPU.
+- Batch inference pipelines running heterogeneous small and medium models side-by-side.
+- Development and experimentation environments where multiple engineers require isolated GPU access without dedicated physical nodes.
+
+### When NOT to Use
+
+- Large foundation model distributed training where jobs require the full compute, memory, and NVLink bandwidth of all GPUs.
+- Models requiring NVLink inter-GPU communication across instances (MIG disables cross-instance NVLink communication within a physical device).
+
+### Also see
+- [Dynamic Resource Allocation (DRA)](#dynamic-resource-allocation-dra) · [Goodput (AI/ML)](#goodput-ai) · [DCGM](#dcgm)
+- [ai-44: Topology-Aware Allocation & Fine-Grained GPU Slicing](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-44-topology-aware-allocation--fine-grained-gpu-slicing)
+
+---
+
+## DCGM
+
+**Data Center GPU Manager (DCGM)** — a suite of tools and APIs developed by NVIDIA specifically for managing and monitoring NVIDIA GPUs in cluster and enterprise data center environments.
+
+DCGM runs as a background service or daemon, collecting active and passive telemetry (temperature, clock frequencies, power usage, PCIe throughput), performing active health diagnostics under test workloads, and detecting uncorrectable memory errors, NVLink fabric degradations, and hardware policy violations.
+
+### Key Characteristics
+
+- **Telemetry & Health Monitoring**: Streams real-time metrics and alerts for thermal throttling, power limits, and memory integrity.
+- **Active Diagnostic Suites**: Executes comprehensive self-test suites (Level 1 short tests through Level 4 deep stress tests) to validate GPUs before workload admission.
+- **Kubernetes Integration**: Feeds metrics into Prometheus and Kubernetes node monitoring agents (e.g., `node-problem-detector`, NVIDIA GPU Operator).
+- **Proactive Failure Detection**: Identifies subtle hardware degradation and correctable ECC error spikes before they escalate to fatal uncorrectable crashes.
+
+### When to Use
+
+- Pre-flight node burn-in and admission validation in automated GPU cluster provisioning.
+- Continuous hardware health checking and telemetry collection for large-scale training and inference clusters.
+- Automated node auto-repair controllers that require programmatic health signals to cordon or reboot hosts.
+
+### When NOT to Use
+
+- Standalone desktop or single-workstation ML development environments where basic `nvidia-smi` is sufficient.
+- Systems using non-NVIDIA accelerators (e.g., AMD ROCm, Google TPU, AWS Trainium).
+
+### Also see
+- [Xid / SXid Errors](#xid-errors) · [Dynamic Resource Allocation (DRA)](#dynamic-resource-allocation-dra) · [Goodput (AI/ML)](#goodput-ai)
+- [ai-40: Layered Hardware Health Checking](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-40-layered-hardware-health-checking--fail-closed-diagnostics)
+
+---
+
+## Xid / SXid Errors
+
+**Xid Errors** (and SXid Errors for NVSwitch) — driver-level error reporting codes emitted by NVIDIA GPU drivers directly into the Linux kernel log buffer (`dmesg`). An Xid error indicates that the driver detected an abnormal condition, hardware malfunction, memory corruption, or illegal instruction on a specific GPU or interconnect switch.
+
+Because userland diagnostic tools (like DCGM or `nvidia-smi`) can hang or crash when a driver wedges, parsing kernel logs for Xid codes provides a fail-safe fallback path for detecting hardware and driver faults.
+
+### Key Characteristics
+
+- **Kernel Log Origin**: Logged by the kernel module (e.g., `NVRM: Xid (PCI:0000:01:00): 79, GPU has fallen off the bus...`), remaining accessible even if userland daemons crash.
+- **Severity Spectrum**: Ranges from benign user application memory bounds exceptions (e.g., Xid 13, 31) to unrecoverable physical hardware errors (e.g., Xid 79 "GPU fallen off bus", Xid 48 "Double-bit ECC error", Xid 62 "Internal microcode fault").
+- **Generation-Dependent Meaning**: Certain codes that represent fatal hardware failures in older architectures (e.g., Volta/Ampere) may be transient or self-healing in newer generations (e.g., Hopper/Blackwell).
+- **SXid for Fabric**: SXid codes report errors across NVIDIA NVSwitch fabrics, flagging NVLink CRC corruptions, link dropouts, and thermal events across multi-GPU backplanes.
+
+### When to Use
+
+- Reliable automated hardware health detection and node auto-repair in Kubernetes clusters.
+- Kernel-level diagnostic fallbacks when userland monitoring agents become unresponsive.
+- Root-cause analysis and failure attribution to distinguish physical device failure from application CUDA errors.
+
+### When NOT to Use
+
+- High-level application monitoring; application developers should inspect framework exceptions rather than parsing raw kernel Xid logs.
+
+### Also see
+- [DCGM](#dcgm) · [Gang Scheduling](#gang-scheduling) · [NCCL](#nccl)
+- [ai-40: Layered Hardware Health Checking](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-40-layered-hardware-health-checking--fail-closed-diagnostics)
+
+---
+
+## NCCL
+
+**NVIDIA Collective Communications Library (NCCL)** — a library of multi-GPU and multi-node collective communication primitives (such as AllReduce, AllGather, ReduceScatter, Broadcast, and Point-to-Point Send/Receive) optimized for NVIDIA GPUs and high-speed interconnects (NVLink, NVSwitch, InfiniBand, and AWS [EFA](#elastic-fabric-adapter)).
+
+NCCL forms the communication backbone of distributed deep learning frameworks (PyTorch Distributed, JAX, DeepSpeed, Megatron-LM). It automatically discovers cluster network topology and establishes optimized communication rings and trees across GPUs.
+
+### Key Characteristics
+
+- **Hardware Topology Optimization**: Routes inter-GPU traffic over the fastest available path (NVLink within nodes, InfiniBand/RoCE/EFA across nodes via GPUDirect RDMA).
+- **AllReduce Efficiency**: Minimizes latency and maximizes bandwidth utilization during gradient and tensor synchronization phases of distributed training.
+- **Synchronous Barrier Semantics**: Collective primitives block all participating ranks until communication completes across the entire gang.
+- **Timeout Sensitivity**: If any worker rank fails to arrive at an NCCL collective barrier within a configurable watchdog timeout (`NCCL_TIMEOUT`), the entire communicator aborts and fails the job.
+- **Attribution Challenge**: NCCL communication timeouts frequently mimic hardware fabric failures, but can actually stem from upstream CPU data-loading bottlenecks or rank execution skew.
+
+### When to Use
+
+- Multi-GPU data-parallel, tensor-parallel, pipeline-parallel, and sequence-parallel distributed model training.
+- High-throughput distributed inference serving systems (e.g., vLLM, TensorRT-LLM) using tensor parallelism across multiple GPUs.
+
+### When NOT to Use
+
+- Single-GPU model training or inference workloads where no collective inter-device communication occurs.
+- Communication between CPU nodes with no GPU acceleration (standard MPI or TCP sockets suffice).
+
+### Also see
+- [Gang Scheduling](#gang-scheduling) · [Elastic Fabric Adapter (EFA)](#elastic-fabric-adapter) · [Goodput (AI/ML)](#goodput-ai) · [Xid / SXid Errors](#xid-errors)
+- [ai-39: Gang Scheduling & The Straggler Multiplier](../system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md#ai-39-gang-scheduling--the-straggler-multiplier-in-distributed-training)
+

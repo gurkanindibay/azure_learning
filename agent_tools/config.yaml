@@ -165,6 +165,8 @@ takeaway_domains:
       - "articles/agentic-ai/how-does-anthropic-watermark-ai-generated-content.md"
       - "system-design-architecture/ai-ml-infrastructure/40-ai-key-takeaways.md"
       - "articles/agentic-ai/jev-typesafe-ai-decision-model.md"
+      - "system-design-architecture/ai-ml-infrastructure/41-ai-key-takeaways.md"
+      - "articles/case-studies/netflix-reliable-gpu-compute.md"
 
   media:
     file: "media-processing/media-processing-pipelines.md"

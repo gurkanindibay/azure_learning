@@ -18,6 +18,7 @@ Patterns and strategies for AI/ML infrastructure design: Retrieval-Augmented Gen
 | [38-ai-key-takeaways.md](38-ai-key-takeaways.md) | `ai-28` – `ai-30` | On-device MoE inference: selective demand-paged expert loading, asynchronous read-compute overlapping, flash throughput-centric edge AI |
 | [39-ai-key-takeaways.md](39-ai-key-takeaways.md) | `ai-31` – `ai-33` | AI content watermarking & provenance: imperceptible statistical token watermarking, cryptographic C2PA content credentials, dual-layer governance |
 | [40-ai-key-takeaways.md](40-ai-key-takeaways.md) | `ai-34` – `ai-38` | Decision-oriented AI models (Jev/System One Models): generation vs. decision axis, typed decision primitives (Noul/Choice/Score), calibrated confidence routing (RLCD), decision models as agentic subsystems, valid-output vs. correct-output semantic gap |
+| [41-ai-key-takeaways.md](41-ai-key-takeaways.md) | `ai-39` – `ai-44` | Reliable GPU compute (Netflix): gang scheduling goodput, layered fail-closed health checks, graded remediation with Karpenter, pre-flight burn-in, failure attribution, topology-aware allocation & DRA |
 
 
 ## Cross-References
