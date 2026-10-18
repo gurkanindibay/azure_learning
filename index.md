@@ -25,6 +25,7 @@ A technical knowledge base covering Microsoft Azure services, cloud-agnostic arc
 ## Programming Languages
 
 * [C# / .NET](/programming-languages/csharp/) — .NET concurrency patterns, multithreading, and best practices
+* [Rust](/programming-languages/rust/) — Complete 16-week systems programming curriculum from basics to production
 
 ## Operations
 

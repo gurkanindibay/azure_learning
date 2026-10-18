@@ -57,42 +57,42 @@ cargo run --manifest-path programming-languages/rust/practices/Cargo.toml -p c16
 
 | # | Topic | Guide File | Practice Crate | Focus |
 |---|-------|------------|----------------|-------|
-| 01 | Installation & toolchain | [01-getting-started.md](./01-getting-started.md) | [`c01_getting_started`](./practices/crates/c01_getting_started) | `rustup`, `cargo`, project layout |
-| 02 | Ownership & Borrowing | [02-ownership-borrowing.md](./02-ownership-borrowing.md) | [`c02_ownership_borrowing`](./practices/crates/c02_ownership_borrowing) | Move semantics, borrow checker, lifetimes intro |
-| 03 | Basic Types & Control Flow | [03-types-and-control-flow.md](./03-types-and-control-flow.md) | [`c03_types_and_control_flow`](./practices/crates/c03_types_and_control_flow) | Scalars, tuples, arrays, `if let`, `match` |
+| 01 | Installation & toolchain | [01-getting-started.md](./lessons/01-getting-started.md) | [`c01_getting_started`](./practices/crates/c01_getting_started) | `rustup`, `cargo`, project layout |
+| 02 | Ownership & Borrowing | [02-ownership-borrowing.md](./lessons/02-ownership-borrowing.md) | [`c02_ownership_borrowing`](./practices/crates/c02_ownership_borrowing) | Move semantics, borrow checker, lifetimes intro |
+| 03 | Basic Types & Control Flow | [03-types-and-control-flow.md](./lessons/03-types-and-control-flow.md) | [`c03_types_and_control_flow`](./practices/crates/c03_types_and_control_flow) | Scalars, tuples, arrays, `if let`, `match` |
 
 ### Phase 2: Core Concepts — Weeks 4–6
 
 | # | Topic | Guide File | Practice Crate | Focus |
 |---|-------|------------|----------------|-------|
-| 04 | Structs, Enums & Pattern Matching | [04-structs-enums-patterns.md](./04-structs-enums-patterns.md) | [`c04_structs_enums_patterns`](./practices/crates/c04_structs_enums_patterns) | `impl` blocks, `Option`, `Result`, destructuring |
-| 05 | Traits & Generics | [05-traits-and-generics.md](./05-traits-and-generics.md) | [`c05_traits_and_generics`](./practices/crates/c05_traits_and_generics) | Trait objects, `dyn`, monomorphization, bounds |
-| 06 | Error Handling | [06-error-handling.md](./06-error-handling.md) | [`c06_error_handling`](./practices/crates/c06_error_handling) | `?` operator, `thiserror`, `anyhow`, custom errors |
+| 04 | Structs, Enums & Pattern Matching | [04-structs-enums-patterns.md](./lessons/04-structs-enums-patterns.md) | [`c04_structs_enums_patterns`](./practices/crates/c04_structs_enums_patterns) | `impl` blocks, `Option`, `Result`, destructuring |
+| 05 | Traits & Generics | [05-traits-and-generics.md](./lessons/05-traits-and-generics.md) | [`c05_traits_and_generics`](./practices/crates/c05_traits_and_generics) | Trait objects, `dyn`, monomorphization, bounds |
+| 06 | Error Handling | [06-error-handling.md](./lessons/06-error-handling.md) | [`c06_error_handling`](./practices/crates/c06_error_handling) | `?` operator, `thiserror`, `anyhow`, custom errors |
 
 ### Phase 3: Systems Programming — Weeks 7–9
 
 | # | Topic | Guide File | Practice Crate | Focus |
 |---|-------|------------|----------------|-------|
-| 07 | Lifetimes Deep Dive | [07-lifetimes.md](./07-lifetimes.md) | [`c07_lifetimes`](./practices/crates/c07_lifetimes) | Lifetime annotations, `'static`, variance |
-| 08 | Smart Pointers & Interior Mutability | [08-smart-pointers.md](./08-smart-pointers.md) | [`c08_smart_pointers`](./practices/crates/c08_smart_pointers) | `Box`, `Rc`, `Arc`, `Cell`, `RefCell`, `Mutex` |
-| 09 | Iterators & Closures | [09-iterators-closures.md](./09-iterators-closures.md) | [`c09_iterators_closures`](./practices/crates/c09_iterators_closures) | `Iterator` trait, lazy evaluation, `Fn`/`FnMut`/`FnOnce` |
+| 07 | Lifetimes Deep Dive | [07-lifetimes.md](./lessons/07-lifetimes.md) | [`c07_lifetimes`](./practices/crates/c07_lifetimes) | Lifetime annotations, `'static`, variance |
+| 08 | Smart Pointers & Interior Mutability | [08-smart-pointers.md](./lessons/08-smart-pointers.md) | [`c08_smart_pointers`](./practices/crates/c08_smart_pointers) | `Box`, `Rc`, `Arc`, `Cell`, `RefCell`, `Mutex` |
+| 09 | Iterators & Closures | [09-iterators-closures.md](./lessons/09-iterators-closures.md) | [`c09_iterators_closures`](./practices/crates/c09_iterators_closures) | `Iterator` trait, lazy evaluation, `Fn`/`FnMut`/`FnOnce` |
 
 ### Phase 4: Async & Concurrency — Weeks 10–12
 
 | # | Topic | Guide File | Practice Crate | Focus |
 |---|-------|------------|----------------|-------|
-| 10 | Concurrency Primitives | [10-concurrency.md](./10-concurrency.md) | [`c10_concurrency`](./practices/crates/c10_concurrency) | Threads, channels, `Mutex`, `RwLock`, `Arc` |
-| 11 | Async/Await & Tokio | [11-async-tokio.md](./11-async-tokio.md) | [`c11_async_tokio`](./practices/crates/c11_async_tokio) | `Future`, executors, `tokio`, `async-std` |
-| 12 | Unsafe Rust | [12-unsafe-rust.md](./12-unsafe-rust.md) | [`c12_unsafe_rust`](./practices/crates/c12_unsafe_rust) | Raw pointers, FFI, `unsafe` blocks, when to use |
+| 10 | Concurrency Primitives | [10-concurrency.md](./lessons/10-concurrency.md) | [`c10_concurrency`](./practices/crates/c10_concurrency) | Threads, channels, `Mutex`, `RwLock`, `Arc` |
+| 11 | Async/Await & Tokio | [11-async-tokio.md](./lessons/11-async-tokio.md) | [`c11_async_tokio`](./practices/crates/c11_async_tokio) | `Future`, executors, `tokio`, `async-std` |
+| 12 | Unsafe Rust | [12-unsafe-rust.md](./lessons/12-unsafe-rust.md) | [`c12_unsafe_rust`](./practices/crates/c12_unsafe_rust) | Raw pointers, FFI, `unsafe` blocks, when to use |
 
 ### Phase 5: Ecosystem & Production — Weeks 13–16
 
 | # | Topic | Guide File | Practice Crate | Focus |
 |---|-------|------------|----------------|-------|
-| 13 | Testing & Benchmarking | [13-testing-benchmarking.md](./13-testing-benchmarking.md) | [`c13_testing_benchmarking`](./practices/crates/c13_testing_benchmarking) | `#[test]`, `cargo test`, Criterion, property-based testing |
-| 14 | Web & API Development | [14-web-development.md](./14-web-development.md) | [`c14_web_development`](./practices/crates/c14_web_development) | Axum, Actix-Web, SQLx, REST/gRPC patterns |
-| 15 | CLI & Tooling | [15-cli-and-tooling.md](./15-cli-and-tooling.md) | [`c15_cli_and_tooling`](./practices/crates/c15_cli_and_tooling) | Clap, Serde, config management, release builds |
-| 16 | Best Practices & Idioms | [16-best-practices.md](./16-best-practices.md) | [`c16_best_practices`](./practices/crates/c16_best_practices) | Idiomatic Rust, `clippy`, `rustfmt`, API design |
+| 13 | Testing & Benchmarking | [13-testing-benchmarking.md](./lessons/13-testing-benchmarking.md) | [`c13_testing_benchmarking`](./practices/crates/c13_testing_benchmarking) | `#[test]`, `cargo test`, Criterion, property-based testing |
+| 14 | Web & API Development | [14-web-development.md](./lessons/14-web-development.md) | [`c14_web_development`](./practices/crates/c14_web_development) | Axum, Actix-Web, SQLx, REST/gRPC patterns |
+| 15 | CLI & Tooling | [15-cli-and-tooling.md](./lessons/15-cli-and-tooling.md) | [`c15_cli_and_tooling`](./practices/crates/c15_cli_and_tooling) | Clap, Serde, config management, release builds |
+| 16 | Best Practices & Idioms | [16-best-practices.md](./lessons/16-best-practices.md) | [`c16_best_practices`](./practices/crates/c16_best_practices) | Idiomatic Rust, `clippy`, `rustfmt`, API design |
 
 
 ---

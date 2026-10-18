@@ -349,4 +349,4 @@ Enable these in `lib.rs` / `main.rs`:
 ---
 
 > **Previous**: [15 — CLI & Tooling](./15-cli-and-tooling.md)  
-> **Back to Index**: [index.md](./index.md)
+> **Back to Index**: [index.md](../index.md)
