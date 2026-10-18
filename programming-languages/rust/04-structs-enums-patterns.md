@@ -110,6 +110,8 @@ println!("area = {}", r.area());
 r.scale(2.0);
 ```
 
+> **Note on `new`**: Unlike C++, Java, or C#, Rust does not have a `new` keyword or a built-in constructor mechanism. `Type::new(...)` is purely an idiomatic community naming convention for an associated function returning `Self`. For details on destruction and cleanup, see [02 — Ownership & Borrowing](./02-ownership-borrowing.md#the-drop-trait-vs-the-new-convention).
+
 ---
 
 ## Enums

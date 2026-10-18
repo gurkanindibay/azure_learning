@@ -11,6 +11,7 @@ generated: { by: agent:antigravity, at: 2026-10-17T00:00:00Z }
 ## Table of Contents
 - [Why Ownership?](#why-ownership)
 - [Ownership Rules](#ownership-rules)
+  - [The `Drop` Trait vs. The `new()` Convention](#the-drop-trait-vs-the-new-convention)
 - [Move Semantics](#move-semantics)
 - [Clone vs Copy](#clone-vs-copy)
 - [Borrowing & References](#borrowing--references)
@@ -49,6 +50,40 @@ Three invariants the compiler enforces:
     // ... use s ...
 } // s goes out of scope; String is dropped here
 ```
+
+### The `Drop` Trait vs. The `new()` Convention
+
+A common question for developers coming from languages like C++, Java, or C#: *is `drop` like `new`, and are they built into Rust?*
+
+| Aspect | `Drop` | `new` |
+|---|---|---|
+| **What is it?** | A built-in trait (`std::ops::Drop`) | A convention for an associated function |
+| **Compiler support?** | **Yes** — compiler automatically inserts drop calls at scope exit | **No** — it is standard user code |
+| **Keyword?** | No keyword; `drop()` function in standard prelude | No keyword (unlike Java/C++/C#) |
+| **Naming flexibility** | Fixed signature: `fn drop(&mut self)` | Any name: `new()`, `with_capacity()`, `default()` |
+
+#### 1. `Drop` is Built-In and Compiler-Integrated
+- **Automatic Destructor (RAII)**: When an owner leaves scope, the compiler automatically runs its `Drop::drop(&mut self)` implementation to free resources (heap memory, open file handles, sockets, locks).
+- **Manual `.drop()` is forbidden**: You cannot write `x.drop()`; the compiler disallows manual invocation to prevent double-free bugs.
+- **Early dropping with `std::mem::drop`**: To release a resource before scope exit, use the built-in function `drop(x)`, which takes ownership and lets the value drop:
+  ```rust
+  let lock = mutex.lock().unwrap();
+  // ... work with protected data ...
+  drop(lock); // explicitly drop lock early to unblock other threads
+  ```
+
+#### 2. `new` is NOT Built-In (It's a Convention)
+- Rust has **no `new` keyword**.
+- Structs are instantiated directly using struct literal syntax (`Point { x: 0, y: 0 }`).
+- `Type::new(...)` is simply an associated function that the Rust community adopts as a constructor pattern:
+  ```rust
+  impl Rectangle {
+      // Just a normal function returning Self — no special compiler magic:
+      pub fn new(width: f64, height: f64) -> Self {
+          Self { width, height }
+      }
+  }
+  ```
 
 ---
 
