@@ -1,0 +1,3 @@
+[submodule "programming-languages/rust/practices"]
+	path = programming-languages/rust/practices
+	url = https://github.com/gurkanindibay/rust-practices.git
