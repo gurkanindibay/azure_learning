@@ -31,7 +31,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 EXCLUDE_DIRS = {'.git', '.github', 'scripts', 'agent_tools', '.agents', '__pycache__', '.venv', 'agents'}
-EXCLUDE_FILES = {'AGENTS.md', 'log.md', 'accessibility-guidelines.md', '.copilot-instructions.md', 'architecture_taxonomy_reference.md'}
+EXCLUDE_FILES = {'AGENTS.md', 'log.md', 'accessibility-guidelines.md', '.copilot-instructions.md', 'architecture_taxonomy_reference.md', 'README.md'}
 RESERVED = {'index.md', 'log.md'}
 
 # Files that serve as directory indices

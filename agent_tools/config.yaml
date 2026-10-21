@@ -338,6 +338,11 @@ takeaway_domains:
   arch:
     file: "software-architecture/architecture-principles.md"
     desc: "Architecture Principles"
+    related_files:
+      - "system-design-architecture/software-architecture/senior-engineer-to-architect-takeaways.md"
+      - "system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md"
+      - "articles/software-architecture/how-the-top-5-percent-of-senior-engineers-become-architects.md"
+      - "articles/software-architecture/10-popular-architecture-practices-harm.md"
   url:
     file: "case-studies/url-shortener.md"
     desc: "URL Shortener"

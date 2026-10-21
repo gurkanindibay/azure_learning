@@ -23,3 +23,4 @@ Source articles covering software architecture patterns, strategies, and case st
 - [microservices-join-queries-solutions](microservices-join-queries-solutions.md)
 - [10-microservices-misconceptions-you-must-unlearn](10-microservices-misconceptions-you-must-unlearn.md)
 - [10-popular-architecture-practices-harm](10-popular-architecture-practices-harm.md)
+- [how-the-top-5-percent-of-senior-engineers-become-architects](how-the-top-5-percent-of-senior-engineers-become-architects.md)

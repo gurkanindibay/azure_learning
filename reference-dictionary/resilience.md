@@ -55,6 +55,7 @@ generated: { by: process:okf-migrate, at: 2026-06-14T00:00:00Z }
 | Fail-Open vs Fail-Closed | [`#fail-open-vs-fail-closed`](#fail-open-vs-fail-closed) |
 | Admission Control | [`#admission-control`](#admission-control) |
 | Three-State Ambiguity | [`#three-state-ambiguity`](#three-state-ambiguity) |
+| Failure Mode Analysis | [`#failure-mode-analysis`](#failure-mode-analysis) |
 
 ---
 
@@ -879,6 +880,32 @@ A fundamental distributed systems reality where a timed-out remote call (such as
 
 ### Also see
 - [Idempotency](cqrs-event-driven.md#idempotency) · [Timeout](#timeout) · [Two Generals Problem](data-concurrency.md#two-generals-problem) · [Compensating Transaction](data-concurrency.md#compensating-transaction)
+
+---
+
+## Failure Mode Analysis {#failure-mode-analysis}
+
+A proactive system design and resilience evaluation practice in which architects systematically analyze dependencies, components, and communication paths to identify potential failure scenarios, evaluate their blast radius, and design mitigations before writing code. Unlike developer-centric "happy path" design, Failure Mode Analysis starts with the premise: *"What happens when dependencies fail or experience extreme latency?"*
+
+### Key Characteristics
+- **Scenario Enumeration**: Identifying concrete failure conditions (e.g., downstream payment gateway outage, inventory service latency degradation, message broker unreachability, database connection pool exhaustion).
+- **Impact Assessment**: Tracing the immediate blast radius on upstream callers, user experience (e.g., checkout thread exhaustion, abandoned carts), and downstream data consistency.
+- **Explicit Mitigation Matrix**: Documenting proactive architectural protections for each scenario:
+  - *Timeouts & Circuit Breakers*: Preventing slow dependencies from consuming local worker pools.
+  - *Idempotency Keys*: Allowing safe retries when remote responses are lost.
+  - *Fallback & Graceful Degradation*: Returning cached data, static defaults, or queuing requests for asynchronous processing.
+  - *Compensation & Outbox*: Resolving partial failures in multi-step workflows.
+
+### When to Use
+- Designing distributed service architectures, payment workflows, checkout platforms, or third-party integrations.
+- Pre-launch architecture reviews, readiness assessments, and disaster recovery planning.
+- Establishing test scenarios for chaos engineering and game days.
+
+### When NOT to Use
+- Stateless, trivial internal utility scripts where transient failure causes zero business harm and process restart is sufficient.
+
+### Also see
+- [Circuit Breaker](#circuit-breaker) · [Cascading Failure](#cascading-failure) · [Graceful Degradation](#graceful-degradation) · [Blast Radius](#blast-radius) · [Three-State Ambiguity](#three-state-ambiguity) · [arch-36 Failure Mode & Resilience Modeling](../system-design-architecture/software-architecture/senior-engineer-to-architect-takeaways.md#arch-36)
 
 ---
 

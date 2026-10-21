@@ -82,6 +82,8 @@ generated: { by: process:okf-migrate, at: 2026-07-04T00:00:00Z }
 | Vendor Lock-in | [`#vendor-lock-in`](#vendor-lock-in) |
 | Premature Optimization | [`#premature-optimization`](#premature-optimization) |
 | Speculative Generalization | [`#speculative-generalization`](#speculative-generalization) |
+| C4 Model | [`#c4-model`](#c4-model) |
+| Cost Architecture | [`#cost-architecture`](#cost-architecture) |
 
 ---
 
@@ -1619,4 +1621,52 @@ An engineering anti-pattern in which a system or component is made more general,
 
 ### Also see
 - [YAGNI](design-patterns.md#yagni) · [arch-24 Configuration Explosion](../system-design-architecture/software-architecture/architecture-anti-patterns-takeaways.md#arch-24-configuration-explosion) · [Kill Switch](#kill-switch)
+
+---
+
+## C4 Model {#c4-model}
+
+A hierarchical, four-level abstraction framework for modeling and visualizing software architecture created by Simon Brown. Rather than creating one massive, confusing system diagram, the C4 model progressively zooms in across distinct levels of abstraction: **System Context (Level 1)**, **Containers (Level 2)**, **Components (Level 3)**, and **Code (Level 4)**.
+
+### Key Characteristics
+- **Level 1 — System Context**: Shows the high-level ecosystem, defining what system is being built, who the human users/actors are, and what external software systems it integrates with.
+- **Level 2 — Containers**: Zooms into the system boundary to show the high-level deployable units (single-page applications, backend APIs, microservices, databases, object stores).
+- **Level 3 — Components**: Zooms into an individual container to show its internal modular building blocks, key interfaces, and component-to-component interactions.
+- **Level 4 — Code**: Drills into an individual component to show implementation classes, interfaces, and patterns (typically optional, reserved for complex architectural mechanics).
+- **Targeted Communication**: Levels 1 and 2 target executive, product, and cross-team audiences; Levels 3 and 4 target development and maintenance teams.
+
+### When to Use
+- Communicating system boundaries, ownership, and responsibilities to diverse stakeholder groups with varying technical depth.
+- Onboarding new engineers without overwhelming them with low-level package structures.
+- Standardizing architecture diagrams across engineering teams without heavy UML tooling overhead.
+
+### When NOT to Use
+- For capturing runtime message ordering, timing constraints, or asynchronous event flows (use [Sequence Diagrams](#sequence-diagram) instead).
+- For low-level cloud network infrastructure (VPC CIDR ranges, subnets, transit gateways, route tables).
+
+### Also see
+- [Architecture Decision Record](design-patterns.md#architecture-decision-record) · [Microservices](#microservices) · [Service Decomposition](#service-decomposition)
+
+---
+
+## Cost Architecture {#cost-architecture}
+
+The architectural discipline of treating cloud infrastructure economics, capacity utilization, compute/storage sizing, and operational run-rate costs as core design drivers and non-functional requirements (NFRs) rather than post-deployment concerns.
+
+### Key Characteristics
+- **Traffic and Capacity Modeling**: Deriving required infrastructure capacity directly from business traffic models (baseline vs peak requests/minute) rather than arbitrary provisioning.
+- **Unit Economics**: Calculating cost per user, cost per order, or cost per transaction to verify that architecture remains financially sustainable under 10× scale.
+- **Utilization Efficiency**: Evaluating right-sizing, autoscaling thresholds, serverless vs provisioned compute, and multi-region data transfer fees.
+- **Defensibility**: Explicitly answering *"Can we build it, operate it, scale it, secure it, and afford it?"* during architectural reviews.
+
+### When to Use
+- Architecture reviews and design proposals for high-scale, multi-tenant, or bursty workloads.
+- Evaluating serverless vs containerized microservice architectures where compute pricing models diverge significantly under sustained load.
+- Planning multi-region redundancy to prevent data transfer and egress cost explosions.
+
+### When NOT to Use
+- Disposable hackathons, proof-of-concept prototypes, or pre-product-market-fit validation where velocity dominates all considerations.
+
+### Also see
+- [Well-Architected Framework](#well-architected-framework) · [arch-38 Cost Architecture and Capacity Governance](../system-design-architecture/software-architecture/senior-engineer-to-architect-takeaways.md#arch-38)
 
